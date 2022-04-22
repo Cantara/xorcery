@@ -45,8 +45,6 @@ import java.util.concurrent.TimeUnit;
 public class MapDbDomainEventsService
         implements Closeable, ContainerLifecycleListener {
 
-    private ScheduledExecutorService scheduledExecutorService;
-
     @Provider
     public static class Feature
             extends AbstractFeature {
@@ -65,8 +63,8 @@ public class MapDbDomainEventsService
         }
     }
 
-    private RegistryClient registryClient;
-    private MapDatabaseService mapDatabaseService;
+    private final RegistryClient registryClient;
+    private final MapDatabaseService mapDatabaseService;
 
     @Inject
     public MapDbDomainEventsService(RegistryClient registryClient, MapDatabaseService mapDatabaseService) {
@@ -79,7 +77,6 @@ public class MapDbDomainEventsService
         System.out.println("MapDatabase Domain Events Startup");
 
         registryClient.addRegistryListener(new DomainEventsRegistryListener());
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     }
 
     @Override
@@ -89,7 +86,6 @@ public class MapDbDomainEventsService
     @Override
     public void onShutdown(Container container) {
         System.out.println("Shutdown");
-        scheduledExecutorService.shutdown();
     }
 
     public void connect(Link domainEventSource) {
@@ -104,10 +100,7 @@ public class MapDbDomainEventsService
                     try {
                         disruptor.handleEventsWith(new MetadataDeserializerEventHandler(),
                                         new DomainEventDeserializeEventHandler())
-                                .then(new MapDbDomainEventEventHandler(mapDatabaseService), new WebSocketFlowControlEventHandler(1, session, runnable ->
-                                {
-                                    scheduledExecutorService.schedule(runnable, 5, TimeUnit.SECONDS);
-                                }));
+                                .then(new MapDbDomainEventEventHandler(mapDatabaseService), new WebSocketFlowControlEventHandler(1, session, Executors.newSingleThreadExecutor()));
                         disruptor.start();
 
                         System.out.println("Receiving metric messages from " + domainEventSource.getHref());
@@ -133,7 +126,7 @@ public class MapDbDomainEventsService
         }
     }
 
-    private class DomainEventsClientEndpoint
+    private static class DomainEventsClientEndpoint
             implements WebSocketListener {
         private final Disruptor<EventHolder<JsonArray>> disruptor;
 
@@ -180,7 +173,7 @@ public class MapDbDomainEventsService
             StringWriter sw = new StringWriter();
             cause.printStackTrace(new PrintWriter(sw));
 
-            System.out.printf("Error:%s%n", sw.toString());
+            System.out.printf("Error:%s%n", sw);
         }
     }
 }
