@@ -35,11 +35,12 @@ public class RegistryServersResource
     @Produces( ResourceDocument.APPLICATION_JSON_API )
     public String servers()
     {
-        return new ResourceDocument.Builder()
+        String servers = new ResourceDocument.Builder()
             .data( service.getServers().stream()
                           .flatMap( rd -> rd.getResources().orElseThrow().getResources().stream() )
                           .collect( ResourceObjects.toResourceObjects() ) )
             .build().toString();
+        return servers;
     }
 
     @POST

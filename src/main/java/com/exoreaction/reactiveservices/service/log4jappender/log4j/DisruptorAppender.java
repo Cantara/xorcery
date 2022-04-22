@@ -4,6 +4,7 @@ import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.BroadcastEventHandler;
 import com.exoreaction.reactiveservices.disruptor.EventHolder;
 import com.exoreaction.reactiveservices.disruptor.MetadataSerializerEventHandler;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -66,7 +67,7 @@ public class DisruptorAppender
         disruptor =
             new Disruptor<>( EventHolder::new, 4096, new NamedThreadFactory( "Log4jDisruptor-" ),
                 ProducerType.MULTI,
-                new YieldingWaitStrategy() );
+                new BlockingWaitStrategy() );
 
         disruptor.handleEventsWith(
                      new MetadataSerializerEventHandler(),

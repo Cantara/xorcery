@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.service.registry.client;
 
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
+import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
 
 /**
  * @author rickardoberg
@@ -10,23 +11,43 @@ import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 
 public interface RegistryListener
 {
-    default void snapshot( ResourceDocument registry )
+    default void registry(ResourceDocument registry)
     {
-        registry.getResources().ifPresent( ro ->
+    }
+
+    default void servers( ResourceDocument servers )
+    {
+        servers.getResources().ifPresent(resources ->
         {
-            ro.getResources().forEach( this::added );
+            resources.getResources().forEach( ro ->
+            {
+                switch (ro.getType())
+                {
+                    case "server": addedServer(ro);
+                    case "service": addedService(ro);
+                }
+            } );
         });
     }
 
-    default void added( ResourceDocument server)
+    default void addedServer( ResourceObject server)
     {
-        server.getResources().ifPresent( ro ->
-        {
-            ro.getResources().forEach( this::added );
-        });
     }
 
-    void added( ResourceObject service);
-    void updated( ResourceObject service);
-    void removed( ResourceObject service);
+    default void removedServer( ResourceObject server)
+    {
+    }
+
+    default void addedService( ResourceObject service)
+    {
+
+    }
+    default void updatedService( ResourceObject service)
+    {
+
+    }
+    default void removedService( ResourceObject service)
+    {
+
+    }
 }

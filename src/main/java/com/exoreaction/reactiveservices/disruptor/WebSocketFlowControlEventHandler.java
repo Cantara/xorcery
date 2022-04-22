@@ -3,6 +3,8 @@ package com.exoreaction.reactiveservices.disruptor;
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.concurrent.Executor;
 
 /**
  * @author rickardoberg
@@ -13,11 +15,13 @@ public class WebSocketFlowControlEventHandler
     implements DefaultEventHandler<Object>
 {
     private final Session session;
+    private Executor flowControlExecutor;
     private long batchSize;
 
-    public WebSocketFlowControlEventHandler( long initialRequest, Session session ) throws IOException
+    public WebSocketFlowControlEventHandler( long initialRequest, Session session, Executor flowControlExecutor ) throws IOException
     {
         this.session = session;
+        this.flowControlExecutor = flowControlExecutor;
         session.getRemote().sendString( Long.toString( initialRequest ) );
     }
 
@@ -26,7 +30,15 @@ public class WebSocketFlowControlEventHandler
     {
         if (endOfBatch)
         {
-            session.getRemote().sendString( Long.toString( batchSize ) );
+            flowControlExecutor.execute(()->
+                    {
+                        try {
+                            session.getRemote().sendString( Long.toString( batchSize ) );
+                        } catch (IOException e) {
+                            // TODO Error handling
+                        }
+                    }
+                    );
         }
         DefaultEventHandler.super.onEvent( event, sequence, endOfBatch );
     }

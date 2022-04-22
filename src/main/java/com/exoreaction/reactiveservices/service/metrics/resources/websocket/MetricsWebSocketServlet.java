@@ -8,7 +8,9 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -31,15 +33,13 @@ public class MetricsWebSocketServlet
     protected void configure( JettyWebSocketServletFactory factory )
     {
         factory.setMaxTextMessageSize( 1048576 );
+        factory.setIdleTimeout(Duration.ofMillis(Long.MAX_VALUE));
 
-        LoggerContext lc = (LoggerContext) LogManager.getContext( false );
-        DisruptorAppender appender = lc.getConfiguration().getAppender( "Disruptor" );
-
-        factory.addMapping( "/ws/metrics", (( jettyServerUpgradeRequest, jettyServerUpgradeResponse ) ->
+        factory.addMapping( "/ws/metricevents", (( jettyServerUpgradeRequest, jettyServerUpgradeResponse ) ->
         {
-            List<String>
-                metricNames = Arrays.asList(jettyServerUpgradeRequest.getParameterMap().get( "metrics" ).get( 0 ).split( "," ));
-            return new MetricsWebSocketEndpoint( metricRegistry, metricNames );
+            String metricNames = jettyServerUpgradeRequest.getParameterMap().get("metrics").get(0);
+            List<String> metricNamesList = metricNames.isBlank() ? Collections.emptyList() : Arrays.asList(metricNames.split( "," ));
+            return new MetricsWebSocketEndpoint( metricRegistry, metricNamesList );
         }) );
     }
 }

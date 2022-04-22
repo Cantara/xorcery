@@ -7,7 +7,8 @@ import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
-import com.exoreaction.reactiveservices.server.jetty.JettyConnectorThreadPool;
+import com.exoreaction.reactiveservices.jetty.JettyConnectorThreadPool;
+import com.exoreaction.reactiveservices.rest.RestClient;
 import com.exoreaction.reactiveservices.service.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.configuration.StandardConfiguration;
 import com.exoreaction.reactiveservices.service.log4jappender.resources.LogWebSocketServlet;
@@ -41,6 +42,10 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.URI;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
@@ -50,212 +55,163 @@ import static com.codahale.metrics.MetricRegistry.name;
  */
 
 public class Server
-    implements Closeable
-{
+        implements Closeable {
     private Configuration configuration;
     private org.eclipse.jetty.server.Server server;
-    private ResourceDocument serverDocument;
-    private RegistryClient registryClient;
+    private List<ResourceObject> services = new CopyOnWriteArrayList<>();
 
-    public Server() throws Exception
-    {
+    public Server() throws Exception {
         this.configuration = configuration();
 
-        webServer();
-        register();
+        services.add(new ResourceObject.Builder("server")
+                        .attributes(new Attributes.Builder()
+                                .attribute("jetty.version", Jetty.VERSION)
+                                .build()).build());
+        MetricRegistry metricRegistry = metrics();
+
+        webServer(metricRegistry);
     }
 
-    private Configuration configuration() throws Exception
+
+    public void addService(ResourceObject serviceResource) {
+        services.add(serviceResource);
+    }
+
+    public ResourceDocument getServerDocument()
     {
+        ResourceDocument serverDocument = new ResourceDocument.Builder()
+                .links(new Links.Builder().link(JsonApiRels.self, "http://localhost:8080/").build())
+                .data(services.stream().collect(ResourceObjects.toResourceObjects()))
+                .build();
+        return serverDocument;
+    }
+
+    private Configuration configuration() throws Exception {
         Configuration.Builder builder = new Configuration.Builder();
 
         // Load defaults
-        builder.addYaml( Configuration.class.getResourceAsStream( "/server.yaml" ) );
+        builder.addYaml(Configuration.class.getResourceAsStream("/server.yaml"));
 
         // Load overrides
-        StandardConfiguration standardConfiguration = new StandardConfiguration( builder.build() );
-
-        File overridesYamlFile = new File( standardConfiguration.home(), "conf/server_overrides.yaml" );
-        FileInputStream overridesYamlStream = new FileInputStream( overridesYamlFile );
-        builder.addYaml( overridesYamlStream );
+        Configuration partialConfig = builder.build();
+        StandardConfiguration standardConfiguration = new StandardConfiguration(partialConfig);
+        builder = partialConfig.asBuilder();
+        File overridesYamlFile = new File(standardConfiguration.home(), "conf/server_overrides.yaml");
+        if (overridesYamlFile.exists()) {
+            FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
+            builder.addYaml(overridesYamlStream);
+        }
 
         // Load user
-        File userYamlFile = new File( System.getProperty( "user.home" ), "reactive/server.yaml" );
-        FileInputStream userYamlStream = new FileInputStream( userYamlFile );
-        builder.addYaml( userYamlStream );
+        File userYamlFile = new File(System.getProperty("user.home"), "reactive/server.yaml");
+        if (userYamlFile.exists()) {
+            FileInputStream userYamlStream = new FileInputStream(userYamlFile);
+            builder.addYaml(userYamlStream);
+        }
 
         return builder.build();
     }
 
-    private void webServer() throws Exception
-    {
+    private MetricRegistry metrics() {
         MetricRegistry metricRegistry = new MetricRegistry();
 
         // Setup Jvm mem metric
         OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
         com.sun.management.OperatingSystemMXBean sunOperatingSystemMXBean = (com.sun.management
-            .OperatingSystemMXBean) operatingSystemMXBean;
+                .OperatingSystemMXBean) operatingSystemMXBean;
 
-        metricRegistry.gauge( name( "server.mem.free" ), () -> sunOperatingSystemMXBean::getFreeMemorySize );
+        metricRegistry.gauge(name("server.mem.free"), () -> sunOperatingSystemMXBean::getFreeMemorySize);
 
-        Configuration jettyConfig = configuration.getConfiguration( "jetty" );
+        return metricRegistry;
+    }
+
+    private void webServer(MetricRegistry metricRegistry) throws Exception {
+
+        Configuration jettyConfig = configuration.getConfiguration("jetty");
 
         // Setup thread pool
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
-        jettyConnectorThreadPool.setName( "jetty-http-server-" );
-        jettyConnectorThreadPool.setMinThreads( 10 );
-        jettyConnectorThreadPool.setMaxThreads( 150 );
+        jettyConnectorThreadPool.setName("jetty-http-server-");
+        jettyConnectorThreadPool.setMinThreads(10);
+        jettyConnectorThreadPool.setMaxThreads(150);
 
         // Create server
-        server = new org.eclipse.jetty.server.Server( jettyConnectorThreadPool );
+        server = new org.eclipse.jetty.server.Server(jettyConnectorThreadPool);
 
         // Setup connector
         final HttpConfiguration config = new HttpConfiguration();
-        config.setOutputBufferSize( 32768 );
-        config.setRequestHeaderSize( 1024 * 16 );
+        config.setOutputBufferSize(32768);
+        config.setRequestHeaderSize(1024 * 16);
 
         // Added for X-Forwarded-For support, from ALB
-        config.addCustomizer( new ForwardedRequestCustomizer() );
+        config.addCustomizer(new ForwardedRequestCustomizer());
 
         // Setup protocols
-        HttpConnectionFactory http1 = new HttpConnectionFactory( config );
-        final ServerConnector http = new ServerConnector( server, http1 );
-        http.setPort( jettyConfig.getInt( "port", 8080 ) );
+        HttpConnectionFactory http1 = new HttpConnectionFactory(config);
+        final ServerConnector http = new ServerConnector(server, http1);
+        http.setPort(jettyConfig.getInt("port", 8080));
 
-        server.addConnector( http );
+        server.addConnector(http);
 
-        ServletContextHandler ctx = new ServletContextHandler( ServletContextHandler.NO_SESSIONS );
-        ctx.setContextPath( "/" );
+        ServletContextHandler ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        ctx.setContextPath("/");
 
         ResourceConfig resourceConfig = new ResourceConfig();
 
-        Binder binder = new AbstractBinder()
-        {
+        Binder binder = new AbstractBinder() {
             @Override
-            protected void configure()
-            {
-                try
-                {
-                    // Bind provided services
-                    bind( metricRegistry );
+            protected void configure() {
+                try {
+                    HttpClient httpClient = new HttpClient();
+                    httpClient.start();
+                    WebSocketClient webSocketClient = new WebSocketClient(httpClient);
+                    webSocketClient.setIdleTimeout(Duration.ofMillis(Long.MAX_VALUE));
+                    webSocketClient.start();
+                    RestClient restClient = new RestClient(webSocketClient);
+                    bind(httpClient);
+                    bind(webSocketClient);
+                    bind(restClient);
 
-                    serverDocument = services( resourceConfig, this, ctx );
-                    bind( serverDocument );
-                }
-                catch ( Exception e )
-                {
-                    throw new RuntimeIOException( e );
+                    // Bind provided services
+                    bind(metricRegistry);
+                    bind(configuration);
+                    bind(ctx);
+                    bind(Server.this);
+                } catch (Exception e) {
+                    throw new RuntimeIOException(e);
                 }
             }
         };
-        resourceConfig.register( binder );
-        resourceConfig.packages( "com.exoreaction.reactiveservices" );
+        resourceConfig.register(binder);
+        resourceConfig.packages("com.exoreaction.reactiveservices");
 
-        ServletHolder serHol = new ServletHolder( new ServletContainer( resourceConfig ) );
-        ctx.addServlet( serHol, "/*" );
-        serHol.setInitOrder( 1 );
+        ServletHolder serHol = new ServletHolder(new ServletContainer(resourceConfig));
+        ctx.addServlet(serHol, "/*");
+        serHol.setInitOrder(1);
 
-        JettyWebSocketServletContainerInitializer.configure( ctx, null );
+        JettyWebSocketServletContainerInitializer.configure(ctx, null);
 
-        InstrumentedHandler instrumentedHandler = new InstrumentedHandler( metricRegistry, "jetty" );
-        instrumentedHandler.setHandler( ctx );
+        InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry, "jetty");
+        instrumentedHandler.setHandler(ctx);
 
-        server.setHandler( instrumentedHandler );
+        server.setHandler(instrumentedHandler);
 
         Slf4jRequestLogWriter requestLog = new Slf4jRequestLogWriter();
-        requestLog.setLoggerName( "jetty" );
+        requestLog.setLoggerName("jetty");
         server.setRequestLog(
-            new CustomRequestLog( requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\"" ) );
+                new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
 
         // Start Jetty
         server.start();
+
+        System.out.println(getServerDocument().toString());
     }
 
-    private ResourceDocument services( ResourceConfig resourceConfig, AbstractBinder binder,
-                                       ServletContextHandler ctx ) throws Exception
-    {
-        HttpClient httpClient = new HttpClient();
-        httpClient.start();
-        WebSocketClient webSocketClient = new WebSocketClient( httpClient );
-        webSocketClient.start();
-
-        registryClient = new RegistryClient( webSocketClient, URI.create( "http://localhost:8080/api/registry" ) );
-
-        return new ResourceDocument.Builder()
-            .links( new Links.Builder().link( JsonApiRels.self, "http://localhost:8080/" ).build() )
-            .data( new ResourceObjects.Builder()
-                .resource( new ResourceObject.Builder( "server" )
-                    .attributes( new Attributes.Builder()
-                        .attribute( "jetty.version", Jetty.VERSION )
-                        .build() )
-                    .build() )
-                .resource( registry( resourceConfig, binder, ctx ) )
-                .resource( log4jAppender( resourceConfig, binder, ctx ) )
-                .resource( sysoutLogging( resourceConfig, binder, registryClient, webSocketClient ) )
-                .resource( metrics( resourceConfig, binder, registryClient, webSocketClient ) )
-                .build() )
-            .build();
-    }
-
-    private ResourceObject metrics( ResourceConfig resourceConfig, AbstractBinder binder, RegistryClient registryClient,
-                                    WebSocketClient webSocketClient )
-    {
-        resourceConfig.
-        return null;
-    }
-
-    private ResourceObject registry( ResourceConfig resourceConfig, AbstractBinder binder,
-                                     ServletContextHandler ctx )
-    {
-        var service = new RegistryService();
-        binder.bind( service );
-        ctx.addServlet( new ServletHolder( new RegistryWebSocketServlet( service ) ), "/ws/registryevents" );
-
-        return new ResourceObject.Builder( "service", "registry" )
-            .links( new Links.Builder()
-                .link( "registry", URI.create( "http://localhost:8080/api/registry" ) )
-                .link( "registryevents", URI.create( "ws://localhost:8080/ws/registryevents" ) )
-                .build() )
-            .build();
-    }
-
-    private ResourceObject log4jAppender( ResourceConfig resourceConfig, AbstractBinder binder,
-                                          ServletContextHandler ctx )
-    {
-        ctx.addServlet( new ServletHolder( new LogWebSocketServlet() ), "/ws/logevents" );
-
-        return new ResourceObject.Builder( "service", "log4jappender" )
-            .links(
-                new Links.Builder().link( "logevents", URI.create( "ws://localhost:8080/ws/logevents" ) ).build() )
-            .build();
-    }
-
-    private ResourceObject sysoutLogging( ResourceConfig resourceConfig, AbstractBinder binder,
-                                          RegistryClient registryClient, WebSocketClient webSocketClient )
-    {
-        binder.bind( SysoutLoggingService.class );
-
-        return new ResourceObject.Builder( "service", "sysoutlogging" )
-            .links( new Links.Builder().link( "logstore", URI.create( "http://localhost:8080/api/sysoutlogging" ) )
-                                       .build() )
-            .build();
-    }
-
-    public void register() throws Exception
-    {
-        registryClient.addServer( serverDocument );
-    }
-
-    public void close() throws IOException
-    {
-        try
-        {
+    public void close() throws IOException {
+        try {
             server.stop();
-        }
-        catch ( Exception e )
-        {
-            throw new IOException( e );
+        } catch (Exception e) {
+            throw new IOException(e);
         }
     }
-
 }

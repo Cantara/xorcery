@@ -32,6 +32,10 @@ import java.util.Map;
 public class AbstractJsonElement
     implements JsonElement
 {
+    private static final Map<String,Object> config = new HashMap<>();
+    {
+        config.put( JsonGenerator.PRETTY_PRINTING, Boolean.TRUE );
+    }
     private final JsonStructure json;
 
     public AbstractJsonElement( JsonStructure json )
@@ -49,8 +53,6 @@ public class AbstractJsonElement
     public String toString()
     {
         StringWriter out = new StringWriter();
-        Map<String,Object> config = new HashMap<>();
-        config.put( JsonGenerator.PRETTY_PRINTING, Boolean.TRUE );
         Json.createWriterFactory( config ).createWriter( out ).write( json );
         return out.toString();
     }

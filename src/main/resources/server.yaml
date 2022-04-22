@@ -1,2 +1,11 @@
 jetty:
   port: 8080
+
+registryclient:
+  uri: http://localhost:8080/api/registry
+
+soutmetrics:
+  enabled: false
+
+mapdbdomainevents:
+  enabled: true

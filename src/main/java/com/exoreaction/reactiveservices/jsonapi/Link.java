@@ -6,6 +6,7 @@ import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 import org.glassfish.jersey.uri.UriTemplate;
 
+import java.net.URI;
 import java.util.Optional;
 
 /**
@@ -46,6 +47,21 @@ public class Link
         {
             return ((JsonObject) value).getString( "href" );
         }
+    }
+
+    public URI getHrefAsUri()
+    {
+        return URI.create(getHref());
+    }
+
+    public URI getHrefAsUriBuilder()
+    {
+        return URI.create(getHref());
+    }
+
+    public UriTemplate getHrefAsUriTemplate()
+    {
+        return new UriTemplate(getHref());
     }
 
     public boolean isTemplate()

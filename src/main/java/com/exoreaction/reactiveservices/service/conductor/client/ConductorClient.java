@@ -54,7 +54,7 @@ public class ConductorClient
 
             ResourceDocument snapshot =
                 new ResourceDocument( Json.createReader( new StringReader( patternsJson ) ).read() );
-            listener.snapshot( snapshot );
+//            listener.snapshot( snapshot );
         }
         catch ( InterruptedException | TimeoutException | ExecutionException | IOException e )
         {
@@ -82,7 +82,7 @@ public class ConductorClient
         public void onWebSocketText( String body )
         {
             ResourceDocument added = new ResourceDocument( Json.createReader( new StringReader( body ) ).read() );
-            listener.added( added );
+//            listener.added( added );
         }
     }
 }

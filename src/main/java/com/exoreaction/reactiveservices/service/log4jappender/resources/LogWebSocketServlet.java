@@ -6,6 +6,8 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
+import java.time.Duration;
+
 /**
  * @author rickardoberg
  * @since 15/04/2022
@@ -22,6 +24,7 @@ public class LogWebSocketServlet
     protected void configure( JettyWebSocketServletFactory factory )
     {
         factory.setMaxTextMessageSize( 1048576 );
+        factory.setIdleTimeout(Duration.ofMillis(Long.MAX_VALUE));
 
         LoggerContext lc = (LoggerContext) LogManager.getContext( false );
         DisruptorAppender appender = lc.getConfiguration().getAppender( "Disruptor" );

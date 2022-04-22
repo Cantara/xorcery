@@ -1,10 +1,24 @@
 package com.exoreaction.reactiveservices.service.registry.resources;
 
+import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
+import com.exoreaction.reactiveservices.server.Server;
+import com.exoreaction.reactiveservices.service.registry.resources.websocket.RegistryWebSocketServlet;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.core.FeatureContext;
+import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.api.Session;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -16,11 +30,52 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 
 public class RegistryService
+    implements ContainerLifecycleListener
 {
+    @Provider
+    public static class Feature
+            extends AbstractFeature
+    {
+        @Override
+        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
+
+            server.addService(new ResourceObject.Builder("service", "registry")
+                    .links(new Links.Builder()
+                            .link("registry", URI.create("http://localhost:8080/api/registry"))
+                            .link("registryevents", URI.create("ws://localhost:8080/ws/registryevents"))
+                            .build())
+                    .build());
+
+            RegistryService service = new RegistryService();
+            context.register(service);
+            injectionManager.getInstance(ServletContextHandler.class).addServlet( new ServletHolder( new RegistryWebSocketServlet( service ) ), "/ws/registryevents" );
+            return true;
+        }
+    }
+
     private final List<ResourceDocument> servers = new CopyOnWriteArrayList<>();
     private List<Session> sessions = new CopyOnWriteArrayList<>();
 
-    public void addServer( ResourceDocument server )
+    public RegistryService()
+    {
+    }
+
+    @Override
+    public void onStartup(Container container)
+    {
+    }
+
+    @Override
+    public void onReload(Container container) {
+
+    }
+
+    @Override
+    public void onShutdown(Container container) {
+
+    }
+
+    public void addServer(ResourceDocument server )
     {
         servers.add( server );
 

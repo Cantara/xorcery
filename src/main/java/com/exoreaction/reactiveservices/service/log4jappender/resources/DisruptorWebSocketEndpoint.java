@@ -26,6 +26,11 @@ public class DisruptorWebSocketEndpoint<T>
         this.consumers = consumers;
     }
 
+    public Semaphore getSemaphore()
+    {
+        return semaphore;
+    }
+
     // WebSocket
     @Override
     public void onWebSocketBinary( byte[] payload, int offset, int len )
