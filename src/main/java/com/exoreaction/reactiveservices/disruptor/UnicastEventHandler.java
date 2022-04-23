@@ -11,22 +11,22 @@ import java.util.List;
  */
 
 public class UnicastEventHandler<T>
-    implements DefaultEventHandler<EventHolder<T>>
+    implements DefaultEventHandler<T>
 {
-    private final List<EventHandler<EventHolder<T>>> consumers;
+    private final List<EventHandler<T>> consumers;
 
-    public UnicastEventHandler(List<EventHandler<EventHolder<T>>> consumers )
+    public UnicastEventHandler(List<EventHandler<T>> consumers )
     {
         this.consumers = consumers;
     }
 
     @Override
-    public void onEvent( EventHolder<T> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent( T event, long sequence, boolean endOfBatch ) throws Exception
     {
         while (true)
         {
             try {
-                EventHandler<EventHolder<T>> consumer = consumers.get(0);
+                EventHandler<T> consumer = consumers.get(0);
                 consumer.onEvent( event, sequence, endOfBatch );
                 return;
             } catch (IndexOutOfBoundsException e)
@@ -48,7 +48,7 @@ public class UnicastEventHandler<T>
     @Override
     public void onStart()
     {
-        for ( EventHandler<EventHolder<T>> consumer : consumers )
+        for ( EventHandler<T> consumer : consumers )
         {
             consumer.onStart();
         }
@@ -57,7 +57,7 @@ public class UnicastEventHandler<T>
     @Override
     public void onShutdown()
     {
-        for ( EventHandler<EventHolder<T>> consumer : consumers )
+        for ( EventHandler<T> consumer : consumers )
         {
             consumer.onShutdown();
         }

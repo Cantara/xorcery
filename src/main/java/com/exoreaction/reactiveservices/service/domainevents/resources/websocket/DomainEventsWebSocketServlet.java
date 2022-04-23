@@ -1,8 +1,10 @@
 package com.exoreaction.reactiveservices.service.domainevents.resources.websocket;
 
+import com.exoreaction.reactiveservices.disruptor.EventHandlerResult;
 import com.exoreaction.reactiveservices.disruptor.EventHolder;
+import com.exoreaction.reactiveservices.service.domainevents.DomainEventHolder;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvent;
-import com.exoreaction.reactiveservices.service.log4jappender.resources.websocket.DisruptorWebSocketEndpoint;
+import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
 import com.lmax.disruptor.EventHandler;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
@@ -18,11 +20,14 @@ import java.util.List;
 public class DomainEventsWebSocketServlet
     extends JettyWebSocketServlet
 {
-    private List<EventHandler<EventHolder<List<DomainEvent>>>> consumers;
+    private List<EventHandler<DomainEventHolder>> consumers;
+    private EventHandlerResult<List<DomainEvent>, Metadata> eventHandlerResult;
 
-    public DomainEventsWebSocketServlet(List<EventHandler<EventHolder<List<DomainEvent>>>> consumers)
+    public DomainEventsWebSocketServlet(List<EventHandler<DomainEventHolder>> consumers,
+                                        EventHandlerResult<List<DomainEvent>, Metadata> eventHandlerResult)
     {
         this.consumers = consumers;
+        this.eventHandlerResult = eventHandlerResult;
     }
 
     @Override
@@ -33,7 +38,7 @@ public class DomainEventsWebSocketServlet
 
         factory.addMapping( "/ws/domainevents", (( jettyServerUpgradeRequest, jettyServerUpgradeResponse ) ->
         {
-            return new DisruptorWebSocketEndpoint<>( consumers );
+            return new DomainEventsWebSocketEndpoint( consumers, eventHandlerResult );
         }) );
     }
 }

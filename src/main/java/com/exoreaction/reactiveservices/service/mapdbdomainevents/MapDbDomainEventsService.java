@@ -100,7 +100,7 @@ public class MapDbDomainEventsService
                     try {
                         disruptor.handleEventsWith(new MetadataDeserializerEventHandler(),
                                         new DomainEventDeserializeEventHandler())
-                                .then(new MapDbDomainEventEventHandler(mapDatabaseService), new WebSocketFlowControlEventHandler(1, session, Executors.newSingleThreadExecutor()));
+                                .then(new MapDbDomainEventEventHandler(mapDatabaseService, session), new WebSocketFlowControlEventHandler(1, session, Executors.newSingleThreadExecutor()));
                         disruptor.start();
 
                         System.out.println("Receiving metric messages from " + domainEventSource.getHref());

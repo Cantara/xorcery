@@ -8,6 +8,7 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Link;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
+import com.exoreaction.reactiveservices.service.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
 import com.exoreaction.reactiveservices.service.soutlogger.disruptor.Log4jDeserializeEventHandler;
@@ -49,11 +50,12 @@ public class SysoutLoggingService
             extends AbstractFeature {
 
         @Override
-        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server)
-        {
-            server.addService(new ResourceObject.Builder("service", "sysoutlogging").build());
+        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
+            if (injectionManager.getInstance(Configuration.class).getConfiguration("soutlogging").getBoolean("enabled", true)) {
+                server.addService(new ResourceObject.Builder("service", "sysoutlogging").build());
 
-            context.register(SysoutLoggingService.class);
+                context.register(SysoutLoggingService.class);
+            }
 
             return super.configure(context, injectionManager, server);
         }
@@ -77,6 +79,7 @@ public class SysoutLoggingService
     public void onReload(Container container) {
 
     }
+
     @Override
     public void onShutdown(Container container) {
         System.out.println("Shutdown");

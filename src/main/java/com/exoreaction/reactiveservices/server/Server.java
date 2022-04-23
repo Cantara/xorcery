@@ -65,7 +65,6 @@ public class Server
         webServer(metricRegistry);
     }
 
-
     public void addService(ResourceObject serviceResource) {
         services.add(serviceResource);
     }

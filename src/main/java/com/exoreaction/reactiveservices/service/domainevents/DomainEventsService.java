@@ -1,13 +1,12 @@
 package com.exoreaction.reactiveservices.service.domainevents;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
-import com.exoreaction.reactiveservices.disruptor.MetadataSerializerEventHandler;
-import com.exoreaction.reactiveservices.disruptor.UnicastEventHandler;
+import com.exoreaction.reactiveservices.disruptor.*;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.disruptor.DomainEventSerializeEventHandler;
 import com.exoreaction.reactiveservices.service.domainevents.resources.websocket.DomainEventsWebSocketServlet;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvent;
@@ -34,43 +33,43 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Singleton
 public class DomainEventsService
-    implements ContainerLifecycleListener
-{
+        implements DomainEventPublisher, ContainerLifecycleListener {
 
     @Provider
     public static class Feature
             extends AbstractFeature {
 
-        List<EventHandler<EventHolder<List<DomainEvent>>>> consumers = new CopyOnWriteArrayList<>();
+        List<EventHandler<DomainEventHolder>> consumers = new CopyOnWriteArrayList<>();
 
         @Override
-        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server)
-        {
+        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
             server.addService(new ResourceObject.Builder("service", "domainevents")
                     .links(
                             new Links.Builder().link("domainevents", URI.create("ws://localhost:8080/ws/domainevents")).build())
                     .build());
-            injectionManager.getInstance(ServletContextHandler.class).addServlet(new ServletHolder(new DomainEventsWebSocketServlet(consumers)), "/ws/domainevents");
 
-            context.register(new DomainEventsService(consumers));
+            EventHandlerResult<List<DomainEvent>, Metadata> eventHandlerResult = new EventHandlerResult<>();
+            injectionManager.getInstance(ServletContextHandler.class).addServlet(new ServletHolder(new DomainEventsWebSocketServlet(consumers, eventHandlerResult)), "/ws/domainevents");
+
+            context.register(new DomainEventsService(consumers, eventHandlerResult));
 
             return super.configure(context, injectionManager, server);
         }
     }
-    private final Disruptor<EventHolder<List<DomainEvent>>> disruptor;
 
-    public DomainEventsService(List<EventHandler<EventHolder<List<DomainEvent>>>> consumers)
-    {
+    private final Disruptor<DomainEventHolder> disruptor;
+
+    public DomainEventsService(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<List<DomainEvent>, Metadata> eventHandlerResult) {
         disruptor =
-                new Disruptor<>( EventHolder::new, 4096, new NamedThreadFactory( "DomainEventsDisruptor-" ),
+                new Disruptor<>(DomainEventHolder::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
                         ProducerType.MULTI,
-                        new BlockingWaitStrategy() );
+                        new BlockingWaitStrategy());
 
         disruptor.handleEventsWith(
                         new MetadataSerializerEventHandler(),
-                        new DomainEventSerializeEventHandler( new ObjectMapper()) )
-                .then( new UnicastEventHandler<>( consumers ) );
-
+                        new DomainEventSerializeEventHandler(new ObjectMapper()))
+                .then(new UnicastEventHandler<>(consumers))
+                .then(eventHandlerResult);
     }
 
     @Override
@@ -88,16 +87,16 @@ public class DomainEventsService
         disruptor.shutdown();
     }
 
-    public CompletionStage<Metadata> publish(Metadata metadata, List<DomainEvent> events)
-    {
-        disruptor.getRingBuffer().publishEvent((event, seq, md, e)->
+    public CompletionStage<Metadata> publish(Metadata metadata, List<DomainEvent> events) {
+        CompletableFuture<Metadata> future = new CompletableFuture<>();
+        disruptor.getRingBuffer().publishEvent((event, seq, md, e, f) ->
         {
             event.metadata.clear();
-            event.metadata.putAllValues(metadata.getMetadata());
-            event.event = events;
-        }, metadata, events);
+            event.metadata.putAllValues(md.getMetadata());
+            event.event = e;
+            ((EventHolderWithResult<List<DomainEvent>, Metadata>) event).result = f;
+        }, metadata, events, future);
 
-        // TODO Wait for write confirmation
-        return CompletableFuture.completedStage(metadata);
+        return future;
     }
 }
