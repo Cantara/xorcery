@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.log4jappender.resources;
+package com.exoreaction.reactiveservices.service.log4jappender.resources.websocket;
 
 import com.exoreaction.reactiveservices.service.log4jappender.log4j.DisruptorAppender;
 import org.apache.logging.log4j.LogManager;

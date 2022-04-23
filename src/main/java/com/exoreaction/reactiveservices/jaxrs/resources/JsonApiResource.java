@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.jaxrs;
+package com.exoreaction.reactiveservices.jaxrs.resources;
 
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import jakarta.inject.Inject;

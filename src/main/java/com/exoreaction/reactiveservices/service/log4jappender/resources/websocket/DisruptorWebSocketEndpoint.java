@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.log4jappender.resources;
+package com.exoreaction.reactiveservices.service.log4jappender.resources.websocket;
 
 import com.exoreaction.reactiveservices.disruptor.EventHolder;
 import com.lmax.disruptor.EventHandler;

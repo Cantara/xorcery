@@ -1,8 +1,9 @@
-package com.exoreaction.reactiveservices.service.conductor.resources;
+package com.exoreaction.reactiveservices.service.conductor.resources.api;
 
-import com.exoreaction.reactiveservices.jaxrs.JsonApiResource;
+import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
+import com.exoreaction.reactiveservices.service.conductor.resources.ConductorService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

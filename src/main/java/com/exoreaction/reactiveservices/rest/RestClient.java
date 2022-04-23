@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.rest;
 
-import com.exoreaction.reactiveservices.jetty.ResponseListener;
+import com.exoreaction.reactiveservices.jetty.client.ResponseListener;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;

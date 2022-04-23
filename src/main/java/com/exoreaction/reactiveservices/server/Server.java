@@ -7,15 +7,10 @@ import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
-import com.exoreaction.reactiveservices.jetty.JettyConnectorThreadPool;
+import com.exoreaction.reactiveservices.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.reactiveservices.rest.RestClient;
 import com.exoreaction.reactiveservices.service.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.configuration.StandardConfiguration;
-import com.exoreaction.reactiveservices.service.log4jappender.resources.LogWebSocketServlet;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
-import com.exoreaction.reactiveservices.service.registry.resources.RegistryService;
-import com.exoreaction.reactiveservices.service.registry.resources.websocket.RegistryWebSocketServlet;
-import com.exoreaction.reactiveservices.service.soutlogger.SysoutLoggingService;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.RuntimeIOException;
@@ -41,9 +36,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.net.URI;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -162,6 +155,7 @@ public class Server
             @Override
             protected void configure() {
                 try {
+                    // Bind provided services
                     HttpClient httpClient = new HttpClient();
                     httpClient.start();
                     WebSocketClient webSocketClient = new WebSocketClient(httpClient);
@@ -172,7 +166,6 @@ public class Server
                     bind(webSocketClient);
                     bind(restClient);
 
-                    // Bind provided services
                     bind(metricRegistry);
                     bind(configuration);
                     bind(ctx);

@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.registry.resources.api;
 
-import com.exoreaction.reactiveservices.jaxrs.JsonApiResource;
+import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.service.registry.resources.RegistryService;

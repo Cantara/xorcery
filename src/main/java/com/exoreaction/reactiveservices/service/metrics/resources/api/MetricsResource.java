@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.metrics.resources.api;
 
 import com.codahale.metrics.*;
-import com.exoreaction.reactiveservices.jaxrs.JsonApiResource;
+import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;

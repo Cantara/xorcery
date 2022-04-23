@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.mapdbdomainevents;
+package com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor;
 
 import com.exoreaction.reactiveservices.disruptor.DefaultEventHandler;
 import com.exoreaction.reactiveservices.disruptor.EventHolder;

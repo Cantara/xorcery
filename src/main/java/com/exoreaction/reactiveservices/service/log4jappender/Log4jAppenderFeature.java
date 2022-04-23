@@ -4,7 +4,7 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.log4jappender.resources.LogWebSocketServlet;
+import com.exoreaction.reactiveservices.service.log4jappender.resources.websocket.LogWebSocketServlet;
 import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 import org.eclipse.jetty.servlet.ServletContextHandler;

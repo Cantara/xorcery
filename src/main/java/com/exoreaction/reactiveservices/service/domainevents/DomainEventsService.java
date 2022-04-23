@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.service.domainevents;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
-import com.exoreaction.reactiveservices.disruptor.BroadcastEventHandler;
 import com.exoreaction.reactiveservices.disruptor.EventHolder;
 import com.exoreaction.reactiveservices.disruptor.MetadataSerializerEventHandler;
 import com.exoreaction.reactiveservices.disruptor.UnicastEventHandler;
@@ -9,9 +8,10 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.domainevents.resources.DomainEventsWebSocketServlet;
-import com.exoreaction.reactiveservices.service.domainevents.spi.DomainEvent;
-import com.exoreaction.reactiveservices.service.domainevents.spi.Metadata;
+import com.exoreaction.reactiveservices.service.domainevents.disruptor.DomainEventSerializeEventHandler;
+import com.exoreaction.reactiveservices.service.domainevents.resources.websocket.DomainEventsWebSocketServlet;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvent;
+import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventHandler;

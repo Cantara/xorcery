@@ -1,7 +1,8 @@
-package com.exoreaction.reactiveservices.service.conductor.resources;
+package com.exoreaction.reactiveservices.service.conductor.resources.api;
 
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
+import com.exoreaction.reactiveservices.service.conductor.resources.ConductorService;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.ws.rs.Consumes;

@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.jetty;
+package com.exoreaction.reactiveservices.jetty.server;
 
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;

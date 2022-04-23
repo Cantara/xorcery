@@ -1,12 +1,9 @@
-package com.exoreaction.reactiveservices.service.domainevents.resources;
+package com.exoreaction.reactiveservices.service.domainevents.resources.websocket;
 
 import com.exoreaction.reactiveservices.disruptor.EventHolder;
-import com.exoreaction.reactiveservices.service.domainevents.spi.DomainEvent;
-import com.exoreaction.reactiveservices.service.log4jappender.log4j.DisruptorAppender;
-import com.exoreaction.reactiveservices.service.log4jappender.resources.DisruptorWebSocketEndpoint;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvent;
+import com.exoreaction.reactiveservices.service.log4jappender.resources.websocket.DisruptorWebSocketEndpoint;
 import com.lmax.disruptor.EventHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 

@@ -10,6 +10,8 @@ import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
+import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.DomainEventDeserializeEventHandler;
+import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.MapDbDomainEventEventHandler;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -33,8 +35,6 @@ import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author rickardoberg

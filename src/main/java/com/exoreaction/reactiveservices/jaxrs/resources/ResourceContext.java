@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.jaxrs;
+package com.exoreaction.reactiveservices.jaxrs.resources;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Cookie;

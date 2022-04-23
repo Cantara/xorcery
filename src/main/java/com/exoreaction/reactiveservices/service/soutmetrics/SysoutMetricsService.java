@@ -11,6 +11,8 @@ import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
+import com.exoreaction.reactiveservices.service.soutmetrics.disruptor.MetricDeserializeEventHandler;
+import com.exoreaction.reactiveservices.service.soutmetrics.disruptor.SysoutMetricEventHandler;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;

@@ -1,5 +1,6 @@
-package com.exoreaction.reactiveservices.service.conductor.resources;
+package com.exoreaction.reactiveservices.service.conductor.resources.websocket;
 
+import com.exoreaction.reactiveservices.service.conductor.resources.ConductorService;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
