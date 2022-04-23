@@ -5,6 +5,7 @@ import com.exoreaction.reactiveservices.service.domainevents.DomainEventsService
 import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
 import com.exoreaction.reactiveservices.service.greeter.domainevents.GreetedEvent;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
+import com.github.jknack.handlebars.Context;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -28,7 +29,7 @@ public class GreeterResource
     }
 
     @GET
-    public String get(@QueryParam("greeting") String greetingString)
+    public Context get(@QueryParam("greeting") String greetingString)
     {
         if (greetingString != null)
         {
@@ -41,6 +42,6 @@ public class GreeterResource
             }
         }
 
-        return Optional.ofNullable(mapDatabaseService.getDatabase().get("greeting")).orElse("");
+        return Context.newContext(Optional.ofNullable(mapDatabaseService.getDatabase().get("greeting")).orElse(""));
     }
 }

@@ -25,14 +25,14 @@ public class MetricsResource
 
     @GET
     @Produces(PRODUCES_JSON_API)
-    public String registry() {
+    public ResourceDocument metrics() {
         return new ResourceDocument.Builder()
                 .data(metricRegistry.getMetrics().entrySet().stream().map(entry ->
                         new ResourceObject.Builder("metric", entry.getKey())
                                 .attributes(new Attributes.Builder()
                                         .attribute("type", toTypeName(entry.getValue().getClass()))
                                         .build()).build()).collect(toResourceObjects()))
-                .build().toString();
+                .build();
     }
 
     private String toTypeName(Class<? extends Metric> metricClass) {

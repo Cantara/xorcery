@@ -28,13 +28,13 @@ public class RegistryResource
 
     @GET
     @Produces( PRODUCES_JSON_API )
-    public String registry()
+    public ResourceDocument registry()
     {
         return new ResourceDocument.Builder()
             .links( new Links.Builder()
                 .link( "servers", getUriBuilderForPathFrom( RegistryServersResource.class ) )
                 .link( "events", getBaseUriBuilder().scheme( "ws" ).path( "ws/registryevents" ) )
                 .build())
-            .build().toString();
+            .build();
     }
 }

@@ -33,14 +33,13 @@ public class RegistryServersResource
 
     @GET
     @Produces( ResourceDocument.APPLICATION_JSON_API )
-    public String servers()
+    public ResourceDocument servers()
     {
-        String servers = new ResourceDocument.Builder()
+        return new ResourceDocument.Builder()
             .data( service.getServers().stream()
                           .flatMap( rd -> rd.getResources().orElseThrow().getResources().stream() )
                           .collect( ResourceObjects.toResourceObjects() ) )
-            .build().toString();
-        return servers;
+            .build();
     }
 
     @POST

@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.server.resources.api;
 
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
+import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.server.Server;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -26,8 +27,8 @@ public class ServerResource
 
     @GET
     @Produces(PRODUCES_JSON_API)
-    public String get()
+    public ResourceDocument get()
     {
-        return server.getServerDocument().toString();
+        return server.getServerDocument();
     }
 }
