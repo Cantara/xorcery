@@ -1,0 +1,17 @@
+{
+  "data": [
+    {
+      "id": "log4j_sysout",
+      "type": "template",
+      "attributes": {
+        "name": "Log4j to Sysout"
+      },
+      "relationships": {
+        "services": [
+          {"data":{"type": "service", "id": "log4jappender"}},
+          {"data":{"type": "service", "id": "sysout"}}
+        ]
+      }
+    }
+  ]
+}

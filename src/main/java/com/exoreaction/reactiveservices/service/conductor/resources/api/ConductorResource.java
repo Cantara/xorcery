@@ -28,13 +28,13 @@ public class ConductorResource
 
     @GET
     @Produces( PRODUCES_JSON_API )
-    public String get()
+    public ResourceDocument get()
     {
         return new ResourceDocument.Builder()
             .links( new Links.Builder()
-                .link( "patterns", getUriBuilderForPathFrom( ConductorPatternsResource.class ) )
-                .link( "events", getBaseUriBuilder().scheme( "ws" ).path( "ws/conductorevents" ) )
+                .link( "templates", getUriBuilderForPathFrom( TemplatesResource.class ) )
+                .link( "conductorevents", getBaseUriBuilder().scheme( "ws" ).path( "ws/conductorevents" ) )
                 .build())
-            .build().toString();
+            .build();
     }
 }

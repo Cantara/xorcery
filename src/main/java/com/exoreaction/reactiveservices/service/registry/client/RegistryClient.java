@@ -78,6 +78,7 @@ public class RegistryClient
                 {
                     switch (result.getResponse().getStatus()) {
                         case 200:
+                        case 204:
                             LogManager.getLogger(RegistryClient.class).info("Registered server");
                             break;
                         default:

@@ -3,6 +3,7 @@ package com.exoreaction.reactiveservices.service.conductor.resources.api;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
 import com.exoreaction.reactiveservices.service.conductor.resources.ConductorService;
+import com.exoreaction.reactiveservices.service.conductor.resources.model.Template;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
 import jakarta.ws.rs.Consumes;
@@ -20,33 +21,33 @@ import java.io.StringReader;
  * @since 12/04/2022
  */
 
-@Path( "api/conductor/patterns" )
-public class ConductorPatternsResource
+@Path( "api/conductor/templates" )
+public class TemplatesResource
 {
     private final ConductorService service;
 
     @Inject
-    public ConductorPatternsResource( ConductorService service )
+    public TemplatesResource(ConductorService service )
     {
         this.service = service;
     }
 
     @GET
     @Produces( ResourceDocument.APPLICATION_JSON_API )
-    public String servers()
+    public ResourceDocument get()
     {
         return new ResourceDocument.Builder()
-            .data( service.getPatterns().stream()
-                          .flatMap( rd -> rd.getResources().orElseThrow().getResources().stream() )
+            .data( service.getTemplates().stream()
+                          .map(Template::getJson)
                           .collect( ResourceObjects.toResourceObjects() ) )
-            .build().toString();
+            .build();
     }
 
     @POST
     @Consumes( ResourceDocument.APPLICATION_JSON_API )
     public void add( String resourceObject )
     {
-        service.addPattern( new ResourceDocument( Json.createReader( new StringReader( resourceObject ) ).read() ) );
+//        service.addTemplates( new ResourceDocument( Json.createReader( new StringReader( resourceObject ) ).read() ) );
     }
 
 /*
@@ -66,6 +67,6 @@ public class ConductorPatternsResource
     @Path( "{id}" )
     public void remove( @PathParam( "id" ) String id )
     {
-        service.removePattern( id );
+        service.removeTemplate( id );
     }
 }

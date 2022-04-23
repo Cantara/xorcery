@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.service.greeter.resources.api;
 
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.service.domainevents.DomainEventsService;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
 import com.exoreaction.reactiveservices.service.greeter.domainevents.GreetedEvent;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
@@ -19,12 +20,12 @@ import java.util.concurrent.ExecutionException;
 public class GreeterResource
     extends JsonApiResource
 {
-    private final DomainEventsService domainEventsService;
+    private final DomainEventPublisher eventPublisher;
     private MapDatabaseService mapDatabaseService;
 
     @Inject
-    public GreeterResource(DomainEventsService domainEventsService, MapDatabaseService mapDatabaseService) {
-        this.domainEventsService = domainEventsService;
+    public GreeterResource(DomainEventsService eventPublisher, MapDatabaseService mapDatabaseService) {
+        this.eventPublisher = eventPublisher;
         this.mapDatabaseService = mapDatabaseService;
     }
 
@@ -34,7 +35,7 @@ public class GreeterResource
         if (greetingString != null)
         {
             try {
-                domainEventsService.publish(new Metadata(), List.of(new GreetedEvent() {{
+                eventPublisher.publish(new Metadata(), List.of(new GreetedEvent() {{
                     greeting = greetingString;
                 }})).toCompletableFuture().get();
             } catch (InterruptedException | ExecutionException e) {

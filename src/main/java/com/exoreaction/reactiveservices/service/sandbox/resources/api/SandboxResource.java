@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
-@Path("/")
+//@Path("/")
 public class SandboxResource
 {
     private HttpClient httpClient;
