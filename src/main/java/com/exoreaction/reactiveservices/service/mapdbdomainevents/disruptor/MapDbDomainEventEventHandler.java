@@ -19,7 +19,7 @@ import java.util.Map;
  */
 
 public class MapDbDomainEventEventHandler
-    implements DefaultEventHandler<EventHolder<JsonArray>>
+    implements DefaultEventHandler<EventHolder<JsonObject>>
 {
     private final MapDatabaseService mapDatabaseService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -33,9 +33,9 @@ public class MapDbDomainEventEventHandler
     }
 
     @Override
-    public void onEvent( EventHolder<JsonArray> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent( EventHolder<JsonObject> event, long sequence, boolean endOfBatch ) throws Exception
     {
-        event.event.stream().map(JsonObject.class::cast).forEach( jsonObject ->
+        event.event.getJsonArray("events").stream().map(JsonObject.class::cast).forEach( jsonObject ->
         {
             for (Map.Entry<String, JsonValue> entry : jsonObject.entrySet()) {
                 mapDatabaseService.put(entry.getKey(), entry.getValue().toString());

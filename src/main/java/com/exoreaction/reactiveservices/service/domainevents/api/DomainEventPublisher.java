@@ -5,5 +5,5 @@ import java.util.concurrent.CompletionStage;
 
 public interface DomainEventPublisher
 {
-    CompletionStage<Metadata> publish(Metadata metadata, List<Record> events);
+    CompletionStage<Metadata> publish(DomainEvents events);
 }

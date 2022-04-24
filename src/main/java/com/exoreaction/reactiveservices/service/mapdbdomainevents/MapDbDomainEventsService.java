@@ -20,6 +20,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 import org.eclipse.jetty.websocket.api.Session;
@@ -89,7 +90,7 @@ public class MapDbDomainEventsService
     }
 
     public void connect(Link domainEventSource) {
-        Disruptor<EventHolder<JsonArray>> disruptor =
+        Disruptor<EventHolder<JsonObject>> disruptor =
                 new Disruptor<>(EventHolder::new, 4096, new NamedThreadFactory("MapDbDomainEventsDisruptorIn-"),
                         ProducerType.SINGLE,
                         new BlockingWaitStrategy());
@@ -128,12 +129,12 @@ public class MapDbDomainEventsService
 
     private static class DomainEventsClientEndpoint
             implements WebSocketListener {
-        private final Disruptor<EventHolder<JsonArray>> disruptor;
+        private final Disruptor<EventHolder<JsonObject>> disruptor;
 
         ByteBuffer headers;
 
         private DomainEventsClientEndpoint(
-                Disruptor<EventHolder<JsonArray>> disruptor) {
+                Disruptor<EventHolder<JsonObject>> disruptor) {
             this.disruptor = disruptor;
         }
 

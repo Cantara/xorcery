@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.service.domainevents.resources.websocke
 
 import com.exoreaction.reactiveservices.disruptor.EventHandlerResult;
 import com.exoreaction.reactiveservices.service.domainevents.DomainEventHolder;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
 import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
 import com.lmax.disruptor.EventHandler;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
@@ -19,10 +20,10 @@ public class DomainEventsWebSocketServlet
     extends JettyWebSocketServlet
 {
     private List<EventHandler<DomainEventHolder>> consumers;
-    private EventHandlerResult<List<Record>, Metadata> eventHandlerResult;
+    private EventHandlerResult<DomainEvents, Metadata> eventHandlerResult;
 
     public DomainEventsWebSocketServlet(List<EventHandler<DomainEventHolder>> consumers,
-                                        EventHandlerResult<List<Record>, Metadata> eventHandlerResult)
+                                        EventHandlerResult<DomainEvents, Metadata> eventHandlerResult)
     {
         this.consumers = consumers;
         this.eventHandlerResult = eventHandlerResult;

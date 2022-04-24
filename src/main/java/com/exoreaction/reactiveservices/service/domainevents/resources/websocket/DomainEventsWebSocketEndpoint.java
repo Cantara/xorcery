@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.service.domainevents.resources.websocke
 
 import com.exoreaction.reactiveservices.disruptor.EventHandlerResult;
 import com.exoreaction.reactiveservices.service.domainevents.DomainEventHolder;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
 import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventHandler;
@@ -23,12 +24,12 @@ public class DomainEventsWebSocketEndpoint
     implements WebSocketListener, EventHandler<DomainEventHolder>
 {
     private final List<EventHandler<DomainEventHolder>> consumers;
-    private EventHandlerResult<List<Record>, Metadata> eventHandlerResult;
+    private EventHandlerResult<DomainEvents, Metadata> eventHandlerResult;
     private Session session;
     private Semaphore semaphore = new Semaphore(0);
     private ObjectMapper mapper = new ObjectMapper();
 
-    public DomainEventsWebSocketEndpoint(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<List<Record>, Metadata> eventHandlerResult)
+    public DomainEventsWebSocketEndpoint(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<DomainEvents, Metadata> eventHandlerResult)
     {
         this.consumers = consumers;
         this.eventHandlerResult = eventHandlerResult;

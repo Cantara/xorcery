@@ -14,16 +14,16 @@ import java.io.StringReader;
  */
 
 public class DomainEventDeserializeEventHandler
-    implements DefaultEventHandler<EventHolder<JsonArray>>
+    implements DefaultEventHandler<EventHolder<JsonObject>>
 {
     public DomainEventDeserializeEventHandler()
     {
     }
 
     @Override
-    public void onEvent( EventHolder<JsonArray> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent( EventHolder<JsonObject> event, long sequence, boolean endOfBatch ) throws Exception
     {
         String json = new String(event.body.array());
-        event.event = Json.createReader(new StringReader(json)).readArray();
+        event.event = Json.createReader(new StringReader(json)).readObject();
     }
 }

@@ -7,6 +7,7 @@ import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
 import com.exoreaction.reactiveservices.service.domainevents.disruptor.DomainEventSerializeEventHandler;
 import com.exoreaction.reactiveservices.service.domainevents.resources.websocket.DomainEventsWebSocketServlet;
 import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
@@ -47,7 +48,7 @@ public class DomainEventsService
                             new Links.Builder().link("domainevents", URI.create("ws://localhost:8080/ws/domainevents")).build())
                     .build());
 
-            EventHandlerResult<List<Record>, Metadata> eventHandlerResult = new EventHandlerResult<>();
+            EventHandlerResult<DomainEvents, Metadata> eventHandlerResult = new EventHandlerResult<>();
             injectionManager.getInstance(ServletContextHandler.class).addServlet(new ServletHolder(new DomainEventsWebSocketServlet(consumers, eventHandlerResult)), "/ws/domainevents");
 
             context.register(new DomainEventsService(consumers, eventHandlerResult));
@@ -58,7 +59,7 @@ public class DomainEventsService
 
     private final Disruptor<DomainEventHolder> disruptor;
 
-    public DomainEventsService(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<List<Record>, Metadata> eventHandlerResult) {
+    public DomainEventsService(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<DomainEvents, Metadata> eventHandlerResult) {
         disruptor =
                 new Disruptor<>(DomainEventHolder::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
                         ProducerType.MULTI,
@@ -86,15 +87,15 @@ public class DomainEventsService
         disruptor.shutdown();
     }
 
-    public CompletionStage<Metadata> publish(Metadata metadata, List<Record> events) {
+    public CompletionStage<Metadata> publish(DomainEvents events) {
         CompletableFuture<Metadata> future = new CompletableFuture<>();
-        disruptor.getRingBuffer().publishEvent((event, seq, md, e, f) ->
+        disruptor.getRingBuffer().publishEvent((event, seq, e, f) ->
         {
             event.metadata.clear();
-            event.metadata.putAllValues(md.getMetadata());
+            // TODO populate metadata with system information
             event.event = e;
             event.result = f;
-        }, metadata, events, future);
+        }, events, future);
 
         return future;
     }
