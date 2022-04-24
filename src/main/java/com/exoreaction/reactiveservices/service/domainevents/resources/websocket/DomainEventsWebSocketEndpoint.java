@@ -1,16 +1,11 @@
 package com.exoreaction.reactiveservices.service.domainevents.resources.websocket;
 
 import com.exoreaction.reactiveservices.disruptor.EventHandlerResult;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
-import com.exoreaction.reactiveservices.disruptor.EventHolderWithResult;
-import com.exoreaction.reactiveservices.jsonapi.Meta;
 import com.exoreaction.reactiveservices.service.domainevents.DomainEventHolder;
-import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvent;
 import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;
-import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
@@ -28,12 +23,12 @@ public class DomainEventsWebSocketEndpoint
     implements WebSocketListener, EventHandler<DomainEventHolder>
 {
     private final List<EventHandler<DomainEventHolder>> consumers;
-    private EventHandlerResult<List<DomainEvent>, Metadata> eventHandlerResult;
+    private EventHandlerResult<List<Record>, Metadata> eventHandlerResult;
     private Session session;
     private Semaphore semaphore = new Semaphore(0);
     private ObjectMapper mapper = new ObjectMapper();
 
-    public DomainEventsWebSocketEndpoint(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<List<DomainEvent>, Metadata> eventHandlerResult)
+    public DomainEventsWebSocketEndpoint(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<List<Record>, Metadata> eventHandlerResult)
     {
         this.consumers = consumers;
         this.eventHandlerResult = eventHandlerResult;

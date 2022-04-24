@@ -35,9 +35,7 @@ public class GreeterResource
         if (greetingString != null)
         {
             try {
-                eventPublisher.publish(new Metadata(), List.of(new GreetedEvent() {{
-                    greeting = greetingString;
-                }})).toCompletableFuture().get();
+                eventPublisher.publish(new Metadata(), List.of(new GreetedEvent(greetingString))).toCompletableFuture().get();
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }

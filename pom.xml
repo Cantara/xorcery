@@ -17,7 +17,7 @@
         <jersey.version>3.0.4</jersey.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
-        <jackson.version>2.11.3</jackson.version>
+        <jackson.version>2.13.2</jackson.version>
         <metrics.version>4.2.9</metrics.version>
 
         <neo4j.version>4.2.3</neo4j.version>
