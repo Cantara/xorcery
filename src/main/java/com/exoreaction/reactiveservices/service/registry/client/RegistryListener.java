@@ -23,8 +23,8 @@ public interface RegistryListener
             {
                 switch (ro.getType())
                 {
-                    case "server": addedServer(ro);
-                    case "service": addedService(ro);
+                    case "server": addedServer(ro); break;
+                    case "service": addedService(ro); break;
                 }
             } );
         });

@@ -43,9 +43,9 @@ public class DomainEventsService
 
         @Override
         public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
-            server.addService(new ResourceObject.Builder("service", "domainevents")
-                    .links(
-                            new Links.Builder().link("domainevents", URI.create("ws://localhost:8080/ws/domainevents")).build())
+            server.addService(new ResourceObject
+                    .Builder("service", "domainevents")
+                    .links(new Links.Builder().link("domainevents", server.getBaseUriBuilder().scheme("ws").path("ws/domainevents")))
                     .build());
 
             EventHandlerResult<DomainEvents, Metadata> eventHandlerResult = new EventHandlerResult<>();

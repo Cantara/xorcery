@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 /**
  * @author rickardoberg
@@ -37,7 +38,7 @@ public class Configuration {
             } else {
                 builder = merge(current, yaml);
             }
-
+            yamlStream.close();
             return this;
         }
 
@@ -78,7 +79,7 @@ public class Configuration {
     }
 
     public boolean getBoolean(String name, boolean defaultValue) {
-        return config.getBoolean(name, defaultValue);
+        return cfg(name, defaultValue, (config, n)->config.getBoolean(n, defaultValue));
     }
 
     public Configuration getConfiguration(String name) {
@@ -87,5 +88,17 @@ public class Configuration {
 
     public Builder asBuilder() {
         return new Builder(Json.createObjectBuilder(config));
+    }
+
+    private <T> T cfg(String name, T defaultValue, BiFunction<JsonObject, String, T> lookup)
+    {
+        String[] names = name.split("\\.");
+        JsonObject c = config;
+        for (int i = 0; i < names.length-1; i++) {
+            c = c.getJsonObject(names[i]);
+            if (c == null)
+                return defaultValue;
+        }
+        return lookup.apply(c, names[names.length-1]);
     }
 }

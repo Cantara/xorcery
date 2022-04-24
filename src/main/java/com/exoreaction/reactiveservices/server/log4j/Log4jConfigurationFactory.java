@@ -22,22 +22,21 @@ import java.net.URI;
 
 @Plugin(name = "CustomConfigurationFactory", category = ConfigurationFactory.CATEGORY)
 @Order(50)
-public class Log4jConfigurationFactory extends ConfigurationFactory
-{
+public class Log4jConfigurationFactory extends ConfigurationFactory {
 
-    static Configuration createConfiguration( final String name, ConfigurationBuilder<BuiltConfiguration> builder) {
+    static Configuration createConfiguration(final String name, ConfigurationBuilder<BuiltConfiguration> builder) {
         builder.setConfigurationName(name);
-        builder.setStatusLevel( Level.ERROR);
+        builder.setStatusLevel(Level.ERROR);
         builder.add(builder.newFilter("ThresholdFilter", Filter.Result.ACCEPT, Filter.Result.NEUTRAL).
-                           addAttribute("level", Level.INFO));
+                addAttribute("level", Level.INFO));
 
         {
             AppenderComponentBuilder appenderBuilder = builder.newAppender("Stdout", "CONSOLE").
-                                                              addAttribute("target", ConsoleAppender.Target.SYSTEM_OUT);
+                    addAttribute("target", ConsoleAppender.Target.SYSTEM_OUT);
             appenderBuilder.add(builder.newLayout("PatternLayout").
-                                       addAttribute("pattern", "%d [%t] %-5level %logger{36}: %msg%n%throwable"));
+                    addAttribute("pattern", "%d [%t] %-5level %marker %c{1.}: %msg%n%throwable"));
             appenderBuilder.add(builder.newFilter("MarkerFilter", Filter.Result.DENY,
-                Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"));
+                    Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"));
             builder.add(appenderBuilder);
         }
 
@@ -45,22 +44,23 @@ public class Log4jConfigurationFactory extends ConfigurationFactory
             AppenderComponentBuilder appenderBuilder = builder.newAppender("Disruptor", "DISRUPTOR");
             appenderBuilder.add(builder.newLayout("JsonTemplateLayout"));
             appenderBuilder.add(builder.newFilter("MarkerFilter", Filter.Result.DENY,
-                Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"));
+                    Filter.Result.NEUTRAL).addAttribute("marker", "FLOW"));
             builder.add(appenderBuilder);
         }
 
         builder.add(builder.newLogger("org.apache.logging.log4j", Level.DEBUG).
-                           add(builder.newAppenderRef("Stdout")).
-                           add(builder.newAppenderRef("Disruptor")).
-                           addAttribute("additivity", false));
+                add(builder.newAppenderRef("Stdout")).
+                add(builder.newAppenderRef("Disruptor")).
+                addAttribute("additivity", false));
         builder.add(builder.newRootLogger(Level.ERROR)
-//                           .add(builder.newAppenderRef("Stdout"))
-                           .add(builder.newAppenderRef("Disruptor")));
+                .add(builder.newAppenderRef("Stdout"))
+                .add(builder.newAppenderRef("Disruptor"))
+        );
         return builder.build();
     }
 
     @Override
-    public Configuration getConfiguration( final LoggerContext loggerContext, final ConfigurationSource source) {
+    public Configuration getConfiguration(final LoggerContext loggerContext, final ConfigurationSource source) {
         return getConfiguration(loggerContext, source.toString(), null);
     }
 
@@ -72,6 +72,6 @@ public class Log4jConfigurationFactory extends ConfigurationFactory
 
     @Override
     protected String[] getSupportedTypes() {
-        return new String[] {"*"};
+        return new String[]{"*"};
     }
 }

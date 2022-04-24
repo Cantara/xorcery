@@ -15,7 +15,7 @@ class GreeterResourceIT {
 
     @BeforeEach
     void setUp() throws Exception {
-        server = new Server();
+        server = new Server(null, null);
         httpClient.start();
     }
 

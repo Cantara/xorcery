@@ -9,15 +9,14 @@ import com.exoreaction.reactiveservices.service.greeter.domainevents.GreetedEven
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
 import com.github.jknack.handlebars.Context;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 
 import static com.github.jknack.handlebars.Context.newContext;
-import static java.util.Optional.ofNullable;
 
 @Path("api/greeter")
 public class GreeterResource

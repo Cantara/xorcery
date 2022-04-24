@@ -19,9 +19,9 @@ public class Log4jAppenderFeature
 
     @Override
     public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
-        server.addService(new ResourceObject.Builder("service", "log4jappender")
-                .links(
-                        new Links.Builder().link("logevents", URI.create("ws://localhost:8080/ws/logevents")).build())
+        server.addService(new ResourceObject
+                .Builder("service", "log4jappender")
+                .links(new Links.Builder().link("logevents", server.getBaseUriBuilder().scheme("ws").path("ws/logevents")))
                 .build());
         injectionManager.getInstance(ServletContextHandler.class).addServlet(new ServletHolder(new LogWebSocketServlet()), "/ws/logevents");
         return true;

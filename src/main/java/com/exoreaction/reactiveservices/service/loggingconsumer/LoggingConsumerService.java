@@ -1,41 +1,43 @@
-package com.exoreaction.reactiveservices.service.jmxviewer;
+package com.exoreaction.reactiveservices.service.loggingconsumer;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.disruptor.BroadcastEventHandler;
 import com.exoreaction.reactiveservices.disruptor.EventHolder;
 import com.exoreaction.reactiveservices.disruptor.MetadataDeserializerEventHandler;
 import com.exoreaction.reactiveservices.disruptor.WebSocketFlowControlEventHandler;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Link;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.rest.RestClient;
 import com.exoreaction.reactiveservices.server.Server;
+import com.exoreaction.reactiveservices.service.configuration.Configuration;
+import com.exoreaction.reactiveservices.service.loggingconsumer.disruptor.Log4jDeserializeEventHandler;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
-import com.exoreaction.reactiveservices.service.soutmetrics.disruptor.MetricDeserializeEventHandler;
-import com.exoreaction.reactiveservices.service.soutmetrics.disruptor.SysoutMetricEventHandler;
 import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.parser.JsonLogEventParser;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.spi.Contract;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author rickardoberg
@@ -43,72 +45,73 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Singleton
-public class JmxViewerService
-        implements Closeable, ContainerLifecycleListener {
-
-    private ScheduledExecutorService scheduledExecutorService;
+@Contract
+public class LoggingConsumerService
+        implements ContainerLifecycleListener {
 
     @Provider
     public static class Feature
             extends AbstractFeature {
 
         @Override
-        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server)
-        {
-/*
-            server.addService(new ResourceObject.Builder("service", "jmxviewer").build());
+        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
+            if (injectionManager.getInstance(Configuration.class).getBoolean("loggingconsumer.enabled", true)) {
+                server.addService(new ResourceObject.Builder("service", "loggingconsumer").build());
 
-            context.register(JmxViewerService.class);
-*/
+                context.register(LoggingConsumerService.class, LoggingConsumerService.class, ContainerLifecycleListener.class);
+            }
 
             return super.configure(context, injectionManager, server);
         }
     }
 
     private RegistryClient registryClient;
+    private List<EventHandler<EventHolder<LogEvent>>> handlers = new CopyOnWriteArrayList<>();
 
     @Inject
-    public JmxViewerService(RegistryClient registryClient, RestClient restClient) {
+    public LoggingConsumerService(RegistryClient registryClient) {
         this.registryClient = registryClient;
     }
 
     @Override
     public void onStartup(Container container) {
-        System.out.println("JMX Viewer Startup");
+        System.out.println("Log consumer Startup");
 
-        registryClient.addRegistryListener(new JmxRegistryListener());
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        registryClient.addRegistryListener(new LoggingRegistryListener());
     }
 
     @Override
     public void onReload(Container container) {
 
     }
+
     @Override
     public void onShutdown(Container container) {
+
+        // TODO Close active sessions
         System.out.println("Shutdown");
-        scheduledExecutorService.shutdown();
     }
 
-    public void connect(Link metricSource) {
-        Disruptor<EventHolder<JsonObject>> disruptor =
-                new Disruptor<>(EventHolder::new, 4096, new NamedThreadFactory("JmxViewerMetricsDisruptorIn-"),
+    public void addLogHandler(EventHandler<EventHolder<LogEvent>> handler) {
+        handlers.add(handler);
+    }
+
+    private void connect(Link logSource) {
+        Disruptor<EventHolder<LogEvent>> disruptor =
+                new Disruptor<>(EventHolder::new, 4096, new NamedThreadFactory("SysoutDisruptorIn-"),
                         ProducerType.SINGLE,
                         new BlockingWaitStrategy());
 
-        registryClient.connect(metricSource.getHrefAsUriTemplate().createURI(""), new MetricsClientEndpoint(disruptor))
+        registryClient.connect(logSource.getHref(), new LoggingClientEndpoint(disruptor))
                 .thenAccept(session ->
                 {
                     try {
                         disruptor.handleEventsWith(new MetadataDeserializerEventHandler(),
-                                        new MetricDeserializeEventHandler())
-                                .then(new SysoutMetricEventHandler(), new WebSocketFlowControlEventHandler(1, session, runnable ->
-                                {
-                                    scheduledExecutorService.schedule(runnable, 5, TimeUnit.SECONDS);
-                                }));
+                                        new Log4jDeserializeEventHandler(new JsonLogEventParser()))
+                                .then(new BroadcastEventHandler<>(handlers), new WebSocketFlowControlEventHandler(4096, session, Executors.newSingleThreadExecutor()));
                         disruptor.start();
 
-                        System.out.println("Receiving metric messages from " + metricSource.getHref());
+                        System.out.println("Receiving log messages from " + logSource.getHref());
                     } catch (IOException e) {
                         throw new CompletionException(e);
                     }
@@ -119,32 +122,21 @@ public class JmxViewerService
                 });
     }
 
-    @Override
-    public void close() throws IOException {
-        // TODO Close active sessions
-    }
-
-    private class JmxRegistryListener implements RegistryListener {
+    private class LoggingRegistryListener implements RegistryListener {
         @Override
-        public void addedService(ResourceObject service)
-        {
-            service.getLinks().getRel("metrics").ifPresent(link ->
-            {
-
-            });
-
-            service.getLinks().getRel("metricevents").ifPresent(JmxViewerService.this::connect);
+        public void addedService(ResourceObject service) {
+            service.getLinks().getRel("logevents").ifPresent(LoggingConsumerService.this::connect);
         }
     }
 
-    private class MetricsClientEndpoint
+    private class LoggingClientEndpoint
             implements WebSocketListener {
-        private final Disruptor<EventHolder<JsonObject>> disruptor;
+        private final Disruptor<EventHolder<LogEvent>> disruptor;
 
         ByteBuffer headers;
 
-        private MetricsClientEndpoint(
-                Disruptor<EventHolder<JsonObject>> disruptor) {
+        private LoggingClientEndpoint(
+                Disruptor<EventHolder<LogEvent>> disruptor) {
             this.disruptor = disruptor;
         }
 

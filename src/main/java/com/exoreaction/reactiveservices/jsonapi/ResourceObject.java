@@ -56,6 +56,11 @@ public class ResourceObject
             return this;
         }
 
+        public Builder links( Links.Builder links )
+        {
+            return links(links.build());
+        }
+
         public Builder links( Links links )
         {
             builder.add( "links", links.json() );

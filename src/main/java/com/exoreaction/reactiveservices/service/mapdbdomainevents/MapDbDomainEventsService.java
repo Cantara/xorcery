@@ -23,6 +23,10 @@ import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -46,6 +50,9 @@ import java.util.concurrent.Executors;
 public class MapDbDomainEventsService
         implements Closeable, ContainerLifecycleListener {
 
+    public static final String SERVICE_TYPE = "mapdbdomainevents";
+    public static final Marker MARKER = MarkerManager.getMarker("service:"+SERVICE_TYPE);
+
     @Provider
     public static class Feature
             extends AbstractFeature {
@@ -53,9 +60,10 @@ public class MapDbDomainEventsService
         @Override
         public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server)
         {
-            if (injectionManager.getInstance(Configuration.class).getConfiguration("mapdbdomainevents").getBoolean("enabled", true))
+            if (injectionManager.getInstance(Configuration.class).getConfiguration(SERVICE_TYPE).getBoolean("enabled", true))
             {
-                server.addService(new ResourceObject.Builder("service", "mapdbdomainevents").build());
+                server.addService(new ResourceObject.Builder("service", SERVICE_TYPE).build());
+                MARKER.addParents(server.getServerLogMarker());
 
                 context.register(MapDbDomainEventsService.class);
             }
@@ -64,6 +72,7 @@ public class MapDbDomainEventsService
         }
     }
 
+    private final Logger logger = LogManager.getLogger(getClass());
     private final RegistryClient registryClient;
     private final MapDatabaseService mapDatabaseService;
 
@@ -75,7 +84,7 @@ public class MapDbDomainEventsService
 
     @Override
     public void onStartup(Container container) {
-        System.out.println("MapDatabase Domain Events Startup");
+        logger.info(MARKER, "Startup");
 
         registryClient.addRegistryListener(new DomainEventsRegistryListener());
     }
@@ -86,7 +95,7 @@ public class MapDbDomainEventsService
     }
     @Override
     public void onShutdown(Container container) {
-        System.out.println("Shutdown");
+        logger.info(MARKER, "Shutdown");
     }
 
     public void connect(Link domainEventSource) {
@@ -104,7 +113,7 @@ public class MapDbDomainEventsService
                                 .then(new MapDbDomainEventEventHandler(mapDatabaseService, session), new WebSocketFlowControlEventHandler(1, session, Executors.newSingleThreadExecutor()));
                         disruptor.start();
 
-                        System.out.println("Receiving metric messages from " + domainEventSource.getHref());
+//                        logger.info(MARKER, "Connected to " + domainEventSource.getHref());
                     } catch (IOException e) {
                         throw new CompletionException(e);
                     }
@@ -129,6 +138,7 @@ public class MapDbDomainEventsService
 
     private static class DomainEventsClientEndpoint
             implements WebSocketListener {
+        private final Logger logger = LogManager.getLogger(getClass());
         private final Disruptor<EventHolder<JsonObject>> disruptor;
 
         ByteBuffer headers;
@@ -140,7 +150,7 @@ public class MapDbDomainEventsService
 
         @Override
         public void onWebSocketText(String message) {
-            System.out.println("Text:" + message);
+            logger.debug(MARKER, "Text: {}",  message);
         }
 
         @Override
@@ -160,21 +170,18 @@ public class MapDbDomainEventsService
 
         @Override
         public void onWebSocketClose(int statusCode, String reason) {
-            System.out.printf("Close:%d %s%n", statusCode, reason);
+            logger.info(MARKER, "Closed: {} ({})",  statusCode, reason);
             disruptor.shutdown();
         }
 
         @Override
         public void onWebSocketConnect(Session session) {
-            System.out.printf("Connect:%s%n", session.getRemote().getRemoteAddress().toString());
+            logger.info(MARKER, "Connected to {}",  session.getUpgradeRequest().getRequestURI());
         }
 
         @Override
         public void onWebSocketError(Throwable cause) {
-            StringWriter sw = new StringWriter();
-            cause.printStackTrace(new PrintWriter(sw));
-
-            System.out.printf("Error:%s%n", sw);
+            logger.error(MARKER, "Error",  cause);
         }
     }
 }

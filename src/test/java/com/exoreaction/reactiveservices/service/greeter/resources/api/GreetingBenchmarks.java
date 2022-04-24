@@ -30,7 +30,7 @@ public class GreetingBenchmarks {
 
     @Setup()
     public void setup() throws Exception {
-        server = new Server();
+        server = new Server(null, null);
         httpClient.start();
         System.out.println("Setup done");
     }

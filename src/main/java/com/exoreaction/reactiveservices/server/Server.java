@@ -12,6 +12,9 @@ import com.exoreaction.reactiveservices.rest.RestClient;
 import com.exoreaction.reactiveservices.service.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.configuration.StandardConfiguration;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
+import jakarta.ws.rs.core.UriBuilder;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.RuntimeIOException;
 import org.eclipse.jetty.server.CustomRequestLog;
@@ -36,8 +39,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -50,13 +55,20 @@ import static com.codahale.metrics.MetricRegistry.name;
 public class Server
         implements Closeable {
     private Configuration configuration;
+    private URI baseUri;
+
+    private Marker serverLogMarker;
     private org.eclipse.jetty.server.Server server;
     private List<ResourceObject> services = new CopyOnWriteArrayList<>();
 
-    public Server() throws Exception {
-        this.configuration = configuration();
+    public Server(File configurationFile, String id) throws Exception {
+        this.configuration = configuration(configurationFile);
 
-        services.add(new ResourceObject.Builder("server")
+        String serverId = configuration.getString("id", UUID.randomUUID().toString());
+
+        serverLogMarker = MarkerManager.getMarker("server:"+serverId);
+
+        services.add(new ResourceObject.Builder("server", serverId)
                         .attributes(new Attributes.Builder()
                                 .attribute("jetty.version", Jetty.VERSION)
                                 .build()).build());
@@ -68,21 +80,34 @@ public class Server
     public void addService(ResourceObject serviceResource) {
         services.add(serviceResource);
     }
+    public Marker getServerLogMarker() {
+        return serverLogMarker;
+    }
+
+    public UriBuilder getBaseUriBuilder()
+    {
+        return UriBuilder.fromUri(baseUri);
+    }
 
     public ResourceDocument getServerDocument()
     {
         ResourceDocument serverDocument = new ResourceDocument.Builder()
-                .links(new Links.Builder().link(JsonApiRels.self, "http://localhost:8080/").build())
+                .links(new Links.Builder().link(JsonApiRels.self, baseUri).build())
                 .data(services.stream().collect(ResourceObjects.toResourceObjects()))
                 .build();
         return serverDocument;
     }
 
-    private Configuration configuration() throws Exception {
+    private Configuration configuration(File configFile) throws Exception {
         Configuration.Builder builder = new Configuration.Builder();
 
         // Load defaults
-        builder.addYaml(Configuration.class.getResourceAsStream("/server.yaml"));
+        if (configFile != null)
+        {
+            builder.addYaml(new FileInputStream(configFile));
+        } else {
+            builder.addYaml(Configuration.class.getResourceAsStream("/server.yaml"));
+        }
 
         // Load overrides
         Configuration partialConfig = builder.build();
@@ -142,6 +167,8 @@ public class Server
         HttpConnectionFactory http1 = new HttpConnectionFactory(config);
         final ServerConnector http = new ServerConnector(server, http1);
         http.setPort(jettyConfig.getInt("port", 8080));
+
+        baseUri = URI.create("http://127.0.0.1:"+http.getPort()+"/");
 
         server.addConnector(http);
 

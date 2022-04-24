@@ -17,11 +17,11 @@ public class MetricsFeature
         extends AbstractFeature {
     @Override
     public boolean configure(FeatureContext context, InjectionManager im, Server server) {
-        server.addService(new ResourceObject.Builder("service", "metrics")
-                .links(
-                        new Links.Builder()
-                                .link("metrics", "http://localhost:8080/api/metrics")
-                                .link("metricevents", "ws://localhost:8080/ws/metricevents?metrics={metric_names}").build())
+        server.addService(new ResourceObject
+                .Builder("service", "metrics")
+                .links(new Links.Builder()
+                        .link("metrics", server.getBaseUriBuilder().path("api/metrics"))
+                        .link("metricevents", server.getBaseUriBuilder().scheme("ws").path("ws/metricevents?metrics={metric_names}").toTemplate()))
                 .build());
         MetricRegistry metricRegistry = im.getInstance(MetricRegistry.class);
         im.getInstance(ServletContextHandler.class)

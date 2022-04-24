@@ -41,8 +41,8 @@ public class RegistryService
 
             server.addService(new ResourceObject.Builder("service", "registry")
                     .links(new Links.Builder()
-                            .link("registry", URI.create("http://localhost:8080/api/registry"))
-                            .link("registryevents", URI.create("ws://localhost:8080/ws/registryevents"))
+                            .link("registry", server.getBaseUriBuilder().path("api/registry"))
+                            .link("registryevents", server.getBaseUriBuilder().scheme("ws").path("ws/registryevents"))
                             .build())
                     .build());
 
@@ -81,7 +81,7 @@ public class RegistryService
 
         send( server );
 
-        LogManager.getLogger(getClass()).info("Added server:"+server);
+        LogManager.getLogger(getClass()).debug("Added server:"+server);
     }
 
     public void removeServer( String serverSelfUri )

@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.soutlogger.disruptor;
+package com.exoreaction.reactiveservices.service.loggingconsumer.disruptor;
 
 import com.exoreaction.reactiveservices.disruptor.DefaultEventHandler;
 import com.exoreaction.reactiveservices.disruptor.EventHolder;

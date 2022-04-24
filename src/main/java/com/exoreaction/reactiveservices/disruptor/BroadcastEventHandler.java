@@ -10,19 +10,19 @@ import java.util.List;
  */
 
 public class BroadcastEventHandler<T>
-    implements DefaultEventHandler<EventHolder<T>>
+    implements DefaultEventHandler<T>
 {
-    private final List<EventHandler<EventHolder<T>>> consumers;
+    private final List<EventHandler<T>> consumers;
 
-    public BroadcastEventHandler( List<EventHandler<EventHolder<T>>> consumers )
+    public BroadcastEventHandler( List<EventHandler<T>> consumers )
     {
         this.consumers = consumers;
     }
 
     @Override
-    public void onEvent( EventHolder<T> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent( T event, long sequence, boolean endOfBatch ) throws Exception
     {
-        for ( EventHandler<EventHolder<T>> consumer : consumers )
+        for ( EventHandler<T> consumer : consumers )
         {
             consumer.onEvent( event, sequence, endOfBatch );
         }
@@ -31,7 +31,7 @@ public class BroadcastEventHandler<T>
     @Override
     public void onStart()
     {
-        for ( EventHandler<EventHolder<T>> consumer : consumers )
+        for ( EventHandler<T> consumer : consumers )
         {
             consumer.onStart();
         }
@@ -40,7 +40,7 @@ public class BroadcastEventHandler<T>
     @Override
     public void onShutdown()
     {
-        for ( EventHandler<EventHolder<T>> consumer : consumers )
+        for ( EventHandler<T> consumer : consumers )
         {
             consumer.onShutdown();
         }

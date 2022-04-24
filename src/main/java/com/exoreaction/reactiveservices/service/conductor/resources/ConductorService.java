@@ -42,17 +42,15 @@ public class ConductorService
 
     @Provider
     public static class Feature
-            extends AbstractFeature
-    {
+            extends AbstractFeature {
         @Override
         public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
 
-            server.addService(new ResourceObject.Builder("service", "conductor")
-                    .links(
-                            new Links.Builder()
-                                    .link("conductor", URI.create("http://localhost:8080/api/conductor"))
-                                    .link("conductorevents", URI.create("ws://localhost:8080/ws/conductorevents"))
-                                    .build())
+            server.addService(new ResourceObject
+                    .Builder("service", "conductor")
+                    .links(new Links.Builder()
+                            .link("conductor", server.getBaseUriBuilder().path("api/conductor"))
+                            .link("conductorevents", server.getBaseUriBuilder().scheme("ws").path("ws/conductorevents")))
                     .build());
 
             context.register(ConductorService.class, ConductorService.class, ContainerLifecycleListener.class);
