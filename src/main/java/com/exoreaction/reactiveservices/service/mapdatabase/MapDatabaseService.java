@@ -31,6 +31,11 @@ public class MapDatabaseService
         database.put(name, value);
     }
 
+    public String get(String name)
+    {
+        return database.get(name);
+    }
+
     public Map<String, String> getDatabase() {
         return database;
     }

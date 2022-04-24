@@ -54,7 +54,7 @@ public class Log4jConfigurationFactory extends ConfigurationFactory
                            add(builder.newAppenderRef("Disruptor")).
                            addAttribute("additivity", false));
         builder.add(builder.newRootLogger(Level.ERROR)
-                           .add(builder.newAppenderRef("Stdout"))
+//                           .add(builder.newAppenderRef("Stdout"))
                            .add(builder.newAppenderRef("Disruptor")));
         return builder.build();
     }

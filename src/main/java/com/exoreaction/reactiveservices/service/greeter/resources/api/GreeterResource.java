@@ -9,18 +9,19 @@ import com.exoreaction.reactiveservices.service.greeter.domainevents.GreetedEven
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
 import com.github.jknack.handlebars.Context;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
+
+import static com.github.jknack.handlebars.Context.newContext;
+import static java.util.Optional.ofNullable;
 
 @Path("api/greeter")
 public class GreeterResource
-    extends JsonApiResource
-{
+        extends JsonApiResource {
     private final DomainEventPublisher eventPublisher;
     private final MapDatabaseService mapDatabaseService;
 
@@ -31,17 +32,13 @@ public class GreeterResource
     }
 
     @GET
-    public Context get(@QueryParam("greeting") String greetingString)
-    {
-        if (greetingString != null)
-        {
-            try {
-                eventPublisher.publish(new DomainEvents(new Metadata(), new GreetedEvent(greetingString))).toCompletableFuture().get();
-            } catch (InterruptedException | ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-        }
+    public Context get() {
+        return newContext(mapDatabaseService.get("greeting"));
+    }
 
-        return Context.newContext(Optional.ofNullable(mapDatabaseService.getDatabase().get("greeting")).orElse(""));
+    @POST
+    public CompletionStage<Context> post(@FormParam("greeting") String greetingString) {
+        return eventPublisher.publish(new DomainEvents(new Metadata(), new GreetedEvent(greetingString)))
+                .thenApply(md -> get());
     }
 }

@@ -157,9 +157,11 @@ public class Server
                     // Bind provided services
                     HttpClient httpClient = new HttpClient();
                     httpClient.start();
+                    server.addManaged(httpClient);
                     WebSocketClient webSocketClient = new WebSocketClient(httpClient);
                     webSocketClient.setIdleTimeout(Duration.ofMillis(Long.MAX_VALUE));
                     webSocketClient.start();
+                    server.addManaged(webSocketClient);
                     RestClient restClient = new RestClient(webSocketClient);
                     bind(httpClient);
                     bind(webSocketClient);
@@ -195,8 +197,6 @@ public class Server
 
         // Start Jetty
         server.start();
-
-        System.out.println(getServerDocument().toString());
     }
 
     public void close() throws IOException {
