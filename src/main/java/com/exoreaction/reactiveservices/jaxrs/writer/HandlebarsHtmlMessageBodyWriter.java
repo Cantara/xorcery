@@ -29,12 +29,14 @@ public class HandlebarsHtmlMessageBodyWriter
 
     private Handlebars handlebars;
 
-    @jakarta.ws.rs.core.Context
-    private HttpServletRequest request;
+    jakarta.inject.Provider<ContainerRequestContext> requestContextProvider;
 
     @Inject
-    public HandlebarsHtmlMessageBodyWriter(Handlebars handlebars) {
+    public HandlebarsHtmlMessageBodyWriter(Handlebars handlebars,
+                                           jakarta.inject.Provider<ContainerRequestContext> requestContextProvider)
+    {
         this.handlebars = handlebars;
+        this.requestContextProvider = requestContextProvider;
     }
 
     @Override
@@ -44,7 +46,7 @@ public class HandlebarsHtmlMessageBodyWriter
 
     @Override
     public void writeTo(Context context, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-        String path = request.getPathInfo();
+        String path = requestContextProvider.get().getUriInfo().getPath();
         Template compile = handlebars.compile(path);
         OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8);
         compile.apply(context, writer);

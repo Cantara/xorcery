@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.soutmetrics;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.EventHolder;
 import com.exoreaction.reactiveservices.disruptor.MetadataDeserializerEventHandler;
 import com.exoreaction.reactiveservices.disruptor.WebSocketFlowControlEventHandler;
@@ -8,7 +9,6 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Link;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
 import com.exoreaction.reactiveservices.service.soutmetrics.disruptor.MetricDeserializeEventHandler;
@@ -21,6 +21,10 @@ import jakarta.inject.Singleton;
 import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.glassfish.jersey.internal.inject.InjectionManager;
@@ -45,7 +49,10 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class SysoutMetricsService
         implements Closeable, ContainerLifecycleListener {
+    public static final String SERVICE_TYPE = "soutmetrics";
+    public static final Marker MARKER = MarkerManager.getMarker("service:"+SERVICE_TYPE);
 
+    private final Logger logger = LogManager.getLogger(getClass());
     private ScheduledExecutorService scheduledExecutorService;
 
     @Provider
@@ -55,9 +62,10 @@ public class SysoutMetricsService
         @Override
         public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server)
         {
-            if (injectionManager.getInstance(Configuration.class).getConfiguration("soutmetrics").getBoolean("enabled", true))
+            if (injectionManager.getInstance(Configuration.class).getConfiguration(SERVICE_TYPE).getBoolean("enabled", true))
             {
-                server.addService(new ResourceObject.Builder("service", "sysoutmetrics").build());
+                server.addService(new ResourceObject.Builder("service", SERVICE_TYPE).build());
+                MARKER.addParents(server.getServerLogMarker());
 
                 context.register(SysoutMetricsService.class);
             }
@@ -171,7 +179,7 @@ public class SysoutMetricsService
 
         @Override
         public void onWebSocketConnect(Session session) {
-            System.out.printf("Connect:%s%n", session.getRemote().getRemoteAddress().toString());
+            logger.info(MARKER, "Connected to {}",  session.getUpgradeRequest().getRequestURI());
         }
 
         @Override

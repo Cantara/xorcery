@@ -9,8 +9,9 @@ import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
 import com.exoreaction.reactiveservices.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.reactiveservices.rest.RestClient;
-import com.exoreaction.reactiveservices.service.configuration.Configuration;
-import com.exoreaction.reactiveservices.service.configuration.StandardConfiguration;
+import com.exoreaction.reactiveservices.configuration.Configuration;
+import com.exoreaction.reactiveservices.configuration.StandardConfiguration;
+import com.exoreaction.reactiveservices.server.resources.ServerApplication;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.ws.rs.core.UriBuilder;
 import org.apache.logging.log4j.Marker;
@@ -30,7 +31,6 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import java.io.Closeable;
@@ -175,7 +175,7 @@ public class Server
         ServletContextHandler ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         ctx.setContextPath("/");
 
-        ResourceConfig resourceConfig = new ResourceConfig();
+        ServerApplication app = new ServerApplication();
 
         Binder binder = new AbstractBinder() {
             @Override
@@ -203,10 +203,10 @@ public class Server
                 }
             }
         };
-        resourceConfig.register(binder);
-        resourceConfig.packages("com.exoreaction.reactiveservices");
+        app.register(binder);
+        app.packages("com.exoreaction.reactiveservices.service");
 
-        ServletHolder serHol = new ServletHolder(new ServletContainer(resourceConfig));
+        ServletHolder serHol = new ServletHolder(new ServletContainer(app));
         ctx.addServlet(serHol, "/*");
         serHol.setInitOrder(1);
 

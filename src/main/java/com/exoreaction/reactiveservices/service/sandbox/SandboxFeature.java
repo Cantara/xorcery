@@ -5,6 +5,7 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.io.FileTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
+import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 
 import java.io.File;

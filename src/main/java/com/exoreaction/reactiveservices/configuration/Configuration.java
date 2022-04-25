@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.configuration;
+package com.exoreaction.reactiveservices.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

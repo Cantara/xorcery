@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.configuration;
+package com.exoreaction.reactiveservices.configuration;
 
 import java.io.File;
 import java.io.IOException;

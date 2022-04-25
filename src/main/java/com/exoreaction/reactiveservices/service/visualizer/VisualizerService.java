@@ -5,14 +5,13 @@ import com.exoreaction.reactiveservices.disruptor.DefaultEventHandler;
 import com.exoreaction.reactiveservices.disruptor.EventHolder;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Link;
+import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.configuration.Configuration;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.loggingconsumer.LoggingConsumerService;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.Sequence;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.FeatureContext;
@@ -23,10 +22,7 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,7 +38,10 @@ public class VisualizerService
         @Override
         public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
             if (injectionManager.getInstance(Configuration.class).getConfiguration("visualizer").getBoolean("enabled", true)) {
-                server.addService(new ResourceObject.Builder("service", "visualizer").build());
+                server.addService(new ResourceObject.Builder("service", "visualizer")
+                        .links(new Links.Builder()
+                                .link("visualizer", server.getBaseUriBuilder().path("api/visualizer")))
+                        .build());
 
                 context.register(VisualizerService.class, VisualizerService.class, ContainerLifecycleListener.class);
             }

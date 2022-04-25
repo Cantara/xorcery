@@ -1,14 +1,16 @@
-<table class="resource" id="{{id}}-{{type}}" border="1">
-    <caption><strong class="resource_type">{{type}}</strong> <span class="resource_id">{{id}}</span></caption>
-    {{#with links}}
-    <tr><td>
+<table class="resource" id="{{id.string}}-{{type.string}}">
+    <thead>
+    <tr>
+        <th colspan="2"><span class="resource_type">{{type.string}}</span>:<span class="resource_id">{{id.string}}</span></th>
+    </tr>
+    </thead>
+
+    {{#with this.links.entrySet}}
         {{> "sandbox/links"}}
-    </td></tr>
-    Has links
     {{/with}}
 
-    {{#with attributes}}
-    Has attributes
+    {{#with this.attributes.entrySet}}
+        {{> "sandbox/attributes"}}
     {{/with}}
 
 </table>

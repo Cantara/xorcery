@@ -1,8 +1,28 @@
 <html>
-Hello World2
-{{#each data}}
-{{> "sandbox/resource"}}
-{{/each}}
-Bye world
+<head>
+    <style>
+        table
+        {
+            border:2px solid;
+        }
 
+        td
+        {
+            border: 1px solid gray;
+        }
+    </style>
+</head>
+<body>
+<table class="resourcedocument">
+{{#with links.entrySet}}
+    {{> "sandbox/links"}}
+{{/with}}
+
+{{#each data}}
+    <tr><td colspan="2">{{> "sandbox/resource"}}</td></tr>
+{{/each}}
+</table>
+
+
+</body>
 </html>

@@ -40,6 +40,10 @@ public class ResourceObject
             builder.add( "type", type );
         }
 
+        public Builder attributes( Attributes.Builder attributes )
+        {
+            return attributes(attributes.build());
+        }
         public Builder attributes( Attributes attributes )
         {
             JsonObject object = attributes.object();

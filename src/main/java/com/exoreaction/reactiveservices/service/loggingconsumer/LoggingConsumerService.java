@@ -9,7 +9,7 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Link;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.configuration.Configuration;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.loggingconsumer.disruptor.Log4jDeserializeEventHandler;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;

@@ -1,8 +1,8 @@
 jetty:
   port: 8080
 
-registryclient:
-  uri: http://localhost:8080/api/registry
+registry:
+  master: http://localhost:8080/api/registry
 
 loggingconsumer:
   enabled: true
@@ -11,7 +11,7 @@ soutmetrics:
   enabled: false
 
 soutlogging:
-  enabled: false
+  enabled: true
 
 mapdbdomainevents:
   enabled: true

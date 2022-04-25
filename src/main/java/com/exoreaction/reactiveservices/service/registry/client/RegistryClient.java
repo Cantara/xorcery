@@ -6,7 +6,7 @@ import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.rest.RestClient;
 import com.exoreaction.reactiveservices.rest.RestHelpers;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.configuration.Configuration;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;
@@ -56,11 +56,11 @@ public class RegistryClient
     @Inject
     public RegistryClient(RestClient restClient, Configuration configuration, Server server) {
         this.restClient = restClient;
-        this.configuration = configuration.getConfiguration("registryclient");
+        this.configuration = configuration.getConfiguration("registry");
         this.server = server;
         System.out.println("Registry client create");
 
-        this.registryUri = this.configuration.getString("uri", null);
+        this.registryUri = this.configuration.getString("master", null);
     }
 
     @Override

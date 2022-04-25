@@ -21,7 +21,7 @@ public class MetricsFeature
                 .Builder("service", "metrics")
                 .links(new Links.Builder()
                         .link("metrics", server.getBaseUriBuilder().path("api/metrics"))
-                        .link("metricevents", server.getBaseUriBuilder().scheme("ws").path("ws/metricevents?metrics={metric_names}").toTemplate()))
+                        .link("metricevents", server.getBaseUriBuilder().scheme("ws").path("ws/metricevents").queryParam("metrics","{metric_names}").toTemplate()))
                 .build());
         MetricRegistry metricRegistry = im.getInstance(MetricRegistry.class);
         im.getInstance(ServletContextHandler.class)

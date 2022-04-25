@@ -1,3 +1,6 @@
-{{#each .}}
-Link:{{.}} {{href}}
+<tbody class="links">
+<tr><th colspan="2">Links</th></tr>
+{{#each}}
+<tr><td>{{key}}</td><td> <a href="{{value.string}}.html">{{value.string}}</a> </td></tr>
 {{/each}}
+</tbody>
