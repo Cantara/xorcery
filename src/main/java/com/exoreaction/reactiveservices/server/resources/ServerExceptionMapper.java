@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.server.resources;
 
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
@@ -16,6 +17,12 @@ public class ServerExceptionMapper
     {
         logger.error("Response exception", exception);
 
-        return Response.status(500).build();
+        try {
+            throw exception;
+        } catch (WebApplicationException e) {
+            return e.getResponse();
+        } catch (Throwable e) {
+            return Response.status(500).build();
+        }
     }
 }

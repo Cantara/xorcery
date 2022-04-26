@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.conductor.client;
 
+import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.Link;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
@@ -65,7 +66,7 @@ public class ConductorClient
     public void addPatterns( ResourceDocument server ) throws ExecutionException, InterruptedException, TimeoutException
     {
         httpClient.POST( UriBuilder.fromUri( conductorUri ).segment( "patterns" ).build(  ) )
-                  .body( new StringRequestContent( ResourceDocument.APPLICATION_JSON_API, server.toString() ) ).send();
+                  .body( new StringRequestContent( MediaTypes.APPLICATION_JSON_API, server.toString() ) ).send();
     }
 
     public class ClientEndpoint

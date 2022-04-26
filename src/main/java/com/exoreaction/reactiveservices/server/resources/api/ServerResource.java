@@ -8,6 +8,8 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
+import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
+
 /**
  * @author rickardoberg
  * @since 13/04/2022
@@ -26,7 +28,7 @@ public class ServerResource
     }
 
     @GET
-    @Produces(PRODUCES_JSON_API)
+    @Produces(JSON_API_TEXT_HTML)
     public ResourceDocument get()
     {
         return server.getServerDocument();

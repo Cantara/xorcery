@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.sandbox.resources;
 
+import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jetty.client.ResponseListener;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.rest.RestHelpers;
@@ -7,7 +8,6 @@ import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotAcceptableException;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
@@ -18,7 +18,6 @@ import org.eclipse.jetty.http.HttpMethod;
 
 import java.io.IOException;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
 
 @Provider
 public class SandboxExceptionMapper
@@ -42,7 +41,7 @@ public class SandboxExceptionMapper
         ResponseListener response = new ResponseListener();
         httpClient.newRequest(requestContextProvider.get().getUriInfo().getRequestUri())
                 .method(HttpMethod.GET)
-                .accept(ResourceDocument.APPLICATION_JSON_API)
+                .accept(MediaTypes.APPLICATION_JSON_API)
                 .send(response);
         try {
             return response.getResult()

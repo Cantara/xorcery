@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.rest;
 
+import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jetty.client.ResponseListener;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import org.eclipse.jetty.client.HttpClient;
@@ -42,7 +43,7 @@ public class RestClient {
 
     public CompletionStage<Result> submit(String uri, ResourceDocument resourceDocument) {
         ResponseListener response = new ResponseListener();
-        Request.Content content = new BytesRequestContent(ResourceDocument.APPLICATION_JSON_API, resourceDocument.toString().getBytes(StandardCharsets.UTF_8));
+        Request.Content content = new BytesRequestContent(MediaTypes.APPLICATION_JSON_API, resourceDocument.toString().getBytes(StandardCharsets.UTF_8));
         httpClient.newRequest(uri).method(HttpMethod.POST).body(content).send(response);
         return response.getResult();
     }

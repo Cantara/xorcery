@@ -13,8 +13,6 @@ import org.glassfish.hk2.api.ServiceLocator;
 public abstract class JsonApiResource
     implements ResourceContext
 {
-    protected static final String PRODUCES_JSON_API = ResourceDocument.APPLICATION_JSON_API + ";qs=1.0";
- //   protected static final String PRODUCES_JSON_SCHEMA = JsonSchema.JSON_SCHEMA + ";qs=0.1";
 
     private ServiceLocator serviceLocator;
     private ContainerRequestContext containerRequestContext;
