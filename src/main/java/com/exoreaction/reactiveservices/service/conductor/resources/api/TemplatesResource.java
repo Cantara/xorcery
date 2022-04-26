@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.api;
 
+import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
 import com.exoreaction.reactiveservices.service.conductor.resources.ConductorService;
@@ -33,7 +34,7 @@ public class TemplatesResource
     }
 
     @GET
-    @Produces( ResourceDocument.APPLICATION_JSON_API )
+    @Produces( MediaTypes.JSON_API_TEXT_HTML )
     public ResourceDocument get()
     {
         return new ResourceDocument.Builder()
@@ -44,7 +45,7 @@ public class TemplatesResource
     }
 
     @POST
-    @Consumes( ResourceDocument.APPLICATION_JSON_API )
+    @Consumes( MediaTypes.APPLICATION_JSON_API )
     public void add( String resourceObject )
     {
 //        service.addTemplates( new ResourceDocument( Json.createReader( new StringReader( resourceObject ) ).read() ) );
