@@ -1,9 +1,8 @@
 package com.exoreaction.reactiveservices.service.soutmetrics.disruptor;
 
-import com.exoreaction.reactiveservices.disruptor.DefaultEventHandler;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
+import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
 import jakarta.json.JsonObject;
-import org.apache.logging.log4j.core.LogEvent;
 
 /**
  * @author rickardoberg
@@ -11,10 +10,10 @@ import org.apache.logging.log4j.core.LogEvent;
  */
 
 public class SysoutMetricEventHandler
-    implements DefaultEventHandler<EventHolder<JsonObject>>
+    implements DefaultEventHandler<Event<JsonObject>>
 {
     @Override
-    public void onEvent( EventHolder<JsonObject> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent(Event<JsonObject> event, long sequence, boolean endOfBatch ) throws Exception
     {
         System.out.println("Metric:"+event.event.toString()+":"+event.metadata);
     }

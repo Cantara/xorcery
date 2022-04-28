@@ -8,15 +8,8 @@ import java.io.IOException;
  * @since 20/04/2022
  */
 
-public class StandardConfiguration
+public record StandardConfiguration(Configuration configuration)
 {
-    private final Configuration configuration;
-
-    public StandardConfiguration( Configuration configuration )
-    {
-        this.configuration = configuration;
-    }
-
     public String home()
     {
         String home;
@@ -29,6 +22,6 @@ public class StandardConfiguration
             home = new File("..").getAbsolutePath();
         }
 
-        return configuration.getString( "home", home );
+        return configuration().getString( "home", home );
     }
 }

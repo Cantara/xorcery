@@ -10,14 +10,13 @@ import com.exoreaction.reactiveservices.configuration.Configuration;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;
-import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.spi.Contract;
 
 import java.io.StringReader;
 import java.util.concurrent.CompletionStage;
@@ -28,6 +27,7 @@ import java.util.concurrent.CompletionStage;
  */
 
 @Singleton
+@Contract
 public class RegistryClient
         implements ContainerLifecycleListener, RestHelpers {
 
@@ -36,15 +36,13 @@ public class RegistryClient
             extends AbstractFeature {
 
         @Override
-        public boolean configure(FeatureContext context, InjectionManager im, Server server) {
-            context.register(new RegistryClient(im.getInstance(RestClient.class), im.getInstance(Configuration.class), im.getInstance(Server.class)));
-//            injectionManager.register(Bindings.service(RegistryClient.class));
-            return super.configure(context, im, server);
+        protected String serviceType() {
+            return "registryclient";
         }
 
         @Override
         protected void configure() {
-//            bind(RegistryClient.class).to(RegistryClient.class);
+            context.register(RegistryClient.class, RegistryClient.class, ContainerLifecycleListener.class);
         }
     }
 
@@ -124,7 +122,7 @@ public class RegistryClient
                                         .thenCompose(RestHelpers::toResourceDocument)
                                         .thenAccept(servers ->
                                         {
-                                            listener.servers(servers);
+                                            listener.addedServer(servers);
                                         });
 
                             });
@@ -151,7 +149,7 @@ public class RegistryClient
         @Override
         public void onWebSocketText(String body) {
             ResourceDocument added = new ResourceDocument(Json.createReader(new StringReader(body)).read());
-            listener.servers(added);
+            listener.addedServer(added);
         }
     }
 }

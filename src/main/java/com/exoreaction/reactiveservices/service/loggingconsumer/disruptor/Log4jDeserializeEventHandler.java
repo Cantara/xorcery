@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.loggingconsumer.disruptor;
 
-import com.exoreaction.reactiveservices.disruptor.DefaultEventHandler;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
+import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.parser.JsonLogEventParser;
 
@@ -11,7 +11,7 @@ import org.apache.logging.log4j.core.parser.JsonLogEventParser;
  */
 
 public class Log4jDeserializeEventHandler
-    implements DefaultEventHandler<EventHolder<LogEvent>>
+    implements DefaultEventHandler<Event<LogEvent>>
 {
     private final JsonLogEventParser parser;
 
@@ -21,8 +21,9 @@ public class Log4jDeserializeEventHandler
     }
 
     @Override
-    public void onEvent( EventHolder<LogEvent> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent(Event<LogEvent> event, long sequence, boolean endOfBatch ) throws Exception
     {
-        event.event = parser.parseFrom( event.body.array());
+        if (event.event == null && event.body != null)
+            event.event = parser.parseFrom( event.body.array());
     }
 }

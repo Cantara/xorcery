@@ -1,14 +1,13 @@
 package com.exoreaction.reactiveservices.service.mapdbdomainevents;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
-import com.exoreaction.reactiveservices.disruptor.MetadataDeserializerEventHandler;
-import com.exoreaction.reactiveservices.disruptor.WebSocketFlowControlEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.handlers.MetadataDeserializerEventHandler;
+import com.exoreaction.reactiveservices.disruptor.handlers.WebSocketFlowControlEventHandler;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Link;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.configuration.Configuration;
+import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
 import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.DomainEventDeserializeEventHandler;
 import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.MapDbDomainEventEventHandler;
@@ -20,7 +19,6 @@ import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonObject;
-import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +26,6 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
@@ -55,17 +52,18 @@ public class MapDbDomainEventsService
             extends AbstractFeature {
 
         @Override
-        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server)
-        {
-            if (injectionManager.getInstance(Configuration.class).getConfiguration(SERVICE_TYPE).getBoolean("enabled", true))
-            {
-                server.addService(new ResourceObject.Builder("service", SERVICE_TYPE).build());
-                MARKER.addParents(server.getServerLogMarker());
+        protected String serviceType() {
+            return SERVICE_TYPE;
+        }
 
-                context.register(MapDbDomainEventsService.class);
-            }
+        @Override
+        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
 
-            return super.configure(context, injectionManager, server);
+        }
+
+        @Override
+        protected void configure() {
+            context.register(MapDbDomainEventsService.class);
         }
     }
 
@@ -96,8 +94,8 @@ public class MapDbDomainEventsService
     }
 
     public void connect(Link domainEventSource) {
-        Disruptor<EventHolder<JsonObject>> disruptor =
-                new Disruptor<>(EventHolder::new, 4096, new NamedThreadFactory("MapDbDomainEventsDisruptorIn-"),
+        Disruptor<Event<JsonObject>> disruptor =
+                new Disruptor<>(Event::new, 4096, new NamedThreadFactory("MapDbDomainEventsDisruptorIn-"),
                         ProducerType.SINGLE,
                         new BlockingWaitStrategy());
 
@@ -136,12 +134,12 @@ public class MapDbDomainEventsService
     private static class DomainEventsClientEndpoint
             implements WebSocketListener {
         private final Logger logger = LogManager.getLogger(getClass());
-        private final Disruptor<EventHolder<JsonObject>> disruptor;
+        private final Disruptor<Event<JsonObject>> disruptor;
 
         ByteBuffer headers;
 
         private DomainEventsClientEndpoint(
-                Disruptor<EventHolder<JsonObject>> disruptor) {
+                Disruptor<Event<JsonObject>> disruptor) {
             this.disruptor = disruptor;
         }
 

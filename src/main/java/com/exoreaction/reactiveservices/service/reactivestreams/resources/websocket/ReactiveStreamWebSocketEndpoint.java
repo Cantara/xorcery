@@ -1,18 +1,16 @@
-package com.exoreaction.reactiveservices.service.domainevents.resources.websocket;
+package com.exoreaction.reactiveservices.service.reactivestreams.resources.websocket;
 
-import com.exoreaction.reactiveservices.disruptor.EventHandlerResult;
-import com.exoreaction.reactiveservices.service.domainevents.DomainEventHolder;
-import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.handlers.MetadataSerializerEventHandler;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.lmax.disruptor.AggregateEventHandler;
 import com.lmax.disruptor.EventHandler;
-import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -20,19 +18,23 @@ import java.util.concurrent.TimeUnit;
  * @author rickardoberg
  * @since 13/04/2022
  */
-public class DomainEventsWebSocketEndpoint
-    implements WebSocketListener, EventHandler<DomainEventHolder>
+public class ReactiveStreamWebSocketEndpoint<T>
+    implements WebSocketListener, ReactiveEventStreams.Subscriber<T>, EventHandler<Event<T>>
 {
-    private final List<EventHandler<DomainEventHolder>> consumers;
-    private EventHandlerResult<DomainEvents, Metadata> eventHandlerResult;
     private Session session;
     private Semaphore semaphore = new Semaphore(0);
-    private ObjectMapper mapper = new ObjectMapper();
+    private ReactiveEventStreams.Publisher<T> publisher;
+    private Map<String, String> parameters;
+    private EventHandler<Event<T>> serializer;
+    private ReactiveEventStreams.Subscription subscription;
 
-    public DomainEventsWebSocketEndpoint(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<DomainEvents, Metadata> eventHandlerResult)
+    public ReactiveStreamWebSocketEndpoint(ReactiveEventStreams.Publisher<T> publisher,
+                                           Map<String, String> parameters,
+                                           EventHandler<Event<T>> serializer)
     {
-        this.consumers = consumers;
-        this.eventHandlerResult = eventHandlerResult;
+        this.publisher = publisher;
+        this.parameters = parameters;
+        this.serializer = serializer;
     }
 
     public Semaphore getSemaphore()
@@ -44,31 +46,29 @@ public class DomainEventsWebSocketEndpoint
     @Override
     public void onWebSocketBinary( byte[] payload, int offset, int len )
     {
-        try {
-            Metadata result = mapper.readValue( payload, offset, len, Metadata.class );
-            eventHandlerResult.complete(result);
-        } catch (IOException e) {
-            LogManager.getLogger(getClass()).error("Could not deserialize result", e);
-        }
+        // TODO
+        // Handle CompletionStage
     }
 
     @Override
     public void onWebSocketText( String message )
     {
-        semaphore.release(Integer.parseInt( message ));
+        long requestAmount = Long.parseLong(message);
+        semaphore.release((int)requestAmount);
+        subscription.request(requestAmount);
     }
 
     @Override
     public void onWebSocketClose( int statusCode, String reason )
     {
-        consumers.remove( this );
+        subscription.cancel();
     }
 
     @Override
     public void onWebSocketConnect( Session session )
     {
         this.session = session;
-        consumers.add( this );
+        publisher.subscribe( this,parameters );
     }
 
     @Override
@@ -76,15 +76,23 @@ public class DomainEventsWebSocketEndpoint
     {
     }
 
+    // Subscriber
+    @Override
+    public EventHandler<Event<T>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        this.subscription = subscription;
+        return new AggregateEventHandler<>(serializer, new MetadataSerializerEventHandler<>(), this);
+    }
+
     // EventHandler
     @Override
-    public void onEvent( DomainEventHolder event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent(Event<T> event, long sequence, boolean endOfBatch ) throws Exception
     {
         while (!semaphore.tryAcquire(1, TimeUnit.SECONDS))
         {
             if (!session.isOpen())
                 return;
         }
+
         session.getRemote().sendBytes( event.headers, new WriteCallback()
         {
             @Override

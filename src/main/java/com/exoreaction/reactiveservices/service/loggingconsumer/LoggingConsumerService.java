@@ -1,15 +1,13 @@
 package com.exoreaction.reactiveservices.service.loggingconsumer;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
-import com.exoreaction.reactiveservices.disruptor.BroadcastEventHandler;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
-import com.exoreaction.reactiveservices.disruptor.MetadataDeserializerEventHandler;
-import com.exoreaction.reactiveservices.disruptor.WebSocketFlowControlEventHandler;
+import com.exoreaction.reactiveservices.disruptor.handlers.BroadcastEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.handlers.MetadataDeserializerEventHandler;
+import com.exoreaction.reactiveservices.disruptor.handlers.WebSocketFlowControlEventHandler;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Link;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.loggingconsumer.disruptor.Log4jDeserializeEventHandler;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
@@ -19,13 +17,11 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.parser.JsonLogEventParser;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
@@ -54,19 +50,18 @@ public class LoggingConsumerService
             extends AbstractFeature {
 
         @Override
-        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
-            if (injectionManager.getInstance(Configuration.class).getBoolean("loggingconsumer.enabled", true)) {
-                server.addService(new ResourceObject.Builder("service", "loggingconsumer").build());
+        protected String serviceType() {
+            return "loggingconsumer";
+        }
 
-                context.register(LoggingConsumerService.class, LoggingConsumerService.class, ContainerLifecycleListener.class);
-            }
-
-            return super.configure(context, injectionManager, server);
+        @Override
+        protected void configure() {
+            context.register(LoggingConsumerService.class, LoggingConsumerService.class, ContainerLifecycleListener.class);
         }
     }
 
     private RegistryClient registryClient;
-    private List<EventHandler<EventHolder<LogEvent>>> handlers = new CopyOnWriteArrayList<>();
+    private List<EventHandler<Event<LogEvent>>> handlers = new CopyOnWriteArrayList<>();
 
     @Inject
     public LoggingConsumerService(RegistryClient registryClient) {
@@ -92,13 +87,13 @@ public class LoggingConsumerService
         System.out.println("Shutdown");
     }
 
-    public void addLogHandler(EventHandler<EventHolder<LogEvent>> handler) {
+    public void addLogHandler(EventHandler<Event<LogEvent>> handler) {
         handlers.add(handler);
     }
 
     private void connect(Link logSource) {
-        Disruptor<EventHolder<LogEvent>> disruptor =
-                new Disruptor<>(EventHolder::new, 4096, new NamedThreadFactory("SysoutDisruptorIn-"),
+        Disruptor<Event<LogEvent>> disruptor =
+                new Disruptor<>(Event::new, 4096, new NamedThreadFactory("SysoutDisruptorIn-"),
                         ProducerType.SINGLE,
                         new BlockingWaitStrategy());
 
@@ -131,12 +126,12 @@ public class LoggingConsumerService
 
     private class LoggingClientEndpoint
             implements WebSocketListener {
-        private final Disruptor<EventHolder<LogEvent>> disruptor;
+        private final Disruptor<Event<LogEvent>> disruptor;
 
         ByteBuffer headers;
 
         private LoggingClientEndpoint(
-                Disruptor<EventHolder<LogEvent>> disruptor) {
+                Disruptor<Event<LogEvent>> disruptor) {
             this.disruptor = disruptor;
         }
 

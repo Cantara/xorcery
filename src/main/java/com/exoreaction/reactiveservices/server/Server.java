@@ -42,6 +42,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -54,6 +55,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 
 public class Server
         implements Closeable {
+    private final String serverId;
     private Configuration configuration;
     private URI baseUri;
 
@@ -64,9 +66,9 @@ public class Server
     public Server(File configurationFile, String id) throws Exception {
         this.configuration = configuration(configurationFile);
 
-        String serverId = configuration.getString("id", UUID.randomUUID().toString());
+        serverId = configuration.getString("id", Optional.ofNullable(id).orElse(UUID.randomUUID().toString()));
 
-        serverLogMarker = MarkerManager.getMarker("server:"+serverId);
+        serverLogMarker = MarkerManager.getMarker("server:"+ serverId);
 
         services.add(new ResourceObject.Builder("server", serverId)
                         .attributes(new Attributes.Builder()
@@ -75,6 +77,10 @@ public class Server
         MetricRegistry metricRegistry = metrics();
 
         webServer(metricRegistry);
+    }
+
+    public String getServerId() {
+        return serverId;
     }
 
     public void addService(ResourceObject serviceResource) {
@@ -144,7 +150,7 @@ public class Server
 
     private void webServer(MetricRegistry metricRegistry) throws Exception {
 
-        Configuration jettyConfig = configuration.getConfiguration("jetty");
+        Configuration jettyConfig = configuration.getConfiguration("server");
 
         // Setup thread pool
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();

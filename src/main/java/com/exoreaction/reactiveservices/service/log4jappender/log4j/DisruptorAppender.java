@@ -1,12 +1,11 @@
 package com.exoreaction.reactiveservices.service.log4jappender.log4j;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
-import com.exoreaction.reactiveservices.disruptor.BroadcastEventHandler;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
-import com.exoreaction.reactiveservices.disruptor.MetadataSerializerEventHandler;
+import com.exoreaction.reactiveservices.disruptor.handlers.BroadcastEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.handlers.MetadataSerializerEventHandler;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.ThreadContext;
@@ -55,8 +54,8 @@ public class DisruptorAppender
         return new DisruptorAppender.Builder<B>().asBuilder();
     }
 
-    private final Disruptor<EventHolder<LogEvent>> disruptor;
-    private final List<EventHandler<EventHolder<LogEvent>>> consumers = new CopyOnWriteArrayList<>();
+    private final Disruptor<Event<LogEvent>> disruptor;
+    private final List<EventHandler<Event<LogEvent>>> consumers = new CopyOnWriteArrayList<>();
 
     public DisruptorAppender( final String name, final Layout<? extends Serializable> layout, final Filter filter,
                               final boolean ignoreExceptions, final Property[] properties )
@@ -65,7 +64,7 @@ public class DisruptorAppender
         Objects.requireNonNull( layout, "layout" );
 
         disruptor =
-            new Disruptor<>( EventHolder::new, 4096, new NamedThreadFactory( "Log4jDisruptor-" ),
+            new Disruptor<>( Event::new, 4096, new NamedThreadFactory( "Log4jDisruptor-" ),
                 ProducerType.MULTI,
                 new BlockingWaitStrategy() );
 
@@ -88,8 +87,8 @@ public class DisruptorAppender
         disruptor.publishEvent( ( holder, seq, e ) ->
         {
             holder.metadata.clear();
-            holder.metadata.putAllValues( ThreadContext.getContext() );
-            holder.metadata.put("appname", "Test");
+            holder.metadata.getMetadata().putAll( ThreadContext.getContext() );
+            holder.metadata.add("appname", "Test");
             holder.event = e;
         }, event );
     }
@@ -103,7 +102,7 @@ public class DisruptorAppender
         return stopped;
     }
 
-    public List<EventHandler<EventHolder<LogEvent>>> getConsumers()
+    public List<EventHandler<Event<LogEvent>>> getConsumers()
     {
         return consumers;
     }

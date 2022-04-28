@@ -1,19 +1,28 @@
-jetty:
+server:
   port: 8080
 
 registry:
   master: http://localhost:8080/api/registry
 
-loggingconsumer:
+log4jappender:
   enabled: true
 
-soutmetrics:
-  enabled: false
+loggingconsumer:
+  enabled: true
 
 soutlogging:
   enabled: true
 
+soutmetrics:
+  enabled: true
+
+domainevents:
+  enabled: true
+
 mapdbdomainevents:
+  enabled: true
+
+greeter:
   enabled: true
 
 visualizer:

@@ -1,23 +1,19 @@
 package com.exoreaction.reactiveservices.service.visualizer;
 
 
-import com.exoreaction.reactiveservices.disruptor.DefaultEventHandler;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
+import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.Link;
-import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.configuration.Configuration;
+import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
 import com.exoreaction.reactiveservices.service.loggingconsumer.LoggingConsumerService;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.core.LogEvent;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
@@ -28,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
 @Contract
-public class VisualizerService
+public class Visualizer
         implements ContainerLifecycleListener {
 
     @Provider
@@ -36,17 +32,18 @@ public class VisualizerService
             extends AbstractFeature {
 
         @Override
-        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
-            if (injectionManager.getInstance(Configuration.class).getConfiguration("visualizer").getBoolean("enabled", true)) {
-                server.addService(new ResourceObject.Builder("service", "visualizer")
-                        .links(new Links.Builder()
-                                .link("visualizer", server.getBaseUriBuilder().path("api/visualizer")))
-                        .build());
+        protected String serviceType() {
+            return "visualizer";
+        }
 
-                context.register(VisualizerService.class, VisualizerService.class, ContainerLifecycleListener.class);
-            }
+        @Override
+        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
+            builder.api("visualizer", "api/visualizer");
+        }
 
-            return super.configure(context, injectionManager, server);
+        @Override
+        protected void configure() {
+            context.register(Visualizer.class, Visualizer.class, ContainerLifecycleListener.class);
         }
     }
 
@@ -59,7 +56,7 @@ public class VisualizerService
     private final List<ServiceConnection> connections = new CopyOnWriteArrayList<>();
 
     @Inject
-    public VisualizerService(RegistryClient registryClient, LoggingConsumerService loggingConsumerService) {
+    public Visualizer(RegistryClient registryClient, LoggingConsumerService loggingConsumerService) {
         this.registryClient = registryClient;
         this.loggingConsumerService = loggingConsumerService;
     }
@@ -100,9 +97,9 @@ public class VisualizerService
     }
 
     private class LogEventHandler
-            implements DefaultEventHandler<EventHolder<LogEvent>> {
+            implements DefaultEventHandler<Event<LogEvent>> {
         @Override
-        public void onEvent(EventHolder<LogEvent> event, long sequence, boolean endOfBatch) throws Exception {
+        public void onEvent(Event<LogEvent> event, long sequence, boolean endOfBatch) throws Exception {
             if (event.event.getMessage().getFormat().startsWith("Connected to")) {
                 String serviceId = event.event.getMarker().getName().split(":")[1];
                 String toUri = event.event.getMessage().getFormattedMessage().substring("Connected to ".length());
@@ -114,14 +111,14 @@ public class VisualizerService
             }
         }
 
-        private int getServiceById(String serviceId)
-        {
+        private int getServiceById(String serviceId) {
             for (ServiceEntry service : services) {
                 if (service.resource().getId().equals(serviceId))
                     return service.id();
             }
             return -1;
         }
+
         private int getServiceByLink(String toUri) {
             for (ServiceEntry service : services) {
                 for (Link link : service.resource().getLinks().getLinks()) {
@@ -134,9 +131,9 @@ public class VisualizerService
 
     }
 
-    private record ServiceEntry(ResourceObject resource, int id)
-    {
+    private record ServiceEntry(ResourceObject resource, int id) {
     }
+
     private record ServiceConnection(int from, int to) {
     }
 }

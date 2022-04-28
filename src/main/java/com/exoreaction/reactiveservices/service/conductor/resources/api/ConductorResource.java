@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.api;
 
+import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
@@ -27,7 +28,7 @@ public class ConductorResource
     }
 
     @GET
-    @Produces( PRODUCES_JSON_API )
+    @Produces( MediaTypes.JSON_API_TEXT_HTML )
     public ResourceDocument get()
     {
         return new ResourceDocument.Builder()

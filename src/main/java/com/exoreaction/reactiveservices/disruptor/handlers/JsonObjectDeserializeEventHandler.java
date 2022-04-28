@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor;
+package com.exoreaction.reactiveservices.disruptor.handlers;
 
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.disruptor.Event;
@@ -12,17 +12,20 @@ import java.io.StringReader;
  * @since 18/04/2022
  */
 
-public class DomainEventDeserializeEventHandler
+public class JsonObjectDeserializeEventHandler
     implements DefaultEventHandler<Event<JsonObject>>
 {
-    public DomainEventDeserializeEventHandler()
+    public JsonObjectDeserializeEventHandler()
     {
     }
 
     @Override
     public void onEvent(Event<JsonObject> event, long sequence, boolean endOfBatch ) throws Exception
     {
-        String json = new String(event.body.array());
-        event.event = Json.createReader(new StringReader(json)).readObject();
+        if (event.body != null && event.event == null)
+        {
+            String json = new String(event.body.array());
+            event.event = Json.createReader(new StringReader(json)).readObject();
+        }
     }
 }

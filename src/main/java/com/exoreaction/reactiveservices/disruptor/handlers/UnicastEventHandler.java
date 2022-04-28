@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.disruptor;
+package com.exoreaction.reactiveservices.disruptor.handlers;
 
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;

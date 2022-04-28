@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.domainevents.api;
+package com.exoreaction.reactiveservices.disruptor;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;

@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.service.visualizer.resources.api;
 
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.service.visualizer.VisualizerService;
+import com.exoreaction.reactiveservices.service.visualizer.Visualizer;
 import com.github.jknack.handlebars.Context;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -12,19 +11,19 @@ import java.util.Map;
 
 @Path("api/visualizer")
 public class VisualizerResource {
-    private final VisualizerService visualizerService;
+    private final Visualizer visualizer;
 
     @Inject
-    public VisualizerResource(VisualizerService visualizerService) {
-        this.visualizerService = visualizerService;
+    public VisualizerResource(Visualizer visualizer) {
+        this.visualizer = visualizer;
     }
 
     @GET
     public Context get() {
         Map<String, Object> root = new HashMap<>();
 
-        root.put("services", visualizerService.getServices());
-        root.put("connections", visualizerService.getConnections());
+        root.put("services", visualizer.getServices());
+        root.put("connections", visualizer.getConnections());
 
         return Context.newContext(root);
     }

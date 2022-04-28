@@ -18,7 +18,8 @@ import java.util.function.BiFunction;
  * @author rickardoberg
  * @since 20/04/2022
  */
-public class Configuration {
+public class Configuration
+{
     public static class Builder {
         private JsonObjectBuilder builder;
 
@@ -83,7 +84,10 @@ public class Configuration {
     }
 
     public Configuration getConfiguration(String name) {
-        return new Configuration(config.getJsonObject(name));
+        JsonObject jsonObject = config.getJsonObject(name);
+        if (jsonObject == null)
+            jsonObject = Json.createObjectBuilder().build();  // Create empty configuration
+        return new Configuration(jsonObject);
     }
 
     public Builder asBuilder() {

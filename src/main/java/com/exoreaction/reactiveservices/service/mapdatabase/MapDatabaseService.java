@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.mapdatabase;
 
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
@@ -14,6 +15,11 @@ public class MapDatabaseService
     @Provider
     public static class Feature
             extends AbstractFeature {
+
+        @Override
+        protected String serviceType() {
+            return "mapdatabase";
+        }
 
         @Override
         protected void configure() {

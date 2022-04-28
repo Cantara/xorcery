@@ -1,9 +1,8 @@
-package com.exoreaction.reactiveservices.disruptor;
+package com.exoreaction.reactiveservices.disruptor.handlers;
 
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.io.IOException;
-import java.util.Timer;
 import java.util.concurrent.Executor;
 
 /**

@@ -1,24 +1,18 @@
 package com.exoreaction.reactiveservices.service.greeter;
 
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.Attributes;
-import com.exoreaction.reactiveservices.jsonapi.Links;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
-import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
+import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.service.greeter.commands.ChangeGreeting;
 import com.exoreaction.reactiveservices.service.greeter.domainevents.GreetedEvent;
+import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.spi.Contract;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -29,18 +23,20 @@ public class GreeterApplication {
     @Provider
     public static class Feature
             extends AbstractFeature {
+
         @Override
-        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
+        protected String serviceType() {
+            return "greeter";
+        }
 
-            server.addService(new ResourceObject.Builder("service", "greeter")
-                    .attributes(new Attributes.Builder()
-                            .attribute("version", "1.0"))
-                    .links(new Links.Builder()
-                            .link("greeter", server.getBaseUriBuilder().path("api/greeter")))
-                    .build());
+        @Override
+        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
+            builder.version("1.0.0").api("greeter", "api/greeter");
+        }
 
+        @Override
+        protected void configure() {
             context.register(GreeterApplication.class, GreeterApplication.class);
-            return super.configure(context, injectionManager, server);
         }
     }
 

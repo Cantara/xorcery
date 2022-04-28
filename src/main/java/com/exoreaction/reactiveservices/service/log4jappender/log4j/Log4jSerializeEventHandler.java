@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.log4jappender.log4j;
 
-import com.exoreaction.reactiveservices.disruptor.DefaultEventHandler;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
+import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.layout.JsonLayout;
 
@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
  */
 
 public class Log4jSerializeEventHandler
-    implements DefaultEventHandler<EventHolder<LogEvent>>
+    implements DefaultEventHandler<Event<LogEvent>>
 {
     private final JsonLayout layout;
 
@@ -23,7 +23,7 @@ public class Log4jSerializeEventHandler
     }
 
     @Override
-    public void onEvent( EventHolder<LogEvent> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent(Event<LogEvent> event, long sequence, boolean endOfBatch ) throws Exception
     {
         event.body = ByteBuffer.wrap(layout.toByteArray( event.event ));
     }

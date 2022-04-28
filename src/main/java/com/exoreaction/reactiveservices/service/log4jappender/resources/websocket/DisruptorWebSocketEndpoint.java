@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.log4jappender.resources.websocket;
 
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
+import com.exoreaction.reactiveservices.disruptor.Event;
 import com.lmax.disruptor.EventHandler;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
@@ -15,13 +15,13 @@ import java.util.concurrent.TimeUnit;
  * @since 13/04/2022
  */
 public class DisruptorWebSocketEndpoint<T>
-    implements WebSocketListener, EventHandler<EventHolder<T>>
+    implements WebSocketListener, EventHandler<Event<T>>
 {
-    private final List<EventHandler<EventHolder<T>>> consumers;
+    private final List<EventHandler<Event<T>>> consumers;
     private Session session;
     private Semaphore semaphore = new Semaphore(0);
 
-    public DisruptorWebSocketEndpoint( List<EventHandler<EventHolder<T>>> consumers )
+    public DisruptorWebSocketEndpoint( List<EventHandler<Event<T>>> consumers )
     {
         this.consumers = consumers;
     }
@@ -63,7 +63,7 @@ public class DisruptorWebSocketEndpoint<T>
 
     // EventHandler
     @Override
-    public void onEvent( EventHolder<T> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent(Event<T> event, long sequence, boolean endOfBatch ) throws Exception
     {
         while (!semaphore.tryAcquire(1, TimeUnit.SECONDS))
         {

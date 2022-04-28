@@ -1,30 +1,25 @@
 package com.exoreaction.reactiveservices.service.conductor.resources;
 
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.Links;
 import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Service;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Template;
+import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
 import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
-import com.exoreaction.reactiveservices.service.soutlogger.SysoutLoggingService;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;
-import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.websocket.api.Session;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -43,18 +38,21 @@ public class ConductorService
     @Provider
     public static class Feature
             extends AbstractFeature {
+
         @Override
-        public boolean configure(FeatureContext context, InjectionManager injectionManager, Server server) {
+        protected String serviceType() {
+            return "conductor";
+        }
 
-            server.addService(new ResourceObject
-                    .Builder("service", "conductor")
-                    .links(new Links.Builder()
-                            .link("conductor", server.getBaseUriBuilder().path("api/conductor"))
-                            .link("conductorevents", server.getBaseUriBuilder().scheme("ws").path("ws/conductorevents")))
-                    .build());
+        @Override
+        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
+            builder.api("conductor", "api/conductor")
+                    .websocket("conductorevents", "ws/conductorevents");
+        }
 
+        @Override
+        protected void configure() {
             context.register(ConductorService.class, ConductorService.class, ContainerLifecycleListener.class);
-            return super.configure(context, injectionManager, server);
         }
     }
 

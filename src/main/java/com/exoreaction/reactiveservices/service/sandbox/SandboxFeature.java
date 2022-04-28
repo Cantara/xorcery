@@ -15,6 +15,11 @@ public class SandboxFeature
     extends AbstractFeature
 {
     @Override
+    protected String serviceType() {
+        return "sandbox";
+    }
+
+    @Override
     protected void configure() {
         File file = new File(getClass().getResource("/templates/sandbox/resourcedocument.html").getFile())
                 .getParentFile().getParentFile();

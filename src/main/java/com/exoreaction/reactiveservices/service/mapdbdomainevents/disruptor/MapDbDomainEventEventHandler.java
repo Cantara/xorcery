@@ -1,11 +1,10 @@
 package com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor;
 
-import com.exoreaction.reactiveservices.disruptor.DefaultEventHandler;
-import com.exoreaction.reactiveservices.disruptor.EventHolder;
-import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
+import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.json.JsonArray;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 import org.eclipse.jetty.websocket.api.Session;
@@ -19,7 +18,7 @@ import java.util.Map;
  */
 
 public class MapDbDomainEventEventHandler
-    implements DefaultEventHandler<EventHolder<JsonObject>>
+    implements DefaultEventHandler<Event<JsonObject>>
 {
     private final MapDatabaseService mapDatabaseService;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -33,7 +32,7 @@ public class MapDbDomainEventEventHandler
     }
 
     @Override
-    public void onEvent( EventHolder<JsonObject> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent(Event<JsonObject> event, long sequence, boolean endOfBatch ) throws Exception
     {
         event.event.getJsonArray("events").stream().map(JsonObject.class::cast).forEach( jsonObject ->
         {

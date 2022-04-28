@@ -3,7 +3,7 @@ package com.exoreaction.reactiveservices.service.domainevents.resources.websocke
 import com.exoreaction.reactiveservices.disruptor.EventHandlerResult;
 import com.exoreaction.reactiveservices.service.domainevents.DomainEventHolder;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
-import com.exoreaction.reactiveservices.service.domainevents.api.Metadata;
+import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.lmax.disruptor.EventHandler;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
