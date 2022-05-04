@@ -126,6 +126,7 @@ public class MapDbDomainEventsService
                     new BlockingWaitStrategy());
             disruptor.handleEventsWith(new MapDbDomainEventEventHandler(mapDatabaseService, subscription, objectMapper));
             disruptor.start();
+            subscription.request(1);
             return disruptor.getRingBuffer();
         }
 

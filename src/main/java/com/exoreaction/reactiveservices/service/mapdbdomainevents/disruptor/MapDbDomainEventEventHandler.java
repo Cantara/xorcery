@@ -34,8 +34,6 @@ public class MapDbDomainEventEventHandler
         this.mapDatabaseService = mapDatabaseService;
         this.subscription = subscription;
         this.objectMapper = objectMapper;
-
-        subscription.request(1);
     }
 
     @Override
