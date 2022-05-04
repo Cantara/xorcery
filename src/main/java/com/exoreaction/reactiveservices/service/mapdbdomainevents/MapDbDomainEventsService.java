@@ -2,38 +2,37 @@ package com.exoreaction.reactiveservices.service.mapdbdomainevents;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
-import com.exoreaction.reactiveservices.disruptor.handlers.MetadataDeserializerEventHandler;
-import com.exoreaction.reactiveservices.disruptor.handlers.WebSocketFlowControlEventHandler;
+import com.exoreaction.reactiveservices.disruptor.EventWithResult;
+import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.Link;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
+import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
-import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.DomainEventDeserializeEventHandler;
 import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.MapDbDomainEventEventHandler;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
+import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Executors;
+import java.util.Collections;
 
 /**
  * @author rickardoberg
@@ -57,7 +56,7 @@ public class MapDbDomainEventsService
         }
 
         @Override
-        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
+        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
 
         }
 
@@ -68,55 +67,37 @@ public class MapDbDomainEventsService
     }
 
     private final Logger logger = LogManager.getLogger(getClass());
-    private final RegistryClient registryClient;
+    private final Registry registry;
+    private ReactiveStreams reactiveStreams;
     private final MapDatabaseService mapDatabaseService;
+    private ObjectMapper objectMapper;
 
     @Inject
-    public MapDbDomainEventsService(RegistryClient registryClient, MapDatabaseService mapDatabaseService) {
-        this.registryClient = registryClient;
+    public MapDbDomainEventsService(Registry registry, ReactiveStreams reactiveStreams,
+                                    MapDatabaseService mapDatabaseService, ObjectMapper objectMapper) {
+        this.registry = registry;
+        this.reactiveStreams = reactiveStreams;
         this.mapDatabaseService = mapDatabaseService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public void onStartup(Container container) {
-        logger.info(MARKER, "Startup");
-
-        registryClient.addRegistryListener(new DomainEventsRegistryListener());
+        registry.addRegistryListener(new DomainEventsRegistryListener());
     }
 
     @Override
     public void onReload(Container container) {
 
     }
+
     @Override
     public void onShutdown(Container container) {
-        logger.info(MARKER, "Shutdown");
+
     }
 
     public void connect(Link domainEventSource) {
-        Disruptor<Event<JsonObject>> disruptor =
-                new Disruptor<>(Event::new, 4096, new NamedThreadFactory("MapDbDomainEventsDisruptorIn-"),
-                        ProducerType.SINGLE,
-                        new BlockingWaitStrategy());
-
-        registryClient.connect(domainEventSource.getHrefAsUriTemplate().createURI(""), new DomainEventsClientEndpoint(disruptor))
-                .thenAccept(session ->
-                {
-                    try {
-                        disruptor.handleEventsWith(new MetadataDeserializerEventHandler(),
-                                        new DomainEventDeserializeEventHandler())
-                                .then(new MapDbDomainEventEventHandler(mapDatabaseService, session), new WebSocketFlowControlEventHandler(1, session, Executors.newSingleThreadExecutor()));
-                        disruptor.start();
-
-//                        logger.info(MARKER, "Connected to " + domainEventSource.getHref());
-                    } catch (IOException e) {
-                        throw new CompletionException(e);
-                    }
-                }).exceptionally(e ->
-                {
-                    e.printStackTrace();
-                    return null;
-                });
+        reactiveStreams.subscribe(domainEventSource, new DomainEventsSubscriber(), Collections.emptyMap(), MarkerManager.getMarker(domainEventSource.getHref()));
     }
 
     @Override
@@ -131,52 +112,25 @@ public class MapDbDomainEventsService
         }
     }
 
-    private static class DomainEventsClientEndpoint
-            implements WebSocketListener {
-        private final Logger logger = LogManager.getLogger(getClass());
-        private final Disruptor<Event<JsonObject>> disruptor;
+    private class DomainEventsSubscriber
+        implements ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>>
+    {
 
-        ByteBuffer headers;
+        private Disruptor<Event<EventWithResult<DomainEvents, Metadata>>> disruptor;
 
-        private DomainEventsClientEndpoint(
-                Disruptor<Event<JsonObject>> disruptor) {
-            this.disruptor = disruptor;
+        @Override
+        public EventSink<Event<EventWithResult<DomainEvents, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+            disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("MapDbDomainEventsDisruptorIn-"),
+                    ProducerType.SINGLE,
+                    new BlockingWaitStrategy());
+            disruptor.handleEventsWith(new MapDbDomainEventEventHandler(mapDatabaseService, subscription, objectMapper));
+            disruptor.start();
+            return disruptor.getRingBuffer();
         }
 
         @Override
-        public void onWebSocketText(String message) {
-            logger.debug(MARKER, "Text: {}",  message);
-        }
-
-        @Override
-        public void onWebSocketBinary(byte[] payload, int offset, int len) {
-            if (headers == null) {
-                headers = ByteBuffer.wrap(payload, offset, len);
-            } else {
-                ByteBuffer body = ByteBuffer.wrap(payload, offset, len);
-                disruptor.publishEvent((holder, seq, h, b) ->
-                {
-                    holder.headers = h;
-                    holder.body = b;
-                }, headers, body);
-                headers = null;
-            }
-        }
-
-        @Override
-        public void onWebSocketClose(int statusCode, String reason) {
-            logger.info(MARKER, "Closed: {} ({})",  statusCode, reason);
+        public void onComplete() {
             disruptor.shutdown();
-        }
-
-        @Override
-        public void onWebSocketConnect(Session session) {
-            logger.info(MARKER, "Connected to {}",  session.getUpgradeRequest().getRequestURI());
-        }
-
-        @Override
-        public void onWebSocketError(Throwable cause) {
-            logger.error(MARKER, "Error",  cause);
         }
     }
 }

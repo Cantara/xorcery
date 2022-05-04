@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.reactivestreams.api;
 
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 
 public record ServiceLinkReference(ServiceReference service, String rel) {
 

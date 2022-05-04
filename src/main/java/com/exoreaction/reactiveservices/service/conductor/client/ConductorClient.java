@@ -1,9 +1,9 @@
 package com.exoreaction.reactiveservices.service.conductor.client;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
-import com.exoreaction.reactiveservices.jsonapi.Link;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
+import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
 import jakarta.json.Json;
 import jakarta.ws.rs.core.UriBuilder;
 import org.eclipse.jetty.client.HttpClient;
@@ -43,7 +43,7 @@ public class ConductorClient
             String conductorJson = httpClient.GET( conductorUri ).getContentAsString();
 
             ResourceDocument conductor =
-                new ResourceDocument( Json.createReader( new StringReader( conductorJson ) ).read() );
+                new ResourceDocument( Json.createReader( new StringReader( conductorJson ) ).readObject() );
 
             // Register for updates
             Link websocket = conductor.getLinks().getRel( "events" ).orElseThrow();
@@ -54,7 +54,7 @@ public class ConductorClient
             String patternsJson = httpClient.GET( link.getHref() ).getContentAsString();
 
             ResourceDocument snapshot =
-                new ResourceDocument( Json.createReader( new StringReader( patternsJson ) ).read() );
+                new ResourceDocument( Json.createReader( new StringReader( patternsJson ) ).readObject() );
 //            listener.snapshot( snapshot );
         }
         catch ( InterruptedException | TimeoutException | ExecutionException | IOException e )
@@ -82,7 +82,7 @@ public class ConductorClient
         @Override
         public void onWebSocketText( String body )
         {
-            ResourceDocument added = new ResourceDocument( Json.createReader( new StringReader( body ) ).read() );
+            ResourceDocument added = new ResourceDocument( Json.createReader( new StringReader( body ) ).readObject() );
 //            listener.added( added );
         }
     }

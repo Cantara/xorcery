@@ -5,6 +5,7 @@ import jakarta.ws.rs.core.MediaType;
 public class MediaTypes
 {
     public final static String APPLICATION_JSON_API = "application/vnd.api+json";
+    public final static String APPLICATION_JSON_LOGEVENT = "application/vnd.logevent+json";
 
     /**
      * A {@link MediaType} constant representing {@value #APPLICATION_JSON_API} media type.

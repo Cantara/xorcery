@@ -1,22 +1,22 @@
 package com.exoreaction.reactiveservices.service.soutlogger;
 
+import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.Link;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.service.loggingconsumer.disruptor.Log4jDeserializeEventHandler;
+import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
-import com.lmax.disruptor.AggregateEventHandler;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventSink;
+import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.core.parser.JsonLogEventParser;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +35,7 @@ public class SysoutLogging
     public static final String SERVICE_TYPE = "soutlogging";
 
     private ReactiveStreams reactiveStreams;
-    private RegistryClient registryClient;
+    private Registry registry;
 
     @Provider
     public static class Feature
@@ -53,16 +53,15 @@ public class SysoutLogging
 
 
     @Inject
-    public SysoutLogging(ReactiveStreams reactiveStreams, RegistryClient registryClient) {
+    public SysoutLogging(ReactiveStreams reactiveStreams, Registry registry) {
         this.reactiveStreams = reactiveStreams;
-        this.registryClient = registryClient;
+        this.registry = registry;
     }
 
     @Override
     public void onStartup(Container container) {
-        System.out.println("Sysoutlogger Startup");
+        registry.addRegistryListener(new LoggingRegistryListener());
 
-        registryClient.addRegistryListener(new LoggingRegistryListener());
     }
 
     @Override
@@ -73,8 +72,6 @@ public class SysoutLogging
     @Override
     public void onShutdown(Container container) {
 
-        // TODO Close active sessions
-        System.out.println("Shutdown");
     }
 
     @NotNull
@@ -90,10 +87,16 @@ public class SysoutLogging
     {
         private ReactiveEventStreams.Subscription subscription;
         @Override
-        public EventHandler<Event<LogEvent>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<LogEvent>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
             this.subscription = subscription;
+
+            Disruptor<Event<LogEvent>> disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("SysoutLogger-") );
+            disruptor.handleEventsWith(this);
+            disruptor.start();
+
             subscription.request(1);
-            return new AggregateEventHandler<>(new Log4jDeserializeEventHandler(new JsonLogEventParser()), this);
+
+            return disruptor.getRingBuffer();
         }
 
         @Override

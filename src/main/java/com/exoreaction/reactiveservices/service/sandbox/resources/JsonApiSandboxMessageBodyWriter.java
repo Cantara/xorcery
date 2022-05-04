@@ -1,24 +1,16 @@
 package com.exoreaction.reactiveservices.service.sandbox.resources;
 
-import com.exoreaction.reactiveservices.jetty.client.ResponseListener;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
-import com.exoreaction.reactiveservices.rest.RestHelpers;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.json.Json;
-import jakarta.json.JsonWriterFactory;
-import jakarta.json.stream.JsonGenerator;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.Provider;
-import org.apache.logging.log4j.LogManager;
-import org.eclipse.jetty.http.HttpMethod;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,9 +18,6 @@ import java.io.OutputStreamWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CompletionException;
 
 @Singleton
 @Provider

@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.soutmetrics.disruptor;
 
-import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import jakarta.json.JsonObject;
 
 /**

@@ -1,14 +1,15 @@
 package com.exoreaction.reactiveservices.service.conductor.resources;
 
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Service;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Template;
-import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
+import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;
@@ -33,7 +34,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Contract
 public class ConductorService
         implements ContainerLifecycleListener {
-    private RegistryClient registryClient;
 
     @Provider
     public static class Feature
@@ -45,7 +45,7 @@ public class ConductorService
         }
 
         @Override
-        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
+        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
             builder.api("conductor", "api/conductor")
                     .websocket("conductorevents", "ws/conductorevents");
         }
@@ -56,13 +56,17 @@ public class ConductorService
         }
     }
 
+    private Registry registry;
+    private ReactiveStreams reactiveStreams;
+
     private final List<Template> templates = new CopyOnWriteArrayList<>();
     private final List<Group> groups = new CopyOnWriteArrayList<>();
     private List<Session> sessions = new CopyOnWriteArrayList<>();
 
     @Inject
-    public ConductorService(RegistryClient registryClient) {
-        this.registryClient = registryClient;
+    public ConductorService(ReactiveStreams reactiveStreams, Registry registry) {
+        this.reactiveStreams = reactiveStreams;
+        this.registry = registry;
     }
 
     @Override
@@ -73,7 +77,9 @@ public class ConductorService
         templates.getResources()
                 .ifPresent(ro -> ro.getResources().forEach(r -> addTemplate(new Template(r))));
 
-        registryClient.addRegistryListener(new ConductorRegistryListener());
+//        reactiveStreams.subscribe();
+
+//        registry.addRegistryListener(new ConductorRegistryListener());
     }
 
     @Override

@@ -1,14 +1,13 @@
 package com.exoreaction.reactiveservices.service.registry.resources.api;
 
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
-import com.exoreaction.reactiveservices.jsonapi.Links;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
-import com.exoreaction.reactiveservices.service.registry.resources.RegistryService;
+import com.exoreaction.reactiveservices.jsonapi.model.Links;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
 
 import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
 
@@ -21,10 +20,10 @@ import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HT
 public class RegistryResource
     extends JsonApiResource
 {
-    private final RegistryService service;
+    private final Registry service;
 
     @Inject
-    public RegistryResource( RegistryService service )
+    public RegistryResource( Registry service )
     {
         this.service = service;
     }

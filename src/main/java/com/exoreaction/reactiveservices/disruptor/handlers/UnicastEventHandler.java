@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.disruptor.handlers;
 
-import com.lmax.disruptor.EventHandler;
-import org.apache.logging.log4j.LogManager;
+import com.exoreaction.reactiveservices.disruptor.Event;
+import com.lmax.disruptor.EventSink;
 
 import java.util.List;
 
@@ -11,36 +11,36 @@ import java.util.List;
  */
 
 public class UnicastEventHandler<T>
-    implements DefaultEventHandler<T>
+    implements DefaultEventHandler<Event<T>>
 {
-    private final List<EventHandler<T>> consumers;
+    private final List<EventSink<Event<T>>> subscribers;
 
-    public UnicastEventHandler(List<EventHandler<T>> consumers )
+    public UnicastEventHandler(List<EventSink<Event<T>>> subscribers)
     {
-        this.consumers = consumers;
+        this.subscribers = subscribers;
     }
 
     @Override
-    public void onEvent( T event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent( Event<T> event, long sequence, boolean endOfBatch ) throws Exception
     {
         while (true)
         {
-            try {
-                EventHandler<T> consumer = consumers.get(0);
-                consumer.onEvent( event, sequence, endOfBatch );
-                return;
-            } catch (IndexOutOfBoundsException e)
-            {
-                // Try again
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
+            for (EventSink<Event<T>> subscriber : subscribers) {
+                boolean isPublished = subscriber.tryPublishEvent((e, seq, e2) ->
+                {
+                    e.metadata.clear();
+                    e.metadata.add(e2.metadata);
+                    e.event = e2.event;
+                }, event);
+                if (isPublished)
                     return;
-                }
-            } catch (Exception e)
-            {
-                // Try again
-                LogManager.getLogger(LogManager.getLogger()).error("Could not send events", e);
+            }
+
+            // Try again
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                return;
             }
         }
     }
@@ -48,18 +48,10 @@ public class UnicastEventHandler<T>
     @Override
     public void onStart()
     {
-        for ( EventHandler<T> consumer : consumers )
-        {
-            consumer.onStart();
-        }
     }
 
     @Override
     public void onShutdown()
     {
-        for ( EventHandler<T> consumer : consumers )
-        {
-            consumer.onShutdown();
-        }
     }
 }

@@ -2,16 +2,16 @@ package com.exoreaction.reactiveservices.service.metrics.resources.api;
 
 import com.codahale.metrics.*;
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
-import com.exoreaction.reactiveservices.jsonapi.Attributes;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
+import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
 import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
-import static com.exoreaction.reactiveservices.jsonapi.ResourceObjects.toResourceObjects;
+import static com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects.toResourceObjects;
 
 @Path("api/metrics")
 public class MetricsResource

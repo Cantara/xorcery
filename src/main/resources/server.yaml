@@ -2,7 +2,7 @@ server:
   port: 8080
 
 registry:
-  master: http://localhost:8080/api/registry
+  master: http://localhost:8080/
 
 log4jappender:
   enabled: true

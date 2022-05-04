@@ -17,11 +17,9 @@
 
 package com.exoreaction.reactiveservices.json;
 
-import jakarta.json.JsonArray;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonValue;
+import jakarta.json.*;
 
+import java.io.StringWriter;
 import java.util.Optional;
 
 /**
@@ -30,7 +28,7 @@ import java.util.Optional;
  */
 public interface JsonElement
 {
-    JsonValue json();
+    JsonStructure json();
 
     default JsonObject object()
     {
@@ -145,6 +143,13 @@ public interface JsonElement
         }
         else
         { return Optional.empty(); }
+    }
+
+    default String toJsonString()
+    {
+        StringWriter out = new StringWriter();
+        Json.createWriter( out ).write( json() );
+        return out.toString();
     }
 
 }

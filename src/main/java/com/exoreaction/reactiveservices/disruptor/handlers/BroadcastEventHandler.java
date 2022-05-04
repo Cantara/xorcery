@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.disruptor.handlers;
 
-import com.lmax.disruptor.EventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
+import com.lmax.disruptor.EventSink;
 
 import java.util.List;
 
@@ -10,39 +11,36 @@ import java.util.List;
  */
 
 public class BroadcastEventHandler<T>
-    implements DefaultEventHandler<T>
+    implements DefaultEventHandler<Event<T>>
 {
-    private final List<EventHandler<T>> consumers;
+    private final List<EventSink<Event<T>>> subscribers;
 
-    public BroadcastEventHandler( List<EventHandler<T>> consumers )
+    public BroadcastEventHandler( List<EventSink<Event<T>>> subscribers)
     {
-        this.consumers = consumers;
+        this.subscribers = subscribers;
     }
 
     @Override
-    public void onEvent( T event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent( Event<T> event, long sequence, boolean endOfBatch ) throws Exception
     {
-        for ( EventHandler<T> consumer : consumers )
+        for ( EventSink<Event<T>> subscriber : subscribers)
         {
-            consumer.onEvent( event, sequence, endOfBatch );
+            subscriber.publishEvent((e, seq, e2) ->
+            {
+                e.metadata.clear();
+                e.metadata.add(e2.metadata);
+                e.event = e2.event;
+            }, event);
         }
     }
 
     @Override
     public void onStart()
     {
-        for ( EventHandler<T> consumer : consumers )
-        {
-            consumer.onStart();
-        }
     }
 
     @Override
     public void onShutdown()
     {
-        for ( EventHandler<T> consumer : consumers )
-        {
-            consumer.onShutdown();
-        }
     }
 }

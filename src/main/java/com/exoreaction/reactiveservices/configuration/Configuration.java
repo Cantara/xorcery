@@ -2,14 +2,14 @@ package com.exoreaction.reactiveservices.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
-import jakarta.json.JsonValue;
+import jakarta.json.*;
+import jakarta.json.stream.JsonGenerator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -104,5 +104,15 @@ public class Configuration
                 return defaultValue;
         }
         return lookup.apply(c, names[names.length-1]);
+    }
+
+    @Override
+    public String toString() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
+        JsonWriterFactory jsonWriterFactory = Json.createWriterFactory(config);
+        StringWriter writer = new StringWriter();
+        jsonWriterFactory.createWriter(writer).write(this.config);
+        return writer.toString();
     }
 }

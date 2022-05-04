@@ -1,17 +1,18 @@
 package com.exoreaction.reactiveservices.service.soutmetrics;
 
+import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.Link;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
+import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
-import com.exoreaction.reactiveservices.disruptor.handlers.JsonObjectDeserializeEventHandler;
-import com.lmax.disruptor.AggregateEventHandler;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventSink;
+import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonObject;
@@ -59,24 +60,25 @@ public class SysoutMetrics
     }
 
     private ReactiveStreams reactiveStreams;
-    private RegistryClient registryClient;
+    private Registry registry;
 
     @Inject
-    public SysoutMetrics(ReactiveStreams reactiveStreams, RegistryClient registryClient) {
+    public SysoutMetrics(ReactiveStreams reactiveStreams, Registry registry) {
         this.reactiveStreams = reactiveStreams;
-        this.registryClient = registryClient;
+        this.registry = registry;
     }
 
     @Override
     public void onStartup(Container container) {
-        registryClient.addRegistryListener(new MetricsRegistryListener());
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        registry.addRegistryListener(new MetricsRegistryListener());
     }
 
     @Override
     public void onReload(Container container) {
 
     }
+
     @Override
     public void onShutdown(Container container) {
         scheduledExecutorService.shutdown();
@@ -104,10 +106,16 @@ public class SysoutMetrics
         }
 
         @Override
-        public EventHandler<Event<JsonObject>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<JsonObject>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
             this.subscription = subscription;
+
+            Disruptor<Event<JsonObject>> disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("SysoutLogger-") );
+            disruptor.handleEventsWith(this);
+            disruptor.start();
+
             subscription.request(1);
-            return new AggregateEventHandler<>(new JsonObjectDeserializeEventHandler(), this);
+
+            return disruptor.getRingBuffer();
         }
 
         @Override

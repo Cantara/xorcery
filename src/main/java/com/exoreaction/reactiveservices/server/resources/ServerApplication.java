@@ -1,14 +1,13 @@
 package com.exoreaction.reactiveservices.server.resources;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import jakarta.ws.rs.ApplicationPath;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
 
 public class ServerApplication
     extends ResourceConfig

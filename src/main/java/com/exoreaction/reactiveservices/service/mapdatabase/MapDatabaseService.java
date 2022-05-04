@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.service.mapdatabase;
 
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;

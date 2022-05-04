@@ -1,15 +1,15 @@
 package com.exoreaction.reactiveservices.service.visualizer;
 
 
-import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.Link;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
-import com.exoreaction.reactiveservices.service.loggingconsumer.LoggingConsumerService;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryClient;
-import com.exoreaction.reactiveservices.service.registry.client.RegistryListener;
+import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
+import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
@@ -37,7 +37,7 @@ public class Visualizer
         }
 
         @Override
-        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
+        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
             builder.api("visualizer", "api/visualizer");
         }
 
@@ -47,26 +47,24 @@ public class Visualizer
         }
     }
 
-    private RegistryClient registryClient;
-    private LoggingConsumerService loggingConsumerService;
-
+    private ReactiveStreams reactiveStreams;
+    private Registry registry;
     private final AtomicInteger serviceCounter = new AtomicInteger();
     private final List<ServiceEntry> services = new CopyOnWriteArrayList<>();
 
     private final List<ServiceConnection> connections = new CopyOnWriteArrayList<>();
 
     @Inject
-    public Visualizer(RegistryClient registryClient, LoggingConsumerService loggingConsumerService) {
-        this.registryClient = registryClient;
-        this.loggingConsumerService = loggingConsumerService;
+    public Visualizer(ReactiveStreams reactiveStreams, Registry registry) {
+        this.reactiveStreams = reactiveStreams;
+        this.registry = registry;
     }
 
     @Override
     public void onStartup(Container container) {
         System.out.println("Visualizer Startup");
 
-        registryClient.addRegistryListener(new VisualizerRegistryListener());
-        loggingConsumerService.addLogHandler(new LogEventHandler());
+//        registry.addRegistryListener(new VisualizerRegistryListener());
     }
 
     @Override

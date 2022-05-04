@@ -367,11 +367,13 @@
         </dependency>
 
         <!-- Jersey extensions -->
+<!--
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>
             <version>${jersey.version}</version>
         </dependency>
+-->
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-processing</artifactId>
@@ -390,10 +392,16 @@
             <version>${jersey.version}</version>
         </dependency>
 
+
         <dependency>
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
             <version>2.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.activation</groupId>
+            <artifactId>jakarta.activation</artifactId>
+            <version>2.0.1</version>
         </dependency>
 
         <!-- Disruptor -->
@@ -483,6 +491,7 @@
             <version>7.3.0</version>
         </dependency> -->
 
+
         <!-- Serialization
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -514,6 +523,19 @@
             <version>${jackson.version}</version>
         </dependency>
         -->
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jakarta-jsonp</artifactId>
+            <version>2.13.2</version>
+        </dependency>
+<!--
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr353</artifactId>
+            <version>2.13.2</version>
+        </dependency>
+-->
 
         <!-- Project Reactor
         <dependency>

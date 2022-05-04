@@ -1,11 +1,10 @@
 package com.exoreaction.reactiveservices.service.log4jappender.log4j;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
-import com.exoreaction.reactiveservices.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.reactiveservices.disruptor.Event;
-import com.exoreaction.reactiveservices.disruptor.handlers.MetadataSerializerEventHandler;
+import com.exoreaction.reactiveservices.disruptor.handlers.BroadcastEventHandler;
 import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.ThreadContext;
@@ -19,7 +18,6 @@ import org.apache.logging.log4j.core.config.Node;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
-import org.apache.logging.log4j.core.layout.JsonLayout;
 
 import java.io.Serializable;
 import java.util.List;
@@ -55,7 +53,7 @@ public class DisruptorAppender
     }
 
     private final Disruptor<Event<LogEvent>> disruptor;
-    private final List<EventHandler<Event<LogEvent>>> consumers = new CopyOnWriteArrayList<>();
+    private final List<EventSink<Event<LogEvent>>> subscribers = new CopyOnWriteArrayList<>();
 
     public DisruptorAppender( final String name, final Layout<? extends Serializable> layout, final Filter filter,
                               final boolean ignoreExceptions, final Property[] properties )
@@ -68,10 +66,7 @@ public class DisruptorAppender
                 ProducerType.MULTI,
                 new BlockingWaitStrategy() );
 
-        disruptor.handleEventsWith(
-                     new MetadataSerializerEventHandler(),
-                     new Log4jSerializeEventHandler( JsonLayout.newBuilder().build() ) )
-                 .then( new BroadcastEventHandler<>( consumers ) );
+        disruptor.handleEventsWith(new BroadcastEventHandler<>(subscribers));
     }
 
     @Override
@@ -102,9 +97,9 @@ public class DisruptorAppender
         return stopped;
     }
 
-    public List<EventHandler<Event<LogEvent>>> getConsumers()
+    public List<EventSink<Event<LogEvent>>> getSubscribers()
     {
-        return consumers;
+        return subscribers;
     }
 
     @Override

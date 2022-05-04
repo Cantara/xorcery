@@ -1,21 +1,12 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.api;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
 import com.exoreaction.reactiveservices.service.conductor.resources.ConductorService;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Template;
 import jakarta.inject.Inject;
-import jakarta.json.Json;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-
-import java.io.StringReader;
+import jakarta.ws.rs.*;
 
 /**
  * @author rickardoberg

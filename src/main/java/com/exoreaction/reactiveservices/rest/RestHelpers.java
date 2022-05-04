@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.rest;
 
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import jakarta.json.Json;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Result;

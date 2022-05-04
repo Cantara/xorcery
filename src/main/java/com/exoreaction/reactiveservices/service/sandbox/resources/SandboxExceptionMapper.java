@@ -2,7 +2,6 @@ package com.exoreaction.reactiveservices.service.sandbox.resources;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jetty.client.ResponseListener;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import com.exoreaction.reactiveservices.rest.RestHelpers;
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;

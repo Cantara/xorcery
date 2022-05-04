@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.service.mapdbeventlog;
 
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import jakarta.ws.rs.ext.Provider;
 import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;

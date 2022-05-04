@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.model;
 
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 
 public class Group {
     private final ResourceObject resourceObject;

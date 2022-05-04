@@ -1,36 +1,45 @@
 package com.exoreaction.reactiveservices.service.domainevents;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
-import com.exoreaction.reactiveservices.disruptor.*;
-import com.exoreaction.reactiveservices.disruptor.handlers.MetadataSerializerEventHandler;
+import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.EventWithResult;
+import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
-import com.exoreaction.reactiveservices.disruptor.handlers.ObjectMapperSerializeEventHandler;
-import com.exoreaction.reactiveservices.service.domainevents.resources.websocket.DomainEventsWebSocketServlet;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
-import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceReference;
 import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import jakarta.servlet.annotation.WebListener;
 import jakarta.ws.rs.ext.Provider;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
+@WebListener
+@Provider
 public class DomainEventsPublisher
-        implements DomainEventPublisher, ContainerLifecycleListener {
+        implements DomainEventPublisher,
+        ReactiveEventStreams.Publisher<EventWithResult<DomainEvents, Metadata>>,
+        ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "domainevents";
 
@@ -44,39 +53,41 @@ public class DomainEventsPublisher
         }
 
         @Override
-        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
-                    builder.websocket("domainevents", "ws/domainevents");
+        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
+            builder.websocket("domainevents", "ws/domainevents");
         }
 
         @Override
         protected void configure() {
-            EventHandlerResult<DomainEvents, Metadata> eventHandlerResult = new EventHandlerResult<>();
-            injectionManager.getInstance(ServletContextHandler.class).addServlet(new ServletHolder(new DomainEventsWebSocketServlet(consumers, eventHandlerResult)), "/ws/domainevents");
-
-            context.register(new DomainEventsPublisher(consumers, eventHandlerResult));
+            context.register(DomainEventsPublisher.class, DomainEventPublisher.class, ContainerLifecycleListener.class);
         }
 
-        List<EventHandler<DomainEventHolder>> consumers = new CopyOnWriteArrayList<>();
     }
 
+    private final ReactiveStreams reactiveStreams;
+    private ServiceResourceObject resourceObject;
+    private final List<EventSink<Event<EventWithResult<DomainEvents, Metadata>>>> subscribers = new CopyOnWriteArrayList<>();
     private final Disruptor<DomainEventHolder> disruptor;
 
-    public DomainEventsPublisher(List<EventHandler<DomainEventHolder>> consumers, EventHandlerResult<DomainEvents, Metadata> eventHandlerResult) {
+    @Inject
+    public DomainEventsPublisher(ReactiveStreams reactiveStreams, Server server, @Named(SERVICE_TYPE) ServiceResourceObject resourceObject) {
+        this.reactiveStreams = reactiveStreams;
+        this.resourceObject = resourceObject;
         disruptor =
                 new Disruptor<>(DomainEventHolder::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
                         ProducerType.MULTI,
                         new BlockingWaitStrategy());
 
-        disruptor.handleEventsWith(
-                        new MetadataSerializerEventHandler(),
-                        new ObjectMapperSerializeEventHandler(new ObjectMapper()))
-                .then(new UnicastEventHandler<>(consumers))
-                .then(eventHandlerResult);
+        disruptor.handleEventsWith(new UnicastEventHandler<>(subscribers));
     }
 
     @Override
     public void onStartup(Container container) {
         disruptor.start();
+        resourceObject.resourceObject().getLinks().getRel("domainevents").ifPresent(link ->
+        {
+            reactiveStreams.publish(resourceObject.serviceReference().link("domainevents"), this, link);
+        });
     }
 
     @Override
@@ -89,14 +100,30 @@ public class DomainEventsPublisher
         disruptor.shutdown();
     }
 
+    public void subscribe(ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>> subscriber, Map<String, String> parameters) {
+
+        final AtomicReference<EventSink<Event<EventWithResult<DomainEvents, Metadata>>>> handler = new AtomicReference<>();
+        handler.set(subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
+            @Override
+            public void request(long n) {
+                // Ignore for now
+            }
+
+            @Override
+            public void cancel() {
+                subscribers.remove(handler.get());
+            }
+        }));
+        subscribers.add(handler.get());
+    }
+
     public CompletionStage<Metadata> publish(DomainEvents events) {
         CompletableFuture<Metadata> future = new CompletableFuture<>();
         disruptor.getRingBuffer().publishEvent((event, seq, e, f) ->
         {
             event.metadata.clear();
             // TODO populate metadata with system information
-            event.event = e;
-            event.result = f;
+            event.event = new EventWithResult<>(e, f);
         }, events, future);
 
         return future;

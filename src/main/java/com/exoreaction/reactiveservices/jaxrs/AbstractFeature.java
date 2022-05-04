@@ -2,9 +2,8 @@ package com.exoreaction.reactiveservices.jaxrs;
 
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.configuration.ServiceConfiguration;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
+import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
@@ -20,7 +19,7 @@ public abstract class AbstractFeature
     protected FeatureContext context;
     protected InjectionManager injectionManager;
 
-    protected ResourceObject resourceObject;
+    protected ServiceResourceObject resourceObject;
 
     @Override
     public boolean configure(FeatureContext context)
@@ -30,9 +29,11 @@ public abstract class AbstractFeature
         if (isEnabled())
         {
             String serviceType = Objects.requireNonNull(serviceType(), "Service type may not be null");
-            ServiceResourceObjectBuilder builder = new ServiceResourceObjectBuilder(server(), serviceType);
+            ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(server(), serviceType);
             buildResourceObject(builder);
-            server().addService(resourceObject = builder.build());
+            resourceObject = builder.build();           ;
+            server().addService(resourceObject.resourceObject());
+            bind(resourceObject).named(serviceType);
 
             if (!super.getBindings().isEmpty())
             {
@@ -46,7 +47,7 @@ public abstract class AbstractFeature
 
     abstract protected String serviceType();
 
-    protected void buildResourceObject(ServiceResourceObjectBuilder builder)
+    protected void buildResourceObject(ServiceResourceObject.Builder builder)
     {
 
     }

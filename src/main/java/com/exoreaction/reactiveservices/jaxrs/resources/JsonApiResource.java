@@ -1,6 +1,5 @@
 package com.exoreaction.reactiveservices.jaxrs.resources;
 
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.OPTIONS;
 import jakarta.ws.rs.container.ContainerRequestContext;

@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.rest;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jetty.client.ResponseListener;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Result;

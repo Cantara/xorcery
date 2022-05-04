@@ -1,29 +1,21 @@
 package com.exoreaction.reactiveservices.server;
 
 import com.codahale.metrics.MetricRegistry;
-import com.exoreaction.reactiveservices.jsonapi.Attributes;
-import com.exoreaction.reactiveservices.jsonapi.JsonApiRels;
-import com.exoreaction.reactiveservices.jsonapi.Links;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObject;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
-import com.exoreaction.reactiveservices.jetty.server.JettyConnectorThreadPool;
-import com.exoreaction.reactiveservices.rest.RestClient;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.configuration.StandardConfiguration;
+import com.exoreaction.reactiveservices.jetty.server.JettyConnectorThreadPool;
+import com.exoreaction.reactiveservices.jsonapi.model.*;
+import com.exoreaction.reactiveservices.rest.RestClient;
 import com.exoreaction.reactiveservices.server.resources.ServerApplication;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsonp.JSONPModule;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.ws.rs.core.UriBuilder;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.RuntimeIOException;
-import org.eclipse.jetty.server.CustomRequestLog;
-import org.eclipse.jetty.server.ForwardedRequestCustomizer;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.Slf4jRequestLogWriter;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.Jetty;
@@ -199,6 +191,11 @@ public class Server
                     bind(httpClient);
                     bind(webSocketClient);
                     bind(restClient);
+
+                    // Create default ObjectMapper
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    objectMapper.registerModule(new JSONPModule());
+                    bind(objectMapper);
 
                     bind(metricRegistry);
                     bind(configuration);

@@ -1,19 +1,11 @@
 package com.exoreaction.reactiveservices.service.registry.resources.api;
 
-import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
-import com.exoreaction.reactiveservices.jsonapi.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.ResourceObjects;
-import com.exoreaction.reactiveservices.service.registry.resources.RegistryService;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import jakarta.inject.Inject;
 import jakarta.json.Json;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.*;
 
 import java.io.StringReader;
 
@@ -27,10 +19,10 @@ import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HT
 @Path( "api/registry/servers" )
 public class RegistryServersResource
 {
-    private final RegistryService service;
+    private final Registry service;
 
     @Inject
-    public RegistryServersResource( RegistryService service )
+    public RegistryServersResource( Registry service )
     {
         this.service = service;
     }
@@ -50,7 +42,7 @@ public class RegistryServersResource
     @Consumes( JSON_API_TEXT_HTML )
     public void add( String resourceObject )
     {
-        service.addServer( new ResourceDocument( Json.createReader( new StringReader( resourceObject ) ).read() ) );
+        service.addServer( new ResourceDocument( Json.createReader( new StringReader( resourceObject ) ).readObject() ) );
     }
 
 /*

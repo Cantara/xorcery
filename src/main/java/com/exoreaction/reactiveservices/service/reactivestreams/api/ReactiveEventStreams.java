@@ -1,11 +1,9 @@
 package com.exoreaction.reactiveservices.service.reactivestreams.api;
 
 import com.exoreaction.reactiveservices.disruptor.Event;
-import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventSink;
 
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Flow;
 
 public final class ReactiveEventStreams {
     private ReactiveEventStreams() {
@@ -17,7 +15,13 @@ public final class ReactiveEventStreams {
     }
 
     public interface Subscriber<T> {
-        public EventHandler<Event<T>> onSubscribe(Subscription subscription);
+        EventSink<Event<T>> onSubscribe(Subscription subscription);
+
+        default void onError(Throwable throwable)
+        {}
+
+        default void onComplete()
+        {}
     }
 
     public interface Subscription {

@@ -1,13 +1,13 @@
 package com.exoreaction.reactiveservices.service.greeter;
 
+import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.service.greeter.commands.ChangeGreeting;
 import com.exoreaction.reactiveservices.service.greeter.domainevents.GreetedEvent;
-import com.exoreaction.reactiveservices.service.helpers.ServiceResourceObjectBuilder;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
+import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
@@ -30,7 +30,7 @@ public class GreeterApplication {
         }
 
         @Override
-        protected void buildResourceObject(ServiceResourceObjectBuilder builder) {
+        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
             builder.version("1.0.0").api("greeter", "api/greeter");
         }
 

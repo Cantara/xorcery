@@ -2,19 +2,25 @@ package com.exoreaction.reactiveservices.disruptor;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class Metadata
+public record Metadata(Map<String, String> metadata)
 {
-    private Map<String, String> metadata = new HashMap<>();
+    public Metadata() {
+        this(new HashMap<>());
+    }
 
     @JsonAnySetter
     public void add(String name, String value)
     {
         metadata.put(name, value);
+    }
+
+    public void add(Metadata metadata)
+    {
+        this.metadata.putAll(metadata.getMetadata());
     }
 
     public void clear()
