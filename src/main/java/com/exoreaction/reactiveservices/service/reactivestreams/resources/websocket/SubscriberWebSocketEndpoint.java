@@ -73,7 +73,8 @@ public class SubscriberWebSocketEndpoint<T>
                     if (messageBodyWriter == null) {
                         holder.event = (T) e;
                     } else {
-                        CompletableFuture<?> resultFuture = new CompletableFuture<>().whenComplete((result, throwable) ->
+                        CompletableFuture<?> resultFuture = new CompletableFuture<>();
+                        resultFuture.whenComplete((result, throwable) ->
                         {
                             // Send result back
                             ByteArrayOutputStream bout = new ByteArrayOutputStream();

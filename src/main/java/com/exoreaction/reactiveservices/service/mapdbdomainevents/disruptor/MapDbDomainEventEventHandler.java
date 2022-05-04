@@ -21,7 +21,7 @@ import java.util.Map;
  */
 
 public class MapDbDomainEventEventHandler
-    implements DefaultEventHandler<Event<EventWithResult<DomainEvents, Metadata>>>
+    implements DefaultEventHandler<Event<EventWithResult<JsonObject, Metadata>>>
 {
     private final MapDatabaseService mapDatabaseService;
     private ReactiveEventStreams.Subscription subscription;
@@ -34,14 +34,14 @@ public class MapDbDomainEventEventHandler
         this.mapDatabaseService = mapDatabaseService;
         this.subscription = subscription;
         this.objectMapper = objectMapper;
+
+        subscription.request(1);
     }
 
     @Override
-    public void onEvent(Event<EventWithResult<DomainEvents, Metadata>> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent(Event<EventWithResult<JsonObject, Metadata>> event, long sequence, boolean endOfBatch ) throws Exception
     {
-        String jsonString = objectMapper.writeValueAsString(event.event.event());
-
-        JsonObject eventsJson = Json.createReader(new StringReader(jsonString)).readObject();
+        JsonObject eventsJson = event.event.event();
 
         eventsJson.getJsonArray("events").stream().map(JsonObject.class::cast).forEach( jsonObject ->
         {

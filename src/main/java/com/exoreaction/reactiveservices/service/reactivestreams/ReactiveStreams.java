@@ -101,6 +101,7 @@ public class ReactiveStreams
 
         MessageBodyWriter<Object> writer = null;
         MessageBodyReader<Object> reader = null;
+        Type resultType = null;
 
         for (Type genericInterface : publisher.getClass().getGenericInterfaces()) {
             if (genericInterface instanceof ParameterizedType && ((ParameterizedType)genericInterface).getRawType().equals(Publisher.class))
@@ -111,7 +112,7 @@ public class ReactiveStreams
                 {
                     ParameterizedType eventWithResultType = ((ParameterizedType)publisherEventType);
                     Type eventType = eventWithResultType.getActualTypeArguments()[0];
-                    Type resultType = eventWithResultType.getActualTypeArguments()[1];
+                    resultType = eventWithResultType.getActualTypeArguments()[1];
                     writer = (MessageBodyWriter<Object>) messageBodyWorkers.getMessageBodyWriter((Class<?>)eventType, eventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
                     if (writer == null)
                     {
@@ -140,7 +141,7 @@ public class ReactiveStreams
         }
 
         String path = URI.create(websocketLink.getHrefAsUriTemplate().createURI()).getPath();
-        PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, publisher, writer, reader, objectMapper);
+        PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, publisher, writer, reader, resultType, objectMapper);
 
         servletContextHandler.addServlet(new ServletHolder(servlet), path);
         logger.info("Published websocket for " + streamReference);

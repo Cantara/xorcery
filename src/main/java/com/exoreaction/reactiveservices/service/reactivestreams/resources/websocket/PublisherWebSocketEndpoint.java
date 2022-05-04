@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
@@ -20,6 +21,7 @@ import org.eclipse.jetty.websocket.api.WriteCallback;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -42,6 +44,7 @@ public class PublisherWebSocketEndpoint<T>
     private MessageBodyReader<?> messageBodyReader;
     private ReactiveEventStreams.Subscription subscription;
 
+    private Type resultType;
     private final ObjectMapper objectMapper;
 
     private final AtomicReference<CompletableFuture<Object>> resultFuture = new AtomicReference<>();
@@ -51,11 +54,13 @@ public class PublisherWebSocketEndpoint<T>
                                       Map<String, String> parameters,
                                       MessageBodyWriter<T> messageBodyWriter,
                                       MessageBodyReader<?> messageBodyReader,
+                                      Type resultType,
                                       ObjectMapper objectMapper) {
         this.publisher = publisher;
         this.parameters = parameters;
         this.messageBodyWriter = messageBodyWriter;
         this.messageBodyReader = messageBodyReader;
+        this.resultType = resultType;
         this.objectMapper = objectMapper;
     }
 
@@ -69,7 +74,7 @@ public class PublisherWebSocketEndpoint<T>
         // TODO
         try {
             ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
-            Object result = messageBodyReader.readFrom(null, null, new Annotation[0], null,
+            Object result = messageBodyReader.readFrom((Class)resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE,
                     new MultivaluedHashMap<String, String>(), bin);
 
             resultFuture.get().complete((Object) result);

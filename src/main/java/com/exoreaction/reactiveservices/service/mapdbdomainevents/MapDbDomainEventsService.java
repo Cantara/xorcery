@@ -22,6 +22,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -113,13 +114,13 @@ public class MapDbDomainEventsService
     }
 
     private class DomainEventsSubscriber
-        implements ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>>
+        implements ReactiveEventStreams.Subscriber<EventWithResult<JsonObject, Metadata>>
     {
 
-        private Disruptor<Event<EventWithResult<DomainEvents, Metadata>>> disruptor;
+        private Disruptor<Event<EventWithResult<JsonObject, Metadata>>> disruptor;
 
         @Override
-        public EventSink<Event<EventWithResult<DomainEvents, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<EventWithResult<JsonObject, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
             disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("MapDbDomainEventsDisruptorIn-"),
                     ProducerType.SINGLE,
                     new BlockingWaitStrategy());

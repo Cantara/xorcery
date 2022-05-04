@@ -7,6 +7,7 @@ import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
+import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,18 +23,21 @@ public class PublisherWebSocketServlet<T>
     private ReactiveEventStreams.Publisher<T> publisher;
     private MessageBodyWriter<Object> messageBodyWriter;
     private MessageBodyReader<Object> messageBodyReader;
+    private Type resultType;
     private ObjectMapper objectMapper;
 
     public PublisherWebSocketServlet(String path,
                                      ReactiveEventStreams.Publisher<T> publisher,
                                      MessageBodyWriter<Object> messageBodyWriter,
                                      MessageBodyReader<Object> messageBodyReader,
+                                     Type resultType,
                                      ObjectMapper objectMapper) {
 
         this.path = path;
         this.publisher = publisher;
         this.messageBodyWriter = messageBodyWriter;
         this.messageBodyReader = messageBodyReader;
+        this.resultType = resultType;
         this.objectMapper = objectMapper;
     }
 
@@ -48,7 +52,7 @@ public class PublisherWebSocketServlet<T>
                     .getParameterMap().entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().stream().findFirst().orElse(null)));
 
-            return new PublisherWebSocketEndpoint(publisher, singleValueParameters, messageBodyWriter, messageBodyReader, objectMapper);
+            return new PublisherWebSocketEndpoint(publisher, singleValueParameters, messageBodyWriter, messageBodyReader, resultType, objectMapper);
         });
     }
 }

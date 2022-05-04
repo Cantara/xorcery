@@ -14,7 +14,7 @@ soutlogging:
   enabled: true
 
 soutmetrics:
-  enabled: true
+  enabled: false
 
 domainevents:
   enabled: true

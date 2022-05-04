@@ -113,7 +113,7 @@ public class SysoutMetrics
             disruptor.handleEventsWith(this);
             disruptor.start();
 
-            subscription.request(1);
+            scheduledExecutorService.schedule(()->subscription.request(1), 5, TimeUnit.SECONDS);
 
             return disruptor.getRingBuffer();
         }
