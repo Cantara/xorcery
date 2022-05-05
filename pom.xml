@@ -20,7 +20,7 @@
         <jackson.version>2.13.2</jackson.version>
         <metrics.version>4.2.9</metrics.version>
 
-        <neo4j.version>4.2.3</neo4j.version>
+        <neo4j.version>4.4.6</neo4j.version>
 
         <junit.version>5.7.0</junit.version>
         <junit.platform.version>1.7.0</junit.platform.version>
@@ -451,39 +451,6 @@
         </dependency>
         -->
 
-        <!-- Database dependencies -->
-        <!--
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j</artifactId>
-            <version>${neo4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-security</artifactId>
-            <version>${neo4j.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-nop</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.neo4j.procedure</groupId>
-            <artifactId>apoc</artifactId>
-            <version>4.2.0.1</version>
-            <classifier>all</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.hashids</groupId>
-            <artifactId>hashids</artifactId>
-            <version>1.0.3</version>
-        </dependency>
-        -->
-
         <!-- EventStore dependencies
         <dependency>
             <groupId>com.geteventstore</groupId>
@@ -550,6 +517,31 @@
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>
             <version>3.0.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j</artifactId>
+            <version>${neo4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.neo4j</groupId>
+            <artifactId>neo4j-security</artifactId>
+            <version>${neo4j.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-nop</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.neo4j.procedure</groupId>
+            <artifactId>apoc</artifactId>
+            <version>4.2.0.1</version>
+            <classifier>all</classifier>
         </dependency>
 
         <!-- Metrics dependencies -->

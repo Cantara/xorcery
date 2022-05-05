@@ -71,7 +71,6 @@ public class PublisherWebSocketEndpoint<T>
     // WebSocket
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
-        // TODO
         try {
             ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
             Object result = messageBodyReader.readFrom((Class)resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE,

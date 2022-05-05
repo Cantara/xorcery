@@ -20,10 +20,13 @@ domainevents:
   enabled: true
 
 mapdbdomainevents:
-  enabled: true
+  enabled: false
 
 greeter:
   enabled: true
 
 visualizer:
+  enabled: true
+
+neo4jdatabase:
   enabled: true

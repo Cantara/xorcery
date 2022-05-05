@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  * @author rickardoberg
@@ -82,7 +83,10 @@ public class Configuration
     public boolean getBoolean(String name, boolean defaultValue) {
         return cfg(name, defaultValue, (config, n)->config.getBoolean(n, defaultValue));
     }
-
+    public Map<String, JsonValue> asMap()
+    {
+        return config.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
     public Configuration getConfiguration(String name) {
         JsonObject jsonObject = config.getJsonObject(name);
         if (jsonObject == null)

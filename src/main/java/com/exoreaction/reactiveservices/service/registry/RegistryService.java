@@ -127,11 +127,6 @@ public class RegistryService
                     new RegistryPublisher(), link);
         });
 
-        resourceObject.linkByRel("registryevents").ifPresent(link ->
-        {
-            reactiveStreams.subscribe(link, new UpstreamSubscriber(), Collections.emptyMap(), MarkerManager.getMarker(link.getHref()));
-        });
-
         registration.start();
     }
 

@@ -223,7 +223,8 @@ public class ReactiveStreams
 
         try {
             URI websocketEndpointUri = URI.create(link.getHrefAsUriTemplate().createURI(parameters));
-            webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber, reader, writer, objectMapper, eventType, marker), websocketEndpointUri);
+            webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber, reader, writer, objectMapper, eventType, marker), websocketEndpointUri)
+                    .join();
         } catch (IOException e) {
             logger.error("Could not subscribe", e);
         }

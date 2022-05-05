@@ -117,11 +117,11 @@ public class DomainEventsPublisher
         subscribers.add(handler.get());
     }
 
-    public CompletionStage<Metadata> publish(DomainEvents events) {
+    public CompletionStage<Metadata> publish(Metadata metadata, DomainEvents events) {
         CompletableFuture<Metadata> future = new CompletableFuture<>();
         disruptor.getRingBuffer().publishEvent((event, seq, e, f) ->
         {
-            event.metadata.clear();
+            event.metadata.clear().add(metadata);
             // TODO populate metadata with system information
             event.event = new EventWithResult<>(e, f);
         }, events, future);

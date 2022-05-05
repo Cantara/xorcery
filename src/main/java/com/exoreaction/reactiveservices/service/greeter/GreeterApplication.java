@@ -2,19 +2,28 @@ package com.exoreaction.reactiveservices.service.greeter;
 
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvent;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
-import com.exoreaction.reactiveservices.service.greeter.commands.ChangeGreeting;
-import com.exoreaction.reactiveservices.service.greeter.domainevents.GreetedEvent;
+import com.exoreaction.reactiveservices.service.greeter.commands.UpdateGreeting;
+import com.exoreaction.reactiveservices.service.greeter.domainevents.UpdatedGreeting;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
+import com.exoreaction.reactiveservices.service.neo4j.client.GraphResult;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.spi.Contract;
+import org.neo4j.internal.helpers.collection.MapUtil;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+
+import static com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents.events;
 
 @Singleton
 @Contract
@@ -41,32 +50,43 @@ public class GreeterApplication {
     }
 
     private DomainEventPublisher domainEventPublisher;
-    private MapDatabaseService mapDatabaseService;
+    private GraphDatabase graphDatabase;
 
     @Inject
     public GreeterApplication(DomainEventPublisher domainEventPublisher,
-                              MapDatabaseService mapDatabaseService) {
+                              GraphDatabase graphDatabase) {
         this.domainEventPublisher = domainEventPublisher;
-        this.mapDatabaseService = mapDatabaseService;
+        this.graphDatabase = graphDatabase;
     }
 
     // Reads
-    public String get(String name) {
-        return mapDatabaseService.get(name);
+    public CompletionStage<String> get(String name) {
+
+        return graphDatabase.execute("MATCH (greeter:Greeter {id:$id}) RETURN greeter.greeting as greeting",
+                        new MapUtil.MapBuilder<String, Object>().entry("id", "greeter").create())
+                .thenApply(r ->
+                {
+                    try (GraphResult result = r) {
+                        return result.getResult().stream().findFirst().map(m -> m.get("greeting").toString()).orElse("Hello World");
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
+                    }
+                });
     }
 
     // Writes
     public CompletionStage<Metadata> handle(Record command) {
-        Metadata metadata = new Metadata();
+        Metadata metadata = new Metadata().add("app", "Greeter");
 
         try {
-            return (CompletionStage<Metadata>) getClass().getDeclaredMethod("handle", Metadata.class, command.getClass()).invoke(this, metadata, command);
+            DomainEvents domainEvents = (DomainEvents) getClass().getDeclaredMethod("handle", command.getClass()).invoke(this, command);
+            return domainEventPublisher.publish(metadata, domainEvents);
         } catch (Throwable e) {
             return CompletableFuture.failedStage(e);
         }
     }
 
-    private CompletionStage<Metadata> handle(Metadata metadata, ChangeGreeting changeGreeting) {
-        return domainEventPublisher.publish(new DomainEvents(metadata, new GreetedEvent(changeGreeting.newGreeting())));
+    private DomainEvents handle(UpdateGreeting updateGreeting) {
+        return events(new UpdatedGreeting(updateGreeting.newGreeting()));
     }
 }
