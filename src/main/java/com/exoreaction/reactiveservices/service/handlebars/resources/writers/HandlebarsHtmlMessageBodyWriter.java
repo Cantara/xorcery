@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.jaxrs.writers;
+package com.exoreaction.reactiveservices.service.handlebars.resources.writers;
 
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;

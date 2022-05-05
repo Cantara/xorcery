@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.sandbox.resources;
+package com.exoreaction.reactiveservices.service.handlebars.resources;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jetty.client.ResponseListener;
@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.concurrent.CompletionException;
 
 @Provider
-public class SandboxExceptionMapper
+public class HandlebarsExceptionMapper
     implements ExceptionMapper<NotAcceptableException>
 {
     private HttpClient httpClient;
@@ -28,7 +28,7 @@ public class SandboxExceptionMapper
     jakarta.inject.Provider<ContainerRequestContext> requestContextProvider;
 
     @Inject
-    public SandboxExceptionMapper(HttpClient httpClient, Handlebars handlebars, jakarta.inject.Provider<ContainerRequestContext> requestContextProvider) {
+    public HandlebarsExceptionMapper(HttpClient httpClient, Handlebars handlebars, jakarta.inject.Provider<ContainerRequestContext> requestContextProvider) {
         this.httpClient = httpClient;
         this.handlebars = handlebars;
         this.requestContextProvider = requestContextProvider;

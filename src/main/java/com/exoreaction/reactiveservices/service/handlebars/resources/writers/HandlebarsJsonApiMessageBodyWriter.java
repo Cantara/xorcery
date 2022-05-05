@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.sandbox.resources;
+package com.exoreaction.reactiveservices.service.handlebars.resources.writers;
 
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.github.jknack.handlebars.Context;
@@ -22,13 +22,13 @@ import java.nio.charset.StandardCharsets;
 @Singleton
 @Provider
 @Produces(MediaType.TEXT_HTML)
-public class JsonApiSandboxMessageBodyWriter
+public class HandlebarsJsonApiMessageBodyWriter
     implements MessageBodyWriter<ResourceDocument>
 {
     private Handlebars handlebars;
 
     @Inject
-    public JsonApiSandboxMessageBodyWriter(Handlebars handlebars) {
+    public HandlebarsJsonApiMessageBodyWriter(Handlebars handlebars) {
         this.handlebars = handlebars;
     }
 
