@@ -118,7 +118,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
+                <version>3.0.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -128,11 +128,17 @@
                 </executions>
                 <configuration>
                     <executable>java</executable>
-                    <workingDirectory>target/server/bin</workingDirectory>
+                    <workingDirectory>target/classes</workingDirectory>
                     <arguments>
+                        <argument>--add-exports=java.base/sun.nio.ch=ALL-UNNAMED</argument>
+                        <argument>--add-opens=java.base/java.nio=ALL-UNNAMED</argument>
+                        <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
+                        <argument>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</argument>
+                        <argument>--add-opens=java.base/java.io=ALL-UNNAMED</argument>
+                        <argument>--add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</argument>
                         <argument>-classpath</argument>
                         <classpath/>
-                        <argument>com.exoreaction.reactiveservices.Main</argument>
+                        <argument>com.exoreaction.reactiveservices.server.Main</argument>
                     </arguments>
                 </configuration>
             </plugin>
