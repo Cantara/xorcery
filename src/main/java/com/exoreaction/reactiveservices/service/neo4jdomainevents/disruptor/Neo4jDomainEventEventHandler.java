@@ -91,6 +91,7 @@ public class Neo4jDomainEventEventHandler
                     future.completeExceptionally(e);
                 }
             }
+            futures.clear();
         }
 
         subscription.request(1);
