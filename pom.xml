@@ -22,8 +22,8 @@
 
         <neo4j.version>4.4.6</neo4j.version>
 
-        <junit.version>5.7.0</junit.version>
-        <junit.platform.version>1.7.0</junit.platform.version>
+        <junit.version>5.8.2</junit.version>
+        <junit.platform.version>1.8.2</junit.platform.version>
     </properties>
 
     <build>
