@@ -164,7 +164,7 @@ public class Server
         // Setup protocols
         HttpConnectionFactory http1 = new HttpConnectionFactory(config);
         final ServerConnector http = new ServerConnector(server, http1);
-        http.setPort(jettyConfig.getInt("port", 8080));
+        http.setPort(jettyConfig.getInt("port", 8889));
 
         baseUri = URI.create("http://127.0.0.1:"+http.getPort()+"/");
 

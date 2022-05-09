@@ -45,13 +45,13 @@ public class GreetingBenchmarks {
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public void reads() throws ExecutionException, InterruptedException, TimeoutException {
-        httpClient.GET("http://localhost:8080/api/greeter").getContentAsString();
+        httpClient.GET("http://localhost:8889/api/greeter").getContentAsString();
     }
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public void writes() throws ExecutionException, InterruptedException, TimeoutException {
-        httpClient.FORM("http://localhost:8080/api/greeter", new Fields() {{
+        httpClient.FORM("http://localhost:8889/api/greeter", new Fields() {{
             put("greeting", "HelloWorld!");
         }}).getContentAsString();
     }

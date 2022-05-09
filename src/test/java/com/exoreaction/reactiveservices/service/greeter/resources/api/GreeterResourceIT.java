@@ -35,12 +35,12 @@ class GreeterResourceIT {
 
     @Test
     void get() throws Exception {
-        httpClient.GET("http://localhost:8080/api/greeter").getContentAsString();
+        httpClient.GET("http://localhost:8889/api/greeter").getContentAsString();
     }
 
     @Test
     void post() throws Exception {
-        httpClient.FORM("http://localhost:8080/api/greeter", new Fields() {{
+        httpClient.FORM("http://localhost:8889/api/greeter", new Fields() {{
             put("greeting", "HelloWorld!");
         }}).getContentAsString();
     }
