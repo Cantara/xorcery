@@ -32,6 +32,7 @@
         <url>https://github.com/cantara/reactiveservices</url>
         <tag>HEAD</tag>
     </scm>
+
     <build>
         <plugins>
             <plugin>
@@ -42,6 +43,10 @@
                     <release>18</release>
                     <source>18</source>
                     <target>18</target>
+                    <compilerArgs>
+                        <arg>--add-exports</arg>
+                        <arg>java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
