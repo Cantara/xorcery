@@ -44,8 +44,8 @@
                     <target>18</target>
                     <compilerArgs>
                         <arg>--add-exports</arg>
-<!--                        <arg>java.base/sun.nio.ch=ALL-UNNAMED &#45;&#45;add-opens=java.base/java.nio=ALL-UNNAMED &#45;&#45;add-opens=java.base/java.lang=ALL-UNNAMED &#45;&#45;add-opens=java.base/java.lang.reflect=ALL-UNNAMED &#45;&#45;add-opens=java.base/java.io=ALL-UNNAMED &#45;&#45;add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</arg>-->
-                        <arg>--add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</arg>
+                        <arg>java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</arg>
+<!--                        <arg>--add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</arg> -->
                     </compilerArgs>
                 </configuration>
             </plugin>
