@@ -178,7 +178,7 @@
                     <skip>true</skip>
                     <!-- Show 100% of the lines from the stack trace (doesn't work) -->
                     <trimStackTrace>false</trimStackTrace>
-                    <argLine>-Xms1g -Xmx1g --illegal-access=permit</argLine>
+                    <argLine>-Xms1g -Xmx1g --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-exports=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED --illegal-access=permit</argLine>
                 </configuration>
                 <executions>
                     <execution>
