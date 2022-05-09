@@ -26,6 +26,12 @@
         <junit.platform.version>1.7.0</junit.platform.version>
     </properties>
 
+    <scm>
+        <developerConnection>scm:git:ssh://git@github.com/cantara/reactiveservices.git</developerConnection>
+        <connection>scm:git:https://github.com/cantara/reactiveservices.git</connection>
+        <url>https://github.com/cantara/reactiveservices</url>
+        <tag>HEAD</tag>
+    </scm>
     <build>
         <plugins>
             <plugin>
@@ -308,18 +314,18 @@
             <artifactId>jetty-server</artifactId>
             <version>${jetty.version}</version>
         </dependency>
-<!--
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
--->
+        <!--
+                <dependency>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-servlet</artifactId>
+                    <version>${jetty.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-util</artifactId>
+                    <version>${jetty.version}</version>
+                </dependency>
+        -->
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>websocket-jetty-client</artifactId>
@@ -373,13 +379,13 @@
         </dependency>
 
         <!-- Jersey extensions -->
-<!--
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-moxy</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
--->
+        <!--
+                <dependency>
+                    <groupId>org.glassfish.jersey.media</groupId>
+                    <artifactId>jersey-media-moxy</artifactId>
+                    <version>${jersey.version}</version>
+                </dependency>
+        -->
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-processing</artifactId>
@@ -502,13 +508,13 @@
             <artifactId>jackson-datatype-jakarta-jsonp</artifactId>
             <version>2.13.2</version>
         </dependency>
-<!--
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr353</artifactId>
-            <version>2.13.2</version>
-        </dependency>
--->
+        <!--
+                <dependency>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-jsr353</artifactId>
+                    <version>2.13.2</version>
+                </dependency>
+        -->
 
         <!-- Project Reactor
         <dependency>
@@ -646,4 +652,18 @@
         </dependency>
 
     </dependencies>
+
+
+    <distributionManagement>
+        <repository>
+            <id>cantara</id>
+            <name>Cantara Release Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>cantara</id>
+            <name>Cantara Snapshot Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
