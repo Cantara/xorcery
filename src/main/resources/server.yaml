@@ -30,3 +30,7 @@ visualizer:
 
 neo4jdatabase:
   enabled: true
+
+eventstore:
+  enabled: true
+  url: esdb+discover://localhost:2113?tls=false

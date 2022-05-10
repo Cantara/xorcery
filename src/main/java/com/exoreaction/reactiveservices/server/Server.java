@@ -58,7 +58,7 @@ public class Server
     public Server(File configurationFile, String id) throws Exception {
         this.configuration = configuration(configurationFile);
 
-        serverId = configuration.getString("id", Optional.ofNullable(id).orElse(UUID.randomUUID().toString()));
+        serverId = configuration.getString("id").orElseGet(()-> Optional.ofNullable(id).orElse(UUID.randomUUID().toString()));
 
         serverLogMarker = MarkerManager.getMarker("server:"+ serverId);
 
@@ -164,7 +164,7 @@ public class Server
         // Setup protocols
         HttpConnectionFactory http1 = new HttpConnectionFactory(config);
         final ServerConnector http = new ServerConnector(server, http1);
-        http.setPort(jettyConfig.getInt("port", 8080));
+        http.setPort(jettyConfig.getInteger("port").orElse(8080));
 
         baseUri = URI.create("http://127.0.0.1:"+http.getPort()+"/");
 

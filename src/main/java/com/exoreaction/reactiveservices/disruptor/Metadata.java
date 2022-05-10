@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public record Metadata(Map<String, String> metadata)
 {
@@ -44,5 +45,10 @@ public record Metadata(Map<String, String> metadata)
     @JsonValue
     public Map<String, String> getMetadata() {
         return metadata;
+    }
+
+    public Optional<String> get(String name)
+    {
+        return Optional.ofNullable(metadata.get(name));
     }
 }

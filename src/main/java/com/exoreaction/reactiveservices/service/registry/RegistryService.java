@@ -107,7 +107,7 @@ public class RegistryService
         this.jsonApiClient = jsonApiClient;
         this.server = server;
 
-        this.registryLink = new Link("self", this.configuration.getString("master", null));
+        this.registryLink = new Link("self", this.configuration.getString("master").orElseThrow());
 
         registration = new StartupRegistration(
                 reactiveStreams, jsonApiClient, registryLink,

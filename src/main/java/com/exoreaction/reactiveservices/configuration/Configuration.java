@@ -67,25 +67,25 @@ public class Configuration
         this.config = config;
     }
 
-    public String getString(String name, String defaultValue) {
-        return config.getString(name, defaultValue);
+    public Optional<String> getString(String name) {
+        return cfg(name, (config,n)->Optional.ofNullable(config.getString(n, null)));
     }
 
-    public URI getURI(String name, URI defaultValue) {
+    public Optional<URI> getURI(String name) {
 
-        return Optional.ofNullable(config.getString(name)).map(URI::create).orElse(defaultValue);
+        return cfg(name, (config, n)->Optional.ofNullable(config.getString(n)).map(URI::create));
     }
 
-    public int getInt(String name, int defaultValue) {
-        return config.getInt(name, defaultValue);
+    public Optional<Integer> getInteger(String name) {
+        return cfg(name, (config, n)->Optional.ofNullable(config.getJsonNumber(n)).map(JsonNumber::intValue));
     }
 
-    public boolean getBoolean(String name, boolean defaultValue) {
-        return cfg(name, defaultValue, (config, n)->config.getBoolean(n, defaultValue));
+    public Optional<Boolean> getBoolean(String name) {
+        return cfg(name, (config, n)->Optional.ofNullable(config.get(n)).map(v -> v.equals(JsonValue.TRUE)));
     }
     public Map<String, JsonValue> asMap()
     {
-        return config.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return config;
     }
     public Configuration getConfiguration(String name) {
         JsonObject jsonObject = config.getJsonObject(name);
@@ -98,14 +98,14 @@ public class Configuration
         return new Builder(Json.createObjectBuilder(config));
     }
 
-    private <T> T cfg(String name, T defaultValue, BiFunction<JsonObject, String, T> lookup)
+    private <T> Optional<T> cfg(String name, BiFunction<JsonObject, String, Optional<T>> lookup)
     {
         String[] names = name.split("\\.");
         JsonObject c = config;
         for (int i = 0; i < names.length-1; i++) {
             c = c.getJsonObject(names[i]);
             if (c == null)
-                return defaultValue;
+                return Optional.empty();
         }
         return lookup.apply(c, names[names.length-1]);
     }
