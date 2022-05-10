@@ -1,8 +1,8 @@
 jetty:
-  port: 8081
+  port: 8881
 
 registryclient:
-  uri: http://localhost:8080/api/registry
+  uri: http://localhost:8889/api/registry
 
 soutmetrics:
   enabled: true

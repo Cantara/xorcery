@@ -1,8 +1,8 @@
 server:
-  port: 8080
+  port: 8889
 
 registry:
-  master: http://localhost:8080/
+  master: http://localhost:8889/
 
 log4jappender:
   enabled: true
