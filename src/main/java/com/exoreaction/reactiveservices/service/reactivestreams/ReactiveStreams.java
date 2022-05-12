@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.reactivestreams;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
@@ -44,6 +45,7 @@ public class ReactiveStreams
         implements ContainerLifecycleListener {
 
     private static final Logger logger = LogManager.getLogger(ReactiveStreams.class);
+    private final boolean allowLocal;
 
     @Provider
     public static class Feature
@@ -71,6 +73,7 @@ public class ReactiveStreams
     @Inject
     public ReactiveStreams(ServletContextHandler servletContextHandler,
                            jakarta.inject.Provider<Registry> registryService,
+                           Configuration configuration,
                            WebSocketClient webSocketClient,
                            MessageBodyWorkers messageBodyWorkers,
                            ObjectMapper objectMapper) {
@@ -79,6 +82,7 @@ public class ReactiveStreams
         this.webSocketClient = webSocketClient;
         this.messageBodyWorkers = messageBodyWorkers;
         this.objectMapper = objectMapper;
+        this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
     }
 
     @Override
@@ -164,7 +168,7 @@ public class ReactiveStreams
                               Map<String, String> parameters) {
         Publisher<T> publisher = publishers.get(streamReference);
 
-        if (publisher != null) {
+        if (allowLocal && publisher != null) {
             // Local
             publisher.subscribe(subscriber, parameters);
         } else {

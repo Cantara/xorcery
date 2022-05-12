@@ -1,3 +1,6 @@
+environment: development
+tag: default
+
 server:
   port: 8889
 
@@ -32,5 +35,14 @@ neo4jdatabase:
   enabled: true
 
 eventstore:
-  enabled: true
+  enabled: false
   url: esdb+discover://localhost:2113?tls=false
+
+metrics:
+  enabled: false
+
+jmxmetrics:
+  enabled: true
+
+reactivestreams:
+  allowlocal: false

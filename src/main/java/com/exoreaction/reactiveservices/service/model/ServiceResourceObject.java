@@ -27,6 +27,11 @@ public record ServiceResourceObject(ResourceObject resourceObject)
             return this;
         }
 
+        public Builder attribute(String name, Object value) {
+            attributes.attribute(name, value);
+            return this;
+        }
+
         public Builder api(String rel, String path) {
             links.link(rel, server.getBaseUriBuilder().path(path));
 

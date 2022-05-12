@@ -1,7 +1,7 @@
-package com.exoreaction.reactiveservices.service.soutmetrics;
+package com.exoreaction.reactiveservices.service.jmxmetrics;
 
-import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
@@ -38,13 +38,14 @@ import java.util.function.Consumer;
  */
 
 @Singleton
-public class SysoutMetrics
+public class JmxMetrics
         implements ContainerLifecycleListener {
-    public static final String SERVICE_TYPE = "soutmetrics";
+    public static final String SERVICE_TYPE = "jmxmetrics";
     public static final Marker MARKER = MarkerManager.getMarker("service:"+SERVICE_TYPE);
 
     private final Logger logger = LogManager.getLogger(getClass());
     private ScheduledExecutorService scheduledExecutorService;
+    private JmxReporter reporter;
 
     @Provider
     public static class Feature
@@ -57,7 +58,7 @@ public class SysoutMetrics
 
         @Override
         protected void configure() {
-            context.register(SysoutMetrics.class, ContainerLifecycleListener.class);
+            context.register(JmxMetrics.class, ContainerLifecycleListener.class);
         }
     }
 
@@ -65,7 +66,7 @@ public class SysoutMetrics
     private Registry registry;
 
     @Inject
-    public SysoutMetrics(ReactiveStreams reactiveStreams, Registry registry) {
+    public JmxMetrics(ReactiveStreams reactiveStreams, Registry registry) {
         this.reactiveStreams = reactiveStreams;
         this.registry = registry;
     }
@@ -74,6 +75,13 @@ public class SysoutMetrics
     public void onStartup(Container container) {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         registry.addRegistryListener(new MetricsRegistryListener());
+
+        reporter = JmxReporter.forRegistry( container.getApplicationHandler().getInjectionManager().getInstance(MetricRegistry.class) )
+                .convertRatesTo( TimeUnit.SECONDS )
+                .convertDurationsTo( TimeUnit.MILLISECONDS )
+                .build();
+        reporter.start();
+
     }
 
     @Override
@@ -84,6 +92,7 @@ public class SysoutMetrics
     @Override
     public void onShutdown(Container container) {
         scheduledExecutorService.shutdown();
+        reporter.stop();
     }
 
     @NotNull

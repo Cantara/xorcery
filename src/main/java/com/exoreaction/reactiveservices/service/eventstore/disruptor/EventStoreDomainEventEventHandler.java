@@ -54,6 +54,7 @@ public class EventStoreDomainEventEventHandler
             } else {
                 event.event.result().completeExceptionally(t);
             }
+            
 
             subscription.request(1);
         });

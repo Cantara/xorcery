@@ -1,8 +1,11 @@
 package com.exoreaction.reactiveservices.service.greeter;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.disruptor.StandardMetadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvent;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
 import com.exoreaction.reactiveservices.service.greeter.commands.UpdateGreeting;
@@ -12,6 +15,7 @@ import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphResult;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.spi.Contract;
@@ -29,18 +33,23 @@ import static com.exoreaction.reactiveservices.service.domainevents.api.DomainEv
 @Contract
 public class GreeterApplication {
 
+    public static final String SERVICE_TYPE = "greeter";
+
     @Provider
     public static class Feature
             extends AbstractFeature {
 
         @Override
         protected String serviceType() {
-            return "greeter";
+            return SERVICE_TYPE;
         }
 
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.version("1.0.0").api("greeter", "api/greeter");
+            builder
+                    .version("1.0.0")
+                    .attribute(DomainEventMetadata.DOMAIN, "greeter")
+                    .api("greeter", "api/greeter");
         }
 
         @Override
@@ -50,13 +59,24 @@ public class GreeterApplication {
     }
 
     private DomainEventPublisher domainEventPublisher;
+    private Configuration configuration;
     private GraphDatabase graphDatabase;
 
     @Inject
     public GreeterApplication(DomainEventPublisher domainEventPublisher,
-                              GraphDatabase graphDatabase) {
+                              Configuration configuration,
+                              GraphDatabase graphDatabase,
+                              @Named(SERVICE_TYPE) ServiceResourceObject serviceResourceObject) {
         this.domainEventPublisher = domainEventPublisher;
+        this.configuration = configuration;
         this.graphDatabase = graphDatabase;
+/*
+
+        this.metadata = new Metadata()
+                .add(StandardMetadata.ENVIRONMENT, configuration.getString(StandardMetadata.ENVIRONMENT).orElse("development"))
+                .add(StandardMetadata.TAG, configuration.getString(StandardMetadata.TAG).orElse("default"))
+                .add(DomainEventMetadata.DOMAIN, serviceResourceObject.)
+*/
     }
 
     // Reads

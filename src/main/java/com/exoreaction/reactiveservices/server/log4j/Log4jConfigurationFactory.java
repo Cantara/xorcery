@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.server.log4j;
 
+import com.exoreaction.reactiveservices.service.greeter.resources.api.LogGeneratorResource;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -52,6 +53,11 @@ public class Log4jConfigurationFactory extends ConfigurationFactory {
                 add(builder.newAppenderRef("Stdout")).
                 add(builder.newAppenderRef("Disruptor")).
                 addAttribute("additivity", false));
+
+        builder.add(builder.newLogger(LogGeneratorResource.class.getPackageName(), Level.DEBUG).
+                add(builder.newAppenderRef("Disruptor")).
+                addAttribute("additivity", false));
+
         builder.add(builder.newRootLogger(Level.ERROR)
                 .add(builder.newAppenderRef("Stdout"))
                 .add(builder.newAppenderRef("Disruptor"))
