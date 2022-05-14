@@ -23,7 +23,7 @@ public record Metadata(Map<String, String> metadata)
         this(new HashMap<>());
     }
 
-//    @JsonAnySetter
+    @JsonAnySetter
     public Metadata add(String name, String value)
     {
         metadata.put(name, value);

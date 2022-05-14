@@ -128,11 +128,21 @@ public class SysoutLogging
             return ringBuffer;
         }
 
+
+        long bs;
+
+        @Override
+        public void onBatchStart(long batchSize) {
+            bs = batchSize;
+        }
+
         @Override
         public void onEvent(Event<LogEvent> event, long sequence, boolean endOfBatch) throws Exception {
 //            System.out.println("Log:"+event.event.toString()+":"+event.metadata);
             meter.mark();
-            subscription.request(1);
+            if (endOfBatch) {
+                subscription.request(bs);
+            }
         }
     }
 

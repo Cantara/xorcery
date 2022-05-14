@@ -7,6 +7,7 @@ import com.exoreaction.reactiveservices.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.rest.RestClient;
 import com.exoreaction.reactiveservices.server.resources.ServerApplication;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsonp.JSONPModule;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
@@ -194,6 +195,7 @@ public class Server
 
                     // Create default ObjectMapper
                     ObjectMapper objectMapper = new ObjectMapper();
+                    objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
                     objectMapper.registerModule(new JSONPModule());
                     bind(objectMapper);
 

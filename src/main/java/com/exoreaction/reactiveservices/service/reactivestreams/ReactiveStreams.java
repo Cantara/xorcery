@@ -21,10 +21,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.eclipse.jetty.io.ArrayByteBufferPool;
+import org.eclipse.jetty.io.ByteBufferAccumulator;
+import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.glassfish.hk2.utilities.reflection.ParameterizedTypeImpl;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -67,6 +69,8 @@ public class ReactiveStreams
     private MessageBodyWorkers messageBodyWorkers;
     private ObjectMapper objectMapper;
 
+    private ByteBufferPool byteBufferPool;
+
 
     private final Map<ServiceLinkReference, Publisher> publishers = new ConcurrentHashMap<>();
 
@@ -83,6 +87,8 @@ public class ReactiveStreams
         this.messageBodyWorkers = messageBodyWorkers;
         this.objectMapper = objectMapper;
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
+
+        byteBufferPool = new ArrayByteBufferPool();
     }
 
     @Override
@@ -227,7 +233,8 @@ public class ReactiveStreams
 
         try {
             URI websocketEndpointUri = URI.create(link.getHrefAsUriTemplate().createURI(parameters));
-            webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber, reader, writer, objectMapper, eventType, marker), websocketEndpointUri)
+            webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber, reader, writer, objectMapper, eventType, marker,
+                            new ByteBufferAccumulator(byteBufferPool, true)), websocketEndpointUri)
                     .join();
         } catch (IOException e) {
             logger.error("Could not subscribe", e);

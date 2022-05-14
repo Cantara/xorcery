@@ -4,6 +4,7 @@ import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
@@ -14,6 +15,9 @@ import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.io.ArrayByteBufferPool;
+import org.eclipse.jetty.io.ByteBufferOutputStream2;
+import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
@@ -85,6 +89,11 @@ public class PublisherWebSocketEndpoint<T>
     @Override
     public void onWebSocketText(String message) {
         long requestAmount = Long.parseLong(message);
+        if (requestAmount > 1)
+        {
+//            System.out.println("Requested:"+requestAmount);
+        }
+
         semaphore.release((int) requestAmount);
         subscription.request(requestAmount);
     }
@@ -109,7 +118,7 @@ public class PublisherWebSocketEndpoint<T>
     public EventSink<Event<T>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
         this.subscription = subscription;
 
-        disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("WebSocketDisruptor-"));
+        disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("PublisherWebSocketDisruptor-"));
 
         if (messageBodyReader != null)
             disruptor.handleEventsWith(new Sender()).then(new Receiver());
@@ -136,6 +145,8 @@ public class PublisherWebSocketEndpoint<T>
     public class Sender
             implements EventHandler<Event<T>> {
 
+        ByteBufferPool pool = new ArrayByteBufferPool();
+
         @Override
         public void onEvent(Event<T> event, long sequence, boolean endOfBatch) throws Exception {
             while (!semaphore.tryAcquire(1, TimeUnit.SECONDS)) {
@@ -143,36 +154,44 @@ public class PublisherWebSocketEndpoint<T>
                     return;
             }
 
-            ByteBuffer metadataBuffer = ByteBuffer.wrap(objectMapper.writeValueAsBytes(event.metadata));
+            ByteBufferOutputStream2 metadataOutputStream = new ByteBufferOutputStream2(pool, true);
+
+            objectMapper.writeValue(metadataOutputStream, event.metadata);
+            ByteBuffer metadataBuffer = metadataOutputStream.takeByteBuffer();
 
             session.getRemote().sendBytes(metadataBuffer, new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable t) {
                     logger.error("Could not send metadata", t);
                     // TODO
+                    pool.release(metadataBuffer);
                 }
 
                 @Override
                 public void writeSuccess() {
-                    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                    pool.release(metadataBuffer);
+
+                    ByteBufferOutputStream2 eventOutputStream = new ByteBufferOutputStream2(pool, true);
                     try {
                         if (messageBodyReader == null) {
-                            messageBodyWriter.writeTo(event.event, event.event.getClass(), event.event.getClass(), new Annotation[0], null, null, bout);
+                            messageBodyWriter.writeTo(event.event, event.event.getClass(), event.event.getClass(), new Annotation[0], null, null, eventOutputStream);
                         } else {
-                            messageBodyWriter.writeTo(((EventWithResult<T, ?>) event.event).event(), event.event.getClass(), event.event.getClass(), new Annotation[0], null, null, bout);
+                            messageBodyWriter.writeTo(((EventWithResult<T, ?>) event.event).event(), event.event.getClass(), event.event.getClass(), new Annotation[0], null, null, eventOutputStream);
                         }
 
-                        ByteBuffer eventBuffer = ByteBuffer.wrap(bout.toByteArray());
+                        ByteBuffer eventBuffer = eventOutputStream.takeByteBuffer();
 
                         session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
                             @Override
                             public void writeFailed(Throwable t) {
                                 // TODO
                                 logger.error("Could not send event", t);
+                                pool.release(eventBuffer);
                             }
 
                             @Override
                             public void writeSuccess() {
+                                pool.release(eventBuffer);
                                 // TODO
                             }
                         });
