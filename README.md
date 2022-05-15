@@ -14,8 +14,10 @@ java --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.n
 ```
 
 Add these to the IntelliJ JVM options tab if you are starting Main from within that environment.
+On IntelliJ >2021.3.2: "Open 'Edit/run configurations' dialog" -> "Edit Configurations" -> "Choose run configuration for Application" -> under "Build and run" -> "Modify options" -> "Add VM options" -> Enter all options starting with "--add-...." 
 
 You can also use mvn exec:exec to run it with the correct settings.
+Alterative in intelliJ, which can run on IntelliJ-downloaded/confed JVM: "Maven" tab on the right hand side -> "manager" -> Plugins -> "exec" -> "exec:exec" 
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
