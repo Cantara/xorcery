@@ -17,7 +17,6 @@ public abstract class SubscriberProxy<T>
 
     public SubscriberProxy(MultiSubscriber<T> multiSubscriber) {
         this.multiSubscriber = multiSubscriber;
-        multiSubscriber.add(this);
     }
 
     public void requests(long allowedOutstandingRequests) {
@@ -37,6 +36,7 @@ public abstract class SubscriberProxy<T>
     @Override
     public EventSink<Event<T>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
         this.subscription = subscription;
+        multiSubscriber.add(this);
         try {
             return (EventSink<Event<T>>) Proxy.newProxyInstance(getClass().getClassLoader(),
                     new Class[]{EventSink.class}, this);

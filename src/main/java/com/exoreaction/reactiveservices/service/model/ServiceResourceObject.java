@@ -60,6 +60,7 @@ public record ServiceResourceObject(ResourceObject resourceObject)
         return new ServiceReference(resourceObject.getType(), resourceObject.getId());
     }
 
+    public String serverId() { return resourceObject.getId();}
     public String version()
     {
         return resourceObject().getAttributes().getString("version");

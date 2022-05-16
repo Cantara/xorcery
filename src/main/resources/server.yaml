@@ -39,7 +39,7 @@ eventstore:
   url: esdb+discover://localhost:2113?tls=false
 
 metrics:
-  enabled: false
+  enabled: true
 
 jmxmetrics:
   enabled: true

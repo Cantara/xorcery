@@ -34,8 +34,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
-@WebListener
-@Provider
 public class DomainEventsPublisher
         implements DomainEventPublisher,
         ReactiveEventStreams.Publisher<EventWithResult<DomainEvents, Metadata>>,

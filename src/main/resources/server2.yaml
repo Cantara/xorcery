@@ -1,18 +1,51 @@
-jetty:
+environment: development
+tag: default
+
+server:
   port: 8881
 
-registryclient:
-  uri: http://localhost:8889/api/registry
+registry:
+  master: http://localhost:8889/
 
-soutmetrics:
+log4jappender:
+  enabled: true
+
+loggingconsumer:
   enabled: true
 
 soutlogging:
-  enabled: true
+  enabled: false
+
+soutmetrics:
+  enabled: false
+
+domainevents:
+  enabled: false
 
 mapdbdomainevents:
+  enabled: false
+
+greeter:
   enabled: false
 
 visualizer:
   enabled: false
 
+neo4jdatabase:
+  enabled: false
+
+neo4jdomainevents:
+  enabled: false
+
+eventstore:
+  enabled: false
+  url: esdb+discover://localhost:2113?tls=false
+
+metrics:
+  enabled: true
+
+jmxmetrics:
+  enabled: false
+
+reactivestreams:
+  allowlocal: false
