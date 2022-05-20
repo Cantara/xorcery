@@ -4,7 +4,7 @@ import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
-import com.exoreaction.reactiveservices.service.conductor.resources.ConductorService;
+import com.exoreaction.reactiveservices.service.conductor.ConductorService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

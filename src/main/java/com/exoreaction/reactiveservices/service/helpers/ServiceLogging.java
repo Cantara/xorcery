@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.helpers;
 
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceReference;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 
@@ -25,11 +25,11 @@ public interface ServiceLogging {
         logger().debug(marker(), "Stopped");
     }
 
-    default void connectedTo(ServiceReference serviceReference) {
-        logger().info(marker(), "Connected to " + serviceReference);
+    default void connectedTo(ServiceIdentifier serviceIdentifier) {
+        logger().info(marker(), "Connected to " + serviceIdentifier);
     }
 
-    default void disconnectedFrom(ServiceReference serviceReference) {
-        logger().info(marker(), "Disconnected from " + serviceReference);
+    default void disconnectedFrom(ServiceIdentifier serviceIdentifier) {
+        logger().info(marker(), "Disconnected from " + serviceIdentifier);
     }
 }

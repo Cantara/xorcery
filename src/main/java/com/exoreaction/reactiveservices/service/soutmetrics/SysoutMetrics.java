@@ -1,13 +1,12 @@
 package com.exoreaction.reactiveservices.service.soutmetrics;
 
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
@@ -16,6 +15,7 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
@@ -27,6 +27,7 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -63,11 +64,13 @@ public class SysoutMetrics
 
     private ReactiveStreams reactiveStreams;
     private Registry registry;
+    private ServiceResourceObject sro;
 
     @Inject
-    public SysoutMetrics(ReactiveStreams reactiveStreams, Registry registry) {
+    public SysoutMetrics(ReactiveStreams reactiveStreams, Registry registry, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
         this.reactiveStreams = reactiveStreams;
         this.registry = registry;
+        this.sro = sro;
     }
 
     @Override
@@ -90,8 +93,8 @@ public class SysoutMetrics
     private Consumer<Link> connect(ResourceObject service) {
         return l ->
         {
-            reactiveStreams.subscribe(new ServiceLinkReference(service, "metricevents"),
-                    new MetricEventSubscriber(scheduledExecutorService));
+            reactiveStreams.subscribe(sro.serviceIdentifier(), l,
+                    new MetricEventSubscriber(scheduledExecutorService), Collections.emptyMap());
         };
     }
 

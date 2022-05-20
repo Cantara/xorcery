@@ -7,11 +7,10 @@ import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
 import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.MapDbDomainEventEventHandler;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
@@ -21,6 +20,7 @@ import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
@@ -31,8 +31,6 @@ import org.apache.logging.log4j.MarkerManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.Collections;
 
 /**
@@ -45,7 +43,7 @@ public class MapDbDomainEventsService
         implements ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "mapdbdomainevents";
-    public static final Marker MARKER = MarkerManager.getMarker("service:"+SERVICE_TYPE);
+    public static final Marker MARKER = MarkerManager.getMarker("service:" + SERVICE_TYPE);
 
     @Provider
     public static class Feature
@@ -70,14 +68,17 @@ public class MapDbDomainEventsService
     private final Logger logger = LogManager.getLogger(getClass());
     private final Registry registry;
     private ReactiveStreams reactiveStreams;
+    private ServiceResourceObject sro;
     private final MapDatabaseService mapDatabaseService;
     private ObjectMapper objectMapper;
 
     @Inject
     public MapDbDomainEventsService(Registry registry, ReactiveStreams reactiveStreams,
+                                    @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                     MapDatabaseService mapDatabaseService, ObjectMapper objectMapper) {
         this.registry = registry;
         this.reactiveStreams = reactiveStreams;
+        this.sro = sro;
         this.mapDatabaseService = mapDatabaseService;
         this.objectMapper = objectMapper;
     }
@@ -98,7 +99,7 @@ public class MapDbDomainEventsService
     }
 
     public void connect(Link domainEventSource) {
-        reactiveStreams.subscribe(domainEventSource, new DomainEventsSubscriber(), Collections.emptyMap(), MarkerManager.getMarker(domainEventSource.getHref()));
+        reactiveStreams.subscribe(sro.serviceIdentifier(), domainEventSource, new DomainEventsSubscriber());
     }
 
     private class DomainEventsRegistryListener implements RegistryListener {
@@ -109,8 +110,7 @@ public class MapDbDomainEventsService
     }
 
     private class DomainEventsSubscriber
-        implements ReactiveEventStreams.Subscriber<EventWithResult<JsonObject, Metadata>>
-    {
+            implements ReactiveEventStreams.Subscriber<EventWithResult<JsonObject, Metadata>> {
 
         private Disruptor<Event<EventWithResult<JsonObject, Metadata>>> disruptor;
 

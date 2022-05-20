@@ -12,10 +12,10 @@ import com.exoreaction.reactiveservices.rest.RestProcess;
 import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.model.ServerResourceDocument;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceReference;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.SubscriberEventSink;
 import com.exoreaction.reactiveservices.service.registry.api.*;
 import com.lmax.disruptor.EventHandler;
@@ -110,7 +110,7 @@ public class RegistryService
         this.registryLink = new Link("self", this.configuration.getString("master").orElseThrow());
 
         registration = new StartupRegistration(
-                reactiveStreams, jsonApiClient, registryLink,
+                reactiveStreams, jsonApiClient, resourceObject.serviceIdentifier(), registryLink,
                 server.getServerDocument(), new UpstreamSubscriber(),
                 new CompletableFuture<ResourceDocument>().thenApply(v ->
                 {
@@ -123,8 +123,7 @@ public class RegistryService
     public void onStartup(Container container) {
         resourceObject.linkByRel("registryevents").ifPresent(link ->
         {
-            reactiveStreams.publish(resourceObject.serviceReference().link("registryevents"),
-                    new RegistryPublisher(), link);
+            reactiveStreams.publish(resourceObject.serviceIdentifier(), link, new RegistryPublisher());
         });
 
         registration.start();
@@ -146,15 +145,26 @@ public class RegistryService
 
     @Override
     public void addServer(ResourceDocument server) {
-        send(new AddedServer(server.object()));
+        String selfHref = server.getLinks().getSelf().map(Link::getHref).orElse("");
+        servers.removeIf(rd ->
+                rd.getLinks().getSelf()
+                        .map(s -> s.getHref().equals(selfHref)).orElse(false));
+
+        servers.add(server);
+
+        publish(new AddedServer(server.object()));
     }
 
     @Override
     public void removeServer(String serverSelfUri) {
-        send(new RemovedServer(Json.createValue(serverSelfUri)));
+        if (servers.removeIf(rd ->
+                rd.getLinks().getSelf()
+                        .map(s -> s.getHref().equals(serverSelfUri)).orElse(false))) {
+            publish(new RemovedServer(Json.createValue(serverSelfUri)));
+        }
     }
 
-    private void send(RegistryChange registryChange) {
+    private void publish(RegistryChange registryChange) {
 
         for (SubscriberEventSink<RegistryChange> subscriber : subscribers) {
             subscriber.sink().publishEvent((event, seq, sro) ->
@@ -171,11 +181,11 @@ public class RegistryService
     }
 
     @Override
-    public Optional<ServiceResourceObject> getService(ServiceReference serviceReference) {
+    public Optional<ServiceResourceObject> getService(ServiceIdentifier serviceIdentifier) {
         return servers.stream()
                 .flatMap(rd -> rd.getResources().stream())
                 .flatMap(r -> r.getResources().stream())
-                .filter(ro -> ro.getId().equals(serviceReference.id()) && ro.getType().equals(serviceReference.type()))
+                .filter(ro -> ro.getResourceObjectIdentifier().equals(serviceIdentifier.resourceObjectIdentifier()))
                 .findFirst().map(ServiceResourceObject::new);
     }
 
@@ -196,7 +206,7 @@ public class RegistryService
 
     private void handleUpstreamChange(RegistryChange event) {
         if (event instanceof AddedServer) {
-            ResourceDocument resourceDocument = new ResourceDocument((JsonObject)event.json());
+            ResourceDocument resourceDocument = new ResourceDocument((JsonObject) event.json());
             {
                 servers.add(resourceDocument);
                 listeners.forEach(listener -> listener.addedServer(resourceDocument));
@@ -205,7 +215,7 @@ public class RegistryService
             {
                 RegistrySnapshot registrySnapshot = (RegistrySnapshot) event;
                 servers.clear();
-                servers.addAll(((JsonArray)registrySnapshot.json()).getValuesAs(json -> new ResourceDocument((JsonObject)json)));
+                servers.addAll(((JsonArray) registrySnapshot.json()).getValuesAs(json -> new ResourceDocument((JsonObject) json)));
 //                listeners.forEach(listener -> listener.snapshot()removedServer(resourceDocument));
             }
         } else if (event instanceof RemovedServer) {
@@ -243,7 +253,9 @@ public class RegistryService
         }
     }
 
-    public record StartupRegistration(ReactiveStreams reactiveStreams, JsonApiClient client, Link registryUri,
+    public record StartupRegistration(ReactiveStreams reactiveStreams, JsonApiClient client,
+                                      ServiceIdentifier serviceIdentifier,
+                                      Link registryUri,
                                       ResourceDocument server,
                                       UpstreamSubscriber upstreamSubscriber,
                                       CompletionStage<ResourceDocument> result)
@@ -262,13 +274,35 @@ public class RegistryService
             return registry.serviceByType("registry")
                     .map(sro -> sro.linkByRel("registryevents").map(link ->
                     {
-                        reactiveStreams.subscribe(link, upstreamSubscriber, Collections.emptyMap(), MarkerManager.getMarker(sro.serviceReference().toString()));
+                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Collections.emptyMap());
                         return CompletableFuture.completedStage(registry);
                     }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry"))))
                     .orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
         }
 
         private <U> CompletionStage<ResourceDocument> submitServer(ServerResourceDocument registry) {
+            return registry.serviceByType("registry")
+                    .map(sro -> sro.linkByRel("registry").map(link ->
+                            client.get(link)
+                                    .thenCompose(rd -> rd.getLinks().getRel("servers").map(serversLink ->
+                                            client.submit(serversLink, server)).orElse(CompletableFuture.failedStage(new IllegalStateException("No link 'servers' in registry"))))).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry"))))
+                    .orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
+        }
+    }
+
+    public record ShutdownDeregistration(JsonApiClient client, Link registryUri,
+                                         ResourceDocument server,
+                                         CompletionStage<ResourceDocument> result)
+            implements RestProcess<ResourceDocument> {
+
+        public void start() {
+            client.get(registryUri)
+                    .thenApply(ServerResourceDocument::new)
+                    .thenCompose(this::deleteServer)
+                    .whenComplete(this::complete);
+        }
+
+        private <U> CompletionStage<ResourceDocument> deleteServer(ServerResourceDocument registry) {
             return registry.serviceByType("registry")
                     .map(sro -> sro.linkByRel("registry").map(link ->
                             client.get(link)

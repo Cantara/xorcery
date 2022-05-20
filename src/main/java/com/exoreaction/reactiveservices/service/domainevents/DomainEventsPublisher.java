@@ -10,10 +10,8 @@ import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceReference;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -21,7 +19,6 @@ import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.servlet.annotation.WebListener;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -59,7 +56,6 @@ public class DomainEventsPublisher
         protected void configure() {
             context.register(DomainEventsPublisher.class, DomainEventPublisher.class, ContainerLifecycleListener.class);
         }
-
     }
 
     private final ReactiveStreams reactiveStreams;
@@ -82,9 +78,9 @@ public class DomainEventsPublisher
     @Override
     public void onStartup(Container container) {
         disruptor.start();
-        resourceObject.resourceObject().getLinks().getRel("domainevents").ifPresent(link ->
+        resourceObject.linkByRel("domainevents").ifPresent(link ->
         {
-            reactiveStreams.publish(resourceObject.serviceReference().link("domainevents"), this, link);
+            reactiveStreams.publish(resourceObject.serviceIdentifier(), link, this);
         });
     }
 

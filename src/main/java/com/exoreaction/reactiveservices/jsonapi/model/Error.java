@@ -16,9 +16,11 @@ import java.util.Optional;
 public record Error(JsonObject json)
     implements JsonElement
 {
-    public static class Builder
+    public static record Builder(JsonObjectBuilder builder)
     {
-        JsonObjectBuilder builder = Json.createObjectBuilder();
+        public Builder {
+            builder = Json.createObjectBuilder();
+        }
 
         public Builder status(int value)
         {

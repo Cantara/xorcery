@@ -4,45 +4,54 @@ tag: default
 server:
   port: 8889
 
+reactivestreams:
+  allowlocal: false
+
 registry:
   master: http://localhost:8889/
 
-log4jappender:
+conductor:
   enabled: true
 
-loggingconsumer:
+# Logging
+log4jappender:
   enabled: true
 
 soutlogging:
   enabled: true
 
+# Metrics
+metrics:
+  enabled: false
+
 soutmetrics:
   enabled: false
 
-domainevents:
-  enabled: true
-
-mapdbdomainevents:
+jmxmetrics:
   enabled: false
 
-greeter:
-  enabled: true
-
-visualizer:
-  enabled: true
-
+# Domain events
 neo4jdatabase:
-  enabled: true
+  enabled: false
+
+neo4jdomainevents:
+  enabled: false
 
 eventstore:
   enabled: false
   url: esdb+discover://localhost:2113?tls=false
 
-metrics:
-  enabled: true
+mapdbdomainevents:
+  enabled: false
 
-jmxmetrics:
-  enabled: true
+greeter:
+  enabled: false
 
-reactivestreams:
-  allowlocal: false
+domainevents:
+  enabled: false
+
+# Misc
+
+visualizer:
+  enabled: false
+

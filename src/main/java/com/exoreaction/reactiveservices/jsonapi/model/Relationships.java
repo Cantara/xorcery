@@ -35,6 +35,10 @@ public record Relationships(JsonObject json)
             builder.add( name, relationship.json() );
             return this;
         }
+        public Builder relationship( String name, Relationship.Builder relationship )
+        {
+            return relationship(name, relationship.build());
+        }
 
         @SafeVarargs
         public final Builder with( Consumer<Builder>... consumers )

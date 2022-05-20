@@ -5,7 +5,7 @@ import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceReference;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 
 import java.util.Optional;
 
@@ -55,9 +55,9 @@ public record ServiceResourceObject(ResourceObject resourceObject)
         }
     }
 
-    public ServiceReference serviceReference()
+    public ServiceIdentifier serviceIdentifier()
     {
-        return new ServiceReference(resourceObject.getType(), resourceObject.getId());
+        return new ServiceIdentifier(resourceObject.getType(), resourceObject.getId());
     }
 
     public String serverId() { return resourceObject.getId();}

@@ -5,16 +5,13 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.log4jappender.log4j.DisruptorAppender;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams.Publisher;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
 import com.lmax.disruptor.EventSink;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.servlet.ServletContextEvent;
-import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
@@ -54,14 +51,12 @@ public class Log4jAppenderEventPublisher
 
     private final ReactiveStreams reactiveStreams;
     private Server server;
-    private ServiceLinkReference streamReference;
     private ServiceResourceObject sro;
 
     @Inject
     public Log4jAppenderEventPublisher(ReactiveStreams reactiveStreams, Server server, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
         this.reactiveStreams = reactiveStreams;
         this.server = server;
-        streamReference = sro.serviceReference().link("logevents");
         this.sro = sro;
     }
 
@@ -69,7 +64,7 @@ public class Log4jAppenderEventPublisher
     public void onStartup(Container container) {
         sro.linkByRel("logevents").ifPresent(link ->
         {
-            reactiveStreams.publish(streamReference, this, link);
+            reactiveStreams.publish(sro.serviceIdentifier(), link, this);
         });
     }
 

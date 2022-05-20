@@ -1,26 +1,30 @@
 package com.exoreaction.reactiveservices.service.soutlogger;
 
-import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
+import com.exoreaction.reactiveservices.service.conductor.api.ConductorListener;
+import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
+import com.exoreaction.reactiveservices.service.model.ServiceLinkAttributes;
+import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.MultiSubscriber;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.SubscriberProxy;
-import com.exoreaction.reactiveservices.service.registry.api.Registry;
-import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.core.LogEvent;
@@ -28,6 +32,9 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -40,13 +47,6 @@ public class SysoutLogging
         implements ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "soutlogging";
-    private final Meter meter;
-
-    private ReactiveStreams reactiveStreams;
-    private Registry registry;
-    private Configuration configuration;
-    private MetricRegistry metricRegistry;
-    private MultiSubscriber<LogEvent> multiSubscriber;
 
     @Provider
     public static class Feature
@@ -62,20 +62,28 @@ public class SysoutLogging
         }
     }
 
+    private final Meter meter;
+    private ServiceResourceObject serviceResourceObject;
+
+    private ReactiveStreams reactiveStreams;
+    private Conductor conductor;
+    private Configuration configuration;
+    private MultiSubscriber<LogEvent> multiSubscriber;
 
     @Inject
-    public SysoutLogging(ReactiveStreams reactiveStreams, Registry registry,
-                         Configuration configuration, MetricRegistry metricRegistry) {
+    public SysoutLogging(ReactiveStreams reactiveStreams, Conductor conductor,
+                         Configuration configuration, MetricRegistry metricRegistry,
+                         @Named(SERVICE_TYPE) ServiceResourceObject serviceResourceObject) {
         this.reactiveStreams = reactiveStreams;
-        this.registry = registry;
+        this.conductor = conductor;
         this.configuration = configuration;
-        this.metricRegistry = metricRegistry;
         meter = metricRegistry.meter("logmeter");
+        this.serviceResourceObject = serviceResourceObject;
     }
 
     @Override
     public void onStartup(Container container) {
-        registry.addRegistryListener(new LoggingRegistryListener());
+        conductor.addConductorListener(new LoggingConductorListener());
 
         Disruptor<Event<LogEvent>> disruptor = new Disruptor<>(Event::new, configuration.getInteger("sysoutlogger.size").orElse(4096), new NamedThreadFactory("SysoutLogger-"));
         LogEventSubscriber subscriber = new LogEventSubscriber(disruptor.getRingBuffer());
@@ -96,11 +104,10 @@ public class SysoutLogging
     }
 
     @NotNull
-    private Consumer<Link> connect(ResourceObject service) {
-        return l ->
+    private Consumer<Link> connect(Optional<ServiceLinkAttributes> attributes) {
+        return link ->
         {
-            reactiveStreams.subscribe(new ServiceLinkReference(service, "logevents"),
-                    new LogSubscriberProxy(multiSubscriber));
+            reactiveStreams.subscribe(serviceResourceObject.serviceIdentifier(), link, new LogSubscriberProxy(multiSubscriber), attributes.map(ServiceLinkAttributes::toMap).orElse(Collections.emptyMap()));
         };
     }
 
@@ -138,7 +145,7 @@ public class SysoutLogging
 
         @Override
         public void onEvent(Event<LogEvent> event, long sequence, boolean endOfBatch) throws Exception {
-//            System.out.println("Log:"+event.event.toString()+":"+event.metadata);
+            System.out.println("Log:"+event.event.toString()+":"+event.metadata);
             meter.mark();
             if (endOfBatch) {
                 subscription.request(bs);
@@ -146,10 +153,20 @@ public class SysoutLogging
         }
     }
 
-    private class LoggingRegistryListener implements RegistryListener {
+    private class LoggingConductorListener implements ConductorListener {
+
         @Override
-        public void addedService(ResourceObject service) {
-            service.getLinks().getRel("logevents").ifPresent(connect(service));
+        public void addedGroup(Group group) {
+            // Does the added group contain this service?
+            if (group.contains(serviceResourceObject.serviceIdentifier())) {
+                // Find log publisher to connect to
+                group.servicesByLinkRel("logevents", (sro, attributes) ->
+                {
+                    sro.linkByRel("logevents").ifPresent(connect(attributes));
+                });
+            }
+
+            ConductorListener.super.addedGroup(group);
         }
     }
 }

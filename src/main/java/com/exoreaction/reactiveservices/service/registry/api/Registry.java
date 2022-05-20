@@ -4,7 +4,7 @@ import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceReference;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import org.glassfish.jersey.spi.Contract;
 
 import java.util.List;
@@ -20,9 +20,9 @@ public interface Registry {
     // Read
     List<ResourceDocument> getServers();
 
-    abstract Optional<ServiceResourceObject> getService(ServiceReference serviceReference);
+    Optional<ServiceResourceObject> getService(ServiceIdentifier serviceIdentifier);
 
-    abstract Optional<Link> getServiceLink(ServiceLinkReference serviceLinkReference);
+    Optional<Link> getServiceLink(ServiceLinkReference serviceLinkReference);
 
-    abstract void addRegistryListener(RegistryListener listener);
+    void addRegistryListener(RegistryListener listener);
 }

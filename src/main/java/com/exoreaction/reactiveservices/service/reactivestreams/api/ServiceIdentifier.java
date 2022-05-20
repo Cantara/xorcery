@@ -2,11 +2,11 @@ package com.exoreaction.reactiveservices.service.reactivestreams.api;
 
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjectIdentifier;
 
-public record ServiceReference(String type, String id)
+public record ServiceIdentifier(ResourceObjectIdentifier resourceObjectIdentifier)
 {
-    public ServiceReference(ResourceObjectIdentifier resourceObjectIdentifier)
+    public ServiceIdentifier(String type, String id)
     {
-        this(resourceObjectIdentifier.getType(), resourceObjectIdentifier.getId());
+        this(new ResourceObjectIdentifier.Builder(type, id).build());
     }
 
     public ServiceLinkReference link(String rel)
@@ -16,6 +16,6 @@ public record ServiceReference(String type, String id)
 
     @Override
     public String toString() {
-        return id+":"+type;
+        return resourceObjectIdentifier.getType()+":"+resourceObjectIdentifier.getId();
     }
 }

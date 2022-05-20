@@ -22,6 +22,7 @@ import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,12 +61,6 @@ public class SubscriberWebSocketEndpoint<T>
         this.byteBufferAccumulator = byteBufferAccumulator;
     }
 
-//    @Override
-    public void onWebSocketText(String message) {
-        logger.info("Receive text:" + message);
-    }
-
-
     @Override
     public void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
         byteBufferAccumulator.copyBuffer(payload);
@@ -81,13 +76,11 @@ public class SubscriberWebSocketEndpoint<T>
         WebSocketPartialListener.super.onWebSocketPartialText(payload, fin);
     }
 
-    //  @Override
     public void onWebSocketBinary(ByteBuffer byteBuffer) {
 
 
         try {
             if (metadata == null) {
-//                metadata = objectMapper.readValue(inputStream, Metadata.class);
                 metadata = byteBuffer;
             } else {
                 ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
@@ -132,6 +125,7 @@ public class SubscriberWebSocketEndpoint<T>
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
+        subscriber.onComplete();
         logger.info("Close websocket:{} {}", statusCode, reason);
     }
 
@@ -146,6 +140,9 @@ public class SubscriberWebSocketEndpoint<T>
 
             @Override
             public void request(long n) {
+                if (!session.isOpen())
+                    return;
+
                 requests.addAndGet(n);
 
                 if (sendRequests.get() == null) {
@@ -177,7 +174,8 @@ public class SubscriberWebSocketEndpoint<T>
 
             @Override
             public void cancel() {
-                session.close();
+                requests.set(0);
+                request(Long.MIN_VALUE);
             }
         });
 
@@ -186,6 +184,11 @@ public class SubscriberWebSocketEndpoint<T>
 
     @Override
     public void onWebSocketError(Throwable cause) {
-        logger.error("Web socket error", cause);
+        if (cause instanceof ClosedChannelException)
+        {
+            // Ignore
+        } else {
+            logger.error("Subscriber websocket error", cause);
+        }
     }
 }

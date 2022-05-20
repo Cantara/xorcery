@@ -10,7 +10,7 @@ import com.exoreaction.reactiveservices.jsonapi.client.JsonApiClient;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
@@ -18,6 +18,7 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
@@ -77,12 +78,15 @@ public class JmxMetrics
         }
     }
 
+    private ServiceResourceObject sro;
     private ReactiveStreams reactiveStreams;
     private Registry registry;
     private JsonApiClient client;
 
     @Inject
-    public JmxMetrics(ReactiveStreams reactiveStreams, Registry registry) {
+    public JmxMetrics(@Named(SERVICE_TYPE) ServiceResourceObject sro,
+                      ReactiveStreams reactiveStreams, Registry registry) {
+        this.sro = sro;
         this.reactiveStreams = reactiveStreams;
         this.registry = registry;
         ClientConfig config = new ClientConfig();
@@ -135,7 +139,7 @@ public class JmxMetrics
                                 case "meter" -> new MeterMXBean.Model(metricSupplier);
                                 case "counter" -> new CounterMXBean.Model(metricSupplier);
                                 case "timer" -> new TimerMXBean.Model(metricSupplier);
-                                default -> throw new IllegalArgumentException("Unknown type "+metricType);
+                                default -> throw new IllegalArgumentException("Unknown type " + metricType);
                             };
                             managementServer.registerMBean(mBean, name);
 
@@ -168,7 +172,7 @@ public class JmxMetrics
     private void pollMetrics(Link metricevents, String serverId, Collection<String> metricNames) {
         Map<String, String> parameters = new HashMap<>();
         parameters.put("metric_names", String.join(",", metricNames));
-        reactiveStreams.subscribe(metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), parameters, MARKER);
+        reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), parameters);
     }
 
     private class MetricEventSubscriber
@@ -207,7 +211,6 @@ public class JmxMetrics
                 polledMetrics.get(serverId).get(name).set(value);
             });
 
-//            System.out.println("Metric:"+event.event.toString()+":"+event.metadata);
             scheduledExecutorService.schedule(() -> subscription.request(1), 5, TimeUnit.SECONDS);
         }
 
@@ -220,7 +223,11 @@ public class JmxMetrics
     private class JmxServersRegistryListener implements RegistryListener {
         @Override
         public void addedService(ResourceObject service) {
-            service.getLinks().getRel("metrics").ifPresent(link -> fetchMetrics(link, new ServiceResourceObject(service)));
+            service.getLinks().getRel("metrics").ifPresent(link ->
+            {
+                logger.info("Connecting to JMX publisher {}", link.getHref());
+                fetchMetrics(link, new ServiceResourceObject(service));
+            });
         }
     }
 

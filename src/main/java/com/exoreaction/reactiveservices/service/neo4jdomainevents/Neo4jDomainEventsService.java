@@ -7,11 +7,9 @@ import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
-import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.MapDbDomainEventEventHandler;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.neo4jdomainevents.disruptor.Neo4jDomainEventEventHandler;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
@@ -21,9 +19,9 @@ import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonArray;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,8 +31,6 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.neo4j.graphdb.GraphDatabaseService;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.Collections;
 
 /**
@@ -47,7 +43,7 @@ public class Neo4jDomainEventsService
         implements ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "neo4jdomainevents";
-    public static final Marker MARKER = MarkerManager.getMarker("service:"+SERVICE_TYPE);
+    public static final Marker MARKER = MarkerManager.getMarker("service:" + SERVICE_TYPE);
 
     @Provider
     public static class Feature
@@ -72,14 +68,17 @@ public class Neo4jDomainEventsService
     private final Logger logger = LogManager.getLogger(getClass());
     private final Registry registry;
     private ReactiveStreams reactiveStreams;
+    private ServiceResourceObject sro;
     private GraphDatabaseService graphDatabaseService;
     private ObjectMapper objectMapper;
 
     @Inject
     public Neo4jDomainEventsService(Registry registry, ReactiveStreams reactiveStreams,
+                                    @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                     GraphDatabaseService graphDatabaseService) {
         this.registry = registry;
         this.reactiveStreams = reactiveStreams;
+        this.sro = sro;
         this.graphDatabaseService = graphDatabaseService;
     }
 
@@ -99,7 +98,7 @@ public class Neo4jDomainEventsService
     }
 
     public void connect(Link domainEventSource) {
-        reactiveStreams.subscribe(domainEventSource, new DomainEventsSubscriber(), Collections.emptyMap(), MarkerManager.getMarker(domainEventSource.getHref()));
+        reactiveStreams.subscribe(sro.serviceIdentifier(), domainEventSource, new DomainEventsSubscriber());
     }
 
     private class DomainEventsRegistryListener implements RegistryListener {
@@ -110,8 +109,7 @@ public class Neo4jDomainEventsService
     }
 
     private class DomainEventsSubscriber
-        implements ReactiveEventStreams.Subscriber<EventWithResult<JsonArray, Metadata>>
-    {
+            implements ReactiveEventStreams.Subscriber<EventWithResult<JsonArray, Metadata>> {
 
         private Disruptor<Event<EventWithResult<JsonArray, Metadata>>> disruptor;
 

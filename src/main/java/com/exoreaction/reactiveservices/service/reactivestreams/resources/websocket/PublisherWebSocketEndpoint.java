@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
@@ -94,8 +95,13 @@ public class PublisherWebSocketEndpoint<T>
 //            System.out.println("Requested:"+requestAmount);
         }
 
-        semaphore.release((int) requestAmount);
-        subscription.request(requestAmount);
+        if (requestAmount == Long.MIN_VALUE)
+        {
+            subscription.cancel();
+        } else {
+            semaphore.release((int) requestAmount);
+            subscription.request(requestAmount);
+        }
     }
 
     @Override
@@ -111,6 +117,12 @@ public class PublisherWebSocketEndpoint<T>
 
     @Override
     public void onWebSocketError(Throwable cause) {
+        if (cause instanceof ClosedChannelException)
+        {
+            // Ignore
+        } else {
+            logger.error("Publisher websocket error", cause);
+        }
     }
 
     // Subscriber
@@ -132,7 +144,7 @@ public class PublisherWebSocketEndpoint<T>
     @Override
     public void onError(Throwable throwable) {
         logger.error("Reactive socket error", throwable);
-
+        // Send this to subscriber websocket ?
     }
 
     @Override
@@ -215,5 +227,4 @@ public class PublisherWebSocketEndpoint<T>
             result.join();
         }
     }
-
 }

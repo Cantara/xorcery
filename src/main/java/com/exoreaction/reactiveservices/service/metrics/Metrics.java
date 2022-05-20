@@ -3,11 +3,9 @@ package com.exoreaction.reactiveservices.service.metrics;
 import com.codahale.metrics.*;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
 import com.lmax.disruptor.EventSink;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -20,11 +18,9 @@ import org.apache.logging.log4j.LogManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Singleton
 public class Metrics
@@ -57,6 +53,8 @@ public class Metrics
     private final ReactiveStreams reactiveStreams;
     private MetricRegistry metricRegistry;
 
+    private final List<MetricSubscription> subscriptions = new CopyOnWriteArrayList<>();
+
     @Inject
     public Metrics(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject, ReactiveStreams reactiveStreams, MetricRegistry metricRegistry) {
         this.resourceObject = resourceObject;
@@ -66,9 +64,9 @@ public class Metrics
 
     @Override
     public void onStartup(Container container) {
-        resourceObject.resourceObject().getLinks().getRel("metricevents").ifPresent(link ->
+        resourceObject.linkByRel("metricevents").ifPresent(link ->
         {
-            reactiveStreams.publish(resourceObject.serviceReference().link("metricevents"), this, link);
+            reactiveStreams.publish(resourceObject.serviceIdentifier(), link, this);
         });
     }
 
@@ -79,7 +77,10 @@ public class Metrics
 
     @Override
     public void onShutdown(Container container) {
-
+        while (!subscriptions.isEmpty()) {
+            System.out.println("Canceling metric subscription");
+            subscriptions.remove(0).cancel();
+        }
     }
 
     @Override
@@ -87,19 +88,21 @@ public class Metrics
         String metricNames = Optional.ofNullable(parameters.get("metrics")).orElse("");
         Collection<String> metricNamesList = metricNames.isBlank() ? metricRegistry.getNames() : Arrays.asList(metricNames.split(","));
 
-        new MetricSubscription(subscriber, metricNamesList, metricRegistry);
+        subscriptions.add(new MetricSubscription(subscriber, metricNamesList, metricRegistry));
     }
 
     private class MetricSubscription
             implements ReactiveEventStreams.Subscription {
-        private final CompletableFuture<EventSink<Event<JsonObject>>> subscriber = new CompletableFuture<>();
+        private final CompletableFuture<EventSink<Event<JsonObject>>> eventSink = new CompletableFuture<>();
+        private final ReactiveEventStreams.Subscriber<JsonObject> subscriber;
         private Collection<String> metricNames;
         private MetricRegistry metricRegistry;
 
         public MetricSubscription(ReactiveEventStreams.Subscriber<JsonObject> subscriber, Collection<String> metricNames, MetricRegistry metricRegistry) {
             this.metricNames = metricNames;
             this.metricRegistry = metricRegistry;
-            this.subscriber.complete( subscriber.onSubscribe(this));
+            this.subscriber = subscriber;
+            this.eventSink.complete(subscriber.onSubscribe(this));
         }
 
         @Override
@@ -134,7 +137,7 @@ public class Metrics
             JsonObject jsonObject = metricsBuilder.build();
 
             try {
-                subscriber.whenComplete((es, t)->
+                eventSink.whenComplete((es, t) ->
                 {
                     es.publishEvent((e, seq, metric) ->
                     {
@@ -149,7 +152,8 @@ public class Metrics
 
         @Override
         public void cancel() {
-
+            subscriptions.remove(this);
+            subscriber.onComplete();
         }
     }
 }

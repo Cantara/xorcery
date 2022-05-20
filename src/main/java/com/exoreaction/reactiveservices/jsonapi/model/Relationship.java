@@ -13,113 +13,104 @@ import java.util.function.Consumer;
  */
 
 public record Relationship(JsonObject json)
-    implements JsonElement
-{
-    public static class Builder
-    {
+        implements JsonElement, Consumer<Relationship.Builder> {
+    public static class Builder {
+        public static Relationship relationship(ResourceObject resourceObject) {
+            return new Builder().resourceIdentifier(resourceObject).build();
+        }
+
         JsonObjectBuilder builder = Json.createObjectBuilder();
 
-        public Builder links( Links value )
-        {
-            builder.add( "links", value.json() );
+        public Builder links(Links value) {
+            builder.add("links", value.json());
             return this;
         }
 
-        public Builder link( String rel, URI value )
-        {
-            return links( new Links.Builder().link( rel, value ).build() );
+        public Builder link(String rel, URI value) {
+            return links(new Links.Builder().link(rel, value).build());
         }
 
-        public Builder link( String rel, String value )
-        {
-            return links( new Links.Builder().link( rel, value ).build() );
+        public Builder link(String rel, String value) {
+            return links(new Links.Builder().link(rel, value).build());
         }
 
-        public Builder meta( Meta value )
-        {
-            if (!value.getMeta().isEmpty())
-            {
-                builder.add( "meta", value.json() );
+        public Builder meta(Meta value) {
+            if (!value.getMeta().isEmpty()) {
+                builder.add("meta", value.json());
             }
             return this;
         }
 
-        public Builder resourceIdentifier( ResourceObjectIdentifier value )
-        {
-            builder.add( "data", value == null ? JsonValue.NULL : value.json() );
+        public Builder resourceIdentifier(ResourceObjectIdentifier value) {
+            builder.add("data", value == null ? JsonValue.NULL : value.json());
             return this;
         }
 
-        public Builder resourceIdentifiers( ResourceObjectIdentifiers value )
-        {
-            builder.add( "data", value.json() );
+        public Builder resourceIdentifiers(ResourceObjectIdentifiers value) {
+            builder.add("data", value.json());
             return this;
         }
 
-        public Builder resourceIdentifier( ResourceObject value )
-        {
-            builder.add( "data", value == null ? JsonValue.NULL : value.getResourceObjectIdentifier().json() );
+        public Builder resourceIdentifier(ResourceObject value) {
+            builder.add("data", value == null ? JsonValue.NULL : value.getResourceObjectIdentifier().json());
             return this;
         }
 
-        public Builder resourceIdentifiers( ResourceObjects value )
-        {
-            builder.add( "data", value.getResourceObjectIdentifiers().json() );
+        public Builder resourceIdentifiers(ResourceObjects value) {
+            builder.add("data", value.getResourceObjectIdentifiers().json());
             return this;
         }
 
-        public Builder with( Consumer<Builder> consumer )
-        {
-            consumer.accept( this );
+        public Builder with(Consumer<Builder> consumer) {
+            consumer.accept(this);
             return this;
         }
 
-        public Relationship build()
-        {
-            return new Relationship( builder.build() );
+        public Relationship build() {
+            return new Relationship(builder.build());
         }
     }
 
 
-    public boolean isIncluded()
-    {
-        return object().containsKey( "data" );
+    public boolean isIncluded() {
+        return object().containsKey("data");
     }
 
-    public boolean isMany()
-    {
-        return object().get( "data" ) instanceof JsonArray;
+    public boolean isMany() {
+        return object().get("data") instanceof JsonArray;
     }
 
-    public Meta getMeta()
-    {
+    public Meta getMeta() {
         return new Meta(
-            Optional.ofNullable( object().getJsonObject( "meta" ) ).orElse( JsonValue.EMPTY_JSON_OBJECT ) );
+                Optional.ofNullable(object().getJsonObject("meta")).orElse(JsonValue.EMPTY_JSON_OBJECT));
     }
 
-    public Links getLinks()
-    {
+    public Links getLinks() {
         return new Links(
-            Optional.ofNullable( object().getJsonObject( "links" ) ).orElse( JsonValue.EMPTY_JSON_OBJECT ) );
+                Optional.ofNullable(object().getJsonObject("links")).orElse(JsonValue.EMPTY_JSON_OBJECT));
     }
 
-    public Optional<ResourceObjectIdentifier> getResourceObjectIdentifier()
-    {
-        JsonValue data = object().get( "data" );
-        if ( data == null || data == JsonValue.NULL || data instanceof JsonArray )
-        {
+    public Optional<ResourceObjectIdentifier> getResourceObjectIdentifier() {
+        JsonValue data = object().get("data");
+        if (data == null || data == JsonValue.NULL || data instanceof JsonArray) {
             return Optional.empty();
         }
 
-        return Optional.of( new ResourceObjectIdentifier( (JsonObject) data ) );
+        return Optional.of(new ResourceObjectIdentifier((JsonObject) data));
     }
 
-    public Optional<ResourceObjectIdentifiers> getResourceObjectIdentifiers()
-    {
-        JsonValue data = object().getJsonArray( "data" );
-        if ( data == null || data instanceof JsonObject )
-        { return Optional.empty(); }
+    public Optional<ResourceObjectIdentifiers> getResourceObjectIdentifiers() {
+        JsonValue data = object().getJsonArray("data");
+        if (data == null || data instanceof JsonObject) {
+            return Optional.empty();
+        }
 
-        return Optional.of( new ResourceObjectIdentifiers( data.asJsonArray() ) );
+        return Optional.of(new ResourceObjectIdentifiers(data.asJsonArray()));
+    }
+
+    @Override
+    public void accept(Builder builder) {
+        getResourceObjectIdentifier().ifPresent(builder::resourceIdentifier);
+        getResourceObjectIdentifiers().ifPresent(builder::resourceIdentifiers);
     }
 }

@@ -14,48 +14,39 @@ import static java.util.Optional.ofNullable;
  */
 
 public record ResourceObjectIdentifier(JsonObject json)
-    implements JsonElement
-{
-    public static class Builder
-    {
+        implements JsonElement {
+    public static class Builder {
         private JsonObjectBuilder builder;
 
-        public Builder( String id, String type )
-        {
+        public Builder(String type, String id) {
             builder = Json.createObjectBuilder();
-            builder.add( "id", id )
-                   .add( "type", type );
+            builder.add("type", type)
+                    .add("id", id);
         }
 
-        public Builder( String id, Enum<?> type )
-        {
-            this(id, type.name());
+        public Builder(Enum<?> type, String id) {
+            this(type.name(), id);
         }
 
-        public Builder meta( Meta meta )
-        {
-            builder.add( "meta", meta.json() );
+        public Builder meta(Meta meta) {
+            builder.add("meta", meta.json());
             return this;
         }
 
-        public ResourceObjectIdentifier build()
-        {
-            return new ResourceObjectIdentifier( builder.build() );
+        public ResourceObjectIdentifier build() {
+            return new ResourceObjectIdentifier(builder.build());
         }
     }
 
-    public String getId()
-    {
+    public String getId() {
         return getString("id");
     }
 
-    public String getType()
-    {
-        return getString( "type" );
+    public String getType() {
+        return getString("type");
     }
 
-    public Meta getMeta()
-    {
-        return new Meta( ofNullable( object().getJsonObject( "meta" ) ).orElse( EMPTY_JSON_OBJECT ) );
+    public Meta getMeta() {
+        return new Meta(ofNullable(object().getJsonObject("meta")).orElse(EMPTY_JSON_OBJECT));
     }
 }

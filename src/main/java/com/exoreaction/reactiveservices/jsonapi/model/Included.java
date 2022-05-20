@@ -7,7 +7,9 @@ import jakarta.json.JsonArrayBuilder;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * @author rickardoberg
@@ -15,14 +17,14 @@ import java.util.Set;
  */
 
 public record Included(JsonArray json)
-    implements JsonElement
+    implements JsonElement, Consumer<Included.Builder>
 {
     public static class Builder
     {
         private Set<String> included = new HashSet<>();
         private JsonArrayBuilder builder = Json.createArrayBuilder();
 
-        public Builder include( ResourceObject resourceObject )
+        public Builder include(ResourceObject resourceObject )
         {
             String resourceId = resourceObject.getId() + ":" + resourceObject.getType();
             if ( !included.contains( resourceId ) )
@@ -54,6 +56,12 @@ public record Included(JsonArray json)
             return this;
         }
 
+        public Builder with(Consumer<Builder> consumer)
+        {
+            consumer.accept(this);
+            return this;
+        }
+
         public Included build()
         {
             return new Included( builder.build() );
@@ -73,5 +81,15 @@ public record Included(JsonArray json)
     public List<ResourceObject> getIncluded()
     {
         return array().getValuesAs( ResourceObject::new );
+    }
+
+    public Optional<ResourceObject> findByResourceObjectIdentifier(ResourceObjectIdentifier roi)
+    {
+        return getIncluded().stream().filter(ro -> ro.getId().equals(roi.getId()) && ro.getType().equals(roi.getType())).findFirst();
+    }
+
+    @Override
+    public void accept(Builder builder) {
+        getIncluded().forEach(builder::include);
     }
 }

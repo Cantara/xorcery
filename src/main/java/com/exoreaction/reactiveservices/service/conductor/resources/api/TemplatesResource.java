@@ -3,8 +3,8 @@ package com.exoreaction.reactiveservices.service.conductor.resources.api;
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
-import com.exoreaction.reactiveservices.service.conductor.resources.ConductorService;
-import com.exoreaction.reactiveservices.service.conductor.resources.model.Template;
+import com.exoreaction.reactiveservices.service.conductor.ConductorService;
+import com.exoreaction.reactiveservices.service.conductor.resources.model.GroupTemplate;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 
@@ -30,7 +30,7 @@ public class TemplatesResource
     {
         return new ResourceDocument.Builder()
             .data( service.getTemplates().stream()
-                          .map(Template::getJson)
+                          .map(GroupTemplate::template)
                           .collect( ResourceObjects.toResourceObjects() ) )
             .build();
     }

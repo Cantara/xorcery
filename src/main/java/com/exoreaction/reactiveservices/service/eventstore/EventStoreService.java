@@ -14,7 +14,7 @@ import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.eventstore.disruptor.EventStoreDomainEventEventHandler;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
@@ -23,8 +23,8 @@ import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.MarkerManager;
 import org.glassfish.jersey.server.spi.Container;
@@ -35,11 +35,11 @@ import java.util.Collections;
 
 @Singleton
 public class EventStoreService
-    implements ContainerLifecycleListener
-{
+        implements ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "eventstore";
     private final EventStoreDBClient client;
+    private ServiceResourceObject sro;
     private ReactiveStreams reactiveStreams;
     private Registry registry;
 
@@ -64,7 +64,9 @@ public class EventStoreService
     }
 
     @Inject
-    public EventStoreService(Configuration configuration, ReactiveStreams reactiveStreams, Registry registry) throws ParseError {
+    public EventStoreService(@Named(SERVICE_TYPE) ServiceResourceObject sro,
+                             Configuration configuration, ReactiveStreams reactiveStreams, Registry registry) throws ParseError {
+        this.sro = sro;
         this.reactiveStreams = reactiveStreams;
         this.registry = registry;
         String connectionString = configuration.getConfiguration("eventstore").getString("url").orElseThrow();
@@ -89,7 +91,7 @@ public class EventStoreService
     }
 
     public void connect(Link domainEventSource) {
-        reactiveStreams.subscribe(domainEventSource, new EventStoreService.DomainEventsSubscriber(), Collections.emptyMap(), MarkerManager.getMarker(domainEventSource.getHref()));
+        reactiveStreams.subscribe(sro.serviceIdentifier(), domainEventSource, new EventStoreService.DomainEventsSubscriber());
     }
 
 
@@ -101,8 +103,7 @@ public class EventStoreService
     }
 
     private class DomainEventsSubscriber
-            implements ReactiveEventStreams.Subscriber<EventWithResult<ByteBuffer, Metadata>>
-    {
+            implements ReactiveEventStreams.Subscriber<EventWithResult<ByteBuffer, Metadata>> {
 
         private Disruptor<Event<EventWithResult<ByteBuffer, Metadata>>> disruptor;
 

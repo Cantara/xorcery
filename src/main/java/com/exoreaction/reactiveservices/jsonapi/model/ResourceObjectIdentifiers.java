@@ -31,6 +31,11 @@ public record ResourceObjectIdentifiers(JsonArray json)
             return this;
         }
 
+        public Builder resources( ResourceObjectIdentifiers resourceObjectIdentifiers )
+        {
+            resourceObjectIdentifiers.getResources().forEach(this::resource);
+            return this;
+        }
         public Builder resources( ResourceObjects resourceObjects )
         {
             for ( ResourceObject resource : resourceObjects.getResources() )
