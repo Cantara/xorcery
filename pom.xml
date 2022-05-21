@@ -47,7 +47,7 @@
                         <arg>--add-exports=java.base/java.nio=ALL-UNNAMED</arg>
                         <arg>--add-opens=java.base/java.lang=ALL-UNNAMED</arg>
                         <arg>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</arg>
-                        <arg>--add-opens=java.base/java.io=ALL-UNNAMED</arg> 
+                        <arg>--add-opens=java.base/java.io=ALL-UNNAMED</arg>
                         <arg>--add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</arg>
                     </compilerArgs>
                 </configuration>
@@ -286,7 +286,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-layout-groupTemplate-json</artifactId>
+            <artifactId>log4j-layout-template-json</artifactId>
             <version>${log4j.version}</version>
         </dependency>
 
