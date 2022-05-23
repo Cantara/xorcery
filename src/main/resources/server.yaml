@@ -32,10 +32,13 @@ jmxmetrics:
 
 # Domain events
 neo4jdatabase:
-  enabled: false
+  enabled: true
+  databases:
+    neo4j:
+      foo: bar
 
 neo4jdomainevents:
-  enabled: false
+  enabled: true
 
 eventstore:
   enabled: false
@@ -44,11 +47,11 @@ eventstore:
 mapdbdomainevents:
   enabled: false
 
-greeter:
-  enabled: false
-
 domainevents:
-  enabled: false
+  enabled: true
+
+greeter:
+  enabled: true
 
 # Misc
 

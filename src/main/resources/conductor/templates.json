@@ -1,5 +1,6 @@
 {
-  "data": {
+  "data": [
+    {
     "id": "log4j_sysout",
     "type": "grouptemplate",
     "attributes": {
@@ -20,12 +21,41 @@
       }
     }
   },
+    {
+      "id": "greeter_neo4jdomainevents",
+      "type": "grouptemplate",
+      "attributes": {
+        "name": "Project Greeter events into Neo4j"
+      },
+      "relationships": {
+        "services": {
+          "data": [
+            {
+              "type": "rel",
+              "id": "domainevents"
+            },
+            {
+              "type": "type",
+              "id": "neo4jdomainevents"
+            }
+          ]
+        }
+      }
+    }
+  ],
   "included": [
     {
-      "id": "logevents",
       "type": "rel",
+      "id": "logevents",
       "attributes": {
         "category": "jetty"
+      }
+    },
+    {
+      "type": "type",
+      "id": "neo4jdomainevents",
+      "attributes": {
+        "database": "neo4j"
       }
     }
   ]

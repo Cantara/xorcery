@@ -4,6 +4,7 @@ import com.exoreaction.reactiveservices.json.JsonElement;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonValue;
 
 import java.util.List;
 
@@ -54,5 +55,12 @@ public record ResourceObjectIdentifiers(JsonArray json)
     public List<ResourceObjectIdentifier> getResources()
     {
         return array().getValuesAs( ResourceObjectIdentifier::new );
+    }
+
+    public boolean contains(ResourceObjectIdentifier resourceObjectIdentifier) {
+        return getResources().stream().anyMatch(ro -> ro.equals(resourceObjectIdentifier));
+    }
+    public boolean contains(ResourceObject resourceObject) {
+        return contains(resourceObject.getResourceObjectIdentifier());
     }
 }

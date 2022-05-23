@@ -61,9 +61,12 @@ public class GroupTemplates {
                         partialGroups.remove(groupTemplate.template().getId());
 
                         // New group based on template has been created
+                        LogManager.getLogger(getClass()).info("Match:"+updatedGroup);
+
                         matchedTemplates.add(groupTemplate.template().getId());
                         groups.addGroup(updatedGroup);
                     } else {
+                        LogManager.getLogger(getClass()).info("Partial match:"+updatedGroup);
                         partialGroups.put(groupTemplate.template().getId(), updatedGroup);
                     }
                 });

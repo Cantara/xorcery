@@ -6,17 +6,14 @@ import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
 import com.exoreaction.reactiveservices.service.conductor.api.ConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
-import com.exoreaction.reactiveservices.service.model.ServiceLinkAttributes;
+import com.exoreaction.reactiveservices.service.model.ServiceAttributes;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.MultiSubscriber;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.SubscriberProxy;
 import com.lmax.disruptor.EventHandler;
@@ -33,7 +30,6 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -104,10 +100,10 @@ public class SysoutLogging
     }
 
     @NotNull
-    private Consumer<Link> connect(Optional<ServiceLinkAttributes> attributes) {
+    private Consumer<Link> connect(Optional<ServiceAttributes> attributes) {
         return link ->
         {
-            reactiveStreams.subscribe(serviceResourceObject.serviceIdentifier(), link, new LogSubscriberProxy(multiSubscriber), attributes.map(ServiceLinkAttributes::toMap).orElse(Collections.emptyMap()));
+            reactiveStreams.subscribe(serviceResourceObject.serviceIdentifier(), link, new LogSubscriberProxy(multiSubscriber), attributes.map(ServiceAttributes::toMap).orElse(Collections.emptyMap()));
         };
     }
 

@@ -103,9 +103,9 @@ public class Server
         // Load defaults
         if (configFile != null)
         {
-            builder.addYaml(new FileInputStream(configFile));
+            builder = builder.addYaml(new FileInputStream(configFile));
         } else {
-            builder.addYaml(Configuration.class.getResourceAsStream("/server.yaml"));
+            builder = builder.addYaml(Configuration.class.getResourceAsStream("/server.yaml"));
         }
 
         // Load overrides
@@ -115,14 +115,14 @@ public class Server
         File overridesYamlFile = new File(standardConfiguration.home(), "conf/server_overrides.yaml");
         if (overridesYamlFile.exists()) {
             FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
-            builder.addYaml(overridesYamlStream);
+            builder = builder.addYaml(overridesYamlStream);
         }
 
         // Load user
         File userYamlFile = new File(System.getProperty("user.home"), "reactive/server.yaml");
         if (userYamlFile.exists()) {
             FileInputStream userYamlStream = new FileInputStream(userYamlFile);
-            builder.addYaml(userYamlStream);
+            builder = builder.addYaml(userYamlStream);
         }
 
         return builder.build();

@@ -8,7 +8,7 @@ import jakarta.json.JsonValue;
 import java.util.HashMap;
 import java.util.Map;
 
-public record ServiceLinkAttributes(Attributes attributes) {
+public record ServiceAttributes(Attributes attributes) {
 
     public Map<String, String> toMap() {
         Map<String, String> map = new HashMap<>(attributes.getAttributes().size());

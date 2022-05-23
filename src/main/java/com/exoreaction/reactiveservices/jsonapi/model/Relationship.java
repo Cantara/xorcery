@@ -113,4 +113,13 @@ public record Relationship(JsonObject json)
         getResourceObjectIdentifier().ifPresent(builder::resourceIdentifier);
         getResourceObjectIdentifiers().ifPresent(builder::resourceIdentifiers);
     }
+
+    public boolean contains(ResourceObjectIdentifier resourceObjectIdentifier) {
+        return getResourceObjectIdentifier()
+                .map(roi -> roi.equals(resourceObjectIdentifier))
+                .orElseGet(() -> getResourceObjectIdentifiers()
+                        .map(rois -> rois.contains(resourceObjectIdentifier))
+                        .orElse(false));
+    }
+
 }

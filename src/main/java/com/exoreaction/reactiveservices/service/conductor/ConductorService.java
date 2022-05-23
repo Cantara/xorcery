@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.conductor;
 
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.jsonapi.model.Relationship;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
@@ -91,7 +92,7 @@ public class ConductorService
         // Load templates
         ResourceDocument templates = new ResourceDocument(Json.createReader(getClass().getResourceAsStream("/conductor/templates.json")).readObject());
 
-        addTemplate(new GroupTemplate(templates));
+        templates.split().forEach(rd -> addTemplate(new GroupTemplate(rd)));
 
         sro.linkByRel("conductorevents").ifPresent(link ->
         {

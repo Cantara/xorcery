@@ -4,6 +4,7 @@ import com.exoreaction.reactiveservices.json.JsonElement;
 import jakarta.json.*;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * @author rickardoberg
@@ -61,10 +62,10 @@ public record ResourceDocument(JsonObject json)
             return this;
         }
 
-        public Builder links(Links.Builder value)
-        {
+        public Builder links(Links.Builder value) {
             return links(value.build());
         }
+
         public Builder links(Links value) {
             if (!value.object().isEmpty()) {
                 builder.add("links", value.json());
@@ -72,10 +73,10 @@ public record ResourceDocument(JsonObject json)
             return this;
         }
 
-        public Builder included(Included.Builder value)
-        {
+        public Builder included(Included.Builder value) {
             return included(value.build());
         }
+
         public Builder included(Included value) {
             if (!value.array().isEmpty()) {
                 builder.add("included", value.json());
@@ -141,5 +142,27 @@ public record ResourceDocument(JsonObject json)
     public Included getIncluded() {
         return new Included(
                 Optional.ofNullable(object().getJsonArray("included")).orElse(JsonValue.EMPTY_JSON_ARRAY));
+    }
+
+    /**
+     * If this ResourceDocument is a collection of ResourceObjects, then split into a set of ResourceDocuments that are
+     * single-resource. Referenced included ResourceObjects are included in the split documents, and duplicated if necessary.
+     *
+     * If this ResourceDocument is a single ResourceObject, then just return it.
+     *
+     * @return
+     */
+    public Stream<ResourceDocument> split() {
+        return getResources().map(ros -> ros.getResources().stream().map(ro ->
+                        new Builder()
+                                .data(ro)
+                                .links(getLinks())
+                                .meta(getMeta())
+                                .jsonapi(getJsonapi())
+                                .included(new Included.Builder()
+                                        .includeRelated(ro, getIncluded().getIncluded())
+                                        .build())
+                                .build()))
+                .orElse(Stream.of(this));
     }
 }

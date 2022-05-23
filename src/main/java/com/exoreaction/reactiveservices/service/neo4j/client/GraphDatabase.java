@@ -10,13 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ForkJoinPool;
 
-public class GraphDatabase {
-    private final GraphDatabaseService graphDatabaseService;
-
-    public GraphDatabase(GraphDatabaseService graphDatabaseService) {
-        this.graphDatabaseService = graphDatabaseService;
-    }
-
+public record GraphDatabase(GraphDatabaseService graphDatabaseService) {
     public CompletionStage<GraphResult> execute(String cypherQuery, Map<String, Object> parameters) {
 
         CompletableFuture<GraphResult> future = new CompletableFuture<>();

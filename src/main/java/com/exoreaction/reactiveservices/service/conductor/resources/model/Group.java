@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.model;
 
 import com.exoreaction.reactiveservices.jsonapi.model.*;
-import com.exoreaction.reactiveservices.service.model.ServiceLinkAttributes;
+import com.exoreaction.reactiveservices.service.model.ServiceAttributes;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 
@@ -83,23 +83,43 @@ public record Group(ResourceDocument resourceDocument) {
         return services().stream().anyMatch(service -> service.resourceObject().getResourceObjectIdentifier().equals(serviceIdentifier.resourceObjectIdentifier()));
     }
 
-    public void servicesByLinkRel(String rel, BiConsumer<ServiceResourceObject, Optional<ServiceLinkAttributes>> serviceLinkConsumer) {
-        resourceDocument.getIncluded().getIncluded().stream().filter(ro -> ro.getLinks().getRel(rel).isPresent())
+    public boolean contains(ServiceResourceObject serviceResourceObject) {
+        return contains(serviceResourceObject.serviceIdentifier());
+    }
+
+    public void servicesByLinkRel(String rel, BiConsumer<ServiceResourceObject, Optional<ServiceAttributes>> serviceAttributesConsumer) {
+        resourceDocument
+                .getIncluded()
+                .getIncluded()
+                .stream()
+                .filter(ro -> ro.getLinks().getRel(rel).isPresent())
                 .forEach(ro ->
                 {
                     ServiceResourceObject sro = new ServiceResourceObject(ro);
 
-                    // Find attributes, if any
-                    Optional<ServiceLinkAttributes> attributes = resourceDocument.getIncluded().getIncluded().stream()
+                    // Find service attributes, if any
+                    Optional<ServiceAttributes> attributes = resourceDocument.getIncluded().getIncluded().stream()
                             .filter(iro -> iro.getRelationships().getRelationship("service")
                                     .flatMap(Relationship::getResourceObjectIdentifier)
                                     .map(roi -> roi.equals(ro.getResourceObjectIdentifier()))
                                     .orElse(false))
                             .findFirst()
                             .map(ResourceObject::getAttributes)
-                            .map(ServiceLinkAttributes::new);
+                            .map(ServiceAttributes::new);
 
-                    serviceLinkConsumer.accept(sro, attributes);
+                    serviceAttributesConsumer.accept(sro, attributes);
                 });
+    }
+
+    public Optional<ServiceAttributes> serviceAttributes(ServiceIdentifier serviceIdentifier) {
+        return resourceDocument
+                .getIncluded()
+                .getIncluded()
+                .stream()
+                .filter(ro -> ro.getRelationships()
+                        .getRelationship("service")
+                        .map(r -> r.contains(serviceIdentifier.resourceObjectIdentifier()))
+                        .orElse(false))
+                .map(ro -> new ServiceAttributes(ro.getAttributes())).findFirst();
     }
 }
