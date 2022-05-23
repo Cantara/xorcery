@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.disruptor.handlers;
 
 import com.exoreaction.reactiveservices.disruptor.Event;
+import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.lmax.disruptor.EventSink;
 
 import java.util.List;
@@ -28,8 +29,7 @@ public class UnicastEventHandler<T>
             for (EventSink<Event<T>> subscriber : subscribers) {
                 boolean isPublished = subscriber.tryPublishEvent((e, seq, e2) ->
                 {
-                    e.metadata.clear();
-                    e.metadata.add(e2.metadata);
+                    e.metadata = new Metadata.Builder().add(e2.metadata).build();
                     e.event = e2.event;
                 }, event);
                 if (isPublished)

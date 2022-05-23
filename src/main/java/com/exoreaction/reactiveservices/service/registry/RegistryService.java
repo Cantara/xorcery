@@ -169,7 +169,6 @@ public class RegistryService
         for (SubscriberEventSink<RegistryChange> subscriber : subscribers) {
             subscriber.sink().publishEvent((event, seq, sro) ->
             {
-                event.metadata.clear();
                 event.event = registryChange;
             }, resourceObject);
         }

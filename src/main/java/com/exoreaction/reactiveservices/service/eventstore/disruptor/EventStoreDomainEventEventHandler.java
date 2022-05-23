@@ -2,12 +2,10 @@ package com.exoreaction.reactiveservices.service.eventstore.disruptor;
 
 import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.EventStoreDBClient;
-import com.exoreaction.reactiveservices.disruptor.Event;
-import com.exoreaction.reactiveservices.disruptor.EventWithResult;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
-import com.exoreaction.reactiveservices.disruptor.StandardMetadata;
+import com.exoreaction.reactiveservices.disruptor.*;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
+import com.exoreaction.reactiveservices.service.domainevents.api.EventStoreMetadata;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 
 import java.nio.ByteBuffer;
@@ -23,8 +21,6 @@ public class EventStoreDomainEventEventHandler
         implements DefaultEventHandler<Event<EventWithResult<ByteBuffer, Metadata>>> {
     private final EventStoreDBClient client;
     private ReactiveEventStreams.Subscription subscription;
-    private UUID eventId;
-    private String eventType;
 
     public EventStoreDomainEventEventHandler(EventStoreDBClient client, ReactiveEventStreams.Subscription subscription) {
 
@@ -34,27 +30,31 @@ public class EventStoreDomainEventEventHandler
 
     @Override
     public void onEvent(Event<EventWithResult<ByteBuffer, Metadata>> event, long sequence, boolean endOfBatch) throws Exception {
-        Map<String, String> metadata = event.metadata.getMetadata();
-        eventId = UUID.fromString(metadata.get(StandardMetadata.CORRELATION_ID));
-        eventType = metadata.get(DomainEventMetadata.COMMAND_TYPE);
+        RequestMetadata requestMetadata = new RequestMetadata(event.metadata);
+        UUID eventId = requestMetadata.correlationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
+        DomainEventMetadata domainEventMetadata = new DomainEventMetadata(event.metadata);
+        String eventType = domainEventMetadata.commandType();
         EventData eventData = EventData.builderAsBinary(eventId, eventType, event.event.event().array())
                 .metadataAsJson(event.metadata)
                 .build();
 
         event.event.event().clear();
-        String streamId = metadata.get(StandardMetadata.ENVIRONMENT) + "-" +
-                metadata.get(StandardMetadata.TAG) + "-" +
-                metadata.get(DomainEventMetadata.DOMAIN) + "-" +
-                metadata.get(StandardMetadata.VERSION);
+        DeploymentMetadata deploymentMetadata = new DeploymentMetadata(event.metadata);
+        String streamId = deploymentMetadata.environment() + "-" +
+                deploymentMetadata.tag() + "-" +
+                domainEventMetadata.domain() + "-" +
+                deploymentMetadata.version();
 
         client.appendToStream(streamId, eventData).whenComplete((wr, t) ->
         {
             if (t == null) {
-                event.event.result().complete(new Metadata().add(DomainEventMetadata.POSITION, Long.toString(wr.getLogPosition().getCommitUnsigned())));
+                event.event.result().complete(new Metadata.Builder()
+                        .add("position", Long.toString(wr.getLogPosition().getCommitUnsigned()))
+                        .build());
             } else {
                 event.event.result().completeExceptionally(t);
             }
-            
+
 
             subscription.request(1);
         });

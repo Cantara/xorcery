@@ -1,13 +1,21 @@
 package com.exoreaction.reactiveservices.service.domainevents.api;
 
-import com.exoreaction.reactiveservices.disruptor.StandardMetadata;
+import com.exoreaction.reactiveservices.disruptor.Metadata;
 
-public interface DomainEventMetadata
-    extends StandardMetadata
+public record DomainEventMetadata(Metadata metadata)
 {
-    String DOMAIN = "d";
-    String AGGREGATE_TYPE ="at";
-    String COMMAND_TYPE = "ct";
+    public String domain()
+    {
+        return metadata.getString("domain").orElse("default");
+    }
 
-    String POSITION = "pos";
+    public String aggregateType()
+    {
+        return metadata.getString("aggregateType").orElseThrow();
+    }
+
+    public String commandType()
+    {
+        return metadata.getString("commandType").orElseThrow();
+    }
 }

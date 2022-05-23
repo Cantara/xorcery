@@ -22,13 +22,13 @@ soutlogging:
 
 # Metrics
 metrics:
-  enabled: false
+  enabled: true
 
 soutmetrics:
   enabled: false
 
 jmxmetrics:
-  enabled: false
+  enabled: true
 
 # Domain events
 neo4jdatabase:

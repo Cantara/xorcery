@@ -6,6 +6,6 @@ package com.exoreaction.reactiveservices.disruptor;
  */
 public class Event<T>
 {
-    public Metadata metadata = new Metadata();
+    public Metadata metadata;
     public T event;
 }

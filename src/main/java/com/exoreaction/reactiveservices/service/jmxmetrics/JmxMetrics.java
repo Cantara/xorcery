@@ -56,7 +56,6 @@ import java.util.function.Supplier;
 public class JmxMetrics
         implements ContainerLifecycleListener {
     public static final String SERVICE_TYPE = "jmxmetrics";
-    public static final Marker MARKER = MarkerManager.getMarker("service:" + SERVICE_TYPE);
 
     private final Logger logger = LogManager.getLogger(getClass());
     private final MBeanServer managementServer;

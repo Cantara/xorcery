@@ -1,54 +1,61 @@
 package com.exoreaction.reactiveservices.disruptor;
 
 import com.fasterxml.jackson.annotation.*;
+import jakarta.json.Json;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public record Metadata(Map<String, String> metadata)
-{
-    @JsonCreator(mode= JsonCreator.Mode.DELEGATING)
-    public Metadata(@JsonProperty("metadata") Map<String, String> metadata) {
-        if (metadata == null)
-        {
-            this.metadata = new HashMap<>();
-        } else {
-            this.metadata = metadata;
+public record Metadata(JsonObject metadata) {
+    public record Builder(JsonObjectBuilder builder) {
+
+        public Builder() {
+            this(Json.createObjectBuilder());
+        }
+
+        public Builder add(String name, String value) {
+            builder.add(name, value);
+            return this;
+        }
+
+        public Builder add(String name, long value) {
+            builder.add(name, value);
+            return this;
+        }
+
+        public Builder add(String name, JsonObject value) {
+            builder.add(name, value);
+            return this;
+        }
+
+        public Builder add(Metadata metadata) {
+            this.builder.addAll(Json.createObjectBuilder(metadata.metadata));
+            return this;
+        }
+
+        public Metadata build() {
+            return new Metadata(builder.build());
         }
     }
 
-    public Metadata() {
-        this(new HashMap<>());
+    public Optional<String> getString(String name) {
+        return Optional.ofNullable(metadata.getString(name));
     }
 
-    @JsonAnySetter
-    public Metadata add(String name, String value)
-    {
-        metadata.put(name, value);
-        return this;
+    public Optional<Long> getLong(String name) {
+        return Optional.ofNullable(metadata.getJsonNumber(name)).map(JsonNumber::longValue);
     }
 
-    public Metadata add(Metadata metadata)
-    {
-        this.metadata.putAll(metadata.getMetadata());
-        return this;
+    public Optional<JsonObject> getJsonObject(String name) {
+        return Optional.ofNullable(metadata.getJsonObject(name));
     }
 
-    public Metadata clear()
-    {
-        metadata.clear();
-        return this;
-    }
-
-    @JsonValue
-    public Map<String, String> getMetadata() {
-        return metadata;
-    }
-
-    public Optional<String> get(String name)
-    {
-        return Optional.ofNullable(metadata.get(name));
+    public Builder toBuilder() {
+        return new Builder(Json.createObjectBuilder(metadata));
     }
 }

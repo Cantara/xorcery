@@ -82,8 +82,7 @@ public class Neo4jDomainEventEventHandler
 
                 for (CompletableFuture<Metadata> future : futures) {
                     version++;
-                    Metadata result = new Metadata();
-                    result.add("version", Long.toString(version));
+                    Metadata result = new Metadata.Builder().add("position", version).build();
                     future.complete(result);
                 }
             } catch (Exception e) {

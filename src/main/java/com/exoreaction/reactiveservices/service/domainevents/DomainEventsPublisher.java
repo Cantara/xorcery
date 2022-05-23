@@ -1,6 +1,8 @@
 package com.exoreaction.reactiveservices.service.domainevents;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
+import com.exoreaction.reactiveservices.disruptor.DeploymentMetadata;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
@@ -59,14 +61,19 @@ public class DomainEventsPublisher
     }
 
     private final ReactiveStreams reactiveStreams;
+    private final DeploymentMetadata deploymentMetadata;
     private ServiceResourceObject resourceObject;
     private final List<EventSink<Event<EventWithResult<DomainEvents, Metadata>>>> subscribers = new CopyOnWriteArrayList<>();
     private final Disruptor<DomainEventHolder> disruptor;
 
     @Inject
-    public DomainEventsPublisher(ReactiveStreams reactiveStreams, Server server, @Named(SERVICE_TYPE) ServiceResourceObject resourceObject) {
+    public DomainEventsPublisher(ReactiveStreams reactiveStreams, Server server,
+                                 @Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
+                                 Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
         this.resourceObject = resourceObject;
+        this.deploymentMetadata = new DeploymentMetadata(configuration);
+
         disruptor =
                 new Disruptor<>(DomainEventHolder::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
                         ProducerType.MULTI,
@@ -115,8 +122,8 @@ public class DomainEventsPublisher
         CompletableFuture<Metadata> future = new CompletableFuture<>();
         disruptor.getRingBuffer().publishEvent((event, seq, e, f) ->
         {
-            event.metadata.clear().add(metadata);
-            // TODO populate metadata with system information
+            event.metadata = deploymentMetadata.metadata()
+                    .toBuilder().add(metadata).build();
             event.event = new EventWithResult<>(e, f);
         }, events, future);
 

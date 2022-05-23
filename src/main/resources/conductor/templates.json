@@ -1,26 +1,26 @@
 {
   "data": [
     {
-    "id": "log4j_sysout",
-    "type": "grouptemplate",
-    "attributes": {
-      "name": "Log4j HTTP requests to Sysout"
-    },
-    "relationships": {
-      "services": {
-        "data": [
-          {
-            "type": "rel",
-            "id": "logevents"
-          },
-          {
-            "type": "type",
-            "id": "soutlogging"
-          }
-        ]
+      "id": "log4j_sysout",
+      "type": "grouptemplate",
+      "attributes": {
+        "name": "Log4j HTTP requests to Sysout"
+      },
+      "relationships": {
+        "services": {
+          "data": [
+            {
+              "type": "rel",
+              "id": "logevents"
+            },
+            {
+              "type": "type",
+              "id": "soutlogging"
+            }
+          ]
+        }
       }
-    }
-  },
+    },
     {
       "id": "greeter_neo4jdomainevents",
       "type": "grouptemplate",

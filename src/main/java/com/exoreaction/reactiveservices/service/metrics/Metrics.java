@@ -1,6 +1,8 @@
 package com.exoreaction.reactiveservices.service.metrics;
 
 import com.codahale.metrics.*;
+import com.exoreaction.reactiveservices.configuration.Configuration;
+import com.exoreaction.reactiveservices.disruptor.DeploymentMetadata;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
@@ -54,12 +56,17 @@ public class Metrics
     private MetricRegistry metricRegistry;
 
     private final List<MetricSubscription> subscriptions = new CopyOnWriteArrayList<>();
+    private final DeploymentMetadata deploymentMetadata;
 
     @Inject
-    public Metrics(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject, ReactiveStreams reactiveStreams, MetricRegistry metricRegistry) {
+    public Metrics(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
+                   ReactiveStreams reactiveStreams,
+                   MetricRegistry metricRegistry,
+                   Configuration configuration) {
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
         this.metricRegistry = metricRegistry;
+        this.deploymentMetadata = new DeploymentMetadata(configuration);
     }
 
     @Override
@@ -141,7 +148,7 @@ public class Metrics
                 {
                     es.publishEvent((e, seq, metric) ->
                     {
-                        e.metadata.clear();
+                        e.metadata = deploymentMetadata.metadata();
                         e.event = metric;
                     }, jsonObject);
                 });

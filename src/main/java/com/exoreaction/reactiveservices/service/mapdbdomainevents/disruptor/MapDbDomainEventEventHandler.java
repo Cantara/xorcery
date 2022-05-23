@@ -49,8 +49,7 @@ public class MapDbDomainEventEventHandler
         });
 
         version++;
-        Metadata result = new Metadata();
-        result.add("version", Long.toString(version));
+        Metadata result = new Metadata.Builder().add("version", Long.toString(version)).build();
         event.event.result().complete(result);
 
         subscription.request(1);
