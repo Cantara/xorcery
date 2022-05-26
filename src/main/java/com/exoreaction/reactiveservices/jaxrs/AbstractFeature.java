@@ -3,7 +3,7 @@ package com.exoreaction.reactiveservices.jaxrs;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.configuration.ServiceConfiguration;
 import com.exoreaction.reactiveservices.server.Server;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
 import org.glassfish.jersey.internal.inject.AbstractBinder;

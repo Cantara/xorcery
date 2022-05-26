@@ -5,8 +5,7 @@ import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
@@ -89,7 +88,7 @@ public class Visualizer
 
     private class VisualizerRegistryListener implements RegistryListener {
         @Override
-        public void addedService(ResourceObject service) {
+        public void addedService(ServiceResourceObject service) {
             services.add(new ServiceEntry(service, serviceCounter.incrementAndGet()));
         }
     }
@@ -111,7 +110,7 @@ public class Visualizer
 
         private int getServiceById(String serviceId) {
             for (ServiceEntry service : services) {
-                if (service.resource().getId().equals(serviceId))
+                if (service.resource().serverId().equals(serviceId))
                     return service.id();
             }
             return -1;
@@ -119,7 +118,7 @@ public class Visualizer
 
         private int getServiceByLink(String toUri) {
             for (ServiceEntry service : services) {
-                for (Link link : service.resource().getLinks().getLinks()) {
+                for (Link link : service.resource().resourceObject().getLinks().getLinks()) {
                     if (link.getHref().equals(toUri))
                         return service.id();
                 }
@@ -129,7 +128,7 @@ public class Visualizer
 
     }
 
-    private record ServiceEntry(ResourceObject resource, int id) {
+    private record ServiceEntry(ServiceResourceObject resource, int id) {
     }
 
     private record ServiceConnection(int from, int to) {

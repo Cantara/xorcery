@@ -52,7 +52,7 @@ public class PublisherWebSocketServlet<T>
                     .getParameterMap().entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().stream().findFirst().orElse(null)));
 
-            return new PublisherWebSocketEndpoint(publisher, singleValueParameters, messageBodyWriter, messageBodyReader, resultType, objectMapper);
+            return new PublisherWebSocketEndpoint(jettyServerUpgradeRequest.getRequestPath(), publisher, singleValueParameters, messageBodyWriter, messageBodyReader, resultType, objectMapper);
         });
     }
 }

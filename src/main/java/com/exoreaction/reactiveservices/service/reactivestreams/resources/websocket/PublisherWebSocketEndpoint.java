@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.websocket.api.BatchMode;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
@@ -43,6 +44,7 @@ public class PublisherWebSocketEndpoint<T>
     private final static Logger logger = LogManager.getLogger(PublisherWebSocketEndpoint.class);
     private Session session;
     private Semaphore semaphore = new Semaphore(0);
+    private String webSocketPath;
     private ReactiveEventStreams.Publisher<T> publisher;
     private Map<String, String> parameters;
     private MessageBodyWriter<T> messageBodyWriter;
@@ -55,12 +57,13 @@ public class PublisherWebSocketEndpoint<T>
     private final AtomicReference<CompletableFuture<Object>> resultFuture = new AtomicReference<>();
     private Disruptor<Event<T>> disruptor;
 
-    public PublisherWebSocketEndpoint(ReactiveEventStreams.Publisher<T> publisher,
+    public PublisherWebSocketEndpoint(String webSocketPath, ReactiveEventStreams.Publisher<T> publisher,
                                       Map<String, String> parameters,
                                       MessageBodyWriter<T> messageBodyWriter,
                                       MessageBodyReader<?> messageBodyReader,
                                       Type resultType,
                                       ObjectMapper objectMapper) {
+        this.webSocketPath = webSocketPath;
         this.publisher = publisher;
         this.parameters = parameters;
         this.messageBodyWriter = messageBodyWriter;
@@ -97,6 +100,7 @@ public class PublisherWebSocketEndpoint<T>
 
         if (requestAmount == Long.MIN_VALUE)
         {
+            logger.info("Received cancel on websocket "+webSocketPath);
             subscription.cancel();
         } else {
             semaphore.release((int) requestAmount);
@@ -106,12 +110,14 @@ public class PublisherWebSocketEndpoint<T>
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        subscription.cancel();
+        if (statusCode != 1006 && !reason.equals("complete"))
+            subscription.cancel();
     }
 
     @Override
     public void onWebSocketConnect(Session session) {
         this.session = session;
+        session.getRemote().setBatchMode(BatchMode.ON);
         publisher.subscribe(this, parameters);
     }
 
@@ -149,8 +155,9 @@ public class PublisherWebSocketEndpoint<T>
 
     @Override
     public void onComplete() {
+        logger.info("Sending complete on websocket {} for session {}",webSocketPath, session.getRemote().getRemoteAddress());
         disruptor.shutdown();
-        session.close();
+        session.close(1000, "complete");
     }
 
     // EventHandler
@@ -212,6 +219,9 @@ public class PublisherWebSocketEndpoint<T>
                     }
                 }
             });
+
+            if (endOfBatch)
+                session.getRemote().flush();
         }
     }
 

@@ -7,13 +7,13 @@ import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
-import com.exoreaction.reactiveservices.service.conductor.api.ConductorListener;
-import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
-import com.exoreaction.reactiveservices.service.model.ServiceAttributes;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.MultiSubscriber;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.SubscriberProxy;
 import com.lmax.disruptor.EventHandler;
@@ -79,7 +79,7 @@ public class SysoutLogging
 
     @Override
     public void onStartup(Container container) {
-        conductor.addConductorListener(new LoggingConductorListener());
+        conductor.addConductorListener(new LoggingConductorListener(serviceResourceObject.serviceIdentifier(), "logevents"));
 
         Disruptor<Event<LogEvent>> disruptor = new Disruptor<>(Event::new, configuration.getInteger("sysoutlogger.size").orElse(4096), new NamedThreadFactory("SysoutLogger-"));
         LogEventSubscriber subscriber = new LogEventSubscriber(disruptor.getRingBuffer());
@@ -149,20 +149,14 @@ public class SysoutLogging
         }
     }
 
-    private class LoggingConductorListener implements ConductorListener {
+    private class LoggingConductorListener extends AbstractConductorListener {
 
-        @Override
-        public void addedGroup(Group group) {
-            // Does the added group contain this service?
-            if (group.contains(serviceResourceObject.serviceIdentifier())) {
-                // Find log publisher to connect to
-                group.servicesByLinkRel("logevents", (sro, attributes) ->
-                {
-                    sro.linkByRel("logevents").ifPresent(connect(attributes));
-                });
-            }
+        public LoggingConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
+            super(serviceIdentifier, rel);
+        }
 
-            ConductorListener.super.addedGroup(group);
+        public void connect(ServiceResourceObject sro, Link link, Optional<ServiceAttributes> attributes, Optional<ServiceAttributes> selfAttributes) {
+            reactiveStreams.subscribe(serviceIdentifier, link, new LogSubscriberProxy(multiSubscriber), attributes.map(ServiceAttributes::toMap).orElse(Collections.emptyMap()));
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.model;
+package com.exoreaction.reactiveservices.server.model;
 
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import jakarta.json.JsonNumber;
@@ -7,8 +7,14 @@ import jakarta.json.JsonValue;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public record ServiceAttributes(Attributes attributes) {
+
+    public Optional<String> version()
+    {
+        return attributes.getOptionalString("version");
+    }
 
     public Map<String, String> toMap() {
         Map<String, String> map = new HashMap<>(attributes.getAttributes().size());

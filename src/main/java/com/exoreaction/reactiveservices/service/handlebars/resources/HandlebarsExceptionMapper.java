@@ -18,7 +18,7 @@ import org.eclipse.jetty.http.HttpMethod;
 import java.io.IOException;
 import java.util.concurrent.CompletionException;
 
-@Provider
+//@Provider
 public class HandlebarsExceptionMapper
     implements ExceptionMapper<NotAcceptableException>
 {

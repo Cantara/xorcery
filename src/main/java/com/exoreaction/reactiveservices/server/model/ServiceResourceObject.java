@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.model;
+package com.exoreaction.reactiveservices.server.model;
 
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
@@ -9,17 +9,12 @@ import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdent
 
 import java.util.Optional;
 
-public record ServiceResourceObject(ResourceObject resourceObject)
-{
-    public static class Builder {
-        private final Server server;
-        private final ResourceObject.Builder builder;
-        private final Links.Builder links = new Links.Builder();
-        private final Attributes.Builder attributes = new Attributes.Builder();
+public record ServiceResourceObject(ResourceObject resourceObject) {
+
+    public record Builder(Server server, ResourceObject.Builder builder, Links.Builder links, Attributes.Builder attributes) {
 
         public Builder(Server server, String serviceType) {
-            this.server = server;
-            this.builder = new ResourceObject.Builder(serviceType, server.getServerId());
+            this(server, new ResourceObject.Builder(serviceType, server.getServerId()), new Links.Builder(), new Attributes.Builder());
         }
 
         public Builder version(String v) {
@@ -55,19 +50,23 @@ public record ServiceResourceObject(ResourceObject resourceObject)
         }
     }
 
-    public ServiceIdentifier serviceIdentifier()
-    {
+    public ServiceIdentifier serviceIdentifier() {
         return new ServiceIdentifier(resourceObject.getType(), resourceObject.getId());
     }
 
-    public String serverId() { return resourceObject.getId();}
-    public String version()
-    {
+    public String serverId() {
+        return resourceObject.getId();
+    }
+
+    public String version() {
         return resourceObject().getAttributes().getString("version");
     }
 
-    public Optional<Link> linkByRel(String rel)
-    {
+    public ServiceAttributes attributes() {
+        return new ServiceAttributes(resourceObject.getAttributes());
+    }
+
+    public Optional<Link> linkByRel(String rel) {
         return resourceObject().getLinks().getRel(rel);
     }
 }

@@ -6,16 +6,16 @@ import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
-import com.exoreaction.reactiveservices.service.conductor.api.ConductorListener;
-import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
-import com.exoreaction.reactiveservices.service.model.ServiceAttributes;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabases;
 import com.exoreaction.reactiveservices.service.neo4jdomainevents.disruptor.Neo4jDomainEventEventHandler;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -29,7 +29,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.neo4j.graphdb.GraphDatabaseService;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -83,7 +82,7 @@ public class Neo4jDomainEventsService
 
     @Override
     public void onStartup(Container container) {
-        conductor.addConductorListener(new DomainEventsConductorListener());
+        conductor.addConductorListener(new DomainEventsConductorListener(sro.serviceIdentifier(), "domainevents"));
     }
 
     @Override
@@ -101,23 +100,6 @@ public class Neo4jDomainEventsService
         {
             reactiveStreams.subscribe(sro.serviceIdentifier(), link, new DomainEventsSubscriber(selfParameters), publisherParameters);
         };
-    }
-
-    private class DomainEventsConductorListener implements ConductorListener {
-
-        @Override
-        public void addedGroup(Group group) {
-            // Does the added group contain this service?
-            if (group.contains(sro)) {
-                // Find publisher to connect to
-                group.servicesByLinkRel("domainevents", (sro, attributes) ->
-                {
-                    // Find Neo4j settings
-                    Optional<ServiceAttributes> selfAttributes = group.serviceAttributes(Neo4jDomainEventsService.this.sro.serviceIdentifier());
-                    sro.linkByRel("domainevents").ifPresent(connect(attributes, selfAttributes));
-                });
-            }
-        }
     }
 
     private class DomainEventsSubscriber
@@ -148,6 +130,18 @@ public class Neo4jDomainEventsService
         @Override
         public void onComplete() {
             disruptor.shutdown();
+        }
+    }
+
+    private class DomainEventsConductorListener extends AbstractConductorListener {
+
+        public DomainEventsConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
+            super(serviceIdentifier, rel);
+        }
+
+        @Override
+        public void connect(ServiceResourceObject sro, Link link, Optional<ServiceAttributes> attributes, Optional<ServiceAttributes> selfAttributes) {
+            reactiveStreams.subscribe(sro.serviceIdentifier(), link, new DomainEventsSubscriber(selfAttributes), attributes);
         }
     }
 }

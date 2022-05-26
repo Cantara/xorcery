@@ -1,6 +1,5 @@
 package com.exoreaction.reactiveservices.service.jmxmetrics;
 
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
@@ -9,11 +8,13 @@ import com.exoreaction.reactiveservices.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.reactiveservices.jsonapi.client.JsonApiClient;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
+import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
+import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.reactiveservices.service.registry.api.Registry;
-import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -27,19 +28,13 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
+import javax.management.*;
 import java.lang.management.ManagementFactory;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -79,15 +74,15 @@ public class JmxMetrics
 
     private ServiceResourceObject sro;
     private ReactiveStreams reactiveStreams;
-    private Registry registry;
+    private Conductor conductor;
     private JsonApiClient client;
 
     @Inject
     public JmxMetrics(@Named(SERVICE_TYPE) ServiceResourceObject sro,
-                      ReactiveStreams reactiveStreams, Registry registry) {
+                      ReactiveStreams reactiveStreams, Conductor conductor) {
         this.sro = sro;
         this.reactiveStreams = reactiveStreams;
-        this.registry = registry;
+        this.conductor = conductor;
         ClientConfig config = new ClientConfig();
         config.register(new JsonApiMessageBodyReader());
         Client client = ClientBuilder.newBuilder().withConfig(config).build();
@@ -98,14 +93,15 @@ public class JmxMetrics
     @Override
     public void onStartup(Container container) {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        registry.addRegistryListener(new JmxServersRegistryListener());
+        conductor.addConductorListener(new JmxServersConductorListener(sro.serviceIdentifier(), "metrics"));
+/*
 
         reporter = JmxReporter.forRegistry(container.getApplicationHandler().getInjectionManager().getInstance(MetricRegistry.class))
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
         reporter.start();
-
+*/
     }
 
     @Override
@@ -116,37 +112,7 @@ public class JmxMetrics
     @Override
     public void onShutdown(Container container) {
         scheduledExecutorService.shutdown();
-        reporter.stop();
-    }
-
-    private void fetchMetrics(Link serverMetrics, ServiceResourceObject resourceObject) {
-        client.get(serverMetrics)
-                .whenComplete((rd, throwable) ->
-                {
-                    // Create server and metrics beans
-                    try {
-                        String serverId = resourceObject.serverId();
-                        ServerMXBean serverMXBean = new ServerMXBean.Model(serverId);
-                        managementServer.registerMBean(serverMXBean, ObjectName.getInstance("reactive", "server", serverId));
-
-                        for (ResourceObject resource : rd.getResources().orElseThrow().getResources()) {
-                            ObjectName name = ObjectName.getInstance(String.format("reactive:server=%s,metric=%s", serverId, resource.getId()));
-                            String metricType = resource.getAttributes().getString("type");
-                            final Supplier<JsonValue> metricSupplier = newMetricSupplier(resourceObject, resource.getId());
-                            Object mBean = switch (metricType) {
-                                case "gauge" -> new GaugeMXBean.Model(metricSupplier);
-                                case "meter" -> new MeterMXBean.Model(metricSupplier);
-                                case "counter" -> new CounterMXBean.Model(metricSupplier);
-                                case "timer" -> new TimerMXBean.Model(metricSupplier);
-                                default -> throw new IllegalArgumentException("Unknown type " + metricType);
-                            };
-                            managementServer.registerMBean(mBean, name);
-
-                        }
-                    } catch (Exception e) {
-                        logger.error("Could not register MXBean", e);
-                    }
-                });
+//        reporter.stop();
     }
 
     private Map<String, ReactiveEventStreams.Subscription> subscriptions = new ConcurrentHashMap<>();
@@ -216,18 +182,52 @@ public class JmxMetrics
         @Override
         public void onComplete() {
             disruptor.shutdown();
+
+            try {
+                Set<ObjectName> mbeanNames = managementServer.queryNames(ObjectName.getInstance("reactive:server="+serverId+",*"), null);
+
+                for (ObjectName mbeanName : mbeanNames) {
+                    managementServer.unregisterMBean(mbeanName);
+                }
+            } catch (Throwable e) {
+                logger.error("Could not unregister MBean", e);
+            }
         }
     }
 
-    private class JmxServersRegistryListener implements RegistryListener {
-        @Override
-        public void addedService(ResourceObject service) {
-            service.getLinks().getRel("metrics").ifPresent(link ->
-            {
-                logger.info("Connecting to JMX publisher {}", link.getHref());
-                fetchMetrics(link, new ServiceResourceObject(service));
-            });
+    private class JmxServersConductorListener extends AbstractConductorListener {
+
+        public JmxServersConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
+            super(serviceIdentifier, rel);
+        }
+
+        public void connect(ServiceResourceObject sro, Link link, Optional<ServiceAttributes> attributes, Optional<ServiceAttributes> selfAttributes) {
+            client.get(link)
+                    .whenComplete((rd, throwable) ->
+                    {
+                        // Create server and metrics beans
+                        try {
+                            String serverId = sro.serverId();
+                            ServerMXBean serverMXBean = new ServerMXBean.Model(serverId);
+                            managementServer.registerMBean(serverMXBean, ObjectName.getInstance("reactive", "server", serverId));
+
+                            for (ResourceObject resource : rd.getResources().orElseThrow().getResources()) {
+                                ObjectName name = ObjectName.getInstance(String.format("reactive:server=%s,metric=%s", serverId, resource.getId()));
+                                String metricType = resource.getAttributes().getString("type");
+                                final Supplier<JsonValue> metricSupplier = newMetricSupplier(sro, resource.getId());
+                                Object mBean = switch (metricType) {
+                                    case "gauge" -> new GaugeMXBean.Model(metricSupplier);
+                                    case "meter" -> new MeterMXBean.Model(metricSupplier);
+                                    case "counter" -> new CounterMXBean.Model(metricSupplier);
+                                    case "timer" -> new TimerMXBean.Model(metricSupplier);
+                                    default -> throw new IllegalArgumentException("Unknown type " + metricType);
+                                };
+                                managementServer.registerMBean(mBean, name);
+                            }
+                        } catch (Exception e) {
+                            logger.error("Could not register MXBean", e);
+                        }
+                    });
         }
     }
-
 }

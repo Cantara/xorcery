@@ -5,7 +5,7 @@ import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.DeploymentMetadata;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.lmax.disruptor.EventSink;
@@ -22,7 +22,6 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Singleton
 public class Metrics
@@ -55,7 +54,6 @@ public class Metrics
     private final ReactiveStreams reactiveStreams;
     private MetricRegistry metricRegistry;
 
-    private final List<MetricSubscription> subscriptions = new CopyOnWriteArrayList<>();
     private final DeploymentMetadata deploymentMetadata;
 
     @Inject
@@ -84,10 +82,6 @@ public class Metrics
 
     @Override
     public void onShutdown(Container container) {
-        while (!subscriptions.isEmpty()) {
-            System.out.println("Canceling metric subscription");
-            subscriptions.remove(0).cancel();
-        }
     }
 
     @Override
@@ -95,7 +89,7 @@ public class Metrics
         String metricNames = Optional.ofNullable(parameters.get("metrics")).orElse("");
         Collection<String> metricNamesList = metricNames.isBlank() ? metricRegistry.getNames() : Arrays.asList(metricNames.split(","));
 
-        subscriptions.add(new MetricSubscription(subscriber, metricNamesList, metricRegistry));
+        new MetricSubscription(subscriber, metricNamesList, metricRegistry);
     }
 
     private class MetricSubscription
@@ -159,7 +153,7 @@ public class Metrics
 
         @Override
         public void cancel() {
-            subscriptions.remove(this);
+            System.out.println("METRIC SUBSCRIPTION CANCELLED");
             subscriber.onComplete();
         }
     }

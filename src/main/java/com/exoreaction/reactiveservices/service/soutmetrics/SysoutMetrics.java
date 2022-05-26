@@ -4,13 +4,13 @@ import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
+import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
+import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceLinkReference;
-import com.exoreaction.reactiveservices.service.registry.api.Registry;
-import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -19,19 +19,14 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
+import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * @author rickardoberg
@@ -42,9 +37,7 @@ import java.util.function.Consumer;
 public class SysoutMetrics
         implements ContainerLifecycleListener {
     public static final String SERVICE_TYPE = "soutmetrics";
-    public static final Marker MARKER = MarkerManager.getMarker("service:"+SERVICE_TYPE);
 
-    private final Logger logger = LogManager.getLogger(getClass());
     private ScheduledExecutorService scheduledExecutorService;
 
     @Provider
@@ -63,20 +56,20 @@ public class SysoutMetrics
     }
 
     private ReactiveStreams reactiveStreams;
-    private Registry registry;
+    private Conductor conductor;
     private ServiceResourceObject sro;
 
     @Inject
-    public SysoutMetrics(ReactiveStreams reactiveStreams, Registry registry, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
+    public SysoutMetrics(ReactiveStreams reactiveStreams, Conductor conductor, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
         this.reactiveStreams = reactiveStreams;
-        this.registry = registry;
+        this.conductor = conductor;
         this.sro = sro;
     }
 
     @Override
     public void onStartup(Container container) {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        registry.addRegistryListener(new MetricsRegistryListener());
+        conductor.addConductorListener(new MetricsConductorListener(sro.serviceIdentifier(), "metricevents"));
     }
 
     @Override
@@ -89,51 +82,47 @@ public class SysoutMetrics
         scheduledExecutorService.shutdown();
     }
 
-    @NotNull
-    private Consumer<Link> connect(ResourceObject service) {
-        return l ->
-        {
-            reactiveStreams.subscribe(sro.serviceIdentifier(), l,
-                    new MetricEventSubscriber(scheduledExecutorService), Collections.emptyMap());
-        };
-    }
-
-
     private static class MetricEventSubscriber
-            implements ReactiveEventStreams.Subscriber<JsonObject>, EventHandler<Event<JsonObject>>
-    {
+            implements ReactiveEventStreams.Subscriber<JsonObject>, EventHandler<Event<JsonObject>> {
         private final ScheduledExecutorService scheduledExecutorService;
         private ReactiveEventStreams.Subscription subscription;
+        private final long delay;
 
-        public MetricEventSubscriber(ScheduledExecutorService scheduledExecutorService) {
+        public MetricEventSubscriber(Optional<ServiceAttributes> selfParameters, ScheduledExecutorService scheduledExecutorService) {
 
             this.scheduledExecutorService = scheduledExecutorService;
+            this.delay = Duration.parse(selfParameters.flatMap(sa -> sa.attributes().getOptionalString("delay")).orElse("5S")).toSeconds();
         }
 
         @Override
         public EventSink<Event<JsonObject>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
             this.subscription = subscription;
 
-            Disruptor<Event<JsonObject>> disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("SysoutLogger-") );
+            Disruptor<Event<JsonObject>> disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("SysoutMetrics-"));
             disruptor.handleEventsWith(this);
             disruptor.start();
 
-            scheduledExecutorService.schedule(()->subscription.request(1), 5, TimeUnit.SECONDS);
+            scheduledExecutorService.schedule(() -> subscription.request(1), delay, TimeUnit.SECONDS);
 
             return disruptor.getRingBuffer();
         }
 
         @Override
         public void onEvent(Event<JsonObject> event, long sequence, boolean endOfBatch) throws Exception {
-            System.out.println("Metric:"+event.event.toString()+":"+event.metadata);
-            scheduledExecutorService.schedule(()->subscription.request(1), 5, TimeUnit.SECONDS);
+            System.out.println("Metric:" + event.event.toString() + ":" + event.metadata);
+            scheduledExecutorService.schedule(() -> subscription.request(1), delay, TimeUnit.SECONDS);
         }
     }
 
-    private class MetricsRegistryListener implements RegistryListener {
-        @Override
-        public void addedService(ResourceObject service) {
-            service.getLinks().getRel("metricevents").ifPresent(connect(service));
+    private class MetricsConductorListener extends AbstractConductorListener {
+
+        public MetricsConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
+            super(serviceIdentifier, rel);
+        }
+
+        public void connect(ServiceResourceObject sro, Link link, Optional<ServiceAttributes> attributes, Optional<ServiceAttributes> selfAttributes) {
+            reactiveStreams.subscribe(serviceIdentifier, link,
+                    new MetricEventSubscriber(selfAttributes, scheduledExecutorService), attributes);
         }
     }
 }

@@ -11,9 +11,8 @@ import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.eventstore.disruptor.EventStoreDomainEventEventHandler;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
@@ -26,12 +25,10 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
-import org.apache.logging.log4j.MarkerManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.nio.ByteBuffer;
-import java.util.Collections;
 
 @Singleton
 public class EventStoreService
@@ -97,8 +94,8 @@ public class EventStoreService
 
     private class EventStoreRegistryListener implements RegistryListener {
         @Override
-        public void addedService(ResourceObject service) {
-            service.getLinks().getRel("domainevents").ifPresent(EventStoreService.this::connect);
+        public void addedService(ServiceResourceObject service) {
+            service.linkByRel("domainevents").ifPresent(EventStoreService.this::connect);
         }
     }
 

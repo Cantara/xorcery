@@ -5,17 +5,26 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.io.FileTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
+import jakarta.ws.rs.core.Feature;
+import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
+import org.glassfish.jersey.internal.inject.AbstractBinder;
+import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 
 import java.io.File;
 
 @Provider
 public class HandlebarsFeature
-    extends AbstractFeature
-{
+        extends AbstractBinder
+        implements Feature {
     @Override
-    protected String serviceType() {
-        return "handlebars";
+    public boolean configure(FeatureContext context) {
+
+        InjectionManager injectionManager = ((InjectionManagerSupplier) context).getInjectionManager();
+        injectionManager.register(this);
+
+        return true;
     }
 
     @Override

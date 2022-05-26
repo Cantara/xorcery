@@ -5,6 +5,7 @@ import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.service.conductor.ConductorService;
+import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -19,12 +20,12 @@ import jakarta.ws.rs.Produces;
 public class ConductorResource
     extends JsonApiResource
 {
-    private final ConductorService service;
+    private final Conductor conductor;
 
     @Inject
-    public ConductorResource( ConductorService service )
+    public ConductorResource( Conductor conductor )
     {
-        this.service = service;
+        this.conductor = conductor;
     }
 
     @GET

@@ -101,4 +101,9 @@ public record ResourceObject(JsonObject json)
     public Meta getMeta() {
         return new Meta(ofNullable(object().getJsonObject("meta")).orElse(EMPTY_JSON_OBJECT));
     }
+
+    public boolean isSameResourceIdentifier(ResourceObject resourceObject)
+    {
+        return getType().equals(resourceObject.getType()) && getId().equals(resourceObject.getId());
+    }
 }

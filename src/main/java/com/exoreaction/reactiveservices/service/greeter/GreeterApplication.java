@@ -8,7 +8,7 @@ import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPubl
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
 import com.exoreaction.reactiveservices.service.greeter.commands.UpdateGreeting;
 import com.exoreaction.reactiveservices.service.greeter.domainevents.UpdatedGreeting;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphResult;
 import jakarta.inject.Inject;

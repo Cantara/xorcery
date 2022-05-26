@@ -1,38 +1,73 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.model;
 
 import com.exoreaction.reactiveservices.jsonapi.model.*;
-import com.exoreaction.reactiveservices.service.model.ServiceAttributes;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-
-import static com.exoreaction.reactiveservices.jsonapi.model.Relationship.Builder.relationship;
 
 public record Group(ResourceDocument resourceDocument) {
     public boolean isTemplate(GroupTemplate groupTemplate) {
         return group().getId().equals(groupTemplate.template().getId());
     }
 
-    public Group add(Service service, ResourceObject settings) {
+    public Group add(ServiceResourceObject service, ResourceObject settings) {
         ResourceObjectIdentifiers.Builder rois = new ResourceObjectIdentifiers.Builder();
         group().getRelationships().getRelationship("services")
                 .flatMap(Relationship::getResourceObjectIdentifiers)
                 .ifPresent(rois::resources);
 
-        rois.resource(settings);
+        Included.Builder included = new Included.Builder();
+        Relationship.Builder relationship = new Relationship.Builder();
+
+        AtomicBoolean foundExisting = new AtomicBoolean();
+        resourceDocument().getIncluded().getIncluded().forEach(ro ->
+                {
+                    if (ro.isSameResourceIdentifier(settings))
+                    {
+                        ro.getRelationships().getRelationship("service").ifPresent(r ->
+                        {
+                            r.getResourceObjectIdentifier().ifPresentOrElse(serviceRoi ->
+                            {
+                                relationship.resourceIdentifiers(new ResourceObjectIdentifiers.Builder()
+                                        .resource(serviceRoi) // Keep existing
+                                        .resource(service.resourceObject().getResourceObjectIdentifier()) // Add new
+                                        .build());
+                            }, ()->
+                            {
+                                r.getResourceObjectIdentifiers().ifPresent(serviceRois ->
+                                {
+                                    relationship.resourceIdentifiers(new ResourceObjectIdentifiers.Builder()
+                                            .resources(serviceRois) // Keep existing
+                                            .resource(service.resourceObject().getResourceObjectIdentifier()) // Add new
+                                            .build());
+                                });
+                            });
+                        });
+                        foundExisting.set(true);
+                    } else
+                    {
+                        included.add(ro);
+                    }
+                });
+
+        if (!foundExisting.get())
+        {
+            rois.resource(settings);
+            relationship.resourceIdentifier(service.resourceObject());
+        }
 
         Relationships.Builder builder = new Relationships.Builder();
         builder.relationship("services", new Relationship.Builder().resourceIdentifiers(rois.build()));
 
-        Included.Builder included = new Included.Builder().with(resourceDocument().getIncluded());
-
         ResourceObject newSettings = new ResourceObject.Builder(settings.getType(), settings.getId())
                 .attributes(settings.getAttributes())
-                .relationships(new Relationships.Builder().relationship("service", relationship(service.resourceObject())))
+                .relationships(new Relationships.Builder().relationship("service", relationship.build()))
                 .build();
         included.add(newSettings);
         included.add(service.resourceObject());
@@ -46,7 +81,7 @@ public record Group(ResourceDocument resourceDocument) {
         return newGroup;
     }
 
-    public Group add(Service service) {
+    public Group add(ServiceResourceObject service) {
         ResourceObjectIdentifiers.Builder rois = new ResourceObjectIdentifiers.Builder();
         group().getRelationships().getRelationship("services")
                 .flatMap(Relationship::getResourceObjectIdentifiers)
@@ -73,9 +108,9 @@ public record Group(ResourceDocument resourceDocument) {
         return resourceDocument().getResource().orElseThrow();
     }
 
-    public List<Service> services() {
+    public List<ServiceResourceObject> services() {
         return resourceDocument().getIncluded().getIncluded().stream()
-                .map(Service::new)
+                .map(ServiceResourceObject::new)
                 .collect(Collectors.toList());
     }
 

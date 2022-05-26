@@ -3,18 +3,15 @@ package com.exoreaction.reactiveservices.service.neo4j;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.configuration.StandardConfiguration;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.service.mapdbdomainevents.MapDbDomainEventsService;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabases;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.spi.Contract;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
@@ -24,8 +21,6 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
-import static org.neo4j.configuration.GraphDatabaseSettings.DEFAULT_DATABASE_NAME;
 
 @Singleton
 public class Neo4jService

@@ -1,14 +1,13 @@
 package com.exoreaction.reactiveservices.service.conductor;
 
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jsonapi.model.Relationship;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
 import com.exoreaction.reactiveservices.service.conductor.api.ConductorChange;
 import com.exoreaction.reactiveservices.service.conductor.api.ConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.*;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
@@ -19,9 +18,11 @@ import jakarta.inject.Singleton;
 import jakarta.json.Json;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -57,6 +58,8 @@ public class ConductorService
         }
     }
 
+    private Logger logger = LogManager.getLogger(getClass());
+
     private Registry registry;
     private ServiceResourceObject sro;
     private ReactiveStreams reactiveStreams;
@@ -76,13 +79,20 @@ public class ConductorService
             @Override
             public void addedGroup(Group group) {
                 listeners.forEach(l -> l.addedGroup(group));
-                LogManager.getLogger(getClass()).info("Added group:" + group);
+                logger.info("Added group:" + group);
+            }
+
+            @Override
+            public void updatedGroup(Group group) {
+                listeners.forEach(l -> l.updatedGroup(group));
+                logger.info("Updated group:" + group);
             }
         });
         groupTemplates = new GroupTemplates(new GroupTemplates.GroupTemplatesListener() {
             @Override
             public void addedTemplate(GroupTemplate groupTemplate) {
-//                listeners.forEach(l -> l.addedGroup(group))
+                listeners.forEach(l -> l.addedTemplate(groupTemplate));
+                logger.info("Added template:" + groupTemplate);
             }
         }, groups);
     }
@@ -100,6 +110,7 @@ public class ConductorService
         });
 
         registry.addRegistryListener(new ConductorRegistryListener());
+        System.out.println("Added conductor registry listener");
     }
 
     @Override
@@ -114,22 +125,18 @@ public class ConductorService
 
     public void addTemplate(GroupTemplate groupTemplate) {
         groupTemplates.addTemplate(groupTemplate);
-
-        addedTemplate(groupTemplate);
-
-        LogManager.getLogger(getClass()).info("Added template:" + groupTemplate);
     }
 
     public void removeTemplate(String templateId) {
 //        groupTemplates.removeIf(t -> t.resourceObject().getId().equals(templateId));
     }
 
-    public List<GroupTemplate> getTemplates() {
-        return groupTemplates.getTemplates();
+    public GroupTemplates getGroupTemplates() {
+        return groupTemplates;
     }
 
-    public List<Group> getGroups() {
-        return groups.getGroups();
+    public Groups getGroups() {
+        return groups;
     }
 
     @Override
@@ -138,20 +145,16 @@ public class ConductorService
         listeners.add(listener);
     }
 
-    public void addedTemplate(GroupTemplate groupTemplate) {
-//        listeners.forEach(l -> l.addedTemplate(group);
-    }
-
-    public void addedGroup(Group group) {
-        listeners.forEach(l -> l.addedGroup(group));
-    }
-
-
     private class ConductorRegistryListener implements RegistryListener {
         @Override
-        public void addedService(ResourceObject service) {
+        public void snapshot(Collection<ServerResourceDocument> servers) {
+            RegistryListener.super.snapshot(servers);
+        }
 
-            groupTemplates.addedService(new Service(service));
+        @Override
+        public void addedService(ServiceResourceObject service) {
+//            System.out.println("Conductor Service:"+service.serviceIdentifier());
+            groupTemplates.addedService(service);
         }
     }
 

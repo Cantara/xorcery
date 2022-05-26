@@ -153,6 +153,7 @@ public class Server
 
         // Create server
         server = new org.eclipse.jetty.server.Server(jettyConnectorThreadPool);
+        server.setStopAtShutdown(true);
 
         // Setup connector
         final HttpConfiguration config = new HttpConfiguration();
@@ -180,6 +181,7 @@ public class Server
             @Override
             protected void configure() {
                 try {
+/*
                     // Bind provided services
                     HttpClient httpClient = new HttpClient();
                     httpClient.start();
@@ -192,6 +194,7 @@ public class Server
                     bind(httpClient);
                     bind(webSocketClient);
                     bind(restClient);
+*/
 
                     // Create default ObjectMapper
                     ObjectMapper objectMapper = new ObjectMapper();

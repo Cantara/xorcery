@@ -34,6 +34,7 @@ public class Main
 
         Runtime.getRuntime().addShutdownHook( new Thread( () ->
         {
+            System.out.println("Shutting down server!");
             try
             {
                 server.close();
@@ -42,6 +43,7 @@ public class Main
             {
                 logger.warn( "Error during shutdown", e );
             }
+            System.out.println("Shutdown server!");
             logger.info( "Shutdown" );
 
             LogManager.shutdown();

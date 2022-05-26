@@ -11,11 +11,62 @@
           "data": [
             {
               "type": "rel",
-              "id": "logevents"
+              "id": "logevents",
+              "meta": {
+                "cardinality": "many"
+              }
             },
             {
               "type": "type",
               "id": "soutlogging"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "metrics_sysout",
+      "type": "grouptemplate",
+      "attributes": {
+        "name": "Log metrics to Sysout"
+      },
+      "relationships": {
+        "services": {
+          "data": [
+            {
+              "type": "rel",
+              "id": "metricevents",
+              "meta": {
+                "cardinality": "many"
+              }
+            },
+            {
+              "type": "type",
+              "id": "soutmetrics"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "metrics_jmx",
+      "type": "grouptemplate",
+      "attributes": {
+        "name": "Expose metrics to JMX for VisualVM integration"
+      },
+      "relationships": {
+        "services": {
+          "data": [
+            {
+              "type": "rel",
+              "id": "metricevents",
+              "meta": {
+                "cardinality": "many"
+              }
+            },
+            {
+              "type": "type",
+              "id": "jmxmetrics"
             }
           ]
         }
@@ -56,6 +107,13 @@
       "id": "neo4jdomainevents",
       "attributes": {
         "database": "neo4j"
+      }
+    },
+    {
+      "type": "type",
+      "id": "soutmetrics",
+      "attributes": {
+        "delay": "5S"
       }
     }
   ]

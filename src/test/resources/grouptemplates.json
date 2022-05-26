@@ -10,7 +10,10 @@
         "data": [
           {
             "type": "rel",
-            "id": "logevents"
+            "id": "logevents",
+            "meta": {
+              "cardinality": "many"
+            }
           },
           {
             "type": "type",

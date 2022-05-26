@@ -6,10 +6,9 @@ import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.mapdatabase.MapDatabaseService;
 import com.exoreaction.reactiveservices.service.mapdbdomainevents.disruptor.MapDbDomainEventEventHandler;
-import com.exoreaction.reactiveservices.service.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
@@ -30,8 +29,6 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-
-import java.util.Collections;
 
 /**
  * @author rickardoberg
@@ -104,8 +101,8 @@ public class MapDbDomainEventsService
 
     private class DomainEventsRegistryListener implements RegistryListener {
         @Override
-        public void addedService(ResourceObject service) {
-            service.getLinks().getRel("domainevents").ifPresent(MapDbDomainEventsService.this::connect);
+        public void addedService(ServiceResourceObject service) {
+            service.linkByRel("domainevents").ifPresent(MapDbDomainEventsService.this::connect);
         }
     }
 

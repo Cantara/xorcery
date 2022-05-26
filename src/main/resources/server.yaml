@@ -5,7 +5,7 @@ server:
   port: 8889
 
 reactivestreams:
-  allowlocal: false
+  allowlocal: true
 
 registry:
   master: http://localhost:8889/
@@ -18,7 +18,7 @@ log4jappender:
   enabled: true
 
 soutlogging:
-  enabled: true
+  enabled: false
 
 # Metrics
 metrics:

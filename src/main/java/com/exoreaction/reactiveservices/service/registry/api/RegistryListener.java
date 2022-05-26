@@ -1,10 +1,10 @@
 package com.exoreaction.reactiveservices.service.registry.api;
 
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjectIdentifier;
+import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * @author rickardoberg
@@ -12,33 +12,22 @@ import java.util.List;
  */
 
 public interface RegistryListener {
-    default void snapshot(List<ResourceDocument> servers) {
-        for (ResourceDocument server : servers) {
-            addedServer(server);
-        }
+    default void snapshot(Collection<ServerResourceDocument> servers) {
+        servers.forEach(this::addedServer);
     }
 
-    default void addedServer(ResourceDocument server) {
-        server.getResources().ifPresent(resources ->
-        {
-            resources.getResources().forEach(this::addedService);
-        });
+    default void addedServer(ServerResourceDocument server) {
+        server.services().forEach(this::addedService);
     }
 
-    default void removedServer(ResourceDocument server) {
-        server.getResources().ifPresent(resources ->
-        {
-            resources.getResources()
-                    .stream()
-                    .map(ResourceObject::getResourceObjectIdentifier)
-                    .forEach(this::removedService);
-        });
+    default void removedServer(ServerResourceDocument server) {
+        server.services().map(ServiceResourceObject::serviceIdentifier).forEach(this::removedService);
     }
 
-    default void addedService(ResourceObject service) {
+    default void addedService(ServiceResourceObject service) {
 
     }
 
-    default void removedService(ResourceObjectIdentifier service) {
+    default void removedService(ServiceIdentifier service) {
     }
 }

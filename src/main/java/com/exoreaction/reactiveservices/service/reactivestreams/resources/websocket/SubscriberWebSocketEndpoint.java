@@ -3,6 +3,7 @@ package com.exoreaction.reactiveservices.service.reactivestreams.resources.webso
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
@@ -14,6 +15,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
+import org.eclipse.jetty.io.ByteBufferOutputStream2;
+import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
 import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
@@ -42,8 +45,13 @@ public class SubscriberWebSocketEndpoint<T>
     private Type eventType;
     private Marker marker;
 
-    private ByteBufferAccumulator byteBufferAccumulator;
+    // Dummy variables for readers
+    private final Annotation[] annotations = new Annotation[0];
 
+    private ByteBufferAccumulator byteBufferAccumulator;
+    private ByteBufferPool byteBufferPool;
+    private ReactiveStreamsService.SubscriptionProcess<T> subscriptionProcess;
+    private String webSocketHref;
 
     public SubscriberWebSocketEndpoint(ReactiveEventStreams.Subscriber<T> subscriber,
                                        MessageBodyReader<Object> messageBodyReader,
@@ -51,21 +59,25 @@ public class SubscriberWebSocketEndpoint<T>
                                        ObjectMapper objectMapper,
                                        Type eventType,
                                        Marker marker,
-                                       ByteBufferAccumulator byteBufferAccumulator) {
+                                       ByteBufferPool byteBufferPool,
+                                       ReactiveStreamsService.SubscriptionProcess<T> subscriptionProcess,
+                                       String webSocketHref) {
         this.eventType = eventType;
         this.marker = marker;
         this.subscriber = subscriber;
         this.messageBodyReader = messageBodyReader;
         this.messageBodyWriter = messageBodyWriter;
         this.objectMapper = objectMapper;
-        this.byteBufferAccumulator = byteBufferAccumulator;
+        this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, true);
+        this.byteBufferPool = byteBufferPool;
+        this.subscriptionProcess = subscriptionProcess;
+        this.webSocketHref = webSocketHref;
     }
 
     @Override
     public void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
         byteBufferAccumulator.copyBuffer(payload);
-        if (fin)
-        {
+        if (fin) {
             onWebSocketBinary(byteBufferAccumulator.takeByteBuffer());
             byteBufferAccumulator.close();
         }
@@ -77,19 +89,17 @@ public class SubscriberWebSocketEndpoint<T>
     }
 
     public void onWebSocketBinary(ByteBuffer byteBuffer) {
-
-
         try {
             if (metadata == null) {
                 metadata = byteBuffer;
             } else {
                 ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-                Object event = messageBodyReader.readFrom((Class<Object>) eventType, eventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE, null, inputStream);
+                Object event = messageBodyReader.readFrom((Class<Object>) eventType, eventType, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, inputStream);
                 byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
                 eventSink.publishEvent((holder, seq, m, e) ->
                 {
                     try {
-                        holder.metadata = objectMapper.readerForUpdating(holder.metadata).readValue(new ByteBufferBackedInputStream(metadata));
+                        holder.metadata = objectMapper.readValue(new ByteBufferBackedInputStream(metadata), Metadata.class);
                     } catch (IOException ex) {
                         throw new UncheckedIOException(ex);
                     }
@@ -101,14 +111,25 @@ public class SubscriberWebSocketEndpoint<T>
                         resultFuture.whenComplete((result, throwable) ->
                         {
                             // Send result back
-                            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                            ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
 
                             try {
-                                messageBodyWriter.writeTo(result, null, null, null, null, null, bout);
-                                session.getRemote().sendBytes(ByteBuffer.wrap(bout.toByteArray()));
+                                messageBodyWriter.writeTo(result, null, null, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, resultOutputStream);
+                                ByteBuffer data = resultOutputStream.takeByteBuffer();
+                                session.getRemote().sendBytes(data, new WriteCallback() {
+                                    @Override
+                                    public void writeFailed(Throwable x) {
+                                        logger.error(marker, "Could not send result", x);
+                                    }
+
+                                    @Override
+                                    public void writeSuccess() {
+                                        byteBufferPool.release(data);
+                                    }
+                                });
                             } catch (IOException ex) {
-                                logger.error("Could not send result", ex);
-                                session.close();
+                                logger.error(marker, "Could not send result", ex);
+                                subscriber.onError(ex);
                             }
                         });
 
@@ -125,8 +146,15 @@ public class SubscriberWebSocketEndpoint<T>
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        subscriber.onComplete();
-        logger.info("Close websocket:{} {}", statusCode, reason);
+        if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
+            logger.info(marker, "Complete subscription to {}:{} {}", webSocketHref, statusCode, reason);
+            subscriber.onComplete();
+            subscriptionProcess.result().complete(null); // Now considered done
+        } else {
+            logger.info(marker, "Close websocket {}:{} {}", webSocketHref, statusCode, reason);
+            logger.info(marker, "Starting subscription process again");
+            subscriptionProcess.start();
+        }
     }
 
     @Override
@@ -184,11 +212,11 @@ public class SubscriberWebSocketEndpoint<T>
 
     @Override
     public void onWebSocketError(Throwable cause) {
-        if (cause instanceof ClosedChannelException)
-        {
+        if (cause instanceof ClosedChannelException) {
             // Ignore
         } else {
-            logger.error("Subscriber websocket error", cause);
+            logger.error(marker, "Subscriber websocket error", cause);
+            subscriber.onError(cause);
         }
     }
 }
