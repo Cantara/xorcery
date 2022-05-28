@@ -110,7 +110,7 @@ public class Visualizer
 
         private int getServiceById(String serviceId) {
             for (ServiceEntry service : services) {
-                if (service.resource().serverId().equals(serviceId))
+                if (service.resource().getServerId().equals(serviceId))
                     return service.id();
             }
             return -1;

@@ -95,7 +95,7 @@ public class EventStoreService
     private class EventStoreRegistryListener implements RegistryListener {
         @Override
         public void addedService(ServiceResourceObject service) {
-            service.linkByRel("domainevents").ifPresent(EventStoreService.this::connect);
+            service.getLinkByRel("domainevents").ifPresent(EventStoreService.this::connect);
         }
     }
 

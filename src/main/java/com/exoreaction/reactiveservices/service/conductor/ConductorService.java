@@ -104,7 +104,7 @@ public class ConductorService
 
         templates.split().forEach(rd -> addTemplate(new GroupTemplate(rd)));
 
-        sro.linkByRel("conductorevents").ifPresent(link ->
+        sro.getLinkByRel("conductorevents").ifPresent(link ->
         {
             reactiveStreams.publish(sro.serviceIdentifier(), link, new ConductorPublisher());
         });

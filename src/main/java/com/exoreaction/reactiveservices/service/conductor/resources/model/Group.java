@@ -127,7 +127,7 @@ public record Group(ResourceDocument resourceDocument) {
                 .getIncluded()
                 .getIncluded()
                 .stream()
-                .filter(ro -> ro.getLinks().getRel(rel).isPresent())
+                .filter(ro -> ro.getLinks().getByRel(rel).isPresent())
                 .forEach(ro ->
                 {
                     ServiceResourceObject sro = new ServiceResourceObject(ro);

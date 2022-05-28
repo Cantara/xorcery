@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public record ServiceAttributes(Attributes attributes) {
 
-    public Optional<String> version()
+    public Optional<String> getVersion()
     {
         return attributes.getOptionalString("version");
     }

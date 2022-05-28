@@ -46,10 +46,10 @@ public class ConductorClient
                 new ResourceDocument( Json.createReader( new StringReader( conductorJson ) ).readObject() );
 
             // Register for updates
-            Link websocket = conductor.getLinks().getRel( "events" ).orElseThrow();
+            Link websocket = conductor.getLinks().getByRel( "events" ).orElseThrow();
             webSocketClient.connect( new ClientEndpoint( listener ), URI.create( websocket.getHref() ) ).get();
 
-            Link link = conductor.getLinks().getRel( "patterns" ).orElseThrow();
+            Link link = conductor.getLinks().getByRel( "patterns" ).orElseThrow();
 
             String patternsJson = httpClient.GET( link.getHref() ).getContentAsString();
 

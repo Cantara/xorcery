@@ -40,7 +40,7 @@ public abstract class AbstractConductorListener
             group.servicesByLinkRel(rel, (sro, attributes) ->
             {
                 Optional<ServiceAttributes> selfAttributes = group.serviceAttributes(serviceIdentifier);
-                sro.linkByRel(rel).ifPresent(link ->
+                sro.getLinkByRel(rel).ifPresent(link ->
                 {
                     groupServiceConnections.computeIfAbsent(group.group().getId(), id -> new ArrayList<>())
                             .add(link);
@@ -59,7 +59,7 @@ public abstract class AbstractConductorListener
             group.servicesByLinkRel(rel, (sro, attributes) ->
             {
                 Optional<ServiceAttributes> selfAttributes = group.serviceAttributes(serviceIdentifier);
-                sro.linkByRel(rel).ifPresent(link ->
+                sro.getLinkByRel(rel).ifPresent(link ->
                 {
                     // Check against existing connections
                     List<Link> current = groupServiceConnections.computeIfAbsent(group.group().getId(), id -> new ArrayList<>());

@@ -93,25 +93,10 @@ public record Links(JsonObject json)
 
     public Optional<Link> getSelf()
     {
-        return getRel( "self" );
+        return getByRel( "self" );
     }
 
-    public Optional<Link> getNext()
-    {
-        return getRel( "next" );
-    }
-
-    public Optional<Link> getRelated()
-    {
-        return getRel( "related" );
-    }
-
-    public Optional<Link> getDescribedBy()
-    {
-        return getRel( "describedBy" );
-    }
-
-    public Optional<Link> getRel( String name )
+    public Optional<Link> getByRel(String name )
     {
         return Optional.ofNullable( object().get( name ) ).map( v -> new Link( name, v ) );
     }

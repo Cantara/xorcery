@@ -17,11 +17,11 @@ public interface RegistryListener {
     }
 
     default void addedServer(ServerResourceDocument server) {
-        server.services().forEach(this::addedService);
+        server.getServices().forEach(this::addedService);
     }
 
     default void removedServer(ServerResourceDocument server) {
-        server.services().map(ServiceResourceObject::serviceIdentifier).forEach(this::removedService);
+        server.getServices().map(ServiceResourceObject::serviceIdentifier).forEach(this::removedService);
     }
 
     default void addedService(ServiceResourceObject service) {

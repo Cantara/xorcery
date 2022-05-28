@@ -69,7 +69,7 @@ public class Metrics
 
     @Override
     public void onStartup(Container container) {
-        resourceObject.linkByRel("metricevents").ifPresent(link ->
+        resourceObject.getLinkByRel("metricevents").ifPresent(link ->
         {
             reactiveStreams.publish(resourceObject.serviceIdentifier(), link, this);
         });

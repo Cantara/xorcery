@@ -52,7 +52,7 @@ public record GroupTemplate(ResourceDocument resourceDocument) {
                 service.resourceObject().getType().equals(serviceTemplate.getId()))
             return true;
         return serviceTemplate.getType().equals("rel") &&
-                service.resourceObject().getLinks().getRel(serviceTemplate.getId()).isPresent();
+                service.resourceObject().getLinks().getByRel(serviceTemplate.getId()).isPresent();
     }
 
     public boolean isMatched(Group partialGroup) {

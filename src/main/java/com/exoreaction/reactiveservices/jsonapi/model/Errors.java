@@ -38,15 +38,15 @@ public record Errors(JsonArray json)
         return !array().isEmpty();
     }
 
-    public List<Error> errors()
+    public List<Error> getErrors()
     {
         return array().getValuesAs( Error::new );
     }
 
-    public Map<String,Error> errorMap()
+    public Map<String,Error> getErrorMap()
     {
         Map<String,Error> map = new HashMap<>();
-        for ( Error error : errors() )
+        for ( Error error : getErrors() )
         {
             String pointer = error.getSource().getPointer();
             if ( pointer != null )
@@ -58,9 +58,9 @@ public record Errors(JsonArray json)
         return map;
     }
 
-    public String error()
+    public String getError()
     {
-        for ( Error error : errors() )
+        for ( Error error : getErrors() )
         {
             if (error.getSource().getPointer() == null)
                 return error.getTitle();

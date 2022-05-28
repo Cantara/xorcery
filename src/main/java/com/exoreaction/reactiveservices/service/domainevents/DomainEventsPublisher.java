@@ -85,7 +85,7 @@ public class DomainEventsPublisher
     @Override
     public void onStartup(Container container) {
         disruptor.start();
-        resourceObject.linkByRel("domainevents").ifPresent(link ->
+        resourceObject.getLinkByRel("domainevents").ifPresent(link ->
         {
             reactiveStreams.publish(resourceObject.serviceIdentifier(), link, this);
         });

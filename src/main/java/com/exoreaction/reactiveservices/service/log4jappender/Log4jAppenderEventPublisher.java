@@ -62,7 +62,7 @@ public class Log4jAppenderEventPublisher
 
     @Override
     public void onStartup(Container container) {
-        sro.linkByRel("logevents").ifPresent(link ->
+        sro.getLinkByRel("logevents").ifPresent(link ->
         {
             reactiveStreams.publish(sro.serviceIdentifier(), link, this);
         });

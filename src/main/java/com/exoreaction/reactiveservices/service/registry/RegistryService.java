@@ -123,7 +123,7 @@ public class RegistryService
 
     @Override
     public void onStartup(Container container) {
-        resourceObject.linkByRel("registryevents").ifPresent(link ->
+        resourceObject.getLinkByRel("registryevents").ifPresent(link ->
         {
             reactiveStreams.publish(resourceObject.serviceIdentifier(), link, new RegistryPublisher());
         });
@@ -291,8 +291,8 @@ public class RegistryService
 
         private CompletionStage<ServerResourceDocument> subscribeMaster(ServerResourceDocument registry) {
 
-            return registry.serviceByType("registry")
-                    .map(sro -> sro.linkByRel("registryevents").map(link ->
+            return registry.getServiceByType("registry")
+                    .map(sro -> sro.getLinkByRel("registryevents").map(link ->
                     {
                         System.out.println("Subscribe to upstream registry");
                         reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Collections.emptyMap());
@@ -302,10 +302,10 @@ public class RegistryService
         }
 
         private <U> CompletionStage<ResourceDocument> submitServer(ServerResourceDocument registry) {
-            return registry.serviceByType("registry")
-                    .map(sro -> sro.linkByRel("registry").map(link ->
+            return registry.getServiceByType("registry")
+                    .map(sro -> sro.getLinkByRel("registry").map(link ->
                             client.get(link)
-                                    .thenCompose(rd -> rd.getLinks().getRel("servers").map(serversLink ->
+                                    .thenCompose(rd -> rd.getLinks().getByRel("servers").map(serversLink ->
                                             client.submit(serversLink, server)).orElse(CompletableFuture.failedStage(new IllegalStateException("No link 'servers' in registry"))))).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry"))))
                     .orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
         }
@@ -324,10 +324,10 @@ public class RegistryService
         }
 
         private <U> CompletionStage<ResourceDocument> deleteServer(ServerResourceDocument registry) {
-            return registry.serviceByType("registry")
-                    .map(sro -> sro.linkByRel("registry").map(link ->
+            return registry.getServiceByType("registry")
+                    .map(sro -> sro.getLinkByRel("registry").map(link ->
                             client.get(link)
-                                    .thenCompose(rd -> rd.getLinks().getRel("servers").map(serversLink ->
+                                    .thenCompose(rd -> rd.getLinks().getByRel("servers").map(serversLink ->
                                             client.submit(serversLink, server)).orElse(CompletableFuture.failedStage(new IllegalStateException("No link 'servers' in registry"))))).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry"))))
                     .orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
         }

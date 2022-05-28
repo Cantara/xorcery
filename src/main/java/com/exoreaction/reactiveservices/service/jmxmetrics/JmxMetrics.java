@@ -122,12 +122,12 @@ public class JmxMetrics
         return new Supplier<JsonValue>() {
             @Override
             public JsonValue get() {
-                String serverId = metricsResource.serverId();
+                String serverId = metricsResource.getServerId();
                 Map<String, AtomicReference<JsonValue>> currentServerMetrics = polledMetrics.computeIfAbsent(serverId, id -> new ConcurrentHashMap<>());
                 AtomicReference<JsonValue> value = currentServerMetrics.get(metricName);
                 if (value == null) {
                     currentServerMetrics.put(metricName, value = new AtomicReference<>());
-                    pollMetrics(metricsResource.linkByRel("metricevents").orElseThrow(), serverId, currentServerMetrics.keySet());
+                    pollMetrics(metricsResource.getLinkByRel("metricevents").orElseThrow(), serverId, currentServerMetrics.keySet());
                 }
                 return value.get();
             }
@@ -207,7 +207,7 @@ public class JmxMetrics
                     {
                         // Create server and metrics beans
                         try {
-                            String serverId = sro.serverId();
+                            String serverId = sro.getServerId();
                             ServerMXBean serverMXBean = new ServerMXBean.Model(serverId);
                             managementServer.registerMBean(serverMXBean, ObjectName.getInstance("reactive", "server", serverId));
 

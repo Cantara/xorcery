@@ -8,13 +8,13 @@ import java.util.stream.Stream;
 
 public record ServerResourceDocument(ResourceDocument resourceDocument) {
 
-    public Stream<ServiceResourceObject> services() {
+    public Stream<ServiceResourceObject> getServices() {
         return resourceDocument.getResources().orElseThrow()
                 .getResources().stream()
                 .map(ServiceResourceObject::new);
     }
 
-    public Optional<ServiceResourceObject> service(ServiceIdentifier serviceIdentifier) {
+    public Optional<ServiceResourceObject> getServiceByIdentifier(ServiceIdentifier serviceIdentifier) {
         return resourceDocument.getResources()
                 .flatMap(r -> r.getResources().stream()
                         .filter(ro -> ro.getResourceObjectIdentifier().equals(serviceIdentifier.resourceObjectIdentifier()))
@@ -22,7 +22,7 @@ public record ServerResourceDocument(ResourceDocument resourceDocument) {
                 .map(ServiceResourceObject::new);
     }
 
-    public Optional<ServiceResourceObject> serviceByType(String type) {
+    public Optional<ServiceResourceObject> getServiceByType(String type) {
         return resourceDocument.getResources()
                 .flatMap(ro -> ro.getResources().stream()
                         .filter(r -> r.getType().equals(type))

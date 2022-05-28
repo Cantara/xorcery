@@ -54,19 +54,19 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
         return new ServiceIdentifier(resourceObject.getType(), resourceObject.getId());
     }
 
-    public String serverId() {
+    public String getServerId() {
         return resourceObject.getId();
     }
 
-    public String version() {
+    public String getVersion() {
         return resourceObject().getAttributes().getString("version");
     }
 
-    public ServiceAttributes attributes() {
+    public ServiceAttributes getAttributes() {
         return new ServiceAttributes(resourceObject.getAttributes());
     }
 
-    public Optional<Link> linkByRel(String rel) {
-        return resourceObject().getLinks().getRel(rel);
+    public Optional<Link> getLinkByRel(String rel) {
+        return resourceObject().getLinks().getByRel(rel);
     }
 }
