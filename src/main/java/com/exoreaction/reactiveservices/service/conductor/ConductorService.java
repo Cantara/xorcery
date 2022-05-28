@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.conductor;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
@@ -22,6 +23,9 @@ import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +66,7 @@ public class ConductorService
 
     private Registry registry;
     private ServiceResourceObject sro;
+    private Configuration configuration;
     private ReactiveStreams reactiveStreams;
 
 
@@ -70,10 +75,12 @@ public class ConductorService
     private List<ConductorListener> listeners = new CopyOnWriteArrayList<>();
 
     @Inject
-    public ConductorService(ReactiveStreams reactiveStreams, Registry registry, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
+    public ConductorService(ReactiveStreams reactiveStreams, Registry registry,
+                            @Named(SERVICE_TYPE) ServiceResourceObject sro, Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
         this.registry = registry;
         this.sro = sro;
+        this.configuration = configuration;
 
         groups = new Groups(new Groups.GroupsListener() {
             @Override
@@ -100,14 +107,31 @@ public class ConductorService
     @Override
     public void onStartup(Container container) {
         // Load templates
-        ResourceDocument templates = new ResourceDocument(Json.createReader(getClass().getResourceAsStream("/conductor/templates.json")).readObject());
+        for (String templateName : List.of(configuration.getString("conductor.templates").orElseThrow().split(","))) {
+            logger.info("Loading conductor template from:"+templateName);
+            try {
+                URI templateUri = URI.create(templateName);
 
-        templates.split().forEach(rd -> addTemplate(new GroupTemplate(rd)));
+                ResourceDocument templates = new ResourceDocument(Json.createReader(templateUri.toURL().openStream()).readObject());
 
-        sro.getLinkByRel("conductorevents").ifPresent(link ->
-        {
-            reactiveStreams.publish(sro.serviceIdentifier(), link, new ConductorPublisher());
-        });
+                templates.split().forEach(rd -> addTemplate(new GroupTemplate(rd)));
+
+                sro.getLinkByRel("conductorevents").ifPresent(link ->
+                {
+                    reactiveStreams.publish(sro.serviceIdentifier(), link, new ConductorPublisher());
+                });
+            } catch (IllegalArgumentException | IOException e) {
+                // Just load from classpath
+                ResourceDocument templates = new ResourceDocument(Json.createReader(getClass().getResourceAsStream(templateName)).readObject());
+
+                templates.split().forEach(rd -> addTemplate(new GroupTemplate(rd)));
+
+                sro.getLinkByRel("conductorevents").ifPresent(link ->
+                {
+                    reactiveStreams.publish(sro.serviceIdentifier(), link, new ConductorPublisher());
+                });
+            }
+        }
 
         registry.addRegistryListener(new ConductorRegistryListener());
         System.out.println("Added conductor registry listener");

@@ -12,6 +12,7 @@ registry:
 
 conductor:
   enabled: true
+  templates: /conductor/templates.json
 
 # Logging
 log4jappender:
