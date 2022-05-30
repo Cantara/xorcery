@@ -5,7 +5,7 @@ server:
   port: 8889
 
 reactivestreams:
-  allowlocal: true
+  allowlocal: false
 
 registry:
   master: http://localhost:8889/

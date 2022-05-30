@@ -3,6 +3,7 @@ package com.exoreaction.reactiveservices.service.soutmetrics;
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
@@ -11,6 +12,7 @@ import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -57,19 +59,21 @@ public class SysoutMetrics
 
     private ReactiveStreams reactiveStreams;
     private Conductor conductor;
+    private Registry registry;
     private ServiceResourceObject sro;
 
     @Inject
-    public SysoutMetrics(ReactiveStreams reactiveStreams, Conductor conductor, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
+    public SysoutMetrics(ReactiveStreams reactiveStreams, Conductor conductor, Registry registry, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
+        this.registry = registry;
         this.sro = sro;
     }
 
     @Override
     public void onStartup(Container container) {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        conductor.addConductorListener(new MetricsConductorListener(sro.serviceIdentifier(), "metricevents"));
+        conductor.addConductorListener(new MetricsConductorListener());
     }
 
     @Override
@@ -88,10 +92,10 @@ public class SysoutMetrics
         private ReactiveEventStreams.Subscription subscription;
         private final long delay;
 
-        public MetricEventSubscriber(Optional<ServiceAttributes> selfParameters, ScheduledExecutorService scheduledExecutorService) {
+        public MetricEventSubscriber(Optional<JsonObject> selfParameters, ScheduledExecutorService scheduledExecutorService) {
 
             this.scheduledExecutorService = scheduledExecutorService;
-            this.delay = Duration.parse(selfParameters.flatMap(sa -> sa.attributes().getOptionalString("delay")).orElse("5S")).toSeconds();
+            this.delay = Duration.parse(selfParameters.flatMap(sa -> new Attributes(sa).getOptionalString("delay")).orElse("5S")).toSeconds();
         }
 
         @Override
@@ -116,13 +120,13 @@ public class SysoutMetrics
 
     private class MetricsConductorListener extends AbstractConductorListener {
 
-        public MetricsConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
-            super(serviceIdentifier, rel);
+        public MetricsConductorListener() {
+            super(sro.serviceIdentifier(), registry, "metricevents");
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<ServiceAttributes> attributes, Optional<ServiceAttributes> selfAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceAttributes, Optional<JsonObject> consumerAttributes) {
             reactiveStreams.subscribe(serviceIdentifier, link,
-                    new MetricEventSubscriber(selfAttributes, scheduledExecutorService), attributes);
+                    new MetricEventSubscriber(consumerAttributes, scheduledExecutorService), sourceAttributes);
         }
     }
 }

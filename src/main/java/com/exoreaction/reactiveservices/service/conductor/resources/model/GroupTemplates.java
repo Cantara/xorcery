@@ -1,5 +1,8 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.model;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
+import com.exoreaction.reactiveservices.jsonapi.model.Relationship;
+import com.exoreaction.reactiveservices.jsonapi.model.Relationships;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
@@ -20,13 +23,15 @@ public class GroupTemplates {
         }
     }
 
-    public GroupTemplates(GroupTemplatesListener listener, Groups groups) {
+    public GroupTemplates(GroupTemplatesListener listener, Groups groups, Configuration configuration) {
         this.listener = listener;
         this.groups = groups;
+        this.configuration = configuration;
     }
 
     private final GroupTemplatesListener listener;
     private final Groups groups;
+    private final Configuration configuration;
 
     private final List<GroupTemplate> groupTemplates = new CopyOnWriteArrayList<>();
     private final List<String> matchedTemplates = new CopyOnWriteArrayList<>();
@@ -49,55 +54,79 @@ public class GroupTemplates {
     public void addedService(ServiceResourceObject service) {
         try {
             // Check if any group templates match
+            // TODO This algo can be simplified
             for (GroupTemplate groupTemplate : groupTemplates) {
-                groupTemplate.match(service).ifPresent(roi ->
-                {
+                if (groupTemplate.getSources().isSource(service, configuration)) {
                     // Check if group exists already
-                    groups.groupByTemplate(groupTemplate)
+                    groups.getGroupByTemplate(groupTemplate)
                             .ifPresentOrElse(existingGroup ->
                             {
                                 // Check if many cardinality
-                                if (groupTemplate.isMany(service)) {
-                                    // Check if we have included data
-                                    groupTemplate.resourceDocument().getIncluded().findByResourceObjectIdentifier(roi).ifPresentOrElse(ro ->
-                                    {
-                                        groups.addService(existingGroup, service, ro);
-                                    }, () ->
-                                    {
-                                        groups.addService(existingGroup, service);
-                                    });
+                                if (groupTemplate.getSources().isMany()) {
+                                    groups.addOrUpdateGroup(existingGroup.addSource(service));
                                 }
                             }, () ->
                             {
                                 // Create partial group
-                                Group partialGroup = partialGroups.computeIfAbsent(groupTemplate.template().getId(), templateId ->
-                                        new Group(new ResourceDocument.Builder()
-                                                .data(new ResourceObject.Builder("group", templateId).build())
+                                Group partialGroup = partialGroups.computeIfAbsent(groupTemplate.resourceObject().getId(), templateId ->
+                                        new Group(new ResourceObject.Builder("group", templateId)
+                                                .relationships(new Relationships.Builder()
+                                                        .relationship("sources", new Relationship.Builder().build())
+                                                        .relationship("consumers", new Relationship.Builder().build()))
+                                                .attributes(groupTemplate.resourceObject().getAttributes())
                                                 .build()));
 
-                                // Check if we have included data
-                                Group updatedGroup = groupTemplate.resourceDocument().getIncluded().findByResourceObjectIdentifier(roi).map(ro ->
-                                {
-                                    return partialGroup.add(service, ro);
-                                }).orElseGet(() ->
-                                {
-                                    return partialGroup.add(service);
-                                });
+                                Group updatedGroup = partialGroup.addSource(service);
 
-                                if (groupTemplate.isMatched(updatedGroup)) {
-                                    partialGroups.remove(groupTemplate.template().getId());
+                                if (updatedGroup.isComplete()) {
+                                    partialGroups.remove(groupTemplate.resourceObject().getId());
 
                                     // New group based on template has been created
                                     LogManager.getLogger(getClass()).info("Match:" + updatedGroup);
 
-                                    matchedTemplates.add(groupTemplate.template().getId());
-                                    groups.addGroup(updatedGroup);
+                                    matchedTemplates.add(groupTemplate.resourceObject().getId());
+                                    groups.addOrUpdateGroup(updatedGroup);
                                 } else {
                                     LogManager.getLogger(getClass()).info("Partial match:" + updatedGroup);
-                                    partialGroups.put(groupTemplate.template().getId(), updatedGroup);
+                                    partialGroups.put(groupTemplate.resourceObject().getId(), updatedGroup);
                                 }
                             });
-                });
+                } else if (groupTemplate.getConsumers().isConsumer(service, configuration)) {
+                    // Check if group exists already
+                    groups.getGroupByTemplate(groupTemplate)
+                            .ifPresentOrElse(existingGroup ->
+                            {
+                                // Check if many cardinality
+                                if (groupTemplate.getConsumers().isMany()) {
+                                    groups.addOrUpdateGroup(existingGroup.addConsumer(service));
+                                }
+                            }, () ->
+                            {
+                                // Create partial group
+                                Group partialGroup = partialGroups.computeIfAbsent(groupTemplate.resourceObject().getId(), templateId ->
+                                        new Group(new ResourceObject.Builder("group", templateId)
+                                                .relationships(new Relationships.Builder()
+                                                        .relationship("sources", new Relationship.Builder().build())
+                                                        .relationship("consumers", new Relationship.Builder().build()))
+                                                .attributes(groupTemplate.resourceObject().getAttributes())
+                                                .build()));
+
+                                Group updatedGroup = partialGroup.addConsumer(service);
+
+                                if (updatedGroup.isComplete()) {
+                                    partialGroups.remove(groupTemplate.resourceObject().getId());
+
+                                    // New group based on template has been created
+                                    LogManager.getLogger(getClass()).info("Match:" + updatedGroup);
+
+                                    matchedTemplates.add(groupTemplate.resourceObject().getId());
+                                    groups.addOrUpdateGroup(updatedGroup);
+                                } else {
+                                    LogManager.getLogger(getClass()).info("Partial match:" + updatedGroup);
+                                    partialGroups.put(groupTemplate.resourceObject().getId(), updatedGroup);
+                                }
+                            });
+                }
             }
         } catch (Exception e) {
             LogManager.getLogger(getClass()).error("Could not handle service", e);

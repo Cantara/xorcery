@@ -16,7 +16,7 @@ import java.util.Optional;
 public record Error(JsonObject json)
     implements JsonElement
 {
-    public static record Builder(JsonObjectBuilder builder)
+    public record Builder(JsonObjectBuilder builder)
     {
         public Builder {
             builder = Json.createObjectBuilder();

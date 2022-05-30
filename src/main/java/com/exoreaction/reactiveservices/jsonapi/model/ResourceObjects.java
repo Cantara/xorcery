@@ -14,36 +14,33 @@ import java.util.stream.Collector;
  */
 
 public record ResourceObjects(JsonArray json)
-    implements JsonElement
-{
-    public static Collector<ResourceObject,Builder,ResourceObjects> toResourceObjects()
-    {
-        return Collector.of( Builder::new, (builder, ro) -> {if (ro != null) builder.resource(ro);}, ( builder1, builder2 ) -> builder1, Builder::build );
+        implements JsonElement {
+    public static Collector<ResourceObject, Builder, ResourceObjects> toResourceObjects() {
+        return Collector.of(Builder::new, (builder, ro) -> {
+            if (ro != null) builder.resource(ro);
+        }, (builder1, builder2) -> builder1, Builder::build);
     }
 
-    public static class Builder
-    {
-        JsonArrayBuilder builder = Json.createArrayBuilder();
+    public record Builder(JsonArrayBuilder builder) {
+        public Builder() {
+            this(Json.createArrayBuilder());
+        }
 
-        public Builder resource( ResourceObject resourceObject )
-        {
-            builder.add( resourceObject.json() );
+        public Builder resource(ResourceObject resourceObject) {
+            builder.add(resourceObject.json());
             return this;
         }
 
-        public ResourceObjects build()
-        {
-            return new ResourceObjects( builder.build() );
+        public ResourceObjects build() {
+            return new ResourceObjects(builder.build());
         }
     }
 
-    public List<ResourceObject> getResources()
-    {
-        return array().getValuesAs( ResourceObject::new );
+    public List<ResourceObject> getResources() {
+        return array().getValuesAs(ResourceObject::new);
     }
 
-    public ResourceObjectIdentifiers getResourceObjectIdentifiers()
-    {
-        return new ResourceObjectIdentifiers.Builder().resources( this ).build();
+    public ResourceObjectIdentifiers getResourceObjectIdentifiers() {
+        return new ResourceObjectIdentifiers.Builder().resources(this).build();
     }
 }

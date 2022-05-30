@@ -14,12 +14,14 @@ import java.util.function.Consumer;
 
 public record Relationship(JsonObject json)
         implements JsonElement, Consumer<Relationship.Builder> {
-    public static class Builder {
+    public record Builder(JsonObjectBuilder builder) {
         public static Relationship relationship(ResourceObject resourceObject) {
             return new Builder().resourceIdentifier(resourceObject).build();
         }
 
-        JsonObjectBuilder builder = Json.createObjectBuilder();
+        public Builder() {
+            this(Json.createObjectBuilder());
+        }
 
         public Builder links(Links value) {
             builder.add("links", value.json());

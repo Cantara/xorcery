@@ -25,9 +25,11 @@ import static java.util.stream.Collectors.toMap;
 public record Links(JsonObject json)
     implements JsonElement
 {
-    public static class Builder
+    public record Builder(JsonObjectBuilder builder)
     {
-        JsonObjectBuilder builder = Json.createObjectBuilder();
+        public Builder() {
+            this(Json.createObjectBuilder());
+        }
 
         public Builder link( Consumer<Builder> consumer )
         {

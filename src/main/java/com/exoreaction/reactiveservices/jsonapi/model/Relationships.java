@@ -21,9 +21,15 @@ import static java.util.stream.Collectors.toMap;
 public record Relationships(JsonObject json)
     implements JsonElement
 {
-    public static class Builder
+    public record Builder(JsonObjectBuilder builder)
     {
-        private JsonObjectBuilder builder = Json.createObjectBuilder();
+        public Builder() {
+            this(Json.createObjectBuilder());
+        }
+
+        public Builder(Relationships relationships) {
+            this(Json.createObjectBuilder(relationships.object()));
+        }
 
         public Builder relationship( Enum name, Relationship relationship )
         {

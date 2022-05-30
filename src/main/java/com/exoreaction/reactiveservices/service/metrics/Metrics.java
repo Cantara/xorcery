@@ -85,8 +85,8 @@ public class Metrics
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<JsonObject> subscriber, Map<String, String> parameters) {
-        String metricNames = Optional.ofNullable(parameters.get("metrics")).orElse("");
+    public void subscribe(ReactiveEventStreams.Subscriber<JsonObject> subscriber, JsonObject parameters) {
+        String metricNames = Optional.ofNullable(parameters.getJsonArray("metrics")).map(array -> array.getString(0, "")).orElse("");
         Collection<String> metricNamesList = metricNames.isBlank() ? metricRegistry.getNames() : Arrays.asList(metricNames.split(","));
 
         new MetricSubscription(subscriber, metricNamesList, metricRegistry);

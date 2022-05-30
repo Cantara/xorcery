@@ -16,10 +16,11 @@ import java.util.List;
 public record ResourceObjectIdentifiers(JsonArray json)
     implements JsonElement
 {
-    public static class Builder
+    public record Builder(JsonArrayBuilder builder)
     {
-        JsonArrayBuilder builder = Json.createArrayBuilder();
-
+        public Builder() {
+            this(Json.createArrayBuilder());
+        }
         public Builder resource( ResourceObjectIdentifier resourceObjectIdentifier )
         {
             builder.add( resourceObjectIdentifier.json() );

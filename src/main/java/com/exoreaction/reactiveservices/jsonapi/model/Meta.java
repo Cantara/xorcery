@@ -14,38 +14,33 @@ import java.util.function.Consumer;
  */
 
 public record Meta(JsonObject json)
-    implements JsonElement
-{
-    public static class Builder
-    {
-        JsonObjectBuilder json = Json.createObjectBuilder();
+        implements JsonElement {
+    public record Builder(JsonObjectBuilder json) {
+        public Builder() {
+            this(Json.createObjectBuilder());
+        }
 
-        public Builder meta(String name, JsonValue value)
-        {
-            json.add( name, value );
+        public Builder meta(String name, JsonValue value) {
+            json.add(name, value);
             return this;
         }
 
-        public Builder meta(String name, long value)
-        {
-            json.add( name, value );
+        public Builder meta(String name, long value) {
+            json.add(name, value);
             return this;
         }
 
-        public Builder with( Consumer<Builder> consumer)
-        {
-            consumer.accept( this );
+        public Builder with(Consumer<Builder> consumer) {
+            consumer.accept(this);
             return this;
         }
 
-        public Meta build()
-        {
+        public Meta build() {
             return new Meta(json.build());
         }
     }
 
-    public JsonObject getMeta()
-    {
+    public JsonObject getMeta() {
         return json().asJsonObject();
     }
 }

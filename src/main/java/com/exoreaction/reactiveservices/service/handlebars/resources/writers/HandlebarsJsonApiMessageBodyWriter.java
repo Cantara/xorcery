@@ -43,7 +43,7 @@ public class HandlebarsJsonApiMessageBodyWriter
                         OutputStream entityStream) throws IOException, WebApplicationException {
 
         OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8);
-        handlebars.compile("sandbox/resourcedocument").apply(Context.newContext(resourceDocument.object()), writer);
+        handlebars.compile("jsonapi/resourcedocument").apply(Context.newContext(resourceDocument.object()), writer);
         writer.close();
     }
 }

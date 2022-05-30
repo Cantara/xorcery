@@ -17,9 +17,12 @@ import java.util.Map;
 public record Errors(JsonArray json)
     implements JsonElement
 {
-    public static class Builder
+    public record Builder(JsonArrayBuilder builder)
     {
-        JsonArrayBuilder builder = Json.createArrayBuilder();
+
+        public Builder() {
+            this(Json.createArrayBuilder());
+        }
 
         public Builder error( Error error )
         {

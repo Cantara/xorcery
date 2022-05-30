@@ -1,0 +1,35 @@
+{
+  "data": [
+    {
+      "id": "log4j_sysout",
+      "type": "group",
+      "relationships": {
+        "sources": {"data": [
+          {
+            "type": "logappender",
+            "id": "server1"
+          }
+        ]},
+        "consumers": {"data": [
+          {
+            "type": "sysout",
+            "id": "server1"
+          }
+        ]}
+      },
+      "attributes": {
+        "name": "Log4j HTTP requests to Sysout",
+        "sources": {
+          "pattern": "rel=='logevents'",
+          "many": true,
+          "parameters": {
+            "category": "jetty"
+          }
+        },
+        "consumers": {
+          "pattern": "type=='soutlogging'"
+        }
+      }
+    }
+  ]
+}

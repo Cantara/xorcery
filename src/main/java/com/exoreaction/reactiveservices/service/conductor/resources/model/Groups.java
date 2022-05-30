@@ -1,8 +1,5 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.model;
 
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,33 +14,20 @@ public class Groups {
         }
     }
 
-    private final List<Group> groups = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Group> groups = new CopyOnWriteArrayList<>();
     private final GroupsListener groupsListener;
 
     public Groups(GroupsListener groupsListener) {
         this.groupsListener = groupsListener;
     }
 
-    public void addGroup(Group addedGroup) {
-        groups.add(addedGroup);
-        groupsListener.addedGroup(addedGroup);
-    }
-
-    public void addService(Group group, ServiceResourceObject serviceResourceObject, ResourceObject settings) {
-        if (groups.remove(group))
-        {
-            Group updatedGroup = group.add(serviceResourceObject, settings);
-            groups.add(updatedGroup);
-            groupsListener.updatedGroup(updatedGroup);
-        }
-    }
-
-    public void addService(Group group, ServiceResourceObject serviceResourceObject) {
-        if (groups.remove(group))
-        {
-            Group updatedGroup = group.add(serviceResourceObject);
-            groups.add(updatedGroup);
-            groupsListener.updatedGroup(updatedGroup);
+    public void addOrUpdateGroup(Group group) {
+        if (groups.addIfAbsent(group)) {
+            groupsListener.addedGroup(group);
+        } else {
+            groups.remove(group);
+            groups.add(group);
+            groupsListener.updatedGroup(group);
         }
     }
 
@@ -51,7 +35,7 @@ public class Groups {
         return groups;
     }
 
-    public Optional<Group> groupByTemplate(GroupTemplate groupTemplate) {
+    public Optional<Group> getGroupByTemplate(GroupTemplate groupTemplate) {
         return getGroups().stream()
                 .filter(group -> group.isTemplate(groupTemplate))
                 .findFirst();

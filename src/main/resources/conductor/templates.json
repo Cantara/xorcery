@@ -4,23 +4,14 @@
       "id": "log4j_sysout",
       "type": "grouptemplate",
       "attributes": {
-        "name": "Log4j HTTP requests to Sysout"
-      },
-      "relationships": {
-        "services": {
-          "data": [
-            {
-              "type": "rel",
-              "id": "logevents",
-              "meta": {
-                "cardinality": "many"
-              }
-            },
-            {
-              "type": "type",
-              "id": "soutlogging"
-            }
-          ]
+        "name": "Log4j HTTP requests to Sysout",
+        "sources": {
+          "pattern": "rel=='logevents'",
+          "many": true,
+          "parameters": {"category": "jetty"}
+        },
+        "consumers": {
+          "pattern": "type=='soutlogging'"
         }
       }
     },
@@ -28,23 +19,13 @@
       "id": "metrics_sysout",
       "type": "grouptemplate",
       "attributes": {
-        "name": "Log metrics to Sysout"
-      },
-      "relationships": {
-        "services": {
-          "data": [
-            {
-              "type": "rel",
-              "id": "metricevents",
-              "meta": {
-                "cardinality": "many"
-              }
-            },
-            {
-              "type": "type",
-              "id": "soutmetrics"
-            }
-          ]
+        "name": "Log metrics to Sysout",
+        "sources": {
+          "pattern": "rel=='metricevents'",
+          "many": true
+        },
+        "consumers": {
+          "pattern": "type=='soutmetrics'"
         }
       }
     },
@@ -52,23 +33,13 @@
       "id": "metrics_jmx",
       "type": "grouptemplate",
       "attributes": {
-        "name": "Expose metrics to JMX for VisualVM integration"
-      },
-      "relationships": {
-        "services": {
-          "data": [
-            {
-              "type": "rel",
-              "id": "metricevents",
-              "meta": {
-                "cardinality": "many"
-              }
-            },
-            {
-              "type": "type",
-              "id": "jmxmetrics"
-            }
-          ]
+        "name": "Expose metrics to JMX for VisualVM integration",
+        "sources": {
+          "pattern": "rel=='metricevents'",
+          "many": true
+        },
+        "consumers": {
+          "pattern": "type=='jmxmetrics'"
         }
       }
     },
@@ -76,44 +47,16 @@
       "id": "greeter_neo4jdomainevents",
       "type": "grouptemplate",
       "attributes": {
-        "name": "Project Greeter events into Neo4j"
-      },
-      "relationships": {
-        "services": {
-          "data": [
-            {
-              "type": "rel",
-              "id": "domainevents"
-            },
-            {
-              "type": "type",
-              "id": "neo4jdomainevents"
-            }
-          ]
+        "name": "Project Greeter events into Neo4j",
+        "sources": {
+          "pattern": "rel=='domainevents'"
+        },
+        "consumers": {
+          "pattern": "type=='neo4jdomainevents'",
+          "parameters": {
+            "database": "neo4j"
+          }
         }
-      }
-    }
-  ],
-  "included": [
-    {
-      "type": "rel",
-      "id": "logevents",
-      "attributes": {
-        "category": "jetty"
-      }
-    },
-    {
-      "type": "type",
-      "id": "neo4jdomainevents",
-      "attributes": {
-        "database": "neo4j"
-      }
-    },
-    {
-      "type": "type",
-      "id": "soutmetrics",
-      "attributes": {
-        "delay": "5S"
       }
     }
   ]

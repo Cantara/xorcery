@@ -17,6 +17,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -101,37 +102,32 @@ public class ConductorService
                 listeners.forEach(l -> l.addedTemplate(groupTemplate));
                 logger.info("Added template:" + groupTemplate);
             }
-        }, groups);
+        }, groups, configuration);
     }
 
     @Override
     public void onStartup(Container container) {
         // Load templates
         for (String templateName : List.of(configuration.getString("conductor.templates").orElseThrow().split(","))) {
-            logger.info("Loading conductor template from:"+templateName);
+            logger.info("Loading conductor template from:" + templateName);
             try {
                 URI templateUri = URI.create(templateName);
 
                 ResourceDocument templates = new ResourceDocument(Json.createReader(templateUri.toURL().openStream()).readObject());
-
-                templates.split().forEach(rd -> addTemplate(new GroupTemplate(rd)));
-
-                sro.getLinkByRel("conductorevents").ifPresent(link ->
-                {
-                    reactiveStreams.publish(sro.serviceIdentifier(), link, new ConductorPublisher());
-                });
+                templates.getResources().ifPresent(ros -> ros.getResources().forEach(ro -> addTemplate(new GroupTemplate(ro))));
+                templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
             } catch (IllegalArgumentException | IOException e) {
                 // Just load from classpath
                 ResourceDocument templates = new ResourceDocument(Json.createReader(getClass().getResourceAsStream(templateName)).readObject());
-
-                templates.split().forEach(rd -> addTemplate(new GroupTemplate(rd)));
-
-                sro.getLinkByRel("conductorevents").ifPresent(link ->
-                {
-                    reactiveStreams.publish(sro.serviceIdentifier(), link, new ConductorPublisher());
-                });
+                templates.getResources().ifPresent(ros -> ros.getResources().forEach(ro -> addTemplate(new GroupTemplate(ro))));
+                templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
             }
         }
+
+        sro.getLinkByRel("conductorevents").ifPresent(link ->
+        {
+            reactiveStreams.publish(sro.serviceIdentifier(), link, new ConductorPublisher());
+        });
 
         registry.addRegistryListener(new ConductorRegistryListener());
         System.out.println("Added conductor registry listener");
@@ -185,7 +181,7 @@ public class ConductorService
     private class ConductorPublisher
             implements ReactiveEventStreams.Publisher<ConductorChange> {
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<ConductorChange> subscriber, Map<String, String> parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<ConductorChange> subscriber, JsonObject parameters) {
 
         }
     }

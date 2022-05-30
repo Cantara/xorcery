@@ -14,8 +14,10 @@ import java.util.stream.Stream;
 public record ResourceDocument(JsonObject json)
         implements JsonElement {
 
-    public static class Builder {
-        JsonObjectBuilder builder = Json.createObjectBuilder();
+    public record Builder(JsonObjectBuilder builder) {
+        public Builder() {
+            this(Json.createObjectBuilder());
+        }
 
         public Builder data(ResourceObject.Builder value) {
             return data(value.build());
@@ -90,12 +92,6 @@ public record ResourceDocument(JsonObject json)
 
     }
 
-    public static Builder from(ResourceDocument resourceDocument) {
-        Builder b = new Builder();
-        b.builder = Json.createObjectBuilder(resourceDocument.object());
-        return b;
-    }
-
     public boolean isCollection() {
         return object().get("data") instanceof JsonArray;
     }
@@ -147,7 +143,7 @@ public record ResourceDocument(JsonObject json)
     /**
      * If this ResourceDocument is a collection of ResourceObjects, then split into a set of ResourceDocuments that are
      * single-resource. Referenced included ResourceObjects are included in the split documents, and duplicated if necessary.
-     *
+     * <p>
      * If this ResourceDocument is a single ResourceObject, then just return it.
      *
      * @return

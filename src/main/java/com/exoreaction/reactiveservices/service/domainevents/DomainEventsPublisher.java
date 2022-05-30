@@ -21,6 +21,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -101,8 +102,8 @@ public class DomainEventsPublisher
         disruptor.shutdown();
     }
 
-    public void subscribe(ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>> subscriber, Map<String, String> parameters) {
-
+    @Override
+    public void subscribe(ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>> subscriber, JsonObject parameters) {
         final AtomicReference<EventSink<Event<EventWithResult<DomainEvents, Metadata>>>> handler = new AtomicReference<>();
         handler.set(subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
             @Override

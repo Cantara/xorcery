@@ -149,18 +149,12 @@ public class RegistryService
 
     @Override
     public void addRegistryListener(RegistryListener listener) {
-        registration.result().whenComplete((registry, throwable) ->
-        {
-            disruptor.getRingBuffer().publishEvent((e, seq, l) ->
-            {
-                e.event = new AddedListener(l);
-            }, listener);
-        });
+        applyChange(new AddedListener(listener));
     }
 
     @Override
     public void addServer(ServerResourceDocument server) {
-        publish(new AddedServer(server.resourceDocument().object()));
+        applyChange(new AddedServer(server.resourceDocument().object()));
     }
 
     @Override
@@ -169,18 +163,20 @@ public class RegistryService
         {
             if (rd.resourceDocument().getLinks().getSelf()
                     .map(s -> s.getHref().equals(serverSelfUri)).orElse(false)) {
-                publish(new RemovedServer(rd.resourceDocument().json()));
+                applyChange(new RemovedServer(rd.resourceDocument().json()));
             }
         });
     }
 
     private void publish(RegistryChange registryChange) {
 
-        for (SubscriberEventSink<RegistryChange> subscriber : subscribers) {
-            subscriber.sink().publishEvent((event, seq, rc) ->
-            {
-                event.event = rc;
-            }, registryChange);
+        if (!(registryChange instanceof AddedListener)) {
+            for (SubscriberEventSink<RegistryChange> subscriber : subscribers) {
+                subscriber.sink().publishEvent((event, seq, rc) ->
+                {
+                    event.event = rc;
+                }, registryChange);
+            }
         }
     }
 
@@ -197,6 +193,16 @@ public class RegistryService
                 .flatMap(r -> r.getResources().stream())
                 .filter(ro -> ro.getResourceObjectIdentifier().equals(serviceIdentifier.resourceObjectIdentifier()))
                 .findFirst().map(ServiceResourceObject::new);
+    }
+
+    private void applyChange(RegistryChange change) {
+        registration.result().whenComplete((registry, throwable) ->
+        {
+            disruptor.getRingBuffer().publishEvent((e, seq, l) ->
+            {
+                e.event = change;
+            }, change);
+        });
     }
 
     private void handleChange(RegistryChange event) {
@@ -235,12 +241,15 @@ public class RegistryService
             listeners.add(registryListener);
             registryListener.snapshot(servers);
         }
+
+        // Publish event downstream
+        publish(event);
     }
 
     private class RegistryPublisher
             implements ReactiveEventStreams.Publisher<RegistryChange> {
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<RegistryChange> subscriber, Map<String, String> parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<RegistryChange> subscriber, JsonObject parameters) {
             AtomicReference<SubscriberEventSink<RegistryChange>> eventSink = new AtomicReference<>();
 
             eventSink.set(new SubscriberEventSink<>(subscriber, subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
@@ -292,13 +301,22 @@ public class RegistryService
         private CompletionStage<ServerResourceDocument> subscribeMaster(ServerResourceDocument registry) {
 
             return registry.getServiceByType("registry")
-                    .map(sro -> sro.getLinkByRel("registryevents").map(link ->
-                    {
-                        System.out.println("Subscribe to upstream registry");
-                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Collections.emptyMap());
-                        return CompletableFuture.completedStage(registry);
-                    }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry"))))
-                    .orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
+                    .map(sro ->
+                            {
+                                if (sro.serviceIdentifier().equals(serviceIdentifier)) {
+                                    // Master is localhost, no need to subscribe
+                                    return CompletableFuture.completedStage(registry);
+                                } else {
+
+                                    return sro.getLinkByRel("registryevents").map(link ->
+                                    {
+                                        System.out.println("Subscribe to upstream registry");
+                                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Optional.of(Json.createObjectBuilder().build()));
+                                        return CompletableFuture.completedStage(registry);
+                                    }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry")));
+                                }
+                            }
+                    ).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
         }
 
         private <U> CompletionStage<ResourceDocument> submitServer(ServerResourceDocument registry) {
@@ -364,8 +382,7 @@ public class RegistryService
     }
 
     private record AddedListener(RegistryListener listener)
-            implements RegistryChange
-    {
+            implements RegistryChange {
         @Override
         public JsonValue json() {
             return null;

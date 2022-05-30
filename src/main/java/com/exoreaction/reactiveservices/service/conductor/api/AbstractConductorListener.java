@@ -5,6 +5,8 @@ import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
 import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import jakarta.json.JsonObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -19,57 +21,48 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class AbstractConductorListener
         implements ConductorListener {
     protected final ServiceIdentifier serviceIdentifier;
+    private Registry registry;
     private final String rel;
     private final Map<String, List<Link>> groupServiceConnections = new ConcurrentHashMap<>();
     private final Marker marker;
     private final Logger logger = LogManager.getLogger(getClass());
 
-    public AbstractConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
+    public AbstractConductorListener(ServiceIdentifier serviceIdentifier, Registry registry, String rel) {
         this.serviceIdentifier = serviceIdentifier;
         this.marker = MarkerManager.getMarker(serviceIdentifier.toString());
+        this.registry = registry;
         this.rel = rel;
     }
 
-    public abstract void connect(ServiceResourceObject sro, Link link, Optional<ServiceAttributes> attributes, Optional<ServiceAttributes> selfAttributes);
+    public abstract void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceParameters, Optional<JsonObject> consumerParameters);
 
     @Override
     public void addedGroup(Group group) {
-        // Does the added group contain this service?
-        if (group.contains(serviceIdentifier)) {
-            // Find publisher to connect to
-            group.servicesByLinkRel(rel, (sro, attributes) ->
-            {
-                Optional<ServiceAttributes> selfAttributes = group.serviceAttributes(serviceIdentifier);
-                sro.getLinkByRel(rel).ifPresent(link ->
-                {
-                    groupServiceConnections.computeIfAbsent(group.group().getId(), id -> new ArrayList<>())
-                            .add(link);
-                    connect(sro, link, attributes, selfAttributes);
-                    logger.info(marker, "Connect {} to {}", serviceIdentifier, link.getHref());
-                });
-            });
-        }
+        updatedGroup(group);
     }
 
     @Override
     public void updatedGroup(Group group) {
-        // Does the updated group contain this service?
-        if (group.contains(serviceIdentifier)) {
+        if (group.getConsumers().stream().anyMatch(serviceIdentifier::equals)) {
             // Find publisher to connect to
-            group.servicesByLinkRel(rel, (sro, attributes) ->
-            {
-                Optional<ServiceAttributes> selfAttributes = group.serviceAttributes(serviceIdentifier);
-                sro.getLinkByRel(rel).ifPresent(link ->
-                {
-                    // Check against existing connections
-                    List<Link> current = groupServiceConnections.computeIfAbsent(group.group().getId(), id -> new ArrayList<>());
-                    if (!current.contains(link)) {
-                        current.add(link);
-                        connect(sro, link, attributes, selfAttributes);
-                        logger.info(marker, "Connect {} to {}", serviceIdentifier, link.getHref());
-                    }
-                });
-            });
+            group.getSources()
+                    .stream()
+                    .map(registry::getService)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .forEach(sro ->
+                    {
+                        sro.getLinkByRel(rel).ifPresent(link ->
+                        {
+                            List<Link> current = groupServiceConnections.computeIfAbsent(group.resourceObject().getId(), id -> new ArrayList<>());
+                            if (!current.contains(link))
+                            {
+                                current.add(link);
+                                connect(sro, link, group.getSourceParameters(), group.getConsumerParameters());
+                                logger.info(marker, "Connect {} to {}", serviceIdentifier, link.getHref());
+                            }
+                        });
+                    });
         }
     }
 }

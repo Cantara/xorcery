@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.ext.MessageBodyReader;
@@ -46,7 +47,7 @@ public class PublisherWebSocketEndpoint<T>
     private Semaphore semaphore = new Semaphore(0);
     private String webSocketPath;
     private ReactiveEventStreams.Publisher<T> publisher;
-    private Map<String, String> parameters;
+    private JsonObject parameters;
     private MessageBodyWriter<T> messageBodyWriter;
     private MessageBodyReader<?> messageBodyReader;
     private ReactiveEventStreams.Subscription subscription;
@@ -58,7 +59,7 @@ public class PublisherWebSocketEndpoint<T>
     private Disruptor<Event<T>> disruptor;
 
     public PublisherWebSocketEndpoint(String webSocketPath, ReactiveEventStreams.Publisher<T> publisher,
-                                      Map<String, String> parameters,
+                                      JsonObject parameters,
                                       MessageBodyWriter<T> messageBodyWriter,
                                       MessageBodyReader<?> messageBodyReader,
                                       Type resultType,

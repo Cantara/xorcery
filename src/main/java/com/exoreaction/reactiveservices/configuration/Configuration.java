@@ -24,6 +24,17 @@ public record Configuration(JsonObject config) {
             this(Json.createObjectBuilder());
         }
 
+        public Builder add(String name, JsonValue value)
+        {
+            builder.add(name, value);
+            return this;
+        }
+
+        public Builder add(String name, String value)
+        {
+            return add(name, Json.createValue(value));
+        }
+
         public Builder addYaml(InputStream yamlStream) throws IOException {
             try {
                 JsonObject current = builder.build();

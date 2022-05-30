@@ -5,6 +5,8 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 
+import java.util.Objects;
+
 import static jakarta.json.JsonValue.EMPTY_JSON_OBJECT;
 import static java.util.Optional.ofNullable;
 
@@ -15,11 +17,10 @@ import static java.util.Optional.ofNullable;
 
 public record ResourceObject(JsonObject json)
         implements JsonElement {
-    public static class Builder {
-        private JsonObjectBuilder builder;
+    public record Builder(JsonObjectBuilder builder) {
 
         public Builder(String type, String id) {
-            builder = Json.createObjectBuilder();
+            this(Json.createObjectBuilder());
             builder.add("id", id)
                     .add("type", type);
         }
@@ -29,8 +30,12 @@ public record ResourceObject(JsonObject json)
         }
 
         public Builder(String type) {
-            builder = Json.createObjectBuilder();
+            this(Json.createObjectBuilder());
             builder.add("type", type);
+        }
+
+        public Builder(ResourceObject resourceObject) {
+            this(Json.createObjectBuilder(resourceObject.json()));
         }
 
         public Builder attributes(Attributes attributes) {
@@ -102,8 +107,16 @@ public record ResourceObject(JsonObject json)
         return new Meta(ofNullable(object().getJsonObject("meta")).orElse(EMPTY_JSON_OBJECT));
     }
 
-    public boolean isSameResourceIdentifier(ResourceObject resourceObject)
-    {
-        return getType().equals(resourceObject.getType()) && getId().equals(resourceObject.getId());
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ResourceObject that = (ResourceObject) o;
+        return getType().equals(that.getType()) && getId().equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(json);
     }
 }

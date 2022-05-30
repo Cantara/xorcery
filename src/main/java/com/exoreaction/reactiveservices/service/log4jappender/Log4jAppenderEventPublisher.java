@@ -12,6 +12,7 @@ import com.lmax.disruptor.EventSink;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import jakarta.json.JsonObject;
 import jakarta.servlet.annotation.WebListener;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
@@ -79,7 +80,7 @@ public class Log4jAppenderEventPublisher
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<LogEvent> subscriber, Map<String, String> parameters) {
+    public void subscribe(ReactiveEventStreams.Subscriber<LogEvent> subscriber, JsonObject parameters) {
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
         DisruptorAppender appender = lc.getConfiguration().getAppender("Disruptor");
 

@@ -17,26 +17,23 @@ import java.io.StringReader;
  * @since 12/04/2022
  */
 
-@Path( "api/conductor/groups" )
-public class GroupsResource
-{
+@Path("api/conductor/groups")
+public class GroupsResource {
     private Conductor conductor;
 
     @Inject
-    public GroupsResource(Conductor conductor )
-    {
+    public GroupsResource(Conductor conductor) {
         this.conductor = conductor;
     }
 
     @GET
-    @Produces( MediaTypes.JSON_API_TEXT_HTML )
-    public ResourceDocument get()
-    {
+    @Produces(MediaTypes.JSON_API_TEXT_HTML)
+    public ResourceDocument get() {
         return new ResourceDocument.Builder()
-            .data( conductor.getGroups().getGroups().stream()
-                          .map(Group::group)
-                          .collect( ResourceObjects.toResourceObjects() ) )
-            .build();
+                .data(conductor.getGroups().getGroups().stream()
+                        .map(Group::resourceObject)
+                        .collect(ResourceObjects.toResourceObjects()))
+                .build();
     }
 
 /*

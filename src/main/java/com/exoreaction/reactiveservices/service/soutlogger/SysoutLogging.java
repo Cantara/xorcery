@@ -16,6 +16,7 @@ import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEven
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.MultiSubscriber;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.SubscriberProxy;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.RingBuffer;
@@ -23,6 +24,7 @@ import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.core.LogEvent;
 import org.glassfish.jersey.server.spi.Container;
@@ -63,15 +65,18 @@ public class SysoutLogging
 
     private ReactiveStreams reactiveStreams;
     private Conductor conductor;
+    private Registry registry;
     private Configuration configuration;
     private MultiSubscriber<LogEvent> multiSubscriber;
 
     @Inject
     public SysoutLogging(ReactiveStreams reactiveStreams, Conductor conductor,
+                         Registry registry,
                          Configuration configuration, MetricRegistry metricRegistry,
                          @Named(SERVICE_TYPE) ServiceResourceObject serviceResourceObject) {
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
+        this.registry = registry;
         this.configuration = configuration;
         meter = metricRegistry.meter("logmeter");
         this.serviceResourceObject = serviceResourceObject;
@@ -79,7 +84,7 @@ public class SysoutLogging
 
     @Override
     public void onStartup(Container container) {
-        conductor.addConductorListener(new LoggingConductorListener(serviceResourceObject.serviceIdentifier(), "logevents"));
+        conductor.addConductorListener(new LoggingConductorListener());
 
         Disruptor<Event<LogEvent>> disruptor = new Disruptor<>(Event::new, configuration.getInteger("sysoutlogger.size").orElse(4096), new NamedThreadFactory("SysoutLogger-"));
         LogEventSubscriber subscriber = new LogEventSubscriber(disruptor.getRingBuffer());
@@ -97,14 +102,6 @@ public class SysoutLogging
     @Override
     public void onShutdown(Container container) {
 
-    }
-
-    @NotNull
-    private Consumer<Link> connect(Optional<ServiceAttributes> attributes) {
-        return link ->
-        {
-            reactiveStreams.subscribe(serviceResourceObject.serviceIdentifier(), link, new LogSubscriberProxy(multiSubscriber), attributes.map(ServiceAttributes::toMap).orElse(Collections.emptyMap()));
-        };
     }
 
     private final static class LogSubscriberProxy
@@ -141,7 +138,7 @@ public class SysoutLogging
 
         @Override
         public void onEvent(Event<LogEvent> event, long sequence, boolean endOfBatch) throws Exception {
-            System.out.println("Log:"+event.event.toString()+":"+event.metadata);
+            System.out.println("Log:" + event.event.toString() + ":" + event.metadata);
             meter.mark();
             if (endOfBatch) {
                 subscription.request(bs);
@@ -151,12 +148,12 @@ public class SysoutLogging
 
     private class LoggingConductorListener extends AbstractConductorListener {
 
-        public LoggingConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
-            super(serviceIdentifier, rel);
+        public LoggingConductorListener() {
+            super(serviceResourceObject.serviceIdentifier(), registry, "logevents");
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<ServiceAttributes> attributes, Optional<ServiceAttributes> selfAttributes) {
-            reactiveStreams.subscribe(serviceIdentifier, link, new LogSubscriberProxy(multiSubscriber), attributes.map(ServiceAttributes::toMap).orElse(Collections.emptyMap()));
+        public void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceAttributes, Optional<JsonObject> consumerAttributes) {
+            reactiveStreams.subscribe(serviceIdentifier, link, new LogSubscriberProxy(multiSubscriber), sourceAttributes);
         }
     }
 }

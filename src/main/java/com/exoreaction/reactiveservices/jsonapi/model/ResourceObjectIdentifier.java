@@ -15,11 +15,10 @@ import static java.util.Optional.ofNullable;
 
 public record ResourceObjectIdentifier(JsonObject json)
         implements JsonElement {
-    public static class Builder {
-        private JsonObjectBuilder builder;
+    public record Builder(JsonObjectBuilder builder) {
 
         public Builder(String type, String id) {
-            builder = Json.createObjectBuilder();
+            this(Json.createObjectBuilder());
             builder.add("type", type)
                     .add("id", id);
         }

@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.service.handlebars;
 
 
-import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.io.FileTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
@@ -29,7 +28,7 @@ public class HandlebarsFeature
 
     @Override
     protected void configure() {
-        File file = new File(getClass().getResource("/templates/sandbox/resourcedocument.html").getFile())
+        File file = new File(getClass().getResource("/templates/jsonapi/resourcedocument.html").getFile())
                 .getParentFile().getParentFile();
 
         TemplateLoader templateLoader = new FileTemplateLoader(file, ".html");

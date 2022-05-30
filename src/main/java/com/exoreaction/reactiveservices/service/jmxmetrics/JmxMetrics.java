@@ -15,12 +15,14 @@ import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 import jakarta.ws.rs.client.Client;
@@ -75,14 +77,18 @@ public class JmxMetrics
     private ServiceResourceObject sro;
     private ReactiveStreams reactiveStreams;
     private Conductor conductor;
+    private Registry registry;
     private JsonApiClient client;
 
     @Inject
     public JmxMetrics(@Named(SERVICE_TYPE) ServiceResourceObject sro,
-                      ReactiveStreams reactiveStreams, Conductor conductor) {
+                      ReactiveStreams reactiveStreams,
+                      Conductor conductor,
+                      Registry registry) {
         this.sro = sro;
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
+        this.registry = registry;
         ClientConfig config = new ClientConfig();
         config.register(new JsonApiMessageBodyReader());
         Client client = ClientBuilder.newBuilder().withConfig(config).build();
@@ -135,9 +141,8 @@ public class JmxMetrics
     }
 
     private void pollMetrics(Link metricevents, String serverId, Collection<String> metricNames) {
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put("metric_names", String.join(",", metricNames));
-        reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), parameters);
+        JsonObject parameters = Json.createObjectBuilder().add("metric_names", String.join(",", metricNames)).build();
+        reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), Optional.of(parameters));
     }
 
     private class MetricEventSubscriber
@@ -184,7 +189,7 @@ public class JmxMetrics
             disruptor.shutdown();
 
             try {
-                Set<ObjectName> mbeanNames = managementServer.queryNames(ObjectName.getInstance("reactive:server="+serverId+",*"), null);
+                Set<ObjectName> mbeanNames = managementServer.queryNames(ObjectName.getInstance("reactive:server=" + serverId + ",*"), null);
 
                 for (ObjectName mbeanName : mbeanNames) {
                     managementServer.unregisterMBean(mbeanName);
@@ -198,10 +203,10 @@ public class JmxMetrics
     private class JmxServersConductorListener extends AbstractConductorListener {
 
         public JmxServersConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
-            super(serviceIdentifier, rel);
+            super(sro.serviceIdentifier(), registry, "metrics");
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<ServiceAttributes> attributes, Optional<ServiceAttributes> selfAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceAttributes, Optional<JsonObject> consumerAttributes) {
             client.get(link)
                     .whenComplete((rd, throwable) ->
                     {

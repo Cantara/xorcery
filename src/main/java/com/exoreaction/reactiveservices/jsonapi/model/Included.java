@@ -18,9 +18,10 @@ import java.util.function.Consumer;
 
 public record Included(JsonArray json)
         implements JsonElement, Consumer<Included.Builder> {
-    public static class Builder {
-        private Set<String> included = new HashSet<>();
-        private JsonArrayBuilder builder = Json.createArrayBuilder();
+    public record Builder(JsonArrayBuilder builder, Set<String> included) {
+        public Builder() {
+            this(Json.createArrayBuilder(), new HashSet<>());
+        }
 
         public Builder include(ResourceObject resourceObject) {
             String resourceId = resourceObject.getId() + ":" + resourceObject.getType();

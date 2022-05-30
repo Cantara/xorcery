@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.service.conductor.resources.api;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
 import com.exoreaction.reactiveservices.service.conductor.ConductorService;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
@@ -34,7 +35,7 @@ public class TemplatesResource
     {
         return new ResourceDocument.Builder()
             .data( conductor.getGroupTemplates().getTemplates().stream()
-                          .map(GroupTemplate::template)
+                          .map(GroupTemplate::resourceObject)
                           .collect( ResourceObjects.toResourceObjects() ) )
             .build();
     }
@@ -43,7 +44,7 @@ public class TemplatesResource
     @Consumes( MediaTypes.APPLICATION_JSON_API )
     public void add( String resourceObject )
     {
-        conductor.getGroupTemplates().addTemplate(new GroupTemplate(new ResourceDocument( Json.createReader( new StringReader( resourceObject ) ).readObject() ) ));
+        conductor.getGroupTemplates().addTemplate(new GroupTemplate(new ResourceObject( Json.createReader( new StringReader( resourceObject ) ).readObject() ) ));
     }
 
 /*

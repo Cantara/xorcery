@@ -2,6 +2,9 @@ package com.exoreaction.reactiveservices.service.reactivestreams.resources.webso
 
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
@@ -9,6 +12,7 @@ import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -21,14 +25,14 @@ public class PublisherWebSocketServlet<T>
         extends JettyWebSocketServlet {
     private String path;
     private ReactiveEventStreams.Publisher<T> publisher;
-    private MessageBodyWriter<Object> messageBodyWriter;
+    private MessageBodyWriter<T> messageBodyWriter;
     private MessageBodyReader<Object> messageBodyReader;
     private Type resultType;
     private ObjectMapper objectMapper;
 
     public PublisherWebSocketServlet(String path,
                                      ReactiveEventStreams.Publisher<T> publisher,
-                                     MessageBodyWriter<Object> messageBodyWriter,
+                                     MessageBodyWriter<T> messageBodyWriter,
                                      MessageBodyReader<Object> messageBodyReader,
                                      Type resultType,
                                      ObjectMapper objectMapper) {
@@ -48,11 +52,8 @@ public class PublisherWebSocketServlet<T>
 
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
         {
-            Map<String, String> singleValueParameters = jettyServerUpgradeRequest
-                    .getParameterMap().entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().stream().findFirst().orElse(null)));
-
-            return new PublisherWebSocketEndpoint(jettyServerUpgradeRequest.getRequestPath(), publisher, singleValueParameters, messageBodyWriter, messageBodyReader, resultType, objectMapper);
+            JsonObject parameters = Json.createObjectBuilder(jettyServerUpgradeRequest.getParameterMap()).build();
+            return new PublisherWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), publisher, parameters, messageBodyWriter, messageBodyReader, resultType, objectMapper);
         });
     }
 }

@@ -4,6 +4,7 @@ import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams.Publisher;
@@ -17,6 +18,8 @@ import com.lmax.disruptor.EventSink;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
@@ -42,8 +45,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.*;
 
 @Singleton
@@ -152,7 +157,7 @@ public class ReactiveStreamsService
     public <T> void publish(ServiceIdentifier selfServiceIdentifier, Link websocketLink, Publisher<T> publisher) {
         publishers.put(websocketLink.getHref(), publisher);
 
-        MessageBodyWriter<Object> writer = null;
+        MessageBodyWriter<T> writer = null;
         MessageBodyReader<Object> reader = null;
         Type resultType = null;
 
@@ -164,7 +169,7 @@ public class ReactiveStreamsService
                     ParameterizedType eventWithResultType = ((ParameterizedType) publisherEventType);
                     Type eventType = eventWithResultType.getActualTypeArguments()[0];
                     resultType = eventWithResultType.getActualTypeArguments()[1];
-                    writer = (MessageBodyWriter<Object>) messageBodyWorkers.getMessageBodyWriter((Class<?>) eventType, eventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                    writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) eventType, eventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
                     if (writer == null) {
                         throw new IllegalStateException("Could not find MessageBodyWriter for " + eventType);
                     }
@@ -175,7 +180,7 @@ public class ReactiveStreamsService
                     }
 
                 } else {
-                    writer = (MessageBodyWriter<Object>) messageBodyWorkers.getMessageBodyWriter((Class<?>) publisherEventType, publisherEventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                    writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) publisherEventType, publisherEventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
                     if (writer == null) {
                         throw new IllegalStateException("Could not find MessageBodyWriter for " + publisherEventType);
                     }
@@ -197,7 +202,7 @@ public class ReactiveStreamsService
     public <T> CompletionStage<Void> subscribe(ServiceIdentifier selfServiceIdentifier,
                                                Link websocketLink,
                                                ReactiveEventStreams.Subscriber<T> subscriber,
-                                               Map<String, String> parameters) {
+                                               Optional<JsonObject> parameters) {
 
         CompletableFuture<Void> result = new CompletableFuture<>();
 
@@ -212,7 +217,7 @@ public class ReactiveStreamsService
 
         if (allowLocal && publisher != null) {
             // Local
-            publisher.subscribe(subscriber, parameters);
+            publisher.subscribe(subscriber, parameters.orElseGet(() -> Json.createObjectBuilder().build()));
             return result;
         } else {
 
@@ -273,7 +278,7 @@ public class ReactiveStreamsService
                                          ByteBufferPool byteBufferPool, MessageBodyReader<Object> reader,
                                          MessageBodyWriter<Object> writer, ServiceIdentifier selfServiceIdentifier,
                                          Link websocketLink,
-                                         Map<String, String> parameters,
+                                         Optional<JsonObject> parameters,
                                          ReactiveEventStreams.Subscriber<T> subscriber,
                                          Type eventType, CompletableFuture<Void> result
     ) {
@@ -291,7 +296,7 @@ public class ReactiveStreamsService
                 try {
                     Marker marker = MarkerManager.getMarker(selfServiceIdentifier.toString());
 
-                    URI websocketEndpointUri = URI.create(websocketLink.getHrefAsUriTemplate().createURI(parameters));
+                    URI websocketEndpointUri = URI.create(websocketLink.getHrefAsUriTemplate().createURI(parameters.map(Attributes::new).map(Attributes::toMap).orElseGet(Collections::emptyMap)));
                     webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber, reader, writer, objectMapper, eventType, marker,
                                     byteBufferPool, this, websocketEndpointUri.toASCIIString()), websocketEndpointUri)
                             .whenComplete(this::complete);
@@ -375,7 +380,7 @@ public class ReactiveStreamsService
         }
 
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<T> subscriber, Map<String, String> parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<T> subscriber, JsonObject parameters) {
             publisher.subscribe(new SubscriberTracker<>(subscriber), parameters);
         }
     }
