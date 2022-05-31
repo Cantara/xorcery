@@ -1,28 +1,25 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Objects;
-
-import static jakarta.json.JsonValue.EMPTY_JSON_OBJECT;
-import static java.util.Optional.ofNullable;
 
 /**
  * @author rickardoberg
  * @since 27/11/2018
  */
 
-public record ResourceObject(JsonObject json)
+public record ResourceObject(ObjectNode json)
         implements JsonElement {
-    public record Builder(JsonObjectBuilder builder) {
+
+    public record Builder(ObjectNode builder) {
 
         public Builder(String type, String id) {
-            this(Json.createObjectBuilder());
-            builder.add("id", id)
-                    .add("type", type);
+            this(JsonNodeFactory.instance.objectNode());
+            builder.<ObjectNode>set("id", builder.textNode(id))
+                    .set("type", builder.textNode(type));
         }
 
         public Builder(Enum<?> type, String id) {
@@ -30,18 +27,18 @@ public record ResourceObject(JsonObject json)
         }
 
         public Builder(String type) {
-            this(Json.createObjectBuilder());
-            builder.add("type", type);
+            this(JsonNodeFactory.instance.objectNode());
+            builder.set("type", builder.textNode(type));
         }
 
         public Builder(ResourceObject resourceObject) {
-            this(Json.createObjectBuilder(resourceObject.json()));
+            this(resourceObject.json().deepCopy());
         }
 
         public Builder attributes(Attributes attributes) {
-            JsonObject object = attributes.object();
+            ObjectNode object = attributes.object();
             if (!object.isEmpty())
-                builder.add("attributes", object);
+                builder.set("attributes", object);
             return this;
         }
 
@@ -50,9 +47,9 @@ public record ResourceObject(JsonObject json)
         }
 
         public Builder relationships(Relationships relationships) {
-            JsonObject object = relationships.object();
+            ObjectNode object = relationships.object();
             if (!object.isEmpty())
-                builder.add("relationships", object);
+                builder.set("relationships", object);
             return this;
         }
 
@@ -61,7 +58,7 @@ public record ResourceObject(JsonObject json)
         }
 
         public Builder links(Links links) {
-            builder.add("links", links.json());
+            builder.set("links", links.json());
             return this;
         }
 
@@ -70,21 +67,21 @@ public record ResourceObject(JsonObject json)
         }
 
         public Builder meta(Meta meta) {
-            builder.add("meta", meta.json());
+            builder.set("meta", meta.json());
             return this;
         }
 
         public ResourceObject build() {
-            return new ResourceObject(builder.build());
+            return new ResourceObject(builder);
         }
     }
 
     public String getId() {
-        return object().getString("id", null);
+        return object().path("id").textValue();
     }
 
     public String getType() {
-        return object().getString("type");
+        return object().path("type").textValue();
     }
 
     public ResourceObjectIdentifier getResourceObjectIdentifier() {
@@ -92,19 +89,23 @@ public record ResourceObject(JsonObject json)
     }
 
     public Attributes getAttributes() {
-        return new Attributes(ofNullable(object().getJsonObject("attributes")).orElse(EMPTY_JSON_OBJECT));
+        return new Attributes(object().path("attributes") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     public Relationships getRelationships() {
-        return new Relationships(ofNullable(object().getJsonObject("relationships")).orElse(EMPTY_JSON_OBJECT));
+        return new Relationships(object().path("relationships") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     public Links getLinks() {
-        return new Links(ofNullable(object().getJsonObject("links")).orElse(EMPTY_JSON_OBJECT));
+        return new Links(object().path("links") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     public Meta getMeta() {
-        return new Meta(ofNullable(object().getJsonObject("meta")).orElse(EMPTY_JSON_OBJECT));
+        return new Meta(object().path("meta") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     @Override

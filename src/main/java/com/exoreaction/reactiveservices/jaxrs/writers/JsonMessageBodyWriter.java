@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.jaxrs.writers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsonp.JSONPModule;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Produces;

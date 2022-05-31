@@ -8,15 +8,18 @@ import com.exoreaction.reactiveservices.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.reactiveservices.jsonapi.client.JsonApiClient;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
 import com.exoreaction.reactiveservices.rest.RestProcess;
 import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.SubscriberEventSink;
 import com.exoreaction.reactiveservices.service.registry.api.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.RingBuffer;
@@ -24,7 +27,6 @@ import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.*;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
@@ -34,7 +36,8 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -75,7 +78,7 @@ public class RegistryService
         @Override
         protected void configure() {
             ClientConfig config = new ClientConfig();
-            config.register(new JsonApiMessageBodyReader());
+            config.register(new JsonApiMessageBodyReader(new ObjectMapper()));
             Client client = ClientBuilder.newBuilder().withConfig(config).build();
             bind(new JsonApiClient(client));
 
@@ -249,7 +252,7 @@ public class RegistryService
     private class RegistryPublisher
             implements ReactiveEventStreams.Publisher<RegistryChange> {
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<RegistryChange> subscriber, JsonObject parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<RegistryChange> subscriber, ObjectNode parameters) {
             AtomicReference<SubscriberEventSink<RegistryChange>> eventSink = new AtomicReference<>();
 
             eventSink.set(new SubscriberEventSink<>(subscriber, subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
@@ -267,13 +270,18 @@ public class RegistryService
 
             subscribers.add(eventSink.get());
 
-            JsonArrayBuilder builder = Json.createArrayBuilder();
-            servers.stream()
-                    .map(ServerResourceDocument::resourceDocument)
-                    .map(ResourceDocument::json)
-                    .forEach(builder::add);
+            ResourceObjects.Builder resourceObjects = new ResourceObjects.Builder();
+            for (ServerResourceDocument serverResourceDocument : servers) {
+                serverResourceDocument.resourceDocument().getResources().ifPresent(ros ->
+                {
+                    ros.getResources().forEach(resourceObjects::resource);
+                });
+            }
+            ResourceDocument snapshotDocument = new ResourceDocument.Builder()
+                    .data(resourceObjects.build())
+                    .build();
 
-            RegistrySnapshot snapshot = new RegistrySnapshot(builder.build());
+            RegistrySnapshot snapshot = new RegistrySnapshot(snapshotDocument.json());
             eventSink.get().sink().publishEvent((event, seq, rc) ->
             {
                 event.event = rc;
@@ -311,7 +319,7 @@ public class RegistryService
                                     return sro.getLinkByRel("registryevents").map(link ->
                                     {
                                         System.out.println("Subscribe to upstream registry");
-                                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Optional.of(Json.createObjectBuilder().build()));
+                                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Optional.empty());
                                         return CompletableFuture.completedStage(registry);
                                     }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry")));
                                 }
@@ -384,7 +392,7 @@ public class RegistryService
     private record AddedListener(RegistryListener listener)
             implements RegistryChange {
         @Override
-        public JsonValue json() {
+        public ObjectNode json() {
             return null;
         }
     }

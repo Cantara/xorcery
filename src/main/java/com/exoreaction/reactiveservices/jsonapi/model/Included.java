@@ -1,9 +1,9 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonArrayBuilder;
+import com.exoreaction.util.JsonNodes;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import java.util.HashSet;
 import java.util.List;
@@ -16,11 +16,12 @@ import java.util.function.Consumer;
  * @since 27/11/2018
  */
 
-public record Included(JsonArray json)
+public record Included(ArrayNode json)
         implements JsonElement, Consumer<Included.Builder> {
-    public record Builder(JsonArrayBuilder builder, Set<String> included) {
+
+    public record Builder(ArrayNode builder, Set<String> included) {
         public Builder() {
-            this(Json.createArrayBuilder(), new HashSet<>());
+            this(JsonNodeFactory.instance.arrayNode(), new HashSet<>());
         }
 
         public Builder include(ResourceObject resourceObject) {
@@ -88,7 +89,7 @@ public record Included(JsonArray json)
         }
 
         public Included build() {
-            return new Included(builder.build());
+            return new Included(builder);
         }
 
         public boolean hasIncluded(String id, String type) {
@@ -101,7 +102,7 @@ public record Included(JsonArray json)
     }
 
     public List<ResourceObject> getIncluded() {
-        return array().getValuesAs(ResourceObject::new);
+        return JsonNodes.getValuesAs(array(),ResourceObject::new);
     }
 
     public Optional<ResourceObject> findByResourceObjectIdentifier(ResourceObjectIdentifier roi) {

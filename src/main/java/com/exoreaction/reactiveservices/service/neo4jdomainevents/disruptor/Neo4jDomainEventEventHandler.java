@@ -5,21 +5,17 @@ import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.jknack.handlebars.internal.Files;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * @author rickardoberg
@@ -27,7 +23,7 @@ import java.util.stream.Collectors;
  */
 
 public class Neo4jDomainEventEventHandler
-    implements DefaultEventHandler<Event<EventWithResult<JsonArray, Metadata>>>
+    implements DefaultEventHandler<Event<EventWithResult<ArrayNode, Metadata>>>
 {
     private ReactiveEventStreams.Subscription subscription;
     long version = 0;
@@ -43,24 +39,31 @@ public class Neo4jDomainEventEventHandler
     }
 
     @Override
-    public void onEvent(Event<EventWithResult<JsonArray, Metadata>> event, long sequence, boolean endOfBatch ) throws Exception
+    public void onEvent(Event<EventWithResult<ArrayNode, Metadata>> event, long sequence, boolean endOfBatch ) throws Exception
     {
-        JsonArray eventsJson = event.event.event();
+        ArrayNode eventsJson = event.event.event();
 
-        eventsJson.stream().map(JsonObject.class::cast).forEach( jsonObject ->
-        {
-            String type = jsonObject.getString("eventtype");
+        for (JsonNode jsonNode : eventsJson) {
+            ObjectNode objectNode = (ObjectNode)jsonNode;
+            String type = objectNode.path("eventtype").textValue();
 
-            Map<String, Object> parameters = jsonObject.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                    switch (entry.getValue().getValueType()) {
-                        case ARRAY -> null;
-                        case OBJECT -> null;
-                        case STRING -> ((JsonString) entry.getValue()).getString();
-                        case NUMBER -> ((JsonNumber)entry.getValue()).numberValue();
-                        case TRUE -> Boolean.TRUE;
-                        case FALSE -> Boolean.FALSE;
-                        case NULL -> null;
-                    }));
+            Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
+            Map<String, Object> parameters = new HashMap<>(objectNode.size());
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> next = fields.next();
+
+                parameters.put(next.getKey(), switch (next.getValue().getNodeType()) {
+                    case ARRAY -> null;
+                    case OBJECT -> null;
+                    case STRING -> next.getValue().textValue();
+                    case NUMBER -> next.getValue().numberValue();
+                    case BINARY -> null;
+                    case BOOLEAN -> Boolean.TRUE;
+                    case MISSING -> null;
+                    case NULL -> null;
+                    case POJO -> null;
+                });
+            }
 
             try {
                 String statement = Files.read(getClass().getResourceAsStream("/neo4j/"+type+".cyp"), StandardCharsets.UTF_8);
@@ -69,7 +72,7 @@ public class Neo4jDomainEventEventHandler
             } catch (IOException e) {
                 event.event.result().completeExceptionally(e);
             }
-        });
+        }
 
         futures.add(event.event.result());
 

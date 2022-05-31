@@ -1,20 +1,14 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
-import jakarta.json.JsonValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
-
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 
 /**
@@ -22,102 +16,80 @@ import static java.util.stream.Collectors.toMap;
  * @since 27/11/2018
  */
 
-public record Links(JsonObject json)
-    implements JsonElement
-{
-    public record Builder(JsonObjectBuilder builder)
-    {
+public record Links(ObjectNode json)
+        implements JsonElement {
+
+    public record Builder(ObjectNode builder) {
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder link( Consumer<Builder> consumer )
-        {
-            consumer.accept( this );
+        public Builder link(Consumer<Builder> consumer) {
+            consumer.accept(this);
             return this;
         }
 
-        public Builder link( String rel, String href )
-        {
-            builder.add( rel, href );
+        public Builder link(String rel, String href) {
+            builder.set(rel, builder.textNode(href));
             return this;
         }
 
-        public Builder link( String rel, URI href )
-        {
-            return link( rel, href.toASCIIString() );
+        public Builder link(String rel, URI href) {
+            return link(rel, href.toASCIIString());
         }
 
-        public Builder link( Enum<?> rel, URI href )
-        {
-            return link( rel.name(), href );
+        public Builder link(Enum<?> rel, URI href) {
+            return link(rel.name(), href);
         }
 
-        public Builder link( String rel, UriBuilder href )
-        {
-            return link( rel, href.build() );
+        public Builder link(String rel, UriBuilder href) {
+            return link(rel, href.build());
         }
 
-        public Builder link( String rel, String href, Meta meta )
-        {
-            builder.add( rel, Json.createObjectBuilder()
-                                  .add( "href", href )
-                                  .add( "meta", meta.json() )
-                                  .build() );
+        public Builder link(String rel, String href, Meta meta) {
+            builder.set(rel, builder.objectNode()
+                    .<ObjectNode>set("href", builder.textNode(href))
+                    .set("meta", meta.json()));
             return this;
         }
 
-        public Builder link( String rel, URI href, Meta meta )
-        {
-            return link( rel, href.toASCIIString(), meta );
+        public Builder link(String rel, URI href, Meta meta) {
+            return link(rel, href.toASCIIString(), meta);
         }
 
-        public Builder link( String rel, UriBuilder href, Meta meta )
-        {
-            return link( rel, href.build().toASCIIString(), meta );
+        public Builder link(String rel, UriBuilder href, Meta meta) {
+            return link(rel, href.build().toASCIIString(), meta);
         }
 
         @SafeVarargs
-        public final Builder with( Consumer<Builder>... consumers )
-        {
-            for ( Consumer<Builder> consumer : consumers )
-            {
-                consumer.accept( this );
+        public final Builder with(Consumer<Builder>... consumers) {
+            for (Consumer<Builder> consumer : consumers) {
+                consumer.accept(this);
             }
             return this;
         }
 
-        public Links build()
-        {
-            return new Links( builder.build() );
+        public Links build() {
+            return new Links(builder);
         }
     }
 
-    public Optional<Link> getSelf()
-    {
-        return getByRel( "self" );
+    public Optional<Link> getSelf() {
+        return getByRel("self");
     }
 
-    public Optional<Link> getByRel(String name )
-    {
-        return Optional.ofNullable( object().get( name ) ).map( v -> new Link( name, v ) );
+    public Optional<Link> getByRel(String name) {
+        return Optional.ofNullable(object().get(name)).map(v -> new Link(name, v));
     }
 
-    public List<Link> getLinks()
-    {
-        return object()
-            .entrySet()
-            .stream()
-            .map( entry -> new Link( entry.getKey(), entry.getValue() ) )
-            .collect( toList() );
-    }
+    public List<Link> getLinks() {
 
-    public Map<String,Link> getLinkMapNoSelf()
-    {
-        return object()
-            .entrySet()
-            .stream()
-            .filter( ( entry ) -> !entry.getKey().equals( "self" ) )
-            .collect( toMap( Map.Entry::getKey, entry -> new Link( entry.getKey(), (JsonValue) entry.getValue() ) ) );
+        Iterator<Map.Entry<String, JsonNode>> fields = object().fields();
+        List<Link> links = new ArrayList<>(object().size());
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> next = fields.next();
+            links.add(new Link(next.getKey(), next.getValue()));
+        }
+        return links;
     }
 }

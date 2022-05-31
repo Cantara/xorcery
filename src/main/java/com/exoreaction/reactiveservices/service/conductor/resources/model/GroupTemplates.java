@@ -3,7 +3,6 @@ package com.exoreaction.reactiveservices.service.conductor.resources.model;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Relationship;
 import com.exoreaction.reactiveservices.jsonapi.model.Relationships;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import org.apache.logging.log4j.LogManager;

@@ -1,87 +1,76 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
+import com.exoreaction.util.JsonNodes;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
-
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * @author rickardoberg
  * @since 27/11/2018
  */
 
-public record Relationships(JsonObject json)
-    implements JsonElement
-{
-    public record Builder(JsonObjectBuilder builder)
-    {
+public record Relationships(ObjectNode json)
+        implements JsonElement {
+    public record Builder(ObjectNode builder) {
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
         public Builder(Relationships relationships) {
-            this(Json.createObjectBuilder(relationships.object()));
+            this(relationships.object().deepCopy());
         }
 
-        public Builder relationship( Enum name, Relationship relationship )
-        {
-            return relationship( name.name(), relationship );
+        public Builder relationship(Enum<?> name, Relationship relationship) {
+            return relationship(name.name(), relationship);
         }
 
-        public Builder relationship( String name, Relationship relationship )
-        {
-            builder.add( name, relationship.json() );
+        public Builder relationship(String name, Relationship relationship) {
+            builder.set(name, relationship.json());
             return this;
         }
-        public Builder relationship( String name, Relationship.Builder relationship )
-        {
+
+        public Builder relationship(String name, Relationship.Builder relationship) {
             return relationship(name, relationship.build());
         }
 
         @SafeVarargs
-        public final Builder with( Consumer<Builder>... consumers )
-        {
-            for ( Consumer<Builder> consumer : consumers )
-            {
-                consumer.accept( this );
+        public final Builder with(Consumer<Builder>... consumers) {
+            for (Consumer<Builder> consumer : consumers) {
+                consumer.accept(this);
             }
             return this;
         }
 
-        public Relationships build()
-        {
-            return new Relationships( builder.build() );
+        public Relationships build() {
+            return new Relationships(builder);
         }
     }
 
-    public List<Relationship> getRelationshipList()
-    {
-        return object().values().stream().map(JsonObject.class::cast).map( Relationship::new ).collect( toList() );
+    public List<Relationship> getRelationshipList() {
+
+        return JsonNodes.getValuesAs(object(), Relationship::new);
     }
 
-    public Map<String,Relationship> getRelationships()
-    {
-        return object()
-            .entrySet()
-            .stream()
-            .collect( toMap( Map.Entry::getKey, entry -> new Relationship( (JsonObject) entry.getValue() ) ) );
+    public Map<String, Relationship> getRelationships() {
+        Map<String, Relationship> rels = new HashMap<>(object().size());
+        Iterator<Map.Entry<String, JsonNode>> fields = object().fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> next = fields.next();
+            rels.put(next.getKey(), new Relationship((ObjectNode)next.getValue()));
+        }
+        return rels;
     }
 
-    public Optional<Relationship> getRelationship( String name )
-    {
-        return Optional.ofNullable( object().get( name ) ).map( v -> new Relationship( (JsonObject) v ) );
+    public Optional<Relationship> getRelationship(String name) {
+        return Optional.ofNullable(object().get(name)).map(v -> new Relationship((ObjectNode) v));
     }
 
-    public Optional<Relationship> getRelationship( Enum<?> name )
-    {
+    public Optional<Relationship> getRelationship(Enum<?> name) {
         return getRelationship(name.name());
     }
 }

@@ -1,61 +1,56 @@
 package com.exoreaction.reactiveservices.disruptor;
 
-import com.fasterxml.jackson.annotation.*;
-import jakarta.json.Json;
-import jakarta.json.JsonNumber;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
-public record Metadata(JsonObject metadata) {
-    public record Builder(JsonObjectBuilder builder) {
+public record Metadata(ObjectNode metadata) {
+    public record Builder(ObjectNode builder) {
 
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
         public Builder add(String name, String value) {
-            builder.add(name, value);
+            builder.set(name, builder.textNode(value));
             return this;
         }
 
         public Builder add(String name, long value) {
-            builder.add(name, value);
+            builder.set(name, builder.numberNode(value));
             return this;
         }
 
-        public Builder add(String name, JsonObject value) {
-            builder.add(name, value);
+        public Builder add(String name, ObjectNode value) {
+            builder.set(name, value);
             return this;
         }
 
         public Builder add(Metadata metadata) {
-            this.builder.addAll(Json.createObjectBuilder(metadata.metadata));
+            this.builder.setAll(metadata.metadata);
             return this;
         }
 
         public Metadata build() {
-            return new Metadata(builder.build());
+            return new Metadata(builder);
         }
     }
 
     public Optional<String> getString(String name) {
-        return Optional.ofNullable(metadata.getString(name));
+        return Optional.ofNullable(metadata.path(name).textValue());
     }
 
     public Optional<Long> getLong(String name) {
-        return Optional.ofNullable(metadata.getJsonNumber(name)).map(JsonNumber::longValue);
+        return Optional.ofNullable(metadata.get(name)).map(JsonNode::longValue);
     }
 
-    public Optional<JsonObject> getJsonObject(String name) {
-        return Optional.ofNullable(metadata.getJsonObject(name));
+    public Optional<ObjectNode> getObjectNode(String name) {
+        return Optional.ofNullable(metadata.get(name)).map(ObjectNode.class::cast);
     }
 
     public Builder toBuilder() {
-        return new Builder(Json.createObjectBuilder(metadata));
+        return new Builder(metadata);
     }
 }

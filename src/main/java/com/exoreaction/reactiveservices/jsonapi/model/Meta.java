@@ -1,10 +1,9 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
-import jakarta.json.JsonValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.function.Consumer;
 
@@ -13,20 +12,21 @@ import java.util.function.Consumer;
  * @since 27/11/2018
  */
 
-public record Meta(JsonObject json)
+public record Meta(ObjectNode json)
         implements JsonElement {
-    public record Builder(JsonObjectBuilder json) {
+
+    public record Builder(ObjectNode json) {
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder meta(String name, JsonValue value) {
-            json.add(name, value);
+        public Builder meta(String name, JsonNode value) {
+            json.set(name, value);
             return this;
         }
 
         public Builder meta(String name, long value) {
-            json.add(name, value);
+            json.set(name, json.numberNode(value));
             return this;
         }
 
@@ -36,11 +36,11 @@ public record Meta(JsonObject json)
         }
 
         public Meta build() {
-            return new Meta(json.build());
+            return new Meta(json);
         }
     }
 
-    public JsonObject getMeta() {
-        return json().asJsonObject();
+    public ObjectNode getMeta() {
+        return object();
     }
 }

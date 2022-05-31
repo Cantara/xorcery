@@ -5,21 +5,19 @@ import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
-import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -87,22 +85,22 @@ public class SysoutMetrics
     }
 
     private static class MetricEventSubscriber
-            implements ReactiveEventStreams.Subscriber<JsonObject>, EventHandler<Event<JsonObject>> {
+            implements ReactiveEventStreams.Subscriber<ObjectNode>, EventHandler<Event<ObjectNode>> {
         private final ScheduledExecutorService scheduledExecutorService;
         private ReactiveEventStreams.Subscription subscription;
         private final long delay;
 
-        public MetricEventSubscriber(Optional<JsonObject> selfParameters, ScheduledExecutorService scheduledExecutorService) {
+        public MetricEventSubscriber(Optional<ObjectNode> selfParameters, ScheduledExecutorService scheduledExecutorService) {
 
             this.scheduledExecutorService = scheduledExecutorService;
             this.delay = Duration.parse(selfParameters.flatMap(sa -> new Attributes(sa).getOptionalString("delay")).orElse("5S")).toSeconds();
         }
 
         @Override
-        public EventSink<Event<JsonObject>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<ObjectNode>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
             this.subscription = subscription;
 
-            Disruptor<Event<JsonObject>> disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("SysoutMetrics-"));
+            Disruptor<Event<ObjectNode>> disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("SysoutMetrics-"));
             disruptor.handleEventsWith(this);
             disruptor.start();
 
@@ -112,7 +110,7 @@ public class SysoutMetrics
         }
 
         @Override
-        public void onEvent(Event<JsonObject> event, long sequence, boolean endOfBatch) throws Exception {
+        public void onEvent(Event<ObjectNode> event, long sequence, boolean endOfBatch) throws Exception {
             System.out.println("Metric:" + event.event.toString() + ":" + event.metadata);
             scheduledExecutorService.schedule(() -> subscription.request(1), delay, TimeUnit.SECONDS);
         }
@@ -124,7 +122,7 @@ public class SysoutMetrics
             super(sro.serviceIdentifier(), registry, "metricevents");
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceAttributes, Optional<JsonObject> consumerAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
             reactiveStreams.subscribe(serviceIdentifier, link,
                     new MetricEventSubscriber(consumerAttributes, scheduledExecutorService), sourceAttributes);
         }

@@ -6,26 +6,26 @@ import com.exoreaction.reactiveservices.disruptor.DeploymentMetadata;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventSink;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
 public class Metrics
-        implements ContainerLifecycleListener, ReactiveEventStreams.Publisher<JsonObject> {
+        implements ContainerLifecycleListener, ReactiveEventStreams.Publisher<ObjectNode> {
 
     public static final String SERVICE_TYPE = "metrics";
 
@@ -85,8 +85,8 @@ public class Metrics
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<JsonObject> subscriber, JsonObject parameters) {
-        String metricNames = Optional.ofNullable(parameters.getJsonArray("metrics")).map(array -> array.getString(0, "")).orElse("");
+    public void subscribe(ReactiveEventStreams.Subscriber<ObjectNode> subscriber, ObjectNode parameters) {
+        String metricNames = parameters.path("metrics").get(0).asText("");
         Collection<String> metricNamesList = metricNames.isBlank() ? metricRegistry.getNames() : Arrays.asList(metricNames.split(","));
 
         new MetricSubscription(subscriber, metricNamesList, metricRegistry);
@@ -94,12 +94,12 @@ public class Metrics
 
     private class MetricSubscription
             implements ReactiveEventStreams.Subscription {
-        private final CompletableFuture<EventSink<Event<JsonObject>>> eventSink = new CompletableFuture<>();
-        private final ReactiveEventStreams.Subscriber<JsonObject> subscriber;
+        private final CompletableFuture<EventSink<Event<ObjectNode>>> eventSink = new CompletableFuture<>();
+        private final ReactiveEventStreams.Subscriber<ObjectNode> subscriber;
         private Collection<String> metricNames;
         private MetricRegistry metricRegistry;
 
-        public MetricSubscription(ReactiveEventStreams.Subscriber<JsonObject> subscriber, Collection<String> metricNames, MetricRegistry metricRegistry) {
+        public MetricSubscription(ReactiveEventStreams.Subscriber<ObjectNode> subscriber, Collection<String> metricNames, MetricRegistry metricRegistry) {
             this.metricNames = metricNames;
             this.metricRegistry = metricRegistry;
             this.subscriber = subscriber;
@@ -108,26 +108,31 @@ public class Metrics
 
         @Override
         public void request(long n) {
-            JsonObjectBuilder metricsBuilder = Json.createObjectBuilder();
+            ObjectNode metricsBuilder = JsonNodeFactory.instance.objectNode();
             for (String metricName : metricNames) {
                 Metric metric = metricRegistry.getMetrics().get(metricName);
                 try {
-                    if (metric instanceof Gauge) {
-                        Number value = (Number) ((Gauge<?>) metric).getValue();
-                        if (value instanceof Double) {
+                    if (metric instanceof Gauge gauge) {
+                        Number value = (Number) gauge.getValue();
+                        if (value instanceof Double v) {
                             if (Double.isNaN((Double) value))
                                 continue; // Skip these
+
+                            metricsBuilder.set(metricName, metricsBuilder.numberNode(v));
+                        } else if (value instanceof Float v) {
+                            metricsBuilder.set(metricName, metricsBuilder.numberNode(v));
+                        } else if (value instanceof Long v) {
+                            metricsBuilder.set(metricName, metricsBuilder.numberNode(v));
+                        } else if (value instanceof Integer v) {
+                            metricsBuilder.set(metricName, metricsBuilder.numberNode(v));
                         }
-                        metricsBuilder.add(metricName, Json.createValue(value));
-                    } else if (metric instanceof Meter) {
-                        Meter meter = (Meter) metric;
-                        JsonObjectBuilder builder = Json.createObjectBuilder();
-                        builder.add("count", meter.getCount());
-                        builder.add("meanrate", meter.getMeanRate());
-                        metricsBuilder.add(metricName, builder.build());
-                    } else if (metric instanceof Counter) {
-                        Counter counter = (Counter) metric;
-                        metricsBuilder.add(metricName, counter.getCount());
+                    } else if (metric instanceof Meter meter) {
+                        ObjectNode builder = JsonNodeFactory.instance.objectNode();
+                        builder.set("count", builder.numberNode(meter.getCount()));
+                        builder.set("meanrate", builder.numberNode(meter.getMeanRate()));
+                        metricsBuilder.set(metricName, builder);
+                    } else if (metric instanceof Counter counter) {
+                        metricsBuilder.set(metricName, metricsBuilder.numberNode(counter.getCount()));
                     } else {
 //                        System.out.println(metric.getClass());
                     }
@@ -135,7 +140,6 @@ public class Metrics
                     LogManager.getLogger(getClass()).error("Could not serialize metric " + metricName + "with value " + metric.toString(), e);
                 }
             }
-            JsonObject jsonObject = metricsBuilder.build();
 
             try {
                 eventSink.whenComplete((es, t) ->
@@ -144,7 +148,7 @@ public class Metrics
                     {
                         e.metadata = deploymentMetadata.metadata();
                         e.event = metric;
-                    }, jsonObject);
+                    }, metricsBuilder);
                 });
             } catch (Exception e) {
                 throw new RuntimeException(e);

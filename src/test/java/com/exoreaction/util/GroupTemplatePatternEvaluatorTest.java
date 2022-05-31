@@ -5,7 +5,6 @@ import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.GroupTemplatePatternEvaluator;
-import jakarta.json.Json;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -18,7 +17,7 @@ class GroupTemplatePatternEvaluatorTest {
     {
         // Given
         Configuration configuration = new Configuration.Builder()
-                .add("environment", Json.createValue("development"))
+                .add("environment", "development")
                 .build();
         ServiceResourceObject sro = new ServiceResourceObject(new ResourceObject.Builder("logappender", "server1").build());
         Link link = new Link("logevents", "http://localhost/ws/logevents");

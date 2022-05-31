@@ -8,23 +8,23 @@ import com.exoreaction.reactiveservices.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.reactiveservices.jsonapi.client.JsonApiClient;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
-import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonValue;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
@@ -34,7 +34,8 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
-import javax.management.*;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,7 +91,7 @@ public class JmxMetrics
         this.conductor = conductor;
         this.registry = registry;
         ClientConfig config = new ClientConfig();
-        config.register(new JsonApiMessageBodyReader());
+        config.register(new JsonApiMessageBodyReader(new ObjectMapper()));
         Client client = ClientBuilder.newBuilder().withConfig(config).build();
         this.client = new JsonApiClient(client);
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
@@ -122,15 +123,15 @@ public class JmxMetrics
     }
 
     private Map<String, ReactiveEventStreams.Subscription> subscriptions = new ConcurrentHashMap<>();
-    private Map<String, Map<String, AtomicReference<JsonValue>>> polledMetrics = new ConcurrentHashMap<>();
+    private Map<String, Map<String, AtomicReference<JsonNode>>> polledMetrics = new ConcurrentHashMap<>();
 
-    private Supplier<JsonValue> newMetricSupplier(ServiceResourceObject metricsResource, String metricName) {
-        return new Supplier<JsonValue>() {
+    private Supplier<JsonNode> newMetricSupplier(ServiceResourceObject metricsResource, String metricName) {
+        return new Supplier<JsonNode>() {
             @Override
-            public JsonValue get() {
+            public JsonNode get() {
                 String serverId = metricsResource.getServerId();
-                Map<String, AtomicReference<JsonValue>> currentServerMetrics = polledMetrics.computeIfAbsent(serverId, id -> new ConcurrentHashMap<>());
-                AtomicReference<JsonValue> value = currentServerMetrics.get(metricName);
+                Map<String, AtomicReference<JsonNode>> currentServerMetrics = polledMetrics.computeIfAbsent(serverId, id -> new ConcurrentHashMap<>());
+                AtomicReference<JsonNode> value = currentServerMetrics.get(metricName);
                 if (value == null) {
                     currentServerMetrics.put(metricName, value = new AtomicReference<>());
                     pollMetrics(metricsResource.getLinkByRel("metricevents").orElseThrow(), serverId, currentServerMetrics.keySet());
@@ -141,16 +142,17 @@ public class JmxMetrics
     }
 
     private void pollMetrics(Link metricevents, String serverId, Collection<String> metricNames) {
-        JsonObject parameters = Json.createObjectBuilder().add("metric_names", String.join(",", metricNames)).build();
+        ObjectNode parameters = JsonNodeFactory.instance.objectNode();
+        parameters.set("metric_names", parameters.textNode(String.join(",", metricNames)));
         reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), Optional.of(parameters));
     }
 
     private class MetricEventSubscriber
-            implements ReactiveEventStreams.Subscriber<JsonObject>, EventHandler<Event<JsonObject>> {
+            implements ReactiveEventStreams.Subscriber<ObjectNode>, EventHandler<Event<ObjectNode>> {
         private final ScheduledExecutorService scheduledExecutorService;
         private String serverId;
         private ReactiveEventStreams.Subscription subscription;
-        private Disruptor<Event<JsonObject>> disruptor;
+        private Disruptor<Event<ObjectNode>> disruptor;
 
         public MetricEventSubscriber(ScheduledExecutorService scheduledExecutorService, String serverId) {
 
@@ -159,7 +161,7 @@ public class JmxMetrics
         }
 
         @Override
-        public EventSink<Event<JsonObject>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<ObjectNode>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
             this.subscription = subscription;
             Optional.ofNullable(subscriptions.put(serverId, subscription))
                     .ifPresent(ReactiveEventStreams.Subscription::cancel);
@@ -174,12 +176,13 @@ public class JmxMetrics
         }
 
         @Override
-        public void onEvent(Event<JsonObject> event, long sequence, boolean endOfBatch) throws Exception {
+        public void onEvent(Event<ObjectNode> event, long sequence, boolean endOfBatch) throws Exception {
 
-            event.event.forEach((name, value) ->
-            {
-                polledMetrics.get(serverId).get(name).set(value);
-            });
+            Iterator<Map.Entry<String, JsonNode>> fields = event.event.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> next = fields.next();
+                polledMetrics.get(serverId).get(next.getKey()).set(next.getValue());
+            }
 
             scheduledExecutorService.schedule(() -> subscription.request(1), 5, TimeUnit.SECONDS);
         }
@@ -206,7 +209,7 @@ public class JmxMetrics
             super(sro.serviceIdentifier(), registry, "metrics");
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceAttributes, Optional<JsonObject> consumerAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
             client.get(link)
                     .whenComplete((rd, throwable) ->
                     {
@@ -219,7 +222,7 @@ public class JmxMetrics
                             for (ResourceObject resource : rd.getResources().orElseThrow().getResources()) {
                                 ObjectName name = ObjectName.getInstance(String.format("reactive:server=%s,metric=%s", serverId, resource.getId()));
                                 String metricType = resource.getAttributes().getString("type");
-                                final Supplier<JsonValue> metricSupplier = newMetricSupplier(sro, resource.getId());
+                                final Supplier<JsonNode> metricSupplier = newMetricSupplier(sro, resource.getId());
                                 Object mBean = switch (metricType) {
                                     case "gauge" -> new GaugeMXBean.Model(metricSupplier);
                                     case "meter" -> new MeterMXBean.Model(metricSupplier);

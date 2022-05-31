@@ -7,17 +7,18 @@ import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
-import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabases;
 import com.exoreaction.reactiveservices.service.neo4jdomainevents.disruptor.Neo4jDomainEventEventHandler;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -25,8 +26,6 @@ import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,7 +101,7 @@ public class Neo4jDomainEventsService
 
     }
 
-    private Consumer<Link> connect(Optional<JsonObject> publisherParameters, Optional<JsonObject> selfParameters) {
+    private Consumer<Link> connect(Optional<ObjectNode> publisherParameters, Optional<ObjectNode> selfParameters) {
         return link ->
         {
             reactiveStreams.subscribe(sro.serviceIdentifier(), link, new DomainEventsSubscriber(selfParameters), publisherParameters);
@@ -110,18 +109,18 @@ public class Neo4jDomainEventsService
     }
 
     private class DomainEventsSubscriber
-            implements ReactiveEventStreams.Subscriber<EventWithResult<JsonArray, Metadata>> {
+            implements ReactiveEventStreams.Subscriber<EventWithResult<ArrayNode, Metadata>> {
 
-        private Disruptor<Event<EventWithResult<JsonArray, Metadata>>> disruptor;
-        private Optional<JsonObject> selfParameters;
+        private Disruptor<Event<EventWithResult<ArrayNode, Metadata>>> disruptor;
+        private Optional<ObjectNode> selfParameters;
 
-        public DomainEventsSubscriber(Optional<JsonObject> selfParameters) {
+        public DomainEventsSubscriber(Optional<ObjectNode> selfParameters) {
 
             this.selfParameters = selfParameters;
         }
 
         @Override
-        public EventSink<Event<EventWithResult<JsonArray, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<EventWithResult<ArrayNode, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
             disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Neo4jDomainEventsDisruptorIn-"),
                     ProducerType.SINGLE,
                     new BlockingWaitStrategy());
@@ -147,7 +146,7 @@ public class Neo4jDomainEventsService
         }
 
         @Override
-        public void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceAttributes, Optional<JsonObject> consumerAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
             reactiveStreams.subscribe(sro.serviceIdentifier(), link, new DomainEventsSubscriber(consumerAttributes), sourceAttributes);
         }
     }

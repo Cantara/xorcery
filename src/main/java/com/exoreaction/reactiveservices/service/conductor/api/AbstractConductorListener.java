@@ -1,12 +1,11 @@
 package com.exoreaction.reactiveservices.service.conductor.api;
 
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
-import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
-import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
-import jakarta.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -34,7 +33,7 @@ public abstract class AbstractConductorListener
         this.rel = rel;
     }
 
-    public abstract void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceParameters, Optional<JsonObject> consumerParameters);
+    public abstract void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceParameters, Optional<ObjectNode> consumerParameters);
 
     @Override
     public void addedGroup(Group group) {

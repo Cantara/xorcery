@@ -1,7 +1,10 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -11,12 +14,12 @@ import java.util.stream.Stream;
  * @since 27/11/2018
  */
 
-public record ResourceDocument(JsonObject json)
+public record ResourceDocument(ObjectNode json)
         implements JsonElement {
 
-    public record Builder(JsonObjectBuilder builder) {
+    public record Builder(ObjectNode builder) {
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
         public Builder data(ResourceObject.Builder value) {
@@ -25,9 +28,9 @@ public record ResourceDocument(JsonObject json)
 
         public Builder data(ResourceObject value) {
             if (value == null) {
-                builder.add("data", JsonValue.NULL);
+                builder.putNull("data");
             } else {
-                builder.add("data", value.json());
+                builder.set("data", value.json());
             }
             return this;
         }
@@ -37,7 +40,7 @@ public record ResourceDocument(JsonObject json)
         }
 
         public Builder data(ResourceObjects value) {
-            builder.add("data", value.json());
+            builder.set("data", value.json());
             return this;
         }
 
@@ -46,20 +49,20 @@ public record ResourceDocument(JsonObject json)
         }
 
         public Builder errors(Errors value) {
-            builder.add("errors", value.json());
+            builder.set("errors", value.json());
             return this;
         }
 
         public Builder meta(Meta value) {
             if (!value.object().isEmpty()) {
-                builder.add("meta", value.json());
+                builder.set("meta", value.json());
             }
             return this;
         }
 
         public Builder jsonapi(JsonApi value) {
             if (!value.object().isEmpty()) {
-                builder.add("jsonapi", value.json());
+                builder.set("jsonapi", value.json());
             }
             return this;
         }
@@ -70,7 +73,7 @@ public record ResourceDocument(JsonObject json)
 
         public Builder links(Links value) {
             if (!value.object().isEmpty()) {
-                builder.add("links", value.json());
+                builder.set("links", value.json());
             }
             return this;
         }
@@ -81,63 +84,63 @@ public record ResourceDocument(JsonObject json)
 
         public Builder included(Included value) {
             if (!value.array().isEmpty()) {
-                builder.add("included", value.json());
+                builder.set("included", value.json());
             }
             return this;
         }
 
         public ResourceDocument build() {
-            return new ResourceDocument(builder.build());
+            return new ResourceDocument(builder);
         }
 
     }
 
     public boolean isCollection() {
-        return object().get("data") instanceof JsonArray;
+        return object().get("data") instanceof ArrayNode;
     }
 
     public Optional<ResourceObject> getResource() {
-        JsonValue data = object().get("data");
-        if (data == null || data == JsonValue.NULL || data instanceof JsonArray) {
+        JsonNode data = object().get("data");
+        if (data == null || data.isNull() || data instanceof ArrayNode) {
             return Optional.empty();
         }
 
-        return Optional.of(new ResourceObject((JsonObject) data));
+        return Optional.of(new ResourceObject((ObjectNode) data));
     }
 
 
     public Optional<ResourceObjects> getResources() {
-        JsonValue data = object().get("data");
-        if (data == null || data instanceof JsonObject) {
+        JsonNode data = object().get("data");
+        if (data == null || data instanceof ObjectNode) {
             return Optional.empty();
         }
 
-        return Optional.of(new ResourceObjects(data.asJsonArray()));
+        return Optional.of(new ResourceObjects(((ArrayNode) data)));
     }
 
     public Errors getErrors() {
-        return new Errors(
-                Optional.ofNullable(object().getJsonArray("errors")).orElse(JsonValue.EMPTY_JSON_ARRAY));
+        return new Errors(object().path("errors") instanceof ArrayNode array ? array :
+                JsonNodeFactory.instance.arrayNode());
     }
 
     public Meta getMeta() {
-        return new Meta(
-                Optional.ofNullable(object().getJsonObject("meta")).orElse(JsonValue.EMPTY_JSON_OBJECT));
+        return new Meta(object().path("meta") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     public JsonApi getJsonapi() {
-        return new JsonApi(
-                Optional.ofNullable(object().getJsonObject("jsonapi")).orElse(JsonValue.EMPTY_JSON_OBJECT));
+        return new JsonApi(object().path("jsonapi") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     public Links getLinks() {
-        return new Links(
-                Optional.ofNullable(object().getJsonObject("links")).orElse(JsonValue.EMPTY_JSON_OBJECT));
+        return new Links(object().path("links") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     public Included getIncluded() {
-        return new Included(
-                Optional.ofNullable(object().getJsonArray("included")).orElse(JsonValue.EMPTY_JSON_ARRAY));
+        return new Included(object().path("included") instanceof ArrayNode array ? array :
+                JsonNodeFactory.instance.arrayNode());
     }
 
     /**

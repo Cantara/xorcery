@@ -1,75 +1,60 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
-import jakarta.json.JsonValue;
-
-import java.util.Optional;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @author rickardoberg
  * @since 23/01/2019
  */
 
-public record Error(JsonObject json)
-    implements JsonElement
-{
-    public record Builder(JsonObjectBuilder builder)
-    {
-        public Builder {
-            builder = Json.createObjectBuilder();
+public record Error(ObjectNode json)
+        implements JsonElement {
+    public record Builder(ObjectNode builder) {
+        public Builder() {
+            this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder status(int value)
-        {
-            builder.add( "status", Integer.toString( value ) );
+        public Builder status(int value) {
+            builder.set("status", builder.textNode(Integer.toString(value)));
             return this;
         }
 
-        public Builder source(Source source)
-        {
-            builder.add( "source", source.object() );
+        public Builder source(Source source) {
+            builder.set("source", source.object());
             return this;
         }
 
-        public Builder title(String value)
-        {
-            builder.add( "title", value );
+        public Builder title(String value) {
+            builder.set("title", builder.textNode(value));
             return this;
         }
 
-        public Builder detail(String value)
-        {
-            builder.add( "detail", value );
+        public Builder detail(String value) {
+            builder.set("detail", builder.textNode(value));
             return this;
         }
 
-        public Error build()
-        {
-            return new Error(builder.build());
+        public Error build() {
+            return new Error(builder);
         }
     }
 
-    public String getStatus()
-    {
-        return getOptionalString( "status" ).orElse( null );
+    public String getStatus() {
+        return getOptionalString("status").orElse(null);
     }
 
-    public Source getSource()
-    {
-        return new Source(
-            Optional.ofNullable( object().getJsonObject( "source" ) ).orElse( JsonValue.EMPTY_JSON_OBJECT ) );
+    public Source getSource() {
+        return new Source(object().path("source") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
-    public String getTitle()
-    {
-        return getOptionalString( "title" ).orElse( null );
+    public String getTitle() {
+        return getString("title");
     }
 
-    public String getDetail()
-    {
-        return getOptionalString( "detail" ).orElse( null );
+    public String getDetail() {
+        return getString("detail");
     }
 }

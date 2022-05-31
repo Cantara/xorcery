@@ -1,34 +1,33 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @author rickardoberg
  * @since 23/01/2019
  */
 
-public record Source(JsonObject json)
+public record Source(ObjectNode json)
         implements JsonElement {
-    public record Builder(JsonObjectBuilder builder) {
+    public record Builder(ObjectNode builder) {
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
         public Builder pointer(String value) {
-            builder.add("pointer", value);
+            builder.set("pointer", builder.textNode(value));
             return this;
         }
 
         public Builder parameter(String value) {
-            builder.add("detail", value);
+            builder.set("detail", builder.textNode(value));
             return this;
         }
 
         public Source build() {
-            return new Source(builder.build());
+            return new Source(builder);
         }
     }
 

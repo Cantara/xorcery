@@ -1,26 +1,29 @@
 package com.exoreaction.reactiveservices.rest;
 
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
-import jakarta.json.Json;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Result;
 
-import java.io.StringReader;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-public interface RestHelpers
-{
-    static CompletionStage<ResourceDocument> toResourceDocument(Result result)
-    {
+public interface RestHelpers {
+    ObjectMapper defaultMapper = new ObjectMapper();
+
+    static CompletionStage<ResourceDocument> toResourceDocument(Result result) {
         CompletableFuture<ResourceDocument> future = new CompletableFuture<>();
 
-        new ResultHandler()
-        {
+        new ResultHandler() {
             @Override
             public void status200(Result result) {
                 String content = ((ContentResponse) result.getResponse()).getContentAsString();
-                future.complete(new ResourceDocument(Json.createReader(new StringReader(content)).readObject()));
+                try {
+                    future.complete(new ResourceDocument((ObjectNode) defaultMapper.readTree(content)));
+                } catch (Exception e) {
+                    future.completeExceptionally(e);
+                }
             }
 
             @Override

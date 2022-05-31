@@ -1,9 +1,9 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonArrayBuilder;
+import com.exoreaction.util.JsonNodes;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,57 +14,45 @@ import java.util.Map;
  * @since 27/11/2018
  */
 
-public record Errors(JsonArray json)
-    implements JsonElement
-{
-    public record Builder(JsonArrayBuilder builder)
-    {
-
+public record Errors(ArrayNode json)
+        implements JsonElement {
+    public record Builder(ArrayNode builder) {
         public Builder() {
-            this(Json.createArrayBuilder());
+            this(JsonNodeFactory.instance.arrayNode());
         }
 
-        public Builder error( Error error )
-        {
-            builder.add( error.json() );
+        public Builder error(Error error) {
+            builder.add(error.json());
             return this;
         }
 
-        public Errors build()
-        {
-            return new Errors( builder.build() );
+        public Errors build() {
+            return new Errors(builder);
         }
     }
 
-    public boolean hasErrors()
-    {
+    public boolean hasErrors() {
         return !array().isEmpty();
     }
 
-    public List<Error> getErrors()
-    {
-        return array().getValuesAs( Error::new );
+    public List<Error> getErrors() {
+        return JsonNodes.getValuesAs(array(),Error::new);
     }
 
-    public Map<String,Error> getErrorMap()
-    {
-        Map<String,Error> map = new HashMap<>();
-        for ( Error error : getErrors() )
-        {
+    public Map<String, Error> getErrorMap() {
+        Map<String, Error> map = new HashMap<>();
+        for (Error error : getErrors()) {
             String pointer = error.getSource().getPointer();
-            if ( pointer != null )
-            {
-                pointer = pointer.substring( pointer.lastIndexOf( '/' ) + 1 );
+            if (pointer != null) {
+                pointer = pointer.substring(pointer.lastIndexOf('/') + 1);
             }
-            map.put( pointer, error );
+            map.put(pointer, error);
         }
         return map;
     }
 
-    public String getError()
-    {
-        for ( Error error : getErrors() )
-        {
+    public String getError() {
+        for (Error error : getErrors()) {
             if (error.getSource().getPointer() == null)
                 return error.getTitle();
         }

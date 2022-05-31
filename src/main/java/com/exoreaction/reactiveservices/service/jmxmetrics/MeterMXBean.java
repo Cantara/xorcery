@@ -1,9 +1,8 @@
 package com.exoreaction.reactiveservices.service.jmxmetrics;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metered;
-import jakarta.json.JsonValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -12,12 +11,12 @@ public interface MeterMXBean
     extends Metered
 {
 
-    public record Model(Supplier<JsonValue> value) implements MeterMXBean
+    public record Model(Supplier<JsonNode> value) implements MeterMXBean
     {
         @Override
         public long getCount() {
-            return Optional.ofNullable(value.get()).map(JsonValue::asJsonObject)
-                    .map(o -> o.getJsonNumber("count").longValue())
+            return Optional.ofNullable(value.get()).map(ObjectNode.class::cast)
+                    .map(o -> o.path("count").longValue())
                     .orElse(0L);
         }
 
@@ -33,8 +32,8 @@ public interface MeterMXBean
 
         @Override
         public double getMeanRate() {
-            return Optional.ofNullable(value.get()).map(JsonValue::asJsonObject)
-                    .map(o -> o.getJsonNumber("meanrate").doubleValue())
+            return Optional.ofNullable(value.get()).map(ObjectNode.class::cast)
+                    .map(o -> o.path("meanrate").doubleValue())
                     .orElse(0D);
         }
 

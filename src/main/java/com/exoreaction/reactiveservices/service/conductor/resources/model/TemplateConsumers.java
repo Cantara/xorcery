@@ -4,18 +4,18 @@ import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.GroupTemplatePatternEvaluator;
-import jakarta.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.List;
 
-public record TemplateConsumers(JsonObject json) {
+public record TemplateConsumers(ObjectNode json) {
 
     public boolean isMany() {
-        return json.getBoolean("many", false);
+        return json.path("many").asBoolean(false);
     }
 
     public boolean isConsumer(ServiceResourceObject service, Configuration configuration) {
-        String expression = json.getString("pattern");
+        String expression = json.path("pattern").textValue();
         List<Link> links = service.resourceObject().getLinks().getLinks();
         if (links.isEmpty()) {
             return new GroupTemplatePatternEvaluator(configuration, service, null).eval(expression);

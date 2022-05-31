@@ -4,12 +4,11 @@ import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.ext.MessageBodyReader;
@@ -25,12 +24,10 @@ import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +44,7 @@ public class PublisherWebSocketEndpoint<T>
     private Semaphore semaphore = new Semaphore(0);
     private String webSocketPath;
     private ReactiveEventStreams.Publisher<T> publisher;
-    private JsonObject parameters;
+    private ObjectNode parameters;
     private MessageBodyWriter<T> messageBodyWriter;
     private MessageBodyReader<?> messageBodyReader;
     private ReactiveEventStreams.Subscription subscription;
@@ -59,7 +56,7 @@ public class PublisherWebSocketEndpoint<T>
     private Disruptor<Event<T>> disruptor;
 
     public PublisherWebSocketEndpoint(String webSocketPath, ReactiveEventStreams.Publisher<T> publisher,
-                                      JsonObject parameters,
+                                      ObjectNode parameters,
                                       MessageBodyWriter<T> messageBodyWriter,
                                       MessageBodyReader<?> messageBodyReader,
                                       Type resultType,

@@ -1,26 +1,23 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
-
-import static jakarta.json.JsonValue.EMPTY_JSON_OBJECT;
-import static java.util.Optional.ofNullable;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @author rickardoberg
  * @since 27/11/2018
  */
 
-public record ResourceObjectIdentifier(JsonObject json)
+public record ResourceObjectIdentifier(ObjectNode json)
         implements JsonElement {
-    public record Builder(JsonObjectBuilder builder) {
+
+    public record Builder(ObjectNode builder) {
 
         public Builder(String type, String id) {
-            this(Json.createObjectBuilder());
-            builder.add("type", type)
-                    .add("id", id);
+            this(JsonNodeFactory.instance.objectNode());
+            builder.<ObjectNode>set("type", builder.textNode(type))
+                    .set("id", builder.textNode(id));
         }
 
         public Builder(Enum<?> type, String id) {
@@ -28,12 +25,12 @@ public record ResourceObjectIdentifier(JsonObject json)
         }
 
         public Builder meta(Meta meta) {
-            builder.add("meta", meta.json());
+            builder.set("meta", meta.json());
             return this;
         }
 
         public ResourceObjectIdentifier build() {
-            return new ResourceObjectIdentifier(builder.build());
+            return new ResourceObjectIdentifier(builder);
         }
     }
 
@@ -46,6 +43,7 @@ public record ResourceObjectIdentifier(JsonObject json)
     }
 
     public Meta getMeta() {
-        return new Meta(ofNullable(object().getJsonObject("meta")).orElse(EMPTY_JSON_OBJECT));
+        return new Meta(object().path("meta") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 }

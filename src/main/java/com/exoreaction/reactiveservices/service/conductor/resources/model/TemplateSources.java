@@ -3,16 +3,16 @@ package com.exoreaction.reactiveservices.service.conductor.resources.model;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.GroupTemplatePatternEvaluator;
-import jakarta.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public record TemplateSources(JsonObject json) {
+public record TemplateSources(ObjectNode json) {
 
     public boolean isMany() {
-        return json.getBoolean("many", false);
+        return json.path("many").asBoolean(false);
     }
 
     public boolean isSource(ServiceResourceObject service, Configuration configuration) {
-        String expression = json.getString("pattern");
+        String expression = json.path("pattern").textValue();
         return service.resourceObject().getLinks().getLinks().stream().anyMatch(link ->
                 new GroupTemplatePatternEvaluator(configuration, service, link.rel()).eval(expression));
     }

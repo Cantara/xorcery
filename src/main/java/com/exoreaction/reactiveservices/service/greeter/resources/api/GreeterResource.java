@@ -13,8 +13,6 @@ import org.apache.logging.log4j.LogManager;
 
 import java.util.concurrent.CompletionStage;
 
-import static com.github.jknack.handlebars.Context.newContext;
-
 @Path("api/greeter")
 public class GreeterResource
         extends JsonApiResource {

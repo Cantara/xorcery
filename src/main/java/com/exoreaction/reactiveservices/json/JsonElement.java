@@ -17,139 +17,110 @@
 
 package com.exoreaction.reactiveservices.json;
 
-import jakarta.json.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.*;
 
-import java.io.StringWriter;
 import java.util.Optional;
 
 /**
  * @author rickardoberg
  * @since 07/08/2017
  */
-public interface JsonElement
-{
-    JsonStructure json();
+public interface JsonElement {
+    ContainerNode<?> json();
 
-    default JsonObject object()
-    {
-        JsonValue json = json();
-        if ( json instanceof JsonObject)
-            return (JsonObject) json;
+    default ObjectNode object() {
+        ContainerNode<?> json = json();
+        if (json instanceof ObjectNode object)
+            return object;
         else
             return null;
     }
 
-    default JsonArray array()
-    {
-        JsonValue json = json();
-        if (json instanceof JsonArray )
-            return (JsonArray) json();
+    default ArrayNode array() {
+        ContainerNode<?> json = json();
+        if (json instanceof ArrayNode array)
+            return array;
         else
             return null;
     }
 
-    default String getString( String name )
-    {
-        return object().getString( name );
+    default String getString(String name) {
+        return object().path(name).asText();
     }
 
-    default Optional<String> getOptionalString( String name )
-    {
-        return Optional.ofNullable( object().getString( name, null ) );
+    default Optional<String> getOptionalString(String name) {
+        return Optional.ofNullable(object().path(name).asText());
     }
 
-    default int getInt( String name )
-    {
-        return object().getInt( name );
+    default int getInt(String name) {
+        return object().path(name).intValue();
     }
 
-    default Optional<Integer> getOptionalInt( String name )
-    {
-        JsonValue value = object().get( name );
-        if ( value instanceof JsonNumber )
-        {
-            return Optional.of( ((JsonNumber) value).intValue() );
-        }
-        else
-        { return Optional.empty(); }
-    }
-
-    default long getLong( String name )
-    {
-        return object().getJsonNumber( name ).longValueExact();
-    }
-
-    default Optional<Long> getOptionalLong( String name )
-    {
-        JsonValue value = object().get( name );
-        if ( value instanceof JsonNumber )
-        {
-            return Optional.of( ((JsonNumber) value).longValueExact() );
-        }
-        else
-        { return Optional.empty(); }
-    }
-
-    default boolean getBoolean( String name )
-    {
-        return object().getBoolean( name );
-    }
-
-    default Optional<Boolean> getOptionalBoolean( String name )
-    {
-        try
-        {
-            return Optional.of( object().getBoolean( name ) );
-        }
-        catch ( Exception e )
-        {
+    default Optional<Integer> getOptionalInt(String name) {
+        JsonNode value = object().path(name);
+        if (value instanceof NumericNode number) {
+            return Optional.of(number.intValue());
+        } else {
             return Optional.empty();
         }
     }
 
-    default <T extends Enum<T>> T getEnum( String name, Class<T> enumClass )
-    {
-        Optional<String> value = getOptionalString( name );
+    default long getLong(String name) {
+        return object().path(name).longValue();
+    }
 
-        if ( value.isPresent() )
-        {
-            try
-            {
-                return Enum.valueOf( enumClass, value.get() );
-            }
-            catch ( IllegalArgumentException e )
-            {
+    default Optional<Long> getOptionalLong(String name) {
+        JsonNode value = object().path(name);
+        if (value instanceof NumericNode number) {
+            return Optional.of(number.longValue());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    default boolean getBoolean(String name) {
+        return object().path(name).booleanValue();
+    }
+
+    default Optional<Boolean> getOptionalBoolean(String name) {
+        JsonNode value = object().path(name);
+        if (value instanceof BooleanNode bool) {
+            return Optional.of(bool.booleanValue());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    default <T extends Enum<T>> T getEnum(String name, Class<T> enumClass) {
+        Optional<String> value = getOptionalString(name);
+
+        if (value.isPresent()) {
+            try {
+                return Enum.valueOf(enumClass, value.get());
+            } catch (IllegalArgumentException e) {
                 return null;
             }
+        } else {
+            return null;
         }
-        else
-        { return null; }
     }
 
-    default <T extends Enum<T>> Optional<T> getOptionalEnum( String name, Class<T> enumClass )
-    {
-        Optional<String> value = getOptionalString( name );
+    default <T extends Enum<T>> Optional<T> getOptionalEnum(String name, Class<T> enumClass) {
+        Optional<String> value = getOptionalString(name);
 
-        if ( value.isPresent() )
-        {
-            try
-            {
-                return Optional.of( Enum.valueOf( enumClass, value.get() ) );
-            }
-            catch ( IllegalArgumentException e )
-            {
+        if (value.isPresent()) {
+            try {
+                return Optional.of(Enum.valueOf(enumClass, value.get()));
+            } catch (IllegalArgumentException e) {
                 return null;
             }
+        } else {
+            return Optional.empty();
         }
-        else
-        { return Optional.empty(); }
     }
 
-    default String toJsonString()
-    {
-        StringWriter out = new StringWriter();
-        Json.createWriter( out ).write( json() );
-        return out.toString();
+    default String toJsonString() {
+        return json().toPrettyString();
     }
-
 }

@@ -1,8 +1,7 @@
 package com.exoreaction.reactiveservices.jaxrs.writers;
 
-import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Produces;
@@ -19,26 +18,25 @@ import java.lang.reflect.Type;
 
 @Singleton
 @Provider
-@Produces(MediaTypes.APPLICATION_JSON_API)
-public class JsonApiMessageBodyWriter
-    implements MessageBodyWriter<ResourceDocument>
-{
-    private final ObjectMapper objectMapper;
+@Produces(MediaType.APPLICATION_JSON)
+public class ObjectNodeMessageBodyWriter
+        implements MessageBodyWriter<ObjectNode> {
+    private ObjectMapper objectMapper;
 
     @Inject
-    public JsonApiMessageBodyWriter(ObjectMapper objectMapper) {
+    public ObjectNodeMessageBodyWriter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return type == ResourceDocument.class;
+        return ObjectNode.class.equals(type);
     }
 
     @Override
-    public void writeTo(ResourceDocument resourceDocument, Class<?> type, Type genericType, Annotation[] annotations,
+    public void writeTo(ObjectNode jsonObject, Class<?> type, Type genericType, Annotation[] annotations,
                         MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
                         OutputStream entityStream) throws IOException, WebApplicationException {
-        objectMapper.writer().withDefaultPrettyPrinter().writeValue(entityStream, resourceDocument.json());
+        objectMapper.writeValue(entityStream, jsonObject);
     }
 }

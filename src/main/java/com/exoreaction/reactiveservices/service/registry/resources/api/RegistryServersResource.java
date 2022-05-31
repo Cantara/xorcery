@@ -5,10 +5,7 @@ import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
 import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import jakarta.inject.Inject;
-import jakarta.json.Json;
 import jakarta.ws.rs.*;
-
-import java.io.StringReader;
 
 import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
 
@@ -38,8 +35,8 @@ public class RegistryServersResource {
 
     @POST
     @Consumes(JSON_API_TEXT_HTML)
-    public void add(String resourceObject) {
-        service.addServer(new ServerResourceDocument(new ResourceDocument(Json.createReader(new StringReader(resourceObject)).readObject())));
+    public void add(ResourceDocument resourceDocument) {
+        service.addServer(new ServerResourceDocument(resourceDocument));
     }
 
 /*

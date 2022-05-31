@@ -9,11 +9,12 @@ import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.Server;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -21,13 +22,11 @@ import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -103,7 +102,7 @@ public class DomainEventsPublisher
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>> subscriber, JsonObject parameters) {
+    public void subscribe(ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>> subscriber, ObjectNode parameters) {
         final AtomicReference<EventSink<Event<EventWithResult<DomainEvents, Metadata>>>> handler = new AtomicReference<>();
         handler.set(subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
             @Override

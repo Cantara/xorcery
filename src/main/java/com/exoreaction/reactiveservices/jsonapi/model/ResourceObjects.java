@@ -1,9 +1,9 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.Json;
-import jakarta.json.JsonArray;
-import jakarta.json.JsonArrayBuilder;
+import com.exoreaction.util.JsonNodes;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import java.util.List;
 import java.util.stream.Collector;
@@ -13,17 +13,18 @@ import java.util.stream.Collector;
  * @since 28/11/2018
  */
 
-public record ResourceObjects(JsonArray json)
+public record ResourceObjects(ArrayNode json)
         implements JsonElement {
+
     public static Collector<ResourceObject, Builder, ResourceObjects> toResourceObjects() {
         return Collector.of(Builder::new, (builder, ro) -> {
             if (ro != null) builder.resource(ro);
         }, (builder1, builder2) -> builder1, Builder::build);
     }
 
-    public record Builder(JsonArrayBuilder builder) {
+    public record Builder(ArrayNode builder) {
         public Builder() {
-            this(Json.createArrayBuilder());
+            this(JsonNodeFactory.instance.arrayNode());
         }
 
         public Builder resource(ResourceObject resourceObject) {
@@ -32,12 +33,12 @@ public record ResourceObjects(JsonArray json)
         }
 
         public ResourceObjects build() {
-            return new ResourceObjects(builder.build());
+            return new ResourceObjects(builder);
         }
     }
 
     public List<ResourceObject> getResources() {
-        return array().getValuesAs(ResourceObject::new);
+        return JsonNodes.getValuesAs(array(), ResourceObject::new);
     }
 
     public ResourceObjectIdentifiers getResourceObjectIdentifiers() {

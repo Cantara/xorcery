@@ -3,21 +3,24 @@ package com.exoreaction.reactiveservices.service.conductor;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
 import com.exoreaction.reactiveservices.service.conductor.api.ConductorChange;
 import com.exoreaction.reactiveservices.service.conductor.api.ConductorListener;
-import com.exoreaction.reactiveservices.service.conductor.resources.model.*;
-import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
+import com.exoreaction.reactiveservices.service.conductor.resources.model.GroupTemplate;
+import com.exoreaction.reactiveservices.service.conductor.resources.model.GroupTemplates;
+import com.exoreaction.reactiveservices.service.conductor.resources.model.Groups;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,11 +28,9 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -108,19 +109,24 @@ public class ConductorService
     @Override
     public void onStartup(Container container) {
         // Load templates
+        ObjectMapper objectMapper = new ObjectMapper();
         for (String templateName : List.of(configuration.getString("conductor.templates").orElseThrow().split(","))) {
             logger.info("Loading conductor template from:" + templateName);
             try {
                 URI templateUri = URI.create(templateName);
 
-                ResourceDocument templates = new ResourceDocument(Json.createReader(templateUri.toURL().openStream()).readObject());
+                ResourceDocument templates = new ResourceDocument((ObjectNode)objectMapper.readTree(templateUri.toURL().openStream()));
                 templates.getResources().ifPresent(ros -> ros.getResources().forEach(ro -> addTemplate(new GroupTemplate(ro))));
                 templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
             } catch (IllegalArgumentException | IOException e) {
                 // Just load from classpath
-                ResourceDocument templates = new ResourceDocument(Json.createReader(getClass().getResourceAsStream(templateName)).readObject());
-                templates.getResources().ifPresent(ros -> ros.getResources().forEach(ro -> addTemplate(new GroupTemplate(ro))));
-                templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
+                try {
+                    ResourceDocument templates = new ResourceDocument((ObjectNode)objectMapper.readTree(getClass().getResourceAsStream(templateName)));
+                    templates.getResources().ifPresent(ros -> ros.getResources().forEach(ro -> addTemplate(new GroupTemplate(ro))));
+                    templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
+                } catch (IOException ex) {
+                    logger.error("Could not load template "+templateName, ex);
+                }
             }
         }
 
@@ -181,7 +187,7 @@ public class ConductorService
     private class ConductorPublisher
             implements ReactiveEventStreams.Publisher<ConductorChange> {
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<ConductorChange> subscriber, JsonObject parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<ConductorChange> subscriber, ObjectNode parameters) {
 
         }
     }

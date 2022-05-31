@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.disruptor;
 
-import jakarta.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Optional;
 
@@ -15,9 +15,9 @@ public record RequestMetadata(Metadata metadata) {
         return metadata.getString("correlationId");
     }
 
-    public Optional<JsonObject> jwtClaims()
+    public Optional<ObjectNode> jwtClaims()
     {
-        return metadata.getJsonObject("jwtClaims");
+        return metadata.getObjectNode("jwtClaims");
     }
 
     public Optional<String> remoteIp()

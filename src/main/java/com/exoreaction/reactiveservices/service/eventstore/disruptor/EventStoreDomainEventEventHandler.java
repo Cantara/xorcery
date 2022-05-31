@@ -5,11 +5,9 @@ import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.reactiveservices.disruptor.*;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
-import com.exoreaction.reactiveservices.service.domainevents.api.EventStoreMetadata;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
 import java.util.UUID;
 
 /**

@@ -6,9 +6,9 @@ import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjectIdentifiers;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
-import jakarta.json.Json;
-import jakarta.json.JsonArrayBuilder;
-import jakarta.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,11 +22,11 @@ public record Group(ResourceObject resourceObject) {
     }
 
     public Group addSource(ServiceResourceObject serviceResourceObject) {
-        JsonArrayBuilder builder = resourceObject.getRelationships()
+        ArrayNode builder = resourceObject.getRelationships()
                 .getRelationship("sources")
                 .flatMap(Relationship::getResourceObjectIdentifiers)
-                .map(rois -> Json.createArrayBuilder(rois.json()))
-                .orElseGet(Json::createArrayBuilder);
+                .map(ResourceObjectIdentifiers::json)
+                .orElseGet(JsonNodeFactory.instance::arrayNode);
 
         return new Group(new ResourceObject.Builder(resourceObject)
                 .relationships(new Relationships.Builder(resourceObject.getRelationships())
@@ -37,11 +37,11 @@ public record Group(ResourceObject resourceObject) {
     }
 
     public Group addConsumer(ServiceResourceObject serviceResourceObject) {
-        JsonArrayBuilder builder = resourceObject.getRelationships()
+        ArrayNode builder = resourceObject.getRelationships()
                 .getRelationship("consumers")
                 .flatMap(Relationship::getResourceObjectIdentifiers)
-                .map(rois -> Json.createArrayBuilder(rois.json()))
-                .orElseGet(Json::createArrayBuilder);
+                .map(ResourceObjectIdentifiers::json)
+                .orElseGet(JsonNodeFactory.instance::arrayNode);
 
         return new Group(new ResourceObject.Builder(resourceObject)
                 .relationships(new Relationships.Builder(resourceObject.getRelationships())
@@ -69,12 +69,12 @@ public record Group(ResourceObject resourceObject) {
                 .orElseGet(Collections::emptyList);
     }
 
-    public Optional<JsonObject> getSourceParameters() {
-        return resourceObject().getAttributes().getAttribute("sources").flatMap(json -> Optional.ofNullable(json.asJsonObject().getJsonObject("parameters")));
+    public Optional<ObjectNode> getSourceParameters() {
+        return resourceObject().getAttributes().getAttribute("sources").flatMap(json -> Optional.ofNullable((ObjectNode) json.get("parameters")));
     }
 
-    public Optional<JsonObject> getConsumerParameters() {
-        return resourceObject().getAttributes().getAttribute("consumers").flatMap(json -> Optional.ofNullable(json.asJsonObject().getJsonObject("parameters")));
+    public Optional<ObjectNode> getConsumerParameters() {
+        return resourceObject().getAttributes().getAttribute("consumers").flatMap(json -> Optional.ofNullable((ObjectNode) json.get("parameters")));
     }
 
     public boolean isComplete() {

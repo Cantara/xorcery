@@ -7,16 +7,15 @@ import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
+import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
-import com.exoreaction.reactiveservices.server.model.ServiceAttributes;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.MultiSubscriber;
 import com.exoreaction.reactiveservices.service.reactivestreams.helper.SubscriberProxy;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.RingBuffer;
@@ -24,16 +23,12 @@ import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.core.LogEvent;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * @author rickardoberg
@@ -152,7 +147,7 @@ public class SysoutLogging
             super(serviceResourceObject.serviceIdentifier(), registry, "logevents");
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<JsonObject> sourceAttributes, Optional<JsonObject> consumerAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
             reactiveStreams.subscribe(serviceIdentifier, link, new LogSubscriberProxy(multiSubscriber), sourceAttributes);
         }
     }

@@ -1,22 +1,17 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.model;
 
-import com.exoreaction.reactiveservices.jsonapi.model.Relationship;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjectIdentifier;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-
-import java.util.Optional;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public record GroupTemplate(ResourceObject resourceObject) {
 
     public TemplateSources getSources()
     {
-        return new TemplateSources(resourceObject.getAttributes().getAttribute("sources").orElseThrow().asJsonObject());
+        return new TemplateSources((ObjectNode)resourceObject.getAttributes().getAttribute("sources").orElseThrow());
     }
 
     public TemplateConsumers getConsumers()
     {
-        return new TemplateConsumers(resourceObject.getAttributes().getAttribute("consumers").orElseThrow().asJsonObject());
+        return new TemplateConsumers((ObjectNode)resourceObject.getAttributes().getAttribute("consumers").orElseThrow());
     }
 }

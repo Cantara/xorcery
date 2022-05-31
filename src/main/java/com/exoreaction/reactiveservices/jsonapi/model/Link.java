@@ -1,9 +1,9 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
-import jakarta.json.JsonValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.uri.UriTemplate;
 
 import java.net.URI;
@@ -14,53 +14,36 @@ import java.util.Optional;
  * @since 28/11/2018
  */
 
-public record Link(String rel, JsonValue value)
-{
-    public String getHref()
-    {
-        if ( value.getValueType().equals( JsonValue.ValueType.STRING ) )
-        {
-            return ((JsonString) value).getString();
-        }
-        else
-        {
-            return ((JsonObject) value).getString( "href" );
-        }
-    }
-
+public record Link(String rel, JsonNode value) {
     public Link(String rel, String uri) {
-        this(rel, Json.createValue(uri));
+        this(rel, JsonNodeFactory.instance.textNode(uri));
     }
 
-    public URI getHrefAsUri()
-    {
+    public String getHref() {
+        return value.isTextual() ? value.textValue() : value.path("href").textValue();
+    }
+
+    public URI getHrefAsUri() {
         return URI.create(getHref());
     }
 
-    public URI getHrefAsUriBuilder()
-    {
-        return URI.create(getHref());
+    public UriBuilder getHrefAsUriBuilder() {
+        return UriBuilder.fromUri(getHref());
     }
 
-    public UriTemplate getHrefAsUriTemplate()
-    {
+    public UriTemplate getHrefAsUriTemplate() {
         return new UriTemplate(getHref());
     }
 
-    public boolean isTemplate()
-    {
+    public boolean isTemplate() {
         return !new UriTemplate(getHref()).getTemplateVariables().isEmpty();
     }
 
-    public Optional<Meta> getMeta()
-    {
-        if ( value.getValueType().equals( JsonValue.ValueType.STRING ) )
-        {
+    public Optional<Meta> getMeta() {
+        if (value.isTextual()) {
             return Optional.empty();
-        }
-        else
-        {
-            return Optional.ofNullable( ((JsonObject) value).getJsonObject( "meta" ) ).map( Meta::new );
+        } else {
+            return Optional.ofNullable(value.path("meta")).map(ObjectNode.class::cast).map(Meta::new);
         }
     }
 }

@@ -1,11 +1,13 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.net.URI;
 import java.time.Period;
 import java.util.*;
 import java.util.function.Consumer;
@@ -15,20 +17,22 @@ import java.util.function.Consumer;
  * @since 27/11/2018
  */
 
-public record Attributes(JsonObject json)
+public record Attributes(ObjectNode json)
         implements JsonElement {
-    public record Builder(JsonObjectBuilder builder) {
+
+    public record Builder(ObjectNode builder)
+    {
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
         public Builder attribute(String name, Object value) {
-            builder.add(name, getValue(value));
+            builder.set(name, getValue(value));
             return this;
         }
 
-        public Builder attribute(String name, JsonValue value) {
-            builder.add(name, value);
+        public Builder attribute(String name, JsonNode value) {
+            builder.set(name, value);
             return this;
         }
 
@@ -37,52 +41,52 @@ public record Attributes(JsonObject json)
             return this;
         }
 
-        private JsonValue getValue(Object value) {
+        private JsonNode getValue(Object value) {
             if (value == null) {
-                return JsonValue.NULL;
+                return NullNode.instance;
             } else {
-                if (value instanceof String) {
-                    return Json.createValue((String) value);
-                } else if (value instanceof Boolean) {
-                    return ((Boolean) value) ? JsonValue.TRUE : JsonValue.FALSE;
-                } else if (value instanceof Long) {
-                    return Json.createValue((Long) value);
-                } else if (value instanceof Integer) {
-                    return Json.createValue((Integer) value);
-                } else if (value instanceof BigDecimal) {
-                    return Json.createValue((BigDecimal) value);
-                } else if (value instanceof Double) {
-                    return Json.createValue(new BigDecimal((Double) value).setScale(2, RoundingMode.HALF_EVEN));
+                if (value instanceof String v) {
+                    return builder.textNode(v);
+                } else if (value instanceof Boolean v) {
+                    return builder.booleanNode(v);
+                } else if (value instanceof Long v) {
+                    return builder.numberNode(v);
+                } else if (value instanceof Integer v) {
+                    return builder.numberNode(v);
+                } else if (value instanceof BigDecimal v) {
+                    return builder.numberNode(v);
+                } else if (value instanceof Double v) {
+                    return builder.numberNode(v);
                 } else if (Double.TYPE.isInstance(value)) {
-                    return Json.createValue(new BigDecimal((Double) value).setScale(2, RoundingMode.HALF_EVEN));
-                } else if (value instanceof Float) {
-                    return Json.createValue((Float) value);
-                } else if (value instanceof Enum) {
-                    return Json.createValue(((Enum) value).name());
+                    return builder.numberNode((Double) value);
+                } else if (value instanceof Float v) {
+                    return builder.numberNode(v);
+                } else if (value instanceof Enum v) {
+                    return builder.textNode(v.name());
                 } else if (value instanceof Map) {
                     Set<Map.Entry<Object, Object>> set = ((Map<Object, Object>) value).entrySet();
-                    JsonObjectBuilder map = Json.createObjectBuilder();
+                    ObjectNode map = builder.objectNode();
                     for (Map.Entry<Object, Object> entry : set) {
-                        map.add(entry.getKey().toString(), getValue(entry.getValue()));
+                        map.set(entry.getKey().toString(), getValue(entry.getValue()));
                     }
-                    return map.build();
+                    return map;
                 } else if (value instanceof Period) {
-                    return Json.createValue(value.toString());
+                    return builder.textNode(value.toString());
                 } else if (value.getClass().isArray()) {
-                    JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+                    ArrayNode arrayBuilder = builder.arrayNode();
 
                     Object[] array = (Object[]) value;
                     for (Object instance : array) {
                         arrayBuilder.add(getValue(instance));
                     }
-                    return arrayBuilder.build();
+                    return arrayBuilder;
                 } else if (value instanceof Collection) {
-                    JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+                    ArrayNode arrayBuilder = builder.arrayNode();
                     Collection collection = (Collection) value;
                     for (Object instance : collection) {
                         arrayBuilder.add(getValue(instance));
                     }
-                    return arrayBuilder.build();
+                    return arrayBuilder;
                 } else {
                     throw new IllegalArgumentException("Not a valid value type:" + value.getClass());
                 }
@@ -90,31 +94,33 @@ public record Attributes(JsonObject json)
         }
 
         public Attributes build() {
-            return new Attributes(builder.build());
+            return new Attributes(builder);
         }
     }
 
-    public Optional<JsonValue> getAttribute(String name) {
+    public Optional<JsonNode> getAttribute(String name) {
         return Optional.ofNullable(object().get(name));
     }
 
     public Map<String, String> toMap() {
         Map<String, String> map = new HashMap<>(json().size());
-        for (Map.Entry<String, JsonValue> entry : json().entrySet()) {
-            JsonValue value = entry.getValue();
-            String mapValue = switch (value.getValueType()) {
+        Iterator<Map.Entry<String, JsonNode>> fields = object().fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> entry = fields.next();
+            JsonNode value = entry.getValue();
+            String mapValue = switch (value.getNodeType()) {
                 case ARRAY -> null; // We could serialize these to string or BASE64
                 case OBJECT -> null;
-                case STRING -> ((JsonString) value).getString();
-                case NUMBER -> ((JsonNumber) value).isIntegral() ? Long.toString(((JsonNumber) value).longValue()) :
-                        Double.toString(((JsonNumber) value).doubleValue());
-                case TRUE -> "true";
-                case FALSE -> "false";
+                case STRING -> value.textValue();
+                case NUMBER -> value.textValue();
+                case BINARY -> null;
+                case BOOLEAN -> value.textValue();
+                case MISSING -> null;
                 case NULL -> null;
+                case POJO -> null;
             };
             if (mapValue != null)
                 map.put(entry.getKey(), mapValue);
-
         }
         return map;
     }

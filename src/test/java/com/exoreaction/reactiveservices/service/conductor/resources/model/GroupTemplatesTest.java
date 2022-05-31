@@ -6,11 +6,13 @@ import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import jakarta.json.Json;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +24,7 @@ class GroupTemplatesTest {
     Logger logger = LogManager.getLogger(getClass());
 
     @Test
-    public void givenTemplateWhenServicesProvidedThenCreateGroup() {
+    public void givenTemplateWhenServicesProvidedThenCreateGroup() throws IOException {
         // Given
         AtomicInteger count = new AtomicInteger();
         Groups groups = new Groups(new Groups.GroupsListener() {
@@ -43,7 +45,7 @@ class GroupTemplatesTest {
             }
         }, groups, configuration);
 
-        new ResourceDocument(Json.createReader(getClass().getResourceAsStream("/grouptemplates.json")).readObject())
+        new ResourceDocument((ObjectNode)new ObjectMapper().readTree(getClass().getResource("/grouptemplates.json")))
                 .getResources().map(ResourceObjects::getResources).orElseGet(Collections::emptyList).forEach(ro ->
                 {
                     GroupTemplate template = new GroupTemplate(ro);
@@ -65,7 +67,7 @@ class GroupTemplatesTest {
     }
 
     @Test
-    public void givenTemplateAndGroupWhenServiceProvidedThenExpandGroup() {
+    public void givenTemplateAndGroupWhenServiceProvidedThenExpandGroup() throws IOException {
         // Given
         AtomicInteger count = new AtomicInteger();
         Configuration configuration = new Configuration.Builder()
@@ -91,7 +93,7 @@ class GroupTemplatesTest {
             }
         }, groups, configuration);
 
-        new ResourceDocument(Json.createReader(getClass().getResourceAsStream("/grouptemplates.json")).readObject())
+        new ResourceDocument((ObjectNode)new ObjectMapper().readTree(getClass().getResource("/grouptemplates.json")))
                 .getResources().map(ResourceObjects::getResources).orElseGet(Collections::emptyList).forEach(ro ->
                 {
                     GroupTemplate template = new GroupTemplate(ro);

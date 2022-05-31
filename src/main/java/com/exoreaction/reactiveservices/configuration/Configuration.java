@@ -1,46 +1,47 @@
 package com.exoreaction.reactiveservices.configuration;
 
+import com.exoreaction.util.JsonNodes;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import jakarta.json.*;
-import jakarta.json.stream.JsonGenerator;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.URI;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 /**
  * @author rickardoberg
  * @since 20/04/2022
  */
-public record Configuration(JsonObject config) {
-    public record Builder(JsonObjectBuilder builder) {
+public record Configuration(ObjectNode config) {
+
+    public record Builder(ObjectNode builder) {
 
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder add(String name, JsonValue value)
-        {
-            builder.add(name, value);
+        public Builder add(String name, JsonNode value) {
+            builder.set(name, value);
             return this;
         }
 
-        public Builder add(String name, String value)
-        {
-            return add(name, Json.createValue(value));
+        public Builder add(String name, String value) {
+            return add(name, builder.textNode(value));
         }
 
         public Builder addYaml(InputStream yamlStream) throws IOException {
             try {
-                JsonObject current = builder.build();
-                Map<String, Object> yaml = new ObjectMapper(new YAMLFactory()).readValue(yamlStream, Map.class);
+                ObjectNode current = builder;
+                ObjectNode yaml = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(yamlStream);
+
                 if (current.isEmpty()) {
-                    return new Builder(Json.createObjectBuilder(yaml));
+                    return new Builder(yaml);
                 } else {
                     return new Builder(merge(current, yaml));
                 }
@@ -49,63 +50,75 @@ public record Configuration(JsonObject config) {
             }
         }
 
-        private JsonObjectBuilder merge(JsonObject current, Map<String, Object> yaml) {
-            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-            for (Map.Entry<String, JsonValue> entry : current.entrySet()) {
-                if (entry.getValue() instanceof JsonObject) {
-                    builder.add(entry.getKey(), merge((JsonObject) entry.getValue(), (Map<String, Object>) yaml.get(entry.getKey())).build());
+        private ObjectNode merge(ObjectNode current, ObjectNode yaml) {
+            ObjectNode merged = JsonNodeFactory.instance.objectNode();
+
+            Iterator<Map.Entry<String, JsonNode>> fields = current.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                if (entry.getValue() instanceof ObjectNode object) {
+                    merged.set(entry.getKey(), merge(object, (ObjectNode) yaml.path(entry.getKey())));
                 } else {
-                    builder.add(entry.getKey(), (JsonValue) yaml.getOrDefault(entry.getKey(), entry.getValue()));
+                    JsonNode override = yaml.get(entry.getKey());
+                    merged.set(entry.getKey(), override != null ? override : entry.getValue());
                 }
+
             }
-            return objectBuilder;
+            return merged;
         }
 
         public Configuration build() {
-            return new Configuration(builder.build());
+            return new Configuration(builder);
         }
     }
 
     public Optional<String> getString(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.getString(n, null)));
+        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
+                .map(JsonNode::textValue));
     }
 
     public Optional<URI> getURI(String name) {
 
-        return cfg(name, (config, n) -> Optional.ofNullable(config.getString(n)).map(URI::create));
+        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
+                .map(JsonNode::textValue).map(URI::create));
     }
 
     public Optional<Integer> getInteger(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.getJsonNumber(n)).map(JsonNumber::intValue));
+        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
+                .map(JsonNode::intValue));
     }
 
     public Optional<Boolean> getBoolean(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n)).map(v -> v.equals(JsonValue.TRUE)));
+        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
+                .map(JsonNode::asBoolean));
     }
 
-    public Map<String, JsonValue> asMap() {
-        return config;
+    public Map<String, JsonNode> asMap() {
+        return JsonNodes.asMap(config);
     }
 
     public Configuration getConfiguration(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.getJsonObject(n)).map(Configuration::new))
-                .orElseGet(() -> new Configuration(Json.createObjectBuilder().build()));
+        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
+                .map(ObjectNode.class::cast).map(Configuration::new))
+                .orElseGet(() -> new Configuration(JsonNodeFactory.instance.objectNode()));
     }
 
     public List<Configuration> getConfigurations(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.getJsonArray(n)).map(a -> a.getValuesAs(Configuration::new)))
+        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
+                .map(ArrayNode.class::cast)
+                .map(a -> JsonNodes.getValuesAs(a, Configuration::new)))
                 .orElseGet(Collections::emptyList);
     }
 
     public Builder asBuilder() {
-        return new Builder(Json.createObjectBuilder(config));
+        return new Builder(config);
     }
 
-    private <T> Optional<T> cfg(String name, BiFunction<JsonObject, String, Optional<T>> lookup) {
+    private <T> Optional<T> cfg(String name, BiFunction<ObjectNode, String, Optional<T>> lookup) {
         String[] names = name.split("\\.");
-        JsonObject c = config;
+        ObjectNode c = config;
         for (int i = 0; i < names.length - 1; i++) {
-            c = c.getJsonObject(names[i]);
+            c = (ObjectNode) c.get(names[i]);
             if (c == null)
                 return Optional.empty();
         }
@@ -114,11 +127,6 @@ public record Configuration(JsonObject config) {
 
     @Override
     public String toString() {
-        Map<String, Object> config = new HashMap<>();
-        config.put(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
-        JsonWriterFactory jsonWriterFactory = Json.createWriterFactory(config);
-        StringWriter writer = new StringWriter();
-        jsonWriterFactory.createWriter(writer).write(this.config);
-        return writer.toString();
+        return config.toPrettyString();
     }
 }

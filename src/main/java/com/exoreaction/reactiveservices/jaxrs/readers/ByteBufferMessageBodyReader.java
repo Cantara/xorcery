@@ -1,7 +1,5 @@
 package com.exoreaction.reactiveservices.jaxrs.readers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.ByteBufferDeserializer;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;

@@ -1,7 +1,11 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import jakarta.json.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.net.URI;
 import java.util.Optional;
@@ -12,19 +16,21 @@ import java.util.function.Consumer;
  * @since 01/12/2018
  */
 
-public record Relationship(JsonObject json)
+public record Relationship(ObjectNode json)
         implements JsonElement, Consumer<Relationship.Builder> {
-    public record Builder(JsonObjectBuilder builder) {
+
+    public record Builder(ObjectNode builder) {
+
         public static Relationship relationship(ResourceObject resourceObject) {
             return new Builder().resourceIdentifier(resourceObject).build();
         }
 
         public Builder() {
-            this(Json.createObjectBuilder());
+            this(JsonNodeFactory.instance.objectNode());
         }
 
         public Builder links(Links value) {
-            builder.add("links", value.json());
+            builder.set("links", value.json());
             return this;
         }
 
@@ -38,28 +44,28 @@ public record Relationship(JsonObject json)
 
         public Builder meta(Meta value) {
             if (!value.getMeta().isEmpty()) {
-                builder.add("meta", value.json());
+                builder.set("meta", value.json());
             }
             return this;
         }
 
         public Builder resourceIdentifier(ResourceObjectIdentifier value) {
-            builder.add("data", value == null ? JsonValue.NULL : value.json());
+            builder.set("data", value == null ? NullNode.getInstance() : value.json());
             return this;
         }
 
         public Builder resourceIdentifiers(ResourceObjectIdentifiers value) {
-            builder.add("data", value.json());
+            builder.set("data", value.json());
             return this;
         }
 
         public Builder resourceIdentifier(ResourceObject value) {
-            builder.add("data", value == null ? JsonValue.NULL : value.getResourceObjectIdentifier().json());
+            builder.set("data", value == null ? NullNode.getInstance() : value.getResourceObjectIdentifier().json());
             return this;
         }
 
         public Builder resourceIdentifiers(ResourceObjects value) {
-            builder.add("data", value.getResourceObjectIdentifiers().json());
+            builder.set("data", value.getResourceObjectIdentifiers().json());
             return this;
         }
 
@@ -69,45 +75,45 @@ public record Relationship(JsonObject json)
         }
 
         public Relationship build() {
-            return new Relationship(builder.build());
+            return new Relationship(builder);
         }
     }
 
 
     public boolean isIncluded() {
-        return object().containsKey("data");
+        return object().hasNonNull("data");
     }
 
     public boolean isMany() {
-        return object().get("data") instanceof JsonArray;
+        return object().path("data").isArray();
     }
 
     public Meta getMeta() {
-        return new Meta(
-                Optional.ofNullable(object().getJsonObject("meta")).orElse(JsonValue.EMPTY_JSON_OBJECT));
+        return new Meta(object().path("meta") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     public Links getLinks() {
-        return new Links(
-                Optional.ofNullable(object().getJsonObject("links")).orElse(JsonValue.EMPTY_JSON_OBJECT));
+        return new Links(object().path("links") instanceof ObjectNode object ? object :
+                JsonNodeFactory.instance.objectNode());
     }
 
     public Optional<ResourceObjectIdentifier> getResourceObjectIdentifier() {
-        JsonValue data = object().get("data");
-        if (data == null || data == JsonValue.NULL || data instanceof JsonArray) {
+        JsonNode data = object().path("data");
+        if (data.isNull() || data.isArray()) {
             return Optional.empty();
         }
 
-        return Optional.of(new ResourceObjectIdentifier((JsonObject) data));
+        return Optional.of(new ResourceObjectIdentifier((ObjectNode) data));
     }
 
     public Optional<ResourceObjectIdentifiers> getResourceObjectIdentifiers() {
-        JsonValue data = object().getJsonArray("data");
-        if (data == null || data instanceof JsonObject) {
+        JsonNode data = object().path("data");
+        if (data.isNull() || data.isObject()) {
             return Optional.empty();
         }
 
-        return Optional.of(new ResourceObjectIdentifiers(data.asJsonArray()));
+        return Optional.of(new ResourceObjectIdentifiers((ArrayNode) data));
     }
 
     @Override

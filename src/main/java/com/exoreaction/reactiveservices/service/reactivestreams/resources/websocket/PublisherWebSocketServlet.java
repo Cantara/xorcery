@@ -2,9 +2,7 @@ package com.exoreaction.reactiveservices.service.reactivestreams.resources.webso
 
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonObjectBuilder;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
@@ -12,9 +10,6 @@ import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author rickardoberg
@@ -52,7 +47,7 @@ public class PublisherWebSocketServlet<T>
 
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
         {
-            JsonObject parameters = Json.createObjectBuilder(jettyServerUpgradeRequest.getParameterMap()).build();
+            ObjectNode parameters = objectMapper.valueToTree(jettyServerUpgradeRequest.getParameterMap());
             return new PublisherWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), publisher, parameters, messageBodyWriter, messageBodyReader, resultType, objectMapper);
         });
     }

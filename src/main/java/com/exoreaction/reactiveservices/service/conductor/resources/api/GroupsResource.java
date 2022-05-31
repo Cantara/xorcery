@@ -5,12 +5,10 @@ import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
-import com.exoreaction.reactiveservices.service.conductor.resources.model.GroupTemplate;
 import jakarta.inject.Inject;
-import jakarta.json.Json;
-import jakarta.ws.rs.*;
-
-import java.io.StringReader;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 
 /**
  * @author rickardoberg

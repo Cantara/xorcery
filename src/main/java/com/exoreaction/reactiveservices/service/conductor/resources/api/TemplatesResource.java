@@ -2,16 +2,11 @@ package com.exoreaction.reactiveservices.service.conductor.resources.api;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
-import com.exoreaction.reactiveservices.service.conductor.ConductorService;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.GroupTemplate;
 import jakarta.inject.Inject;
-import jakarta.json.Json;
 import jakarta.ws.rs.*;
-
-import java.io.StringReader;
 
 /**
  * @author rickardoberg
@@ -42,9 +37,9 @@ public class TemplatesResource
 
     @POST
     @Consumes( MediaTypes.APPLICATION_JSON_API )
-    public void add( String resourceObject )
+    public void add( ResourceDocument resourceDocument )
     {
-        conductor.getGroupTemplates().addTemplate(new GroupTemplate(new ResourceObject( Json.createReader( new StringReader( resourceObject ) ).readObject() ) ));
+        conductor.getGroupTemplates().addTemplate(new GroupTemplate(resourceDocument.getResource().get()) );
     }
 
 /*

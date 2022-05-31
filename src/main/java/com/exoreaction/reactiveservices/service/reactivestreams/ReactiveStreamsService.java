@@ -14,12 +14,12 @@ import com.exoreaction.reactiveservices.service.reactivestreams.resources.websoc
 import com.exoreaction.reactiveservices.service.reactivestreams.resources.websocket.SubscriberWebSocketEndpoint;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventSink;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
@@ -202,7 +202,7 @@ public class ReactiveStreamsService
     public <T> CompletionStage<Void> subscribe(ServiceIdentifier selfServiceIdentifier,
                                                Link websocketLink,
                                                ReactiveEventStreams.Subscriber<T> subscriber,
-                                               Optional<JsonObject> parameters) {
+                                               Optional<ObjectNode> parameters) {
 
         CompletableFuture<Void> result = new CompletableFuture<>();
 
@@ -217,7 +217,7 @@ public class ReactiveStreamsService
 
         if (allowLocal && publisher != null) {
             // Local
-            publisher.subscribe(subscriber, parameters.orElseGet(() -> Json.createObjectBuilder().build()));
+            publisher.subscribe(subscriber, parameters.orElseGet(JsonNodeFactory.instance::objectNode));
             return result;
         } else {
 
@@ -278,7 +278,7 @@ public class ReactiveStreamsService
                                          ByteBufferPool byteBufferPool, MessageBodyReader<Object> reader,
                                          MessageBodyWriter<Object> writer, ServiceIdentifier selfServiceIdentifier,
                                          Link websocketLink,
-                                         Optional<JsonObject> parameters,
+                                         Optional<ObjectNode> parameters,
                                          ReactiveEventStreams.Subscriber<T> subscriber,
                                          Type eventType, CompletableFuture<Void> result
     ) {
@@ -380,7 +380,7 @@ public class ReactiveStreamsService
         }
 
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<T> subscriber, JsonObject parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<T> subscriber, ObjectNode parameters) {
             publisher.subscribe(new SubscriberTracker<>(subscriber), parameters);
         }
     }
