@@ -100,7 +100,7 @@ public record Relationship(ObjectNode json)
 
     public Optional<ResourceObjectIdentifier> getResourceObjectIdentifier() {
         JsonNode data = object().path("data");
-        if (data.isNull() || data.isArray()) {
+        if (data.isMissingNode() || data.isArray()) {
             return Optional.empty();
         }
 
@@ -109,7 +109,7 @@ public record Relationship(ObjectNode json)
 
     public Optional<ResourceObjectIdentifiers> getResourceObjectIdentifiers() {
         JsonNode data = object().path("data");
-        if (data.isNull() || data.isObject()) {
+        if (data.isMissingNode() || data.isObject()) {
             return Optional.empty();
         }
 

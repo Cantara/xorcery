@@ -6,9 +6,8 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabases;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Singleton;
-import jakarta.json.JsonString;
-import jakarta.json.JsonValue;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -50,10 +49,7 @@ public class Neo4jService
 
             Map<String, String> neo4jConfig = configuration().getConfiguration("neo4jdatabase.neo4j").asMap()
                     .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                            switch (entry.getValue().getValueType()) {
-                                case STRING -> ((JsonString) entry.getValue()).getString();
-                                default -> entry.getValue().toString();
-                            }
+                            entry.getValue().textValue()
                     ));
 
             DatabaseManagementService managementService = new DatabaseManagementServiceBuilder(Path.of(standardConfiguration.home()))
@@ -61,7 +57,7 @@ public class Neo4jService
                     .build();
 
             Configuration databases = configuration().getConfiguration("neo4jdatabase.databases");
-            for (Map.Entry<String, JsonValue> stringJsonValueEntry : databases.asMap().entrySet()) {
+            for (Map.Entry<String, JsonNode> stringJsonValueEntry : databases.asMap().entrySet()) {
                 GraphDatabaseService graphDb = null;
                 try {
                     graphDb = managementService.database(stringJsonValueEntry.getKey());

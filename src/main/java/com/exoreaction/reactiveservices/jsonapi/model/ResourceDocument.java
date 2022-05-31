@@ -100,8 +100,8 @@ public record ResourceDocument(ObjectNode json)
     }
 
     public Optional<ResourceObject> getResource() {
-        JsonNode data = object().get("data");
-        if (data == null || data.isNull() || data instanceof ArrayNode) {
+        JsonNode data = object().path("data");
+        if (!data.isObject()) {
             return Optional.empty();
         }
 
@@ -110,8 +110,8 @@ public record ResourceDocument(ObjectNode json)
 
 
     public Optional<ResourceObjects> getResources() {
-        JsonNode data = object().get("data");
-        if (data == null || data instanceof ObjectNode) {
+        JsonNode data = object().path("data");
+        if (!data.isArray()) {
             return Optional.empty();
         }
 
