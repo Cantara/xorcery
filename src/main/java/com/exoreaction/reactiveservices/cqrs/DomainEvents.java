@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.domainevents.api;
+package com.exoreaction.reactiveservices.cqrs;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

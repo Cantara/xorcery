@@ -116,13 +116,13 @@ public class ConductorService
                 URI templateUri = URI.create(templateName);
 
                 ResourceDocument templates = new ResourceDocument((ObjectNode)objectMapper.readTree(templateUri.toURL().openStream()));
-                templates.getResources().ifPresent(ros -> ros.getResources().forEach(ro -> addTemplate(new GroupTemplate(ro))));
+                templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
                 templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
             } catch (IllegalArgumentException | IOException e) {
                 // Just load from classpath
                 try {
                     ResourceDocument templates = new ResourceDocument((ObjectNode)objectMapper.readTree(getClass().getResourceAsStream(templateName)));
-                    templates.getResources().ifPresent(ros -> ros.getResources().forEach(ro -> addTemplate(new GroupTemplate(ro))));
+                    templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
                     templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
                 } catch (IOException ex) {
                     logger.error("Could not load template "+templateName, ex);

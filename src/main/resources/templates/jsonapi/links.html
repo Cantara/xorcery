@@ -1,6 +1,6 @@
 <tbody class="links">
 <tr><th colspan="2">Links</th></tr>
-{{#each}}
-<tr><td>{{key}}</td><td> <a href="{{value.string}}">{{value.string}}</a> </td></tr>
+{{#each this.links}}
+<tr><td>{{rel}}</td><td> <a href="{{href}}">{{href}}</a> </td></tr>
 {{/each}}
 </tbody>

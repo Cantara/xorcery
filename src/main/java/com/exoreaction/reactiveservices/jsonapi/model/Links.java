@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
+import com.exoreaction.util.With;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,7 +20,9 @@ import java.util.function.Consumer;
 public record Links(ObjectNode json)
         implements JsonElement {
 
-    public record Builder(ObjectNode builder) {
+    public record Builder(ObjectNode builder)
+            implements With<Attributes.Builder>
+    {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
@@ -59,14 +62,6 @@ public record Links(ObjectNode json)
 
         public Builder link(String rel, UriBuilder href, Meta meta) {
             return link(rel, href.build().toASCIIString(), meta);
-        }
-
-        @SafeVarargs
-        public final Builder with(Consumer<Builder>... consumers) {
-            for (Consumer<Builder> consumer : consumers) {
-                consumer.accept(this);
-            }
-            return this;
         }
 
         public Links build() {

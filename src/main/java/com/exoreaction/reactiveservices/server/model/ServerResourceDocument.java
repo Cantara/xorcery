@@ -10,13 +10,13 @@ public record ServerResourceDocument(ResourceDocument resourceDocument) {
 
     public Stream<ServiceResourceObject> getServices() {
         return resourceDocument.getResources().orElseThrow()
-                .getResources().stream()
+                .stream()
                 .map(ServiceResourceObject::new);
     }
 
     public Optional<ServiceResourceObject> getServiceByIdentifier(ServiceIdentifier serviceIdentifier) {
         return resourceDocument.getResources()
-                .flatMap(r -> r.getResources().stream()
+                .flatMap(r -> r.stream()
                         .filter(ro -> ro.getResourceObjectIdentifier().equals(serviceIdentifier.resourceObjectIdentifier()))
                         .findFirst())
                 .map(ServiceResourceObject::new);
@@ -24,7 +24,7 @@ public record ServerResourceDocument(ResourceDocument resourceDocument) {
 
     public Optional<ServiceResourceObject> getServiceByType(String type) {
         return resourceDocument.getResources()
-                .flatMap(ro -> ro.getResources().stream()
+                .flatMap(ro -> ro.stream()
                         .filter(r -> r.getType().equals(type))
                         .findFirst())
                 .map(ServiceResourceObject::new);

@@ -4,6 +4,7 @@ import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.configuration.StandardConfiguration;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.neo4j.client.Cypher;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabases;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -65,7 +66,7 @@ public class Neo4jService
                     managementService.createDatabase(stringJsonValueEntry.getKey());
                     graphDb = managementService.database(stringJsonValueEntry.getKey());
                 }
-                GraphDatabase graphDatabase = new GraphDatabase(graphDb);
+                GraphDatabase graphDatabase = new GraphDatabase(graphDb, Cypher.defaultMappingReturn());
 
                 bind(graphDb).named(stringJsonValueEntry.getKey()).to(GraphDatabaseService.class);
                 bind(graphDatabase).named(stringJsonValueEntry.getKey()).to(GraphDatabase.class);
@@ -100,6 +101,6 @@ public class Neo4jService
 
     @Override
     public GraphDatabase apply(String name) {
-        return databases.computeIfAbsent(name, n -> new GraphDatabase(managementService.database(n)));
+        return databases.computeIfAbsent(name, n -> new GraphDatabase(managementService.database(n), Cypher.defaultMappingReturn()));
     }
 }

@@ -2,11 +2,15 @@ package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.util.JsonNodes;
+import com.exoreaction.util.With;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 /**
  * @author rickardoberg
@@ -14,7 +18,7 @@ import java.util.stream.Collector;
  */
 
 public record ResourceObjects(ArrayNode json)
-        implements JsonElement {
+        implements JsonElement,Iterable<ResourceObject> {
 
     public static Collector<ResourceObject, Builder, ResourceObjects> toResourceObjects() {
         return Collector.of(Builder::new, (builder, ro) -> {
@@ -22,7 +26,9 @@ public record ResourceObjects(ArrayNode json)
         }, (builder1, builder2) -> builder1, Builder::build);
     }
 
-    public record Builder(ArrayNode builder) {
+    public record Builder(ArrayNode builder)
+            implements With<Attributes.Builder>
+    {
         public Builder() {
             this(JsonNodeFactory.instance.arrayNode());
         }
@@ -39,6 +45,17 @@ public record ResourceObjects(ArrayNode json)
 
     public List<ResourceObject> getResources() {
         return JsonNodes.getValuesAs(array(), ResourceObject::new);
+    }
+
+    @NotNull
+    @Override
+    public Iterator<ResourceObject> iterator() {
+        return getResources().iterator();
+    }
+
+    public Stream<ResourceObject> stream()
+    {
+        return getResources().stream();
     }
 
     public ResourceObjectIdentifiers getResourceObjectIdentifiers() {

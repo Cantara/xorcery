@@ -127,7 +127,7 @@ public class Neo4jDomainEventsService
             String databaseName = selfParameters.flatMap(sa -> new Attributes(sa).getOptionalString("database"))
                     .orElse("neo4j");
             GraphDatabase graphDatabase = graphDatabases.apply(databaseName);
-            disruptor.handleEventsWith(new Neo4jDomainEventEventHandler(graphDatabase.graphDatabaseService(), subscription));
+            disruptor.handleEventsWith(new Neo4jDomainEventEventHandler(graphDatabase.getGraphDatabaseService(), subscription));
             disruptor.start();
             subscription.request(1);
             return disruptor.getRingBuffer();

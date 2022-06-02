@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.util.JsonNodes;
+import com.exoreaction.util.With;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
@@ -19,7 +20,9 @@ import java.util.function.Consumer;
 public record Included(ArrayNode json)
         implements JsonElement, Consumer<Included.Builder> {
 
-    public record Builder(ArrayNode builder, Set<String> included) {
+    public record Builder(ArrayNode builder, Set<String> included)
+            implements With<Attributes.Builder>
+    {
         public Builder() {
             this(JsonNodeFactory.instance.arrayNode(), new HashSet<>());
         }
@@ -44,7 +47,7 @@ public record Included(ArrayNode json)
         }
 
         public Builder include(ResourceObjects resourceObjects) {
-            for (ResourceObject resource : resourceObjects.getResources()) {
+            for (ResourceObject resource : resourceObjects) {
                 include(resource);
             }
             return this;

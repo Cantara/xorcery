@@ -4,7 +4,7 @@ import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.reactiveservices.disruptor.*;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
-import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
+import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 
 import java.nio.ByteBuffer;
@@ -31,17 +31,17 @@ public class EventStoreDomainEventEventHandler
         RequestMetadata requestMetadata = new RequestMetadata(event.metadata);
         UUID eventId = requestMetadata.correlationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
         DomainEventMetadata domainEventMetadata = new DomainEventMetadata(event.metadata);
-        String eventType = domainEventMetadata.commandType();
+        String eventType = domainEventMetadata.getCommandType();
         EventData eventData = EventData.builderAsBinary(eventId, eventType, event.event.event().array())
                 .metadataAsJson(event.metadata)
                 .build();
 
         event.event.event().clear();
         DeploymentMetadata deploymentMetadata = new DeploymentMetadata(event.metadata);
-        String streamId = deploymentMetadata.environment() + "-" +
-                deploymentMetadata.tag() + "-" +
-                domainEventMetadata.domain() + "-" +
-                deploymentMetadata.version();
+        String streamId = deploymentMetadata.getEnvironment() + "-" +
+                deploymentMetadata.getTag() + "-" +
+                domainEventMetadata.getDomain() + "-" +
+                deploymentMetadata.getVersion();
 
         client.appendToStream(streamId, eventData).whenComplete((wr, t) ->
         {

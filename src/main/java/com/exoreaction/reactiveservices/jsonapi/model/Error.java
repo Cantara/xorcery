@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
+import com.exoreaction.util.With;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -11,7 +12,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public record Error(ObjectNode json)
         implements JsonElement {
-    public record Builder(ObjectNode builder) {
+
+    public record Builder(ObjectNode builder)
+            implements With<Attributes.Builder>
+    {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }

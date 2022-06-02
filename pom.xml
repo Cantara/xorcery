@@ -418,6 +418,12 @@
             <version>2.0.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.eclipse</groupId>
+            <artifactId>yasson</artifactId>
+            <version>3.0.0-RC2</version>
+        </dependency>
+
         <!-- Disruptor -->
         <dependency>
             <groupId>com.lmax</groupId>

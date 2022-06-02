@@ -219,7 +219,7 @@ public class JmxMetrics
                             ServerMXBean serverMXBean = new ServerMXBean.Model(serverId);
                             managementServer.registerMBean(serverMXBean, ObjectName.getInstance("reactive", "server", serverId));
 
-                            for (ResourceObject resource : rd.getResources().orElseThrow().getResources()) {
+                            for (ResourceObject resource : rd.getResources().orElseThrow()) {
                                 ObjectName name = ObjectName.getInstance(String.format("reactive:server=%s,metric=%s", serverId, resource.getId()));
                                 String metricType = resource.getAttributes().getString("type");
                                 final Supplier<JsonNode> metricSupplier = newMetricSupplier(sro, resource.getId());

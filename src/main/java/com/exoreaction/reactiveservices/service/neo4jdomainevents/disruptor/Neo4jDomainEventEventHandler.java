@@ -5,6 +5,7 @@ import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.reactiveservices.service.neo4j.client.Cypher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,8 +24,7 @@ import java.util.concurrent.CompletableFuture;
  */
 
 public class Neo4jDomainEventEventHandler
-    implements DefaultEventHandler<Event<EventWithResult<ArrayNode, Metadata>>>
-{
+        implements DefaultEventHandler<Event<EventWithResult<ArrayNode, Metadata>>> {
     private ReactiveEventStreams.Subscription subscription;
     long version = 0;
     private GraphDatabaseService graphDatabaseService;
@@ -39,45 +39,35 @@ public class Neo4jDomainEventEventHandler
     }
 
     @Override
-    public void onEvent(Event<EventWithResult<ArrayNode, Metadata>> event, long sequence, boolean endOfBatch ) throws Exception
-    {
+    public void onEvent(Event<EventWithResult<ArrayNode, Metadata>> event, long sequence, boolean endOfBatch) throws Exception {
         ArrayNode eventsJson = event.event.event();
+        Map<String, Object> metadataMap = Cypher.toMap(event.metadata.metadata());
 
         for (JsonNode jsonNode : eventsJson) {
-            ObjectNode objectNode = (ObjectNode)jsonNode;
-            String type = objectNode.path("eventtype").textValue();
+            ObjectNode objectNode = (ObjectNode) jsonNode;
+            String type = objectNode.path("@class").textValue();
+            type = type.substring(type.lastIndexOf('$')+1);
 
             Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
-            Map<String, Object> parameters = new HashMap<>(objectNode.size());
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> next = fields.next();
-
-                parameters.put(next.getKey(), switch (next.getValue().getNodeType()) {
-                    case ARRAY -> null;
-                    case OBJECT -> null;
-                    case STRING -> next.getValue().textValue();
-                    case NUMBER -> next.getValue().numberValue();
-                    case BINARY -> null;
-                    case BOOLEAN -> Boolean.TRUE;
-                    case MISSING -> null;
-                    case NULL -> null;
-                    case POJO -> null;
-                });
-            }
+            Map<String, Object> parameters = Cypher.toMap(objectNode);
+            parameters.put("metadata", metadataMap);
 
             try {
-                String statement = Files.read(getClass().getResourceAsStream("/neo4j/"+type+".cyp"), StandardCharsets.UTF_8);
+                String finalType = type;
+                String statementFile = event.metadata.getString("domain")
+                        .map(domain -> "/neo4j/" + domain + "/" + finalType + ".cyp")
+                        .orElseGet(()->"/neo4j/" + finalType + ".cyp");
+                String statement = Files.read(getClass().getResourceAsStream(statementFile), StandardCharsets.UTF_8);
 
                 graphDatabaseService.executeTransactionally(statement, parameters);
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 event.event.result().completeExceptionally(e);
             }
         }
 
         futures.add(event.event.result());
 
-        if (endOfBatch)
-        {
+        if (endOfBatch) {
             try {
                 tx.commit();
                 tx.close();

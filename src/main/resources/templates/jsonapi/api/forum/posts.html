@@ -1,0 +1,32 @@
+<html>
+<head>
+    <style>
+        table
+        {
+            border:2px solid;
+        }
+
+        td
+        {
+            border: 1px solid gray;
+        }
+    </style>
+</head>
+<body>
+
+<table class="resourcedocument">
+
+{{#with resources}}
+{{#each this}}
+<tr><td colspan="2">{{> "jsonapi/resource"}}</td></tr>
+{{/each}}
+{{/with}}
+</table>
+
+<form action="?profile=CreatePost" method="post" enctype="application/x-www-form-urlencoded">
+    Title:<input type="text" name="title"><br>
+    Body:<input type="text" name="body"><br>
+
+    <input type="submit">
+</form>
+</body>

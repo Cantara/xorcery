@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
+import com.exoreaction.util.With;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -19,7 +20,9 @@ import java.util.function.Consumer;
 public record Relationship(ObjectNode json)
         implements JsonElement, Consumer<Relationship.Builder> {
 
-    public record Builder(ObjectNode builder) {
+    public record Builder(ObjectNode builder)
+            implements With<Attributes.Builder>
+    {
 
         public static Relationship relationship(ResourceObject resourceObject) {
             return new Builder().resourceIdentifier(resourceObject).build();
@@ -66,11 +69,6 @@ public record Relationship(ObjectNode json)
 
         public Builder resourceIdentifiers(ResourceObjects value) {
             builder.set("data", value.getResourceObjectIdentifiers().json());
-            return this;
-        }
-
-        public Builder with(Consumer<Builder> consumer) {
-            consumer.accept(this);
             return this;
         }
 

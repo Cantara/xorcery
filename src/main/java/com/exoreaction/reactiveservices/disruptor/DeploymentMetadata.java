@@ -12,17 +12,17 @@ public record DeploymentMetadata(Metadata metadata) {
                 .build());
     }
 
-    public String environment()
+    public String getEnvironment()
     {
         return metadata.getString("environment").orElse("default");
     }
 
-    public String tag()
+    public String getTag()
     {
         return metadata.getString("tag").orElse("default");
     }
 
-    public String version()
+    public String getVersion()
     {
         return metadata.getString("version").orElse("0.1.0");
     }

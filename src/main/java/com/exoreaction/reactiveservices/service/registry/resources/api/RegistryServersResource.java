@@ -28,7 +28,7 @@ public class RegistryServersResource {
     public ResourceDocument servers() {
         return new ResourceDocument.Builder()
                 .data(service.getServers().stream()
-                        .flatMap(rd -> rd.resourceDocument().getResources().orElseThrow().getResources().stream())
+                        .flatMap(rd -> rd.resourceDocument().getResources().orElseThrow().stream())
                         .collect(ResourceObjects.toResourceObjects()))
                 .build();
     }

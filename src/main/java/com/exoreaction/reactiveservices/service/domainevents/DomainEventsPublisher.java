@@ -11,7 +11,7 @@ import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
-import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
+import com.exoreaction.reactiveservices.cqrs.DomainEvents;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.fasterxml.jackson.databind.node.ObjectNode;

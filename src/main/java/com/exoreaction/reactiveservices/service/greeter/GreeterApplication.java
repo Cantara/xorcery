@@ -4,9 +4,9 @@ import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
+import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
-import com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents;
+import com.exoreaction.reactiveservices.cqrs.DomainEvents;
 import com.exoreaction.reactiveservices.service.greeter.commands.UpdateGreeting;
 import com.exoreaction.reactiveservices.service.greeter.domainevents.UpdatedGreeting;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
-import static com.exoreaction.reactiveservices.service.domainevents.api.DomainEvents.events;
+import static com.exoreaction.reactiveservices.cqrs.DomainEvents.events;
 
 @Singleton
 @Contract
@@ -75,7 +75,7 @@ public class GreeterApplication {
     public CompletionStage<String> get(String name) {
 
         return graphDatabase.execute("MATCH (greeter:Greeter {id:$id}) RETURN greeter.greeting as greeting",
-                        new MapUtil.MapBuilder<String, Object>().entry("id", "greeter").create())
+                        new MapUtil.MapBuilder<String, Object>().entry("id", "greeter").create(), 30)
                 .thenApply(r ->
                 {
                     try (GraphResult result = r) {

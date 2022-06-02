@@ -32,7 +32,8 @@ public class HandlebarsFeature
                 .getParentFile().getParentFile();
 
         TemplateLoader templateLoader = new FileTemplateLoader(file, ".html");
-        Handlebars handlebars = new Handlebars().with(templateLoader);
+        Handlebars handlebars = new Handlebars()
+                .with(templateLoader);
         handlebars.getCache().setReload(true);
 
         bind(handlebars);

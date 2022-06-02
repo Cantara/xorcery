@@ -1,12 +1,14 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
+import com.exoreaction.util.With;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Optional;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 
 /**
@@ -17,7 +19,9 @@ import java.util.stream.Stream;
 public record ResourceDocument(ObjectNode json)
         implements JsonElement {
 
-    public record Builder(ObjectNode builder) {
+    public record Builder(ObjectNode builder)
+            implements With<Attributes.Builder>
+    {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
@@ -152,7 +156,7 @@ public record ResourceDocument(ObjectNode json)
      * @return
      */
     public Stream<ResourceDocument> split() {
-        return getResources().map(ros -> ros.getResources().stream().map(ro ->
+        return getResources().map(ros -> ros.stream().map(ro ->
                         new Builder()
                                 .data(ro)
                                 .links(getLinks())

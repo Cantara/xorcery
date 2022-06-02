@@ -193,7 +193,7 @@ public class RegistryService
         return servers.stream()
                 .map(ServerResourceDocument::resourceDocument)
                 .flatMap(rd -> rd.getResources().stream())
-                .flatMap(r -> r.getResources().stream())
+                .flatMap(ResourceObjects::stream)
                 .filter(ro -> ro.getResourceObjectIdentifier().equals(serviceIdentifier.resourceObjectIdentifier()))
                 .findFirst().map(ServiceResourceObject::new);
     }
@@ -274,7 +274,7 @@ public class RegistryService
             for (ServerResourceDocument serverResourceDocument : servers) {
                 serverResourceDocument.resourceDocument().getResources().ifPresent(ros ->
                 {
-                    ros.getResources().forEach(resourceObjects::resource);
+                    ros.forEach(resourceObjects::resource);
                 });
             }
             ResourceDocument snapshotDocument = new ResourceDocument.Builder()

@@ -13,14 +13,24 @@
     </style>
 </head>
 <body>
+
 <table class="resourcedocument">
-{{#with links.entrySet}}
-    {{> "jsonapi/links"}}
+
+{{#with links}}
+{{> "jsonapi/links"}}
 {{/with}}
 
-{{#each data}}
+{{#with resources}}
+    {{#each this}}
     <tr><td colspan="2">{{> "jsonapi/resource"}}</td></tr>
-{{/each}}
+    {{/each}}
+{{/with}}
+
+{{#with resource}}
+    {{#if this}}
+        <tr><td colspan="2">{{> "jsonapi/resource"}}</td></tr>
+    {{/if}}
+{{/with}}
 </table>
 
 

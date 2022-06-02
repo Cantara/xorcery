@@ -5,6 +5,5 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.WRAPPER_OBJECT,property = "type")
 public interface ConductorChange {
-//    @JsonValue
     ObjectNode json();
 }

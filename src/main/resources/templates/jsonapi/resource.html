@@ -1,15 +1,15 @@
-<table class="resource" id="{{id.string}}-{{type.string}}">
+<table class="resource" id="{{id}}-{{type}}">
     <thead>
     <tr>
-        <th colspan="2"><span class="resource_type">{{type.string}}</span>:<span class="resource_id">{{id.string}}</span></th>
+        <th colspan="2"><span class="resource_type">{{type}}</span>:<span class="resource_id">{{id}}</span></th>
     </tr>
     </thead>
 
-    {{#with this.links.entrySet}}
+    {{#with this.links}}
         {{> "jsonapi/links"}}
     {{/with}}
 
-    {{#with this.attributes.entrySet}}
+    {{#with this.attributes}}
         {{> "jsonapi/attributes"}}
     {{/with}}
 
