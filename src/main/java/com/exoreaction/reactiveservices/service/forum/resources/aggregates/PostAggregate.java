@@ -7,7 +7,12 @@ import com.exoreaction.reactiveservices.service.forum.resources.events.PostEvent
 
 public class PostAggregate
         extends Aggregate<PostAggregate.PostSnapshot> {
+
     public record CreatePost(String title, String body)
+            implements Command {
+    }
+
+    public record UpdatePost(String title, String body)
             implements Command {
     }
 
@@ -30,6 +35,10 @@ public class PostAggregate
 
     public void handle(CreatePost post) {
         add(new PostEvents.CreatedPost());
+        add(new PostEvents.UpdatedPost(post.title(), post.body()));
+    }
+
+    public void handle(UpdatePost post) {
         add(new PostEvents.UpdatedPost(post.title(), post.body()));
     }
 

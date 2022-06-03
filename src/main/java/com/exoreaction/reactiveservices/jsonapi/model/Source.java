@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public record Source(ObjectNode json)
         implements JsonElement {
     public record Builder(ObjectNode builder)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());

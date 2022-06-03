@@ -6,6 +6,10 @@ public record DomainEventMetadata(Metadata metadata)
 {
     public record Builder(Metadata.Builder builder)
     {
+        public Builder(Metadata metadata) {
+            this(metadata.toBuilder());
+        }
+
         public Builder domain(String value)
         {
             builder.add("domain", value);

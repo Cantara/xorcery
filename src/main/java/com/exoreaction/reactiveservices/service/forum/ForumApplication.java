@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.forum;
 
+import com.exoreaction.reactiveservices.cqrs.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.Command;
 import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.DomainEvents;
@@ -10,7 +11,6 @@ import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPubl
 import com.exoreaction.reactiveservices.service.forum.contexts.PostContext;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
 import com.exoreaction.reactiveservices.service.forum.model.PostModel;
-import com.exoreaction.reactiveservices.service.forum.resources.aggregates.PostAggregate;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
@@ -60,19 +60,19 @@ public class ForumApplication {
     }
 
     public PostContext post(PostModel postModel) {
-        return new PostContext(postModel);
+        return new PostContext(this, postModel);
     }
 
-    public CompletionStage<Metadata> handle(PostAggregate postAggregate, Metadata metadata, Command command) {
+    public CompletionStage<Metadata> handle(Aggregate aggregate, Metadata metadata, Command command) {
 
         // TODO Load snapshot
 
         try {
-            DomainEvents events = postAggregate.handle(metadata, postAggregate.getSnapshot(), command);
+            DomainEvents events = aggregate.handle(metadata, aggregate.getSnapshot(), command);
 
             metadata = new DomainEventMetadata.Builder(metadata.toBuilder())
                     .domain("forum")
-                    .aggregateType(postAggregate.getClass())
+                    .aggregateType(aggregate.getClass())
                     .commandType(command.getClass())
                     .build().metadata();
 

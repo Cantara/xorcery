@@ -14,7 +14,7 @@ public record Error(ObjectNode json)
         implements JsonElement {
 
     public record Builder(ObjectNode builder)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());

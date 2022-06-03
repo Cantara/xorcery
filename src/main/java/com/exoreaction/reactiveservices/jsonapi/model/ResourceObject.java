@@ -16,7 +16,7 @@ public record ResourceObject(ObjectNode json)
         implements JsonElement {
 
     public record Builder(ObjectNode builder)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
 
         public Builder(String type, String id) {

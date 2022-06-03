@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
+import com.exoreaction.reactiveservices.cqrs.Model;
 import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.util.JsonNodes;
 import com.exoreaction.util.With;
@@ -26,8 +27,13 @@ public record ResourceObjects(ArrayNode json)
         }, (builder1, builder2) -> builder1, Builder::build);
     }
 
+    public static ResourceObjects toResourceObjects(Stream<ResourceObject> stream)
+    {
+        return stream.collect(ResourceObjects.toResourceObjects());
+    }
+
     public record Builder(ArrayNode builder)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
         public Builder() {
             this(JsonNodeFactory.instance.arrayNode());

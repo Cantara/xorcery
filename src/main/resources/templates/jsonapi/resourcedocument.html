@@ -15,6 +15,9 @@
 <body>
 
 <table class="resourcedocument">
+{{#with errors}}
+{{> "jsonapi/errors"}}
+{{/with}}
 
 {{#with links}}
 {{> "jsonapi/links"}}
@@ -22,13 +25,13 @@
 
 {{#with resources}}
     {{#each this}}
-    <tr><td colspan="2">{{> "jsonapi/resource"}}</td></tr>
+    <tr><td colspan="2">{{> "jsonapi/resourceobject"}}</td></tr>
     {{/each}}
 {{/with}}
 
 {{#with resource}}
     {{#if this}}
-        <tr><td colspan="2">{{> "jsonapi/resource"}}</td></tr>
+        <tr><td colspan="2">{{> "jsonapi/resourceobject"}}</td></tr>
     {{/if}}
 {{/with}}
 </table>

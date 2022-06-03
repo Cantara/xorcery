@@ -33,8 +33,17 @@ public record Attributes(ObjectNode json)
             return this;
         }
 
+        public Builder attribute(Enum<?> name, Object value) {
+            return attribute(name.name(), value);
+        }
+
         public Builder attribute(String name, JsonNode value) {
             builder.set(name, value);
+            return this;
+        }
+
+        public Builder attributes(ObjectNode objectNode) {
+            objectNode.fields().forEachRemaining(entry -> builder.set(entry.getKey(), entry.getValue()));
             return this;
         }
 

@@ -16,7 +16,7 @@ import java.util.List;
 public record ResourceObjectIdentifiers(ArrayNode json)
         implements JsonElement {
     public record Builder(ArrayNode builder)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
         public Builder() {
             this(JsonNodeFactory.instance.arrayNode());

@@ -16,9 +16,13 @@
 
 <table class="resourcedocument">
 
+{{#with errors}}
+{{> "jsonapi/errors"}}
+{{/with}}
+
 {{#with resources}}
 {{#each this}}
-<tr><td colspan="2">{{> "jsonapi/resource"}}</td></tr>
+<tr><td colspan="2">{{> "jsonapi/resourceobject"}}</td></tr>
 {{/each}}
 {{/with}}
 </table>

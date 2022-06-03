@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Optional;
-import java.util.Spliterators;
 import java.util.stream.Stream;
 
 /**
@@ -20,7 +19,7 @@ public record ResourceDocument(ObjectNode json)
         implements JsonElement {
 
     public record Builder(ObjectNode builder)
-            implements With<Attributes.Builder>
+            implements With<ResourceDocument.Builder>
     {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());

@@ -50,7 +50,7 @@ public interface JsonElement {
     }
 
     default Optional<String> getOptionalString(String name) {
-        return Optional.ofNullable(object().path(name).asText());
+        return Optional.ofNullable(object().get(name)).map(JsonNode::asText);
     }
 
     default int getInt(String name) {

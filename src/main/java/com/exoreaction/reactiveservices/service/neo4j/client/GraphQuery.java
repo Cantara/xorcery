@@ -28,12 +28,12 @@ public class GraphQuery
     private int timeout = 0; // No timeout is the default
 
     private String baseQuery;
-    private BiConsumer<GraphQuery,StringBuilder> extend;
+    private BiConsumer<GraphQuery, StringBuilder> extend;
     private Function<Enum<?>, String> fieldMapping;
     private final Function<GraphQuery, CompletionStage<GraphResult>> applyQuery;
 
     public GraphQuery(String baseQuery,
-                      Function<Enum<?>,String> fieldMapping,
+                      Function<Enum<?>, String> fieldMapping,
                       Function<GraphQuery, CompletionStage<GraphResult>> applyQuery) {
         this.baseQuery = baseQuery;
         this.fieldMapping = fieldMapping;
@@ -53,15 +53,11 @@ public class GraphQuery
      * @param extend
      * @return
      */
-    public GraphQuery extend( BiConsumer<GraphQuery,StringBuilder> extend )
-    {
-        if ( this.extend == null )
-        {
+    public GraphQuery extend(BiConsumer<GraphQuery, StringBuilder> extend) {
+        if (this.extend == null) {
             this.extend = extend;
-        }
-        else
-        {
-            this.extend = this.extend.andThen( extend );
+        } else {
+            this.extend = this.extend.andThen(extend);
         }
 
         return this;
@@ -116,11 +112,12 @@ public class GraphQuery
     public Map<Enum<?>, Object> getParameters() {
         return parameters;
     }
+
     public int getTimeout() {
         return timeout;
     }
 
-    public <T> CompletionStage<Stream<T>> stream(Function<Result.ResultRow, T> mapper) {
+    public <T> CompletionStage<Stream<T>> stream(Function<RowModel, T> mapper) {
         return applyQuery.apply(this).thenApply(gr ->
         {
             List<T> results = new ArrayList<>();
@@ -128,7 +125,7 @@ public class GraphQuery
             try {
                 try (gr) {
                     gr.getResult().accept((Result.ResultVisitor<Exception>) row -> {
-                        results.add(mapper.apply(row));
+                        results.add(mapper.apply(new RowModel(row)));
                         return true;
                     });
                     return results.stream();
@@ -148,69 +145,55 @@ public class GraphQuery
      *
      * @return final Cypher query
      */
-    public String build(  )
-    {
+    public String build() {
         // Base query
-        StringBuilder cypher = new StringBuilder( baseQuery );
+        StringBuilder cypher = new StringBuilder(baseQuery);
 
         // Optionally extend base query
-        if ( extend != null )
-        {
-            extend.accept( this, cypher );
+        if (extend != null) {
+            extend.accept(this, cypher);
         }
 
         // Return clause
-        if ( !result.isEmpty() )
-        {
-            cypher.append( " RETURN " );
+        if (!result.isEmpty()) {
+            cypher.append(" RETURN ");
 
-            if ( distinct )
-            {
-                cypher.append( "DISTINCT " );
+            if (distinct) {
+                cypher.append("DISTINCT ");
             }
 
-            if ( count )
-            {
-                cypher.append( "count(*) as total" );
-            }
-            else
-            {
-                cypher.append( result.stream().map( fieldMapping ).reduce( ( s1, s2 ) -> s1 + "," + s2 ).orElse( "" ) );
+            if (count) {
+                cypher.append("count(*) as total");
+            } else {
+                cypher.append(result.stream().map(fieldMapping).reduce((s1, s2) -> s1 + "," + s2).orElse(""));
             }
         }
 
-        if ( !count )
-        {
+        if (!count) {
             // Sort
-            if ( sortOrder != null )
-            {
-                cypher.append( " ORDER BY " );
+            if (sortOrder != null) {
+                cypher.append(" ORDER BY ");
 
-                Iterator<Map.Entry<Enum<?>,Order>> itr = sortOrder.entrySet().iterator();
-                while ( itr.hasNext() )
-                {
-                    Map.Entry<Enum<?>,Order> entry = itr.next();
-                    cypher.append( Cypher.toField( entry.getKey() ) );
-                    if ( entry.getValue() == Order.DESCENDING )
-                    {
-                        cypher.append( " DESC " );
+                Iterator<Map.Entry<Enum<?>, Order>> itr = sortOrder.entrySet().iterator();
+                while (itr.hasNext()) {
+                    Map.Entry<Enum<?>, Order> entry = itr.next();
+                    cypher.append(Cypher.toField(entry.getKey()));
+                    if (entry.getValue() == Order.DESCENDING) {
+                        cypher.append(" DESC ");
                     }
 
-                    if ( itr.hasNext() )
-                    {
-                        cypher.append( ',' );
+                    if (itr.hasNext()) {
+                        cypher.append(',');
                     }
                 }
             }
 
             // Skip + Limit
-            if ( skip != -1 )
-            {
-                cypher.append( " SKIP " ).append( skip );
+            if (skip != -1) {
+                cypher.append(" SKIP ").append(skip);
             }
-            if ( limit != -1 )
-            {
-                cypher.append( " LIMIT " ).append( limit );
+            if (limit != -1) {
+                cypher.append(" LIMIT ").append(limit);
             }
         }
 

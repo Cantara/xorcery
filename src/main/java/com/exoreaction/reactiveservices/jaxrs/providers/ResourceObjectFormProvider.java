@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.jaxrs.providers;
 
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
@@ -20,23 +19,21 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.List;
 
 @Produces({"application/x-www-form-urlencoded", "*/*"})
 @Consumes({"application/x-www-form-urlencoded", "*/*"})
 @Singleton
 @Provider
-public final class JsonApiFormProvider extends AbstractFormProvider<ResourceDocument> {
+public final class ResourceObjectFormProvider extends AbstractFormProvider<ResourceObject> {
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return type == ResourceDocument.class;
+        return type == ResourceObject.class;
     }
 
     @Override
-    public ResourceDocument readFrom(
-            Class<ResourceDocument> type,
+    public ResourceObject readFrom(
+            Class<ResourceObject> type,
             Type genericType,
             Annotation annotations[],
             MediaType mediaType,
@@ -45,13 +42,13 @@ public final class JsonApiFormProvider extends AbstractFormProvider<ResourceDocu
 
         NullableMultivaluedHashMap<String, String> map = this.readFrom(new NullableMultivaluedHashMap<>(), mediaType, decode(annotations), entityStream);
 
-        return new ResourceDocument.Builder().data(new ResourceObject.Builder("form").attributes(new Attributes.Builder().with(builder ->
+        return new ResourceObject.Builder("form").attributes(new Attributes.Builder().with(builder ->
         {
             map.forEach((name, value) ->
             {
                 builder.attribute(name, value.get(0));
             });
-        }))).build();
+        })).build();
     }
 
 
@@ -71,13 +68,13 @@ public final class JsonApiFormProvider extends AbstractFormProvider<ResourceDocu
 
     @Override
     public void writeTo(
-            ResourceDocument t,
+            ResourceObject ro,
             Class<?> type,
             Type genericType,
             Annotation annotations[],
             MediaType mediaType,
             MultivaluedMap<String, Object> httpHeaders,
             OutputStream entityStream) throws IOException {
-        writeTo(new MultivaluedHashMap<>(t.getResource().map(ro -> ro.getAttributes().toMap()).orElseGet(Collections::emptyMap)), mediaType, entityStream);
+        writeTo(new MultivaluedHashMap<>(ro.getAttributes().toMap()), mediaType, entityStream);
     }
 }

@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.jaxrs.resources;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.SecurityContext;
@@ -89,5 +90,10 @@ public interface ResourceContext
     default Cookie getUserCookie()
     {
         return getContainerRequestContext().getCookies().get( "token" );
+    }
+
+    default ObjectMapper objectMapper()
+    {
+        return service(ObjectMapper.class);
     }
 }

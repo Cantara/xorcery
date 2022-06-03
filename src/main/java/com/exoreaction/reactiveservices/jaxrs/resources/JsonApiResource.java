@@ -12,15 +12,11 @@ import org.glassfish.hk2.api.ServiceLocator;
 public abstract class JsonApiResource
     implements ResourceContext
 {
-    private ServiceLocator serviceLocator;
-    private ContainerRequestContext containerRequestContext;
-
     @Inject
-    public void request( @Context ContainerRequestContext containerRequestContext, ServiceLocator serviceLocator )
-    {
-        this.containerRequestContext = containerRequestContext;
-        this.serviceLocator = serviceLocator;
-    }
+    private ServiceLocator serviceLocator;
+
+    @Inject @Context
+    private ContainerRequestContext containerRequestContext;
 
     public ServiceLocator getServiceLocator()
     {

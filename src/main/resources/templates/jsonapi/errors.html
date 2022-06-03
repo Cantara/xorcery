@@ -1,0 +1,8 @@
+{{#if this.hasErrors}}
+<tbody class="links">
+<tr><th colspan="2">Errors</th></tr>
+{{#each this}}
+<tr><td>{{title}}</td><td>{{detail}}</td></tr>
+{{/each}}
+</tbody>
+{{/if}}

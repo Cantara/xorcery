@@ -4,29 +4,26 @@ import com.exoreaction.reactiveservices.cqrs.Command;
 import com.exoreaction.reactiveservices.cqrs.Context;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.disruptor.RequestMetadata;
-import com.exoreaction.reactiveservices.jsonapi.model.Errors;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.jsonapi.model.Source;
-import com.fasterxml.jackson.databind.JavaType;
+import com.exoreaction.reactiveservices.json.JsonElement;
+import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
 import jakarta.ws.rs.core.Response;
+import org.jetbrains.annotations.NotNull;
 
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Predicate;
 
 public interface JsonApiCommandMixin
         extends ResourceContext {
+
     default Metadata metadata() {
         Metadata.Builder metadata = new Metadata.Builder();
 
@@ -63,20 +60,25 @@ public interface JsonApiCommandMixin
         return metadata.build();
     }
 
-    default CompletionStage<Response> execute(Metadata metadata, ResourceDocument resourceDocument, Context context) {
-        String profile = getFirstQueryParameter("profile");
+    default CompletionStage<JsonElement> commandResourceObject(String rel, Context context) {
+        return CompletableFuture.completedStage(new ResourceObject.Builder("rel", rel)
+                .attributes(new Attributes.Builder().with(a ->
+                {
+                    a.attributes(objectMapper().valueToTree(context.commands().stream().filter(isRelCommand(rel))
+                            .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new)));
+                })).build());
+    }
 
-        Command command = context.commands().stream().filter(c ->
-        {
-            Class<?> commandClass = c.getClass();
-            return profile.equals(commandClass.getSimpleName());
-        }).map(c ->
+
+    default CompletionStage<Response> execute(ResourceObject resourceObject, Context context, Metadata metadata) {
+        String rel = getFirstQueryParameter("rel");
+
+        Command command = context.commands().stream().filter(isRelCommand(rel)).map(c ->
         {
             Class<? extends Command> commandClass = c.getClass();
-            ResourceObject ro = resourceDocument.getResource().orElseThrow(BadRequestException::new);
             try {
                 ObjectMapper service = service(ObjectMapper.class);
-                ObjectNode json = ro.getAttributes().json();
+                ObjectNode json = resourceObject.getAttributes().json();
                 json.set("@class", json.textNode(commandClass.getName()));
                 return service.<Command>treeToValue(json, service.constructType(commandClass));
             } catch (IOException e) {
@@ -101,6 +103,15 @@ public interface JsonApiCommandMixin
                 });
     }
 
+    @NotNull
+    default Predicate<Command> isRelCommand(String rel) {
+        return c ->
+        {
+            Class<?> commandClass = c.getClass();
+            return rel.equals(commandClass.getSimpleName());
+        };
+    }
+
     CompletionStage<Response> ok(Metadata metadata);
 
     default CompletionStage<Response> error(ConstraintViolationException e) {
@@ -121,5 +132,4 @@ public interface JsonApiCommandMixin
                 .entity(new ResourceDocument.Builder().errors(errors.build()).build())
                 .build());
     }
-
 }

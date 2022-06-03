@@ -21,7 +21,7 @@ public record Relationship(ObjectNode json)
         implements JsonElement, Consumer<Relationship.Builder> {
 
     public record Builder(ObjectNode builder)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
 
         public static Relationship relationship(ResourceObject resourceObject) {

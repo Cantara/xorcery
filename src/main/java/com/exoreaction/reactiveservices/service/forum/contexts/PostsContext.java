@@ -27,8 +27,8 @@ public class PostsContext
     @Override
     public CompletionStage<Metadata> handle(Metadata metadata, Command command) {
 
-        metadata = new DomainEventMetadata.Builder(metadata.toBuilder())
-                .aggregateId(UUID.randomUUID().toString().replace("-",""))
+        metadata = new DomainEventMetadata.Builder(metadata)
+                .aggregateId(UUID.randomUUID().toString().replace("-", ""))
                 .build().metadata();
         return forumApplication.handle(new PostAggregate(), metadata, command);
     }

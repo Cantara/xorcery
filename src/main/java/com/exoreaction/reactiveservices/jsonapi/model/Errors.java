@@ -5,8 +5,10 @@ import com.exoreaction.util.JsonNodes;
 import com.exoreaction.util.With;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -16,10 +18,10 @@ import java.util.Map;
  */
 
 public record Errors(ArrayNode json)
-        implements JsonElement {
+        implements JsonElement, Iterable<Error> {
 
     public record Builder(ArrayNode builder)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
         public Builder() {
             this(JsonNodeFactory.instance.arrayNode());
@@ -41,6 +43,12 @@ public record Errors(ArrayNode json)
 
     public List<Error> getErrors() {
         return JsonNodes.getValuesAs(array(),Error::new);
+    }
+
+    @NotNull
+    @Override
+    public Iterator<Error> iterator() {
+        return getErrors().iterator();
     }
 
     public Map<String, Error> getErrorMap() {

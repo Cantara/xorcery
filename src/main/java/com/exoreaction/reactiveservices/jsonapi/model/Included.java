@@ -21,7 +21,7 @@ public record Included(ArrayNode json)
         implements JsonElement, Consumer<Included.Builder> {
 
     public record Builder(ArrayNode builder, Set<String> included)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
         public Builder() {
             this(JsonNodeFactory.instance.arrayNode(), new HashSet<>());

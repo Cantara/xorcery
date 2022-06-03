@@ -17,7 +17,7 @@ public record Meta(ObjectNode json)
         implements JsonElement {
 
     public record Builder(ObjectNode json)
-            implements With<Attributes.Builder>
+            implements With<Builder>
     {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
