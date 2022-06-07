@@ -31,7 +31,11 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
+import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
@@ -41,6 +45,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -79,6 +84,9 @@ public class RegistryService
         protected void configure() {
             ClientConfig config = new ClientConfig();
             config.register(new JsonApiMessageBodyReader(new ObjectMapper()));
+            config.connectorProvider(new JettyConnectorProvider());
+            JettyHttpClientContract instance = injectionManager.getInstance(JettyHttpClientContract.class);
+            config.register(instance);
             Client client = ClientBuilder.newBuilder().withConfig(config).build();
             bind(new JsonApiClient(client));
 
@@ -100,14 +108,15 @@ public class RegistryService
                            ReactiveStreams reactiveStreams,
                            Configuration configuration,
                            JsonApiClient jsonApiClient,
-                           Server server) {
+                           Server server,
+                           ServletContextHandler servletContextHandler) {
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
         this.configuration = configuration.getConfiguration("registry");
         this.jsonApiClient = jsonApiClient;
         this.server = server;
 
-        this.registryLink = new Link("self", this.configuration.getString("master").orElseThrow());
+        this.registryLink = new Link("master", this.configuration.getString("master").orElseThrow());
 
         disruptor = new Disruptor<>(Event::new, 16, new NamedThreadFactory("RegistryChanges"));
         UpstreamSubscriber upstreamSubscriber = new UpstreamSubscriber(disruptor.getRingBuffer());
@@ -131,7 +140,15 @@ public class RegistryService
             reactiveStreams.publish(resourceObject.serviceIdentifier(), link, new RegistryPublisher());
         });
 
-        registration.start();
+        ForkJoinPool.commonPool().execute(()->
+        {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            registration.start();
+        });
     }
 
     @Override

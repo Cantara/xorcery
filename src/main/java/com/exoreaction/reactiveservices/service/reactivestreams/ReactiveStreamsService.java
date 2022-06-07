@@ -35,6 +35,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -44,6 +45,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -69,7 +71,7 @@ public class ReactiveStreamsService
         @Override
         protected void configure() {
             try {
-                HttpClient httpClient = new HttpClient();
+                HttpClient httpClient = injectionManager.getInstance(JettyHttpClientSupplier.class).getHttpClient();
                 WebSocketClient webSocketClient = new WebSocketClient(httpClient);
                 webSocketClient.setIdleTimeout(Duration.ofMillis(Long.MAX_VALUE));
                 webSocketClient.start();
@@ -161,17 +163,21 @@ public class ReactiveStreamsService
         MessageBodyReader<Object> reader = null;
         Type resultType = null;
 
+        Type publisherEventType = null;
         for (Type genericInterface : publisher.getClass().getGenericInterfaces()) {
             if (genericInterface instanceof ParameterizedType && ((ParameterizedType) genericInterface).getRawType().equals(Publisher.class)) {
                 ParameterizedType publisherType = ((ParameterizedType) genericInterface);
-                Type publisherEventType = publisherType.getActualTypeArguments()[0];
+                publisherEventType = publisherType.getActualTypeArguments()[0];
                 if (publisherEventType instanceof ParameterizedType && ((ParameterizedType) publisherEventType).getRawType().equals(EventWithResult.class)) {
                     ParameterizedType eventWithResultType = ((ParameterizedType) publisherEventType);
                     Type eventType = eventWithResultType.getActualTypeArguments()[0];
                     resultType = eventWithResultType.getActualTypeArguments()[1];
-                    writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) eventType, eventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
-                    if (writer == null) {
-                        throw new IllegalStateException("Could not find MessageBodyWriter for " + eventType);
+
+                    if (!eventType.equals(ByteBuffer.class)) {
+                        writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) eventType, eventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                        if (writer == null) {
+                            throw new IllegalStateException("Could not find MessageBodyWriter for " + eventType);
+                        }
                     }
 
                     reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
@@ -180,20 +186,22 @@ public class ReactiveStreamsService
                     }
 
                 } else {
-                    writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) publisherEventType, publisherEventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
-                    if (writer == null) {
-                        throw new IllegalStateException("Could not find MessageBodyWriter for " + publisherEventType);
+                    if (!publisherEventType.equals(ByteBuffer.class)) {
+                        writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) publisherEventType, publisherEventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                        if (writer == null) {
+                            throw new IllegalStateException("Could not find MessageBodyWriter for " + publisherEventType);
+                        }
                     }
                 }
             }
         }
 
-        if (writer == null) {
+        if (writer == null && !ByteBuffer.class.equals(publisherEventType)) {
             throw new IllegalStateException("Could not find MessageBodyWriter for " + publisher.getClass());
         }
 
         String path = URI.create(websocketLink.getHrefAsUriTemplate().createURI()).getPath();
-        PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, new PublisherTracker<>(publisher), writer, reader, resultType, objectMapper);
+        PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, new PublisherTracker<>(publisher), writer, reader, resultType, objectMapper, MarkerManager.getMarker(selfServiceIdentifier.toString()));
 
         servletContextHandler.addServlet(new ServletHolder(servlet), path);
         logger.info("Published websocket for " + selfServiceIdentifier);

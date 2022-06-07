@@ -20,28 +20,26 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class AbstractConductorListener
         implements ConductorListener {
     protected final ServiceIdentifier serviceIdentifier;
-    private Registry registry;
     private final String rel;
     private final Map<String, List<Link>> groupServiceConnections = new ConcurrentHashMap<>();
     private final Marker marker;
     private final Logger logger = LogManager.getLogger(getClass());
 
-    public AbstractConductorListener(ServiceIdentifier serviceIdentifier, Registry registry, String rel) {
+    public AbstractConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
         this.serviceIdentifier = serviceIdentifier;
         this.marker = MarkerManager.getMarker(serviceIdentifier.toString());
-        this.registry = registry;
         this.rel = rel;
     }
 
     public abstract void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceParameters, Optional<ObjectNode> consumerParameters);
 
     @Override
-    public void addedGroup(Group group) {
-        updatedGroup(group);
+    public void addedGroup(Group group, Registry registry) {
+        updatedGroup(group, registry);
     }
 
     @Override
-    public void updatedGroup(Group group) {
+    public void updatedGroup(Group group, Registry registry) {
         if (group.getConsumers().stream().anyMatch(serviceIdentifier::equals)) {
             // Find publisher to connect to
             group.getSources()

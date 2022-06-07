@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.jaxrs.readers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
@@ -18,25 +19,25 @@ import java.lang.reflect.Type;
 
 @Singleton
 @Provider
-@Consumes(MediaType.APPLICATION_JSON)
-public class ObjectNodeMessageBodyReader
-        implements MessageBodyReader<ObjectNode> {
+@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM})
+public class JsonNodeMessageBodyReader
+        implements MessageBodyReader<JsonNode> {
 
     private ObjectMapper objectMapper;
 
     @Inject
-    public ObjectNodeMessageBodyReader(ObjectMapper objectMapper) {
+    public JsonNodeMessageBodyReader(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return ObjectNode.class.equals(type);
+        return JsonNode.class.isAssignableFrom(type);
     }
 
     @Override
-    public ObjectNode readFrom(Class<ObjectNode> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
-
-        return (ObjectNode)objectMapper.readTree(entityStream);
+    public JsonNode readFrom(Class<JsonNode> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+        JsonNode jsonNode = objectMapper.readTree(entityStream);
+        return jsonNode;
     }
 }

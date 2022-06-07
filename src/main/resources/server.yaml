@@ -1,18 +1,29 @@
+host: localhost
+
 environment: development
 tag: default
 
 server:
   port: 8889
+  secure_port: 8443
 
 reactivestreams:
   allowlocal: false
 
 registry:
-  master: http://localhost:8889/
+  master: https://localhost:8443/
 
 conductor:
   enabled: true
-  templates: /conductor/templates.json
+  templates:
+    - /conductor/templates.json
+    - /conductor/certmanager.yaml
+#    - /conductor/forum.yaml
+
+certificatemanager:
+  enabled: true
+  is_master: true
+  renew_on_startup: true
 
 # Logging
 log4jappender:

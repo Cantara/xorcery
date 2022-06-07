@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.jaxrs.readers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -29,7 +30,7 @@ public class JsonMessageBodyReader
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return objectMapper.canDeserialize(objectMapper.constructType(type));
+        return objectMapper.canDeserialize(objectMapper.constructType(type)) && !JsonNode.class.isAssignableFrom(type);
     }
 
     @Override

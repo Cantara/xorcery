@@ -16,8 +16,10 @@ import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEven
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -87,13 +89,13 @@ public class ConductorService
         groups = new Groups(new Groups.GroupsListener() {
             @Override
             public void addedGroup(Group group) {
-                listeners.forEach(l -> l.addedGroup(group));
+                listeners.forEach(l -> l.addedGroup(group, registry));
                 logger.info("Added group:" + group);
             }
 
             @Override
             public void updatedGroup(Group group) {
-                listeners.forEach(l -> l.updatedGroup(group));
+                listeners.forEach(l -> l.updatedGroup(group, registry));
                 logger.info("Updated group:" + group);
             }
         });
@@ -109,8 +111,9 @@ public class ConductorService
     @Override
     public void onStartup(Container container) {
         // Load templates
-        ObjectMapper objectMapper = new ObjectMapper();
-        for (String templateName : List.of(configuration.getString("conductor.templates").orElseThrow().split(","))) {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        for (JsonNode templateJson : configuration.getList("conductor.templates").orElseThrow()) {
+            String templateName = templateJson.textValue();
             logger.info("Loading conductor template from:" + templateName);
             try {
                 URI templateUri = URI.create(templateName);
@@ -167,7 +170,7 @@ public class ConductorService
 
     @Override
     public void addConductorListener(ConductorListener listener) {
-        groups.getGroups().forEach(listener::addedGroup);
+        groups.getGroups().forEach(group -> listener.addedGroup(group, registry));
         listeners.add(listener);
     }
 

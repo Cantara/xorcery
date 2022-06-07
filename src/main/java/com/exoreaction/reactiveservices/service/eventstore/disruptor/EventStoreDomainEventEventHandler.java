@@ -6,6 +6,7 @@ import com.exoreaction.reactiveservices.disruptor.*;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import org.apache.logging.log4j.LogManager;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -40,21 +41,27 @@ public class EventStoreDomainEventEventHandler
         DeploymentMetadata deploymentMetadata = new DeploymentMetadata(event.metadata);
         String streamId = deploymentMetadata.getEnvironment() + "-" +
                 deploymentMetadata.getTag() + "-" +
-                domainEventMetadata.getDomain() + "-" +
-                deploymentMetadata.getVersion();
+                domainEventMetadata.getDomain();
 
-        client.appendToStream(streamId, eventData).whenComplete((wr, t) ->
-        {
-            if (t == null) {
-                event.event.result().complete(new Metadata.Builder()
-                        .add("position", Long.toString(wr.getLogPosition().getCommitUnsigned()))
-                        .build());
-            } else {
-                event.event.result().completeExceptionally(t);
-            }
+        System.out.println("Write metadata:"+new String(eventData.getUserMetadata()));
+        System.out.println("Write data:"+new String(eventData.getEventData()));
+
+        try {
+            client.appendToStream(streamId, eventData).whenComplete((wr, t) ->
+            {
+                if (t == null) {
+                    event.event.result().complete(new Metadata.Builder()
+                            .add("position", Long.toString(wr.getLogPosition().getCommitUnsigned()))
+                            .build());
+                } else {
+                    event.event.result().completeExceptionally(t);
+                }
 
 
-            subscription.request(1);
-        });
+                subscription.request(1);
+            });
+        } catch (Throwable e) {
+            LogManager.getLogger(getClass()).error("Could not append event to stream", e);
+        }
     }
 }

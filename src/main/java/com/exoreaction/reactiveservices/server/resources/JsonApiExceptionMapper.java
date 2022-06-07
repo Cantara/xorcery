@@ -3,6 +3,7 @@ package com.exoreaction.reactiveservices.server.resources;
 import com.exoreaction.reactiveservices.jsonapi.model.Error;
 import com.exoreaction.reactiveservices.jsonapi.model.Errors;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -22,13 +23,13 @@ public class JsonApiExceptionMapper
     @Override
     public Response toResponse(Throwable exception)
     {
-        logger.error("Response exception", exception);
-
         try {
             throw exception;
         } catch (WebApplicationException e) {
             return e.getResponse();
         } catch (Throwable e) {
+            logger.error("Response exception", exception);
+
             return Response.serverError().entity(new ResourceDocument.Builder()
                     .errors(new Errors.Builder()
                             .error(new Error.Builder()

@@ -42,22 +42,6 @@
           "pattern": "type=='jmxmetrics'"
         }
       }
-    },
-    {
-      "id": "greeter_neo4jdomainevents",
-      "type": "grouptemplate",
-      "attributes": {
-        "name": "Project Greeter events into Neo4j",
-        "sources": {
-          "pattern": "rel=='domainevents'"
-        },
-        "consumers": {
-          "pattern": "type=='neo4jdomainevents'",
-          "parameters": {
-            "database": "neo4j"
-          }
-        }
-      }
     }
   ]
 }

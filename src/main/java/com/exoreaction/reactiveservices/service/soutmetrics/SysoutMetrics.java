@@ -57,14 +57,12 @@ public class SysoutMetrics
 
     private ReactiveStreams reactiveStreams;
     private Conductor conductor;
-    private Registry registry;
     private ServiceResourceObject sro;
 
     @Inject
-    public SysoutMetrics(ReactiveStreams reactiveStreams, Conductor conductor, Registry registry, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
+    public SysoutMetrics(ReactiveStreams reactiveStreams, Conductor conductor, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
-        this.registry = registry;
         this.sro = sro;
     }
 
@@ -119,7 +117,7 @@ public class SysoutMetrics
     private class MetricsConductorListener extends AbstractConductorListener {
 
         public MetricsConductorListener() {
-            super(sro.serviceIdentifier(), registry, "metricevents");
+            super(sro.serviceIdentifier(), "metricevents");
         }
 
         public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {

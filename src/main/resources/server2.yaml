@@ -3,6 +3,7 @@ tag: default
 
 server:
   port: 8881
+  secure_port: 8444
 
 registry:
   master: http://localhost:8889/

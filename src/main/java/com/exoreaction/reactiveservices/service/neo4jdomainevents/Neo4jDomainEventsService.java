@@ -69,19 +69,16 @@ public class Neo4jDomainEventsService
     private final Logger logger = LogManager.getLogger(getClass());
     private ReactiveStreams reactiveStreams;
     private Conductor conductor;
-    private Registry registry;
     private ServiceResourceObject sro;
     private GraphDatabases graphDatabases;
 
     @Inject
     public Neo4jDomainEventsService(Conductor conductor,
                                     ReactiveStreams reactiveStreams,
-                                    Registry registry,
                                     @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                     GraphDatabases graphDatabases) {
         this.conductor = conductor;
         this.reactiveStreams = reactiveStreams;
-        this.registry = registry;
         this.sro = sro;
         this.graphDatabases = graphDatabases;
     }
@@ -89,6 +86,7 @@ public class Neo4jDomainEventsService
     @Override
     public void onStartup(Container container) {
         conductor.addConductorListener(new DomainEventsConductorListener(sro.serviceIdentifier(), "domainevents"));
+        conductor.addConductorListener(new EventStoreConductorListener(sro.serviceIdentifier(), "eventstorestreams"));
     }
 
     @Override
@@ -129,7 +127,7 @@ public class Neo4jDomainEventsService
             GraphDatabase graphDatabase = graphDatabases.apply(databaseName);
             disruptor.handleEventsWith(new Neo4jDomainEventEventHandler(graphDatabase.getGraphDatabaseService(), subscription));
             disruptor.start();
-            subscription.request(1);
+            subscription.request(4096);
             return disruptor.getRingBuffer();
         }
 
@@ -142,7 +140,19 @@ public class Neo4jDomainEventsService
     private class DomainEventsConductorListener extends AbstractConductorListener {
 
         public DomainEventsConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
-            super(sro.serviceIdentifier(), registry, "domainevents");
+            super(serviceIdentifier, rel);
+        }
+
+        @Override
+        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
+            reactiveStreams.subscribe(sro.serviceIdentifier(), link, new DomainEventsSubscriber(consumerAttributes), sourceAttributes);
+        }
+    }
+
+    private class EventStoreConductorListener extends AbstractConductorListener {
+
+        public EventStoreConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
+            super(serviceIdentifier, rel);
         }
 
         @Override

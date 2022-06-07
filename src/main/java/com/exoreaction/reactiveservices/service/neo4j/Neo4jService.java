@@ -53,7 +53,8 @@ public class Neo4jService
                             entry.getValue().textValue()
                     ));
 
-            DatabaseManagementService managementService = new DatabaseManagementServiceBuilder(Path.of(standardConfiguration.home()))
+            Path home = Path.of(standardConfiguration.home());
+            DatabaseManagementService managementService = new DatabaseManagementServiceBuilder(home)
                     .setConfigRaw(neo4jConfig)
                     .build();
 

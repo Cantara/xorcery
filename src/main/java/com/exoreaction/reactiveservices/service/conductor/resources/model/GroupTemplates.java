@@ -90,7 +90,9 @@ public class GroupTemplates {
                                     partialGroups.put(groupTemplate.resourceObject().getId(), updatedGroup);
                                 }
                             });
-                } else if (groupTemplate.getConsumers().isConsumer(service, configuration)) {
+                }
+
+                if (groupTemplate.getConsumers().isConsumer(service, configuration)) {
                     // Check if group exists already
                     groups.getGroupByTemplate(groupTemplate)
                             .ifPresentOrElse(existingGroup ->

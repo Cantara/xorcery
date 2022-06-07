@@ -60,18 +60,15 @@ public class SysoutLogging
 
     private ReactiveStreams reactiveStreams;
     private Conductor conductor;
-    private Registry registry;
     private Configuration configuration;
     private MultiSubscriber<LogEvent> multiSubscriber;
 
     @Inject
     public SysoutLogging(ReactiveStreams reactiveStreams, Conductor conductor,
-                         Registry registry,
                          Configuration configuration, MetricRegistry metricRegistry,
                          @Named(SERVICE_TYPE) ServiceResourceObject serviceResourceObject) {
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
-        this.registry = registry;
         this.configuration = configuration;
         meter = metricRegistry.meter("logmeter");
         this.serviceResourceObject = serviceResourceObject;
@@ -144,7 +141,7 @@ public class SysoutLogging
     private class LoggingConductorListener extends AbstractConductorListener {
 
         public LoggingConductorListener() {
-            super(serviceResourceObject.serviceIdentifier(), registry, "logevents");
+            super(serviceResourceObject.serviceIdentifier(), "logevents");
         }
 
         public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {

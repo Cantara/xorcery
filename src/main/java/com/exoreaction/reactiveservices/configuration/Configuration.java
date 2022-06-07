@@ -93,6 +93,11 @@ public record Configuration(ObjectNode config) {
                 .map(JsonNode::asBoolean));
     }
 
+    public Optional<Iterable<JsonNode>> getList(String name) {
+        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
+                .map(ArrayNode.class::cast));
+    }
+
     public Map<String, JsonNode> asMap() {
         return JsonNodes.asMap(config);
     }

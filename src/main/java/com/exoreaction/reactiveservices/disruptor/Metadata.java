@@ -1,10 +1,15 @@
 package com.exoreaction.reactiveservices.disruptor;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Optional;
+
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
+
 
 public record Metadata(ObjectNode metadata) {
     public record Builder(ObjectNode builder) {
@@ -37,6 +42,9 @@ public record Metadata(ObjectNode metadata) {
             return new Metadata(builder);
         }
     }
+    @JsonCreator(mode = DELEGATING)
+    public Metadata {
+    }
 
     public Optional<String> getString(String name) {
         return Optional.ofNullable(metadata.path(name).textValue());
@@ -48,6 +56,12 @@ public record Metadata(ObjectNode metadata) {
 
     public Optional<ObjectNode> getObjectNode(String name) {
         return Optional.ofNullable(metadata.get(name)).map(ObjectNode.class::cast);
+    }
+
+    @JsonValue
+    public ObjectNode metadata()
+    {
+        return metadata;
     }
 
     public Builder toBuilder() {

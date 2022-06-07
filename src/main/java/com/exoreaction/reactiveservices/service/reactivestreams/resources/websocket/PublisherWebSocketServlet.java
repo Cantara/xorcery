@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
+import org.apache.logging.log4j.Marker;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
@@ -24,13 +25,14 @@ public class PublisherWebSocketServlet<T>
     private MessageBodyReader<Object> messageBodyReader;
     private Type resultType;
     private ObjectMapper objectMapper;
+    private Marker marker;
 
     public PublisherWebSocketServlet(String path,
                                      ReactiveEventStreams.Publisher<T> publisher,
                                      MessageBodyWriter<T> messageBodyWriter,
                                      MessageBodyReader<Object> messageBodyReader,
                                      Type resultType,
-                                     ObjectMapper objectMapper) {
+                                     ObjectMapper objectMapper, Marker marker) {
 
         this.path = path;
         this.publisher = publisher;
@@ -38,6 +40,7 @@ public class PublisherWebSocketServlet<T>
         this.messageBodyReader = messageBodyReader;
         this.resultType = resultType;
         this.objectMapper = objectMapper;
+        this.marker = marker;
     }
 
     @Override
@@ -48,7 +51,7 @@ public class PublisherWebSocketServlet<T>
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
         {
             ObjectNode parameters = objectMapper.valueToTree(jettyServerUpgradeRequest.getParameterMap());
-            return new PublisherWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), publisher, parameters, messageBodyWriter, messageBodyReader, resultType, objectMapper);
+            return new PublisherWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), publisher, parameters, messageBodyWriter, messageBodyReader, resultType, objectMapper, marker);
         });
     }
 }

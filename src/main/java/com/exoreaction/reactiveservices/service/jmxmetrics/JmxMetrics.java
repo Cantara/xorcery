@@ -31,6 +31,8 @@ import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
+import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
@@ -85,14 +87,19 @@ public class JmxMetrics
     public JmxMetrics(@Named(SERVICE_TYPE) ServiceResourceObject sro,
                       ReactiveStreams reactiveStreams,
                       Conductor conductor,
-                      Registry registry) {
+                      Registry registry,
+                      JettyHttpClientContract instance) {
         this.sro = sro;
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
         this.registry = registry;
         ClientConfig config = new ClientConfig();
         config.register(new JsonApiMessageBodyReader(new ObjectMapper()));
-        Client client = ClientBuilder.newBuilder().withConfig(config).build();
+        config.connectorProvider(new JettyConnectorProvider());
+        config.register(instance);
+        Client client = ClientBuilder.newBuilder()
+                .withConfig(config)
+                .build();
         this.client = new JsonApiClient(client);
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
     }
@@ -206,7 +213,7 @@ public class JmxMetrics
     private class JmxServersConductorListener extends AbstractConductorListener {
 
         public JmxServersConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
-            super(sro.serviceIdentifier(), registry, "metrics");
+            super(serviceIdentifier, rel);
         }
 
         public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
