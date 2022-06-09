@@ -73,7 +73,7 @@ public class ReactiveStreamsService
             try {
                 HttpClient httpClient = injectionManager.getInstance(JettyHttpClientSupplier.class).getHttpClient();
                 WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-                webSocketClient.setIdleTimeout(Duration.ofMillis(Long.MAX_VALUE));
+                webSocketClient.setIdleTimeout(Duration.ofMillis(httpClient.getIdleTimeout()));
                 webSocketClient.start();
                 bind(webSocketClient).named(SERVICE_TYPE);
                 context.register(ReactiveStreamsService.class, ReactiveStreams.class, ContainerLifecycleListener.class);
@@ -87,6 +87,7 @@ public class ReactiveStreamsService
     private ServletContextHandler servletContextHandler;
     private jakarta.inject.Provider<Registry> registryService;
     private WebSocketClient webSocketClient;
+    private Configuration configuration;
     private MessageBodyWorkers messageBodyWorkers;
     private ObjectMapper objectMapper;
 
@@ -107,6 +108,7 @@ public class ReactiveStreamsService
         this.servletContextHandler = servletContextHandler;
         this.webSocketClient = webSocketClient;
         this.registryService = registryService;
+        this.configuration = configuration;
         this.messageBodyWorkers = messageBodyWorkers;
         this.objectMapper = objectMapper;
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
@@ -201,7 +203,7 @@ public class ReactiveStreamsService
         }
 
         String path = URI.create(websocketLink.getHrefAsUriTemplate().createURI()).getPath();
-        PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, new PublisherTracker<>(publisher), writer, reader, resultType, objectMapper, MarkerManager.getMarker(selfServiceIdentifier.toString()));
+        PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, new PublisherTracker<>(publisher), writer, reader, resultType, configuration, objectMapper, MarkerManager.getMarker(selfServiceIdentifier.toString()));
 
         servletContextHandler.addServlet(new ServletHolder(servlet), path);
         logger.info("Published websocket for " + selfServiceIdentifier);

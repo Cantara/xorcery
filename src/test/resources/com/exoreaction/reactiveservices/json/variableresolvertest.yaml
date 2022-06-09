@@ -1,0 +1,20 @@
+resolverecursive: "{{resolve}}"
+foo: bar
+number: 5
+resolve: "{{ foo }}"
+partial1: "{{ foo }}-abc"
+partial2: "abc-{{ foo }}-abc"
+partial3: "abc-{{ foo }}"
+resolvenumber: "{{number}}"
+
+level1:
+  level2:
+    level3: abc
+
+lvl1:
+  level2: "{{level1.level2}}"
+
+hierarchy: some {{ level1.level2.level3 }} value
+importedhierarchy: "{{ lvl1.level2.level3 }}"
+missing: some {{ level1.level3.missing| "defaultvalue" }} value
+defaultnumber: "{{ somenumber | 5 }}"

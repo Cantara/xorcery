@@ -27,7 +27,7 @@ public class Main
     @Override
     public Integer call() throws Exception {
 
-        ConfigurationFactory.setConfigurationFactory( new Log4jConfigurationFactory() );
+//        ConfigurationFactory.setConfigurationFactory( new Log4jConfigurationFactory() );
         Logger logger = LogManager.getLogger( Main.class );
 
         Server server = new Server(configuration, id);

@@ -3,9 +3,12 @@ host: localhost
 environment: development
 tag: default
 
+idle_timeout: -1
+
 server:
   port: 8889
   secure_port: 8443
+  idle_timeout: "{{ idle_timeout }}"
 
 reactivestreams:
   allowlocal: false
@@ -16,7 +19,7 @@ registry:
 conductor:
   enabled: true
   templates:
-    - /conductor/templates.json
+    - /conductor/templates.yaml
     - /conductor/certmanager.yaml
 #    - /conductor/forum.yaml
 
@@ -30,7 +33,7 @@ log4jappender:
   enabled: true
 
 soutlogging:
-  enabled: false
+  enabled: true
 
 # Metrics
 metrics:

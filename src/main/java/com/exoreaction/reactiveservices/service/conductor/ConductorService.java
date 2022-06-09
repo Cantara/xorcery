@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.conductor;
 
 import com.exoreaction.reactiveservices.configuration.Configuration;
+import com.exoreaction.reactiveservices.json.VariableResolver;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
@@ -16,6 +17,7 @@ import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEven
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.exoreaction.reactiveservices.service.registry.api.RegistryListener;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -86,26 +88,40 @@ public class ConductorService
         this.sro = sro;
         this.configuration = configuration;
 
+        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         groups = new Groups(new Groups.GroupsListener() {
+
             @Override
             public void addedGroup(Group group) {
                 listeners.forEach(l -> l.addedGroup(group, registry));
-                logger.info("Added group:" + group);
+                try {
+                    logger.debug("Added group:\n" + mapper.writeValueAsString(group.resourceObject().object()));
+                } catch (JsonProcessingException e) {
+                    // Ignore
+                }
             }
 
             @Override
             public void updatedGroup(Group group) {
                 listeners.forEach(l -> l.updatedGroup(group, registry));
-                logger.info("Updated group:" + group);
+                try {
+                    logger.debug("Updated group:\n" + mapper.writeValueAsString(group.resourceObject().object()));
+                } catch (JsonProcessingException e) {
+                    // Ignore
+                }
             }
         });
         groupTemplates = new GroupTemplates(new GroupTemplates.GroupTemplatesListener() {
             @Override
             public void addedTemplate(GroupTemplate groupTemplate) {
                 listeners.forEach(l -> l.addedTemplate(groupTemplate));
-                logger.info("Added template:" + groupTemplate);
+                try {
+                    logger.debug("Added template:\n" + mapper.writeValueAsString(groupTemplate.resourceObject().object()));
+                } catch (JsonProcessingException e) {
+                    // Ignore
+                }
             }
-        }, groups, configuration);
+        }, groups);
     }
 
     @Override
@@ -115,21 +131,25 @@ public class ConductorService
         for (JsonNode templateJson : configuration.getList("conductor.templates").orElseThrow()) {
             String templateName = templateJson.textValue();
             logger.info("Loading conductor template from:" + templateName);
+            ObjectNode templateNode = null;
             try {
                 URI templateUri = URI.create(templateName);
+                templateNode = (ObjectNode) objectMapper.readTree(templateUri.toURL().openStream());
 
-                ResourceDocument templates = new ResourceDocument((ObjectNode)objectMapper.readTree(templateUri.toURL().openStream()));
-                templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
-                templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
             } catch (IllegalArgumentException | IOException e) {
                 // Just load from classpath
                 try {
-                    ResourceDocument templates = new ResourceDocument((ObjectNode)objectMapper.readTree(getClass().getResourceAsStream(templateName)));
-                    templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
-                    templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
+                    templateNode = (ObjectNode) objectMapper.readTree(getClass().getResourceAsStream(templateName));
                 } catch (IOException ex) {
-                    logger.error("Could not load template "+templateName, ex);
+                    logger.error("Could not load template " + templateName, ex);
                 }
+            }
+
+            if (templateNode != null) {
+                templateNode = new VariableResolver().apply(configuration.config(), templateNode);
+                ResourceDocument templates = new ResourceDocument(templateNode);
+                templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
+                templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
             }
         }
 
@@ -139,7 +159,6 @@ public class ConductorService
         });
 
         registry.addRegistryListener(new ConductorRegistryListener());
-        System.out.println("Added conductor registry listener");
     }
 
     @Override

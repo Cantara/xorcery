@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.reactivestreams.resources.websocket;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -24,6 +25,7 @@ public class PublisherWebSocketServlet<T>
     private MessageBodyWriter<T> messageBodyWriter;
     private MessageBodyReader<Object> messageBodyReader;
     private Type resultType;
+    private Configuration configuration;
     private ObjectMapper objectMapper;
     private Marker marker;
 
@@ -32,6 +34,7 @@ public class PublisherWebSocketServlet<T>
                                      MessageBodyWriter<T> messageBodyWriter,
                                      MessageBodyReader<Object> messageBodyReader,
                                      Type resultType,
+                                     Configuration configuration,
                                      ObjectMapper objectMapper, Marker marker) {
 
         this.path = path;
@@ -39,6 +42,7 @@ public class PublisherWebSocketServlet<T>
         this.messageBodyWriter = messageBodyWriter;
         this.messageBodyReader = messageBodyReader;
         this.resultType = resultType;
+        this.configuration = configuration;
         this.objectMapper = objectMapper;
         this.marker = marker;
     }
@@ -46,7 +50,7 @@ public class PublisherWebSocketServlet<T>
     @Override
     protected void configure(JettyWebSocketServletFactory factory) {
         factory.setMaxTextMessageSize(1048576);
-        factory.setIdleTimeout(Duration.ofMillis(Long.MAX_VALUE));
+        factory.setIdleTimeout(Duration.ofMillis(configuration.getLong("idle_timeout").orElse(-1L)));
 
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
         {

@@ -4,23 +4,22 @@ import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.reactiveservices.server.Server;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.Fields;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
+@Disabled
 class GreeterResourceIT {
 
-    private Server server;
-    private HttpClient httpClient = new HttpClient();
+    static private Server server;
+    static private HttpClient httpClient = new HttpClient();
 
-    @BeforeEach
-    void setUp() throws Exception {
+    @BeforeAll
+    public static void setUp() throws Exception {
         server = new Server(null, null);
         httpClient.start();
     }
 
-    @AfterEach
-    void tearDown() throws Exception {
+    @AfterAll
+    public static void tearDown() throws Exception {
         server.close();
         httpClient.stop();
 

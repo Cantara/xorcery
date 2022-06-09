@@ -1,24 +1,35 @@
 package com.exoreaction.reactiveservices.configuration;
 
+import com.exoreaction.reactiveservices.json.JsonMerger;
+import com.exoreaction.reactiveservices.json.VariableResolver;
 import com.exoreaction.util.JsonNodes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.*;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
-import java.util.function.BiFunction;
 
 /**
  * @author rickardoberg
  * @since 20/04/2022
  */
 public record Configuration(ObjectNode config) {
+
+    static Optional<JsonNode> lookup(ObjectNode c, String name) {
+        String[] names = name.split("\\.");
+        for (int i = 0; i < names.length - 1; i++) {
+            JsonNode node = c.get(names[i]);
+            if (node instanceof ObjectNode)
+                c = (ObjectNode) node;
+            else
+                return Optional.empty();
+        }
+        return Optional.ofNullable(c.get(names[names.length - 1]));
+    }
 
     public record Builder(ObjectNode builder) {
 
@@ -35,67 +46,67 @@ public record Configuration(ObjectNode config) {
             return add(name, builder.textNode(value));
         }
 
-        public Builder addYaml(InputStream yamlStream) throws IOException {
-            try {
-                ObjectNode current = builder;
-                ObjectNode yaml = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(yamlStream);
+        public Builder add(String name, long value) {
+            return add(name, builder.numberNode(value));
+        }
 
-                if (current.isEmpty()) {
-                    return new Builder(yaml);
-                } else {
-                    return new Builder(merge(current, yaml));
-                }
-            } finally {
-                yamlStream.close();
+        public Builder addYaml(InputStream yamlStream) throws IOException {
+            try (yamlStream) {
+                ObjectNode yaml = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(yamlStream);
+                new JsonMerger().merge(builder, yaml);
+                return this;
             }
         }
 
-        private ObjectNode merge(ObjectNode current, ObjectNode yaml) {
-            ObjectNode merged = JsonNodeFactory.instance.objectNode();
-
-            Iterator<Map.Entry<String, JsonNode>> fields = current.fields();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> entry = fields.next();
-                if (entry.getValue() instanceof ObjectNode object) {
-                    merged.set(entry.getKey(), merge(object, (ObjectNode) yaml.path(entry.getKey())));
-                } else {
-                    JsonNode override = yaml.get(entry.getKey());
-                    merged.set(entry.getKey(), override != null ? override : entry.getValue());
-                }
-
+        public Builder addSystemProperties(String nodeName) {
+            ObjectNode system = builder.objectNode();
+            for (Map.Entry<Object, Object> systemProperty : System.getProperties().entrySet()) {
+                system.set(systemProperty.getKey().toString(), builder.textNode(systemProperty.getValue().toString()));
             }
-            return merged;
+            builder.set(nodeName, system);
+            return this;
+        }
+
+        public Builder addEnvironmentVariables(String nodeName) {
+            ObjectNode env = builder.objectNode();
+            System.getenv().forEach((key, value) -> env.set(key, env.textNode(value)));
+            builder.set(nodeName, env);
+            return this;
         }
 
         public Configuration build() {
-            return new Configuration(builder);
+            // Resolve any references
+            return new Configuration(new VariableResolver().apply(builder, builder));
         }
     }
 
     public Optional<String> getString(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
-                .map(JsonNode::textValue));
+        return lookup(name).map(JsonNode::textValue);
     }
 
     public Optional<URI> getURI(String name) {
 
-        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
-                .map(JsonNode::textValue).map(URI::create));
+        return lookup(name).map(JsonNode::textValue).map(URI::create);
     }
 
     public Optional<Integer> getInteger(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
-                .map(JsonNode::intValue));
+        return lookup(name).map(JsonNode::intValue);
+    }
+
+    public Optional<Long> getLong(String name) {
+        return lookup(name).map(JsonNode::longValue);
     }
 
     public Optional<Boolean> getBoolean(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
-                .map(JsonNode::asBoolean));
+        return lookup(name).map(JsonNode::asBoolean);
     }
 
     public Optional<Iterable<JsonNode>> getList(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
-                .map(ArrayNode.class::cast));
+        return lookup(name).map(ArrayNode.class::cast);
+    }
+
+    public Optional<JsonNode> getJson(String name) {
+        return lookup(name);
     }
 
     public Map<String, JsonNode> asMap() {
@@ -103,15 +114,15 @@ public record Configuration(ObjectNode config) {
     }
 
     public Configuration getConfiguration(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
-                .map(ObjectNode.class::cast).map(Configuration::new))
+        return lookup(name)
+                .map(ObjectNode.class::cast).map(Configuration::new)
                 .orElseGet(() -> new Configuration(JsonNodeFactory.instance.objectNode()));
     }
 
     public List<Configuration> getConfigurations(String name) {
-        return cfg(name, (config, n) -> Optional.ofNullable(config.get(n))
+        return lookup(name)
                 .map(ArrayNode.class::cast)
-                .map(a -> JsonNodes.getValuesAs(a, Configuration::new)))
+                .map(a -> JsonNodes.getValuesAs(a, Configuration::new))
                 .orElseGet(Collections::emptyList);
     }
 
@@ -119,15 +130,8 @@ public record Configuration(ObjectNode config) {
         return new Builder(config);
     }
 
-    private <T> Optional<T> cfg(String name, BiFunction<ObjectNode, String, Optional<T>> lookup) {
-        String[] names = name.split("\\.");
-        ObjectNode c = config;
-        for (int i = 0; i < names.length - 1; i++) {
-            c = (ObjectNode) c.get(names[i]);
-            if (c == null)
-                return Optional.empty();
-        }
-        return lookup.apply(c, names[names.length - 1]);
+    private Optional<JsonNode> lookup(String name) {
+        return lookup(config, name);
     }
 
     @Override

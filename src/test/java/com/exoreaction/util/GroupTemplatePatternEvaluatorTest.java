@@ -1,6 +1,7 @@
 package com.exoreaction.util;
 
 import com.exoreaction.reactiveservices.configuration.Configuration;
+import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
@@ -16,18 +17,17 @@ class GroupTemplatePatternEvaluatorTest {
     public void testEval()
     {
         // Given
-        Configuration configuration = new Configuration.Builder()
-                .add("environment", "development")
-                .build();
-        ServiceResourceObject sro = new ServiceResourceObject(new ResourceObject.Builder("logappender", "server1").build());
+        ServiceResourceObject sro = new ServiceResourceObject(new ResourceObject.Builder("logappender", "server1")
+                .attributes(new Attributes.Builder().attribute("environment", "development").attribute("tag", "sandbox"))
+                .build());
         Link link = new Link("logevents", "http://localhost/ws/logevents");
-        GroupTemplatePatternEvaluator evaluator = new GroupTemplatePatternEvaluator(configuration, sro, link.rel());
+        GroupTemplatePatternEvaluator evaluator = new GroupTemplatePatternEvaluator(sro, link.rel());
 
         // Then
         assertThat(evaluator.eval("rel=='logevents'"), equalTo(true));
         assertThat(evaluator.eval("type=='logappender'"), equalTo(true));
 
-        assertThat(evaluator.eval("configuration.getString('environment').orElse('production')=='development'"), equalTo(true));
+        assertThat(evaluator.eval("tag=='sandbox'"), equalTo(true));
         assertThat(evaluator.eval("environment=='development'"), equalTo(true));
     }
 }

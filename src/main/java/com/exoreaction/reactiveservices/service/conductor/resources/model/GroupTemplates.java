@@ -22,15 +22,13 @@ public class GroupTemplates {
         }
     }
 
-    public GroupTemplates(GroupTemplatesListener listener, Groups groups, Configuration configuration) {
+    public GroupTemplates(GroupTemplatesListener listener, Groups groups) {
         this.listener = listener;
         this.groups = groups;
-        this.configuration = configuration;
     }
 
     private final GroupTemplatesListener listener;
     private final Groups groups;
-    private final Configuration configuration;
 
     private final List<GroupTemplate> groupTemplates = new CopyOnWriteArrayList<>();
     private final List<String> matchedTemplates = new CopyOnWriteArrayList<>();
@@ -55,7 +53,7 @@ public class GroupTemplates {
             // Check if any group templates match
             // TODO This algo can be simplified
             for (GroupTemplate groupTemplate : groupTemplates) {
-                if (groupTemplate.getSources().isSource(service, configuration)) {
+                if (groupTemplate.getSources().isSource(service)) {
                     // Check if group exists already
                     groups.getGroupByTemplate(groupTemplate)
                             .ifPresentOrElse(existingGroup ->
@@ -92,7 +90,7 @@ public class GroupTemplates {
                             });
                 }
 
-                if (groupTemplate.getConsumers().isConsumer(service, configuration)) {
+                if (groupTemplate.getConsumers().isConsumer(service)) {
                     // Check if group exists already
                     groups.getGroupByTemplate(groupTemplate)
                             .ifPresentOrElse(existingGroup ->

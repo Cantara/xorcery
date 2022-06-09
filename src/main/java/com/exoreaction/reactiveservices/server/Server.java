@@ -8,6 +8,7 @@ import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.server.resources.ServerApplication;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsonp.JSONPModule;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.ws.rs.core.UriBuilder;
@@ -42,13 +43,11 @@ import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.servlet.ServletContainer;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.URI;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -103,6 +102,10 @@ public class Server
         return serverLogMarker;
     }
 
+    public URI getBaseUri() {
+        return baseUri;
+    }
+
     public UriBuilder getBaseUriBuilder() {
         return UriBuilder.fromUri(baseUri);
     }
@@ -122,6 +125,10 @@ public class Server
 
     private Configuration configuration(File configFile) throws Exception {
         Configuration.Builder builder = new Configuration.Builder();
+
+        // Load system properties and environment variables
+        builder.addSystemProperties("SYSTEM");
+        builder.addEnvironmentVariables("ENV");
 
         // Load defaults
         if (configFile != null) {
@@ -146,6 +153,12 @@ public class Server
             FileInputStream userYamlStream = new FileInputStream(userYamlFile);
             builder = builder.addYaml(userYamlStream);
         }
+
+        // Log final configuration
+        StringWriter out = new StringWriter();
+        new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter().writeValue(out, builder.builder());
+
+        logger.debug("Configuration:\n"+out);
 
         return builder.build();
     }
@@ -230,12 +243,14 @@ public class Server
         // Create and configure the secure HTTP 1.1/2 connector
         HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpConfig);
         final ServerConnector https = new ServerConnector(server, tls, alpn, h2, http11);
+        https.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
 //        final ServerConnector https = new ServerConnector(server, tls, alpn, http11);
         https.setPort(jettyConfig.getInteger("secure_port").orElse(8443));
         server.addConnector(https);
 
         // Create and configure the HTTP/3 connector
         HTTP3ServerConnector connector = new HTTP3ServerConnector(server, sslContextFactory, new HTTP3ServerConnectionFactory(httpConfig));
+        connector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
         connector.setPort(jettyConfig.getInteger("secure_port").orElse(8443));
         server.addConnector(connector);
 
@@ -265,6 +280,7 @@ public class Server
                     sslClientContextFactory.setSNIProvider(NON_DOMAIN_SNI_PROVIDER);
 
                     ClientConnector connector = new ClientConnector();
+                    connector.setIdleTimeout(Duration.ofMillis(jettyConfig.getLong("idle_timeout").orElse(-1L)));
                     connector.setSslContextFactory(sslClientContextFactory);
 
                     // HTTP 1.1
@@ -277,6 +293,7 @@ public class Server
                     // HTTP/3
                     HTTP3Client h3Client = new HTTP3Client();
                     h3Client.getClientConnector().setSslContextFactory(sslClientContextFactory);
+                    h3Client.getClientConnector().setIdleTimeout(Duration.ofMillis(jettyConfig.getLong("idle_timeout").orElse(-1L)));
                     h3Client.getQuicConfiguration().setSessionRecvWindow(64 * 1024 * 1024);
                     ClientConnectionFactoryOverHTTP3.HTTP3 http3 = new ClientConnectionFactoryOverHTTP3.HTTP3(h3Client);
 
@@ -287,18 +304,6 @@ public class Server
                     client.start();
                     server.addManaged(client);
                     bind(new JettyHttpClientSupplier(client)).to(JettyHttpClientContract.class);
-
-                    /*
-                    // Bind provided services
-                    WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-                    webSocketClient.setIdleTimeout(Duration.ofMillis(Long.MAX_VALUE));
-                    webSocketClient.start();
-                    server.addManaged(webSocketClient);
-                    RestClient restClient = new RestClient(webSocketClient);
-                    bind(httpClient);
-                    bind(webSocketClient);
-                    bind(restClient);
-*/
 
                     // Create default ObjectMapper
                     ObjectMapper objectMapper = new ObjectMapper();

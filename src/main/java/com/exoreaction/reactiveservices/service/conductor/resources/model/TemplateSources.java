@@ -11,9 +11,9 @@ public record TemplateSources(ObjectNode json) {
         return json.path("many").asBoolean(false);
     }
 
-    public boolean isSource(ServiceResourceObject service, Configuration configuration) {
+    public boolean isSource(ServiceResourceObject service) {
         String expression = json.path("pattern").textValue();
         return service.resourceObject().getLinks().getLinks().stream().anyMatch(link ->
-                new GroupTemplatePatternEvaluator(configuration, service, link.rel()).eval(expression));
+                new GroupTemplatePatternEvaluator(service, link.rel()).eval(expression));
     }
 }

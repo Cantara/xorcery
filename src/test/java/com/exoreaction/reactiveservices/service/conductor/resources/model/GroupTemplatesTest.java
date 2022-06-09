@@ -35,15 +35,11 @@ class GroupTemplatesTest {
             }
         });
 
-        Configuration configuration = new Configuration.Builder()
-                .add("environment", "development")
-                .build();
-
         GroupTemplates groupTemplates = new GroupTemplates(new GroupTemplates.GroupTemplatesListener() {
             @Override
             public void addedTemplate(GroupTemplate groupTemplate) {
             }
-        }, groups, configuration);
+        }, groups);
 
         new ResourceDocument((ObjectNode)new ObjectMapper().readTree(getClass().getResource("/grouptemplates.json")))
                 .getResources().map(ResourceObjects::getResources).orElseGet(Collections::emptyList).forEach(ro ->
@@ -70,9 +66,6 @@ class GroupTemplatesTest {
     public void givenTemplateAndGroupWhenServiceProvidedThenExpandGroup() throws IOException {
         // Given
         AtomicInteger count = new AtomicInteger();
-        Configuration configuration = new Configuration.Builder()
-                .add("environment", "development")
-                .build();
         Groups groups = new Groups(new Groups.GroupsListener() {
             @Override
             public void addedGroup(Group group) {
@@ -91,7 +84,7 @@ class GroupTemplatesTest {
             public void addedTemplate(GroupTemplate groupTemplate) {
 
             }
-        }, groups, configuration);
+        }, groups);
 
         new ResourceDocument((ObjectNode)new ObjectMapper().readTree(getClass().getResource("/grouptemplates.json")))
                 .getResources().map(ResourceObjects::getResources).orElseGet(Collections::emptyList).forEach(ro ->

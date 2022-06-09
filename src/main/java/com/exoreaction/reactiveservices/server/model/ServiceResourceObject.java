@@ -11,7 +11,8 @@ import java.util.Optional;
 
 public record ServiceResourceObject(ResourceObject resourceObject) {
 
-    public record Builder(Server server, ResourceObject.Builder builder, Links.Builder links, Attributes.Builder attributes) {
+    public record Builder(Server server, ResourceObject.Builder builder, Links.Builder links,
+                          Attributes.Builder attributes) {
 
         public Builder(Server server, String serviceType) {
             this(server, new ResourceObject.Builder(serviceType, server.getServerId()), new Links.Builder(), new Attributes.Builder());
@@ -34,12 +35,16 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
         }
 
         public Builder websocket(String rel, String path) {
-            links.link(rel, server.getBaseUriBuilder().scheme("ws").path(path));
+            links.link(rel, server.getBaseUriBuilder()
+                    .scheme(server.getBaseUri().getScheme().equals("https") ? "wss" : "ws")
+                    .path(path));
             return this;
         }
 
         public Builder websocket(String rel, String path, String queryParameters) {
-            links.link(rel, server.getBaseUriBuilder().scheme("ws").path(path).replaceQuery(queryParameters).toTemplate());
+            links.link(rel, server.getBaseUriBuilder()
+                    .scheme(server.getBaseUri().getScheme().equals("https") ? "wss" : "ws")
+                    .path(path).replaceQuery(queryParameters).toTemplate());
             return this;
         }
 

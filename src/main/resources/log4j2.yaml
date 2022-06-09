@@ -1,0 +1,42 @@
+Configuration:
+  name: Reactive Services
+  status: warn
+  properties:
+    property:
+      name: filename
+      value: target/test-yaml.log
+  thresholdFilter:
+    level: debug
+  appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%d [%t] %-5level %marker %c{1.}: %msg%n%throwable"
+    Disruptor:
+      name: DISRUPTOR
+      JsonTemplateLayout:
+        LocationInfoEnabled: true
+      Filters:
+        ThresholdFilter:
+          level: info
+
+  Loggers:
+    logger:
+      -
+        name: org.apache.logging.log4j
+        level: debug
+        additivity: false
+        AppenderRef:
+          ref: STDOUT
+      -
+        name: org.apache.logging.log4j.test2
+        level: debug
+        additivity: false
+        AppenderRef:
+          - ref: File
+    Root:
+      level: error
+      AppenderRef:
+        - ref: STDOUT
+        - ref: DISRUPTOR

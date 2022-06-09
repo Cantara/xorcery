@@ -29,6 +29,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -138,6 +139,7 @@ public class PublisherWebSocketEndpoint<T>
         if (cause instanceof ClosedChannelException)
         {
             // Ignore
+            subscription.cancel();
         } else {
             logger.error(marker,"Publisher websocket error", cause);
         }
@@ -193,9 +195,8 @@ public class PublisherWebSocketEndpoint<T>
             session.getRemote().sendBytes(metadataBuffer, new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable t) {
-                    logger.error(marker,"Could not send metadata", t);
-                    // TODO
                     pool.release(metadataBuffer);
+                    onWebSocketError(t);
                 }
 
                 @Override
@@ -216,15 +217,13 @@ public class PublisherWebSocketEndpoint<T>
                             session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
                                 @Override
                                 public void writeFailed(Throwable t) {
-                                    // TODO
-                                    logger.error(marker,"Could not send event", t);
                                     pool.release(eventBuffer);
+                                    onWebSocketError(t);
                                 }
 
                                 @Override
                                 public void writeSuccess() {
                                     pool.release(eventBuffer);
-                                    // TODO
                                 }
                             });
                         } else {
@@ -232,18 +231,18 @@ public class PublisherWebSocketEndpoint<T>
                             session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
                                 @Override
                                 public void writeFailed(Throwable t) {
-                                    // TODO
-                                    logger.error(marker,"Could not send event", t);
+                                    onWebSocketError(t);
                                 }
 
                                 @Override
                                 public void writeSuccess() {
-                                    // TODO
+                                    // Done
                                 }
                             });
                         }
                     } catch (Throwable t) {
                         logger.error(marker,"Could not send event", t);
+                        subscription.cancel();
                     }
                 }
             });

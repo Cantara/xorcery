@@ -29,6 +29,7 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -96,7 +97,7 @@ public class SubscriberWebSocketEndpoint<T>
             if (metadata == null) {
                 metadata = byteBuffer;
             } else {
-                logger.info(marker, "Received:"+ Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+//                logger.info(marker, "Received:"+ Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
 
                 ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
                 Object event = messageBodyReader.readFrom((Class<Object>) eventType, eventType, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, inputStream);

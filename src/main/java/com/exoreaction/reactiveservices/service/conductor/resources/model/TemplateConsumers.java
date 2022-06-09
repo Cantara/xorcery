@@ -14,14 +14,14 @@ public record TemplateConsumers(ObjectNode json) {
         return json.path("many").asBoolean(false);
     }
 
-    public boolean isConsumer(ServiceResourceObject service, Configuration configuration) {
+    public boolean isConsumer(ServiceResourceObject service) {
         String expression = json.path("pattern").textValue();
         List<Link> links = service.resourceObject().getLinks().getLinks();
         if (links.isEmpty()) {
-            return new GroupTemplatePatternEvaluator(configuration, service, null).eval(expression);
+            return new GroupTemplatePatternEvaluator(service, null).eval(expression);
         } else {
             return links.stream().anyMatch(link ->
-                    new GroupTemplatePatternEvaluator(configuration, service, link.rel()).eval(expression));
+                    new GroupTemplatePatternEvaluator(service, link.rel()).eval(expression));
         }
     }
 }

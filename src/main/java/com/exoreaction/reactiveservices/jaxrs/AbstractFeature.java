@@ -28,8 +28,13 @@ public abstract class AbstractFeature
         this.injectionManager = ((InjectionManagerSupplier) context).getInjectionManager();
         if (isEnabled())
         {
+            Configuration configuration = injectionManager.getInstance(Configuration.class);
             String serviceType = Objects.requireNonNull(serviceType(), "Service type may not be null");
             ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(server(), serviceType);
+            configuration.getString("environment")
+                    .ifPresent(env -> builder.attributes().attribute("environment", env));
+            configuration.getString("tag")
+                    .ifPresent(tag -> builder.attributes().attribute("tag", tag));
             buildResourceObject(builder);
             resourceObject = builder.build();           ;
             server().addService(resourceObject.resourceObject());
