@@ -1,0 +1,16 @@
+<table class="resource" id="{{id}}-{{type}}">
+    <thead>
+    <tr>
+        <th colspan="2"><span class="resource_type">{{type}}</span>:<span class="resource_id">{{id}}</span></th>
+    </tr>
+    </thead>
+
+    {{#with this.links}}
+        {{> "jsonapi/partial/links"}}
+    {{/with}}
+
+    {{#with this.attributes}}
+        {{> "jsonapi/partial/attributes"}}
+    {{/with}}
+
+</table>

@@ -3,7 +3,6 @@ package com.exoreaction.reactiveservices.server.resources;
 import com.exoreaction.reactiveservices.jsonapi.model.Error;
 import com.exoreaction.reactiveservices.jsonapi.model.Errors;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;

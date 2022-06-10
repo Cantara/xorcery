@@ -16,7 +16,6 @@ import com.exoreaction.reactiveservices.service.neo4jdomainevents.disruptor.Neo4
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
-import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.BlockingWaitStrategy;

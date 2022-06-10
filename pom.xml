@@ -582,6 +582,12 @@
             </exclusions>
         </dependency>
 
+        <!-- Discovery -->
+        <dependency>
+            <groupId>org.jmdns</groupId>
+            <artifactId>jmdns</artifactId>
+            <version>3.5.7</version>
+        </dependency>
 <!--
         <dependency>
             <groupId>org.neo4j.procedure</groupId>

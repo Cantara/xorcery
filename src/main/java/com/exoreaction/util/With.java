@@ -9,6 +9,7 @@ import java.util.function.Consumer;
  */
 public interface With<T> {
 
+    @SuppressWarnings("unchecked")
     default T with( Consumer<T>... consumers )
     {
         for ( Consumer<T> consumer : consumers )

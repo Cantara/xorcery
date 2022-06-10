@@ -14,7 +14,6 @@ import java.net.URI;
 
 /**
  * @author rickardoberg
- * @since 27/04/2016
  */
 public interface ResourceContext
 {

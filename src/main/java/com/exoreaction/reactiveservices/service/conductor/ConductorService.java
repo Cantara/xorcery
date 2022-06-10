@@ -1,8 +1,8 @@
 package com.exoreaction.reactiveservices.service.conductor;
 
 import com.exoreaction.reactiveservices.configuration.Configuration;
-import com.exoreaction.reactiveservices.json.VariableResolver;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.json.VariableResolver;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
@@ -128,7 +128,8 @@ public class ConductorService
     public void onStartup(Container container) {
         // Load templates
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        for (JsonNode templateJson : configuration.getList("conductor.templates").orElseThrow()) {
+        for (JsonNode templateJson : configuration.getList("conductor.templates").orElseThrow(()->
+                new IllegalStateException("Missing conductor.templates configuration"))) {
             String templateName = templateJson.textValue();
             logger.info("Loading conductor template from:" + templateName);
             ObjectNode templateNode = null;

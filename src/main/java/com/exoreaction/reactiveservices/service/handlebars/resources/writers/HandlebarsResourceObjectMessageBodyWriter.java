@@ -1,6 +1,5 @@
 package com.exoreaction.reactiveservices.service.handlebars.resources.writers;
 
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.handlebars.helpers.OptionalValueResolver;
 import com.github.jknack.handlebars.Context;

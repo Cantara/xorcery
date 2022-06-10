@@ -1,6 +1,5 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.model;
 
-import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.GroupTemplatePatternEvaluator;

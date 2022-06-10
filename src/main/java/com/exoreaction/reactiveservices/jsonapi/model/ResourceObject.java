@@ -9,9 +9,7 @@ import java.util.Objects;
 
 /**
  * @author rickardoberg
- * @since 27/11/2018
  */
-
 public record ResourceObject(ObjectNode json)
         implements JsonElement {
 

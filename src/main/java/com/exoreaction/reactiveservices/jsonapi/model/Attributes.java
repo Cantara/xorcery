@@ -11,11 +11,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.math.BigDecimal;
 import java.time.Period;
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * @author rickardoberg
- * @since 27/11/2018
  */
 
 public record Attributes(ObjectNode json)

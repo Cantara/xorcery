@@ -30,13 +30,10 @@ Configuration:
         AppenderRef:
           ref: STDOUT
       -
-        name: org.apache.logging.log4j.test2
+        name: com.exoreaction.reactiveservices.server.Server
         level: debug
-        additivity: false
-        AppenderRef:
-          - ref: File
     Root:
-      level: error
+      level: info
       AppenderRef:
         - ref: STDOUT
         - ref: DISRUPTOR

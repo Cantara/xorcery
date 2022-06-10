@@ -19,6 +19,8 @@ import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdent
 import com.exoreaction.reactiveservices.service.reactivestreams.api.SubscriberEventSink;
 import com.exoreaction.reactiveservices.service.registry.api.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
@@ -32,7 +34,6 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.util.component.LifeCycle;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
@@ -91,6 +92,10 @@ public class RegistryService
             bind(new JsonApiClient(client));
 
             context.register(RegistryService.class, Registry.class, ContainerLifecycleListener.class);
+
+            if (configuration().getBoolean("registry.dnsdiscovery").orElse(false)) {
+                context.register(RegistryDnsDiscovery.class, ContainerLifecycleListener.class);
+            }
         }
     }
 
@@ -112,11 +117,11 @@ public class RegistryService
                            ServletContextHandler servletContextHandler) {
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
-        this.configuration = configuration.getConfiguration("registry");
+        this.configuration = configuration;
         this.jsonApiClient = jsonApiClient;
         this.server = server;
 
-        this.registryLink = new Link("master", this.configuration.getString("master").orElseThrow());
+        this.registryLink = new Link("master", this.configuration.getString("registry.master").orElseThrow());
 
         disruptor = new Disruptor<>(Event::new, 16, new NamedThreadFactory("RegistryChanges"));
         UpstreamSubscriber upstreamSubscriber = new UpstreamSubscriber(disruptor.getRingBuffer());
@@ -298,7 +303,10 @@ public class RegistryService
                     .data(resourceObjects.build())
                     .build();
 
-            RegistrySnapshot snapshot = new RegistrySnapshot(snapshotDocument.json());
+            ArrayNode serverDocuments = JsonNodeFactory.instance.arrayNode();
+            servers.forEach(srd -> serverDocuments.add(srd.resourceDocument().json()));
+
+            RegistrySnapshot snapshot = new RegistrySnapshot(serverDocuments);
             eventSink.get().sink().publishEvent((event, seq, rc) ->
             {
                 event.event = rc;

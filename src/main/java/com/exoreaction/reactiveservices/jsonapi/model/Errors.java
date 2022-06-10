@@ -14,9 +14,7 @@ import java.util.Map;
 
 /**
  * @author rickardoberg
- * @since 27/11/2018
  */
-
 public record Errors(ArrayNode json)
         implements JsonElement, Iterable<Error> {
 

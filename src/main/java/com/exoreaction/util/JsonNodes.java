@@ -28,4 +28,16 @@ public final class JsonNodes {
         }
         return map;
     }
+
+    public static <T> Map<String, T> toMap(ObjectNode object, Function<JsonNode, T> mapper)
+    {
+        Map<String, T> result = new LinkedHashMap<>(object.size());
+        Iterator<Map.Entry<String, JsonNode>> fields = object.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> next = fields.next();
+            result.put(next.getKey(), mapper.apply(next.getValue()));
+        }
+        return result;
+    }
+
 }

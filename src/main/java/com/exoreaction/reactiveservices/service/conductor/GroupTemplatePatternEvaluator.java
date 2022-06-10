@@ -1,9 +1,6 @@
 package com.exoreaction.reactiveservices.service.conductor;
 
-import com.exoreaction.reactiveservices.configuration.Configuration;
-import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.jexl3.*;
 
 import java.util.Optional;

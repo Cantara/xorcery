@@ -1,8 +1,9 @@
 package com.exoreaction.reactiveservices.jaxrs.writers;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.json.JsonElement;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Produces;
@@ -19,26 +20,31 @@ import java.lang.reflect.Type;
 
 @Singleton
 @Provider
-@Produces(MediaTypes.APPLICATION_JSON_API)
+@Produces({MediaType.WILDCARD})
 public class JsonApiMessageBodyWriter
-    implements MessageBodyWriter<ResourceDocument>
-{
+        implements MessageBodyWriter<JsonElement> {
     private final ObjectMapper objectMapper;
+    private final ObjectMapper yamlObjectMapper;
 
     @Inject
     public JsonApiMessageBodyWriter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
     }
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return type == ResourceDocument.class;
+        return JsonElement.class.isAssignableFrom(type);
     }
 
     @Override
-    public void writeTo(ResourceDocument resourceDocument, Class<?> type, Type genericType, Annotation[] annotations,
+    public void writeTo(JsonElement jsonElement, Class<?> type, Type genericType, Annotation[] annotations,
                         MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
                         OutputStream entityStream) throws IOException, WebApplicationException {
-        objectMapper.writer().withDefaultPrettyPrinter().writeValue(entityStream, resourceDocument.json());
+        if (mediaType.isCompatible(MediaTypes.APPLICATION_YAML_TYPE)) {
+            yamlObjectMapper.writer().writeValue(entityStream, jsonElement.json());
+        } else {
+            objectMapper.writer().withDefaultPrettyPrinter().writeValue(entityStream, jsonElement.json());
+        }
     }
 }

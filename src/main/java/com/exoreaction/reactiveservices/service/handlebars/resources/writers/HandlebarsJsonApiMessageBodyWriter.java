@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.handlebars.resources.writers;
 
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.reactiveservices.service.handlebars.helpers.OptionalValueResolver;
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
@@ -25,29 +25,29 @@ import java.nio.charset.StandardCharsets;
 @Singleton
 @Provider
 @Produces(MediaType.TEXT_HTML)
-public class HandlebarsResourceDocumentMessageBodyWriter
-        implements MessageBodyWriter<ResourceDocument> {
+public class HandlebarsJsonApiMessageBodyWriter
+        implements MessageBodyWriter<JsonElement> {
     private Handlebars handlebars;
     private jakarta.inject.Provider<ContainerRequestContext> requestContext;
 
     @Inject
-    public HandlebarsResourceDocumentMessageBodyWriter(Handlebars handlebars, jakarta.inject.Provider<ContainerRequestContext> requestContext) {
+    public HandlebarsJsonApiMessageBodyWriter(Handlebars handlebars, jakarta.inject.Provider<ContainerRequestContext> requestContext) {
         this.handlebars = handlebars;
         this.requestContext = requestContext;
     }
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return type == ResourceDocument.class;
+        return JsonElement.class.isAssignableFrom(type);
     }
 
     @Override
-    public void writeTo(ResourceDocument resourceDocument, Class<?> type, Type genericType, Annotation[] annotations,
+    public void writeTo(JsonElement jsonElement, Class<?> type, Type genericType, Annotation[] annotations,
                         MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
                         OutputStream entityStream) throws IOException, WebApplicationException {
 
         OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8);
-        Context context = Context.newBuilder(resourceDocument)
+        Context context = Context.newBuilder(jsonElement)
                 .push(OptionalValueResolver.INSTANCE)
                 .build();
 
@@ -55,7 +55,9 @@ public class HandlebarsResourceDocumentMessageBodyWriter
         try {
             handlebars.compile(path).apply(context, writer);
         } catch (IOException e) {
-            handlebars.compile("jsonapi/resourcedocument").apply(context, writer);
+
+            String templateName = jsonElement.getClass().getSimpleName().toLowerCase();
+            handlebars.compile("jsonapi/"+templateName).apply(context, writer);
         }
 
         writer.close();

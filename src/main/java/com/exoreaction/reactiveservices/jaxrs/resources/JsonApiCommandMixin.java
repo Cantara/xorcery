@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.jaxrs.resources;
 
 import com.exoreaction.reactiveservices.cqrs.Command;
 import com.exoreaction.reactiveservices.cqrs.Context;
+import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.disruptor.RequestMetadata;
 import com.exoreaction.reactiveservices.json.JsonElement;
@@ -17,6 +18,7 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Predicate;
@@ -61,19 +63,21 @@ public interface JsonApiCommandMixin
     }
 
     default CompletionStage<JsonElement> commandResourceObject(String rel, Context context) {
-        return CompletableFuture.completedStage(new ResourceObject.Builder("rel", rel)
+        Command command = context.commands().stream().filter(isCommandByName(rel))
+                .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new);
+        return CompletableFuture.completedStage(new ResourceObject.Builder(command.name(), rel)
                 .attributes(new Attributes.Builder().with(a ->
                 {
-                    a.attributes(objectMapper().valueToTree(context.commands().stream().filter(isRelCommand(rel))
-                            .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new)));
+                    a.attributes(objectMapper().valueToTree(command));
                 })).build());
     }
 
 
     default CompletionStage<Response> execute(ResourceObject resourceObject, Context context, Metadata metadata) {
-        String rel = getFirstQueryParameter("rel");
 
-        Command command = context.commands().stream().filter(isRelCommand(rel)).map(c ->
+        // Find command based on simple name of class and type in ResourceObject
+        String commandName = resourceObject.getType();
+        Command command = context.commands().stream().filter(isCommandByName(commandName)).map(c ->
         {
             Class<? extends Command> commandClass = c.getClass();
             try {
@@ -85,6 +89,20 @@ public interface JsonApiCommandMixin
                 throw new UncheckedIOException(e);
             }
         }).findFirst().orElseThrow(NotFoundException::new);
+
+        // Transfer over ResourceObject.id as aggregate id?
+        if (resourceObject.getId() != null)
+        {
+            metadata = new DomainEventMetadata.Builder(metadata)
+                    .aggregateId(resourceObject.getId()).build()
+                    .metadata();
+        } else
+        {
+            // Generate new aggregate id
+            metadata = new DomainEventMetadata.Builder(metadata)
+                    .aggregateId(UUID.randomUUID().toString().replace("-", ""))
+                    .build().metadata();
+        }
 
         return context.handle(metadata, command)
                 .thenCompose(this::ok)
@@ -104,12 +122,8 @@ public interface JsonApiCommandMixin
     }
 
     @NotNull
-    default Predicate<Command> isRelCommand(String rel) {
-        return c ->
-        {
-            Class<?> commandClass = c.getClass();
-            return rel.equals(commandClass.getSimpleName());
-        };
+    default Predicate<Command> isCommandByName(String name) {
+        return c -> name.equals(c.name());
     }
 
     CompletionStage<Response> ok(Metadata metadata);

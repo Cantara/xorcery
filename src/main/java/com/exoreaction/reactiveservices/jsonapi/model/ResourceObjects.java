@@ -1,6 +1,5 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
-import com.exoreaction.reactiveservices.cqrs.Model;
 import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.util.JsonNodes;
 import com.exoreaction.util.With;
@@ -15,9 +14,7 @@ import java.util.stream.Stream;
 
 /**
  * @author rickardoberg
- * @since 28/11/2018
  */
-
 public record ResourceObjects(ArrayNode json)
         implements JsonElement,Iterable<ResourceObject> {
 

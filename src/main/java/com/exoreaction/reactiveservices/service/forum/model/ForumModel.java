@@ -19,4 +19,10 @@ public interface ForumModel {
         title,
         body
     }
+
+    enum Comment
+    {
+        id,
+        body
+    }
 }

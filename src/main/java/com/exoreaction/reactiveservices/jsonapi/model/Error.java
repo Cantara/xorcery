@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @author rickardoberg
- * @since 23/01/2019
  */
 
 public record Error(ObjectNode json)

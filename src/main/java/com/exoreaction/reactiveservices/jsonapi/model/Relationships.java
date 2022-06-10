@@ -8,13 +8,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * @author rickardoberg
- * @since 27/11/2018
  */
-
 public record Relationships(ObjectNode json)
         implements JsonElement {
 

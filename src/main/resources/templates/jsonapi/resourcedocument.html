@@ -16,22 +16,22 @@
 
 <table class="resourcedocument">
 {{#with errors}}
-{{> "jsonapi/errors"}}
+{{> "jsonapi/partial/errors"}}
 {{/with}}
 
 {{#with links}}
-{{> "jsonapi/links"}}
+{{> "jsonapi/partial/links"}}
 {{/with}}
 
 {{#with resources}}
     {{#each this}}
-    <tr><td colspan="2">{{> "jsonapi/resourceobject"}}</td></tr>
+    <tr><td colspan="2">{{> "jsonapi/partial/resourceobject"}}</td></tr>
     {{/each}}
 {{/with}}
 
 {{#with resource}}
     {{#if this}}
-        <tr><td colspan="2">{{> "jsonapi/resourceobject"}}</td></tr>
+        <tr><td colspan="2">{{> "jsonapi/partial/resourceobject"}}</td></tr>
     {{/if}}
 {{/with}}
 </table>

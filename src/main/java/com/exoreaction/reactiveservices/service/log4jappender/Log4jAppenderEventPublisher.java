@@ -81,7 +81,7 @@ public class Log4jAppenderEventPublisher
     @Override
     public void subscribe(ReactiveEventStreams.Subscriber<LogEvent> subscriber, ObjectNode parameters) {
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
-        DisruptorAppender appender = lc.getConfiguration().getAppender("Disruptor");
+        DisruptorAppender appender = lc.getConfiguration().getAppender("DISRUPTOR");
 
         final AtomicReference<EventSink<Event<LogEvent>>> handler = new AtomicReference<>();
         handler.set(subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {

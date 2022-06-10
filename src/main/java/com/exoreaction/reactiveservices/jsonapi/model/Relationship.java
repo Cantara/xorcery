@@ -14,9 +14,7 @@ import java.util.function.Consumer;
 
 /**
  * @author rickardoberg
- * @since 01/12/2018
  */
-
 public record Relationship(ObjectNode json)
         implements JsonElement, Consumer<Relationship.Builder> {
 

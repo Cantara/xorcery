@@ -20,11 +20,11 @@ package com.exoreaction.reactiveservices.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
+import java.util.Collection;
 import java.util.Optional;
 
 /**
  * @author rickardoberg
- * @since 07/08/2017
  */
 public interface JsonElement {
     ContainerNode<?> json();
@@ -122,5 +122,32 @@ public interface JsonElement {
 
     default String toJsonString() {
         return json().toPrettyString();
+    }
+
+    static ArrayNode toArray(Collection<? extends JsonElement> elements)
+    {
+        ArrayNode array = JsonNodeFactory.instance.arrayNode(elements.size());
+        for (JsonElement element : elements) {
+            array.add(element.json());
+        }
+        return array;
+    }
+
+    static ArrayNode toArray(JsonElement... elements)
+    {
+        ArrayNode array = JsonNodeFactory.instance.arrayNode(elements.length);
+        for (JsonElement element : elements) {
+            array.add(element.json());
+        }
+        return array;
+    }
+
+    static ArrayNode toArray(String... values)
+    {
+        ArrayNode array = JsonNodeFactory.instance.arrayNode(values.length);
+        for (String value : values) {
+            array.add(array.textNode(value));
+        }
+        return array;
     }
 }

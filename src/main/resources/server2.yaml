@@ -6,7 +6,15 @@ server:
   secure_port: 8444
 
 registry:
-  master: http://localhost:8889/
+  master: https://localhost:8443/
+  dnsdiscovery: false
+
+conductor:
+  enabled: true
+  templates:
+    - /conductor/templates.yaml
+    - /conductor/certmanager.yaml
+#    - /conductor/forum.yaml
 
 log4jappender:
   enabled: true

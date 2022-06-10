@@ -7,9 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @author rickardoberg
- * @since 27/11/2018
  */
-
 public record ResourceObjectIdentifier(ObjectNode json)
         implements JsonElement {
 

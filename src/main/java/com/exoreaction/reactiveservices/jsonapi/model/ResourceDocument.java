@@ -12,9 +12,7 @@ import java.util.stream.Stream;
 
 /**
  * @author rickardoberg
- * @since 27/11/2018
  */
-
 public record ResourceDocument(ObjectNode json)
         implements JsonElement {
 

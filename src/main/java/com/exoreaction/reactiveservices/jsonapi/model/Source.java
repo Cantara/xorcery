@@ -7,9 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @author rickardoberg
- * @since 23/01/2019
  */
-
 public record Source(ObjectNode json)
         implements JsonElement {
     public record Builder(ObjectNode builder)

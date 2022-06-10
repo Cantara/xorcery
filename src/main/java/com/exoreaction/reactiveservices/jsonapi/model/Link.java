@@ -11,9 +11,7 @@ import java.util.Optional;
 
 /**
  * @author rickardoberg
- * @since 28/11/2018
  */
-
 public record Link(String rel, JsonNode value) {
     public Link(String rel, String uri) {
         this(rel, JsonNodeFactory.instance.textNode(uri));

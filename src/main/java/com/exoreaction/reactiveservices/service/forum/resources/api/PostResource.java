@@ -4,6 +4,7 @@ import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiCommandMixin;
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.json.JsonElement;
+import com.exoreaction.reactiveservices.jsonapi.model.Included;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.APPLICATION_JSON_API;
+import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
 
 @Path("api/forum/posts/{post}")
 public class PostResource
@@ -40,13 +42,16 @@ public class PostResource
     }
 
     @GET
+    @Produces(JSON_API_TEXT_HTML)
     public CompletionStage<JsonElement> get(@QueryParam("rel") String rel) {
         if (rel != null) {
             return commandResourceObject(rel, context);
         } else {
+            Included.Builder included = new Included.Builder();
+
             return CompletableFuture.completedStage(
                     new ResourceDocument.Builder()
-                            .data(postResource().apply(post))
+                            .data(postResource(included).apply(post))
                             .build());
         }
     }

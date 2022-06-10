@@ -6,9 +6,6 @@ import com.exoreaction.reactiveservices.server.Server;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
-
-import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
 
 /**
  * @author rickardoberg
@@ -28,7 +25,6 @@ public class ServerResource
     }
 
     @GET
-    @Produces(JSON_API_TEXT_HTML)
     public ResourceDocument get()
     {
         return server.getServerDocument();

@@ -10,9 +10,7 @@ import java.util.List;
 
 /**
  * @author rickardoberg
- * @since 28/11/2018
  */
-
 public record ResourceObjectIdentifiers(ArrayNode json)
         implements JsonElement {
     public record Builder(ArrayNode builder)

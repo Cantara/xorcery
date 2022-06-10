@@ -14,9 +14,7 @@ import java.util.function.Consumer;
 
 /**
  * @author rickardoberg
- * @since 27/11/2018
  */
-
 public record Links(ObjectNode json)
         implements JsonElement {
 
