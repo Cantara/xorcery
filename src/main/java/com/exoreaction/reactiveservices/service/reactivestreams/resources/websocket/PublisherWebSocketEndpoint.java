@@ -93,7 +93,7 @@ public class PublisherWebSocketEndpoint<T>
             {
                 if (!redundancyNotificationIssued)
                 {
-                    logger.info(marker, "Receiving redundant results from subscriber");
+                    logger.warn(marker, "Receiving redundant results from subscriber");
                     redundancyNotificationIssued = true;
                 }
             }

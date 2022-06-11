@@ -2,10 +2,13 @@ package com.exoreaction.reactiveservices.jaxrs.providers;
 
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
+import com.github.jknack.handlebars.Handlebars;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.Encoded;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Form;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
@@ -26,6 +29,14 @@ import java.lang.reflect.Type;
 @Provider
 public final class ResourceObjectFormProvider extends AbstractFormProvider<ResourceObject> {
 
+    jakarta.inject.Provider<ContainerRequestContext> requestContextProvider;
+
+    @Inject
+    public ResourceObjectFormProvider(jakarta.inject.Provider<ContainerRequestContext> requestContextProvider)
+    {
+        this.requestContextProvider = requestContextProvider;
+    }
+
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         return type == ResourceObject.class;
@@ -42,7 +53,7 @@ public final class ResourceObjectFormProvider extends AbstractFormProvider<Resou
 
         NullableMultivaluedHashMap<String, String> map = this.readFrom(new NullableMultivaluedHashMap<>(), mediaType, decode(annotations), entityStream);
 
-        return new ResourceObject.Builder("form").attributes(new Attributes.Builder().with(builder ->
+        return new ResourceObject.Builder(requestContextProvider.get().getUriInfo().getQueryParameters().getFirst("rel")).attributes(new Attributes.Builder().with(builder ->
         {
             map.forEach((name, value) ->
             {

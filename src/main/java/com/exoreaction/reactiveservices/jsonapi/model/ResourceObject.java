@@ -19,12 +19,15 @@ public record ResourceObject(ObjectNode json)
 
         public Builder(String type, String id) {
             this(JsonNodeFactory.instance.objectNode());
-            builder.<ObjectNode>set("id", builder.textNode(id))
-                    .set("type", builder.textNode(type));
+
+            if (id != null)
+                builder.set("id", builder.textNode(id));
+
+            builder.set("type", builder.textNode(type));
         }
 
         public Builder(Enum<?> type, String id) {
-            this(id, type.name());
+            this(type.name(), id);
         }
 
         public Builder(String type) {

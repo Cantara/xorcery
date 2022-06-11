@@ -11,8 +11,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
-import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
-import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.describedBy;
+import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.describedby;
 
 @Path("api/forum")
 public class ForumResource
@@ -25,20 +24,19 @@ public class ForumResource
     }
 
     @GET
-    @Produces(MediaTypes.JSON_SCHEMA)
+    @Produces(MediaTypes.APPLICATION_JSON_SCHEMA)
     public JsonSchema schema()
     {
         return forum.getSchema(getAbsolutePath()).schema().schema();
     }
 
     @GET
-    @Produces(JSON_API_TEXT_HTML)
     public ResourceDocument get() {
         return new ResourceDocument.Builder()
                 .links(new Links.Builder()
-                        .link(describedBy, getAbsolutePathBuilder().path(".schema"))
-                        .link("posts", getUriBuilderForPathFrom(PostsResource.class))
-                        .link("post", getUriBuilderForPathFrom(PostResource.class).toTemplate())
+                        .link(describedby, getAbsolutePathBuilder().path(".schema"))
+                        .link("posts", getUriBuilderFor(PostsResource.class))
+                        .link("post", getUriBuilderFor(PostResource.class).toTemplate())
                         .build())
                 .build();
     }

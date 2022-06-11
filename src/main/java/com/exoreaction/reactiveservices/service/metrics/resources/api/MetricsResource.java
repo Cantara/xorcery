@@ -10,7 +10,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
-import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
+import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 import static com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects.toResourceObjects;
 
 @Path("api/metrics")
@@ -25,7 +25,7 @@ public class MetricsResource
     }
 
     @GET
-    @Produces(JSON_API_TEXT_HTML)
+    @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
     public ResourceDocument metrics() {
         return new ResourceDocument.Builder()
                 .data(metricRegistry.getMetrics().entrySet().stream().map(entry ->

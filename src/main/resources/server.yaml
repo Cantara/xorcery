@@ -23,7 +23,7 @@ conductor:
   templates:
     - /conductor/templates.yaml
     - /conductor/certmanager.yaml
-#    - /conductor/forum.yaml
+    - /conductor/forum.yaml
 
 certificatemanager:
   enabled: true

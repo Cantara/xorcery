@@ -1,4 +1,5 @@
 <table class="resource" id="{{id}}-{{type}}">
+
     <thead>
     <tr>
         <th colspan="2"><span class="resource_type">{{type}}</span>:<span class="resource_id">{{id}}</span></th>
@@ -6,11 +7,28 @@
     </thead>
 
     {{#with this.links}}
-        {{> "jsonapi/partial/links"}}
+        {{#unless links.isEmpty}}
+            {{> "jsonapi/partial/links"}}
+        {{/unless}}
     {{/with}}
 
-    {{#with this.attributes}}
+    {{#with (lookup schema.links.links type)}}
+        {{#optional submissionSchema}}
+            {{#with ..}}
+                {{> "jsonapi/partial/post"}}
+            {{/with}}
+        {{^}}
+            {{#optional targetSchema}}
+                {{#with ..}}
+                    {{> "jsonapi/partial/patch"}}
+                {{/with}}
+            {{^}}
+                {{#with ..}}
+                    {{> "jsonapi/partial/attributes"}}
+                {{/with}}
+            {{/optional}}
+        {{/optional}}
+    {{^}}
         {{> "jsonapi/partial/attributes"}}
     {{/with}}
-
 </table>

@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 
 @Singleton
 @Provider
-@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM})
+@Produces(MediaType.APPLICATION_OCTET_STREAM)
 public class JsonMessageBodyWriter
         implements MessageBodyWriter<Object> {
     private final ObjectMapper objectMapper;
@@ -30,7 +30,7 @@ public class JsonMessageBodyWriter
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return objectMapper.canSerialize(type);
+        return objectMapper.canSerialize(type) && mediaType.isCompatible(MediaType.APPLICATION_OCTET_STREAM_TYPE);
     }
 
     @Override

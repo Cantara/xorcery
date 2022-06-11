@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.jaxrs.resources;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.OPTIONS;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
@@ -9,6 +10,9 @@ import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
 import org.glassfish.hk2.api.ServiceLocator;
 
+import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
+
+@Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
 public abstract class JsonApiResource
     implements ResourceContext
 {

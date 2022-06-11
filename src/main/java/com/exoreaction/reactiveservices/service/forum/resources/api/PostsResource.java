@@ -1,64 +1,61 @@
 package com.exoreaction.reactiveservices.service.forum.resources.api;
 
+import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
-import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
-import com.exoreaction.reactiveservices.service.forum.model.ForumModel;
-import com.exoreaction.reactiveservices.service.forum.model.PostModel;
-import com.exoreaction.reactiveservices.service.forum.resources.ForumResourceObjectsMixin;
-import com.exoreaction.reactiveservices.service.neo4j.client.GraphQuery;
+import com.exoreaction.reactiveservices.service.forum.resources.ForumApiMixin;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Link;
 import jakarta.ws.rs.core.Response;
 
+import java.net.URI;
 import java.util.concurrent.CompletionStage;
 
 import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.APPLICATION_JSON_API;
-import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
 
 @Path("api/forum/posts")
 public class PostsResource
         extends JsonApiResource
-        implements ForumResourceObjectsMixin {
-    private final PostsContext posts;
+        implements ForumApiMixin {
+
+    private final PostsContext context;
 
     @Inject
     public PostsResource(ForumApplication forumApplication) {
-        posts = forumApplication.posts();
+        context = forumApplication.posts();
     }
 
     @GET
-    @Produces(JSON_API_TEXT_HTML)
-    public CompletionStage<JsonElement> get(@QueryParam("rel") String rel) {
+    public CompletionStage<ResourceDocument> get(@QueryParam("rel") String rel) {
         if (rel != null) {
-            return commandResourceObject(rel, posts);
+            return commandResourceDocument(rel, null, context);
         } else {
             Links.Builder links = new Links.Builder();
-
-            GraphQuery graphQuery = postsQuery();
-
             Included.Builder included = new Included.Builder();
-            return graphQuery.stream(toModel(PostModel::new, ForumModel.Post.class).andThen(postResource(included)))
-                    .thenApply(ro -> new ResourceDocument.Builder()
-                            .data(ResourceObjects.toResourceObjects(ro))
+            return posts(included)
+                    .thenApply(ros -> new ResourceDocument.Builder()
+                            .data(ros)
                             .included(included.build())
-                            .links(links.with(commands(getRequestUriBuilder(), posts)))
+                            .links(links.with(commands(getRequestUriBuilder(), context), schemaLink()))
                             .build());
         }
     }
 
     @POST
     @Consumes({"application/x-www-form-urlencoded", APPLICATION_JSON_API})
-    @Produces(APPLICATION_JSON_API)
     public CompletionStage<Response> post(ResourceObject resourceObject) {
-        return execute(resourceObject, posts, metadata());
+        return execute(resourceObject, context, metadata());
     }
 
     @Override
     public CompletionStage<Response> ok(Metadata metadata) {
-        return get(null).thenApply(rd -> Response.ok(rd).build());
+        String aggregateId = new DomainEventMetadata(metadata).getAggregateId();
+        URI location = getUriBuilderFor(PostResource.class).build(aggregateId);
+        return post(aggregateId, new Included.Builder())
+                .thenApply(post -> Response.created(location).links(schemaHeader()).entity(post).build());
     }
 }

@@ -20,7 +20,9 @@
 {{/with}}
 
 {{#with links}}
-{{> "jsonapi/partial/links"}}
+    {{#unless links.isEmpty}}
+        {{> "jsonapi/partial/links"}}
+    {{/unless}}
 {{/with}}
 
 {{#with resources}}

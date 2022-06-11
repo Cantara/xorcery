@@ -28,12 +28,12 @@ public class ConductorResource
     }
 
     @GET
-    @Produces( MediaTypes.JSON_API_TEXT_HTML )
+    @Produces( MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML)
     public ResourceDocument get()
     {
         return new ResourceDocument.Builder()
             .links( new Links.Builder()
-                .link( "templates", getUriBuilderForPathFrom( TemplatesResource.class ) )
+                .link( "templates", getUriBuilderFor( TemplatesResource.class ) )
                 .link( "conductorevents", getBaseUriBuilder().scheme( "ws" ).path( "ws/conductorevents" ) )
                 .build())
             .build();

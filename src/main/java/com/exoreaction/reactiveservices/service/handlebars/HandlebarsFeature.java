@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.handlebars;
 
 
+import com.exoreaction.reactiveservices.service.handlebars.helpers.UtilHelpers;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.io.FileTemplateLoader;
 import com.github.jknack.handlebars.io.TemplateLoader;
@@ -33,7 +34,8 @@ public class HandlebarsFeature
 
         TemplateLoader templateLoader = new FileTemplateLoader(file, ".html");
         Handlebars handlebars = new Handlebars()
-                .with(templateLoader);
+                .with(templateLoader)
+                .registerHelpers(new UtilHelpers());
         handlebars.getCache().setReload(true);
 
         bind(handlebars);

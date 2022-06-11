@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.hyperschema.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
+import com.exoreaction.util.With;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -18,6 +19,7 @@ public record Links(ArrayNode json)
     implements JsonElement
 {
     public record Builder(ArrayNode builder)
+        implements With<Builder>
     {
         public Builder()
         {

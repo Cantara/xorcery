@@ -1,0 +1,22 @@
+data:
+    - id: domainevents_eventstore
+      type: grouptemplate
+      attributes:
+        name: Forum events into EventStore
+        sources:
+          pattern: rel=='domainevents'
+        consumers:
+          pattern: type=='eventstore'
+
+    - id: eventstore_neo4jdomainevents
+      type: grouptemplate
+      attributes:
+        name: Forum events from EventStore into Neo4j
+        sources:
+          pattern: rel=='eventstorestreams'
+          parameters:
+            stream: development-default-forum
+        consumers:
+          pattern: type=='neo4jdomainevents'
+          parameters:
+            database: neo4j

@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.neo4j.client;
 
 import com.exoreaction.util.With;
+import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.Result;
 
 import java.util.*;
@@ -129,6 +130,25 @@ public class GraphQuery
                         return true;
                     });
                     return results.stream();
+                }
+            } catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
+    public <T> CompletionStage<T> first(Function<RowModel, T> mapper) {
+        return applyQuery.apply(this).thenApply(gr ->
+        {
+            List<T> results = new ArrayList<>();
+
+            try {
+                try (gr) {
+                    gr.getResult().accept((Result.ResultVisitor<Exception>) row -> {
+                        results.add(mapper.apply(new RowModel(row)));
+                        return false;
+                    });
+                    return results.stream().findFirst().orElseThrow(NotFoundException::new);
                 }
             } catch (Exception e) {
                 throw new CompletionException(e);

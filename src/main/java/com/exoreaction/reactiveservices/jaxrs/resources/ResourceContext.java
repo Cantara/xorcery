@@ -76,14 +76,9 @@ public interface ResourceContext
         return getAbsolutePathBuilder().replacePath( path ).build();
     }
 
-    default UriBuilder getUriBuilderForPathFrom( Class<?> resourceClass )
+    default UriBuilder getUriBuilderFor(Class<?> resourceClass )
     {
         return getUriInfo().getBaseUriBuilder().path( resourceClass );
-    }
-
-    default UriBuilder getUriBuilderForPathFrom( Method resourceMethod )
-    {
-        return getUriInfo().getBaseUriBuilder().path( resourceMethod );
     }
 
     default Cookie getUserCookie()

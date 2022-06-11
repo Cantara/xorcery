@@ -5,26 +5,33 @@ import com.exoreaction.reactiveservices.cqrs.Context;
 import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.disruptor.RequestMetadata;
-import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public interface JsonApiCommandMixin
         extends ResourceContext {
+
+    default Consumer<Links.Builder> schemaLink() {
+        return links -> {
+        };
+    }
 
     default Metadata metadata() {
         Metadata.Builder metadata = new Metadata.Builder();
@@ -62,16 +69,37 @@ public interface JsonApiCommandMixin
         return metadata.build();
     }
 
-    default CompletionStage<JsonElement> commandResourceObject(String rel, Context context) {
-        Command command = context.commands().stream().filter(isCommandByName(rel))
-                .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new);
-        return CompletableFuture.completedStage(new ResourceObject.Builder(command.name(), rel)
-                .attributes(new Attributes.Builder().with(a ->
-                {
-                    a.attributes(objectMapper().valueToTree(command));
-                })).build());
+    // Links
+    default Consumer<Links.Builder> commands(UriBuilder baseUriBuilder, Context context) {
+        return links ->
+        {
+            for (Command command : context.commands()) {
+                if (!Command.isDelete(command.getClass())) {
+                    String commandName = Command.getName(command);
+                    links.link(commandName, baseUriBuilder.clone().replaceQueryParam("rel", commandName));
+                }
+            }
+        };
     }
 
+    default CompletionStage<ResourceDocument> commandResourceDocument(String rel, String id, Context context) {
+        Command command = context.commands().stream().filter(isCommandByName(rel))
+                .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new);
+        return CompletableFuture.completedStage(new ResourceDocument.Builder()
+                .links(new Links.Builder().with(schemaLink()))
+                .data(new ResourceObject.Builder(Command.getName(command), id)
+                        .attributes(new Attributes.Builder().with(a ->
+                        {
+                            ObjectNode result = objectMapper().valueToTree(command);
+                            result.remove("@class");
+                            a.attributes(result);
+                        })).build())
+                .build());
+    }
+
+    default CompletionStage<ResourceDocument> commandResourceDocument(String rel, Context context) {
+        return commandResourceDocument(rel, null, context);
+    }
 
     default CompletionStage<Response> execute(ResourceObject resourceObject, Context context, Metadata metadata) {
 
@@ -91,21 +119,28 @@ public interface JsonApiCommandMixin
         }).findFirst().orElseThrow(NotFoundException::new);
 
         // Transfer over ResourceObject.id as aggregate id?
-        if (resourceObject.getId() != null)
-        {
-            metadata = new DomainEventMetadata.Builder(metadata)
-                    .aggregateId(resourceObject.getId()).build()
-                    .metadata();
-        } else
-        {
-            // Generate new aggregate id
-            metadata = new DomainEventMetadata.Builder(metadata)
-                    .aggregateId(UUID.randomUUID().toString().replace("-", ""))
-                    .build().metadata();
-        }
+        String id = resourceObject.getId() != null ? resourceObject.getId() : UUID.randomUUID().toString().replace("-", "");
+        metadata = new DomainEventMetadata.Builder(metadata)
+                .aggregateId(id).build()
+                .metadata();
 
         return context.handle(metadata, command)
+                .thenApply(md -> new DomainEventMetadata.Builder(md)
+                        .aggregateId(id).build()
+                        .metadata())
                 .thenCompose(this::ok)
+/*
+                .thenApply(response ->
+                {
+                    URI location = response.getLocation();
+                    if (location != null)
+                        return Response.fromResponse(response)
+                                .header("Refresh", "0;url=" + location.toASCIIString())
+                                .build();
+                    else
+                        return response;
+                })
+*/
                 .exceptionallyCompose(throwable ->
                 {
                     while (throwable.getCause() != null) {
@@ -123,7 +158,7 @@ public interface JsonApiCommandMixin
 
     @NotNull
     default Predicate<Command> isCommandByName(String name) {
-        return c -> name.equals(c.name());
+        return c -> name.equals(Command.getName(c));
     }
 
     CompletionStage<Response> ok(Metadata metadata);

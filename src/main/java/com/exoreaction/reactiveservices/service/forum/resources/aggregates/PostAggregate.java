@@ -3,6 +3,7 @@ package com.exoreaction.reactiveservices.service.forum.resources.aggregates;
 import com.exoreaction.reactiveservices.cqrs.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.AggregateSnapshot;
 import com.exoreaction.reactiveservices.cqrs.Command;
+import com.exoreaction.reactiveservices.cqrs.annotations.Update;
 import com.exoreaction.reactiveservices.service.forum.resources.events.PostEvents;
 
 public class PostAggregate
@@ -12,6 +13,7 @@ public class PostAggregate
             implements Command {
     }
 
+    @Update
     public record UpdatePost(String title, String body)
             implements Command {
     }

@@ -9,7 +9,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
-import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
+import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 
 /**
  * @author rickardoberg
@@ -29,12 +29,12 @@ public class RegistryResource
     }
 
     @GET
-    @Produces(JSON_API_TEXT_HTML)
+    @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
     public ResourceDocument registry()
     {
         return new ResourceDocument.Builder()
             .links( new Links.Builder()
-                .link( "servers", getUriBuilderForPathFrom( RegistryServersResource.class ) )
+                .link( "servers", getUriBuilderFor( RegistryServersResource.class ) )
                 .link( "events", getBaseUriBuilder().scheme( "ws" ).path( "ws/registryevents" ) )
                 .build())
             .build();

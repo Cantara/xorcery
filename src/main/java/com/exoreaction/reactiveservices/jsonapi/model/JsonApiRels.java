@@ -6,10 +6,12 @@ package com.exoreaction.reactiveservices.jsonapi.model;
 public interface JsonApiRels
 {
     String self = "self";
+    String describedby = "describedby";
+    String alternate = "alternate";
+    String related = "related";
+
+    // Paging
     String first = "first";
     String prev = "prev";
     String next = "next";
-    String related = "related";
-    String describedBy = "describedBy";
-    String alternate = "alternate";
 }

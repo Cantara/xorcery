@@ -4,8 +4,12 @@ import com.exoreaction.reactiveservices.cqrs.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.Command;
 import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.DomainEvents;
+import com.exoreaction.reactiveservices.cqrs.annotations.Update;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.hyperschema.model.Link;
+import com.exoreaction.reactiveservices.hyperschema.model.Links;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
+import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.schema.ResourceDocumentSchema;
 import com.exoreaction.reactiveservices.jsonapi.schema.ResourceObjectSchema;
 import com.exoreaction.reactiveservices.jsonapi.schema.annotations.AttributeSchema;
@@ -20,9 +24,14 @@ import com.exoreaction.reactiveservices.service.forum.contexts.PostContext;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
 import com.exoreaction.reactiveservices.service.forum.model.ForumModel;
 import com.exoreaction.reactiveservices.service.forum.model.PostModel;
+import com.exoreaction.reactiveservices.service.forum.resources.aggregates.PostAggregate;
 import com.exoreaction.reactiveservices.service.forum.resources.api.ApiRelationships;
 import com.exoreaction.reactiveservices.service.forum.resources.api.ApiTypes;
 import com.exoreaction.reactiveservices.service.neo4j.client.Cypher;
+import com.fasterxml.jackson.core.FormatSchema;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.*;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
@@ -30,7 +39,9 @@ import org.glassfish.jersey.spi.Contract;
 
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
@@ -40,6 +51,7 @@ import java.util.function.Consumer;
 public class ForumApplication {
 
     public static final String SERVICE_TYPE = "forum";
+    private final ObjectMapper objectMapper;
 
     @Provider
     public static class Feature
@@ -69,14 +81,17 @@ public class ForumApplication {
     @Inject
     public ForumApplication(DomainEventPublisher domainEventPublisher) {
         this.domainEventPublisher = domainEventPublisher;
+        this.objectMapper = new ObjectMapper();
     }
 
     public ResourceDocumentSchema getSchema(URI absolutePath) {
         ResourceDocumentSchema.Builder builder = new ResourceDocumentSchema.Builder();
-        builder.with(selfDescribedByLinks(absolutePath))
+        builder.with(selfDescribedByLinks(absolutePath),
+                        commands(PostAggregate.class))
                 .resources(postSchema(), commentSchema())
                 .included(commentSchema())
                 .builder()
+                .links(new Links.Builder().with().build())
                 .builder()
                 .title("Forum application");
         return builder.build();
@@ -169,6 +184,131 @@ public class ForumApplication {
                 } catch (NoSuchFieldException e) {
                     e.printStackTrace();
                 }
+            }
+        };
+    }
+
+    public Consumer<ResourceDocumentSchema.Builder> commands(Class<?>... commandClasses) {
+        return resourceDocumentSchema ->
+        {
+            for (Class<?> clazz : commandClasses) {
+
+                // Check if this is an enclosing class
+                commands(clazz.getClasses()).accept(resourceDocumentSchema);
+
+                if (!Command.class.isAssignableFrom(clazz))
+                    continue;
+
+                Class<? extends Command> commandClass = (Class<? extends Command>) clazz;
+
+                final List<BeanProperty> commandProperties = new ArrayList<>();
+                try {
+                    objectMapper.acceptJsonFormatVisitor(commandClass, new JsonFormatVisitorWrapper.Base() {
+                        @Override
+                        public JsonObjectFormatVisitor expectObjectFormat(JavaType type) throws JsonMappingException {
+                            return new JsonObjectFormatVisitor.Base() {
+                                @Override
+                                public void property(BeanProperty prop) throws JsonMappingException {
+                                    commandProperties.add(prop);
+                                }
+
+                                @Override
+                                public void property(String name, JsonFormatVisitable handler, JavaType propertyTypeHint) throws JsonMappingException {
+                                    super.property(name, handler, propertyTypeHint);
+                                }
+
+                                @Override
+                                public void optionalProperty(BeanProperty prop) throws JsonMappingException {
+                                    commandProperties.add(prop);
+                                }
+
+                                @Override
+                                public void optionalProperty(String name, JsonFormatVisitable handler, JavaType propertyTypeHint) throws JsonMappingException {
+                                    super.optionalProperty(name, handler, propertyTypeHint);
+                                }
+                            };
+                        }
+                    });
+                } catch (JsonMappingException e) {
+                    throw new RuntimeException(e);
+                }
+
+                String submissionMediaType = MediaTypes.APPLICATION_JSON_API;
+
+                List<String> required = new ArrayList<>();
+
+                Properties.Builder properties = new Properties.Builder();
+                for (BeanProperty property : commandProperties) {
+/*
+                if ( field.getType().equals( BodyPart.class ) )
+                {
+                    submissionMediaType = MultiPartMediaTypes.MULTIPART_MIXED;
+                    continue;
+                }
+*/
+                    JsonSchema.Builder builder = new JsonSchema.Builder()
+                            .type(Types.typeOf(property.getType().getRawClass()))
+                            .title(property.getName());
+
+                    AttributeSchema schema = property.getAnnotation(AttributeSchema.class);
+                    if (schema != null) {
+                        if (schema.required()) {
+                            required.add(property.getName());
+                        }
+
+                        builder.title(schema.title())
+                                .description(schema.description());
+                    } else {
+                        builder.title(property.getName());
+                        required.add(property.getName());
+                    }
+
+                    if (Enum.class.isAssignableFrom(property.getType().getRawClass())) {
+                        builder.enums(Arrays
+                                .stream((Enum<?>[]) property.getType().getRawClass().getEnumConstants())
+                                .map(Enum::name)
+                                .toArray(String[]::new));
+                    }
+
+                    properties.property(property.getName(), builder.build());
+                }
+
+                String commandName = Command.getName(commandClass);
+
+                JsonSchema commandSchema = new JsonSchema.Builder()
+                        .type(Types.Object)
+                        .properties(new Properties.Builder()
+                                .property("data", new JsonSchema.Builder()
+                                        .type(Types.Object)
+                                        .additionalProperties(false)
+                                        .required("type", "data")
+                                        .properties(new Properties.Builder()
+                                                .property("id", new JsonSchema.Builder().type(Types.String).build())
+                                                .property("type", new JsonSchema.Builder().constant(JsonNodeFactory.instance.textNode(commandName)).build())
+                                                .property("attributes", new JsonSchema.Builder()
+                                                        .type(Types.Object)
+                                                        .required(required.toArray(new String[0]))
+                                                        .properties(properties.build())
+                                                        .build())
+                                                .build())
+                                        .build())
+                                .build())
+                        .build();
+
+                Link.Builder builder = new Link.Builder()
+                        .rel(commandName)
+                        .href("{+command_href}")
+                        .templateRequired("command_href")
+                        .templatePointer("command_href", "0/data/links/" + commandName)
+                        .submissionMediaType(submissionMediaType);
+
+                if (commandClass.isAnnotationPresent(Update.class)) {
+                    builder.targetSchema(commandSchema);
+                } else {
+                    builder.submissionSchema(commandSchema);
+                }
+
+                resourceDocumentSchema.links().link(builder.build());
             }
         };
     }

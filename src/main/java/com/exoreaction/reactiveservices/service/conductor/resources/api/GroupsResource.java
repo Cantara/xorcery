@@ -25,7 +25,7 @@ public class GroupsResource {
     }
 
     @GET
-    @Produces(MediaTypes.JSON_API_TEXT_HTML)
+    @Produces(MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML)
     public ResourceDocument get() {
         return new ResourceDocument.Builder()
                 .data(conductor.getGroups().getGroups().stream()

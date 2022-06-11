@@ -3,10 +3,9 @@ package com.exoreaction.reactiveservices.service.neo4j.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public final class Cypher {
@@ -59,4 +58,5 @@ public final class Cypher {
         return fieldMappings.computeIfAbsent( anEnum, e ->
                 e.getDeclaringClass().getSimpleName().toLowerCase() + "_" + e.name() );
     }
+
 }

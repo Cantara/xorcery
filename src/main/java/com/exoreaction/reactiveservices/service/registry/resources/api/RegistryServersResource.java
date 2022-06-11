@@ -7,7 +7,7 @@ import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 
-import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.JSON_API_TEXT_HTML;
+import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 
 /**
  * @author rickardoberg
@@ -24,7 +24,7 @@ public class RegistryServersResource {
     }
 
     @GET
-    @Produces(JSON_API_TEXT_HTML)
+    @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
     public ResourceDocument servers() {
         return new ResourceDocument.Builder()
                 .data(service.getServers().stream()
@@ -34,7 +34,7 @@ public class RegistryServersResource {
     }
 
     @POST
-    @Consumes(JSON_API_TEXT_HTML)
+    @Consumes(PRODUCES_JSON_API_TEXT_HTML_YAML)
     public void add(ResourceDocument resourceDocument) {
         service.addServer(new ServerResourceDocument(resourceDocument));
     }

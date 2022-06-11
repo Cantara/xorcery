@@ -7,22 +7,28 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
-@JsonIgnoreProperties({ "create", "update","delete" })
+@JsonIgnoreProperties({"create", "update", "delete"})
 public interface Command {
 
-    default String name() {
-        return getClass().getSimpleName();
+    static String getName(Command command)
+    {
+        return command.getClass().getSimpleName();
     }
 
-    default boolean isCreate() {
-        return getClass().getAnnotation(Create.class) != null;
+    static String getName(Class<? extends Command> commandClass)
+    {
+        return commandClass.getSimpleName();
     }
 
-    default boolean isUpdate() {
-        return getClass().getAnnotation(Update.class) != null;
+    static boolean isCreate(Class<? extends Command> commandClass) {
+        return commandClass.getAnnotation(Create.class) != null;
     }
 
-    default boolean isDelete() {
-        return getClass().getAnnotation(Delete.class) != null;
+    static boolean isUpdate(Class<? extends Command> commandClass) {
+        return commandClass.getAnnotation(Update.class) != null;
+    }
+
+    static boolean isDelete(Class<? extends Command> commandClass) {
+        return commandClass.getAnnotation(Delete.class) != null;
     }
 }
