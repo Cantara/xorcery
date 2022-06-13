@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.jaxrs.resources;
+package com.exoreaction.reactiveservices.jsonapi.resources;
 
 import com.exoreaction.reactiveservices.cqrs.Command;
 import com.exoreaction.reactiveservices.cqrs.Context;
@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 /**
  * Helper methods for JSON:API resource implementations
  */
-public interface JsonApiResourceMixin {
-
+public interface JsonApiResourceMixin
+    extends ModelsMixin, CommandsMixin, FilteringMixin, FieldsMixin, IncludesMixin, SortingMixin, PagingMixin
+{
 }

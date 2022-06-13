@@ -9,7 +9,6 @@ import com.exoreaction.reactiveservices.disruptor.Metadata;
 import com.exoreaction.reactiveservices.hyperschema.model.Link;
 import com.exoreaction.reactiveservices.hyperschema.model.Links;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
-import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.schema.ResourceDocumentSchema;
 import com.exoreaction.reactiveservices.jsonapi.schema.ResourceObjectSchema;
 import com.exoreaction.reactiveservices.jsonapi.schema.annotations.AttributeSchema;
@@ -28,9 +27,13 @@ import com.exoreaction.reactiveservices.service.forum.resources.aggregates.PostA
 import com.exoreaction.reactiveservices.service.forum.resources.api.ApiRelationships;
 import com.exoreaction.reactiveservices.service.forum.resources.api.ApiTypes;
 import com.exoreaction.reactiveservices.service.neo4j.client.Cypher;
-import com.fasterxml.jackson.core.FormatSchema;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.jsonFormatVisitors.*;
+import com.fasterxml.jackson.databind.BeanProperty;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitable;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -45,6 +48,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
+
+import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.APPLICATION_JSON_API;
+import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.describedby;
+import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.self;
 
 @Singleton
 @Contract
@@ -86,21 +93,29 @@ public class ForumApplication {
 
     public ResourceDocumentSchema getSchema(URI absolutePath) {
         ResourceDocumentSchema.Builder builder = new ResourceDocumentSchema.Builder();
-        builder.with(selfDescribedByLinks(absolutePath),
-                        commands(PostAggregate.class))
-                .resources(postSchema(), commentSchema())
+        builder.resources(postSchema(), commentSchema())
                 .included(commentSchema())
                 .builder()
-                .links(new Links.Builder().with().build())
+                .links(new Links.Builder().with(
+                                selfDescribedByLinks(absolutePath),
+                                commands(PostAggregate.class),
+                                l -> l.link(new Link.UriTemplateBuilder("posts")
+                                        .parameter("post_fields", "Post fields", "Post fields to include")
+                                        .parameter("sort", "Sort", "Post sort field")
+                                        .parameter("skip", "Skip", "Nr of posts to skip")
+                                        .parameter("limit", "Limit", "Limit nr of posts")
+                                        .build()))
+                        .build())
                 .builder()
                 .title("Forum application");
         return builder.build();
     }
 
-    private Consumer<ResourceDocumentSchema.Builder> selfDescribedByLinks(URI absolutePath) {
+    private Consumer<Links.Builder> selfDescribedByLinks(URI absolutePath) {
         return builder ->
         {
-
+            builder.link(Link.Builder.link("Self", "Self link", self, APPLICATION_JSON_API))
+                    .link(Link.Builder.link("JSON Schema", "JSON Schema for this resource", describedby, APPLICATION_JSON_API, absolutePath.toASCIIString()));
         };
     }
 
@@ -188,13 +203,13 @@ public class ForumApplication {
         };
     }
 
-    public Consumer<ResourceDocumentSchema.Builder> commands(Class<?>... commandClasses) {
-        return resourceDocumentSchema ->
+    public Consumer<Links.Builder> commands(Class<?>... commandClasses) {
+        return links ->
         {
             for (Class<?> clazz : commandClasses) {
 
                 // Check if this is an enclosing class
-                commands(clazz.getClasses()).accept(resourceDocumentSchema);
+                commands(clazz.getClasses()).accept(links);
 
                 if (!Command.class.isAssignableFrom(clazz))
                     continue;
@@ -233,7 +248,7 @@ public class ForumApplication {
                     throw new RuntimeException(e);
                 }
 
-                String submissionMediaType = MediaTypes.APPLICATION_JSON_API;
+                String submissionMediaType = APPLICATION_JSON_API;
 
                 List<String> required = new ArrayList<>();
 
@@ -308,7 +323,7 @@ public class ForumApplication {
                     builder.submissionSchema(commandSchema);
                 }
 
-                resourceDocumentSchema.links().link(builder.build());
+                links.link(builder.build());
             }
         };
     }

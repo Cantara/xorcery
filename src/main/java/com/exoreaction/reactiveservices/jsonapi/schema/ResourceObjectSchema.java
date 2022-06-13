@@ -6,7 +6,7 @@ import com.exoreaction.reactiveservices.hyperschema.model.Links;
 import com.exoreaction.reactiveservices.jsonschema.model.JsonSchema;
 import com.exoreaction.reactiveservices.jsonschema.model.Properties;
 import com.exoreaction.reactiveservices.jsonschema.model.Types;
-import com.exoreaction.util.With;
+import com.exoreaction.util.builders.With;
 
 import java.util.function.Consumer;
 

@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.forum.resources.api;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
-import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonschema.model.JsonSchema;
@@ -25,8 +25,7 @@ public class ForumResource
 
     @GET
     @Produces(MediaTypes.APPLICATION_JSON_SCHEMA)
-    public JsonSchema schema()
-    {
+    public JsonSchema schema() {
         return forum.getSchema(getAbsolutePath()).schema().schema();
     }
 
@@ -35,7 +34,12 @@ public class ForumResource
         return new ResourceDocument.Builder()
                 .links(new Links.Builder()
                         .link(describedby, getAbsolutePathBuilder().path(".schema"))
-                        .link("posts", getUriBuilderFor(PostsResource.class))
+                        .link("posts", getUriBuilderFor(PostsResource.class)
+                                .queryParam("fields[post]", "{post_fields}")
+                                .queryParam("sort", "{sort}")
+                                .queryParam("page[skip]", "{skip}")
+                                .queryParam("page[limit]", "{limit}")
+                                .toTemplate())
                         .link("post", getUriBuilderFor(PostResource.class).toTemplate())
                         .build())
                 .build();

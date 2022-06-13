@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.neo4j.client;
 
-import com.exoreaction.util.With;
-import org.checkerframework.checker.units.qual.A;
+import com.exoreaction.util.builders.With;
+import com.exoreaction.util.function.FallbackFunction;
 import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.Result;
 
@@ -11,10 +11,12 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 public class GraphQuery
         implements With<GraphQuery> {
+
     public enum Order {
         ASCENDING,
         DESCENDING
@@ -27,7 +29,7 @@ public class GraphQuery
     private int limit = -1;
     private Map<Enum<?>, Order> sortOrder = null;
     private Map<Enum<?>, Object> parameters = new HashMap<>();
-    private Set<Enum<?>> result = new LinkedHashSet<>();
+    private Set<Enum<?>> results = new LinkedHashSet<>();
     private boolean distinct = false;
     private boolean count = false; // Only do a count?
     private int timeout = 0; // No timeout is the default
@@ -36,6 +38,7 @@ public class GraphQuery
     private BiConsumer<GraphQuery, StringBuilder> where;
     private Function<Enum<?>, String> fieldMapping;
     private final Function<GraphQuery, CompletionStage<GraphResult>> applyQuery;
+    private Function<Stream<Map<String,Object>>,Stream<Map<String,Object>>> streamOperator = UnaryOperator.identity();
 
     public GraphQuery(String baseQuery,
                       Function<Enum<?>, String> fieldMapping,
@@ -52,6 +55,12 @@ public class GraphQuery
 
     public GraphQuery database(String name) {
         this.database = name;
+        return this;
+    }
+
+    public GraphQuery mappings(Function<Enum<?>, String> customFieldMappings)
+    {
+        this.fieldMapping = new FallbackFunction<>(customFieldMappings, fieldMapping);
         return this;
     }
 
@@ -103,17 +112,27 @@ public class GraphQuery
         }
         this.sortOrder.put(fieldName, order);
 
-        result.add(fieldName);
+        results.add(fieldName);
 
         return this;
     }
 
-    public GraphQuery result(Enum<?>... fieldNames) {
-        return result(Arrays.asList(fieldNames));
+    public GraphQuery results(Enum<?>... fieldNames) {
+        return results(Arrays.asList(fieldNames));
     }
 
-    public GraphQuery result(List<Enum<?>> fieldNames) {
-        result.addAll(fieldNames);
+    public GraphQuery results(List<Enum<?>> fieldNames) {
+        results.addAll(fieldNames);
+        return this;
+    }
+
+    @SafeVarargs
+    public final GraphQuery onStream( UnaryOperator<Stream<Map<String,Object>>>... streamOperators )
+    {
+        for ( UnaryOperator<Stream<Map<String,Object>>> operator : streamOperators )
+        {
+            this.streamOperator = operator.andThen( this.streamOperator );
+        }
         return this;
     }
 
@@ -131,6 +150,41 @@ public class GraphQuery
 
     public Map<Enum<?>, Object> getParameters() {
         return parameters;
+    }
+
+    public Set<Enum<?>> getResults()
+    {
+        return this.results;
+    }
+
+    public boolean hasResultFrom( Class<? extends Enum<?>> enumType )
+    {
+        for ( Enum<?> anEnum : results )
+        {
+            if ( enumType.isInstance( anEnum ) )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasParameterFrom( Class<? extends Enum<?>> enumType )
+    {
+        for ( Enum<?> anEnum : parameters.keySet() )
+        {
+            if ( enumType.isInstance( anEnum ) )
+            { return true; }
+        }
+        return false;
+    }
+
+    public int getSkip() {
+        return skip;
+    }
+
+    public int getLimit() {
+        return limit;
     }
 
     public <T> CompletionStage<Stream<T>> stream(Function<RowModel, T> mapper) {
@@ -209,7 +263,7 @@ public class GraphQuery
         }
 
         // Return clause
-        if (!result.isEmpty()) {
+        if (!results.isEmpty()) {
             cypher.append(" RETURN ");
 
             if (distinct) {
@@ -219,7 +273,7 @@ public class GraphQuery
             if (count) {
                 cypher.append("count(*) as total");
             } else {
-                cypher.append(result.stream().map(fieldMapping).reduce((s1, s2) -> s1 + "," + s2).orElse(""));
+                cypher.append(results.stream().map(fieldMapping).reduce((s1, s2) -> s1 + "," + s2).orElse(""));
             }
         }
 

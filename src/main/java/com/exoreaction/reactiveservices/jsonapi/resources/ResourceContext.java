@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.jaxrs.resources;
+package com.exoreaction.reactiveservices.jsonapi.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.container.ContainerRequestContext;

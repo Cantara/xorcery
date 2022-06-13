@@ -1,4 +1,4 @@
-package com.exoreaction.util;
+package com.exoreaction.util.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ContainerNode;

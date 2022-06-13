@@ -16,6 +16,8 @@ public interface ForumModel {
     enum Post
     {
         id,
+        created_on,
+        last_updated,
         title,
         body
     }

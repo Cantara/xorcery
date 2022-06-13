@@ -4,7 +4,6 @@ import com.exoreaction.reactiveservices.jsonapi.model.Included;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObjects;
-import com.exoreaction.reactiveservices.service.forum.ForumApplication;
 import com.exoreaction.reactiveservices.service.forum.model.ForumModel;
 import com.exoreaction.reactiveservices.service.forum.model.PostModel;
 import com.exoreaction.reactiveservices.service.forum.resources.api.ForumResource;
@@ -18,16 +17,20 @@ import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.describ
 
 public interface ForumApiMixin
         extends ForumResourceObjectsMixin {
-    default CompletionStage<ResourceObjects> posts(Included.Builder included) {
-        GraphQuery graphQuery = postsQuery();
-        return graphQuery.stream(toModel(PostModel::new, ForumModel.Post.class).andThen(postResource(included)))
+    default CompletionStage<ResourceObjects> posts(Included.Builder included, Links.Builder links) {
+        GraphQuery graphQuery = postsQuery()
+                .limit(5) // Max 5 results
+                .sort(ForumModel.Post.created_on, GraphQuery.Order.ASCENDING) // Default sorting
+                .with(pagination(links), sort(ForumModel.Post.class)); // Query param pagination and sorting
+
+        return graphQuery.stream(toModel(PostModel::new, graphQuery.getResults()).andThen(postResource(included)))
                 .thenApply(ResourceObjects::toResourceObjects);
     }
 
     default CompletionStage<ResourceObject> post(String id, Included.Builder included) {
         GraphQuery graphQuery = postsQuery()
                 .parameter(ForumModel.Post.id, id);
-        return graphQuery.first(toModel(PostModel::new, ForumModel.Post.class).andThen(postResource(included)));
+        return graphQuery.first(toModel(PostModel::new, graphQuery.getResults()).andThen(postResource(included)));
     }
 
     @Override

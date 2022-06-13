@@ -2,14 +2,13 @@ package com.exoreaction.reactiveservices.service.forum.resources.api;
 
 import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
 import com.exoreaction.reactiveservices.disruptor.Metadata;
-import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
 import com.exoreaction.reactiveservices.service.forum.resources.ForumApiMixin;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Link;
 import jakarta.ws.rs.core.Response;
 
 import java.net.URI;
@@ -36,7 +35,7 @@ public class PostsResource
         } else {
             Links.Builder links = new Links.Builder();
             Included.Builder included = new Included.Builder();
-            return posts(included)
+            return posts(included, links)
                     .thenApply(ros -> new ResourceDocument.Builder()
                             .data(ros)
                             .included(included.build())

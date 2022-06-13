@@ -1,0 +1,12 @@
+data:
+  - id: log4j_sysout
+    type: grouptemplate
+    attributes:
+      name: Log4j HTTP requests to Sysout
+      sources:
+        pattern: rel=='logevents' and environment=='{{ environment }}'
+        many: true
+        parameters:
+          category: jetty
+      consumers:
+        pattern: type=='soutlogging'

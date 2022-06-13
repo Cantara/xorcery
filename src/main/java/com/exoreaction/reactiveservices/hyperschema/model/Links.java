@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.hyperschema.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import com.exoreaction.util.With;
+import com.exoreaction.util.builders.With;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -10,50 +10,46 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
+
+import static java.lang.String.format;
 
 /**
  * @author rickardoberg
-\ */
+ * \
+ */
 
 public record Links(ArrayNode json)
-    implements JsonElement
-{
+        implements JsonElement {
     public record Builder(ArrayNode builder)
-        implements With<Builder>
-    {
-        public Builder()
-        {
+            implements With<Builder> {
+        public Builder() {
             this(JsonNodeFactory.instance.arrayNode());
         }
 
-        public Builder link( Link value )
-        {
-            builder.add( value.json() );
+        public Builder link(Link value) {
+            builder.add(value.json());
             return this;
         }
 
-        public Links build()
-        {
-            return new Links( builder );
+        public Links build() {
+            return new Links(builder);
         }
     }
 
-    public Optional<Link> getLinkByRel( String rel )
-    {
+    public Optional<Link> getLinkByRel(String rel) {
         for (JsonNode jsonNode : json) {
-            if (jsonNode.path("rel").textValue().equals(rel))
-            {
-                return Optional.of(new Link((ObjectNode)jsonNode));
+            if (jsonNode.path("rel").textValue().equals(rel)) {
+                return Optional.of(new Link((ObjectNode) jsonNode));
             }
         }
         return Optional.empty();
     }
 
-    public Map<String,Link> getLinks()
-    {
-        Map<String,Link> links = new LinkedHashMap<>();
+    public Map<String, Link> getLinks() {
+        Map<String, Link> links = new LinkedHashMap<>();
         array().forEach(
-            ( value ) -> links.put( value.get( "rel" ).textValue(), new Link( (ObjectNode) value ) ) );
+                (value) -> links.put(value.get("rel").textValue(), new Link((ObjectNode) value)));
         return links;
     }
 }

@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.configuration;
 
 import com.exoreaction.reactiveservices.json.JsonMerger;
 import com.exoreaction.reactiveservices.json.VariableResolver;
-import com.exoreaction.util.JsonNodes;
+import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

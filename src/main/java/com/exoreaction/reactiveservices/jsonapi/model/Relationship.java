@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import com.exoreaction.util.With;
+import com.exoreaction.util.builders.With;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

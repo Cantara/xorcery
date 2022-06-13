@@ -8,11 +8,13 @@ public class GraphResult
 {
     private final Transaction tx;
     private final Result result;
+    private AutoCloseable onClose;
 
-    public GraphResult(Transaction tx, Result result) {
+    public GraphResult(Transaction tx, Result result, AutoCloseable onClose) {
 
         this.tx = tx;
         this.result = result;
+        this.onClose = onClose;
     }
 
     public Result getResult() {
@@ -23,5 +25,7 @@ public class GraphResult
     public void close() throws Exception {
         result.close();
         tx.rollback();
+
+        onClose.close();
     }
 }

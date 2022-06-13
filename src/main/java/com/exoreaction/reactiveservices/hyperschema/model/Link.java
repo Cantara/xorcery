@@ -2,8 +2,9 @@ package com.exoreaction.reactiveservices.hyperschema.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.reactiveservices.jsonschema.model.JsonSchema;
+import com.exoreaction.reactiveservices.jsonschema.model.Properties;
 import com.exoreaction.reactiveservices.jsonschema.model.Types;
-import com.exoreaction.util.JsonNodes;
+import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.APPLICATION_JSON_API;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 
@@ -26,6 +29,29 @@ public record Link(ObjectNode json)
         implements JsonElement {
 
     public record Builder(ObjectNode builder) {
+
+        public static Link link(String title, String description, String rel, String targetMediaType) {
+            return new Link.Builder()
+                    .title(title)
+                    .description(description)
+                    .rel(rel)
+                    .href(format("{+%s_href}", rel))
+                    .templateRequired(format("%s_href", rel))
+                    .templatePointer(format("%s_href", rel), format("/links/%s", rel))
+                    .targetMediaType(targetMediaType)
+                    .build();
+        }
+
+        public static Link link(String title, String description, String rel, String targetMediaType, String href) {
+            return new Link.Builder()
+                    .title(title)
+                    .description(description)
+                    .rel(rel)
+                    .href(href)
+                    .targetMediaType(targetMediaType)
+                    .build();
+        }
+
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
@@ -108,6 +134,34 @@ public record Link(ObjectNode json)
 
         public Link build() {
             return new Link(builder);
+        }
+    }
+
+    public record UriTemplateBuilder(String rel, Link.Builder builder, Properties.Builder properties) {
+        public UriTemplateBuilder(String rel) {
+            this(rel, new Link.Builder(), new Properties.Builder());
+            builder.rel(rel)
+                    .href("{+" + rel + "_href}")
+                    .templateRequired(rel + "_href")
+                    .templatePointer(rel + "href", "/links/" + rel)
+                    .targetMediaType(APPLICATION_JSON_API);
+        }
+
+        public UriTemplateBuilder parameter(String name, String title, String description) {
+            properties.property(name, new JsonSchema.Builder()
+                    .title(title)
+                    .description(description)
+                    .type(Types.String)
+                    .build());
+
+            return this;
+        }
+
+        public Link build() {
+            return builder.hrefSchema(new JsonSchema.Builder()
+                            .properties(properties.build())
+                            .build())
+                    .build();
         }
     }
 

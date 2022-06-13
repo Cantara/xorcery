@@ -1,5 +1,7 @@
 package com.exoreaction.reactiveservices.service.neo4j.client;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Result;
 import org.neo4j.graphdb.Transaction;
@@ -13,6 +15,7 @@ import java.util.function.Function;
 
 public class GraphDatabase {
 
+    private final Logger logger = LogManager.getLogger("queries");
     private final GraphDatabaseService graphDatabaseService;
     private Function<Enum<?>, String> defaultFieldMapping;
 
@@ -47,7 +50,10 @@ public class GraphDatabase {
         Transaction tx = graphDatabaseService.beginTx(timeout, TimeUnit.SECONDS);
         try {
             Result result = tx.execute(cypherQuery, parameters);
-            future.complete(new GraphResult(tx, result));
+            future.complete(new GraphResult(tx, result, ()->
+            {
+                logger.info( cypherQuery.replace( '\n', ' ' ));
+            }));
         } catch (Throwable e) {
             future.completeExceptionally(e);
         }

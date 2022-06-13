@@ -7,7 +7,7 @@ import com.exoreaction.reactiveservices.jsonschema.model.Definitions;
 import com.exoreaction.reactiveservices.jsonschema.model.JsonSchema;
 import com.exoreaction.reactiveservices.jsonschema.model.Properties;
 import com.exoreaction.reactiveservices.jsonschema.model.Types;
-import com.exoreaction.util.With;
+import com.exoreaction.util.builders.With;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,15 +54,12 @@ public record ResourceDocumentSchema(HyperSchema schema) {
 
     public record Builder(HyperSchema.Builder builder,
                           Definitions.Builder definitions,
-                          Properties.Builder properties,
-                          Links.Builder links)
-    implements With<Builder>
-    {
+                          Properties.Builder properties)
+            implements With<Builder> {
         public Builder() {
             this(new HyperSchema.Builder(new JsonSchema.Builder()),
                     new Definitions.Builder(),
-                    new Properties.Builder(),
-                    new Links.Builder());
+                    new Properties.Builder());
             builder.builder()
                     .type(Types.Object);
 
@@ -101,8 +98,7 @@ public record ResourceDocumentSchema(HyperSchema schema) {
             return this;
         }
 
-        public Builder included(ResourceObjectSchema... resourceObjectSchemas)
-        {
+        public Builder included(ResourceObjectSchema... resourceObjectSchemas) {
             List<JsonSchema> refs = new ArrayList<>();
             for (ResourceObjectSchema resourceObjectSchema : resourceObjectSchemas) {
                 resourceObjectSchema.schema().schema().getProperties()
@@ -123,8 +119,7 @@ public record ResourceDocumentSchema(HyperSchema schema) {
         }
 
         public ResourceDocumentSchema build() {
-            builder.links(links.build())
-                    .builder()
+            builder.builder()
                     .definitions(definitions.build())
                     .properties(properties.build());
 

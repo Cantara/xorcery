@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.greeter.resources.api;
 
-import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.service.greeter.GreeterApplication;
 import com.github.jknack.handlebars.Context;
 import jakarta.inject.Inject;

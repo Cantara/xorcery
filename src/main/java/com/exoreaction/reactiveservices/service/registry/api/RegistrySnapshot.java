@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.service.registry.api;
 
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.server.model.ServerResourceDocument;
-import com.exoreaction.util.JsonNodes;
+import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

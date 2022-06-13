@@ -12,7 +12,7 @@ registry:
 conductor:
   enabled: true
   templates:
-    - /conductor/templates.yaml
+    - /conductor/metrics.yaml
     - /conductor/certmanager.yaml
 #    - /conductor/forum.yaml
 

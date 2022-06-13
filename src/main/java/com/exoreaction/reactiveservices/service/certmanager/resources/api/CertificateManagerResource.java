@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.certmanager.resources.api;
 
-import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;

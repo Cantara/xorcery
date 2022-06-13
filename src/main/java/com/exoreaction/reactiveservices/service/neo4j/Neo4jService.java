@@ -67,7 +67,7 @@ public class Neo4jService
                     managementService.createDatabase(stringJsonValueEntry.getKey());
                     graphDb = managementService.database(stringJsonValueEntry.getKey());
                 }
-                GraphDatabase graphDatabase = new GraphDatabase(graphDb, Cypher.defaultMappingReturn());
+                GraphDatabase graphDatabase = new GraphDatabase(graphDb, Cypher.defaultFieldMappings());
 
                 bind(graphDb).named(stringJsonValueEntry.getKey()).to(GraphDatabaseService.class);
                 bind(graphDatabase).named(stringJsonValueEntry.getKey()).to(GraphDatabase.class);
@@ -102,6 +102,6 @@ public class Neo4jService
 
     @Override
     public GraphDatabase apply(String name) {
-        return databases.computeIfAbsent(name, n -> new GraphDatabase(managementService.database(n), Cypher.defaultMappingReturn()));
+        return databases.computeIfAbsent(name, n -> new GraphDatabase(managementService.database(n), Cypher.defaultFieldMappings()));
     }
 }

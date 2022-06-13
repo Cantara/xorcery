@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.jaxrs.resources;
+package com.exoreaction.reactiveservices.jsonapi.resources;
 
 import com.exoreaction.reactiveservices.cqrs.Command;
 import com.exoreaction.reactiveservices.cqrs.Context;
@@ -18,14 +18,13 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public interface JsonApiCommandMixin
+public interface CommandsMixin
         extends ResourceContext {
 
     default Consumer<Links.Builder> schemaLink() {

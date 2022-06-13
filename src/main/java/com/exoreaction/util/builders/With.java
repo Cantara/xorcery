@@ -1,9 +1,9 @@
-package com.exoreaction.util;
+package com.exoreaction.util.builders;
 
 import java.util.function.Consumer;
 
 /**
- * Builders can implement this to make it easy to use visitor pattern.
+ * Builders can implement this to make it easy to use visitor pattern. This avoids breaking the DSL flow use in many cases.
  *
  * @param <T>
  */
@@ -18,5 +18,4 @@ public interface With<T> {
         }
         return (T)this;
     }
-
 }

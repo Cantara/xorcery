@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.api;
 
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
-import com.exoreaction.reactiveservices.jaxrs.resources.JsonApiResource;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;

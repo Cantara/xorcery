@@ -18,7 +18,7 @@ public class PostAggregate
             implements Command {
     }
 
-    public class PostSnapshot
+    public static class PostSnapshot
             implements AggregateSnapshot {
         public String title;
     }

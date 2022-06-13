@@ -1,8 +1,8 @@
 package com.exoreaction.reactiveservices.jsonapi.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
-import com.exoreaction.util.JsonNodes;
-import com.exoreaction.util.With;
+import com.exoreaction.util.json.JsonNodes;
+import com.exoreaction.util.builders.With;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.jetbrains.annotations.NotNull;
