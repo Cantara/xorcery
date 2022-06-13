@@ -72,10 +72,11 @@ public interface CommandsMixin
     default Consumer<Links.Builder> commands(UriBuilder baseUriBuilder, Context context) {
         return links ->
         {
+            baseUriBuilder.replaceQuery(null);
             for (Command command : context.commands()) {
                 if (!Command.isDelete(command.getClass())) {
                     String commandName = Command.getName(command);
-                    links.link(commandName, baseUriBuilder.clone().replaceQueryParam("rel", commandName));
+                    links.link(commandName, baseUriBuilder.replaceQueryParam("rel", commandName));
                 }
             }
         };
