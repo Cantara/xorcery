@@ -1,12 +1,14 @@
 package com.exoreaction.reactiveservices.service.neo4j.client;
 
 import com.exoreaction.util.With;
+import org.checkerframework.checker.units.qual.A;
 import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.Result;
 
 import java.util.*;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -18,7 +20,9 @@ public class GraphQuery
         DESCENDING
     }
 
-    private String name = "default"; // Logical name of the query. Used for text lookups
+    private String name = "default"; // Name of the query. Useful for analytics
+    private String database = "default"; // Name of the database/schema. Useful for multi tenancy cases.
+
     private int skip = -1;
     private int limit = -1;
     private Map<Enum<?>, Order> sortOrder = null;
@@ -29,7 +33,7 @@ public class GraphQuery
     private int timeout = 0; // No timeout is the default
 
     private String baseQuery;
-    private BiConsumer<GraphQuery, StringBuilder> extend;
+    private BiConsumer<GraphQuery, StringBuilder> where;
     private Function<Enum<?>, String> fieldMapping;
     private final Function<GraphQuery, CompletionStage<GraphResult>> applyQuery;
 
@@ -46,19 +50,22 @@ public class GraphQuery
         return this;
     }
 
+    public GraphQuery database(String name) {
+        this.database = name;
+        return this;
+    }
+
     /**
-     * Provide a function that is invoked on {@link #build()} to expand the base query.
-     * <p>
-     * Useful in cases where a static base query is not enough.
+     * Provide a function that is invoked on {@link #build()} to create the where clauses.
      *
-     * @param extend
+     * @param clauses
      * @return
      */
-    public GraphQuery extend(BiConsumer<GraphQuery, StringBuilder> extend) {
-        if (this.extend == null) {
-            this.extend = extend;
+    public GraphQuery where(BiConsumer<GraphQuery, StringBuilder> clauses) {
+        if (this.where == null) {
+            this.where = clauses;
         } else {
-            this.extend = this.extend.andThen(extend);
+            this.where = this.where.andThen(clauses);
         }
 
         return this;
@@ -110,12 +117,20 @@ public class GraphQuery
         return this;
     }
 
-    public Map<Enum<?>, Object> getParameters() {
-        return parameters;
+    public String getName() {
+        return name;
+    }
+
+    public String getDatabase() {
+        return database;
     }
 
     public int getTimeout() {
         return timeout;
+    }
+
+    public Map<Enum<?>, Object> getParameters() {
+        return parameters;
     }
 
     public <T> CompletionStage<Stream<T>> stream(Function<RowModel, T> mapper) {
@@ -156,10 +171,29 @@ public class GraphQuery
         });
     }
 
+    public CompletionStage<Long> count() {
+        count = true;
+        return applyQuery.apply(this).thenApply(gr ->
+        {
+            AtomicLong counter = new AtomicLong();
+            try {
+                try (gr) {
+                    gr.getResult().accept((Result.ResultVisitor<Exception>) row -> {
+                        counter.set(row.getNumber("total").longValue());
+                        return false;
+                    });
+                    return counter.get();
+                }
+            } catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        });
+    }
+
     /**
      * Build the final Cypher query.
      * <p>
-     * Starts with the base query string, appends whatever the optional extend function wants, then creates a
+     * Starts with the base query string, appends whatever the optional where function wants, then creates a
      * RETURN clause using the provided function to map fields to strings, and finally adds ORDER BY, SKIP, and LIMIT
      * clauses if necessary.
      *
@@ -169,9 +203,9 @@ public class GraphQuery
         // Base query
         StringBuilder cypher = new StringBuilder(baseQuery);
 
-        // Optionally extend base query
-        if (extend != null) {
-            extend.accept(this, cypher);
+        // Optionally add where clauses
+        if (where != null) {
+            where.accept(this, cypher);
         }
 
         // Return clause

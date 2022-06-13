@@ -13,7 +13,7 @@ public class Posts {
             "MATCH (%s:%s)",
             ForumModel.Post.class.getSimpleName(), ForumModel.Label.Post);
 
-    private final static BiConsumer<GraphQuery, StringBuilder> whereClauses = where()
+    private final static BiConsumer<GraphQuery, StringBuilder> clauses = where()
             .parameter(ForumModel.Post.id, String.class, "Post.id=$post_id");
 
     private final GraphDatabase db;
@@ -27,6 +27,6 @@ public class Posts {
     }
 
     public GraphQuery posts() {
-        return db.query(POSTS).extend(whereClauses);
+        return db.query(POSTS).where(clauses);
     }
 }
