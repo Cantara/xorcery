@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.domainevents.api;
 
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 
 public record EventStoreMetadata(Metadata metadata) {
 

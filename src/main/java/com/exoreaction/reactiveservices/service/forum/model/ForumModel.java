@@ -1,30 +1,26 @@
 package com.exoreaction.reactiveservices.service.forum.model;
 
-public interface ForumModel {
+import com.exoreaction.reactiveservices.cqrs.model.StandardModel;
 
-    enum Label
-    {
+public interface ForumModel
+        extends StandardModel {
+
+    enum Label {
         Post,
         Comment
     }
 
-    enum Relationship
-    {
+    enum Relationship {
         HAS_COMMENT
     }
 
-    enum Post
-    {
-        id,
-        created_on,
-        last_updated,
+    enum Post {
         title,
-        body
+        body,
+        is_comments_enabled
     }
 
-    enum Comment
-    {
-        id,
+    enum Comment {
         body
     }
 }

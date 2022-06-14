@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.cqrs;
+package com.exoreaction.reactiveservices.cqrs.aggregate;
 
 import com.exoreaction.reactiveservices.cqrs.annotations.Create;
 import com.exoreaction.reactiveservices.cqrs.annotations.Delete;

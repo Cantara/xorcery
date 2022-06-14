@@ -1,10 +1,10 @@
 package com.exoreaction.reactiveservices.service.metrics.resources.api;
 
 import com.codahale.metrics.*;
-import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

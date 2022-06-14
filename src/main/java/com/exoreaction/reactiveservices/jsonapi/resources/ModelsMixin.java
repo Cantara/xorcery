@@ -1,15 +1,13 @@
 package com.exoreaction.reactiveservices.jsonapi.resources;
 
-import com.exoreaction.reactiveservices.cqrs.Model;
+import com.exoreaction.reactiveservices.cqrs.model.Model;
 import com.exoreaction.reactiveservices.service.neo4j.client.Cypher;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
-import com.exoreaction.reactiveservices.service.neo4j.client.NodeModel;
 import com.exoreaction.reactiveservices.service.neo4j.client.RowModel;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Function;
 
 public interface ModelsMixin

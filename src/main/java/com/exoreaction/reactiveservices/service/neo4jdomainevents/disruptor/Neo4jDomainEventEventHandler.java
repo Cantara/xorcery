@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.service.neo4jdomainevents.disruptor;
 
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.reactiveservices.service.neo4j.client.Cypher;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;

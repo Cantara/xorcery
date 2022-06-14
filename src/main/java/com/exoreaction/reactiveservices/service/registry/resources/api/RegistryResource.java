@@ -1,8 +1,8 @@
 package com.exoreaction.reactiveservices.service.registry.resources.api;
 
-import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.service.registry.api.Registry;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;

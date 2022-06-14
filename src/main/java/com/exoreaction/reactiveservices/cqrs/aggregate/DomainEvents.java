@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.cqrs;
+package com.exoreaction.reactiveservices.cqrs.aggregate;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 

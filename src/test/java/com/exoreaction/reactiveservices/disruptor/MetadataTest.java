@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.disruptor;
 
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.cqrs;
+package com.exoreaction.reactiveservices.cqrs.model;
 
 import com.exoreaction.reactiveservices.json.JsonElement;
 

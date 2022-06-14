@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.jsonapi.schema;
 
 import com.exoreaction.reactiveservices.hyperschema.model.HyperSchema;
-import com.exoreaction.reactiveservices.hyperschema.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels;
 import com.exoreaction.reactiveservices.jsonschema.model.Definitions;
 import com.exoreaction.reactiveservices.jsonschema.model.JsonSchema;

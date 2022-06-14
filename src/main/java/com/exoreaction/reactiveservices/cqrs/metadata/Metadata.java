@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.disruptor;
+package com.exoreaction.reactiveservices.cqrs.metadata;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

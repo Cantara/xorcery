@@ -2,7 +2,6 @@ package com.exoreaction.reactiveservices.jaxrs.providers;
 
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.github.jknack.handlebars.Handlebars;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;

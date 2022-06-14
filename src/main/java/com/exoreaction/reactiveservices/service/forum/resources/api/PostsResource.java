@@ -1,9 +1,12 @@
 package com.exoreaction.reactiveservices.service.forum.resources.api;
 
-import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
+import com.exoreaction.reactiveservices.jsonapi.model.Included;
+import com.exoreaction.reactiveservices.jsonapi.model.Links;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
-import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
 import com.exoreaction.reactiveservices.service.forum.resources.ForumApiMixin;

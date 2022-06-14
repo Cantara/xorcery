@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.domainevents.api;
 
-import com.exoreaction.reactiveservices.cqrs.DomainEvents;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.aggregate.DomainEvents;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import org.glassfish.jersey.spi.Contract;
 
 import java.util.concurrent.CompletionStage;

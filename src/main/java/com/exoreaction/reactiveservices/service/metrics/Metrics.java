@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.service.metrics;
 
 import com.codahale.metrics.*;
 import com.exoreaction.reactiveservices.configuration.Configuration;
-import com.exoreaction.reactiveservices.disruptor.DeploymentMetadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.DeploymentMetadata;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;

@@ -1,9 +1,9 @@
 package com.exoreaction.reactiveservices.service.greeter;
 
 import com.exoreaction.reactiveservices.configuration.Configuration;
-import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
-import com.exoreaction.reactiveservices.cqrs.DomainEvents;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.cqrs.aggregate.DomainEvents;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
-import static com.exoreaction.reactiveservices.cqrs.DomainEvents.events;
+import static com.exoreaction.reactiveservices.cqrs.aggregate.DomainEvents.events;
 
 @Singleton
 @Contract

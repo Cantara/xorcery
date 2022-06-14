@@ -1,8 +1,8 @@
 package com.exoreaction.reactiveservices.service.forum.contexts;
 
-import com.exoreaction.reactiveservices.cqrs.Command;
-import com.exoreaction.reactiveservices.cqrs.Context;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
+import com.exoreaction.reactiveservices.cqrs.context.DomainContext;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
 import com.exoreaction.reactiveservices.service.forum.resources.aggregates.PostAggregate;
 
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 
 public class PostsContext
-        implements Context {
+        implements DomainContext {
     private final ForumApplication forumApplication;
 
     public PostsContext(ForumApplication forumApplication) {

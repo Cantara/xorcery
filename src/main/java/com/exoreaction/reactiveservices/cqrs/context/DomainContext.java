@@ -1,12 +1,13 @@
-package com.exoreaction.reactiveservices.cqrs;
+package com.exoreaction.reactiveservices.cqrs.context;
 
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
-public interface Context {
+public interface DomainContext {
 
     default List<Command> commands()
     {

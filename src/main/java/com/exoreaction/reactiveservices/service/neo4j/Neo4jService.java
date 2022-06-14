@@ -10,6 +10,8 @@ import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabases;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.neo4j.dbms.api.DatabaseManagementService;
@@ -25,6 +27,9 @@ import java.util.stream.Collectors;
 @Singleton
 public class Neo4jService
         implements ContainerLifecycleListener, GraphDatabases {
+
+    private static final Logger logger = LogManager.getLogger(Neo4jService.class);
+
     public static final String SERVICE_TYPE = "neo4jdatabase";
 
     @Provider
@@ -54,6 +59,7 @@ public class Neo4jService
                     ));
 
             Path home = Path.of(standardConfiguration.home());
+            logger.info("Neo4j home:" + home);
             DatabaseManagementService managementService = new DatabaseManagementServiceBuilder(home)
                     .setConfigRaw(neo4jConfig)
                     .build();

@@ -9,7 +9,6 @@ import jakarta.ws.rs.core.UriInfo;
 import org.glassfish.hk2.api.ServiceLocator;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.net.URI;
 
 /**

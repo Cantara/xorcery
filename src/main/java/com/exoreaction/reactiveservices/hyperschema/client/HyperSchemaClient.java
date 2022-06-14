@@ -2,13 +2,10 @@ package com.exoreaction.reactiveservices.hyperschema.client;
 
 import com.exoreaction.reactiveservices.hyperschema.model.HyperSchema;
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
-import com.exoreaction.reactiveservices.json.JsonElement;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonschema.model.JsonSchema;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.InvocationCallback;
 
 import java.util.concurrent.CompletableFuture;

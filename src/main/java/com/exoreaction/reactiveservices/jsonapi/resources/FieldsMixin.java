@@ -3,7 +3,7 @@ package com.exoreaction.reactiveservices.jsonapi.resources;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphQuery;
 import com.google.common.collect.Sets;
 
-import java.util.*;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -68,7 +68,7 @@ public interface FieldsMixin
         {
             for ( Enum<?> prefix : prefixes )
             {
-                String prefixName = prefix.name();
+                String prefixName = prefix.name().toLowerCase();
                 Predicate<String> fieldFilter = getFieldSelection( prefixName );
 
                 query.getResults()

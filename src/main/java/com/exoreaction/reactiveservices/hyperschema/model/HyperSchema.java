@@ -4,7 +4,6 @@ import com.exoreaction.reactiveservices.jsonschema.model.JsonSchema;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import static com.exoreaction.reactiveservices.jsonschema.model.JsonSchema.HYPER_SCHEMA_DRAFT_7;
 

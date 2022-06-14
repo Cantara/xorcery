@@ -1,14 +1,11 @@
 package com.exoreaction.reactiveservices.service.forum.model;
 
-import com.exoreaction.reactiveservices.cqrs.Model;
+import com.exoreaction.reactiveservices.cqrs.model.EntityModel;
+import com.exoreaction.reactiveservices.cqrs.model.Model;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public record PostModel(ObjectNode json)
-        implements Model {
-    public String getId() {
-        return getString(ForumModel.Post.id);
-    }
-
+        implements EntityModel {
     public String getTitle() {
         return getString(ForumModel.Post.title);
     }

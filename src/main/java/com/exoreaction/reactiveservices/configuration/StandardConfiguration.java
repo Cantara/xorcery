@@ -12,16 +12,15 @@ public record StandardConfiguration(Configuration configuration)
 {
     public String home()
     {
-
         return configuration().getString( "home").orElseGet( ()->
         {
             try
             {
-                return new File( ".." ).getCanonicalPath();
+                return new File( "." ).getCanonicalPath();
             }
             catch ( IOException e )
             {
-                return new File("..").getAbsolutePath();
+                return new File(".").getAbsolutePath();
             }
         } );
     }

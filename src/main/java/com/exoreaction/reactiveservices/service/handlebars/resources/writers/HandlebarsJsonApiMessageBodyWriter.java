@@ -31,7 +31,6 @@ import java.io.OutputStreamWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Optional;
 
 import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.describedby;

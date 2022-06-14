@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.forum.resources.aggregates;
 
-import com.exoreaction.reactiveservices.cqrs.DomainEvents;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.aggregate.DomainEvents;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.service.forum.resources.events.PostEvents;
 import org.junit.jupiter.api.Test;
 

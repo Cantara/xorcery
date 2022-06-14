@@ -10,9 +10,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
-
-import static java.lang.String.format;
 
 /**
  * @author rickardoberg

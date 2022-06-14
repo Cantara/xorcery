@@ -107,24 +107,13 @@ public record Attributes(ObjectNode json)
     }
 
     public Map<String, String> toMap() {
-        Map<String, String> map = new HashMap<>(json().size());
+        Map<String, String> map = new LinkedHashMap<>(json().size());
         Iterator<Map.Entry<String, JsonNode>> fields = object().fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
             JsonNode value = entry.getValue();
-            String mapValue = switch (value.getNodeType()) {
-                case ARRAY -> null; // We could serialize these to string or BASE64
-                case OBJECT -> null;
-                case STRING -> value.textValue();
-                case NUMBER -> value.textValue();
-                case BINARY -> null;
-                case BOOLEAN -> value.textValue();
-                case MISSING -> null;
-                case NULL -> null;
-                case POJO -> null;
-            };
-            if (mapValue != null)
-                map.put(entry.getKey(), mapValue);
+            String mapValue = value.asText();
+            map.put(entry.getKey(), mapValue);
         }
         return map;
     }

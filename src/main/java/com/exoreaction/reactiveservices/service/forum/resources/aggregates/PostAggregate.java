@@ -1,8 +1,8 @@
 package com.exoreaction.reactiveservices.service.forum.resources.aggregates;
 
-import com.exoreaction.reactiveservices.cqrs.Aggregate;
-import com.exoreaction.reactiveservices.cqrs.AggregateSnapshot;
-import com.exoreaction.reactiveservices.cqrs.Command;
+import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
+import com.exoreaction.reactiveservices.cqrs.aggregate.AggregateSnapshot;
+import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
 import com.exoreaction.reactiveservices.cqrs.annotations.Update;
 import com.exoreaction.reactiveservices.service.forum.resources.events.PostEvents;
 

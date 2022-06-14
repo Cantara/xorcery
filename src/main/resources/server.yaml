@@ -1,5 +1,6 @@
 name: server1
 host: localhost
+home: "{{ SYSTEM.user_dir }}/target/neo4j"
 
 environment: development
 tag: default

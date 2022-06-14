@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.server.resources.api;
 
-import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.server.Server;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;

@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.disruptor.handlers;
 
 import com.exoreaction.reactiveservices.disruptor.Event;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.lmax.disruptor.EventSink;
 
 import java.util.List;

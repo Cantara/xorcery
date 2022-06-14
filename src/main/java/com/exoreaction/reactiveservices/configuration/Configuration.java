@@ -66,7 +66,7 @@ public record Configuration(ObjectNode config) {
         public Builder addSystemProperties(String nodeName) {
             ObjectNode system = builder.objectNode();
             for (Map.Entry<Object, Object> systemProperty : System.getProperties().entrySet()) {
-                system.set(systemProperty.getKey().toString(), builder.textNode(systemProperty.getValue().toString()));
+                system.set(systemProperty.getKey().toString().replace('.','_'), builder.textNode(systemProperty.getValue().toString()));
             }
             builder.set(nodeName, system);
             return this;
@@ -74,7 +74,7 @@ public record Configuration(ObjectNode config) {
 
         public Builder addEnvironmentVariables(String nodeName) {
             ObjectNode env = builder.objectNode();
-            System.getenv().forEach((key, value) -> env.set(key, env.textNode(value)));
+            System.getenv().forEach((key, value) -> env.set(key.replace('.','_'), env.textNode(value)));
             builder.set(nodeName, env);
             return this;
         }

@@ -1,6 +1,6 @@
-package com.exoreaction.reactiveservices.cqrs;
+package com.exoreaction.reactiveservices.cqrs.aggregate;
 
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

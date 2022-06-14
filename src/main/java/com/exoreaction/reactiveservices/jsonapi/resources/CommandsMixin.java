@@ -1,15 +1,18 @@
 package com.exoreaction.reactiveservices.jsonapi.resources;
 
-import com.exoreaction.reactiveservices.cqrs.Command;
-import com.exoreaction.reactiveservices.cqrs.Context;
-import com.exoreaction.reactiveservices.cqrs.DomainEventMetadata;
-import com.exoreaction.reactiveservices.disruptor.Metadata;
-import com.exoreaction.reactiveservices.disruptor.RequestMetadata;
+import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
+import com.exoreaction.reactiveservices.cqrs.context.DomainContext;
+import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.RequestMetadata;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
+import com.exoreaction.reactiveservices.service.forum.resources.api.PostResource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +21,7 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -36,6 +40,8 @@ public interface CommandsMixin
         Metadata.Builder metadata = new Metadata.Builder();
 
         RequestMetadata.Builder request = new RequestMetadata.Builder(metadata);
+
+        request.timestamp(System.currentTimeMillis());
 
 /* TODO Do this later but set JWT Claims as metadata
         if ( getSecurityContext().getUserPrincipal() != null )
@@ -69,7 +75,7 @@ public interface CommandsMixin
     }
 
     // Links
-    default Consumer<Links.Builder> commands(UriBuilder baseUriBuilder, Context context) {
+    default Consumer<Links.Builder> commands(UriBuilder baseUriBuilder, DomainContext context) {
         return links ->
         {
             baseUriBuilder.replaceQuery(null);
@@ -82,7 +88,7 @@ public interface CommandsMixin
         };
     }
 
-    default CompletionStage<ResourceDocument> commandResourceDocument(String rel, String id, Context context) {
+    default CompletionStage<ResourceDocument> commandResourceDocument(String rel, String id, DomainContext context) {
         Command command = context.commands().stream().filter(isCommandByName(rel))
                 .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new);
         return CompletableFuture.completedStage(new ResourceDocument.Builder()
@@ -97,11 +103,11 @@ public interface CommandsMixin
                 .build());
     }
 
-    default CompletionStage<ResourceDocument> commandResourceDocument(String rel, Context context) {
+    default CompletionStage<ResourceDocument> commandResourceDocument(String rel, DomainContext context) {
         return commandResourceDocument(rel, null, context);
     }
 
-    default CompletionStage<Response> execute(ResourceObject resourceObject, Context context, Metadata metadata) {
+    default CompletionStage<Response> execute(ResourceObject resourceObject, DomainContext context, Metadata metadata) {
 
         // Find command based on simple name of class and type in ResourceObject
         String commandName = resourceObject.getType();
@@ -161,7 +167,11 @@ public interface CommandsMixin
         return c -> name.equals(Command.getName(c));
     }
 
-    CompletionStage<Response> ok(Metadata metadata);
+    CompletionStage<ResourceDocument> get(String rel);
+
+    default CompletionStage<Response> ok(Metadata metadata) {
+        return get(null).thenApply(rd -> Response.ok(rd).build());
+    }
 
     default CompletionStage<Response> error(ConstraintViolationException e) {
         Errors.Builder errors = new Errors.Builder();

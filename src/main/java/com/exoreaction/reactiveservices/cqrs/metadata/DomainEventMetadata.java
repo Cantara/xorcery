@@ -1,6 +1,7 @@
-package com.exoreaction.reactiveservices.cqrs;
+package com.exoreaction.reactiveservices.cqrs.metadata;
 
-import com.exoreaction.reactiveservices.disruptor.Metadata;
+import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
+import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
 
 public record DomainEventMetadata(Metadata metadata)
 {
