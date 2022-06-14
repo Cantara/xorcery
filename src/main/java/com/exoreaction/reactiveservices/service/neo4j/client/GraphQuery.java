@@ -187,6 +187,10 @@ public class GraphQuery
         return limit;
     }
 
+    public <T> CompletionStage<GraphResult> execute() {
+        return applyQuery.apply(this);
+    }
+
     public <T> CompletionStage<Stream<T>> stream(Function<RowModel, T> mapper) {
         return applyQuery.apply(this).thenApply(gr ->
         {

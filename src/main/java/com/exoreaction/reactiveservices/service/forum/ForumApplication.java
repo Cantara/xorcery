@@ -12,11 +12,16 @@ import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPubl
 import com.exoreaction.reactiveservices.service.forum.contexts.PostContext;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
 import com.exoreaction.reactiveservices.service.forum.model.PostModel;
+import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
+import com.exoreaction.reactiveservices.service.neo4jdomainevents.aggregates.AggregateSnapshotLoader;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.spi.Contract;
 
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -50,10 +55,14 @@ public class ForumApplication {
     }
 
     private final DomainEventPublisher domainEventPublisher;
+    private final AggregateSnapshotLoader snapshotLoader;
+    private GraphDatabase database;
 
     @Inject
-    public ForumApplication(DomainEventPublisher domainEventPublisher) {
+    public ForumApplication(DomainEventPublisher domainEventPublisher, GraphDatabase database) {
         this.domainEventPublisher = domainEventPublisher;
+        this.database = database;
+        this.snapshotLoader = new AggregateSnapshotLoader(database);
     }
 
     public PostsContext posts() {
@@ -66,16 +75,30 @@ public class ForumApplication {
 
     public <T extends AggregateSnapshot> CompletionStage<Metadata> handle(Aggregate<T> aggregate, Metadata metadata, Command command) {
 
-        // TODO Load snapshot
-
         try {
-            DomainEvents events = aggregate.handle(metadata, aggregate.getSnapshot(), command);
-
-            metadata = new DomainEventMetadata.Builder(metadata.toBuilder())
+            DomainEventMetadata domainMetadata = new DomainEventMetadata.Builder(metadata.toBuilder())
                     .domain("forum")
                     .aggregateType(aggregate.getClass())
                     .commandType(command.getClass())
-                    .build().metadata();
+                    .build();
+
+            T snapshot;
+
+            if (Command.isCreate(command.getClass())) {
+                // Should fail
+                try {
+                    snapshotLoader.load(domainMetadata, aggregate);
+                    return CompletableFuture.failedStage(new BadRequestException("Entity already exists"));
+                } catch (Exception e) {
+                    // Good!
+                    snapshot = aggregate.getSnapshot();
+                }
+
+            } else {
+                snapshot = snapshotLoader.load(domainMetadata, aggregate);
+            }
+
+            DomainEvents events = aggregate.handle(domainMetadata.metadata(), snapshot, command);
 
             return domainEventPublisher.publish(metadata, events);
         } catch (Throwable e) {
