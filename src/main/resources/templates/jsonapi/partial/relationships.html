@@ -4,7 +4,11 @@
 
 {{#if value.included}}
 <tr><td>{{key}}</td><td>
-    {{#optional value.resourceObjectIdentifier}}
+    {{#each value.links.links}}
+        <a href="{{{href}}}">{{{href}}}</a><br/>
+    {{/each}}
+
+{{#optional value.resourceObjectIdentifier}}
     <a href="#{{id}}_{{type}}">{{id}}</a>
     {{/optional}}
 

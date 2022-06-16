@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.jsonapi.resources;
 
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
+import com.exoreaction.reactiveservices.service.neo4j.client.GraphQuery;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.uri.UriComponent;
 

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public record Meta(ObjectNode json)
         implements JsonElement {
 
-    public record Builder(ObjectNode json)
+    public record Builder(ObjectNode builder)
             implements With<Builder>
     {
         public Builder() {
@@ -20,17 +20,17 @@ public record Meta(ObjectNode json)
         }
 
         public Builder meta(String name, JsonNode value) {
-            json.set(name, value);
+            builder.set(name, value);
             return this;
         }
 
         public Builder meta(String name, long value) {
-            json.set(name, json.numberNode(value));
+            builder.set(name, builder.numberNode(value));
             return this;
         }
 
         public Meta build() {
-            return new Meta(json);
+            return new Meta(builder);
         }
     }
 

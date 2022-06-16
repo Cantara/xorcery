@@ -113,7 +113,7 @@ public class Pagination
         graphQuery.onStream( this::skipLimit );
     }
 
-    private Stream<Map<String,Object>> skipLimit(Stream<Map<String,Object>> stream )
+    private Stream<Object> skipLimit(Stream<Object> stream )
     {
         AtomicInteger count = new AtomicInteger();
 

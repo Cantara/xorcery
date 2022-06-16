@@ -25,17 +25,21 @@
     {{/unless}}
 {{/with}}
 
-{{#with resources}}
-    {{#each this}}
-    <tr><td colspan="2">{{> "jsonapi/partial/resourceobject"}}</td></tr>
-    {{/each}}
-{{/with}}
-
-{{#with resource}}
-    {{#if this}}
+{{#if collection}}
+    {{#with resources}}
+        <tr><th colspan="2">Resources</th></tr>
+        {{#each this}}
         <tr><td colspan="2">{{> "jsonapi/partial/resourceobject"}}</td></tr>
-    {{/if}}
-{{/with}}
+        {{/each}}
+    {{/with}}
+{{^}}
+    {{#with resource}}
+        {{#if this}}
+            <tr><th colspan="2">Resource</th></tr>
+            <tr><td colspan="2">{{> "jsonapi/partial/resourceobject"}}</td></tr>
+        {{/if}}
+    {{/with}}
+{{/if}}
 
 {{#with included.included}}
     <tr><th colspan="2">Included</th></tr>

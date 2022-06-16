@@ -32,7 +32,6 @@ public interface FieldsMixin
         else
         {
             Set<String> fieldList = Sets.newHashSet( fields.split( "," ) );
-            fieldList.add( type.concat( "_id" ) ); // Always include ID
             fieldSelection = fieldList::contains;
         }
         return fieldSelection;
@@ -40,7 +39,7 @@ public interface FieldsMixin
 
     default Predicate<String> getFieldSelection( Enum<?> type )
     {
-        return getFieldSelection( type.name() );
+        return getFieldSelection( type.name().toLowerCase() );
     }
 
     default Predicate<String> getFieldPrefixSelection( String prefix )

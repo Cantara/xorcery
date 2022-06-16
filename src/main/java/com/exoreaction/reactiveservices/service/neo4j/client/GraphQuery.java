@@ -38,7 +38,7 @@ public class GraphQuery
     private BiConsumer<GraphQuery, StringBuilder> where;
     private Function<Enum<?>, String> fieldMapping;
     private final Function<GraphQuery, CompletionStage<GraphResult>> applyQuery;
-    private Function<Stream<Map<String, Object>>, Stream<Map<String, Object>>> streamOperator = UnaryOperator.identity();
+    private Function<Stream<Object>, Stream<Object>> streamOperator = UnaryOperator.identity();
 
     public GraphQuery(String baseQuery,
                       Function<Enum<?>, String> fieldMapping,
@@ -126,11 +126,10 @@ public class GraphQuery
     }
 
     @SafeVarargs
-    public final GraphQuery onStream(UnaryOperator<Stream<Map<String, Object>>>... streamOperators) {
-        for (UnaryOperator<Stream<Map<String, Object>>> operator : streamOperators) {
+    public final void onStream(UnaryOperator<Stream<Object>>... streamOperators) {
+        for (UnaryOperator<Stream<Object>> operator : streamOperators) {
             this.streamOperator = operator.andThen(this.streamOperator);
         }
-        return this;
     }
 
     public String getName() {
@@ -194,7 +193,7 @@ public class GraphQuery
                         results.add(mapper.apply(new RowModel(row)));
                         return true;
                     });
-                    return results.stream();
+                    return (Stream<T>) streamOperator.apply((Stream<Object>) results.stream());
                 }
             } catch (CompletionException e) {
                 throw e;

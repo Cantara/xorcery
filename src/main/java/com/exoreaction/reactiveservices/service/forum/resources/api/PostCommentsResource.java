@@ -1,7 +1,6 @@
 package com.exoreaction.reactiveservices.service.forum.resources.api;
 
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
-import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.jsonapi.model.Included;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
@@ -18,7 +17,6 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 
-import java.net.URI;
 import java.util.concurrent.CompletionStage;
 
 import static com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata.Builder.aggregateId;
