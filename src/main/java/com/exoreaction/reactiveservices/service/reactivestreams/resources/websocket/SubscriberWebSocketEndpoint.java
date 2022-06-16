@@ -23,6 +23,7 @@ import org.eclipse.jetty.websocket.api.WebSocketPartialListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.UncheckedIOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -118,7 +119,15 @@ public class SubscriberWebSocketEndpoint<T>
                             ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
 
                             try {
-                                messageBodyWriter.writeTo(result, null, null, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, resultOutputStream);
+                                if (throwable != null)
+                                {
+                                    ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
+                                    out.writeObject(throwable);
+                                } else
+                                {
+                                    messageBodyWriter.writeTo(result, null, null, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, resultOutputStream);
+                                }
+
                                 ByteBuffer data = resultOutputStream.takeByteBuffer();
                                 session.getRemote().sendBytes(data, new WriteCallback() {
                                     @Override

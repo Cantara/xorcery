@@ -4,13 +4,17 @@ import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.aggregate.AggregateSnapshot;
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
 import com.exoreaction.reactiveservices.cqrs.aggregate.DomainEvents;
+import com.exoreaction.reactiveservices.cqrs.context.DomainContext;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
+import com.exoreaction.reactiveservices.service.forum.contexts.CommentContext;
+import com.exoreaction.reactiveservices.service.forum.contexts.PostCommentsContext;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostContext;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
+import com.exoreaction.reactiveservices.service.forum.model.CommentModel;
 import com.exoreaction.reactiveservices.service.forum.model.PostModel;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4jdomainevents.aggregates.AggregateSnapshotLoader;
@@ -71,6 +75,14 @@ public class ForumApplication {
 
     public PostContext post(PostModel postModel) {
         return new PostContext(this, postModel);
+    }
+
+    public CommentContext comment(CommentModel model) {
+        return new CommentContext(this, model);
+    }
+
+    public PostCommentsContext postComments(PostModel postModel) {
+        return new PostCommentsContext(this, postModel);
     }
 
     public <T extends AggregateSnapshot> CompletionStage<Metadata> handle(Aggregate<T> aggregate, Metadata metadata, Command command) {

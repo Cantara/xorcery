@@ -1,15 +1,12 @@
 package com.exoreaction.reactiveservices.service.forum.resources;
 
-import com.exoreaction.reactiveservices.cqrs.model.StandardModel;
+import com.exoreaction.reactiveservices.cqrs.model.CommonModel;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResourceMixin;
+import com.exoreaction.reactiveservices.jsonapi.resources.Pagination;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
-import com.exoreaction.reactiveservices.service.forum.model.ForumModel;
-import com.exoreaction.reactiveservices.service.forum.model.PostModel;
-import com.exoreaction.reactiveservices.service.forum.model.Posts;
-import com.exoreaction.reactiveservices.service.forum.resources.api.ApiTypes;
-import com.exoreaction.reactiveservices.service.forum.resources.api.ForumResource;
-import com.exoreaction.reactiveservices.service.forum.resources.api.PostResource;
+import com.exoreaction.reactiveservices.service.forum.model.*;
+import com.exoreaction.reactiveservices.service.forum.resources.api.*;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphQuery;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.Link;
@@ -18,26 +15,42 @@ import jakarta.ws.rs.core.UriBuilder;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.describedby;
 import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.self;
 
 public interface ForumApiMixin
         extends JsonApiResourceMixin {
+
     default CompletionStage<ResourceObjects> posts(Included.Builder included, Links.Builder links) {
         GraphQuery graphQuery = postsQuery()
-                .limit(5) // Max 5 results
-                .sort(StandardModel.Entity.created_on, GraphQuery.Order.ASCENDING) // Default sorting
+                .sort(CommonModel.Entity.created_on, GraphQuery.Order.ASCENDING) // Default sorting
                 .with(pagination(links), sort(ForumModel.Post.class)); // Query param pagination and sorting
 
-        return graphQuery.stream(toModel(PostModel::new, graphQuery.getResults()).andThen(postResource(included)))
+        return graphQuery.stream(toModel(PostModel::new, graphQuery.getResults()).andThen(postResource(included, "")))
                 .thenApply(ResourceObjects::toResourceObjects);
     }
 
     default CompletionStage<ResourceObject> post(String id, Included.Builder included) {
         GraphQuery graphQuery = postsQuery()
-                .parameter(StandardModel.Entity.id, id);
-        return graphQuery.first(toModel(PostModel::new, graphQuery.getResults()).andThen(postResource(included)));
+                .parameter(CommonModel.Entity.id, id);
+        return graphQuery.first(toModel(PostModel::new, graphQuery.getResults()).andThen(postResource(included, "")));
+    }
+
+    default CompletionStage<ResourceObjects> postComments(String postId, Included.Builder included, Pagination pagination) {
+        GraphQuery graphQuery = postCommentsQuery(postId)
+                .limit(5) // Max 5 results
+                .sort(CommonModel.Entity.created_on, GraphQuery.Order.ASCENDING) // Default sorting
+                .with(pagination, sort(ForumModel.Comment.class)); // Query param pagination and sorting
+
+        return graphQuery.stream(toModel(CommentModel::new, graphQuery.getResults()).andThen(commentResource(included)))
+                .thenApply(ResourceObjects::toResourceObjects);
+    }
+
+    default CompletionStage<ResourceObject> comment(String id, Included.Builder included) {
+        GraphQuery graphQuery = commentByIdQuery(id);
+        return graphQuery.first(toModel(CommentModel::new, graphQuery.getResults()).andThen(commentResource(included)));
     }
 
     @Override
@@ -55,29 +68,91 @@ public interface ForumApiMixin
     default GraphQuery postsQuery() {
         return new Posts(database())
                 .posts()
-                .results(StandardModel.Entity.values())
+                .limit(5) // Max 5 results
+                .results(CommonModel.Entity.values())
                 .results(ForumModel.Post.values()) // Specify potential fields to return
-                .with(selectedFields(ApiTypes.post, StandardModel.Label.Entity)) // Filter out fields based on query
-                .results(StandardModel.Entity.id); // Id field is mandatory though
+                .with(selectedFields(ApiTypes.post, CommonModel.Label.Entity)) // Filter out fields based on query
+                .results(CommonModel.Entity.id); // Id field is mandatory though
     }
 
     default GraphQuery postByIdQuery(String id) {
-        return postsQuery().parameter(StandardModel.Entity.id, id);
+        return postsQuery().parameter(CommonModel.Entity.id, id);
     }
 
-    default Function<PostModel, ResourceObject> postResource(Included.Builder included) {
+    default GraphQuery postCommentsQuery(String postId) {
+        return new Comments(database())
+                .commentsByPost(postId)
+                .limit(5) // Max 5 results
+                .results(CommonModel.Entity.values())
+                .results(ForumModel.Comment.values()) // Specify potential fields to return
+                .with(selectedFields(ApiTypes.comment, CommonModel.Label.Entity)) // Filter out fields based on query
+                .results(CommonModel.Entity.id); // Id field is mandatory though
+    }
 
-        UriBuilder postUriBuilder = getUriBuilderFor(PostResource.class);
+    default GraphQuery commentByIdQuery(String id) {
+        return new Comments(database())
+                .comments()
+                .parameter(CommonModel.Entity.id, id)
+                .results(CommonModel.Entity.values())
+                .results(ForumModel.Comment.values()) // Specify potential fields to return
+                .with(selectedFields(ApiTypes.comment, CommonModel.Label.Entity)) // Filter out fields based on query
+                .results(CommonModel.Entity.id);
+    }
+
+    default Function<PostModel, ResourceObject> postResource(Included.Builder included,
+                                                             String includePrefix) {
+
+        UriBuilder uriBuilder = getUriBuilderFor(PostResource.class);
+        ForumApplication forumApplication = forum();
+
+        Predicate<String> fieldSelection = getFieldSelection(ApiTypes.post);
+        String commentsRelationshipPath = includePrefix + ApiRelationships.Post.comments;
+        boolean includeComments = shouldInclude(includePrefix + ApiRelationships.Post.comments);
+
+        return model ->
+        {
+            String id = model.getId();
+            Relationships.Builder relationships = new Relationships.Builder();
+
+            if (includeComments) {
+                Links.Builder links = new Links.Builder();
+                ResourceObjects resources = postComments(model.getId(), included,
+                        pagination(links,
+                                () -> getUriBuilderFor(PostCommentsResource.class)
+                                        .replaceQuery(getUriInfo().getRequestUri().getQuery())
+                                        .resolveTemplate("post", model.getId()), commentsRelationshipPath))
+                        .toCompletableFuture().join();
+
+                relationships.relationship(ApiRelationships.Post.comments, relationship(resources, links));
+                included.include(resources);
+            } else if (fieldSelection.test(ApiRelationships.Post.comments.name())) {
+                relationships.with(relationship(uriBuilder.clone().resolveTemplate("post", model.getId()), ApiRelationships.Post.comments));
+            }
+
+            return new ResourceObject.Builder(ApiTypes.post, id)
+                    .relationships(relationships.build())
+                    .attributes(new Attributes(model.json()))
+                    .links(new Links.Builder()
+                            .link(self, uriBuilder.build(id))
+                            .with(commands(uriBuilder.clone().resolveTemplate("post", model.getId()), forumApplication.post(model)))
+                    )
+                    .build();
+        };
+    }
+
+    default Function<CommentModel, ResourceObject> commentResource(Included.Builder included) {
+
+        UriBuilder uriBuilder = getUriBuilderFor(CommentResource.class);
         ForumApplication forumApplication = forum();
 
         return model ->
         {
             String id = model.getId();
-            return new ResourceObject.Builder(ApiTypes.post, id)
+            return new ResourceObject.Builder(ApiTypes.comment, id)
                     .attributes(new Attributes(model.json()))
                     .links(new Links.Builder()
-                            .link(self, postUriBuilder.build(id))
-                            .with(commands(postUriBuilder.clone().resolveTemplate("post", model.getId()), forumApplication.post(model)))
+                            .link(self, uriBuilder.build(id))
+                            .with(commands(uriBuilder.clone().resolveTemplate("comment", model.getId()), forumApplication.comment(model)))
                     )
                     .build();
         };

@@ -4,6 +4,6 @@ public interface EntityModel
         extends Model
 {
     default String getId() {
-        return getString(StandardModel.Entity.id);
+        return getString(CommonModel.Entity.id);
     }
 }

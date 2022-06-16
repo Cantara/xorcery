@@ -52,7 +52,7 @@ public final class ResourceObjectFormProvider extends AbstractFormProvider<Resou
 
         NullableMultivaluedHashMap<String, String> map = this.readFrom(new NullableMultivaluedHashMap<>(), mediaType, decode(annotations), entityStream);
 
-        return new ResourceObject.Builder(requestContextProvider.get().getUriInfo().getQueryParameters().getFirst("rel")).attributes(new Attributes.Builder().with(builder ->
+        return new ResourceObject.Builder(requestContextProvider.get().getUriInfo().getQueryParameters().getFirst("rel"), map.getFirst("id")).attributes(new Attributes.Builder().with(builder ->
         {
             map.forEach((name, value) ->
             {

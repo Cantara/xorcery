@@ -9,14 +9,8 @@ import com.exoreaction.reactiveservices.service.forum.resources.aggregates.PostA
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
-public class PostsContext
+public record PostsContext(ForumApplication forumApplication)
         implements DomainContext {
-    private final ForumApplication forumApplication;
-
-    public PostsContext(ForumApplication forumApplication) {
-        this.forumApplication = forumApplication;
-    }
-
     @Override
     public List<Command> commands() {
         return List.of(new PostAggregate.CreatePost("", ""));

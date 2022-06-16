@@ -25,6 +25,7 @@ import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -84,11 +85,20 @@ public class PublisherWebSocketEndpoint<T>
         try {
             if (messageBodyReader != null)
             {
-                ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
-                Object result = messageBodyReader.readFrom((Class)resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE,
-                        new MultivaluedHashMap<String, String>(), bin);
+                if (((char)payload[0]) != '{')
+                {
+                    ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
+                    ObjectInputStream oin = new ObjectInputStream(bin);
+                    Throwable throwable = (Throwable) oin.readObject();
+                    resultFuture.get().completeExceptionally(throwable);
+                } else
+                {
+                    ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
+                    Object result = messageBodyReader.readFrom((Class)resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE,
+                            new MultivaluedHashMap<String, String>(), bin);
 
-                resultFuture.get().complete((Object) result);
+                    resultFuture.get().complete((Object) result);
+                }
             } else
             {
                 if (!redundancyNotificationIssued)
@@ -99,6 +109,7 @@ public class PublisherWebSocketEndpoint<T>
             }
         } catch (Throwable e) {
             logger.error(marker,"Could not read result", e);
+            resultFuture.get().completeExceptionally(e);
         }
     }
 

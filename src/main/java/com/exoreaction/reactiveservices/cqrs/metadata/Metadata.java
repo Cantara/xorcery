@@ -46,6 +46,10 @@ public record Metadata(ObjectNode metadata) {
     public Metadata {
     }
 
+    public boolean has(String name) {
+        return metadata.has(name);
+    }
+
     public Optional<String> getString(String name) {
         return Optional.ofNullable(metadata.path(name).textValue());
     }

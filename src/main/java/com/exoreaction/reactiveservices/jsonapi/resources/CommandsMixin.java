@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.jsonapi.resources;
 
+import com.exoreaction.reactiveservices.cqrs.UUIDs;
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
 import com.exoreaction.reactiveservices.cqrs.context.DomainContext;
 import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
@@ -7,6 +8,7 @@ import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.RequestMetadata;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.service.forum.resources.api.PostResource;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.ConstraintViolation;
@@ -91,13 +93,20 @@ public interface CommandsMixin
     default CompletionStage<ResourceDocument> commandResourceDocument(String rel, String id, DomainContext context) {
         Command command = context.commands().stream().filter(isCommandByName(rel))
                 .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new);
+
+        ObjectNode result = objectMapper().valueToTree(command);
+        result.remove("@class");
+        JsonNode jsonId = result.remove("id");
+        if (jsonId != null && jsonId.isTextual())
+        {
+            id = jsonId.textValue();
+        }
+
         return CompletableFuture.completedStage(new ResourceDocument.Builder()
                 .links(new Links.Builder().with(schemaLink()))
                 .data(new ResourceObject.Builder(Command.getName(command), id)
                         .attributes(new Attributes.Builder().with(a ->
                         {
-                            ObjectNode result = objectMapper().valueToTree(command);
-                            result.remove("@class");
                             a.attributes(result);
                         })).build())
                 .build());
@@ -118,35 +127,23 @@ public interface CommandsMixin
                 ObjectMapper service = service(ObjectMapper.class);
                 ObjectNode json = resourceObject.getAttributes().json();
                 json.set("@class", json.textNode(commandClass.getName()));
+                json.set("id", json.textNode(resourceObject.getId()));
                 return service.<Command>treeToValue(json, service.constructType(commandClass));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         }).findFirst().orElseThrow(NotFoundException::new);
 
-        // Transfer over ResourceObject.id as aggregate id?
-        String id = resourceObject.getId() != null ? resourceObject.getId() : UUID.randomUUID().toString().replace("-", "");
-        metadata = new DomainEventMetadata.Builder(metadata)
-                .aggregateId(id).build()
-                .metadata();
+        // Transfer over ResourceObject.id as aggregate id if not already set
+        DomainEventMetadata dem = new DomainEventMetadata(metadata);
+        if (!metadata.has("aggregateId"))
+        {
+            String id = resourceObject.getId() != null ? resourceObject.getId() : UUIDs.newId();
+            DomainEventMetadata.Builder.aggregateId(id, metadata);
+        }
 
         return context.handle(metadata, command)
-                .thenApply(md -> new DomainEventMetadata.Builder(md)
-                        .aggregateId(id).build()
-                        .metadata())
-                .thenCompose(this::ok)
-/*
-                .thenApply(response ->
-                {
-                    URI location = response.getLocation();
-                    if (location != null)
-                        return Response.fromResponse(response)
-                                .header("Refresh", "0;url=" + location.toASCIIString())
-                                .build();
-                    else
-                        return response;
-                })
-*/
+                .thenCompose(md -> ok(md, command))
                 .exceptionallyCompose(throwable ->
                 {
                     while (throwable.getCause() != null) {
@@ -169,7 +166,7 @@ public interface CommandsMixin
 
     CompletionStage<ResourceDocument> get(String rel);
 
-    default CompletionStage<Response> ok(Metadata metadata) {
+    default CompletionStage<Response> ok(Metadata metadata, Command command) {
         return get(null).thenApply(rd -> Response.ok(rd).build());
     }
 

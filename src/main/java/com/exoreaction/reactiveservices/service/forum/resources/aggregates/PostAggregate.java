@@ -20,6 +20,15 @@ public class PostAggregate
             implements Command {
     }
 
+    public record AddComment(String id, String body)
+            implements Command {
+    }
+
+    @Update
+    public record UpdateComment(String id, String body)
+            implements Command {
+    }
+
     public static class PostSnapshot
             implements AggregateSnapshot {
         public String title;
@@ -37,13 +46,22 @@ public class PostAggregate
         this.snapshot = snapshot;
     }
 
-    public void handle(CreatePost post) {
+    public void handle(CreatePost command) {
         add(new PostEvents.CreatedPost());
-        add(new PostEvents.UpdatedPost(post.title(), post.body()));
+        add(new PostEvents.UpdatedPost(command.title(), command.body()));
     }
 
-    public void handle(UpdatePost post) {
-        add(new PostEvents.UpdatedPost(post.title(), post.body()));
+    public void handle(UpdatePost command) {
+        add(new PostEvents.UpdatedPost(command.title(), command.body()));
+    }
+
+    public void handle(AddComment command) {
+        add(new PostEvents.AddedComment(command.id()));
+        add(new PostEvents.UpdatedComment(command.id(), command.body()));
+    }
+
+    public void handle(UpdateComment command) {
+        add(new PostEvents.UpdatedComment(command.id(), command.body()));
     }
 
     protected void apply(PostEvents.UpdatedPost updatedPost) {

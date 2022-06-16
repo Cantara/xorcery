@@ -67,7 +67,8 @@ public class Neo4jDomainEventEventHandler
             }
         }
 
-        futures.add(event.event.result());
+        if (!event.event.result().isCompletedExceptionally())
+            futures.add(event.event.result());
 
         if (endOfBatch) {
             try {

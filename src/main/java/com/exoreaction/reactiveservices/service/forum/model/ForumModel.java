@@ -1,9 +1,9 @@
 package com.exoreaction.reactiveservices.service.forum.model;
 
-import com.exoreaction.reactiveservices.cqrs.model.StandardModel;
+import com.exoreaction.reactiveservices.cqrs.model.CommonModel;
 
 public interface ForumModel
-        extends StandardModel {
+        extends CommonModel {
 
     enum Label {
         Post,

@@ -1,9 +1,14 @@
 package com.exoreaction.reactiveservices.cqrs.model;
 
-public interface StandardModel {
+public interface CommonModel {
 
     enum Label {
         Entity,
+        Aggregate,
+    }
+
+    enum Aggregate {
+        id
     }
 
     enum Entity {

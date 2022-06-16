@@ -2,11 +2,17 @@ package com.exoreaction.reactiveservices.cqrs.metadata;
 
 import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
+import com.exoreaction.reactiveservices.jsonapi.model.Meta;
 
 public record DomainEventMetadata(Metadata metadata)
 {
     public record Builder(Metadata.Builder builder)
     {
+        public static Metadata aggregateId(String aggregateId, Metadata metadata)
+        {
+            return new Builder(metadata).aggregateId(aggregateId).build().metadata();
+        }
+
         public Builder(Metadata metadata) {
             this(metadata.toBuilder());
         }

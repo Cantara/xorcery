@@ -3,11 +3,9 @@ package com.exoreaction.reactiveservices.service.neo4jdomainevents.aggregates;
 import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.aggregate.AggregateSnapshot;
 import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
-import com.exoreaction.reactiveservices.cqrs.model.StandardModel;
-import com.exoreaction.reactiveservices.service.neo4j.client.Cypher;
+import com.exoreaction.reactiveservices.cqrs.model.CommonModel;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.RowModel;
-import com.exoreaction.reactiveservices.service.neo4j.client.WhereClauseBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -53,7 +51,7 @@ public class AggregateSnapshotLoader {
                     }
                 });
 
-        return database.query(cypher).parameter(StandardModel.Entity.id, metadata.getAggregateId())
+        return database.query(cypher).parameter(CommonModel.Entity.id, metadata.getAggregateId())
                 .execute().thenCompose(result ->
                 {
                     try (result) {

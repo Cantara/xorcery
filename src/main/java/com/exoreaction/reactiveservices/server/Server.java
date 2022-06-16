@@ -3,6 +3,7 @@ package com.exoreaction.reactiveservices.server;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.configuration.StandardConfiguration;
+import com.exoreaction.reactiveservices.cqrs.UUIDs;
 import com.exoreaction.reactiveservices.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.server.resources.ServerApplication;
@@ -77,7 +78,7 @@ public class Server
     public Server(File configurationFile, String id) throws Exception {
         this.configuration = configuration(configurationFile);
 
-        serverId = configuration.getString("id").orElseGet(() -> Optional.ofNullable(id).orElse(UUID.randomUUID().toString()));
+        serverId = configuration.getString("id").orElseGet(() -> Optional.ofNullable(id).orElse(UUIDs.newId()));
 
         serverLogMarker = MarkerManager.getMarker("server:" + serverId);
 

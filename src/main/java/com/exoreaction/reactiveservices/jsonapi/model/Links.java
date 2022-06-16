@@ -67,6 +67,11 @@ public record Links(ObjectNode json)
         }
     }
 
+    public boolean isEmpty()
+    {
+        return object().isEmpty();
+    }
+
     public Optional<Link> getSelf() {
         return getByRel("self");
     }

@@ -38,7 +38,7 @@ public class GraphQuery
     private BiConsumer<GraphQuery, StringBuilder> where;
     private Function<Enum<?>, String> fieldMapping;
     private final Function<GraphQuery, CompletionStage<GraphResult>> applyQuery;
-    private Function<Stream<Map<String,Object>>,Stream<Map<String,Object>>> streamOperator = UnaryOperator.identity();
+    private Function<Stream<Map<String, Object>>, Stream<Map<String, Object>>> streamOperator = UnaryOperator.identity();
 
     public GraphQuery(String baseQuery,
                       Function<Enum<?>, String> fieldMapping,
@@ -58,8 +58,7 @@ public class GraphQuery
         return this;
     }
 
-    public GraphQuery mappings(Function<Enum<?>, String> customFieldMappings)
-    {
+    public GraphQuery mappings(Function<Enum<?>, String> customFieldMappings) {
         this.fieldMapping = new FallbackFunction<>(customFieldMappings, fieldMapping);
         return this;
     }
@@ -127,11 +126,9 @@ public class GraphQuery
     }
 
     @SafeVarargs
-    public final GraphQuery onStream( UnaryOperator<Stream<Map<String,Object>>>... streamOperators )
-    {
-        for ( UnaryOperator<Stream<Map<String,Object>>> operator : streamOperators )
-        {
-            this.streamOperator = operator.andThen( this.streamOperator );
+    public final GraphQuery onStream(UnaryOperator<Stream<Map<String, Object>>>... streamOperators) {
+        for (UnaryOperator<Stream<Map<String, Object>>> operator : streamOperators) {
+            this.streamOperator = operator.andThen(this.streamOperator);
         }
         return this;
     }
@@ -152,29 +149,24 @@ public class GraphQuery
         return parameters;
     }
 
-    public Set<Enum<?>> getResults()
-    {
+    public Set<Enum<?>> getResults() {
         return this.results;
     }
 
-    public boolean hasResultFrom( Class<? extends Enum<?>> enumType )
-    {
-        for ( Enum<?> anEnum : results )
-        {
-            if ( enumType.isInstance( anEnum ) )
-            {
+    public boolean hasResultFrom(Class<? extends Enum<?>> enumType) {
+        for (Enum<?> anEnum : results) {
+            if (enumType.isInstance(anEnum)) {
                 return true;
             }
         }
         return false;
     }
 
-    public boolean hasParameterFrom( Class<? extends Enum<?>> enumType )
-    {
-        for ( Enum<?> anEnum : parameters.keySet() )
-        {
-            if ( enumType.isInstance( anEnum ) )
-            { return true; }
+    public boolean hasParameterFrom(Class<? extends Enum<?>> enumType) {
+        for (Enum<?> anEnum : parameters.keySet()) {
+            if (enumType.isInstance(anEnum)) {
+                return true;
+            }
         }
         return false;
     }
@@ -204,6 +196,8 @@ public class GraphQuery
                     });
                     return results.stream();
                 }
+            } catch (CompletionException e) {
+                throw e;
             } catch (Exception e) {
                 throw new CompletionException(e);
             }

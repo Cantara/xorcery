@@ -9,8 +9,11 @@ import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
-import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
+import com.exoreaction.reactiveservices.service.forum.contexts.PostCommentsContext;
+import com.exoreaction.reactiveservices.service.forum.model.PostModel;
 import com.exoreaction.reactiveservices.service.forum.resources.ForumApiMixin;
+import com.exoreaction.reactiveservices.service.forum.resources.aggregates.PostAggregate;
+import com.exoreaction.reactiveservices.service.neo4j.client.GraphQuery;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
@@ -18,18 +21,25 @@ import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.util.concurrent.CompletionStage;
 
+import static com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata.Builder.aggregateId;
 import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.APPLICATION_JSON_API;
 
-@Path("api/forum/posts")
-public class PostsResource
+@Path("api/forum/posts/{post}/comments")
+public class PostCommentsResource
         extends JsonApiResource
         implements ForumApiMixin {
 
-    private final PostsContext context;
+    private PostCommentsContext context;
+    private PostModel post;
 
     @Inject
-    public PostsResource(ForumApplication forumApplication) {
-        context = forumApplication.posts();
+    public void bind(ForumApplication forumApplication) {
+        GraphQuery graphQuery = postByIdQuery(getFirstPathParameter("post"));
+        post = graphQuery
+                .first(toModel(PostModel::new, graphQuery.getResults()))
+                .toCompletableFuture()
+                .join();
+        context = forumApplication.postComments(post);
     }
 
     @GET
@@ -39,7 +49,7 @@ public class PostsResource
         } else {
             Links.Builder links = new Links.Builder();
             Included.Builder included = new Included.Builder();
-            return posts(included, links)
+            return postComments(post.getId(), included, pagination(links))
                     .thenApply(ros -> new ResourceDocument.Builder()
                             .data(ros)
                             .included(included.build())
@@ -51,14 +61,17 @@ public class PostsResource
     @POST
     @Consumes({"application/x-www-form-urlencoded", APPLICATION_JSON_API})
     public CompletionStage<Response> post(ResourceObject resourceObject) {
-        return execute(resourceObject, context, metadata());
+        return execute(resourceObject, context, aggregateId(getFirstPathParameter("post"), metadata()));
     }
 
     @Override
     public CompletionStage<Response> ok(Metadata metadata, Command command) {
-        String aggregateId = new DomainEventMetadata(metadata).getAggregateId();
-        URI location = getUriBuilderFor(PostResource.class).build(aggregateId);
-        return post(aggregateId, new Included.Builder())
-                .thenApply(post -> Response.created(location).links(schemaHeader()).entity(post).build());
+
+        if (command instanceof PostAggregate.AddComment addComment) {
+            return comment(addComment.id(), new Included.Builder())
+                    .thenApply(resource -> Response.created(resource.getLinks().getSelf().orElseThrow().getHrefAsUri())
+                            .links(schemaHeader()).entity(resource).build());
+        } else
+            throw new NotFoundException();
     }
 }

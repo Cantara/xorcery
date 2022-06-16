@@ -20,7 +20,7 @@
 {{/with}}
 
 {{#with links}}
-    {{#unless links.isEmpty}}
+    {{#unless isEmpty}}
         {{> "jsonapi/partial/links"}}
     {{/unless}}
 {{/with}}
@@ -35,6 +35,14 @@
     {{#if this}}
         <tr><td colspan="2">{{> "jsonapi/partial/resourceobject"}}</td></tr>
     {{/if}}
+{{/with}}
+
+{{#with included.included}}
+    <tr><th colspan="2">Included</th></tr>
+
+    {{#each this}}
+    <tr><td colspan="2">{{> "jsonapi/partial/resourceobject"}}</td></tr>
+    {{/each}}
 {{/with}}
 </table>
 

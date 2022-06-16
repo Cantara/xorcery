@@ -1,4 +1,4 @@
-<table class="resource" id="{{id}}-{{type}}">
+<table class="resource" id="{{id}}_{{type}}">
 
     <thead>
     <tr>
@@ -7,7 +7,7 @@
     </thead>
 
     {{#with this.links}}
-        {{#unless links.isEmpty}}
+        {{#unless isEmpty}}
             {{> "jsonapi/partial/links"}}
         {{/unless}}
     {{/with}}
@@ -30,5 +30,11 @@
         {{/optional}}
     {{^}}
         {{> "jsonapi/partial/attributes"}}
+    {{/with}}
+
+    {{#with this.relationships}}
+    {{#unless isEmpty}}
+    {{> "jsonapi/partial/relationships"}}
+    {{/unless}}
     {{/with}}
 </table>

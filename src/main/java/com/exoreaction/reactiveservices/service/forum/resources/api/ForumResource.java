@@ -1,6 +1,6 @@
 package com.exoreaction.reactiveservices.service.forum.resources.api;
 
-import com.exoreaction.reactiveservices.cqrs.model.StandardModel;
+import com.exoreaction.reactiveservices.cqrs.model.CommonModel;
 import com.exoreaction.reactiveservices.hyperschema.model.Link;
 import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
@@ -48,7 +48,9 @@ public class ForumResource
                         .link(describedby, getAbsolutePathBuilder().path(".schema"))
                         .link("posts", getUriBuilderFor(PostsResource.class)
                                 .queryParam("fields[post]", "{post_fields}")
+                                .queryParam("fields[comment]", "{comment_fields}")
                                 .queryParam("fields[entity]", "{entity_fields}")
+                                .queryParam("include", "{include}")
                                 .queryParam("sort", "{sort}")
                                 .queryParam("page[skip]", "{skip}")
                                 .queryParam("page[limit]", "{limit}")
@@ -68,7 +70,9 @@ public class ForumResource
                         .with(commands(PostAggregate.class),
                                 l -> l.link(new Link.UriTemplateBuilder("posts")
                                         .parameter("post_fields", "Post fields", "Post fields to include")
+                                        .parameter("comment_fields", "Comment fields", "Comment fields to include")
                                         .parameter("entity_fields", "Entity fields", "Entity fields to include")
+                                        .parameter("include", "Included relationships", "Relations to include")
                                         .parameter("sort", "Sort", "Post sort field")
                                         .parameter("skip", "Skip", "Nr of posts to skip")
                                         .parameter("limit", "Limit", "Limit nr of posts")
@@ -83,7 +87,7 @@ public class ForumResource
         return new ResourceObjectSchema.Builder()
                 .type(ApiTypes.post)
                 .relationships(relationships(ApiRelationships.Post.values()))
-                .attributes(attributes(StandardModel.Entity.values()))
+                .attributes(attributes(CommonModel.Entity.values()))
                 .attributes(attributes(ForumModel.Post.values()))
                 .with(b -> b.builder().builder().title("Post"))
                 .build();
@@ -92,7 +96,7 @@ public class ForumResource
     private ResourceObjectSchema commentSchema() {
         return new ResourceObjectSchema.Builder()
                 .type(ApiTypes.comment)
-                .attributes(attributes(StandardModel.Entity.values()))
+                .attributes(attributes(CommonModel.Entity.values()))
                 .attributes(attributes(ForumModel.Comment.values()))
                 .with(b -> b.builder().builder().title("Comment"))
                 .build();

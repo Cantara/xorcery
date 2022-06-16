@@ -102,6 +102,11 @@ public record Attributes(ObjectNode json)
         }
     }
 
+    public boolean isEmpty()
+    {
+        return object().isEmpty();
+    }
+
     public Optional<JsonNode> getAttribute(String name) {
         return Optional.ofNullable(object().get(name));
     }

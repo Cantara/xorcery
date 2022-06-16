@@ -44,6 +44,11 @@ public record Relationships(ObjectNode json)
         }
     }
 
+    public boolean isEmpty()
+    {
+        return object().isEmpty();
+    }
+
     public List<Relationship> getRelationshipList() {
 
         return JsonNodes.getValuesAs(object(), Relationship::new);

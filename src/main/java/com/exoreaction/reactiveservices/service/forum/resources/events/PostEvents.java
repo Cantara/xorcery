@@ -8,4 +8,10 @@ public interface PostEvents {
 
     record UpdatedPost(String title, String body) implements DomainEvent {
     }
+
+    record AddedComment(String id) implements DomainEvent {
+    }
+
+    record UpdatedComment(String id, String body) implements DomainEvent {
+    }
 }

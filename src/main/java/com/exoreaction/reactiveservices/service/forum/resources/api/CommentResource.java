@@ -8,7 +8,9 @@ import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
 import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
+import com.exoreaction.reactiveservices.service.forum.contexts.CommentContext;
 import com.exoreaction.reactiveservices.service.forum.contexts.PostContext;
+import com.exoreaction.reactiveservices.service.forum.model.CommentModel;
 import com.exoreaction.reactiveservices.service.forum.model.PostModel;
 import com.exoreaction.reactiveservices.service.forum.resources.ForumApiMixin;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphQuery;
@@ -21,34 +23,34 @@ import java.util.concurrent.CompletionStage;
 
 import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.APPLICATION_JSON_API;
 
-@Path("api/forum/posts/{post}")
-public class PostResource
+@Path("api/forum/comments/{comment}")
+public class CommentResource
         extends JsonApiResource
         implements ForumApiMixin {
 
-    private PostModel post;
-    private PostContext context;
+    private CommentModel model;
+    private CommentContext context;
 
     @Inject
     public void bind(ForumApplication forumApplication) {
-        GraphQuery graphQuery = postByIdQuery(getFirstPathParameter("post"));
-        post = graphQuery
-                .first(toModel(PostModel::new, graphQuery.getResults()))
+        GraphQuery graphQuery = commentByIdQuery(getFirstPathParameter("comment"));
+        model = graphQuery
+                .first(toModel(CommentModel::new, graphQuery.getResults()))
                 .toCompletableFuture()
                 .join();
-        context = forumApplication.post(post);
+        context = forumApplication.comment(model);
     }
 
     @GET
     public CompletionStage<ResourceDocument> get(@QueryParam("rel") String rel) {
         if (rel != null) {
-            return commandResourceDocument(rel, post.getId(), context);
+            return commandResourceDocument(rel, model.getId(), context);
         } else {
             Links.Builder links = new Links.Builder();
             Included.Builder included = new Included.Builder();
             return CompletableFuture.completedStage(
                     new ResourceDocument.Builder()
-                            .data(postResource(included, "").apply(post))
+                            .data(commentResource(included).apply(model))
                             .included(included)
                             .links(links.with(schemaLink()))
                             .build());
@@ -69,7 +71,7 @@ public class PostResource
 
     @Override
     public CompletionStage<Response> ok(Metadata metadata, Command command) {
-        return post(post.getId(), new Included.Builder())
+        return comment(model.getId(), new Included.Builder())
                 .thenApply(resource -> Response.ok(resource).links(schemaHeader()).build());
     }
 }
