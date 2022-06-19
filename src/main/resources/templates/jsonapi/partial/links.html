@@ -38,7 +38,28 @@
 </td></tr>
 
 {{^}}
+{{#if websocket}}
+<tr><td>{{rel}}</td><td>
+    <code>{{{href}}}</code><br/>
+
+        <table>
+            <thead><tr><th>Parameters</th></tr></thead>
+            {{#with (lookup schema.links.links rel)}}
+            {{#optional submissionSchema}}
+            {{#each properties.properties}}
+            <tr>
+                <td><code>{{@key}}</code></td>
+                <td>{{optional title}} ({{optional description}})</td>
+            </tr>
+            {{/each}}
+            {{/optional}}
+            {{/with}}
+        </table>
+</td></tr>
+
+{{^}}
 <tr><td>{{rel}}</td><td> <a href="{{{href}}}">{{{href}}}</a> </td></tr>
+{{/if}}
 {{/if}}
 {{/each}}
 </tbody>

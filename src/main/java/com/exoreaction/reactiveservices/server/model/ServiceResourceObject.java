@@ -41,13 +41,6 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
             return this;
         }
 
-        public Builder websocket(String rel, String path, String queryParameters) {
-            links.link(rel, server.getBaseUriBuilder()
-                    .scheme(server.getBaseUri().getScheme().equals("https") ? "wss" : "ws")
-                    .path(path).replaceQuery(queryParameters).toTemplate());
-            return this;
-        }
-
         public ServiceResourceObject build() {
             return new ServiceResourceObject(builder
                     .attributes(attributes.build())

@@ -18,9 +18,5 @@ public class ServerApplication
         String mediaTypes = Files.readString(Path.of(URI.create(getClass().getResource("/mediatypes.conf").toString())), StandardCharsets.UTF_8)
                 .replace('\n',',');
         property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypes);
-
-        packages("com.exoreaction.reactiveservices.jaxrs");
-        packages("com.exoreaction.reactiveservices.server.resources");
-
     }
 }

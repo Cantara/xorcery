@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.neo4jdomainevents.disruptor;
+package com.exoreaction.reactiveservices.service.neo4jprojections.domainevents;
 
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
@@ -48,7 +48,7 @@ public class Neo4jDomainEventEventHandler
         for (JsonNode jsonNode : eventsJson) {
             ObjectNode objectNode = (ObjectNode) jsonNode;
             String type = objectNode.path("@class").textValue();
-            type = type.substring(type.lastIndexOf('$')+1);
+            type = type.substring(type.lastIndexOf('$') + 1);
 
             Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
             Map<String, Object> parameters = Cypher.toMap(objectNode);
@@ -58,10 +58,10 @@ public class Neo4jDomainEventEventHandler
                 String finalType = type;
                 String statementFile = event.metadata.getString("domain")
                         .map(domain -> "/neo4j/" + domain + "/" + finalType + ".cyp")
-                        .orElseGet(()->"/neo4j/" + finalType + ".cyp");
+                        .orElseGet(() -> "/neo4j/" + finalType + ".cyp");
                 String statement = Files.read(getClass().getResourceAsStream(statementFile), StandardCharsets.UTF_8);
 
-                graphDatabaseService.executeTransactionally(statement, parameters);
+                tx.execute(statement, parameters);
             } catch (Throwable e) {
                 event.event.result().completeExceptionally(e);
             }

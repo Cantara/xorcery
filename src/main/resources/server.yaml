@@ -12,6 +12,14 @@ server:
   secure_port: 8443
   idle_timeout: "{{ idle_timeout }}"
 
+jaxrs:
+  register:
+    - com.exoreaction.reactiveservices.service.registry.RegistryService$Feature
+  packages:
+    - com.exoreaction.reactiveservices.jaxrs
+    - com.exoreaction.reactiveservices.server.resources
+    - com.exoreaction.reactiveservices.service
+
 reactivestreams:
   allowlocal: false
 
@@ -25,6 +33,7 @@ conductor:
     - /conductor/metrics.yaml
     - /conductor/certmanager.yaml
     - /conductor/forum.yaml
+#    - /conductor/forumeventstore.yaml
 
 certificatemanager:
   enabled: true
@@ -55,12 +64,12 @@ neo4jdatabase:
     neo4j:
       foo: bar
 
-neo4jdomainevents:
+neo4jprojections:
   enabled: true
 
 eventstore:
   enabled: false
-  url: esdb+discover://localhost:2113?tls=false
+  url: esdb://localhost:2113?tls=false
 
 mapdbdomainevents:
   enabled: false

@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.service.neo4j.client;
 
 import com.exoreaction.util.builders.With;
 import com.exoreaction.util.function.FallbackFunction;
-import org.neo4j.graphdb.NotFoundException;
+import jakarta.ws.rs.NotFoundException;
 import org.neo4j.graphdb.Result;
 
 import java.util.*;

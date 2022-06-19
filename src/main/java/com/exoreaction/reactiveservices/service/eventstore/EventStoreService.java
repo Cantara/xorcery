@@ -11,7 +11,9 @@ import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
+import com.exoreaction.reactiveservices.service.domainevents.api.EventStoreMetadata;
 import com.exoreaction.reactiveservices.service.eventstore.disruptor.EventStoreDomainEventEventHandler;
+import com.exoreaction.reactiveservices.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ServiceIdentifier;
@@ -62,7 +64,8 @@ public class EventStoreService
 
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.websocket("eventstorestreams", "ws/eventstorestreams", "stream={stream}");
+            builder.api("eventstore", "api/eventstore");
+            builder.websocket("eventstorestreams", "ws/eventstorestreams");
         }
 
         @Override
@@ -83,15 +86,21 @@ public class EventStoreService
 
         EventStoreDBClientSettings settings = EventStoreDBConnectionString.parse(connectionString);
         client = EventStoreDBClient.create(settings);
+
+        // Test connection
+        StreamMetadata metadata = client.getStreamMetadata("$all").join();
+        logger.info("$all stream metadata:"+metadata.toString());
     }
 
     @Override
     public void onStartup(Container container) {
+        // Read
         sro.getLinkByRel("eventstorestreams").ifPresent(link ->
         {
             reactiveStreams.publish(sro.serviceIdentifier(), link, this);
         });
 
+        // Write
         conductor.addConductorListener(new DomainEventsConductorListener(sro.serviceIdentifier(), "domainevents"));
     }
 
@@ -106,22 +115,25 @@ public class EventStoreService
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<ByteBuffer> subscriber, ObjectNode parameters) {
-
-        String streamName = parameters.path("stream").get(0).textValue();
+    public void subscribe(ReactiveEventStreams.Subscriber<ByteBuffer> subscriber, ObjectNode jsonParameters) {
 
         try {
+            EventStoreParameters parameters = objectMapper.treeToValue(jsonParameters, EventStoreParameters.class);
+
             HashMap<String, Object> customProperties = new HashMap<>();
             customProperties.put("foo", "bar");
             StreamMetadata metadata = new StreamMetadata();
             metadata.setCustomProperties(customProperties);
-            LogManager.getLogger(getClass()).info("Setting Stream metadata for {}:{}", streamName, metadata.serialize());
-            client.setStreamMetadata(streamName, metadata).get();
-            LogManager.getLogger(getClass()).info("Stream metadata for {}:{}", streamName, metadata.serialize());
+            LogManager.getLogger(getClass()).info("Setting Stream metadata for {}:{}", parameters.stream, metadata.serialize());
+            client.setStreamMetadata(parameters.stream, metadata).get();
+            LogManager.getLogger(getClass()).info("Stream metadata for {}:{}", parameters.stream, metadata.serialize());
 
             DomainEventsProcessor processor = new DomainEventsProcessor(subscriber);
             processor.setSink(subscriber.onSubscribe(processor));
-            processor.setSubscription(client.subscribeToStream(streamName, processor, SubscribeToStreamOptions.get().fromStart()).get());
+            SubscribeToStreamOptions subscribeToStreamOptions = parameters.from == 0 ?
+                    SubscribeToStreamOptions.get().fromStart() :
+                    SubscribeToStreamOptions.get().fromRevision(parameters.from);
+            processor.setSubscription(client.subscribeToStream(parameters.stream, processor, subscribeToStreamOptions).get());
         } catch (Throwable e) {
             subscriber.onError(e);
             subscriber.onComplete();
@@ -196,6 +208,13 @@ public class EventStoreService
                     logger.info(MarkerManager.getMarker(sro.serviceIdentifier().toString()), "Read event: " + new String(e.getEvent().getEventData()));
                     event.metadata = new Metadata((ObjectNode) objectMapper.readTree(e.getEvent().getUserMetadata()));
                     event.event = ByteBuffer.wrap(e.getEvent().getEventData());
+
+                    // Put in ES metadata
+                    new EventStoreMetadata.Builder(event.metadata.toBuilder())
+                            .streamId(e.getEvent().getStreamId())
+                            .revision(e.getEvent().getStreamRevision().getValueUnsigned())
+                            .contentType(e.getEvent().getContentType());
+
                 } catch (IOException ex) {
                     subscriber.onError(ex);
                 }

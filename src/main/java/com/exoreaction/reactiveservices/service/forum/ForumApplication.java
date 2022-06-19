@@ -4,7 +4,6 @@ import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.aggregate.AggregateSnapshot;
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
 import com.exoreaction.reactiveservices.cqrs.aggregate.DomainEvents;
-import com.exoreaction.reactiveservices.cqrs.context.DomainContext;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
@@ -17,17 +16,16 @@ import com.exoreaction.reactiveservices.service.forum.contexts.PostsContext;
 import com.exoreaction.reactiveservices.service.forum.model.CommentModel;
 import com.exoreaction.reactiveservices.service.forum.model.PostModel;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
-import com.exoreaction.reactiveservices.service.neo4jdomainevents.aggregates.AggregateSnapshotLoader;
+import com.exoreaction.reactiveservices.service.neo4jprojections.Neo4jProjections;
+import com.exoreaction.reactiveservices.service.neo4jprojections.WaitForProjections;
+import com.exoreaction.reactiveservices.service.neo4jprojections.aggregates.AggregateSnapshotLoader;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.spi.Contract;
 
-import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.*;
 
 @Singleton
 @Contract
@@ -60,13 +58,18 @@ public class ForumApplication {
 
     private final DomainEventPublisher domainEventPublisher;
     private final AggregateSnapshotLoader snapshotLoader;
+    private Neo4jProjections neo4jProjections;
+    private final WaitForProjections listener;
     private GraphDatabase database;
 
     @Inject
-    public ForumApplication(DomainEventPublisher domainEventPublisher, GraphDatabase database) {
+    public ForumApplication(DomainEventPublisher domainEventPublisher, GraphDatabase database, Neo4jProjections neo4jProjections) {
         this.domainEventPublisher = domainEventPublisher;
         this.database = database;
         this.snapshotLoader = new AggregateSnapshotLoader(database);
+        this.neo4jProjections = neo4jProjections;
+        listener = new WaitForProjections();
+        neo4jProjections.addProjectionListener(listener);
     }
 
     public PostsContext posts() {
@@ -112,9 +115,11 @@ public class ForumApplication {
 
             DomainEvents events = aggregate.handle(domainMetadata.metadata(), snapshot, command);
 
-            return domainEventPublisher.publish(metadata, events);
+            return domainEventPublisher.publish(metadata, events)
+                    .thenCompose(md -> listener.waitFor(md));
         } catch (Throwable e) {
             return CompletableFuture.failedStage(e);
         }
     }
+
 }

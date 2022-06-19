@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.jaxrs.providers;
 
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
+import com.google.common.base.Strings;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
@@ -52,7 +53,8 @@ public final class ResourceObjectFormProvider extends AbstractFormProvider<Resou
 
         NullableMultivaluedHashMap<String, String> map = this.readFrom(new NullableMultivaluedHashMap<>(), mediaType, decode(annotations), entityStream);
 
-        return new ResourceObject.Builder(requestContextProvider.get().getUriInfo().getQueryParameters().getFirst("rel"), map.getFirst("id")).attributes(new Attributes.Builder().with(builder ->
+        String id = Strings.emptyToNull(map.getFirst("id"));
+        return new ResourceObject.Builder(requestContextProvider.get().getUriInfo().getQueryParameters().getFirst("rel"), id).attributes(new Attributes.Builder().with(builder ->
         {
             map.forEach((name, value) ->
             {

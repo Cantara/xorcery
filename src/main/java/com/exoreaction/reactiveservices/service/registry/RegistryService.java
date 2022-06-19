@@ -26,6 +26,7 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -33,6 +34,7 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
@@ -56,10 +58,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 @Contract
+@Priority(1)
 public class RegistryService
         implements Registry, ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "registry";
+
+    private static final Logger logger = LogManager.getLogger(RegistryService.class);
+
     private final Disruptor<Event<RegistryChange>> disruptor;
     private ServiceResourceObject resourceObject;
     private ReactiveStreams reactiveStreams;
@@ -145,6 +151,7 @@ public class RegistryService
             reactiveStreams.publish(resourceObject.serviceIdentifier(), link, new RegistryPublisher());
         });
 
+/*
         ForkJoinPool.commonPool().execute(()->
         {
             try {
@@ -152,8 +159,9 @@ public class RegistryService
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            registration.start();
         });
+*/
+        registration.start();
     }
 
     @Override
@@ -231,7 +239,7 @@ public class RegistryService
     }
 
     private void handleChange(RegistryChange event) {
-        System.out.println("Registry upstream event:" + event);
+        logger.debug("Registry upstream event:" + event);
         if (event instanceof AddedServer addedServer) {
             {
                 String selfHref = addedServer.server().resourceDocument()
@@ -311,7 +319,7 @@ public class RegistryService
             {
                 event.event = rc;
             }, snapshot);
-            System.out.println("Sent registry snapshot:" + snapshot);
+            logger.debug("Sent registry snapshot:" + snapshot);
         }
     }
 
@@ -343,7 +351,7 @@ public class RegistryService
 
                                     return sro.getLinkByRel("registryevents").map(link ->
                                     {
-                                        System.out.println("Subscribe to upstream registry");
+                                        logger.info("Subscribing to upstream registry");
                                         reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Optional.empty());
                                         return CompletableFuture.completedStage(registry);
                                     }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry")));
@@ -359,6 +367,12 @@ public class RegistryService
                                     .thenCompose(rd -> rd.getLinks().getByRel("servers").map(serversLink ->
                                             client.submit(serversLink, server)).orElse(CompletableFuture.failedStage(new IllegalStateException("No link 'servers' in registry"))))).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry"))))
                     .orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
+        }
+
+        @Override
+        public void complete(ResourceDocument value, Throwable t) {
+            logger.info("Startup registration complete");
+            RestProcess.super.complete(value, t);
         }
     }
 
@@ -396,7 +410,7 @@ public class RegistryService
 
         @Override
         public EventSink<Event<RegistryChange>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
-            System.out.println("Registry upstream onSubscribe");
+            logger.debug("Registry upstream onSubscribe");
             this.subscription = subscription;
             subscription.request(1);
             return disruptor;

@@ -1,4 +1,4 @@
-package com.exoreaction.reactiveservices.service.neo4jdomainevents.aggregates;
+package com.exoreaction.reactiveservices.service.neo4jprojections.aggregates;
 
 import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.aggregate.AggregateSnapshot;

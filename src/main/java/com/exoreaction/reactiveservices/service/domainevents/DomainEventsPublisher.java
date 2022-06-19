@@ -127,6 +127,11 @@ public class DomainEventsPublisher
             event.event = new EventWithResult<>(e, f);
         }, events, future);
 
-        return future;
+        return future.thenApply(md ->
+        {
+            // Return original metadata with this added on top
+            metadata.metadata().setAll(md.metadata());
+            return metadata;
+        });
     }
 }

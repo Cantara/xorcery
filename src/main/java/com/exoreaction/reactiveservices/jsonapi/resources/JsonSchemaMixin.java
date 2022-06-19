@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitable;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import jakarta.ws.rs.core.MediaType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -32,9 +33,10 @@ import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.describ
 import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.self;
 
 public interface JsonSchemaMixin
-    extends ResourceContext
-{
-    ObjectMapper objectMapper();
+        extends ResourceContext {
+    default ObjectMapper objectMapper() {
+        return service(ObjectMapper.class);
+    }
 
     default Link selfLink() {
         return Link.Builder.link("Self", "Self link", self, APPLICATION_JSON_API);
@@ -233,6 +235,95 @@ public interface JsonSchemaMixin
 
                 links.link(builder.build());
             }
+        };
+    }
+
+    default Consumer<Links.Builder> websocket(String rel, Class<?> parameterClass) {
+        return links ->
+        {
+            final List<BeanProperty> commandProperties = new ArrayList<>();
+            try {
+                objectMapper().acceptJsonFormatVisitor(parameterClass, new JsonFormatVisitorWrapper.Base() {
+                    @Override
+                    public JsonObjectFormatVisitor expectObjectFormat(JavaType type) throws JsonMappingException {
+                        return new JsonObjectFormatVisitor.Base() {
+                            @Override
+                            public void property(BeanProperty prop) throws JsonMappingException {
+                                commandProperties.add(prop);
+                            }
+
+                            @Override
+                            public void property(String name, JsonFormatVisitable handler, JavaType propertyTypeHint) throws JsonMappingException {
+                                super.property(name, handler, propertyTypeHint);
+                            }
+
+                            @Override
+                            public void optionalProperty(BeanProperty prop) throws JsonMappingException {
+                                commandProperties.add(prop);
+                            }
+
+                            @Override
+                            public void optionalProperty(String name, JsonFormatVisitable handler, JavaType propertyTypeHint) throws JsonMappingException {
+                                super.optionalProperty(name, handler, propertyTypeHint);
+                            }
+                        };
+                    }
+                });
+            } catch (JsonMappingException e) {
+                throw new RuntimeException(e);
+            }
+
+            String submissionMediaType = MediaType.APPLICATION_JSON;
+
+            List<String> required = new ArrayList<>();
+
+            Properties.Builder properties = new Properties.Builder();
+            for (BeanProperty property : commandProperties) {
+
+                JsonSchema.Builder builder = new JsonSchema.Builder()
+                        .type(Types.typeOf(property.getType().getRawClass()))
+                        .title(property.getName());
+
+                AttributeSchema schema = property.getAnnotation(AttributeSchema.class);
+                if (schema != null) {
+                    if (schema.required()) {
+                        required.add(property.getName());
+                    }
+
+                    builder.title(schema.title())
+                            .description(schema.description());
+                } else {
+                    builder.title(property.getName());
+                    required.add(property.getName());
+                }
+
+                if (Enum.class.isAssignableFrom(property.getType().getRawClass())) {
+                    builder.enums(Arrays
+                            .stream((Enum<?>[]) property.getType().getRawClass().getEnumConstants())
+                            .map(Enum::name)
+                            .toArray(String[]::new));
+                }
+
+                properties.property(property.getName(), builder.build());
+            }
+
+            JsonSchema websocketParametersSchema = new JsonSchema.Builder()
+                    .type(Types.Object)
+                    .additionalProperties(false)
+                    .required(required.toArray(new String[0]))
+                    .properties(properties.build())
+                    .build();
+
+            Link.Builder builder = new Link.Builder()
+                    .rel(rel)
+                    .href("{+websocket_href}")
+                    .templateRequired("websocket_href")
+                    .templatePointer("websocket_href", "0/data/links/" + rel)
+                    .submissionMediaType(submissionMediaType);
+
+            builder.submissionSchema(websocketParametersSchema);
+
+            links.link(builder.build());
         };
     }
 }

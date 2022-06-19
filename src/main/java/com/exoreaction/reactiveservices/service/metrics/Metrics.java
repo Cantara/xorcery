@@ -41,7 +41,7 @@ public class Metrics
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
             builder.api("metrics", "api/metrics")
-                    .websocket("metricevents", "ws/metricevents", "metrics={metric_names}");
+                    .websocket("metricevents", "ws/metricevents");
         }
 
         @Override

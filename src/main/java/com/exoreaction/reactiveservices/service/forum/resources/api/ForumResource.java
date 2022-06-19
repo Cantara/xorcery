@@ -6,6 +6,7 @@ import com.exoreaction.reactiveservices.jaxrs.MediaTypes;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceDocument;
 import com.exoreaction.reactiveservices.jsonapi.resources.JsonApiResource;
+import com.exoreaction.reactiveservices.jsonapi.resources.JsonSchemaMixin;
 import com.exoreaction.reactiveservices.jsonapi.schema.ResourceDocumentSchema;
 import com.exoreaction.reactiveservices.jsonapi.schema.ResourceObjectSchema;
 import com.exoreaction.reactiveservices.jsonschema.model.JsonSchema;
@@ -27,13 +28,7 @@ import static com.exoreaction.reactiveservices.jsonapi.model.JsonApiRels.describ
 @Path("api/forum")
 public class ForumResource
         extends JsonApiResource
-        implements ForumApiMixin {
-    private final ForumApplication forum;
-
-    @Inject
-    public ForumResource(ForumApplication forum) {
-        this.forum = forum;
-    }
+        implements JsonSchemaMixin {
 
     @GET
     @Produces(MediaTypes.APPLICATION_JSON_SCHEMA)
@@ -42,8 +37,8 @@ public class ForumResource
     }
 
     @GET
-    public CompletionStage<ResourceDocument> get(@QueryParam("rel") String rel) {
-        return CompletableFuture.completedStage(new ResourceDocument.Builder()
+    public ResourceDocument get() {
+        return new ResourceDocument.Builder()
                 .links(new Links.Builder()
                         .link(describedby, getAbsolutePathBuilder().path(".schema"))
                         .link("posts", getUriBuilderFor(PostsResource.class)
@@ -57,7 +52,7 @@ public class ForumResource
                                 .toTemplate())
                         .link("post", getUriBuilderFor(PostResource.class).toTemplate())
                         .build())
-                .build());
+                .build();
     }
 
     private ResourceDocumentSchema getSchema() {

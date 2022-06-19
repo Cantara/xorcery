@@ -37,6 +37,10 @@ public record Link(String rel, JsonNode value) {
         return !new UriTemplate(getHref()).getTemplateVariables().isEmpty();
     }
 
+    public boolean isWebsocket() {
+        return getHrefAsUri().getScheme().startsWith("ws");
+    }
+
     public Optional<Meta> getMeta() {
         if (value.isTextual()) {
             return Optional.empty();

@@ -54,8 +54,7 @@ public class PublisherWebSocketServlet<T>
 
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
         {
-            ObjectNode parameters = objectMapper.valueToTree(jettyServerUpgradeRequest.getParameterMap());
-            return new PublisherWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), publisher, parameters, messageBodyWriter, messageBodyReader, resultType, objectMapper, marker);
+            return new PublisherWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), publisher, messageBodyWriter, messageBodyReader, resultType, objectMapper, marker);
         });
     }
 }

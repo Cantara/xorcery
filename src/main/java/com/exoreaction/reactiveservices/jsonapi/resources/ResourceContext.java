@@ -53,6 +53,11 @@ public interface ResourceContext
         return getUriInfo().getAbsolutePathBuilder();
     }
 
+    default URI getBaseUri()
+    {
+        return getUriInfo().getBaseUri();
+    }
+
     default UriBuilder getBaseUriBuilder()
     {
         return getUriInfo().getBaseUriBuilder();

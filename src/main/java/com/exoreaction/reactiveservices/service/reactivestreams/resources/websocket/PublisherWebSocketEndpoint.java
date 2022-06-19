@@ -4,7 +4,9 @@ import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
@@ -19,10 +21,7 @@ import org.apache.logging.log4j.Marker;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.websocket.api.BatchMode;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.eclipse.jetty.websocket.api.WriteCallback;
+import org.eclipse.jetty.websocket.api.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
@@ -60,14 +59,12 @@ public class PublisherWebSocketEndpoint<T>
     private Disruptor<Event<T>> disruptor;
 
     public PublisherWebSocketEndpoint(String webSocketPath, ReactiveEventStreams.Publisher<T> publisher,
-                                      ObjectNode parameters,
                                       MessageBodyWriter<T> messageBodyWriter,
                                       MessageBodyReader<?> messageBodyReader,
                                       Type resultType,
                                       ObjectMapper objectMapper, Marker marker) {
         this.webSocketPath = webSocketPath;
         this.publisher = publisher;
-        this.parameters = parameters;
         this.messageBodyWriter = messageBodyWriter;
         this.messageBodyReader = messageBodyReader;
         this.resultType = resultType;
@@ -81,10 +78,56 @@ public class PublisherWebSocketEndpoint<T>
 
     // WebSocket
     @Override
+    public void onWebSocketConnect(Session session) {
+        this.session = session;
+        session.getRemote().setBatchMode(BatchMode.ON);
+    }
+
+    @Override
+    public void onWebSocketText(String message) {
+
+        if (parameters == null)
+        {
+            if (message.equals(""))
+            {
+                // No parameters
+                parameters = JsonNodeFactory.instance.objectNode();
+                publisher.subscribe(this, parameters);
+            } else
+            {
+                // Read JSON parameters
+                try {
+                    parameters = (ObjectNode) objectMapper.readTree(message);
+                    publisher.subscribe(this, parameters);
+                } catch (JsonProcessingException e) {
+                    session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+                }
+            }
+
+        } else
+        {
+            long requestAmount = Long.parseLong(message);
+
+            if (requestAmount == Long.MIN_VALUE)
+            {
+                logger.info(marker, "Received cancel on websocket "+webSocketPath);
+                subscription.cancel();
+            } else {
+                if (logger.isDebugEnabled())
+                    logger.debug(marker, "Received request:"+requestAmount);
+
+                semaphore.release((int) requestAmount);
+                subscription.request(requestAmount);
+            }
+        }
+    }
+
+    @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
         try {
             if (messageBodyReader != null)
             {
+                // Check if we are getting an exception back
                 if (((char)payload[0]) != '{')
                 {
                     ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
@@ -93,6 +136,7 @@ public class PublisherWebSocketEndpoint<T>
                     resultFuture.get().completeExceptionally(throwable);
                 } else
                 {
+                    // Deserialize result
                     ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
                     Object result = messageBodyReader.readFrom((Class)resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE,
                             new MultivaluedHashMap<String, String>(), bin);
@@ -114,34 +158,9 @@ public class PublisherWebSocketEndpoint<T>
     }
 
     @Override
-    public void onWebSocketText(String message) {
-        long requestAmount = Long.parseLong(message);
-        if (requestAmount > 1)
-        {
-//            System.out.println("Requested:"+requestAmount);
-        }
-
-        if (requestAmount == Long.MIN_VALUE)
-        {
-            logger.info(marker, "Received cancel on websocket "+webSocketPath);
-            subscription.cancel();
-        } else {
-            semaphore.release((int) requestAmount);
-            subscription.request(requestAmount);
-        }
-    }
-
-    @Override
     public void onWebSocketClose(int statusCode, String reason) {
         if (statusCode != 1006 && (reason == null || !reason.equals("complete")))
             subscription.cancel();
-    }
-
-    @Override
-    public void onWebSocketConnect(Session session) {
-        this.session = session;
-        session.getRemote().setBatchMode(BatchMode.ON);
-        publisher.subscribe(this, parameters);
     }
 
     @Override

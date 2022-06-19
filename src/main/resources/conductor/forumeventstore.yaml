@@ -8,7 +8,7 @@ data:
         consumers:
           pattern: type=='eventstore'
 
-    - id: eventstore_neo4jdomainevents
+    - id: eventstore_neo4jprojection
       type: grouptemplate
       attributes:
         name: Forum events from EventStore into Neo4j
@@ -17,6 +17,6 @@ data:
           parameters:
             stream: development-default-forum
         consumers:
-          pattern: type=='neo4jdomainevents'
+          pattern: type=='neo4jprojection'
           parameters:
             database: neo4j

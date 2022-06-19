@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
@@ -124,18 +125,17 @@ public interface CommandsMixin
         {
             Class<? extends Command> commandClass = c.getClass();
             try {
-                ObjectMapper service = service(ObjectMapper.class);
+                ObjectMapper objectMapper = service(ObjectMapper.class);
                 ObjectNode json = resourceObject.getAttributes().json();
                 json.set("@class", json.textNode(commandClass.getName()));
                 json.set("id", json.textNode(resourceObject.getId()));
-                return service.<Command>treeToValue(json, service.constructType(commandClass));
+                return objectMapper.<Command>treeToValue(json, objectMapper.constructType(commandClass));
             } catch (IOException e) {
-                throw new UncheckedIOException(e);
+                throw new BadRequestException(e);
             }
         }).findFirst().orElseThrow(NotFoundException::new);
 
         // Transfer over ResourceObject.id as aggregate id if not already set
-        DomainEventMetadata dem = new DomainEventMetadata(metadata);
         if (!metadata.has("aggregateId"))
         {
             String id = resourceObject.getId() != null ? resourceObject.getId() : UUIDs.newId();
@@ -143,6 +143,12 @@ public interface CommandsMixin
         }
 
         return context.handle(metadata, command)
+                .thenApply(md ->
+                {
+                    metadata.getString("aggregateId")
+                            .ifPresent(id -> md.metadata().set("aggregateId", md.metadata().textNode(id)));
+                    return md;
+                })
                 .thenCompose(md -> ok(md, command))
                 .exceptionallyCompose(throwable ->
                 {

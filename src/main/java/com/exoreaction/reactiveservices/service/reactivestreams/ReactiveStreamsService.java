@@ -47,10 +47,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
 
 @Singleton
@@ -90,6 +87,7 @@ public class ReactiveStreamsService
     private Configuration configuration;
     private MessageBodyWorkers messageBodyWorkers;
     private ObjectMapper objectMapper;
+    private Timer timer;
 
     private ByteBufferPool byteBufferPool;
 
@@ -112,6 +110,7 @@ public class ReactiveStreamsService
         this.messageBodyWorkers = messageBodyWorkers;
         this.objectMapper = objectMapper;
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
+        this.timer = new Timer();
 
         byteBufferPool = new ArrayByteBufferPool();
     }
@@ -128,6 +127,9 @@ public class ReactiveStreamsService
     @Override
     public void onShutdown(Container container) {
         logger.info("SHUTDOWN REACTIVE SERVICES!");
+
+        timer.cancel();
+
         logger.info("Cancel active subscriptions:" + activeSubscriptions.size());
 
         // Cancel active subscriptions
@@ -275,7 +277,7 @@ public class ReactiveStreamsService
             subscriber = new SubscriberTracker<T>(subscriber);
 
             // Start subscription process
-            new SubscriptionProcess<T>(webSocketClient, objectMapper, byteBufferPool,
+            new SubscriptionProcess<T>(webSocketClient, objectMapper, timer, byteBufferPool,
                     reader, writer,
                     selfServiceIdentifier, websocketLink, parameters,
                     subscriber, eventType,
@@ -284,7 +286,7 @@ public class ReactiveStreamsService
         }
     }
 
-    public record SubscriptionProcess<T>(WebSocketClient webSocketClient, ObjectMapper objectMapper,
+    public record SubscriptionProcess<T>(WebSocketClient webSocketClient, ObjectMapper objectMapper, Timer timer,
                                          ByteBufferPool byteBufferPool, MessageBodyReader<Object> reader,
                                          MessageBodyWriter<Object> writer, ServiceIdentifier selfServiceIdentifier,
                                          Link websocketLink,
@@ -306,9 +308,9 @@ public class ReactiveStreamsService
                 try {
                     Marker marker = MarkerManager.getMarker(selfServiceIdentifier.toString());
 
-                    URI websocketEndpointUri = URI.create(websocketLink.getHrefAsUriTemplate().createURI(parameters.map(Attributes::new).map(Attributes::toMap).orElseGet(Collections::emptyMap)));
+                    URI websocketEndpointUri = websocketLink.getHrefAsUri();
                     webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber, reader, writer, objectMapper, eventType, marker,
-                                    byteBufferPool, this, websocketEndpointUri.toASCIIString()), websocketEndpointUri)
+                                    byteBufferPool, this, websocketEndpointUri.toASCIIString(), parameters, timer), websocketEndpointUri)
                             .whenComplete(this::complete);
                 } catch (IOException e) {
                     logger.error("Could not subscribe to " + websocketLink.getHref(), e);
@@ -325,15 +327,13 @@ public class ReactiveStreamsService
             }
         }
 
-        private void retry() {
-            // TODO Clever wait and retry logic goes here.
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException ex) {
-                // Ignore
-            }
-
-            start();
+        public void retry() {
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    start();
+                }
+            }, 10000);
         }
     }
 

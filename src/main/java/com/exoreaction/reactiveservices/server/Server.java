@@ -7,7 +7,10 @@ import com.exoreaction.reactiveservices.cqrs.UUIDs;
 import com.exoreaction.reactiveservices.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
 import com.exoreaction.reactiveservices.server.resources.ServerApplication;
+import com.exoreaction.reactiveservices.service.conductor.ConductorService;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsonp.JSONPModule;
@@ -309,6 +312,7 @@ public class Server
                     // Create default ObjectMapper
                     ObjectMapper objectMapper = new ObjectMapper();
                     objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+                    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                     objectMapper.registerModule(new JSONPModule());
                     bind(objectMapper);
 
@@ -326,7 +330,24 @@ public class Server
             }
         };
         app.register(binder);
-        app.packages("com.exoreaction.reactiveservices.service");
+
+        configuration.getList("jaxrs.register").ifPresent(jsonNodes ->
+        {
+            for (JsonNode jsonNode : jsonNodes) {
+                try {
+                    app.register(getClass().getClassLoader().loadClass(jsonNode.asText()));
+                } catch (ClassNotFoundException e) {
+                    logger.error("Could not load JAX-RS provider "+jsonNode.asText(), e);
+                }
+            }
+        });
+
+        configuration.getList("jaxrs.packages").ifPresent(jsonNodes ->
+        {
+            for (JsonNode jsonNode : jsonNodes) {
+                app.packages(jsonNode.asText());
+            }
+        });
 
         ServletHolder serHol = new ServletHolder(new ServletContainer(app));
         ctx.addServlet(serHol, "/*");

@@ -6,4 +6,4 @@ data:
         sources:
           pattern: rel=='domainevents'
         consumers:
-          pattern: type=='neo4jdomainevents'
+          pattern: type=='neo4jprojection'

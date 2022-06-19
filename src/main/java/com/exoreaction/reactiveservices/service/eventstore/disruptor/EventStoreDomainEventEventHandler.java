@@ -8,6 +8,7 @@ import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.RequestMetadata;
 import com.exoreaction.reactiveservices.disruptor.*;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
+import com.exoreaction.reactiveservices.service.domainevents.api.EventStoreMetadata;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import org.apache.logging.log4j.LogManager;
 
@@ -46,16 +47,17 @@ public class EventStoreDomainEventEventHandler
                 deploymentMetadata.getTag() + "-" +
                 domainEventMetadata.getDomain();
 
-        System.out.println("Write metadata:"+new String(eventData.getUserMetadata()));
-        System.out.println("Write data:"+new String(eventData.getEventData()));
+        System.out.println("Write metadata:" + new String(eventData.getUserMetadata()));
+        System.out.println("Write data:" + new String(eventData.getEventData()));
 
         try {
             client.appendToStream(streamId, eventData).whenComplete((wr, t) ->
             {
                 if (t == null) {
-                    event.event.result().complete(new Metadata.Builder()
-                            .add("position", Long.toString(wr.getLogPosition().getCommitUnsigned()))
-                            .build());
+                    event.event.result().complete(new EventStoreMetadata.Builder(new Metadata.Builder())
+                            .streamId(streamId)
+                            .revision(wr.getNextExpectedRevision().getValueUnsigned())
+                            .build().metadata());
                 } else {
                     event.event.result().completeExceptionally(t);
                 }

@@ -3,9 +3,11 @@ package com.exoreaction.reactiveservices.service.reactivestreams.resources.webso
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
+import com.exoreaction.reactiveservices.jetty.client.WriteCallbackCompletableFuture;
 import com.exoreaction.reactiveservices.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.lmax.disruptor.EventSink;
 import jakarta.ws.rs.core.MediaType;
@@ -17,10 +19,8 @@ import org.apache.logging.log4j.Marker;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.WebSocketConnectionListener;
-import org.eclipse.jetty.websocket.api.WebSocketPartialListener;
-import org.eclipse.jetty.websocket.api.WriteCallback;
+import org.eclipse.jetty.websocket.api.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -29,9 +29,13 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.util.Optional;
+import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 public class SubscriberWebSocketEndpoint<T>
         implements WebSocketPartialListener, WebSocketConnectionListener {
@@ -55,6 +59,8 @@ public class SubscriberWebSocketEndpoint<T>
     private ByteBufferPool byteBufferPool;
     private ReactiveStreamsService.SubscriptionProcess<T> subscriptionProcess;
     private String webSocketHref;
+    private Optional<ObjectNode> parameters;
+    private Timer timer;
 
     public SubscriberWebSocketEndpoint(ReactiveEventStreams.Subscriber<T> subscriber,
                                        MessageBodyReader<Object> messageBodyReader,
@@ -64,7 +70,7 @@ public class SubscriberWebSocketEndpoint<T>
                                        Marker marker,
                                        ByteBufferPool byteBufferPool,
                                        ReactiveStreamsService.SubscriptionProcess<T> subscriptionProcess,
-                                       String webSocketHref) {
+                                       String webSocketHref, Optional<ObjectNode> parameters, Timer timer) {
         this.eventType = eventType;
         this.marker = marker;
         this.subscriber = subscriber;
@@ -75,6 +81,33 @@ public class SubscriberWebSocketEndpoint<T>
         this.byteBufferPool = byteBufferPool;
         this.subscriptionProcess = subscriptionProcess;
         this.webSocketHref = webSocketHref;
+        this.parameters = parameters;
+        this.timer = timer;
+    }
+
+    @Override
+    public void onWebSocketConnect(Session session) {
+        this.session = session;
+
+        // First send parameters, if available
+        String parameterString = parameters.map(Object::toString).orElse("");
+        session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture().with(f ->
+                f.future().thenAccept(Void ->
+                {
+                    eventSink = subscriber.onSubscribe(new WebSocketSubscription(session));
+                    logger.info(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
+                }).exceptionally(t ->
+                {
+                    session.close(StatusCode.SERVER_ERROR, t.getMessage());
+                    logger.error(marker, "Parameter handshake failed", t);
+                    return null;
+                })
+        ));
+    }
+
+    @Override
+    public void onWebSocketPartialText(String payload, boolean fin) {
+        WebSocketPartialListener.super.onWebSocketPartialText(payload, fin);
     }
 
     @Override
@@ -86,12 +119,7 @@ public class SubscriberWebSocketEndpoint<T>
         }
     }
 
-    @Override
-    public void onWebSocketPartialText(String payload, boolean fin) {
-        WebSocketPartialListener.super.onWebSocketPartialText(payload, fin);
-    }
-
-    public void onWebSocketBinary(ByteBuffer byteBuffer) {
+    private void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
             if (metadata == null) {
                 metadata = byteBuffer;
@@ -113,38 +141,7 @@ public class SubscriberWebSocketEndpoint<T>
                         holder.event = (T) e;
                     } else {
                         CompletableFuture<?> resultFuture = new CompletableFuture<>();
-                        resultFuture.whenComplete((result, throwable) ->
-                        {
-                            // Send result back
-                            ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
-
-                            try {
-                                if (throwable != null)
-                                {
-                                    ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
-                                    out.writeObject(throwable);
-                                } else
-                                {
-                                    messageBodyWriter.writeTo(result, null, null, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, resultOutputStream);
-                                }
-
-                                ByteBuffer data = resultOutputStream.takeByteBuffer();
-                                session.getRemote().sendBytes(data, new WriteCallback() {
-                                    @Override
-                                    public void writeFailed(Throwable x) {
-                                        logger.error(marker, "Could not send result", x);
-                                    }
-
-                                    @Override
-                                    public void writeSuccess() {
-                                        byteBufferPool.release(data);
-                                    }
-                                });
-                            } catch (IOException ex) {
-                                logger.error(marker, "Could not send result", ex);
-                                subscriber.onError(ex);
-                            }
-                        });
+                        resultFuture.whenComplete(this::sendResult);
 
                         holder.event = (T) new EventWithResult<>(e, resultFuture);
                     }
@@ -157,70 +154,34 @@ public class SubscriberWebSocketEndpoint<T>
         }
     }
 
-    @Override
-    public void onWebSocketClose(int statusCode, String reason) {
-        if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
-            logger.info(marker, "Complete subscription to {}:{} {}", webSocketHref, statusCode, reason);
-            subscriber.onComplete();
-            subscriptionProcess.result().complete(null); // Now considered done
-        } else {
-            logger.info(marker, "Close websocket {}:{} {}", webSocketHref, statusCode, reason);
-            logger.info(marker, "Starting subscription process again");
-            subscriptionProcess.start();
-        }
-    }
+    private void sendResult(Object result, Throwable throwable) {
+        // Send result back
+        ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
 
-    @Override
-    public void onWebSocketConnect(Session session) {
-        this.session = session;
+        try {
+            if (throwable != null) {
+                ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
+                out.writeObject(throwable);
+            } else {
+                messageBodyWriter.writeTo(result, null, null, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, resultOutputStream);
+            }
 
-        eventSink = subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
-
-            final AtomicLong requests = new AtomicLong();
-            final AtomicReference<CompletableFuture<Void>> sendRequests = new AtomicReference<>();
-
-            @Override
-            public void request(long n) {
-                if (!session.isOpen())
-                    return;
-
-                requests.addAndGet(n);
-
-                if (sendRequests.get() == null) {
-                    sendRequests.set(new CompletableFuture<>());
-                    sendRequests.get().whenComplete((v, t) ->
-                    {
-                        sendRequests.set(null);
-                        long rn = requests.getAndSet(0);
-                        if (rn > 0) {
-                            request(rn);
-                        }
-                    });
-
-                    long rn = requests.getAndSet(0);
-                    session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
-                        @Override
-                        public void writeFailed(Throwable x) {
-                            logger.error(marker, "Could not send request", x);
-                            sendRequests.get().completeExceptionally(x);
-                        }
-
-                        @Override
-                        public void writeSuccess() {
-                            sendRequests.get().complete(null);
-                        }
-                    });
+            ByteBuffer data = resultOutputStream.takeByteBuffer();
+            session.getRemote().sendBytes(data, new WriteCallback() {
+                @Override
+                public void writeFailed(Throwable x) {
+                    logger.error(marker, "Could not send result", x);
                 }
-            }
 
-            @Override
-            public void cancel() {
-                requests.set(0);
-                request(Long.MIN_VALUE);
-            }
-        });
-
-        logger.info(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
+                @Override
+                public void writeSuccess() {
+                    byteBufferPool.release(data);
+                }
+            });
+        } catch (IOException ex) {
+            logger.error(marker, "Could not send result", ex);
+            subscriber.onError(ex);
+        }
     }
 
     @Override
@@ -230,6 +191,72 @@ public class SubscriberWebSocketEndpoint<T>
         } else {
             logger.error(marker, "Subscriber websocket error", cause);
             subscriber.onError(cause);
+        }
+    }
+
+    @Override
+    public void onWebSocketClose(int statusCode, String reason) {
+        if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
+            logger.info(marker, "Complete subscription to {}:{} {}", webSocketHref, statusCode, reason);
+            subscriber.onComplete();
+            subscriptionProcess.result().complete(null); // Now considered done
+        } else {
+            logger.info(marker, "Close websocket {}:{} {}", webSocketHref, statusCode, reason);
+            logger.info(marker, "Starting subscription process again");
+            subscriptionProcess.retry();
+        }
+    }
+
+    private class WebSocketSubscription implements ReactiveEventStreams.Subscription {
+
+        final AtomicLong requests;
+        final AtomicReference<CompletableFuture<Void>> sendRequests;
+        private final Session session;
+
+        public WebSocketSubscription(Session session) {
+            this.session = session;
+            requests = new AtomicLong();
+            sendRequests = new AtomicReference<>();
+        }
+
+        @Override
+        public void request(long n) {
+            if (!session.isOpen())
+                return;
+
+            requests.addAndGet(n);
+
+            if (sendRequests.get() == null) {
+                sendRequests.set(new CompletableFuture<>());
+                sendRequests.get().whenComplete((v, t) ->
+                {
+                    sendRequests.set(null);
+                    long rn = requests.getAndSet(0);
+                    if (rn > 0) {
+                        request(rn);
+                    }
+                });
+
+                long rn = requests.getAndSet(0);
+                session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
+                    @Override
+                    public void writeFailed(Throwable x) {
+                        logger.error(marker, "Could not send request", x);
+                        sendRequests.get().completeExceptionally(x);
+                    }
+
+                    @Override
+                    public void writeSuccess() {
+                        sendRequests.get().complete(null);
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void cancel() {
+            requests.set(0);
+            request(Long.MIN_VALUE);
         }
     }
 }
