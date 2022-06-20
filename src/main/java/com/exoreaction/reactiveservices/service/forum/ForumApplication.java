@@ -5,7 +5,7 @@ import com.exoreaction.reactiveservices.cqrs.aggregate.AggregateSnapshot;
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
 import com.exoreaction.reactiveservices.cqrs.aggregate.DomainEvents;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
-import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;

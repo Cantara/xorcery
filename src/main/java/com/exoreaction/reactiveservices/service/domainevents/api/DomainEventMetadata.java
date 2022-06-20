@@ -1,12 +1,19 @@
-package com.exoreaction.reactiveservices.cqrs.metadata;
+package com.exoreaction.reactiveservices.service.domainevents.api;
 
 import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
-import com.exoreaction.reactiveservices.jsonapi.model.Meta;
+import com.exoreaction.reactiveservices.cqrs.metadata.CommonMetadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.DeploymentMetadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.RequestMetadata;
 
 public record DomainEventMetadata(Metadata metadata)
+    implements CommonMetadata, RequestMetadata, DeploymentMetadata
 {
     public record Builder(Metadata.Builder builder)
+        implements CommonMetadata.Builder<Builder>,
+            RequestMetadata.Builder<Builder>,
+            DeploymentMetadata.Builder<Builder>
     {
         public static Metadata aggregateId(String aggregateId, Metadata metadata)
         {

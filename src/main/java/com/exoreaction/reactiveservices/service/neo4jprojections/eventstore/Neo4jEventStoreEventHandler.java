@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.service.neo4jprojections.eventstore;
 
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
-import com.exoreaction.reactiveservices.service.domainevents.api.EventStoreMetadata;
+import com.exoreaction.reactiveservices.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.reactiveservices.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.reactiveservices.service.neo4j.client.Cypher;
 import com.exoreaction.reactiveservices.service.neo4jprojections.ProjectionListener;

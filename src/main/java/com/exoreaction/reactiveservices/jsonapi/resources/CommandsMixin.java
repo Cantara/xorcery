@@ -3,19 +3,16 @@ package com.exoreaction.reactiveservices.jsonapi.resources;
 import com.exoreaction.reactiveservices.cqrs.UUIDs;
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
 import com.exoreaction.reactiveservices.cqrs.context.DomainContext;
-import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.RequestMetadata;
 import com.exoreaction.reactiveservices.jsonapi.model.*;
-import com.exoreaction.reactiveservices.service.forum.resources.api.PostResource;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -23,9 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URI;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
@@ -42,7 +36,7 @@ public interface CommandsMixin
     default Metadata metadata() {
         Metadata.Builder metadata = new Metadata.Builder();
 
-        RequestMetadata.Builder request = new RequestMetadata.Builder(metadata);
+        DomainEventMetadata.Builder request = new DomainEventMetadata.Builder(metadata);
 
         request.timestamp(System.currentTimeMillis());
 

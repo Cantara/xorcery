@@ -11,7 +11,7 @@ import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.reactiveservices.service.conductor.api.Conductor;
-import com.exoreaction.reactiveservices.service.domainevents.api.EventStoreMetadata;
+import com.exoreaction.reactiveservices.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.reactiveservices.service.eventstore.disruptor.EventStoreDomainEventEventHandler;
 import com.exoreaction.reactiveservices.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
@@ -147,12 +147,12 @@ public class EventStoreService
     private class DomainEventsConductorListener extends AbstractConductorListener {
 
         public DomainEventsConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
-            super(sro.serviceIdentifier(), "domainevents");
+            super(serviceIdentifier, "domainevents");
         }
 
         @Override
         public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
-            reactiveStreams.subscribe(sro.serviceIdentifier(), link, new DomainEventsSubscriber(), sourceAttributes);
+            reactiveStreams.subscribe(this.serviceIdentifier, link, new DomainEventsSubscriber(), sourceAttributes);
         }
     }
 

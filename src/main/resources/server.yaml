@@ -30,10 +30,11 @@ registry:
 conductor:
   enabled: true
   templates:
-    - /conductor/metrics.yaml
+#    - /conductor/metrics.yaml
+    - /conductor/metrics_opensearch.yaml
     - /conductor/certmanager.yaml
-    - /conductor/forum.yaml
-#    - /conductor/forumeventstore.yaml
+#    - /conductor/forum.yaml
+    - /conductor/forumeventstore.yaml
 
 certificatemanager:
   enabled: true
@@ -68,8 +69,15 @@ neo4jprojections:
   enabled: true
 
 eventstore:
-  enabled: false
+  enabled: true
   url: esdb://localhost:2113?tls=false
+
+opensearch:
+  enabled: true
+  url: http://localhost:9200
+  templates:
+    common: /opensearch/common.json
+    domainevents: /opensearch/domainevents.json
 
 mapdbdomainevents:
   enabled: false

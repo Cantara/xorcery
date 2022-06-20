@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "index_patterns": [
+    "domainevents-*"
+  ],
+  "aliases": {
+    "domainevents": {}
+  },
+    "mappings": {
+      "properties": {
+        "data": {
+          "type": "object"
+        }
+      }
+    }
+}

@@ -58,8 +58,12 @@ public record Metadata(ObjectNode metadata) {
         return Optional.ofNullable(metadata.get(name)).map(JsonNode::longValue);
     }
 
+    public Optional<JsonNode> getJsonNode(String name) {
+        return Optional.ofNullable(metadata.get(name));
+    }
+
     public Optional<ObjectNode> getObjectNode(String name) {
-        return Optional.ofNullable(metadata.get(name)).map(ObjectNode.class::cast);
+        return getJsonNode(name).map(ObjectNode.class::cast);
     }
 
     @JsonValue

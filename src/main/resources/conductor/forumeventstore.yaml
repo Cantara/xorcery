@@ -20,3 +20,17 @@ data:
           pattern: type=='neo4jprojection'
           parameters:
             database: neo4j
+
+    - id: eventstore_opensearch
+      type: grouptemplate
+      attributes:
+        name: Forum events from EventStore into OpenSearch
+        sources:
+          pattern: rel=='eventstorestreams'
+          parameters:
+            stream: development-default-forum
+        consumers:
+          pattern: type=='opensearch'
+          parameters:
+            type: domainevents
+            index: domainevents-development-default-forum

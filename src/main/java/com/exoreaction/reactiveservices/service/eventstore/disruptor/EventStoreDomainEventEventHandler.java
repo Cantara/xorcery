@@ -3,12 +3,12 @@ package com.exoreaction.reactiveservices.service.eventstore.disruptor;
 import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.reactiveservices.cqrs.metadata.DeploymentMetadata;
-import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.RequestMetadata;
 import com.exoreaction.reactiveservices.disruptor.*;
 import com.exoreaction.reactiveservices.disruptor.handlers.DefaultEventHandler;
-import com.exoreaction.reactiveservices.service.domainevents.api.EventStoreMetadata;
+import com.exoreaction.reactiveservices.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import org.apache.logging.log4j.LogManager;
 
@@ -33,8 +33,8 @@ public class EventStoreDomainEventEventHandler
 
     @Override
     public void onEvent(Event<EventWithResult<ByteBuffer, Metadata>> event, long sequence, boolean endOfBatch) throws Exception {
-        RequestMetadata requestMetadata = new RequestMetadata(event.metadata);
-        UUID eventId = requestMetadata.correlationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
+        EventStoreMetadata emd = new EventStoreMetadata(event.metadata);
+        UUID eventId = emd.getCorrelationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
         DomainEventMetadata domainEventMetadata = new DomainEventMetadata(event.metadata);
         String eventType = domainEventMetadata.getCommandType();
         EventData eventData = EventData.builderAsBinary(eventId, eventType, event.event.event().array())
@@ -42,9 +42,8 @@ public class EventStoreDomainEventEventHandler
                 .build();
 
         event.event.event().clear();
-        DeploymentMetadata deploymentMetadata = new DeploymentMetadata(event.metadata);
-        String streamId = deploymentMetadata.getEnvironment() + "-" +
-                deploymentMetadata.getTag() + "-" +
+        String streamId = emd.getEnvironment() + "-" +
+                emd.getTag() + "-" +
                 domainEventMetadata.getDomain();
 
         System.out.println("Write metadata:" + new String(eventData.getUserMetadata()));

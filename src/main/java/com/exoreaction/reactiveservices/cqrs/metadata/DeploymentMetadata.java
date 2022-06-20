@@ -2,28 +2,45 @@ package com.exoreaction.reactiveservices.cqrs.metadata;
 
 import com.exoreaction.reactiveservices.configuration.Configuration;
 
-public record DeploymentMetadata(Metadata metadata) {
+public interface DeploymentMetadata {
 
-    public DeploymentMetadata(Configuration configuration) {
-        this(new Metadata.Builder()
-                .add("environment", configuration.getString("environment").orElse("default"))
-                .add("tag", configuration.getString("tag").orElse("default"))
-                .add("version", configuration.getString("version").orElse("0.1.0"))
-                .build());
+    interface Builder<T> {
+        Metadata.Builder builder();
+
+        default T configuration(Configuration configuration) {
+            builder().add("environment", configuration.getString("environment").orElse("default"))
+                    .add("tag", configuration.getString("tag").orElse("default"))
+                    .add("version", configuration.getString("version").orElse("0.1.0"))
+                    .add("name", configuration.getString("name").orElse("noname"))
+                    .add("host", configuration.getString("host").orElse("localhost"))
+                    .build();
+            return (T)this;
+        }
     }
 
-    public String getEnvironment()
+    Metadata metadata();
+
+    default String getEnvironment()
     {
-        return metadata.getString("environment").orElse("default");
+        return metadata().getString("environment").orElse("default");
     }
 
-    public String getTag()
+    default String getTag()
     {
-        return metadata.getString("tag").orElse("default");
+        return metadata().getString("tag").orElse("default");
     }
 
-    public String getVersion()
+    default String getVersion()
     {
-        return metadata.getString("version").orElse("0.1.0");
+        return metadata().getString("version").orElse("0.1.0");
+    }
+
+    default String getName()
+    {
+        return metadata().getString("name").orElse("noname");
+    }
+    default String getHost()
+    {
+        return metadata().getString("host").orElse("localhost");
     }
 }

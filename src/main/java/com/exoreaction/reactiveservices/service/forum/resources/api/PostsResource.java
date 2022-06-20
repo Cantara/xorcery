@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.forum.resources.api;
 
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
-import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.jsonapi.model.Included;
 import com.exoreaction.reactiveservices.jsonapi.model.Links;

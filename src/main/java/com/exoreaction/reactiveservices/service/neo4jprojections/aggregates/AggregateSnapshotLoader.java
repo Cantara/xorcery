@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.service.neo4jprojections.aggregates;
 
 import com.exoreaction.reactiveservices.cqrs.aggregate.Aggregate;
 import com.exoreaction.reactiveservices.cqrs.aggregate.AggregateSnapshot;
-import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.model.CommonModel;
 import com.exoreaction.reactiveservices.service.neo4j.client.GraphDatabase;
 import com.exoreaction.reactiveservices.service.neo4j.client.RowModel;

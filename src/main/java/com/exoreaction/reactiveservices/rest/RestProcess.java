@@ -23,7 +23,7 @@ public interface RestProcess<T> {
             try {
                 throw t;
             } catch (ServerErrorException e) {
-                start();
+                retry();
             } catch (Throwable e) {
                 LogManager.getLogger(getClass()).error("Unhandled exception", e);
                 result().toCompletableFuture().completeExceptionally(e);
@@ -31,5 +31,10 @@ public interface RestProcess<T> {
         } else {
             result().toCompletableFuture().complete(value);
         }
+    }
+
+    default void retry()
+    {
+        start();
     }
 }

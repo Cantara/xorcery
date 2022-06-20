@@ -4,7 +4,7 @@ data:
     attributes:
       name: Log metrics to Sysout
       sources:
-        pattern: rel='metricevents'
+        pattern: rel=='metricevents'
         many: true
       consumers:
         pattern: type=='soutmetrics'
@@ -14,7 +14,7 @@ data:
     attributes:
       name: Expose metrics to JMX for VisualVM integration
       sources:
-        pattern: rel='metricevents'
+        pattern: rel=='metricevents'
         many: true
       consumers:
         pattern: type=='jmxmetrics'

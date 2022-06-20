@@ -19,7 +19,7 @@ import jakarta.ws.rs.core.Response;
 
 import java.util.concurrent.CompletionStage;
 
-import static com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata.Builder.aggregateId;
+import static com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata.Builder.aggregateId;
 import static com.exoreaction.reactiveservices.jaxrs.MediaTypes.APPLICATION_JSON_API;
 
 @Path("api/forum/posts/{post}/comments")

@@ -3,11 +3,14 @@ package com.exoreaction.reactiveservices.service.metrics;
 import com.codahale.metrics.*;
 import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.cqrs.metadata.DeploymentMetadata;
+import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventSink;
@@ -21,7 +24,9 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 @Singleton
 public class Metrics
@@ -64,7 +69,9 @@ public class Metrics
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
         this.metricRegistry = metricRegistry;
-        this.deploymentMetadata = new DeploymentMetadata(configuration);
+        this.deploymentMetadata = new MetricsMetadata.Builder(new Metadata.Builder())
+                .configuration(configuration)
+                .build();
     }
 
     @Override
@@ -86,10 +93,22 @@ public class Metrics
 
     @Override
     public void subscribe(ReactiveEventStreams.Subscriber<ObjectNode> subscriber, ObjectNode parameters) {
-        String metricNames = parameters.path("metrics").get(0).asText("");
-        Collection<String> metricNamesList = metricNames.isBlank() ? metricRegistry.getNames() : Arrays.asList(metricNames.split(","));
-
-        new MetricSubscription(subscriber, metricNamesList, metricRegistry);
+        ArrayNode metrics = (ArrayNode) parameters.get("metrics");
+        Collection<String> metricNames = new HashSet<>();
+        if (metrics != null) {
+            for (JsonNode metric : metrics) {
+                String metricName = metric.asText();
+                Pattern metricNamePattern = Pattern.compile(metricName);
+                for (String name : metricRegistry.getNames()) {
+                    if (metricNamePattern.matcher(name).matches()) {
+                        metricNames.add(name);
+                    }
+                }
+            }
+        } else {
+            metricNames.addAll(metricRegistry.getNames());
+        }
+        new MetricSubscription(subscriber, metricNames, metricRegistry);
     }
 
     private class MetricSubscription
@@ -146,7 +165,9 @@ public class Metrics
                 {
                     es.publishEvent((e, seq, metric) ->
                     {
-                        e.metadata = deploymentMetadata.metadata();
+                        e.metadata = new Metadata.Builder(deploymentMetadata.metadata().metadata().deepCopy())
+                                .add("timestamp", System.currentTimeMillis())
+                                .build();
                         e.event = metric;
                     }, metricsBuilder);
                 });

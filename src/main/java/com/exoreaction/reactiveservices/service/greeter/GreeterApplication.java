@@ -1,7 +1,7 @@
 package com.exoreaction.reactiveservices.service.greeter;
 
 import com.exoreaction.reactiveservices.configuration.Configuration;
-import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.aggregate.DomainEvents;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;

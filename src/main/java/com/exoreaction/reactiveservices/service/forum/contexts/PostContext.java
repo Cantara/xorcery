@@ -2,7 +2,7 @@ package com.exoreaction.reactiveservices.service.forum.contexts;
 
 import com.exoreaction.reactiveservices.cqrs.aggregate.Command;
 import com.exoreaction.reactiveservices.cqrs.context.DomainContext;
-import com.exoreaction.reactiveservices.cqrs.metadata.DomainEventMetadata;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.service.forum.ForumApplication;
 import com.exoreaction.reactiveservices.service.forum.model.PostModel;

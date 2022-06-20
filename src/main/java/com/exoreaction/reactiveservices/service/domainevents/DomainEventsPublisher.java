@@ -11,6 +11,7 @@ import com.exoreaction.reactiveservices.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.Server;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
+import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.reactiveservices.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveStreams;
@@ -72,7 +73,9 @@ public class DomainEventsPublisher
                                  Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
         this.resourceObject = resourceObject;
-        this.deploymentMetadata = new DeploymentMetadata(configuration);
+        this.deploymentMetadata = new DomainEventMetadata.Builder(new Metadata.Builder())
+                .configuration(configuration)
+                .build();
 
         disruptor =
                 new Disruptor<>(DomainEventHolder::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),

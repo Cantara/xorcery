@@ -4,51 +4,46 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Optional;
 
-public record RequestMetadata(Metadata metadata) {
+public interface RequestMetadata {
+    interface Builder<T> {
+        Metadata.Builder builder();
 
-    public record Builder(Metadata.Builder metadata) {
-        public Builder timestamp(long timestamp) {
-            metadata.add("timestamp", timestamp);
-            return this;
+        default T correlationId(String value) {
+            builder().add("correlationId", value);
+            return (T) this;
         }
 
-        public Builder remoteIp(String remoteIp) {
-            metadata.add("remoteIp", remoteIp);
-            return this;
+        default T jwtClaims(ObjectNode value) {
+            builder().add("jwtClaims", value);
+            return (T) this;
         }
 
-        public Builder agent(String agent) {
-            metadata.add("agent", agent);
-            return this;
+        default T remoteIp(String value) {
+            builder().add("remoteIp", value);
+            return (T) this;
         }
 
-        public RequestMetadata build() {
-            return new RequestMetadata(metadata.build());
+        default T agent(String value) {
+            builder().add("agent", value);
+            return (T) this;
         }
-
     }
 
-    public long timestamp() {
-        return metadata.getLong("timestamp").orElse(0L);
+    Metadata metadata();
+
+    default Optional<String> getCorrelationId() {
+        return metadata().getString("correlationId");
     }
 
-    public Optional<String> correlationId()
-    {
-        return metadata.getString("correlationId");
+    default Optional<ObjectNode> getJwtClaims() {
+        return metadata().getObjectNode("jwtClaims");
     }
 
-    public Optional<ObjectNode> jwtClaims()
-    {
-        return metadata.getObjectNode("jwtClaims");
+    default Optional<String> getRemoteIp() {
+        return metadata().getString("remoteIp");
     }
 
-    public Optional<String> remoteIp()
-    {
-        return metadata.getString("remoteIp");
+    default Optional<String> getAgent() {
+        return metadata().getString("agent");
     }
-
-    public Optional<String> agent() {
-        return metadata.getString("agent");
-    }
-
 }
