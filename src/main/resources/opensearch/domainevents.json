@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "index_patterns": [
     "domainevents-*"
   ],
@@ -7,6 +7,17 @@
     "domainevents": {}
   },
     "mappings": {
+      "dynamic_templates": [
+        {
+          "on_as_dates": {
+            "match": "*_on",
+            "mapping": {
+              "type": "date",
+              "format": "epoch_millis"
+            }
+          }
+        }
+      ],
       "properties": {
         "data": {
           "type": "object"

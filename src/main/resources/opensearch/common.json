@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "index_patterns": [
     "*"
   ],
@@ -40,6 +40,14 @@
       "@timestamp": {
         "type": "date",
         "format": "epoch_millis"
+      },
+      "metadata": {
+        "properties": {
+          "timestamp": {
+            "type": "date",
+            "format": "epoch_millis"
+          }
+        }
       }
     }
   }

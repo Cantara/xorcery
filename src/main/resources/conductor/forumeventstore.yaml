@@ -17,7 +17,7 @@ data:
           parameters:
             stream: development-default-forum
         consumers:
-          pattern: type=='neo4jprojection'
+          pattern: type=='neo4jprojections'
           parameters:
             database: neo4j
 
