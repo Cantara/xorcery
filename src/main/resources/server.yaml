@@ -14,11 +14,11 @@ server:
 
 jaxrs:
   register:
-    - com.exoreaction.reactiveservices.service.registry.RegistryService$Feature
+    - com.exoreaction.xorcery.service.registry.RegistryService$Feature
   packages:
-    - com.exoreaction.reactiveservices.jaxrs
-    - com.exoreaction.reactiveservices.server.resources
-    - com.exoreaction.reactiveservices.service
+    - com.exoreaction.xorcery.jaxrs
+    - com.exoreaction.xorcery.server.resources
+    - com.exoreaction.xorcery.service
 
 reactivestreams:
   allowlocal: false

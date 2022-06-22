@@ -10,7 +10,7 @@ Run mvn install to compile everything
 The Neo4j service is not yet updated for JDK18 so a few JVM options need to be added.
 
 ```bash
-java --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED -Dfile.encoding=UTF-8 -classpath "<classpath>" com.exoreaction.reactiveservices.server.Main -id=server1
+java --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED -Dfile.encoding=UTF-8 -classpath "<classpath>" com.exoreaction.xorcery.server.Main -id=server1
 ```
 
 Add these to the IntelliJ JVM options tab if you are starting Main from within that environment.

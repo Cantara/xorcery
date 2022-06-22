@@ -30,7 +30,7 @@ Configuration:
         AppenderRef:
           ref: STDOUT
       -
-        name: com.exoreaction.reactiveservices.server.Server
+        name: com.exoreaction.xorcery.server.Server
         level: debug
     Root:
       level: info

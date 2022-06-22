@@ -1,11 +1,10 @@
 package com.exoreaction.util;
 
-import com.exoreaction.reactiveservices.configuration.Configuration;
-import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
-import com.exoreaction.reactiveservices.jsonapi.model.Link;
-import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
-import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
-import com.exoreaction.reactiveservices.service.conductor.GroupTemplatePatternEvaluator;
+import com.exoreaction.xorcery.jsonapi.model.Attributes;
+import com.exoreaction.xorcery.jsonapi.model.Link;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.service.conductor.GroupTemplatePatternEvaluator;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
