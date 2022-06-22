@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.opensearch.eventstore;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
@@ -31,17 +32,16 @@ public class EventStoreConductorListener extends AbstractConductorListener {
     }
 
     @Override
-    public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
+    public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
 
-        ObjectNode attrs = consumerAttributes.orElseThrow();
-        if (attrs.path("type").textValue().equals("domainevents"))
+        if (consumerConfiguration.getString("type").orElseThrow().equals("domainevents"))
         {
-            String indexName = attrs.path("index").textValue();
+            String indexName = consumerConfiguration.getString("index").orElseThrow();
 
             // Check if we already have written data for this stream before
 //            client.search(Requests.searchRequest(indexName), RequestOptions.DEFAULT).getHits().getHits()
 
-            reactiveStreams.subscribe(serviceIdentifier, link, new EventStoreSubscriber(consumerAttributes, indexName, client, listeners), sourceAttributes);
+            reactiveStreams.subscribe(serviceIdentifier, link, new EventStoreSubscriber(consumerConfiguration, indexName, client, listeners), sourceConfiguration);
         }
     }
 }

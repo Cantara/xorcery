@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.conductor.api;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.resources.model.Group;
@@ -31,7 +32,7 @@ public abstract class AbstractConductorListener
         this.rel = rel;
     }
 
-    public abstract void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceParameters, Optional<ObjectNode> consumerParameters);
+    public abstract void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration);
 
     @Override
     public void addedGroup(Group group, Registry registry) {
@@ -55,7 +56,7 @@ public abstract class AbstractConductorListener
                             if (!current.contains(link))
                             {
                                 current.add(link);
-                                connect(sro, link, group.getSourceParameters(), group.getConsumerParameters());
+                                connect(sro, link, group.getSourceConfiguration(), group.getConsumerConfiguration());
                                 logger.info(marker, "Connect {} to {}", serviceIdentifier, link.getHref());
                             }
                         });

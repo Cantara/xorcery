@@ -282,7 +282,7 @@ public class RegistryService
     private class RegistryPublisher
             implements ReactiveEventStreams.Publisher<RegistryChange> {
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<RegistryChange> subscriber, ObjectNode parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<RegistryChange> subscriber, Configuration parameters) {
             AtomicReference<SubscriberEventSink<RegistryChange>> eventSink = new AtomicReference<>();
 
             eventSink.set(new SubscriberEventSink<>(subscriber, subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
@@ -352,7 +352,7 @@ public class RegistryService
                                     return sro.getLinkByRel("registryevents").map(link ->
                                     {
                                         logger.info("Subscribing to upstream registry");
-                                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Optional.empty());
+                                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, new Configuration(JsonNodeFactory.instance.objectNode()));
                                         return CompletableFuture.completedStage(registry);
                                     }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry")));
                                 }

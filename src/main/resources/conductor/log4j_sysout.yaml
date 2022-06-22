@@ -6,7 +6,7 @@ data:
       sources:
         pattern: rel=='logevents' and environment=='{{ environment }}'
         many: true
-        parameters:
+        configuration:
           category: jetty
       consumers:
         pattern: type=='soutlogging'

@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.neo4jprojections.domainevents;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
@@ -27,25 +28,24 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
     }
 
     @Override
-    public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
+    public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
 
-        String databaseName = consumerAttributes.flatMap(sa -> new Attributes(sa).getOptionalString("database"))
-                .orElse("neo4j");
+        String databaseName = consumerConfiguration.getString("database").orElse("neo4j");
         GraphDatabase graphDatabase = graphDatabases.apply(databaseName);
 
         // Check if we already have written data for this stream before
-        String streamName = sourceAttributes.map(attrs -> attrs.path("stream")).map(JsonNode::textValue).orElseThrow();
+        String streamName = sourceConfiguration.getString("stream").orElseThrow();
 
         try {
             long position = graphDatabase.query("MATCH (stream:Stream {name:$stream_name})")
                     .parameter(Stream.name, streamName)
                     .results(Stream.revision)
                     .first(row -> row.row().getNumber("stream_revision").longValue()).toCompletableFuture().join();
-            sourceAttributes.ifPresent(attrs -> attrs.set("from", attrs.numberNode(position)));
+            sourceConfiguration.config().set("from", sourceConfiguration.config().numberNode(position));
         } catch (NotFoundException e) {
             // No previous knowledge of this stream
         }
 
-        reactiveStreams.subscribe(sro.serviceIdentifier(), link, new DomainEventsSubscriber(consumerAttributes, sourceAttributes, graphDatabase.getGraphDatabaseService()), sourceAttributes);
+        reactiveStreams.subscribe(sro.serviceIdentifier(), link, new DomainEventsSubscriber(consumerConfiguration, sourceConfiguration, graphDatabase.getGraphDatabaseService()), sourceConfiguration);
     }
 }

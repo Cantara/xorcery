@@ -135,7 +135,7 @@ public class CertificateManagerService
             super(serviceIdentifier, rel);
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
             client.get(link)
                     .thenAccept(this::checkCert)
                     .whenComplete((rd, throwable) ->

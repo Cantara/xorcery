@@ -143,8 +143,8 @@ public class SysoutLogging
             super(serviceResourceObject.serviceIdentifier(), "logevents");
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
-            reactiveStreams.subscribe(serviceIdentifier, link, new LogSubscriberProxy(multiSubscriber), sourceAttributes);
+        public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
+            reactiveStreams.subscribe(serviceIdentifier, link, new LogSubscriberProxy(multiSubscriber), sourceConfiguration);
         }
     }
 }

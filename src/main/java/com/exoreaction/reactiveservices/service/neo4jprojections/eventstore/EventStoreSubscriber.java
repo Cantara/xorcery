@@ -1,37 +1,33 @@
 package com.exoreaction.reactiveservices.service.neo4jprojections.eventstore;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.reactiveservices.service.neo4jprojections.ProjectionListener;
-import com.exoreaction.reactiveservices.service.opensearch.eventstore.domainevents.OpenSearchEventStoreEventHandler;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.util.Listeners;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.neo4j.graphdb.GraphDatabaseService;
 
-import java.util.Optional;
-
 class EventStoreSubscriber
         implements ReactiveEventStreams.Subscriber<ArrayNode> {
 
     private Disruptor<Event<ArrayNode>> disruptor;
-    private Optional<ObjectNode> selfParameters;
     private EventStoreParameters sourceParameters;
     private GraphDatabaseService graphDatabaseService;
     private Listeners<ProjectionListener> listeners;
+    private Configuration consumerConfiuration;
 
-    public EventStoreSubscriber(Optional<ObjectNode> selfParameters,
+    public EventStoreSubscriber(Configuration consumerConfiuration,
                                 EventStoreParameters sourceParameters,
                                 GraphDatabaseService graphDatabaseService,
                                 Listeners<ProjectionListener> listeners) {
-
-        this.selfParameters = selfParameters;
+        this.consumerConfiuration = consumerConfiuration;
         this.sourceParameters = sourceParameters;
         this.graphDatabaseService = graphDatabaseService;
         this.listeners = listeners;

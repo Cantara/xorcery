@@ -92,8 +92,8 @@ public class Metrics
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<ObjectNode> subscriber, ObjectNode parameters) {
-        ArrayNode metrics = (ArrayNode) parameters.get("metrics");
+    public void subscribe(ReactiveEventStreams.Subscriber<ObjectNode> subscriber, Configuration parameters) {
+        ArrayNode metrics = (ArrayNode) parameters.config().get("metrics");
         Collection<String> metricNames = new HashSet<>();
         if (metrics != null) {
             for (JsonNode metric : metrics) {

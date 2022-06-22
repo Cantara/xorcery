@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.reactivestreams.resources.websocket;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
@@ -20,7 +21,6 @@ import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -32,10 +32,8 @@ import java.nio.channels.ClosedChannelException;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
 
 public class SubscriberWebSocketEndpoint<T>
         implements WebSocketPartialListener, WebSocketConnectionListener {
@@ -59,7 +57,7 @@ public class SubscriberWebSocketEndpoint<T>
     private ByteBufferPool byteBufferPool;
     private ReactiveStreamsService.SubscriptionProcess<T> subscriptionProcess;
     private String webSocketHref;
-    private Optional<ObjectNode> parameters;
+    private Configuration publisherConfiguration;
     private Timer timer;
 
     public SubscriberWebSocketEndpoint(ReactiveEventStreams.Subscriber<T> subscriber,
@@ -70,7 +68,7 @@ public class SubscriberWebSocketEndpoint<T>
                                        Marker marker,
                                        ByteBufferPool byteBufferPool,
                                        ReactiveStreamsService.SubscriptionProcess<T> subscriptionProcess,
-                                       String webSocketHref, Optional<ObjectNode> parameters, Timer timer) {
+                                       String webSocketHref, Configuration publisherConfiguration, Timer timer) {
         this.eventType = eventType;
         this.marker = marker;
         this.subscriber = subscriber;
@@ -81,7 +79,7 @@ public class SubscriberWebSocketEndpoint<T>
         this.byteBufferPool = byteBufferPool;
         this.subscriptionProcess = subscriptionProcess;
         this.webSocketHref = webSocketHref;
-        this.parameters = parameters;
+        this.publisherConfiguration = publisherConfiguration;
         this.timer = timer;
     }
 
@@ -90,7 +88,7 @@ public class SubscriberWebSocketEndpoint<T>
         this.session = session;
 
         // First send parameters, if available
-        String parameterString = parameters.map(Object::toString).orElse("");
+        String parameterString = publisherConfiguration.config().toPrettyString();
         session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture().with(f ->
                 f.future().thenAccept(Void ->
                 {

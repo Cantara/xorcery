@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.reactivestreams.resources.websocket;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
@@ -45,7 +46,7 @@ public class PublisherWebSocketEndpoint<T>
     private Semaphore semaphore = new Semaphore(0);
     private String webSocketPath;
     private ReactiveEventStreams.Publisher<T> publisher;
-    private ObjectNode parameters;
+    private Configuration publisherConfiguration;
     private MessageBodyWriter<T> messageBodyWriter;
     private MessageBodyReader<?> messageBodyReader;
     private ReactiveEventStreams.Subscription subscription;
@@ -86,24 +87,15 @@ public class PublisherWebSocketEndpoint<T>
     @Override
     public void onWebSocketText(String message) {
 
-        if (parameters == null)
+        if (publisherConfiguration == null)
         {
-            if (message.equals(""))
-            {
-                // No parameters
-                parameters = JsonNodeFactory.instance.objectNode();
-                publisher.subscribe(this, parameters);
-            } else
-            {
-                // Read JSON parameters
-                try {
-                    parameters = (ObjectNode) objectMapper.readTree(message);
-                    publisher.subscribe(this, parameters);
-                } catch (JsonProcessingException e) {
-                    session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
-                }
+            // Read JSON parameters
+            try {
+                publisherConfiguration = new Configuration((ObjectNode) objectMapper.readTree(message));
+                publisher.subscribe(this, publisherConfiguration);
+            } catch (JsonProcessingException e) {
+                session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
             }
-
         } else
         {
             long requestAmount = Long.parseLong(message);

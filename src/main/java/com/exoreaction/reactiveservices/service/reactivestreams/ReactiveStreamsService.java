@@ -214,7 +214,7 @@ public class ReactiveStreamsService
     public <T> CompletionStage<Void> subscribe(ServiceIdentifier selfServiceIdentifier,
                                                Link websocketLink,
                                                ReactiveEventStreams.Subscriber<T> subscriber,
-                                               Optional<ObjectNode> parameters) {
+                                               Configuration publisherConfiguration) {
 
         CompletableFuture<Void> result = new CompletableFuture<>();
 
@@ -229,7 +229,7 @@ public class ReactiveStreamsService
 
         if (allowLocal && publisher != null) {
             // Local
-            publisher.subscribe(subscriber, parameters.orElseGet(JsonNodeFactory.instance::objectNode));
+            publisher.subscribe(subscriber, publisherConfiguration);
             return result;
         } else {
 
@@ -279,7 +279,7 @@ public class ReactiveStreamsService
             // Start subscription process
             new SubscriptionProcess<T>(webSocketClient, objectMapper, timer, byteBufferPool,
                     reader, writer,
-                    selfServiceIdentifier, websocketLink, parameters,
+                    selfServiceIdentifier, websocketLink, publisherConfiguration,
                     subscriber, eventType,
                     result).start();
             return result;
@@ -290,7 +290,7 @@ public class ReactiveStreamsService
                                          ByteBufferPool byteBufferPool, MessageBodyReader<Object> reader,
                                          MessageBodyWriter<Object> writer, ServiceIdentifier selfServiceIdentifier,
                                          Link websocketLink,
-                                         Optional<ObjectNode> parameters,
+                                         Configuration publisherConfiguration,
                                          ReactiveEventStreams.Subscriber<T> subscriber,
                                          Type eventType, CompletableFuture<Void> result
     ) {
@@ -309,8 +309,8 @@ public class ReactiveStreamsService
                     Marker marker = MarkerManager.getMarker(selfServiceIdentifier.toString());
 
                     URI websocketEndpointUri = websocketLink.getHrefAsUri();
-                    webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber, reader, writer, objectMapper, eventType, marker,
-                                    byteBufferPool, this, websocketEndpointUri.toASCIIString(), parameters, timer), websocketEndpointUri)
+                    webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber(), reader, writer, objectMapper, eventType, marker,
+                                    byteBufferPool, this, websocketEndpointUri.toASCIIString(), publisherConfiguration, timer), websocketEndpointUri)
                             .whenComplete(this::complete);
                 } catch (IOException e) {
                     logger.error("Could not subscribe to " + websocketLink.getHref(), e);
@@ -390,7 +390,7 @@ public class ReactiveStreamsService
         }
 
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<T> subscriber, ObjectNode parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<T> subscriber, Configuration parameters) {
             publisher.subscribe(new SubscriberTracker<>(subscriber), parameters);
         }
     }

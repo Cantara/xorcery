@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.log4jappender;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.server.Server;
@@ -79,7 +80,7 @@ public class Log4jAppenderEventPublisher
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<LogEvent> subscriber, ObjectNode parameters) {
+    public void subscribe(ReactiveEventStreams.Subscriber<LogEvent> subscriber, Configuration configuration) {
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
         DisruptorAppender appender = lc.getConfiguration().getAppender("DISRUPTOR");
 

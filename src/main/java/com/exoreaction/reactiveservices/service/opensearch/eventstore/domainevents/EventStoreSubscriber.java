@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.opensearch.eventstore.domainevents;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.util.Listeners;
@@ -19,17 +20,16 @@ public class EventStoreSubscriber
         implements ReactiveEventStreams.Subscriber<ArrayNode> {
 
     private Disruptor<Event<ArrayNode>> disruptor;
-    private Optional<ObjectNode> selfParameters;
     private final String indexName;
     private final RestHighLevelClient client;
     private Listeners<ProjectionListener> listeners;
+    private Configuration consumerConfiguration;
 
-    public EventStoreSubscriber(Optional<ObjectNode> selfParameters,
+    public EventStoreSubscriber(Configuration consumerConfiguration,
                                 String indexName,
                                 RestHighLevelClient client,
                                 Listeners<ProjectionListener> listeners) {
-
-        this.selfParameters = selfParameters;
+        this.consumerConfiguration = consumerConfiguration;
         this.indexName = indexName;
         this.client = client;
         this.listeners = listeners;

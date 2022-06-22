@@ -115,10 +115,10 @@ public class EventStoreService
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<ByteBuffer> subscriber, ObjectNode jsonParameters) {
+    public void subscribe(ReactiveEventStreams.Subscriber<ByteBuffer> subscriber, Configuration configuration) {
 
         try {
-            EventStoreParameters parameters = objectMapper.treeToValue(jsonParameters, EventStoreParameters.class);
+            EventStoreParameters parameters = objectMapper.treeToValue(configuration.config(), EventStoreParameters.class);
 
             HashMap<String, Object> customProperties = new HashMap<>();
             customProperties.put("foo", "bar");
@@ -151,8 +151,8 @@ public class EventStoreService
         }
 
         @Override
-        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
-            reactiveStreams.subscribe(this.serviceIdentifier, link, new DomainEventsSubscriber(), sourceAttributes);
+        public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
+            reactiveStreams.subscribe(this.serviceIdentifier, link, new DomainEventsSubscriber(), sourceConfiguration);
         }
     }
 

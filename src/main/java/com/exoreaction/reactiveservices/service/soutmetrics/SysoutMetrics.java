@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.soutmetrics;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
@@ -87,10 +88,10 @@ public class SysoutMetrics
         private ReactiveEventStreams.Subscription subscription;
         private final long delay;
 
-        public MetricEventSubscriber(Optional<ObjectNode> selfParameters, ScheduledExecutorService scheduledExecutorService) {
+        public MetricEventSubscriber(Configuration consumerConfiguration, ScheduledExecutorService scheduledExecutorService) {
 
             this.scheduledExecutorService = scheduledExecutorService;
-            this.delay = Duration.parse(selfParameters.flatMap(sa -> new Attributes(sa).getOptionalString("delay")).orElse("5S")).toSeconds();
+            this.delay = Duration.parse(consumerConfiguration.getString("delay").orElse("5S")).toSeconds();
         }
 
         @Override
@@ -119,9 +120,9 @@ public class SysoutMetrics
             super(sro.serviceIdentifier(), "metricevents");
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
             reactiveStreams.subscribe(serviceIdentifier, link,
-                    new MetricEventSubscriber(consumerAttributes, scheduledExecutorService), sourceAttributes);
+                    new MetricEventSubscriber(consumerConfiguration, scheduledExecutorService), sourceConfiguration);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.conductor.resources.model;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Relationship;
 import com.exoreaction.reactiveservices.jsonapi.model.Relationships;
 import com.exoreaction.reactiveservices.jsonapi.model.ResourceObject;
@@ -69,12 +70,14 @@ public record Group(ResourceObject resourceObject) {
                 .orElseGet(Collections::emptyList);
     }
 
-    public Optional<ObjectNode> getSourceParameters() {
-        return resourceObject().getAttributes().getAttribute("sources").flatMap(json -> Optional.ofNullable((ObjectNode) json.get("parameters")));
+    public Configuration getSourceConfiguration() {
+        return new Configuration(resourceObject().getAttributes().getAttribute("sources")
+                .flatMap(json -> Optional.ofNullable((ObjectNode) json.get("configuration"))).orElseGet(JsonNodeFactory.instance::objectNode));
     }
 
-    public Optional<ObjectNode> getConsumerParameters() {
-        return resourceObject().getAttributes().getAttribute("consumers").flatMap(json -> Optional.ofNullable((ObjectNode) json.get("parameters")));
+    public Configuration getConsumerConfiguration() {
+        return new Configuration(resourceObject().getAttributes().getAttribute("consumers")
+                .flatMap(json -> Optional.ofNullable((ObjectNode) json.get("configuration"))).orElseGet(JsonNodeFactory.instance::objectNode));
     }
 
     public boolean isComplete() {

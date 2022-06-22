@@ -2,6 +2,7 @@ package com.exoreaction.reactiveservices.service.jmxmetrics;
 
 import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.jaxrs.AbstractFeature;
 import com.exoreaction.reactiveservices.jaxrs.readers.JsonApiMessageBodyReader;
@@ -151,7 +152,7 @@ public class JmxMetrics
     private void pollMetrics(Link metricevents, String serverId, Collection<String> metricNames) {
         ObjectNode parameters = JsonNodeFactory.instance.objectNode();
         parameters.set("metric_names", parameters.textNode(String.join(",", metricNames)));
-        reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), Optional.of(parameters));
+        reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), new Configuration(parameters));
     }
 
     private class MetricEventSubscriber
@@ -216,7 +217,7 @@ public class JmxMetrics
             super(serviceIdentifier, rel);
         }
 
-        public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
+        public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
             client.get(link)
                     .whenComplete((rd, throwable) ->
                     {

@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.opensearch.metrics;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.cqrs.metadata.DeploymentMetadata;
 import com.exoreaction.reactiveservices.cqrs.metadata.RequestMetadata;
 import com.exoreaction.reactiveservices.disruptor.Event;
@@ -41,11 +42,11 @@ public class MetricEventsSubscriber
 
     private BulkRequest bulkRequest;
 
-    public MetricEventsSubscriber(RestHighLevelClient client, Optional<ObjectNode> consumerParameters, Optional<ObjectNode> sourceParameters, ScheduledExecutorService scheduledExecutorService) {
+    public MetricEventsSubscriber(RestHighLevelClient client, Configuration consumerConfiguration, Configuration sourceConfiguration, ScheduledExecutorService scheduledExecutorService) {
         this.client = client;
 
         this.scheduledExecutorService = scheduledExecutorService;
-        this.delay = Duration.parse(consumerParameters.flatMap(sa -> new Attributes(sa).getOptionalString("delay")).orElse("PT5S")).toSeconds();
+        this.delay = Duration.parse(consumerConfiguration.getString("delay").orElse("PT5S")).toSeconds();
         this.objectMapper = new ObjectMapper();
     }
 

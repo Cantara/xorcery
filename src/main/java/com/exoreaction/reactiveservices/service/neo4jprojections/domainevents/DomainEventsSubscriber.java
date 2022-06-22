@@ -1,6 +1,7 @@
 package com.exoreaction.reactiveservices.service.neo4jprojections.domainevents;
 
 import com.exoreaction.reactiveservices.concurrent.NamedThreadFactory;
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.cqrs.metadata.Metadata;
 import com.exoreaction.reactiveservices.disruptor.Event;
 import com.exoreaction.reactiveservices.disruptor.EventWithResult;
@@ -18,15 +19,14 @@ import java.util.Optional;
 class DomainEventsSubscriber
         implements ReactiveEventStreams.Subscriber<EventWithResult<ArrayNode, Metadata>> {
 
+    private final Configuration consumerConfiguration;
+    private final Configuration sourceConfiguration;
     private Disruptor<Event<EventWithResult<ArrayNode, Metadata>>> disruptor;
-    private Optional<ObjectNode> selfParameters;
-    private Optional<ObjectNode> sourceParameters;
     private GraphDatabaseService graphDatabaseService;
 
-    public DomainEventsSubscriber(Optional<ObjectNode> selfParameters, Optional<ObjectNode> sourceParameters, GraphDatabaseService graphDatabaseService) {
-
-        this.selfParameters = selfParameters;
-        this.sourceParameters = sourceParameters;
+    public DomainEventsSubscriber(Configuration consumerConfiguration, Configuration sourceConfiguration, GraphDatabaseService graphDatabaseService) {
+        this.consumerConfiguration = consumerConfiguration;
+        this.sourceConfiguration = sourceConfiguration;
         this.graphDatabaseService = graphDatabaseService;
     }
 

@@ -14,11 +14,11 @@ data:
         name: Forum events from EventStore into Neo4j
         sources:
           pattern: rel=='eventstorestreams'
-          parameters:
+          configuration:
             stream: development-default-forum
         consumers:
           pattern: type=='neo4jprojections'
-          parameters:
+          configuration:
             database: neo4j
 
     - id: eventstore_opensearch
@@ -27,10 +27,10 @@ data:
         name: Forum events from EventStore into OpenSearch
         sources:
           pattern: rel=='eventstorestreams'
-          parameters:
+          configuration:
             stream: development-default-forum
         consumers:
           pattern: type=='opensearch'
-          parameters:
+          configuration:
             type: domainevents
             index: domainevents-development-default-forum

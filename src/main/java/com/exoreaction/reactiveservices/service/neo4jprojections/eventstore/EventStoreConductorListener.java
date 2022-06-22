@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.neo4jprojections.eventstore;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Attributes;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
@@ -37,15 +38,14 @@ public class EventStoreConductorListener extends AbstractConductorListener {
     }
 
     @Override
-    public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceAttributes, Optional<ObjectNode> consumerAttributes) {
+    public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
 
-        String databaseName = consumerAttributes.flatMap(sa -> new Attributes(sa).getOptionalString("database"))
-                .orElse("neo4j");
+        String databaseName = consumerConfiguration.getString("database").orElse("neo4j");
         GraphDatabase graphDatabase = graphDatabases.apply(databaseName);
 
         // Check if we already have written data for this stream before
         try {
-            EventStoreParameters parameters = new ObjectMapper().treeToValue(sourceAttributes.orElseThrow(), EventStoreParameters.class);
+            EventStoreParameters parameters = new ObjectMapper().treeToValue(sourceConfiguration.config(), EventStoreParameters.class);
 
             graphDatabase.query("MATCH (Stream:Stream {name:$stream_name})")
                     .parameter(Stream.name, parameters.stream)
@@ -58,10 +58,10 @@ public class EventStoreConductorListener extends AbstractConductorListener {
                         }
 
                         if (position != null) {
-                            sourceAttributes.ifPresent(attrs -> attrs.set("from", attrs.numberNode(position)));
+                            sourceConfiguration.config().set("from", sourceConfiguration.config().numberNode(position));
                         }
 
-                        reactiveStreams.subscribe(sro.serviceIdentifier(), link, new EventStoreSubscriber(consumerAttributes, parameters, graphDatabase.getGraphDatabaseService(), listeners), sourceAttributes);
+                        reactiveStreams.subscribe(sro.serviceIdentifier(), link, new EventStoreSubscriber(consumerConfiguration, parameters, graphDatabase.getGraphDatabaseService(), listeners), sourceConfiguration);
                     });
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

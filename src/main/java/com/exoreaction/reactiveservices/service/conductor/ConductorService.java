@@ -210,7 +210,7 @@ public class ConductorService
     private class ConductorPublisher
             implements ReactiveEventStreams.Publisher<ConductorChange> {
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<ConductorChange> subscriber, ObjectNode parameters) {
+        public void subscribe(ReactiveEventStreams.Subscriber<ConductorChange> subscriber, Configuration configuration) {
 
         }
     }

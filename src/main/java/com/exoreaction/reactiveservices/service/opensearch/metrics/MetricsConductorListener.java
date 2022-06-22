@@ -1,5 +1,6 @@
 package com.exoreaction.reactiveservices.service.opensearch.metrics;
 
+import com.exoreaction.reactiveservices.configuration.Configuration;
 import com.exoreaction.reactiveservices.jsonapi.model.Link;
 import com.exoreaction.reactiveservices.server.model.ServiceResourceObject;
 import com.exoreaction.reactiveservices.service.conductor.api.AbstractConductorListener;
@@ -30,7 +31,7 @@ public class MetricsConductorListener extends AbstractConductorListener {
     }
 
     @Override
-    public void connect(ServiceResourceObject sro, Link link, Optional<ObjectNode> sourceParameters, Optional<ObjectNode> consumerParameters) {
-        reactiveStreams.subscribe(serviceIdentifier, link, new MetricEventsSubscriber(client, consumerParameters, sourceParameters, scheduledExecutorService), sourceParameters);
+    public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
+        reactiveStreams.subscribe(serviceIdentifier, link, new MetricEventsSubscriber(client, consumerConfiguration, sourceConfiguration, scheduledExecutorService), sourceConfiguration);
     }
 }

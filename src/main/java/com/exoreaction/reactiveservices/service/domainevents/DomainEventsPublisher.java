@@ -105,7 +105,7 @@ public class DomainEventsPublisher
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>> subscriber, ObjectNode parameters) {
+    public void subscribe(ReactiveEventStreams.Subscriber<EventWithResult<DomainEvents, Metadata>> subscriber, Configuration parameters) {
         final AtomicReference<EventSink<Event<EventWithResult<DomainEvents, Metadata>>>> handler = new AtomicReference<>();
         handler.set(subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
             @Override
