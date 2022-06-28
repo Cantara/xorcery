@@ -2,10 +2,11 @@ package com.exoreaction.xorcery.service.eventstore.disruptor;
 
 import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.EventStoreDBClient;
-import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.*;
+import com.exoreaction.xorcery.disruptor.Event;
+import com.exoreaction.xorcery.disruptor.EventWithResult;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
+import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import org.apache.logging.log4j.LogManager;

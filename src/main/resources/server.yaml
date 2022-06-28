@@ -32,6 +32,8 @@ conductor:
   templates:
 #    - /conductor/metrics.yaml
     - /conductor/metrics_opensearch.yaml
+    - /conductor/logging_opensearch.yaml
+    - /conductor/requestlog_opensearch.yaml
     - /conductor/certmanager.yaml
 #    - /conductor/forum.yaml
     - /conductor/forumeventstore.yaml

@@ -149,7 +149,7 @@ public class CertificateManagerService
 
             for (ResourceObject resourceObject : ro) {
                 try {
-                    String base64Cert = resourceObject.getAttributes().getString("base64");
+                    String base64Cert = resourceObject.getAttributes().getString("base64").orElseThrow();
                     byte[] certBytes = Base64.getDecoder().decode(base64Cert);
 
                     File keyStoreFile = new File(new File(".").toURI().relativize(getClass().getResource("/keystore.p12").toURI()).getPath());

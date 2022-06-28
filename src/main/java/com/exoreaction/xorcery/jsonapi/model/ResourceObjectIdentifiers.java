@@ -1,8 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.model;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.util.builders.With;
-import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
@@ -48,7 +47,7 @@ public record ResourceObjectIdentifiers(ArrayNode json)
     }
 
     public List<ResourceObjectIdentifier> getResources() {
-        return JsonNodes.getValuesAs(array(), ResourceObjectIdentifier::new);
+        return JsonElement.getValuesAs(array(), ResourceObjectIdentifier::new);
     }
 
     public boolean contains(ResourceObjectIdentifier resourceObjectIdentifier) {

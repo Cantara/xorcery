@@ -1,7 +1,6 @@
 package com.exoreaction.xorcery.jsonschema.model;
 
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -141,14 +140,14 @@ public record JsonSchema(ObjectNode json)
     }
 
     public Optional<String> getId() {
-        return getOptionalString("$id");
+        return getString("$id");
     }
     public Optional<String> getRef() {
-        return getOptionalString("$ref");
+        return getString("$ref");
     }
 
     public Optional<String> getSchema() {
-        return getOptionalString("$schema");
+        return getString("$schema");
     }
 
     public Optional<Vocabularies> getVocabularies()
@@ -157,31 +156,29 @@ public record JsonSchema(ObjectNode json)
     }
 
     public Optional<String> getTitle() {
-        return getOptionalString("title");
+        return getString("title");
     }
 
     public Optional<String> getDescription() {
-        return getOptionalString("description");
+        return getString("description");
     }
 
     public Types getType() {
-        String type = getString("type");
-
-        return Types.valueOf(capitalize(type));
+        return getString("type").map(t -> Types.valueOf(capitalize(t))).orElse(Types.Null);
     }
 
     public Optional<List<String>> getRequired() {
         return Optional.ofNullable(object().get("required"))
                 .map(ArrayNode.class::cast)
-                .map(a -> JsonNodes.getValuesAs(a, JsonNode::textValue));
+                .map(a -> JsonElement.getValuesAs(a, JsonNode::textValue));
     }
 
     public Optional<String> getConstant() {
-        return getOptionalString("const");
+        return getString("const");
     }
 
     public Optional<Boolean> getAdditionalProperties() {
-        return getOptionalBoolean("additionalProperties");
+        return getBoolean("additionalProperties");
     }
 
     public Definitions getDefinitions() {

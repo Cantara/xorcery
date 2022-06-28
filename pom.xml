@@ -7,6 +7,7 @@
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -49,6 +50,8 @@
                         <arg>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</arg>
                         <arg>--add-opens=java.base/java.io=ALL-UNNAMED</arg>
                         <arg>--add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</arg>
+                        <arg>-processor</arg>
+                        <arg>org.apache.logging.log4j.core.config.plugins.processor.PluginProcessor</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
@@ -84,23 +87,6 @@
                                         <include>classes/*.properties</include>
                                     </includes>
                                     <filtering>true</filtering>
-                                </resource>
-
-                                <resource>
-                                    <directory>src/main</directory>
-                                    <includes>
-                                        <include>bin/**</include>
-                                        <include>conf/**</include>
-                                        <include>logs/**</include>
-                                        <include>partials/**</include>
-                                        <include>static/**</include>
-                                        <include>templates/**</include>
-                                    </includes>
-                                    <excludes>
-                                    </excludes>
-                                </resource>
-                                <resource>
-                                    <directory>src/main/dist</directory>
                                 </resource>
                             </resources>
                         </configuration>

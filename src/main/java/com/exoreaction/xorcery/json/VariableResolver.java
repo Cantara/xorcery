@@ -14,8 +14,17 @@ import java.util.regex.Pattern;
 
 /**
  * Resolve variables in JSON values.
- * <p>
+ *
  * Includes support for hierarchical lookups, recursive lookups, and default values.
+ *
+ * Syntax for strings with variables:
+ * some {{ other.variable.name }} value
+ * If the JSON source has a path other.variable.name that resolves to "foo" then the resulting value
+ * is: "some foo value"
+ *
+ * Default values are expressed with |, like so:
+ * some {{ other.variable.name | bar }} value
+ * If the JSON source tree does not have a path other.variable.name then the resulting value is: "some bar value"
  */
 public class VariableResolver
         implements BiFunction<ObjectNode, ObjectNode, ObjectNode> {

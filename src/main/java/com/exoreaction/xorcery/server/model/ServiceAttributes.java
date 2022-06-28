@@ -8,7 +8,7 @@ public record ServiceAttributes(Attributes attributes) {
 
     public Optional<String> getVersion()
     {
-        return attributes.getOptionalString("version");
+        return attributes.getString("version");
     }
 
 }

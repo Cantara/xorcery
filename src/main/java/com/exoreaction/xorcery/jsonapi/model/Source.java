@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.model;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.util.builders.With;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -33,10 +33,10 @@ public record Source(ObjectNode json)
     }
 
     public String getPointer() {
-        return getOptionalString("pointer").orElse(null);
+        return getString("pointer").orElse(null);
     }
 
     public String getParameter() {
-        return getOptionalString("parameter").orElse(null);
+        return getString("parameter").orElse(null);
     }
 }

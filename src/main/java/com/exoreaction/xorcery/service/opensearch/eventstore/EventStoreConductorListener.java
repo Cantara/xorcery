@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch.eventstore;
 
+import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -8,7 +9,6 @@ import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.EventS
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.ProjectionListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
-import com.exoreaction.util.Listeners;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opensearch.client.RestHighLevelClient;

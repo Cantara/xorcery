@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.model;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.util.builders.With;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -36,11 +36,11 @@ public record ResourceObjectIdentifier(ObjectNode json)
     }
 
     public String getId() {
-        return getString("id");
+        return getString("id").orElse("");
     }
 
     public String getType() {
-        return getString("type");
+        return getString("type").orElseThrow();
     }
 
     public Meta getMeta() {

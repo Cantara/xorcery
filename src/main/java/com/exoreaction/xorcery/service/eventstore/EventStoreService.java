@@ -3,9 +3,9 @@ package com.exoreaction.xorcery.service.eventstore;
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -117,7 +117,7 @@ public class EventStoreService
     public void subscribe(ReactiveEventStreams.Subscriber<ByteBuffer> subscriber, Configuration configuration) {
 
         try {
-            EventStoreParameters parameters = objectMapper.treeToValue(configuration.config(), EventStoreParameters.class);
+            EventStoreParameters parameters = objectMapper.treeToValue(configuration.json(), EventStoreParameters.class);
 
             HashMap<String, Object> customProperties = new HashMap<>();
             customProperties.put("foo", "bar");

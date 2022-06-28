@@ -147,7 +147,7 @@ public class ConductorService
             }
 
             if (templateNode != null) {
-                templateNode = new VariableResolver().apply(configuration.config(), templateNode);
+                templateNode = new VariableResolver().apply(configuration.json(), templateNode);
                 ResourceDocument templates = new ResourceDocument(templateNode);
                 templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
                 templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));

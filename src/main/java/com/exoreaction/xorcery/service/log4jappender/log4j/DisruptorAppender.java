@@ -1,13 +1,8 @@
 package com.exoreaction.xorcery.service.log4jappender.log4j;
 
-import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
-import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
-import com.lmax.disruptor.BlockingWaitStrategy;
+import com.exoreaction.xorcery.disruptor.Event;
 import com.lmax.disruptor.EventSink;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
@@ -21,10 +16,9 @@ import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author rickardoberg
@@ -49,31 +43,20 @@ public class DisruptorAppender
         return new DisruptorAppender.Builder<B>().asBuilder();
     }
 
-    private final Disruptor<Event<LogEvent>> disruptor;
-    private final List<EventSink<Event<LogEvent>>> subscribers = new CopyOnWriteArrayList<>();
+    private final AtomicReference<EventSink<Event<LogEvent>>> logEventSink = new AtomicReference<>();
 
     public DisruptorAppender(final String name, final Layout<? extends Serializable> layout, final Filter filter,
                              final boolean ignoreExceptions, final Property[] properties) {
         super(name, filter, layout, ignoreExceptions, properties);
         Objects.requireNonNull(layout, "layout");
-
-        disruptor =
-                new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Log4jDisruptor-"),
-                        ProducerType.MULTI,
-                        new BlockingWaitStrategy());
-
-        disruptor.handleEventsWith(new BroadcastEventHandler<>(subscribers));
-    }
-
-    @Override
-    public void start() {
-        disruptor.start();
-        super.start();
     }
 
     @Override
     public void append(final LogEvent event) {
-        disruptor.publishEvent((holder, seq, e) ->
+
+        EventSink<Event<LogEvent>> sink = logEventSink.get();
+        if (sink != null)
+            sink.publishEvent((holder, seq, e) ->
         {
             Metadata.Builder builder = new Metadata.Builder();
             ThreadContext.getContext().forEach(builder::add);
@@ -90,8 +73,9 @@ public class DisruptorAppender
         return stopped;
     }
 
-    public List<EventSink<Event<LogEvent>>> getSubscribers() {
-        return subscribers;
+    public void setEventSink(EventSink<Event<LogEvent>> eventSink)
+    {
+        this.logEventSink.set(eventSink);
     }
 
     @Override

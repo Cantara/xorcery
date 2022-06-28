@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.neo4j.client;
 
-import com.exoreaction.util.builders.With;
-import com.exoreaction.util.function.FallbackFunction;
+import com.exoreaction.xorcery.builders.With;
+import com.exoreaction.xorcery.function.FallbackFunction;
 import jakarta.ws.rs.NotFoundException;
 import org.neo4j.graphdb.Result;
 

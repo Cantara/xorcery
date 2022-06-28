@@ -36,7 +36,7 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
                     .parameter(Stream.name, streamName)
                     .results(Stream.revision)
                     .first(row -> row.row().getNumber("stream_revision").longValue()).toCompletableFuture().join();
-            sourceConfiguration.config().set("from", sourceConfiguration.config().numberNode(position));
+            sourceConfiguration.json().set("from", sourceConfiguration.json().numberNode(position));
         } catch (NotFoundException e) {
             // No previous knowledge of this stream
         }

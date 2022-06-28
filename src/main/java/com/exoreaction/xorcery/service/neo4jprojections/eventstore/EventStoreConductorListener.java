@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.neo4jprojections.eventstore;
 
+import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -11,7 +12,6 @@ import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.neo4jprojections.Stream;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
-import com.exoreaction.util.Listeners;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.NotFoundException;
@@ -41,7 +41,7 @@ public class EventStoreConductorListener extends AbstractConductorListener {
 
         // Check if we already have written data for this stream before
         try {
-            EventStoreParameters parameters = new ObjectMapper().treeToValue(sourceConfiguration.config(), EventStoreParameters.class);
+            EventStoreParameters parameters = new ObjectMapper().treeToValue(sourceConfiguration.json(), EventStoreParameters.class);
 
             graphDatabase.query("MATCH (Stream:Stream {name:$stream_name})")
                     .parameter(Stream.name, parameters.stream)
@@ -54,7 +54,7 @@ public class EventStoreConductorListener extends AbstractConductorListener {
                         }
 
                         if (position != null) {
-                            sourceConfiguration.config().set("from", sourceConfiguration.config().numberNode(position));
+                            sourceConfiguration.json().set("from", sourceConfiguration.json().numberNode(position));
                         }
 
                         reactiveStreams.subscribe(sro.serviceIdentifier(), link, new EventStoreSubscriber(consumerConfiguration, parameters, graphDatabase.getGraphDatabaseService(), listeners), sourceConfiguration);

@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.neo4jprojections.eventstore;
 
+import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
@@ -7,7 +8,6 @@ import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreParame
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

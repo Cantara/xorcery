@@ -4,7 +4,6 @@ import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
 import com.exoreaction.xorcery.jsonschema.model.Properties;
 import com.exoreaction.xorcery.jsonschema.model.Types;
-import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -166,19 +165,19 @@ public record Link(ObjectNode json)
     }
 
     public Optional<String> getHref() {
-        return getOptionalString("href");
+        return getString("href");
     }
 
     public Optional<String> getRel() {
-        return getOptionalString("rel");
+        return getString("rel");
     }
 
     public Optional<String> getTitle() {
-        return getOptionalString("title");
+        return getString("title");
     }
 
     public Optional<String> getDescription() {
-        return getOptionalString("description");
+        return getString("description");
     }
 
     public Optional<JsonSchema> getHrefSchema() {
@@ -202,7 +201,7 @@ public record Link(ObjectNode json)
     public Optional<Map<String, String>> getTargetPointers() {
         return ofNullable(object().get("targetPointers"))
                 .map(ObjectNode.class::cast)
-                .map(v -> JsonNodes.toMap(v, JsonNode::textValue));
+                .map(v -> JsonElement.toMap(v, JsonNode::textValue));
     }
 
     public Optional<ObjectNode> getTargetHints() {
@@ -225,17 +224,17 @@ public record Link(ObjectNode json)
     }
 
     public Optional<String> getSubmissionMediaType() {
-        return getOptionalString("submissionMediaType");
+        return getString("submissionMediaType");
     }
 
     public Optional<Types> type() {
-        return getOptionalString("type")
+        return getString("type")
                 .map((type) -> Types.valueOf(capitalize(type)));
     }
 
     public Optional<List<String>> getTemplateRequired() {
         return ofNullable(object().get("templateRequired"))
                 .map(ArrayNode.class::cast)
-                .map(a -> JsonNodes.getValuesAs(a, JsonNode::textValue));
+                .map(a -> JsonElement.getValuesAs(a, JsonNode::textValue));
     }
 }

@@ -10,7 +10,6 @@ import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventSink;
@@ -92,9 +91,9 @@ public class Metrics
 
     @Override
     public void subscribe(ReactiveEventStreams.Subscriber<ObjectNode> subscriber, Configuration parameters) {
-        ArrayNode metrics = (ArrayNode) parameters.config().get("metrics");
         Collection<String> metricNames = new HashSet<>();
-        if (metrics != null) {
+        parameters.getList("metrics").ifPresentOrElse(metrics ->
+        {
             for (JsonNode metric : metrics) {
                 String metricName = metric.asText();
                 Pattern metricNamePattern = Pattern.compile(metricName);
@@ -104,9 +103,10 @@ public class Metrics
                     }
                 }
             }
-        } else {
+        }, ()->
+        {
             metricNames.addAll(metricRegistry.getNames());
-        }
+        });
         new MetricSubscription(subscriber, metricNames, metricRegistry);
     }
 

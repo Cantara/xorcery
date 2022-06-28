@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.jsonapi.resources;
 
 import com.exoreaction.xorcery.cqrs.aggregate.Command;
 import com.exoreaction.xorcery.cqrs.context.DomainContext;
+import com.exoreaction.xorcery.cqrs.model.EntityModel;
 import com.exoreaction.xorcery.cqrs.model.Model;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import jakarta.ws.rs.core.UriBuilder;
@@ -87,6 +88,12 @@ public interface ResourceObjectMapperMixin
         return (model, mapper) -> mapper.links().link(self, linkMapper.apply(model));
     }
 
+    default <T extends EntityModel> BiConsumer<T, ResourceObjectMapper> selfLink(Class<?> resourceClass)
+    {
+        UriBuilder uriBuilder = getUriBuilderFor(resourceClass);
+        return selfLink(model -> uriBuilder.build(model.getId()));
+    }
+
     default <T extends Model> BiConsumer<T, ResourceObjectMapper> commandLinks(Function<T, UriBuilder> baseUriMapper, Function<T, DomainContext> contextMapper) {
         return (model, mapper) ->
         {
@@ -100,6 +107,11 @@ public interface ResourceObjectMapperMixin
                 }
             }
         };
+    }
+
+    default <T extends EntityModel> BiConsumer<T, ResourceObjectMapper> commandLinks(Class<?> resourceClass, Function<T, DomainContext> contextMapper) {
+        UriBuilder uriBuilder = getUriBuilderFor(resourceClass);
+        return commandLinks(model -> uriBuilder.clone().resolveTemplate("id", model.getId()), contextMapper);
     }
 
     // Builders and helpers

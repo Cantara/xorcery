@@ -2,8 +2,8 @@ package com.exoreaction.xorcery.service.neo4jprojections.aggregates;
 
 import com.exoreaction.xorcery.cqrs.aggregate.Aggregate;
 import com.exoreaction.xorcery.cqrs.aggregate.AggregateSnapshot;
-import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.cqrs.model.CommonModel;
+import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.RowModel;
 import com.fasterxml.jackson.databind.ObjectMapper;

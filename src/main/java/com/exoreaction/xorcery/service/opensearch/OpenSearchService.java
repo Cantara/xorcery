@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch;
 
+import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -7,9 +8,10 @@ import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.opensearch.eventstore.EventStoreConductorListener;
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.OpenSearchProjections;
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.ProjectionListener;
+import com.exoreaction.xorcery.service.opensearch.logging.LoggingConductorListener;
 import com.exoreaction.xorcery.service.opensearch.metrics.MetricsConductorListener;
+import com.exoreaction.xorcery.service.opensearch.requestlog.logging.RequestLogConductorListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -27,7 +29,10 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.opensearch.action.support.master.AcknowledgedResponse;
-import org.opensearch.client.*;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestClientBuilder;
+import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.indices.GetIndexTemplatesRequest;
 import org.opensearch.client.indices.IndexTemplateMetadata;
 import org.opensearch.client.indices.PutIndexTemplateRequest;
@@ -44,8 +49,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-
-import static org.apache.commons.io.IOUtils.readFully;
 
 @Singleton
 public class OpenSearchService
@@ -159,8 +162,10 @@ public class OpenSearchService
         } catch (IOException e) {
             logger.error("Error listing templates", e);
         }
+        conductor.addConductorListener(new LoggingConductorListener(client, reactiveStreams, sro.serviceIdentifier(), "logevents"));
         conductor.addConductorListener(new MetricsConductorListener(client, reactiveStreams, scheduledExecutorService, sro.serviceIdentifier(), "metricevents"));
         conductor.addConductorListener(new EventStoreConductorListener(client, reactiveStreams, sro.serviceIdentifier(), "eventstorestreams", listeners));
+        conductor.addConductorListener(new RequestLogConductorListener(client, reactiveStreams, sro.serviceIdentifier(), "requestlogevents"));
     }
 
     @Override
@@ -181,6 +186,18 @@ public class OpenSearchService
             {
                 // Delete indexes for now
                 DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest("metrics-*"); //Index name.
+                AcknowledgedResponse deleteIndexResponse = client.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+            }
+
+            {
+                // Delete indexes for now
+                DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest("logging-*"); //Index name.
+                AcknowledgedResponse deleteIndexResponse = client.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+            }
+
+            {
+                // Delete indexes for now
+                DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest("requests-*"); //Index name.
                 AcknowledgedResponse deleteIndexResponse = client.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
             }
 

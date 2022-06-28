@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.jetty.client;
 
-import com.exoreaction.util.builders.With;
+import com.exoreaction.xorcery.builders.With;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import java.util.concurrent.CompletableFuture;

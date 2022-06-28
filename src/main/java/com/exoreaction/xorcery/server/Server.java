@@ -120,8 +120,7 @@ public class Server
         return serverDocument;
     }
 
-    public org.eclipse.jetty.server.Server getServer()
-    {
+    public org.eclipse.jetty.server.Server getServer() {
         return server;
     }
 
@@ -160,7 +159,7 @@ public class Server
         StringWriter out = new StringWriter();
         new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter().writeValue(out, builder.builder());
 
-        logger.debug("Configuration:\n"+out);
+        logger.debug("Configuration:\n" + out);
 
         return builder.build();
     }
@@ -256,7 +255,7 @@ public class Server
         connector.setPort(jettyConfig.getInteger("secure_port").orElse(8443));
         server.addConnector(connector);
 
-        baseUri = URI.create("https://"+configuration.getString("host").orElse("localhost")+":" + https.getPort() + "/");
+        baseUri = URI.create("https://" + configuration.getString("host").orElse("localhost") + ":" + https.getPort() + "/");
 
 
         ServletContextHandler ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
@@ -335,7 +334,7 @@ public class Server
                 try {
                     app.register(getClass().getClassLoader().loadClass(jsonNode.asText()));
                 } catch (ClassNotFoundException e) {
-                    logger.error("Could not load JAX-RS provider "+jsonNode.asText(), e);
+                    logger.error("Could not load JAX-RS provider " + jsonNode.asText(), e);
                 }
             }
         });

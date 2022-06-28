@@ -1,0 +1,10 @@
+data:
+  - id: logging_opensearch
+    type: grouptemplate,
+    attributes:
+      name: Log requests to OpenSearch
+      sources:
+        pattern: rel=='requestlogevents'
+        many: true
+      consumers:
+        pattern: type=='opensearch'

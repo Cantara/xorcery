@@ -1,8 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.model;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.util.builders.With;
-import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +39,7 @@ public record Errors(ArrayNode json)
     }
 
     public List<Error> getErrors() {
-        return JsonNodes.getValuesAs(array(),Error::new);
+        return JsonElement.getValuesAs(array(),Error::new);
     }
 
     @NotNull

@@ -22,7 +22,7 @@ class VariableResolverTest {
         config = new Configuration(new VariableResolver().apply(objectNode, objectNode));
 
         try {
-            new ObjectMapper(new YAMLFactory()).writeValue(System.out, config.config());
+            new ObjectMapper(new YAMLFactory()).writeValue(System.out, config.json());
         } catch (IOException e) {
             // Ignore
         }

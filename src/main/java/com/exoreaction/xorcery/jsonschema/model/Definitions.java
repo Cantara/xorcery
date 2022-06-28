@@ -1,8 +1,7 @@
 package com.exoreaction.xorcery.jsonschema.model;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.util.builders.With;
-import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -40,7 +39,7 @@ public record Definitions(ObjectNode json)
 
     public Map<String, JsonSchema> getDefinitions() {
         Function<JsonNode, ObjectNode> cast = ObjectNode.class::cast;
-        return JsonNodes.toMap(json, cast.andThen(JsonSchema::new));
+        return JsonElement.toMap(json, cast.andThen(JsonSchema::new));
     }
 
     public JsonSchema resolve(JsonSchema schema) {

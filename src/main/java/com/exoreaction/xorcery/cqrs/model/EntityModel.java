@@ -1,9 +1,8 @@
 package com.exoreaction.xorcery.cqrs.model;
 
 public interface EntityModel
-        extends Model
-{
+        extends Model {
     default String getId() {
-        return getString(CommonModel.Entity.id);
+        return getString(CommonModel.Entity.id).orElse(null);
     }
 }

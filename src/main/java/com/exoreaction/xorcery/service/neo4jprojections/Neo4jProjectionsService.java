@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.neo4jprojections;
 
+import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
@@ -7,7 +8,6 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.domainevents.DomainEventsConductorListener;
 import com.exoreaction.xorcery.service.neo4jprojections.eventstore.EventStoreConductorListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.util.Listeners;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;

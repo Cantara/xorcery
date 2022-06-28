@@ -1,7 +1,9 @@
 package com.exoreaction.xorcery.service.log4jappender;
 
+import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.Event;
+import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.Server;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -9,7 +11,10 @@ import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams.Publisher;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -21,6 +26,8 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
@@ -52,12 +59,28 @@ public class Log4jAppenderEventPublisher
     private final ReactiveStreams reactiveStreams;
     private Server server;
     private ServiceResourceObject sro;
+    private Configuration configuration;
+
+    private final Disruptor<Event<LogEvent>> disruptor;
+    private final List<EventSink<Event<LogEvent>>> subscribers = new CopyOnWriteArrayList<>();
 
     @Inject
-    public Log4jAppenderEventPublisher(ReactiveStreams reactiveStreams, Server server, @Named(SERVICE_TYPE) ServiceResourceObject sro) {
+    public Log4jAppenderEventPublisher(ReactiveStreams reactiveStreams, Server server,
+                                       @Named(SERVICE_TYPE) ServiceResourceObject sro,
+                                       Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
         this.server = server;
         this.sro = sro;
+        this.configuration = configuration;
+
+        disruptor =
+                new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Log4jDisruptor-"),
+                        ProducerType.MULTI,
+                        new BlockingWaitStrategy());
+
+        disruptor.handleEventsWith(
+                        new LoggingMetadataEventHandler(configuration))
+                .then(new BroadcastEventHandler<>(subscribers));
     }
 
     @Override
@@ -66,16 +89,20 @@ public class Log4jAppenderEventPublisher
         {
             reactiveStreams.publish(sro.serviceIdentifier(), link, this);
         });
+
+        disruptor.start();
+        LoggerContext lc = (LoggerContext) LogManager.getContext(false);
+        DisruptorAppender appender = lc.getConfiguration().getAppender("DISRUPTOR");
+        appender.setEventSink(disruptor.getRingBuffer());
     }
 
     @Override
     public void onReload(Container container) {
-
     }
 
     @Override
     public void onShutdown(Container container) {
-
+        disruptor.shutdown();
     }
 
     @Override
@@ -92,9 +119,9 @@ public class Log4jAppenderEventPublisher
 
             @Override
             public void cancel() {
-                appender.getSubscribers().remove(handler.get());
+                subscribers.remove(handler.get());
             }
         }));
-        appender.getSubscribers().add(handler.get());
+        subscribers.add(handler.get());
     }
 }

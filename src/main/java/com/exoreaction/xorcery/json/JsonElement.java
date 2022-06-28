@@ -20,10 +20,13 @@ package com.exoreaction.xorcery.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.net.URI;
+import java.util.*;
+import java.util.function.Function;
 
 /**
+ * Marker interface with helper methods to denote a model that is backed by JSON.
+ *
  * @author rickardoberg
  */
 public interface JsonElement {
@@ -45,75 +48,61 @@ public interface JsonElement {
             return null;
     }
 
-    default String getString(String name) {
-        return object().path(name).asText();
+    default Optional<JsonNode> getJson(String name) {
+        return lookup(object(), name);
     }
 
-    default Optional<String> getOptionalString(String name) {
-        return Optional.ofNullable(object().get(name)).map(JsonNode::asText);
+    default Optional<String> getString(String name) {
+        return getJson(name).map(JsonNode::textValue);
     }
 
-    default int getInt(String name) {
-        return object().path(name).intValue();
+    default Optional<URI> getURI(String name) {
+
+        return getString(name).map(URI::create);
     }
 
-    default Optional<Integer> getOptionalInt(String name) {
-        JsonNode value = object().path(name);
-        if (value instanceof NumericNode number) {
-            return Optional.of(number.intValue());
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    default long getLong(String name) {
-        return object().path(name).longValue();
-    }
-
-    default Optional<Long> getOptionalLong(String name) {
-        JsonNode value = object().path(name);
-        if (value instanceof NumericNode number) {
-            return Optional.of(number.longValue());
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    default boolean getBoolean(String name) {
-        return object().path(name).booleanValue();
-    }
-
-    default Optional<Boolean> getOptionalBoolean(String name) {
-        JsonNode value = object().path(name);
-        if (value instanceof BooleanNode bool) {
-            return Optional.of(bool.booleanValue());
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    default <T extends Enum<T>> T getEnum(String name, Class<T> enumClass) {
-        Optional<String> value = getOptionalString(name);
-
-        if (value.isPresent()) {
-            try {
-                return Enum.valueOf(enumClass, value.get());
-            } catch (IllegalArgumentException e) {
-                return null;
+    default Optional<Integer> getInteger(String name) {
+        return getJson(name).flatMap(value ->
+        {
+            if (value instanceof NumericNode number) {
+                return Optional.of(number.intValue());
+            } else {
+                return Optional.empty();
             }
-        } else {
-            return null;
-        }
+        });
     }
 
-    default <T extends Enum<T>> Optional<T> getOptionalEnum(String name, Class<T> enumClass) {
-        Optional<String> value = getOptionalString(name);
+    default Optional<Long> getLong(String name) {
+        return getJson(name).flatMap(value ->
+        {
+            if (value instanceof NumericNode number) {
+                return Optional.of(number.longValue());
+            } else {
+                return Optional.empty();
+            }
+        });
+    }
+
+    default Optional<Boolean> getBoolean(String name) {
+        return getJson(name).map(JsonNode::asBoolean);
+    }
+
+    default Optional<Iterable<JsonNode>> getList(String name) {
+        return getJson(name).map(ArrayNode.class::cast);
+    }
+
+    default Map<String, JsonNode> asMap() {
+        return JsonElement.asMap(object());
+    }
+
+    default <T extends Enum<T>> Optional<T> getEnum(String name, Class<T> enumClass) {
+        Optional<String> value = getString(name);
 
         if (value.isPresent()) {
             try {
                 return Optional.of(Enum.valueOf(enumClass, value.get()));
             } catch (IllegalArgumentException e) {
-                return null;
+                return Optional.empty();
             }
         } else {
             return Optional.empty();
@@ -124,8 +113,7 @@ public interface JsonElement {
         return json().toPrettyString();
     }
 
-    static ArrayNode toArray(Collection<? extends JsonElement> elements)
-    {
+    static ArrayNode toArray(Collection<? extends JsonElement> elements) {
         ArrayNode array = JsonNodeFactory.instance.arrayNode(elements.size());
         for (JsonElement element : elements) {
             array.add(element.json());
@@ -133,8 +121,7 @@ public interface JsonElement {
         return array;
     }
 
-    static ArrayNode toArray(JsonElement... elements)
-    {
+    static ArrayNode toArray(JsonElement... elements) {
         ArrayNode array = JsonNodeFactory.instance.arrayNode(elements.length);
         for (JsonElement element : elements) {
             array.add(element.json());
@@ -142,12 +129,55 @@ public interface JsonElement {
         return array;
     }
 
-    static ArrayNode toArray(String... values)
-    {
+    static ArrayNode toArray(String... values) {
         ArrayNode array = JsonNodeFactory.instance.arrayNode(values.length);
         for (String value : values) {
             array.add(array.textNode(value));
         }
         return array;
+    }
+
+    static <T, U extends JsonNode> List<T> getValuesAs(ContainerNode<?> arrayNode, Function<U, T> mapFunction) {
+        List<T> list = new ArrayList<>(arrayNode.size());
+        for (JsonNode jsonNode : arrayNode) {
+            list.add(mapFunction.apply((U) jsonNode));
+        }
+        return list;
+    }
+
+    static Map<String, JsonNode> asMap(ObjectNode objectNode) {
+        Map<String, JsonNode> map = new HashMap<>(objectNode.size());
+        Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> entry = fields.next();
+            map.put(entry.getKey(), entry.getValue());
+        }
+        return map;
+    }
+
+    static <T> Map<String, T> toMap(ObjectNode object, Function<JsonNode, T> mapper) {
+        Map<String, T> result = new LinkedHashMap<>(object.size());
+        Iterator<Map.Entry<String, JsonNode>> fields = object.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> next = fields.next();
+            result.put(next.getKey(), mapper.apply(next.getValue()));
+        }
+        return result;
+    }
+
+    static Optional<JsonNode> lookup(ObjectNode c, String name) {
+        if (name.indexOf('.') != -1) {
+            String[] names = name.split("\\.");
+            for (int i = 0; i < names.length - 1; i++) {
+                JsonNode node = c.get(names[i]);
+                if (node instanceof ObjectNode)
+                    c = (ObjectNode) node;
+                else
+                    return Optional.empty();
+            }
+            return Optional.ofNullable(c.get(names[names.length - 1]));
+        } else {
+            return Optional.ofNullable(c.get(name));
+        }
     }
 }

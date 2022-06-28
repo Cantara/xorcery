@@ -29,7 +29,7 @@ public class LogEventMessageBodyWriter
 
     public LogEventMessageBodyWriter() throws IOException {
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
-        String eventTemplate = new String(getClass().getResourceAsStream("/EcsLayout.json").readAllBytes(), StandardCharsets.UTF_8);
+        String eventTemplate = new String(getClass().getResourceAsStream("/JsonLayout.json").readAllBytes(), StandardCharsets.UTF_8);
         layout = JsonTemplateLayout.newBuilder()
                 .setConfiguration(lc.getConfiguration())
                 .setEventTemplate(eventTemplate)

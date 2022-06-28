@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.cqrs.aggregate;
 
-import com.exoreaction.xorcery.cqrs.annotations.Create;
-import com.exoreaction.xorcery.cqrs.annotations.Delete;
-import com.exoreaction.xorcery.cqrs.annotations.Update;
+import com.exoreaction.xorcery.cqrs.annotation.Create;
+import com.exoreaction.xorcery.cqrs.annotation.Delete;
+import com.exoreaction.xorcery.cqrs.annotation.Update;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

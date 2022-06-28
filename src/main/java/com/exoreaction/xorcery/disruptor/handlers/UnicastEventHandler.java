@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.disruptor.handlers;
 
-import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.disruptor.Event;
 import com.lmax.disruptor.EventSink;
 
 import java.util.List;

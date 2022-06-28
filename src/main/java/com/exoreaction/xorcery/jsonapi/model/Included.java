@@ -1,8 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.model;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.util.builders.With;
-import com.exoreaction.util.json.JsonNodes;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
@@ -104,7 +103,7 @@ public record Included(ArrayNode json)
     }
 
     public List<ResourceObject> getIncluded() {
-        return JsonNodes.getValuesAs(array(),ResourceObject::new);
+        return JsonElement.getValuesAs(array(),ResourceObject::new);
     }
 
     public Optional<ResourceObject> findByResourceObjectIdentifier(ResourceObjectIdentifier roi) {

@@ -1,12 +1,12 @@
 package com.exoreaction.xorcery.jsonapi.schema;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.hyperschema.model.HyperSchema;
 import com.exoreaction.xorcery.hyperschema.model.Link;
 import com.exoreaction.xorcery.hyperschema.model.Links;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
 import com.exoreaction.xorcery.jsonschema.model.Properties;
 import com.exoreaction.xorcery.jsonschema.model.Types;
-import com.exoreaction.util.builders.With;
 
 import java.util.function.Consumer;
 

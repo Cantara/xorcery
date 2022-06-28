@@ -1,6 +1,9 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
-import com.exoreaction.xorcery.jsonapi.model.*;
+import com.exoreaction.xorcery.jsonapi.model.Links;
+import com.exoreaction.xorcery.jsonapi.model.Relationship;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;

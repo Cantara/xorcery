@@ -11,8 +11,10 @@ import java.util.function.BiFunction;
 
 /**
  * Given a JSON tree, merge in another JSON tree into it and return the new tree.
+ *
+ * Primitive values get overwritten by adding node, object values get current added with merged object,
+ * and arrays get merged elements added to original array
  */
-
 public class JsonMerger
         implements BiFunction<ObjectNode, ObjectNode, ObjectNode> {
     @Override

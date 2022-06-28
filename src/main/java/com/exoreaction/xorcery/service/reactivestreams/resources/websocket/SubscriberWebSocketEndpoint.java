@@ -1,9 +1,9 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jetty.client.WriteCallbackCompletableFuture;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
@@ -86,7 +86,7 @@ public class SubscriberWebSocketEndpoint<T>
         this.session = session;
 
         // First send parameters, if available
-        String parameterString = publisherConfiguration.config().toPrettyString();
+        String parameterString = publisherConfiguration.json().toPrettyString();
         session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture().with(f ->
                 f.future().thenAccept(Void ->
                 {

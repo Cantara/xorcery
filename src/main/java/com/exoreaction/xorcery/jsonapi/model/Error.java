@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.model;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.util.builders.With;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -45,7 +45,7 @@ public record Error(ObjectNode json)
     }
 
     public String getStatus() {
-        return getOptionalString("status").orElse(null);
+        return getString("status").orElse(null);
     }
 
     public Source getSource() {
@@ -54,10 +54,10 @@ public record Error(ObjectNode json)
     }
 
     public String getTitle() {
-        return getString("title");
+        return getString("title").orElse("");
     }
 
     public String getDetail() {
-        return getString("detail");
+        return getString("detail").orElse("");
     }
 }

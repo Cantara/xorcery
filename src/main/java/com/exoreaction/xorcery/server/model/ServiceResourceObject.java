@@ -57,7 +57,7 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
     }
 
     public String getVersion() {
-        return resourceObject().getAttributes().getString("version");
+        return resourceObject().getAttributes().getString("version").orElse(null);
     }
 
     public ServiceAttributes getAttributes() {
