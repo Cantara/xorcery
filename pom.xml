@@ -430,7 +430,7 @@
         <dependency>
             <groupId>org.eclipse</groupId>
             <artifactId>yasson</artifactId>
-            <version>3.0.0-RC2</version>
+            <version>3.0.0</version>
         </dependency>
 
         <!-- Disruptor -->
