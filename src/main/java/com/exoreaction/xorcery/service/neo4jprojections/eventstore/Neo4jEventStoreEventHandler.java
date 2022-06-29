@@ -67,8 +67,8 @@ public class Neo4jEventStoreEventHandler
             try {
                 String finalType = type;
                 String statementFile = event.metadata.getString("domain")
-                        .map(domain -> "/neo4j/" + domain + "/" + finalType + ".cyp")
-                        .orElseGet(() -> "/neo4j/" + finalType + ".cyp");
+                        .map(domain -> "/src/main/resources/neo4j/" + domain + "/" + finalType + ".cyp")
+                        .orElseGet(() -> "/src/main/resources/neo4j/" + finalType + ".cyp");
                 String statement = Files.read(getClass().getResourceAsStream(statementFile), StandardCharsets.UTF_8);
 
                 tx.execute(statement, parameters);

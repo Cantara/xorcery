@@ -1,7 +1,5 @@
 package com.exoreaction.xorcery.service.neo4j;
 
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
@@ -20,9 +18,9 @@ import org.neo4j.dbms.api.DatabaseNotFoundException;
 import org.neo4j.graphdb.GraphDatabaseService;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Singleton
 public class Neo4jService
@@ -51,37 +49,31 @@ public class Neo4jService
         @Override
         protected void configure() {
 
-            StandardConfiguration standardConfiguration = new StandardConfiguration(configuration());
+            Neo4jConfiguration neo4jConfiguration = new Neo4jConfiguration(configuration().getConfiguration("neo4jdatabase"));
 
-            Map<String, String> neo4jConfig = configuration().getConfiguration("neo4jdatabase.neo4j").asMap()
-                    .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry ->
-                            entry.getValue().textValue()
-                    ));
-
-            Path home = Path.of(standardConfiguration.home());
+            Path home = neo4jConfiguration.databasePath();
             logger.info("Neo4j home:" + home);
             DatabaseManagementService managementService = new DatabaseManagementServiceBuilder(home)
-                    .setConfigRaw(neo4jConfig)
+                    .setConfigRaw(neo4jConfiguration.settings())
                     .build();
 
-            Configuration databases = configuration().getConfiguration("neo4jdatabase.databases");
-            for (Map.Entry<String, JsonNode> stringJsonValueEntry : databases.asMap().entrySet()) {
+            List<String> databases = configuration().getListAs("neo4jdatabase.databases", JsonNode::textValue).orElse(List.of("src/main/resources/neo4j"));
+            for (String database : databases) {
                 GraphDatabaseService graphDb = null;
                 try {
-                    graphDb = managementService.database(stringJsonValueEntry.getKey());
+                    graphDb = managementService.database(database);
                 } catch (DatabaseNotFoundException e) {
-                    managementService.createDatabase(stringJsonValueEntry.getKey());
-                    graphDb = managementService.database(stringJsonValueEntry.getKey());
+                    managementService.createDatabase(database);
+                    graphDb = managementService.database(database);
                 }
                 GraphDatabase graphDatabase = new GraphDatabase(graphDb, Cypher.defaultFieldMappings());
 
-                bind(graphDb).named(stringJsonValueEntry.getKey()).to(GraphDatabaseService.class);
-                bind(graphDatabase).named(stringJsonValueEntry.getKey()).to(GraphDatabase.class);
+                bind(graphDb).named(database).to(GraphDatabaseService.class);
+                bind(graphDatabase).named(database).to(GraphDatabase.class);
             }
 
             context.register(new Neo4jService(managementService), GraphDatabases.class, ContainerLifecycleListener.class);
         }
-
     }
 
     private final DatabaseManagementService managementService;

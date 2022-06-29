@@ -1,6 +1,6 @@
 name: server1
 host: localhost
-home: "{{ SYSTEM.user_dir }}/target/neo4j"
+home: "{{ SYSTEM.user_dir }}"
 
 environment: development
 tag: default
@@ -29,14 +29,12 @@ registry:
 
 conductor:
   enabled: true
-  templates:
+#  templates:
 #    - /conductor/metrics.yaml
-    - /conductor/metrics_opensearch.yaml
-    - /conductor/logging_opensearch.yaml
-    - /conductor/requestlog_opensearch.yaml
-    - /conductor/certmanager.yaml
-#    - /conductor/forum.yaml
-    - /conductor/forumeventstore.yaml
+#    - /conductor/metrics_opensearch.yaml
+#    - /conductor/logging_opensearch.yaml
+#    - /conductor/requestlog_opensearch.yaml
+#    - /conductor/certmanager.yaml
 
 certificatemanager:
   enabled: true
@@ -63,9 +61,12 @@ jmxmetrics:
 # Domain events
 neo4jdatabase:
   enabled: true
+  path: "{{ home }}/target/neo4j"
+  settings:
+    dbms:
+      allow_upgrade: true
   databases:
-    neo4j:
-      foo: bar
+    - neo4j
 
 neo4jprojections:
   enabled: true

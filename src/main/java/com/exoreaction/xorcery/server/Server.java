@@ -50,7 +50,9 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.URI;
+import java.net.URL;
 import java.time.Duration;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -132,23 +134,35 @@ public class Server
         builder.addEnvironmentVariables("ENV");
 
         // Load defaults
-        if (configFile != null) {
-            builder = builder.addYaml(new FileInputStream(configFile));
-        } else {
-            builder = builder.addYaml(Configuration.class.getResourceAsStream("/server.yaml"));
+        builder = builder.addYaml(Configuration.class.getResourceAsStream("/server-defaults.yaml"));
+
+        // Load custom
+        Enumeration<URL> serverConfigurationURLs = Configuration.class.getClassLoader().getResources("/server.yaml");
+        while (serverConfigurationURLs.hasMoreElements()) {
+            URL url = serverConfigurationURLs.nextElement();
+            try (InputStream configurationStream = url.openStream())
+            {
+                builder = builder.addYaml(configurationStream);
+            }
         }
 
-        // Load overrides
+        // Load user directory overrides
         Configuration partialConfig = builder.build();
-        StandardConfiguration standardConfiguration = new StandardConfiguration(partialConfig);
+        StandardConfiguration standardConfiguration = new StandardConfiguration.Impl(partialConfig);
         builder = partialConfig.asBuilder();
-        File overridesYamlFile = new File(standardConfiguration.home(), "conf/server_overrides.yaml");
+        File overridesYamlFile = new File(standardConfiguration.home(), "server.yaml");
         if (overridesYamlFile.exists()) {
             FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
             builder = builder.addYaml(overridesYamlStream);
         }
 
-        // Load user
+        // Load specified overrides
+        if (configFile != null) {
+            builder = builder.addYaml(new FileInputStream(configFile));
+        } else {
+        }
+
+        // Load user overrides
         File userYamlFile = new File(System.getProperty("user.home"), "reactive/server.yaml");
         if (userYamlFile.exists()) {
             FileInputStream userYamlStream = new FileInputStream(userYamlFile);
