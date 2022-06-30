@@ -603,6 +603,13 @@
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jetty11</artifactId>
             <version>${metrics.version}</version>
+            <exclusions>
+                <!-- Conflicts with (and overrides) version pulled in directly from this pom, exclude here to avoid that -->
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-http</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
