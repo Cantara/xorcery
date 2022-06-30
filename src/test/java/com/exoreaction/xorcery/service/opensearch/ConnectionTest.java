@@ -6,7 +6,6 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.opensearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -82,7 +81,6 @@ public class ConnectionTest {
         client.close();
     }
 
-    @NotNull
     private RestHighLevelClient getRestHighLevelClient() {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
