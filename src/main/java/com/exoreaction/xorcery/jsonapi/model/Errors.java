@@ -4,7 +4,6 @@ import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,7 +41,6 @@ public record Errors(ArrayNode json)
         return JsonElement.getValuesAs(array(),Error::new);
     }
 
-    @NotNull
     @Override
     public Iterator<Error> iterator() {
         return getErrors().iterator();

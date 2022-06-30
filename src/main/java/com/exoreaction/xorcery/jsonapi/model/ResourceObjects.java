@@ -4,7 +4,6 @@ import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.List;
@@ -49,7 +48,6 @@ public record ResourceObjects(ArrayNode json)
         return JsonElement.getValuesAs(array(), ResourceObject::new);
     }
 
-    @NotNull
     @Override
     public Iterator<ResourceObject> iterator() {
         return getResources().iterator();

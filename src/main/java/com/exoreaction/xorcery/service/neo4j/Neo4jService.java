@@ -53,8 +53,9 @@ public class Neo4jService
 
             Path home = neo4jConfiguration.databasePath();
             logger.info("Neo4j home:" + home);
+            Map<String, String> settings = neo4jConfiguration.settings();
             DatabaseManagementService managementService = new DatabaseManagementServiceBuilder(home)
-                    .setConfigRaw(neo4jConfiguration.settings())
+                    .setConfigRaw(settings)
                     .build();
 
             List<String> databases = configuration().getListAs("neo4jdatabase.databases", JsonNode::textValue).orElse(List.of("src/main/resources/neo4j"));

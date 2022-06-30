@@ -29,7 +29,7 @@ registry:
 
 conductor:
   enabled: true
-#  templates:
+  templates: []
 #    - /conductor/metrics.yaml
 #    - /conductor/metrics_opensearch.yaml
 #    - /conductor/logging_opensearch.yaml

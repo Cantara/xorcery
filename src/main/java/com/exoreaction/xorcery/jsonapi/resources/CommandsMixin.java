@@ -14,7 +14,6 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
-import org.jetbrains.annotations.NotNull;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.HttpHeaders;
@@ -158,7 +157,6 @@ public interface CommandsMixin
                 });
     }
 
-    @NotNull
     default Predicate<Command> isCommandByName(String name) {
         return c -> name.equals(Command.getName(c));
     }

@@ -1,11 +1,11 @@
 package com.exoreaction.xorcery.service.neo4j.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -16,13 +16,13 @@ public final class Cypher {
 
     public static Map<String, Object> toMap(ObjectNode json) {
         Iterator<Map.Entry<String, JsonNode>> fields = json.fields();
-        Map<String, Object> parameters = new HashMap<>(json.size());
+        Map<String, Object> map = new HashMap<>(json.size());
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> next = fields.next();
 
-            parameters.put(next.getKey(), switch (next.getValue().getNodeType()) {
-                case ARRAY -> null;
-                case OBJECT -> null;
+            map.put(next.getKey(), switch (next.getValue().getNodeType()) {
+                case ARRAY -> toList((ArrayNode) next.getValue());
+                case OBJECT -> toMap((ObjectNode) next.getValue());
                 case STRING -> next.getValue().textValue();
                 case NUMBER -> next.getValue().numberValue();
                 case BINARY -> null;
@@ -32,13 +32,34 @@ public final class Cypher {
                 case POJO -> null;
             });
         }
-        return parameters;
+        return map;
+    }
+
+    public static List<Object> toList(ArrayNode json) {
+        Iterator<JsonNode> fields = json.elements();
+        List<Object> list = new ArrayList<>(json.size());
+        while (fields.hasNext()) {
+            JsonNode next = fields.next();
+
+            list.add(switch (next.getNodeType()) {
+                case ARRAY -> toList((ArrayNode) next);
+                case OBJECT -> toMap((ObjectNode) next);
+                case STRING -> next.textValue();
+                case NUMBER -> next.numberValue();
+                case BINARY -> null;
+                case BOOLEAN -> Boolean.TRUE;
+                case MISSING -> null;
+                case NULL -> null;
+                case POJO -> null;
+            });
+        }
+        return list;
     }
 
     /**
      * By default maps enums used for query results as:
      * Some.name as some_name
-     *
+     * <p>
      * Label enums can be used to return the node as a whole instead of a single property
      * E.g. Label.SomeEntity -> SomeEntity as SomeEntity
      *

@@ -169,6 +169,27 @@ public interface JsonElement {
         return result;
     }
 
+    static <T> Map<String, T> toFlatMap(ObjectNode object, Function<JsonNode, T> mapper) {
+        Map<String, T> result = new LinkedHashMap<>(object.size());
+        toFlatMap(result, "", object, mapper);
+        return result;
+    }
+
+    static <T> void toFlatMap(Map<String, T> result, String prefix, ObjectNode object, Function<JsonNode, T> mapper) {
+        Iterator<Map.Entry<String, JsonNode>> fields = object.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> next = fields.next();
+            if (next.getValue().getNodeType().equals(JsonNodeType.OBJECT))
+            {
+                toFlatMap(result, prefix+next.getKey()+".", (ObjectNode)next.getValue(), mapper);
+            } else {
+                JsonNode value = next.getValue();
+                T mappedValue = mapper.apply(value);
+                result.put(prefix+next.getKey(), mappedValue);
+            }
+        }
+    }
+
     static Optional<JsonNode> lookup(ObjectNode c, String name) {
         if (name.indexOf('.') != -1) {
             String[] names = name.split("\\.");

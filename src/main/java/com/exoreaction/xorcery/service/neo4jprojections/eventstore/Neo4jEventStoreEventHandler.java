@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +39,7 @@ public class Neo4jEventStoreEventHandler
 
     private Transaction tx;
     private Map<String, Object> updateParameters = new HashMap<>();
+    private Map<String, String> cachedEventCypher = new HashMap<>();
 
     public Neo4jEventStoreEventHandler(GraphDatabaseService graphDatabaseService,
                                        ReactiveEventStreams.Subscription subscription,
@@ -65,11 +67,22 @@ public class Neo4jEventStoreEventHandler
             parameters.put("metadata", metadataMap);
 
             try {
-                String finalType = type;
-                String statementFile = event.metadata.getString("domain")
-                        .map(domain -> "/src/main/resources/neo4j/" + domain + "/" + finalType + ".cyp")
-                        .orElseGet(() -> "/src/main/resources/neo4j/" + finalType + ".cyp");
-                String statement = Files.read(getClass().getResourceAsStream(statementFile), StandardCharsets.UTF_8);
+                String statement = cachedEventCypher.get(type);
+                if (statement == null)
+                {
+                    String finalType = type;
+                    String statementFile = event.metadata.getString("domain")
+                            .map(domain -> "/neo4j/" + domain + "/" + finalType + ".cyp")
+                            .orElseGet(() -> "/neo4j/" + finalType + ".cyp");
+                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
+                    if (resourceAsStream == null)
+                    {
+                        logger.error("Could not find Neo4j event projection Cypher statement:"+statementFile);
+                        break;
+                    }
+                    statement = Files.read(resourceAsStream, StandardCharsets.UTF_8);
+                    cachedEventCypher.put(type, statement);
+                }
 
                 tx.execute(statement, parameters);
             } catch (Throwable e) {

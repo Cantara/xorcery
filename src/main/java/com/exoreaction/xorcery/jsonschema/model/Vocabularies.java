@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.jsonschema.model;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -29,7 +28,6 @@ public record Vocabularies(ObjectNode json)
         }
     }
 
-    @NotNull
     @Override
     public Iterator<Map.Entry<String, Boolean>> iterator() {
         Iterator<Map.Entry<String, JsonNode>> iterator = json.fields();

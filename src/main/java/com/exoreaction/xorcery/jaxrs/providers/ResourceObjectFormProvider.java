@@ -2,7 +2,6 @@ package com.exoreaction.xorcery.jaxrs.providers;
 
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
-import com.google.common.base.Strings;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
@@ -14,6 +13,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.ext.Provider;
+import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.internal.util.collection.NullableMultivaluedHashMap;
 import org.glassfish.jersey.message.internal.AbstractFormProvider;
 
@@ -53,7 +53,7 @@ public final class ResourceObjectFormProvider extends AbstractFormProvider<Resou
 
         NullableMultivaluedHashMap<String, String> map = this.readFrom(new NullableMultivaluedHashMap<>(), mediaType, decode(annotations), entityStream);
 
-        String id = Strings.emptyToNull(map.getFirst("id"));
+        String id = StringUtils.trimToNull(map.getFirst("id"));
         return new ResourceObject.Builder(requestContextProvider.get().getUriInfo().getQueryParameters().getFirst("rel"), id).attributes(new Attributes.Builder().with(builder ->
         {
             map.forEach((name, value) ->

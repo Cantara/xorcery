@@ -1,7 +1,6 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
 import com.exoreaction.xorcery.service.neo4j.client.GraphQuery;
-import com.google.common.collect.Sets;
 
 import java.util.Set;
 import java.util.function.Consumer;
@@ -31,7 +30,7 @@ public interface FieldsMixin
         }
         else
         {
-            Set<String> fieldList = Sets.newHashSet( fields.split( "," ) );
+            Set<String> fieldList = Set.of( fields.split( "," ) );
             fieldSelection = fieldList::contains;
         }
         return fieldSelection;

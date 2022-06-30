@@ -134,15 +134,23 @@ public class Server
         builder.addEnvironmentVariables("ENV");
 
         // Load defaults
-        builder = builder.addYaml(Configuration.class.getResourceAsStream("/server-defaults.yaml"));
+        {
+            URL resource = Configuration.class.getResource("/server-defaults.yaml");
+            try(InputStream in = resource.openStream())
+            {
+                builder = builder.addYaml(in);
+                logger.info("Loaded "+resource);
+            }
+        }
 
         // Load custom
-        Enumeration<URL> serverConfigurationURLs = Configuration.class.getClassLoader().getResources("/server.yaml");
+        Enumeration<URL> serverConfigurationURLs = Configuration.class.getClassLoader().getResources("server.yaml");
         while (serverConfigurationURLs.hasMoreElements()) {
-            URL url = serverConfigurationURLs.nextElement();
-            try (InputStream configurationStream = url.openStream())
+            URL resource = serverConfigurationURLs.nextElement();
+            try (InputStream configurationStream = resource.openStream())
             {
                 builder = builder.addYaml(configurationStream);
+                logger.info("Loaded "+resource);
             }
         }
 
@@ -154,19 +162,22 @@ public class Server
         if (overridesYamlFile.exists()) {
             FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
             builder = builder.addYaml(overridesYamlStream);
+            logger.info("Loaded "+overridesYamlFile);
         }
 
         // Load specified overrides
         if (configFile != null) {
             builder = builder.addYaml(new FileInputStream(configFile));
+            logger.info("Loaded "+configFile);
         } else {
         }
 
         // Load user overrides
-        File userYamlFile = new File(System.getProperty("user.home"), "reactive/server.yaml");
+        File userYamlFile = new File(System.getProperty("user.home"), "xorcery/server.yaml");
         if (userYamlFile.exists()) {
             FileInputStream userYamlStream = new FileInputStream(userYamlFile);
             builder = builder.addYaml(userYamlStream);
+            logger.info("Loaded "+userYamlFile);
         }
 
         // Log final configuration

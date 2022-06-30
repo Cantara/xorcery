@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,7 +17,7 @@ public interface IncludesMixin
     default List<String> includeList()
     {
         String include = getFirstQueryParameter( "include" );
-        if ( Strings.isNullOrEmpty( include ) )
+        if ( StringUtils.isBlank( include ) )
         { return Collections.emptyList(); }
         List<String> includes = Arrays.asList( include.split( "," ) );
         return includes;
