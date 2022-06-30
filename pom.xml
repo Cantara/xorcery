@@ -26,9 +26,9 @@
     </properties>
 
     <scm>
-        <developerConnection>scm:git:ssh://git@github.com/cantara/xorcery.git</developerConnection>
-        <connection>scm:git:https://github.com/cantara/xorcery.git</connection>
-        <url>https://github.com/cantara/xorcery</url>
+        <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
+        <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
+        <url>https://github.com/Cantara/xorcery</url>
         <tag>HEAD</tag>
     </scm>
 
