@@ -11,7 +11,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <log4j.version>2.17.2</log4j.version>
+        <log4j.version>2.18.0</log4j.version>
         <jetty.version>11.0.11</jetty.version>
         <jersey.version>3.0.5</jersey.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
