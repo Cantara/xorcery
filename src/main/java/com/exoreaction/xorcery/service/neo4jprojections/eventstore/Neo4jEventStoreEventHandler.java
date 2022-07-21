@@ -17,10 +17,12 @@ import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author rickardoberg
@@ -67,22 +69,38 @@ public class Neo4jEventStoreEventHandler
             parameters.put("metadata", metadataMap);
 
             try {
-                String statement = cachedEventCypher.get(type);
+                String statement = cachedEventCypher.computeIfAbsent(type, t ->
+                        event.metadata.getString("domain")
+                                .map(domain ->
+                                {
+                                    String statementFile = "/neo4j/" + domain + "/" + t + ".cyp";
+                                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
+                                    if (resourceAsStream == null)
+                                        return null;
+
+                                    try {
+                                        return Files.read(resourceAsStream, StandardCharsets.UTF_8);
+                                    } catch (IOException e) {
+                                        logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+                                        return null;
+                                    }
+                                })
+                                .orElseGet(() ->
+                                {
+                                    String statementFile = "/neo4j/" + t + ".cyp";
+                                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
+                                    if (resourceAsStream == null)
+                                        return null;
+
+                                    try {
+                                        return Files.read(resourceAsStream, StandardCharsets.UTF_8);
+                                    } catch (IOException e) {
+                                        logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+                                        return null;
+                                    }
+                                }));
                 if (statement == null)
-                {
-                    String finalType = type;
-                    String statementFile = event.metadata.getString("domain")
-                            .map(domain -> "/neo4j/" + domain + "/" + finalType + ".cyp")
-                            .orElseGet(() -> "/neo4j/" + finalType + ".cyp");
-                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
-                    if (resourceAsStream == null)
-                    {
-                        logger.error("Could not find Neo4j event projection Cypher statement:"+statementFile);
-                        break;
-                    }
-                    statement = Files.read(resourceAsStream, StandardCharsets.UTF_8);
-                    cachedEventCypher.put(type, statement);
-                }
+                    break;
 
                 tx.execute(statement, parameters);
             } catch (Throwable e) {

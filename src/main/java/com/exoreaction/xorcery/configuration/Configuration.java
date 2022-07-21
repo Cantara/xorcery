@@ -50,6 +50,12 @@ public record Configuration(ObjectNode json)
             }
         }
 
+        public Builder addYaml(String yamlString) throws IOException {
+                ObjectNode yaml = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(yamlString);
+                new JsonMerger().merge(builder, yaml);
+                return this;
+        }
+
         public Builder addSystemProperties(String nodeName) {
             ObjectNode system = builder.objectNode();
             for (Map.Entry<Object, Object> systemProperty : System.getProperties().entrySet()) {

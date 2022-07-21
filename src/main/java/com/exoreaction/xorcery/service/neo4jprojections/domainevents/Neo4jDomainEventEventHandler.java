@@ -1,23 +1,27 @@
 package com.exoreaction.xorcery.service.neo4jprojections.domainevents;
 
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
+import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.jknack.handlebars.internal.Files;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -27,17 +31,27 @@ import java.util.concurrent.CompletableFuture;
 
 public class Neo4jDomainEventEventHandler
         implements DefaultEventHandler<Event<EventWithResult<ArrayNode, Metadata>>> {
+
+    private Logger logger = LogManager.getLogger(getClass());
+
     private ReactiveEventStreams.Subscription subscription;
+    private final Configuration sourceConfiguration;
+    private final Listeners<ProjectionListener> listeners;
     long version = 0;
     private GraphDatabaseService graphDatabaseService;
 
     private Transaction tx;
     private List<CompletableFuture<Metadata>> futures = new ArrayList<>();
+    private Map<String, List<String>> cachedEventCypher = new HashMap<>();
 
     public Neo4jDomainEventEventHandler(GraphDatabaseService graphDatabaseService,
-                                        ReactiveEventStreams.Subscription subscription) {
+                                        ReactiveEventStreams.Subscription subscription,
+                                        Configuration sourceConfiguration,
+                                        Listeners<ProjectionListener> listeners) {
         this.graphDatabaseService = graphDatabaseService;
         this.subscription = subscription;
+        this.sourceConfiguration = sourceConfiguration;
+        this.listeners = listeners;
     }
 
     @Override
@@ -50,18 +64,46 @@ public class Neo4jDomainEventEventHandler
             String type = objectNode.path("@class").textValue();
             type = type.substring(type.lastIndexOf('$') + 1);
 
-            Iterator<Map.Entry<String, JsonNode>> fields = objectNode.fields();
             Map<String, Object> parameters = Cypher.toMap(objectNode);
             parameters.put("metadata", metadataMap);
 
             try {
-                String finalType = type;
-                String statementFile = event.metadata.getString("domain")
-                        .map(domain -> "/src/main/resources/neo4j/" + domain + "/" + finalType + ".cyp")
-                        .orElseGet(() -> "/src/main/resources/neo4j/" + finalType + ".cyp");
-                String statement = Files.read(getClass().getResourceAsStream(statementFile), StandardCharsets.UTF_8);
+                List<String> statement = cachedEventCypher.computeIfAbsent(type, t ->
+                        event.metadata.getString("domain")
+                                .map(domain ->
+                                {
+                                    String statementFile = "/neo4j/" + domain + "/" + t + ".cyp";
+                                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
+                                    if (resourceAsStream == null)
+                                        return null;
 
-                tx.execute(statement, parameters);
+                                    try {
+                                        return List.of(Files.read(resourceAsStream, StandardCharsets.UTF_8).split(";"));
+                                    } catch (IOException e) {
+                                        logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+                                        return null;
+                                    }
+                                })
+                                .orElseGet(() ->
+                                {
+                                    String statementFile = "/neo4j/" + t + ".cyp";
+                                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
+                                    if (resourceAsStream == null)
+                                        return null;
+
+                                    try {
+                                        return List.of(Files.read(resourceAsStream, StandardCharsets.UTF_8).split(";"));
+                                    } catch (IOException e) {
+                                        logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+                                        return null;
+                                    }
+                                }));
+                if (statement == null)
+                    break;
+
+                for (String stmt : statement) {
+                    tx.execute(stmt, parameters);
+                }
             } catch (Throwable e) {
                 event.event.result().completeExceptionally(e);
             }
@@ -78,9 +120,11 @@ public class Neo4jDomainEventEventHandler
 
                 for (CompletableFuture<Metadata> future : futures) {
                     version++;
-                    Metadata result = new Metadata.Builder().add("position", version).build();
+                    Metadata result = new Metadata.Builder().add("revision", version).build();
                     future.complete(result);
                 }
+                listeners.listener().onCommit(sourceConfiguration.getString("stream").orElse(""), version);
+
             } catch (Exception e) {
                 for (CompletableFuture<Metadata> future : futures) {
                     future.completeExceptionally(e);

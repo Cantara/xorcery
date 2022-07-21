@@ -2,7 +2,10 @@ package com.exoreaction.xorcery.service.neo4j.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.neo4j.graphdb.Node;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -89,5 +92,37 @@ public final class Cypher {
     public static String toField(Enum<?> anEnum) {
         return fieldMappings.computeIfAbsent(anEnum, e ->
                 e.getDeclaringClass().getSimpleName().toLowerCase() + "_" + e.name());
+    }
+
+    public static ObjectNode toObjectNode(Map<String, Object> resultRow)
+    {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        for (Map.Entry<String, Object> entry : resultRow.entrySet()) {
+            node.set(entry.getKey(), toJsonNode(entry.getValue()));
+        }
+        return node;
+    }
+
+    public static JsonNode toJsonNode(Object value)
+    {
+        if (value == null) {
+            return NullNode.getInstance();
+        } else if (value instanceof String v) {
+            return JsonNodeFactory.instance.textNode(v);
+        } else if (value instanceof Long v) {
+            return JsonNodeFactory.instance.numberNode(v);
+        } else if (value instanceof Double v) {
+            return JsonNodeFactory.instance.numberNode(v);
+        } else if (value instanceof Boolean v) {
+            return JsonNodeFactory.instance.booleanNode(v);
+        } else if (value instanceof Node node) {
+            ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+            for (Map.Entry<String, Object> entry : node.getAllProperties().entrySet()) {
+                objectNode.set(entry.getKey(), toJsonNode(entry.getValue()));
+            }
+            return objectNode;
+        } else {
+            return null;
+        }
     }
 }

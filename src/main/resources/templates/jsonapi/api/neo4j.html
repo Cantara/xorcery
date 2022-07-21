@@ -1,0 +1,40 @@
+<html>
+<head>
+    <style>
+        table
+        {
+            border:2px solid;
+        }
+
+        td
+        {
+            border: 1px solid gray;
+        }
+    </style>
+</head>
+<body>
+
+<form action="" method="get" enctype="application/x-www-form-urlencoded">
+    Parameters:<br/>
+    <textarea name="parameters" rows="30" cols="180">{{meta.asMap.parameters.textValue}}</textarea><br/>
+    Query:<br/>
+    <textarea name="query" rows="30" cols="180">{{{meta.asMap.query.textValue}}}</textarea><br/>
+
+    <input type="submit">
+</form>
+
+<table class="resourcedocument">
+
+    {{#with errors}}
+    {{> "jsonapi/partial/errors"}}
+    {{/with}}
+
+    {{#with resources}}
+    {{#each this}}
+    <tr><td colspan="2">{{> "jsonapi/resourceobject"}}</td></tr>
+    {{/each}}
+    {{/with}}
+</table>
+
+
+</body>

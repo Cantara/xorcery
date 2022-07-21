@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.neo4j;
 
+import apoc.merge.Merge;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
@@ -15,9 +16,14 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.internal.kernel.api.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.kernel.internal.GraphDatabaseAPI;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +46,7 @@ public class Neo4jService
 
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-
+            builder.api("neo4j","api/neo4j");
         }
 
         public Feature() {
@@ -58,7 +64,7 @@ public class Neo4jService
                     .setConfigRaw(settings)
                     .build();
 
-            List<String> databases = configuration().getListAs("neo4jdatabase.databases", JsonNode::textValue).orElse(List.of("src/main/resources/neo4j"));
+            List<String> databases = configuration().getListAs("neo4jdatabase.databases", JsonNode::textValue).orElse(List.of("neo4j"));
             for (String database : databases) {
                 GraphDatabaseService graphDb = null;
                 try {

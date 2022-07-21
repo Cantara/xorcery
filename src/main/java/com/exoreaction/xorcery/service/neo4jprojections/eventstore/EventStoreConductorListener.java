@@ -36,7 +36,7 @@ public class EventStoreConductorListener extends AbstractConductorListener {
     @Override
     public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
 
-        String databaseName = consumerConfiguration.getString("database").orElse("src/main/resources/neo4j");
+        String databaseName = consumerConfiguration.getString("database").orElse("neo4j");
         GraphDatabase graphDatabase = graphDatabases.apply(databaseName);
 
         // Check if we already have written data for this stream before

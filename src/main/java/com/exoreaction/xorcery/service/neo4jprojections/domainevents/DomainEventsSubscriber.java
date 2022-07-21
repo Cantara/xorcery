@@ -5,7 +5,9 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
+import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
@@ -20,11 +22,16 @@ class DomainEventsSubscriber
     private final Configuration sourceConfiguration;
     private Disruptor<Event<EventWithResult<ArrayNode, Metadata>>> disruptor;
     private GraphDatabaseService graphDatabaseService;
+    private Listeners<ProjectionListener> listeners;
 
-    public DomainEventsSubscriber(Configuration consumerConfiguration, Configuration sourceConfiguration, GraphDatabaseService graphDatabaseService) {
+    public DomainEventsSubscriber(Configuration consumerConfiguration,
+                                  Configuration sourceConfiguration,
+                                  GraphDatabaseService graphDatabaseService,
+                                  Listeners<ProjectionListener> listeners) {
         this.consumerConfiguration = consumerConfiguration;
         this.sourceConfiguration = sourceConfiguration;
         this.graphDatabaseService = graphDatabaseService;
+        this.listeners = listeners;
     }
 
     @Override
@@ -32,7 +39,7 @@ class DomainEventsSubscriber
         disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Neo4jDomainEventsDisruptorIn-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
-        disruptor.handleEventsWith(new Neo4jDomainEventEventHandler(graphDatabaseService, subscription));
+        disruptor.handleEventsWith(new Neo4jDomainEventEventHandler(graphDatabaseService, subscription, sourceConfiguration, listeners));
         disruptor.start();
         subscription.request(4096);
         return disruptor.getRingBuffer();

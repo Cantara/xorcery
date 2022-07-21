@@ -571,20 +571,47 @@
             </exclusions>
         </dependency>
 
+        <!-- Logs -->
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-core</artifactId>
+            <version>2.22.34</version>
+        </dependency>
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-bytes</artifactId>
+            <version>2.22.24</version>
+        </dependency>
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-wire</artifactId>
+            <version>2.22.20</version>
+        </dependency>
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-queue</artifactId>
+            <version>5.22.21</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>net.openhft</groupId>
+                    <artifactId>chronicle-bytes</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- Discovery -->
         <dependency>
             <groupId>org.jmdns</groupId>
             <artifactId>jmdns</artifactId>
             <version>3.5.7</version>
         </dependency>
-<!--
+
         <dependency>
             <groupId>org.neo4j.procedure</groupId>
             <artifactId>apoc</artifactId>
-            <version>4.4.0.4</version>
+            <version>4.4.0.6</version>
             <classifier>all</classifier>
         </dependency>
--->
 
         <!-- Metrics dependencies -->
         <dependency>
@@ -651,6 +678,7 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
