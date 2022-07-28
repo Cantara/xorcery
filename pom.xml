@@ -589,7 +589,7 @@
         <dependency>
             <groupId>net.openhft</groupId>
             <artifactId>chronicle-queue</artifactId>
-            <version>5.22.21</version>
+            <version>5.23ea25</version>
             <exclusions>
                 <exclusion>
                     <groupId>net.openhft</groupId>
