@@ -44,10 +44,17 @@ public record Configuration(ObjectNode json)
 
         public Builder addYaml(InputStream yamlStream) throws IOException {
             try (yamlStream) {
-                ObjectNode yaml = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(yamlStream);
+                JsonNode jsonNode = new ObjectMapper(new YAMLFactory()).readTree(yamlStream);
+                ObjectNode yaml = (ObjectNode) jsonNode;
                 new JsonMerger().merge(builder, yaml);
                 return this;
             }
+        }
+
+        public Builder addYaml(String yamlString) throws IOException {
+                ObjectNode yaml = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(yamlString);
+                new JsonMerger().merge(builder, yaml);
+                return this;
         }
 
         public Builder addSystemProperties(String nodeName) {

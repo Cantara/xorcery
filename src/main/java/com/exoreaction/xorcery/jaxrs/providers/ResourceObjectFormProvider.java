@@ -24,7 +24,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 @Produces({"application/x-www-form-urlencoded", "*/*"})
-@Consumes({"application/x-www-form-urlencoded", "*/*"})
+@Consumes({"application/x-www-form-urlencoded"})
 @Singleton
 @Provider
 public final class ResourceObjectFormProvider extends AbstractFormProvider<ResourceObject> {

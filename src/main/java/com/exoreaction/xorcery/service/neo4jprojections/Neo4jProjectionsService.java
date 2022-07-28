@@ -71,7 +71,7 @@ public class Neo4jProjectionsService
 
     @Override
     public void onStartup(Container container) {
-        conductor.addConductorListener(new DomainEventsConductorListener(graphDatabases, reactiveStreams, sro.serviceIdentifier(), "domainevents"));
+        conductor.addConductorListener(new DomainEventsConductorListener(graphDatabases, reactiveStreams, sro.serviceIdentifier(), "domainevents", listeners));
         conductor.addConductorListener(new EventStoreConductorListener(graphDatabases, reactiveStreams, sro.serviceIdentifier(), "eventstorestreams", listeners));
     }
 
@@ -85,8 +85,7 @@ public class Neo4jProjectionsService
 
     }
 
-    public void addProjectionListener(ProjectionListener listener)
-    {
+    public void addProjectionListener(ProjectionListener listener) {
         listeners.addListener(listener);
     }
 }

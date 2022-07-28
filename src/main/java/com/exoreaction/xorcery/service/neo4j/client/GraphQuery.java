@@ -6,6 +6,7 @@ import jakarta.ws.rs.NotFoundException;
 import org.neo4j.graphdb.Result;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicLong;
@@ -204,7 +205,7 @@ public class GraphQuery
     }
 
     public <T> CompletionStage<T> first(Function<RowModel, T> mapper) {
-        return applyQuery.apply(this).thenApply(gr ->
+        return applyQuery.apply(this).thenCompose(gr ->
         {
             List<T> results = new ArrayList<>();
 
@@ -214,7 +215,8 @@ public class GraphQuery
                         results.add(mapper.apply(new RowModel(row)));
                         return false;
                     });
-                    return results.stream().findFirst().orElseThrow(NotFoundException::new);
+                    return results.stream().findFirst().map(CompletableFuture::completedStage)
+                            .orElseGet(()-> CompletableFuture.failedStage(new NotFoundException()));
                 }
             } catch (Exception e) {
                 throw new CompletionException(e);

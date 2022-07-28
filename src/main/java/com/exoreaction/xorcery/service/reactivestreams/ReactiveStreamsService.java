@@ -70,7 +70,7 @@ public class ReactiveStreamsService
             try {
                 HttpClient httpClient = injectionManager.getInstance(JettyHttpClientSupplier.class).getHttpClient();
                 WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-                webSocketClient.setIdleTimeout(Duration.ofMillis(httpClient.getIdleTimeout()));
+                webSocketClient.setIdleTimeout(Duration.ofSeconds(httpClient.getIdleTimeout()));
                 webSocketClient.start();
                 bind(webSocketClient).named(SERVICE_TYPE);
                 context.register(ReactiveStreamsService.class, ReactiveStreams.class, ContainerLifecycleListener.class);

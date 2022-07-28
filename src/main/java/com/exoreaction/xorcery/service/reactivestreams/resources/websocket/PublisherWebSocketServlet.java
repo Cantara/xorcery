@@ -49,7 +49,7 @@ public class PublisherWebSocketServlet<T>
     @Override
     protected void configure(JettyWebSocketServletFactory factory) {
         factory.setMaxTextMessageSize(1048576);
-        factory.setIdleTimeout(Duration.ofMillis(configuration.getLong("idle_timeout").orElse(-1L)));
+        factory.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idle_timeout").orElse(-1L)));
 
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
         {

@@ -2,9 +2,16 @@ package com.exoreaction.xorcery.service.neo4j.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.jknack.handlebars.internal.Files;
+import org.neo4j.graphdb.Node;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -89,5 +96,47 @@ public final class Cypher {
     public static String toField(Enum<?> anEnum) {
         return fieldMappings.computeIfAbsent(anEnum, e ->
                 e.getDeclaringClass().getSimpleName().toLowerCase() + "_" + e.name());
+    }
+
+    public static ObjectNode toObjectNode(Map<String, Object> resultRow) {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        for (Map.Entry<String, Object> entry : resultRow.entrySet()) {
+            node.set(entry.getKey(), toJsonNode(entry.getValue()));
+        }
+        return node;
+    }
+
+    public static JsonNode toJsonNode(Object value) {
+        if (value == null) {
+            return NullNode.getInstance();
+        } else if (value instanceof String v) {
+            return JsonNodeFactory.instance.textNode(v);
+        } else if (value instanceof Long v) {
+            return JsonNodeFactory.instance.numberNode(v);
+        } else if (value instanceof Double v) {
+            return JsonNodeFactory.instance.numberNode(v);
+        } else if (value instanceof Boolean v) {
+            return JsonNodeFactory.instance.booleanNode(v);
+        } else if (value instanceof Node node) {
+            ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+            for (Map.Entry<String, Object> entry : node.getAllProperties().entrySet()) {
+                objectNode.set(entry.getKey(), toJsonNode(entry.getValue()));
+            }
+            return objectNode;
+        } else {
+            return null;
+        }
+    }
+
+    public static List<String> getCypherStatements(String statementResourceFile)
+            throws IllegalArgumentException {
+        try (InputStream resourceAsStream = Cypher.class.getResourceAsStream(statementResourceFile)) {
+            if (resourceAsStream == null)
+                throw new IllegalArgumentException("No such resource file:" + statementResourceFile);
+
+            return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not load Cypher statements", e);
+        }
     }
 }

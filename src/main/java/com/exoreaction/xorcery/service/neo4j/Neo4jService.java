@@ -1,11 +1,14 @@
 package com.exoreaction.xorcery.service.neo4j;
 
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
+import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +21,7 @@ import org.neo4j.dbms.api.DatabaseNotFoundException;
 import org.neo4j.graphdb.GraphDatabaseService;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +44,7 @@ public class Neo4jService
 
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-
+            builder.api("neo4j", "api/neo4j");
         }
 
         public Feature() {
@@ -58,19 +62,35 @@ public class Neo4jService
                     .setConfigRaw(settings)
                     .build();
 
-            List<String> databases = configuration().getListAs("neo4jdatabase.databases", JsonNode::textValue).orElse(List.of("src/main/resources/neo4j"));
-            for (String database : databases) {
+            List<DatabaseConfiguration> databases = configuration().getListAs("neo4jdatabase.databases", json -> new DatabaseConfiguration((ObjectNode) json))
+                    .orElseGet(() ->
+                            List.of(new DatabaseConfiguration(JsonNodeFactory.instance.objectNode().put("name", "neo4j"))
+                            ));
+            for (DatabaseConfiguration database : databases) {
                 GraphDatabaseService graphDb = null;
                 try {
-                    graphDb = managementService.database(database);
+                    graphDb = managementService.database(database.getName());
                 } catch (DatabaseNotFoundException e) {
-                    managementService.createDatabase(database);
-                    graphDb = managementService.database(database);
+                    managementService.createDatabase(database.getName());
+                    graphDb = managementService.database(database.getName());
                 }
                 GraphDatabase graphDatabase = new GraphDatabase(graphDb, Cypher.defaultFieldMappings());
 
-                bind(graphDb).named(database).to(GraphDatabaseService.class);
-                bind(graphDatabase).named(database).to(GraphDatabase.class);
+                // Run startup Cypher
+                for (String cypherResource : database.getStartup()) {
+                    try {
+                        List<String> statements = Cypher.getCypherStatements(cypherResource);
+
+                        for (String statement : statements) {
+                            graphDb.executeTransactionally(statement);
+                        }
+                    } catch (Throwable e) {
+                        logger.error(e);
+                    }
+                }
+
+                bind(graphDb).named(database.getName()).to(GraphDatabaseService.class);
+                bind(graphDatabase).named(database.getName()).to(GraphDatabase.class);
             }
 
             context.register(new Neo4jService(managementService), GraphDatabases.class, ContainerLifecycleListener.class);
@@ -102,5 +122,16 @@ public class Neo4jService
     @Override
     public GraphDatabase apply(String name) {
         return databases.computeIfAbsent(name, n -> new GraphDatabase(managementService.database(n), Cypher.defaultFieldMappings()));
+    }
+
+    public record DatabaseConfiguration(ObjectNode json)
+            implements JsonElement {
+        String getName() {
+            return getString("name").orElseThrow();
+        }
+
+        List<String> getStartup() {
+            return getListAs("startup", JsonNode::textValue).orElse(Collections.emptyList());
+        }
     }
 }

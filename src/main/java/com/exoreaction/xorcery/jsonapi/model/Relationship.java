@@ -26,6 +26,10 @@ public record Relationship(ObjectNode json)
             return new Builder().resourceIdentifier(resourceObject).build();
         }
 
+        public static Relationship relationship(String type, String id) {
+            return new Builder().resourceIdentifier(new ResourceObjectIdentifier.Builder(type, id).build()).build();
+        }
+
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }

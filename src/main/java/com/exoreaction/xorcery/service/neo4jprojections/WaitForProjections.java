@@ -16,10 +16,11 @@ public class WaitForProjections implements ProjectionListener {
 
     public CompletionStage<Metadata> waitFor(Metadata metadata) {
         long revision = metadata.getLong("revision").orElse(0L);
-        String streamId = metadata.getString("streamId").orElse("$all");
+        String projectionId = metadata.getString("streamId")
+                .orElseGet(() -> metadata.getString("domain").orElse("$all"));
 
         CompletableFuture<Metadata> future = new CompletableFuture<>();
-        if (Optional.ofNullable(currentRevisions.get(streamId)).orElse(0L) > revision) {
+        if (Optional.ofNullable(currentRevisions.get(projectionId)).orElse(0L) >= revision) {
             // Already done
             future.complete(metadata);
             return future;
@@ -34,8 +35,8 @@ public class WaitForProjections implements ProjectionListener {
     }
 
     @Override
-    public void onCommit(String streamId, long revision) {
-        currentRevisions.put(streamId, revision);
+    public void onCommit(String projectionId, long revision) {
+        currentRevisions.put(projectionId, revision);
 
         do {
             ProjectionWaiter waiter = queue.peek();

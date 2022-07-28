@@ -17,7 +17,7 @@ public abstract class Aggregate<SNAPSHOT extends AggregateSnapshot> {
 
     private final List<DomainEvent> changes = new ArrayList<>();
 
-    private Metadata metadata;
+    protected Metadata metadata;
 
     public abstract SNAPSHOT getSnapshot();
 

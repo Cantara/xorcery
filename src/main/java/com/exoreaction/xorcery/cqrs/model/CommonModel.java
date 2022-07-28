@@ -13,6 +13,7 @@ public interface CommonModel {
 
     enum Entity {
         id,
+        external_id,
         created_on,
         last_updated_on,
     }

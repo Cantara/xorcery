@@ -96,11 +96,24 @@ public class VariableResolver
             JsonNode replacedValue = lookup(source, subNameWithDefault[0].trim()).orElseGet(() ->
             {
                 if (subNameWithDefault.length > 1) {
-                    try {
-                        return new ObjectMapper().readTree(new StringReader(subNameWithDefault[1].trim()));
-                    } catch (IOException e) {
-                        return MissingNode.getInstance();
+                    for (int i = 1; i < subNameWithDefault.length; i++) {
+                        String defaultKey = subNameWithDefault[i];
+                        JsonNode defaultValue;
+                        try {
+                            defaultValue = new ObjectMapper().readTree(new StringReader(defaultKey.trim()));
+                            if (defaultValue instanceof TextNode textNode)
+                            {
+                                JsonNode resolvedValue = resolveValue(source, textNode);
+                                if (!(resolvedValue instanceof MissingNode))
+                                    defaultValue = resolvedValue;
+                            }
+                        } catch (IOException e) {
+                            defaultValue =  resolveValue(source, JsonNodeFactory.instance.textNode("{{"+defaultKey.trim()+"}}"));
+                        }
+                        if (!(defaultValue instanceof MissingNode))
+                            return defaultValue;
                     }
+                    return MissingNode.getInstance();
                 } else {
                     return MissingNode.getInstance();
                 }
@@ -114,6 +127,10 @@ public class VariableResolver
                 else
                     return replacedValue;
             } else {
+                // Resolve again
+                if (replacedValue instanceof TextNode replacedText)
+                    replacedValue = resolveValue(source, replacedText);
+
                 newValue += textValue.substring(idx, matcher.start()) + replacedValue.asText();
                 idx = matcher.end();
             }
