@@ -7,6 +7,8 @@ import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import com.exoreaction.xorcery.jsonapi.resources.JsonApiResource;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -34,6 +36,9 @@ import java.util.regex.Pattern;
 @Path("api/certmanager")
 public class CertificateManagerResource
         extends JsonApiResource {
+
+    private static final Logger logger = LogManager.getLogger(CertificateManagerResource.class);
+
     @GET
     public ResourceDocument get() throws CertificateException, IOException, ExecutionException, InterruptedException, KeyStoreException, NoSuchAlgorithmException {
 
@@ -45,10 +50,10 @@ public class CertificateManagerResource
 
             for (X509Certificate cert : certs) {
 
-                System.out.println("Current expiry date:"+cert.getNotAfter());
+                logger.info("Current expiry date:"+cert.getNotAfter());
 
                 Date tomorrow = Date.from((Instant) Duration.ofDays(1).addTo(Instant.now()));
-//                if (tomorrow.after(cert.getNotAfter()))
+                if (tomorrow.after(cert.getNotAfter()))
                 {
                     // Create new cert
                     String caName = getCaName(cert);
@@ -67,7 +72,8 @@ public class CertificateManagerResource
                     int exitValue = createCert.exitValue();
 
                     String errors = new String(createCert.getErrorStream().readAllBytes());
-                    System.out.println(errors);
+                    if (errors.length() > 0)
+                        logger.error(errors);
 
                     Process exportCert = Runtime.getRuntime().exec(new String[]{"openssl", "pkcs12", "-export", "-in", "cert.pem", "-inkey", "key.pem", "-out", "keystore.p12", "-name", "server", "-passout", "pass:password"}, new String[0], certDir).onExit().get();
 

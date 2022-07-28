@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
-import com.exoreaction.xorcery.service.neo4jprojections.Stream;
+import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.xorcery.util.Listeners;
@@ -40,16 +40,16 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
         String databaseName = consumerConfiguration.getString("database").orElse("neo4j");
         GraphDatabase graphDatabase = graphDatabases.apply(databaseName);
 
-        // Check if we already have written data for this stream before
+        // Check if we already have written data for this projection before
         String streamName = sourceConfiguration.getString("stream").orElseThrow(() -> new IllegalStateException("Missing 'stream' configuration setting"));
 
-        graphDatabase.query("MATCH (Stream:Stream {name:$stream_name})")
-                .parameter(Stream.name, streamName)
-                .results(Stream.revision)
-                .first(row -> row.row().getNumber("stream_revision").longValue()).whenComplete((position, exception) ->
+        graphDatabase.query("MATCH (Projection:Projection {name:$projection_name})")
+                .parameter(Projection.name, streamName)
+                .results(Projection.revision)
+                .first(row -> row.row().getNumber("projection_revision").longValue()).whenComplete((position, exception) ->
                 {
                     if (exception != null && !(exception.getCause() instanceof NotFoundException)) {
-                        logger.error("Error looking up existing stream position", exception);
+                        logger.error("Error looking up existing projection stream position", exception);
                     }
 
                     if (position != null) {

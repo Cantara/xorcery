@@ -8,6 +8,7 @@ import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.Server;
@@ -39,6 +40,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
@@ -88,12 +90,14 @@ public class RegistryService
 
         @Override
         protected void configure() {
-            ClientConfig config = new ClientConfig();
-            config.register(new JsonApiMessageBodyReader(new ObjectMapper()));
-            config.connectorProvider(new JettyConnectorProvider());
             JettyHttpClientContract instance = injectionManager.getInstance(JettyHttpClientContract.class);
-            config.register(instance);
-            Client client = ClientBuilder.newBuilder().withConfig(config).build();
+            Client client = ClientBuilder.newBuilder().withConfig(new ClientConfig()
+                    .register(new JsonApiMessageBodyReader(new ObjectMapper()))
+                    .register(LoggingFeature.class)
+                    .register(instance)
+                    .connectorProvider(new JettyConnectorProvider())
+                    .property( "jersey.config.logging.logger.level", "INFO" )
+            ).build();
             bind(new JsonApiClient(client));
 
             context.register(RegistryService.class, Registry.class, ContainerLifecycleListener.class);
@@ -136,7 +140,7 @@ public class RegistryService
         registration = new StartupRegistration(
                 reactiveStreams, jsonApiClient, resourceObject.serviceIdentifier(), registryLink,
                 server.getServerDocument(), upstreamSubscriber,
-                new CompletableFuture<ResourceDocument>().thenApply(v ->
+                new CompletableFuture<ResourceObject>().thenApply(v ->
                 {
                     LogManager.getLogger(RegistryService.class).info("Registered server");
                     return v;
@@ -327,8 +331,8 @@ public class RegistryService
                                       Link registryUri,
                                       ResourceDocument server,
                                       UpstreamSubscriber upstreamSubscriber,
-                                      CompletionStage<ResourceDocument> result)
-            implements RestProcess<ResourceDocument> {
+                                      CompletionStage<ResourceObject> result)
+            implements RestProcess<ResourceObject> {
 
         public void start() {
             client.get(registryUri)
@@ -359,7 +363,7 @@ public class RegistryService
                     ).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
         }
 
-        private <U> CompletionStage<ResourceDocument> submitServer(ServerResourceDocument registry) {
+        private <U> CompletionStage<ResourceObject> submitServer(ServerResourceDocument registry) {
             return registry.getServiceByType("registry")
                     .map(sro -> sro.getLinkByRel("registry").map(link ->
                             client.get(link)
@@ -369,7 +373,7 @@ public class RegistryService
         }
 
         @Override
-        public void complete(ResourceDocument value, Throwable t) {
+        public void complete(ResourceObject value, Throwable t) {
             logger.info("Startup registration complete");
             RestProcess.super.complete(value, t);
         }
@@ -377,8 +381,8 @@ public class RegistryService
 
     public record ShutdownDeregistration(JsonApiClient client, Link registryUri,
                                          ResourceDocument server,
-                                         CompletionStage<ResourceDocument> result)
-            implements RestProcess<ResourceDocument> {
+                                         CompletionStage<ResourceObject> result)
+            implements RestProcess<ResourceObject> {
 
         public void start() {
             client.get(registryUri)
@@ -387,7 +391,7 @@ public class RegistryService
                     .whenComplete(this::complete);
         }
 
-        private <U> CompletionStage<ResourceDocument> deleteServer(ServerResourceDocument registry) {
+        private <U> CompletionStage<ResourceObject> deleteServer(ServerResourceDocument registry) {
             return registry.getServiceByType("registry")
                     .map(sro -> sro.getLinkByRel("registry").map(link ->
                             client.get(link)

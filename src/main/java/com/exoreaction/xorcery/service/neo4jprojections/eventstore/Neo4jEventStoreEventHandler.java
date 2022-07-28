@@ -52,7 +52,7 @@ public class Neo4jEventStoreEventHandler
         this.sourceParameters = sourceParameters;
         this.listeners = listeners;
 
-        updateParameters.put("stream_name", sourceParameters.stream);
+        updateParameters.put("projection_name", sourceParameters.stream);
     }
 
     @Override
@@ -74,12 +74,11 @@ public class Neo4jEventStoreEventHandler
                                 .map(domain ->
                                 {
                                     String statementFile = "/neo4j/" + domain + "/" + t + ".cyp";
-                                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
-                                    if (resourceAsStream == null)
-                                        return null;
+                                    try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
+                                        if (resourceAsStream == null)
+                                            return null;
 
-                                    try {
-                                        return Files.read(resourceAsStream, StandardCharsets.UTF_8);
+                                        return new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8);
                                     } catch (IOException e) {
                                         logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
                                         return null;
@@ -88,12 +87,11 @@ public class Neo4jEventStoreEventHandler
                                 .orElseGet(() ->
                                 {
                                     String statementFile = "/neo4j/" + t + ".cyp";
-                                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
-                                    if (resourceAsStream == null)
-                                        return null;
+                                    try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
+                                        if (resourceAsStream == null)
+                                            return null;
 
-                                    try {
-                                        return Files.read(resourceAsStream, StandardCharsets.UTF_8);
+                                        return new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8);
                                     } catch (IOException e) {
                                         logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
                                         return null;
@@ -110,10 +108,10 @@ public class Neo4jEventStoreEventHandler
 
         if (endOfBatch) {
             try {
-                // Update Stream node with current revision
+                // Update Projection node with current revision
                 long revision = new EventStoreMetadata(event.metadata).revision();
-                updateParameters.put("stream_revision", revision);
-                tx.execute("MERGE (stream:Stream {name:$stream_name}) SET stream.revision=$stream_revision",
+                updateParameters.put("projection_revision", revision);
+                tx.execute("MERGE (projection:Projection {name:$projection_name}) SET projection.revision=$projection_revision",
                         updateParameters);
 
                 tx.commit();

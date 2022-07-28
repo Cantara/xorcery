@@ -15,17 +15,45 @@ import static org.hamcrest.Matchers.equalTo;
 class VariableResolverTest {
     private static Configuration config;
 
+    private static final String testYaml = """
+            resolverecursive: "{{resolve}}"
+            resolverecursive2: "{{resolve}}/test/{{ partial3 }}"
+            foo: bar
+            number: 5
+            resolve: "{{ foo }}"
+            partial1: "{{ foo }}-abc"
+            partial2: "abc-{{ foo }}-abc"
+            partial3: "abc-{{ foo }}"
+            resolvenumber: "{{number}}"
+
+            level1:
+              level2:
+                level3: abc
+
+            lvl1:
+              level2: "{{level1.level2}}"
+
+            hierarchy: some {{ level1.level2.level3 }} value
+            importedhierarchy: "{{ lvl1.level2.level3 }}"
+            missing: some {{ level1.level3.missing| "defaultvalue" }} value
+            defaultnumber: "{{ somenumber | 5 }}"
+            resolvemissing: some {{level1.level3.missing | foo}} value            
+            resolvemissingwithdefault: some {{level1.level3.missing | level1.level3.missing | "test"}} value            
+                        """;
+
     @BeforeAll
     public static void setup() throws IOException {
 
-        ObjectNode objectNode = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(VariableResolverTest.class.getResourceAsStream("variableresolvertest.yaml"));
+        ObjectNode objectNode = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(testYaml);
         config = new Configuration(new VariableResolver().apply(objectNode, objectNode));
 
+/*
         try {
             new ObjectMapper(new YAMLFactory()).writeValue(System.out, config.json());
         } catch (IOException e) {
             // Ignore
         }
+*/
     }
 
     @Test
@@ -46,13 +74,16 @@ class VariableResolverTest {
     }
 
     @Test
-    public void testResolveHierarchicalName() throws IOException {
+    public void testResolveHierarchicalName() throws
+            IOException {
         assertThat(config.getString("hierarchy").orElse(null), equalTo("some abc value"));
     }
 
     @Test
     public void testResolveHierarchicalNameWithDefault() throws IOException {
         assertThat(config.getString("missing").orElse(null), equalTo("some defaultvalue value"));
+        assertThat(config.getString("resolvemissing").orElse(null), equalTo("some bar value"));
+        assertThat(config.getString("resolvemissingwithdefault").orElse(null), equalTo("some test value"));
     }
 
     @Test
@@ -64,14 +95,13 @@ class VariableResolverTest {
     public void testResolveRecursive() throws IOException {
         String resolverecursive = config.getString("resolverecursive").orElse(null);
         assertThat(resolverecursive, equalTo("bar"));
+
+        String resolverecursive2 = config.getString("resolverecursive2").orElse(null);
+        assertThat(resolverecursive2, equalTo("bar/test/abc-bar"));
     }
 
     @Test
     public void testResolveNumberWithDefault() throws IOException {
-        Configuration config = new Configuration.Builder()
-                .addYaml(getClass().getResourceAsStream("variableresolvertest.yaml"))
-                .build();
-
         assertThat(config.getInteger("defaultnumber").orElse(null), equalTo(5));
     }
 }

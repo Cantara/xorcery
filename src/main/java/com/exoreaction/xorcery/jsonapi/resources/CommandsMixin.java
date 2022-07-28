@@ -23,11 +23,22 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import static com.exoreaction.xorcery.jaxrs.MediaTypes.APPLICATION_JSON_API;
+import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.self;
+
 public interface CommandsMixin
         extends ResourceContext {
 
     default Consumer<Links.Builder> schemaLink() {
         return links -> {
+        };
+    }
+
+    default Consumer<Links.Builder> commandSelfLink()
+    {
+        return links ->
+        {
+            links.link(self, getUriInfo().getRequestUri().toASCIIString());
         };
     }
 
@@ -96,7 +107,7 @@ public interface CommandsMixin
         }
 
         return CompletableFuture.completedStage(new ResourceDocument.Builder()
-                .links(new Links.Builder().with(schemaLink()))
+                .links(new Links.Builder().with(commandSelfLink(), schemaLink()))
                 .data(new ResourceObject.Builder(Command.getName(command), id)
                         .attributes(new Attributes.Builder().with(a ->
                         {

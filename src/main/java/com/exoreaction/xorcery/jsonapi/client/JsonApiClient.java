@@ -1,8 +1,11 @@
 package com.exoreaction.xorcery.jsonapi.client;
 
 import com.exoreaction.xorcery.jaxrs.MediaTypes;
+import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.InvocationCallback;
@@ -18,36 +21,78 @@ public record JsonApiClient(Client client) {
         client.target(link.getHrefAsUri())
                 .request(MediaTypes.APPLICATION_JSON_API_TYPE)
                 .buildGet()
-                .submit(new InvocationCallback<ResourceDocument>() {
-                    @Override
-                    public void completed(ResourceDocument resourceDocument) {
-                        future.complete(resourceDocument);
-                    }
-
-                    @Override
-                    public void failed(Throwable throwable) {
-                        future.completeExceptionally(throwable);
-                    }
-                });
+                .submit(new ResourceDocumentCallback(future, link));
         return future;
     }
 
-    public CompletionStage<ResourceDocument> submit(Link link, ResourceDocument resourceDocument) {
-        CompletableFuture<ResourceDocument> future = new CompletableFuture<>();
+
+    public CompletionStage<ResourceObject> submit(Link link, ResourceObject resourceObject) {
+        CompletableFuture<ResourceObject> future = new CompletableFuture<>();
+        client.target(link.getHrefAsUri())
+                .request(MediaTypes.APPLICATION_JSON_API_TYPE)
+                .buildPost(Entity.entity(resourceObject.json(), MediaTypes.APPLICATION_JSON_API_TYPE))
+                .submit(new ResourceObjectCallback(future, link));
+        return future;
+    }
+
+    /**
+     * For batch uploads
+     *
+     * @param link
+     * @param resourceDocument
+     * @return
+     */
+    public CompletionStage<ResourceObject> submit(Link link, ResourceDocument resourceDocument) {
+        CompletableFuture<ResourceObject> future = new CompletableFuture<>();
         client.target(link.getHrefAsUri())
                 .request(MediaTypes.APPLICATION_JSON_API_TYPE)
                 .buildPost(Entity.entity(resourceDocument.json(), MediaTypes.APPLICATION_JSON_API_TYPE))
-                .submit(new InvocationCallback<ResourceDocument>() {
-                    @Override
-                    public void completed(ResourceDocument resourceDocument) {
-                        future.complete(resourceDocument);
-                    }
-
-                    @Override
-                    public void failed(Throwable throwable) {
-                        future.completeExceptionally(throwable);
-                    }
-                });
+                .submit(new ResourceObjectCallback(future, link));
         return future;
     }
+
+    private static class Callback<T>
+    implements InvocationCallback<T> {
+
+        private final CompletableFuture<T> future;
+        private final Link link;
+
+        public Callback(CompletableFuture<T> future, Link link) {
+            this.future = future;
+            this.link = link;
+        }
+
+        @Override
+        public void completed(T result) {
+            future.complete(result);
+        }
+
+        @Override
+        public void failed(Throwable throwable) {
+            if (throwable instanceof ProcessingException processingException)
+            {
+                future.completeExceptionally(new ProcessingException(link.getHref(), processingException.getCause()));
+            } else
+            {
+                future.completeExceptionally(throwable);
+            }
+        }
+    }
+
+    private static class ResourceObjectCallback
+        extends Callback<ResourceObject>
+    {
+        public ResourceObjectCallback(CompletableFuture<ResourceObject> future, Link link) {
+            super(future, link);
+        }
+    }
+
+    private static class ResourceDocumentCallback
+        extends Callback<ResourceDocument>
+    {
+        public ResourceDocumentCallback(CompletableFuture<ResourceDocument> future, Link link) {
+            super(future, link);
+        }
+    }
+
 }

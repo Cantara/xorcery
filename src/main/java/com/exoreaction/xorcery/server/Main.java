@@ -12,7 +12,7 @@ import java.util.concurrent.Callable;
  * @since 12/04/2022
  */
 
-@CommandLine.Command(name="reactiveserver", version="1.0")
+@CommandLine.Command(name="xorcery", version="1.0")
 public class Main
     implements Callable<Integer>
 {
@@ -25,13 +25,14 @@ public class Main
     @Override
     public Integer call() throws Exception {
 
+        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         Logger logger = LogManager.getLogger( Main.class );
 
         Server server = new Server(configuration, id);
 
         Runtime.getRuntime().addShutdownHook( new Thread( () ->
         {
-            System.out.println("Shutting down server!");
+            logger.info( "Shutting down server" );
             try
             {
                 server.close();
@@ -40,7 +41,6 @@ public class Main
             {
                 logger.warn( "Error during shutdown", e );
             }
-            System.out.println("Shutdown server!");
             logger.info( "Shutdown" );
 
             LogManager.shutdown();

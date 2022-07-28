@@ -4,14 +4,15 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery</artifactId>
-    <version>0.7.1-SNAPSHOT</version>
+    <version>0.8.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <log4j.version>2.17.2</log4j.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <log4j.version>2.18.0</log4j.version>
         <jetty.version>11.0.11</jetty.version>
         <jersey.version>3.0.5</jersey.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
@@ -19,7 +20,7 @@
         <jackson.version>2.13.3</jackson.version>
         <metrics.version>4.2.10</metrics.version>
 
-        <neo4j.version>4.4.8</neo4j.version>
+        <neo4j.version>4.4.9</neo4j.version>
 
         <junit.version>5.8.2</junit.version>
         <junit.platform.version>1.8.2</junit.platform.version>
@@ -249,17 +250,22 @@
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>${log4j.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-jul</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-            <version>1.7.36</version>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.7.36</version>
+            <version>${slf4j.version}</version>
         </dependency>
 
         <!-- Configuration -->
@@ -529,21 +535,6 @@
             <artifactId>jackson-datatype-jakarta-jsonp</artifactId>
             <version>2.13.3</version>
         </dependency>
-        <!--
-                <dependency>
-                    <groupId>com.fasterxml.jackson.datatype</groupId>
-                    <artifactId>jackson-datatype-jsr353</artifactId>
-                    <version>2.13.2</version>
-                </dependency>
-        -->
-
-        <!-- Project Reactor
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
-            <version>3.4.16</version>
-        </dependency>
-        -->
 
         <!-- Database dependencies -->
         <dependency>
@@ -555,6 +546,14 @@
                 <exclusion>
                     <groupId>commons-logging</groupId>
                     <artifactId>commons-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.neo4j</groupId>
+                    <artifactId>neo4j-import-tool</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.neo4j</groupId>
+                    <artifactId>neo4j-batch-insert</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -604,13 +603,6 @@
             <groupId>org.jmdns</groupId>
             <artifactId>jmdns</artifactId>
             <version>3.5.7</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.neo4j.procedure</groupId>
-            <artifactId>apoc</artifactId>
-            <version>4.4.0.6</version>
-            <classifier>all</classifier>
         </dependency>
 
         <!-- Metrics dependencies -->

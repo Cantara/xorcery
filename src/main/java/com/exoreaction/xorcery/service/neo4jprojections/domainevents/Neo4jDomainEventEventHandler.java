@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
+import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
@@ -42,6 +43,7 @@ public class Neo4jDomainEventEventHandler
 
     private Transaction tx;
     private List<CompletableFuture<Metadata>> futures = new ArrayList<>();
+    private Map<String, Object> updateParameters = new HashMap<>();
     private Map<String, List<String>> cachedEventCypher = new HashMap<>();
 
     public Neo4jDomainEventEventHandler(GraphDatabaseService graphDatabaseService,
@@ -52,6 +54,10 @@ public class Neo4jDomainEventEventHandler
         this.subscription = subscription;
         this.sourceConfiguration = sourceConfiguration;
         this.listeners = listeners;
+
+        sourceConfiguration.getLong("from").ifPresent(from -> version = from);
+
+        updateParameters.put("projection_name", sourceConfiguration.getString("stream").orElseThrow());
     }
 
     @Override
@@ -73,12 +79,11 @@ public class Neo4jDomainEventEventHandler
                                 .map(domain ->
                                 {
                                     String statementFile = "/neo4j/" + domain + "/" + t + ".cyp";
-                                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
-                                    if (resourceAsStream == null)
-                                        return null;
+                                    try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
+                                        if (resourceAsStream == null)
+                                            return null;
 
-                                    try {
-                                        return List.of(Files.read(resourceAsStream, StandardCharsets.UTF_8).split(";"));
+                                        return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
                                     } catch (IOException e) {
                                         logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
                                         return null;
@@ -87,12 +92,11 @@ public class Neo4jDomainEventEventHandler
                                 .orElseGet(() ->
                                 {
                                     String statementFile = "/neo4j/" + t + ".cyp";
-                                    InputStream resourceAsStream = getClass().getResourceAsStream(statementFile);
-                                    if (resourceAsStream == null)
-                                        return null;
+                                    try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
+                                        if (resourceAsStream == null)
+                                            return null;
 
-                                    try {
-                                        return List.of(Files.read(resourceAsStream, StandardCharsets.UTF_8).split(";"));
+                                        return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
                                     } catch (IOException e) {
                                         logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
                                         return null;
@@ -114,6 +118,11 @@ public class Neo4jDomainEventEventHandler
 
         if (endOfBatch) {
             try {
+                // Update Projection node with current revision
+                updateParameters.put("projection_revision", version + futures.size());
+                tx.execute("MERGE (projection:Projection {name:$projection_name}) SET projection.revision=$projection_revision",
+                        updateParameters);
+
                 tx.commit();
                 tx.close();
                 tx = graphDatabaseService.beginTx();
@@ -123,6 +132,7 @@ public class Neo4jDomainEventEventHandler
                     Metadata result = new Metadata.Builder().add("revision", version).build();
                     future.complete(result);
                 }
+                System.out.println("Completed future " + version);
                 listeners.listener().onCommit(sourceConfiguration.getString("stream").orElse(""), version);
 
             } catch (Exception e) {

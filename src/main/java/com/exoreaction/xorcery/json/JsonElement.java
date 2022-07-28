@@ -200,9 +200,11 @@ public interface JsonElement {
                 else
                     return Optional.empty();
             }
-            return Optional.ofNullable(c.get(names[names.length - 1]));
+            JsonNode value = c.get(names[names.length - 1]);
+            return value instanceof NullNode ? Optional.empty() : Optional.ofNullable(value);
         } else {
-            return Optional.ofNullable(c.get(name));
+            JsonNode value = c.get(name);
+            return value instanceof NullNode ? Optional.empty() : Optional.ofNullable(value);
         }
     }
 }

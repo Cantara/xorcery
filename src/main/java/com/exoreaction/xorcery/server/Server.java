@@ -51,8 +51,10 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.URI;
 import java.net.URL;
+import java.security.KeyStore;
 import java.time.Duration;
 import java.util.Enumeration;
+import java.util.EventListener;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -206,6 +208,9 @@ public class Server
 
         Configuration jettyConfig = configuration.getConfiguration("server");
 
+        int httpPort = jettyConfig.getInteger("port").orElse(8889);
+        int httpsPort = jettyConfig.getInteger("ssl.port").orElse(8443);
+
 /*
         // Ensure Conscrypt is used
         ConscryptHostnameVerifier hostnameVerifier = new ConscryptHostnameVerifier() {
@@ -240,48 +245,68 @@ public class Server
         // Setup protocols
         HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
 
-        // The ConnectionFactory for clear-text HTTP/2.
-        HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
+        if (configuration.getBoolean("server.http2.enabled").orElse(false))
+        {
+            // The ConnectionFactory for clear-text HTTP/2.
+            HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
 
-        // Create and configure the HTTP 1.1/2 connector
-        final ServerConnector http = new ServerConnector(server, http11, h2c);
-        http.setPort(jettyConfig.getInteger("port").orElse(8889));
-        server.addConnector(http);
-
-        // The ALPN ConnectionFactory.
-        ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
-        // The default protocol to use in case there is no negotiation.
-        alpn.setDefaultProtocol(http11.getProtocol());
+            // Create and configure the HTTP 1.1/2 connector
+            final ServerConnector http = new ServerConnector(server, http11, h2c);
+            http.setPort(httpPort);
+            server.addConnector(http);
+        } else
+        {
+            // Create and configure the HTTP 1.1 connector
+            final ServerConnector http = new ServerConnector(server, http11);
+            http.setPort(httpPort);
+            server.addConnector(http);
+        }
 
         // Configure the SslContextFactory with the keyStore information.
-        SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
-        sslContextFactory.setKeyStoreType("PKCS12");
-        sslContextFactory.setKeyStorePath(new File(".").toURI().relativize(getClass().getResource("/keystore.p12").toURI()).getPath());
-        sslContextFactory.setKeyStorePassword("password");
-        sslContextFactory.setTrustStorePath(new File(".").toURI().relativize(getClass().getResource("/truststore.jks").toURI()).getPath());
-        sslContextFactory.setTrustStorePassword("password");
-        sslContextFactory.setHostnameVerifier((hostName, session) -> true);
-        sslContextFactory.setTrustAll(true);
-        sslContextFactory.setWantClientAuth(true);
+        SslContextFactory.Server sslContextFactory = configuration.getBoolean("server.ssl.enabled").orElse(false) ? new SslContextFactory.Server() : null;
+        if (configuration.getBoolean("server.ssl.enabled").orElse(false))
+        {
+            // The ALPN ConnectionFactory.
+            ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
+            // The default protocol to use in case there is no negotiation.
+            alpn.setDefaultProtocol(http11.getProtocol());
 
-        SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, alpn.getProtocol());
+            sslContextFactory.setKeyStoreType(configuration.getString("server.ssl.keystore.type").orElse("PKCS12"));
+            sslContextFactory.setKeyStorePath(configuration.getString("server.ssl.keystore.path")
+                    .orElseGet(()->getClass().getResource("/keystore.p12").toExternalForm()));
+            sslContextFactory.setKeyStorePassword(configuration.getString("server.ssl.keystore.password").orElse("password"));
 
-        // Create and configure the secure HTTP 1.1/2 connector
-        HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpConfig);
-        final ServerConnector https = new ServerConnector(server, tls, alpn, h2, http11);
-        https.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
+//            sslContextFactory.setTrustStoreType(configuration.getString("server.ssl.truststore.type").orElse("PKCS12"));
+            sslContextFactory.setTrustStorePath(configuration.getString("server.ssl.truststore.path")
+                    .orElseGet(()->getClass().getResource("/keystore.p12").toExternalForm()));
+            sslContextFactory.setTrustStorePassword(configuration.getString("server.ssl.truststore.password").orElse("password"));
+            sslContextFactory.setHostnameVerifier((hostName, session) -> true);
+            sslContextFactory.setTrustAll(configuration.getBoolean("server.ssl.trustall").orElse(false));
+            sslContextFactory.setWantClientAuth(configuration.getBoolean("server.ssl.wantclientauth").orElse(false));
+
+            SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, alpn.getProtocol());
+
+            // Create and configure the secure HTTP 1.1/2 connector
+            HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpConfig);
+            final ServerConnector https = new ServerConnector(server, tls, alpn, h2, http11);
+            https.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
 //        final ServerConnector https = new ServerConnector(server, tls, alpn, http11);
-        https.setPort(jettyConfig.getInteger("secure_port").orElse(8443));
-        server.addConnector(https);
+            https.setPort(httpsPort);
+            server.addConnector(https);
 
-        // Create and configure the HTTP/3 connector
-        HTTP3ServerConnector connector = new HTTP3ServerConnector(server, sslContextFactory, new HTTP3ServerConnectionFactory(httpConfig));
-        connector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
-        connector.setPort(jettyConfig.getInteger("secure_port").orElse(8443));
-        server.addConnector(connector);
+            // Create and configure the HTTP/3 connector
+            if (configuration.getBoolean("server.http3.enabled").orElse(false))
+            {
+                HTTP3ServerConnector connector = new HTTP3ServerConnector(server, sslContextFactory, new HTTP3ServerConnectionFactory(httpConfig));
+                connector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
+                connector.setPort(httpsPort);
+                server.addConnector(connector);
+            }
 
-        baseUri = URI.create("https://" + configuration.getString("host").orElse("localhost") + ":" + https.getPort() + "/");
-
+            baseUri = URI.create("https://" + configuration.getString("host").orElse("localhost") + ":" + httpsPort + "/");
+        } else {
+            baseUri = URI.create("http://" + configuration.getString("host").orElse("localhost") + ":" + httpPort + "/");
+        }
 
         ServletContextHandler ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         ctx.setContextPath("/");
@@ -294,37 +319,56 @@ public class Server
                 try {
 
                     // Client setup
-                    SslContextFactory.Client sslClientContextFactory = new SslContextFactory.Client();
-                    sslClientContextFactory.setKeyStoreType("PKCS12");
-                    sslClientContextFactory.setKeyStorePath(new File(".").toURI().relativize(getClass().getResource("/keystore.p12").toURI()).getPath());
-                    sslClientContextFactory.setKeyStorePassword("password");
-                    sslClientContextFactory.setTrustStorePath(new File(".").toURI().relativize(getClass().getResource("/truststore.jks").toURI()).getPath());
-                    sslClientContextFactory.setTrustStorePassword("password");
-                    sslClientContextFactory.setEndpointIdentificationAlgorithm("HTTPS");
-                    sslClientContextFactory.setHostnameVerifier((hostName, session) -> true);
-                    sslClientContextFactory.setTrustAll(true);
-                    sslClientContextFactory.setSNIProvider(NON_DOMAIN_SNI_PROVIDER);
-
                     ClientConnector connector = new ClientConnector();
-                    connector.setIdleTimeout(Duration.ofMillis(jettyConfig.getLong("idle_timeout").orElse(-1L)));
-                    connector.setSslContextFactory(sslClientContextFactory);
+                    connector.setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
 
                     // HTTP 1.1
                     ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
 
                     // HTTP/2
                     HTTP2Client http2Client = new HTTP2Client(connector);
+                    http2Client.setIdleTimeout(configuration.getLong("client.idle_timeout").orElse(-1L));
+
                     ClientConnectionFactoryOverHTTP2.HTTP2 http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
 
-                    // HTTP/3
-                    HTTP3Client h3Client = new HTTP3Client();
-                    h3Client.getClientConnector().setSslContextFactory(sslClientContextFactory);
-                    h3Client.getClientConnector().setIdleTimeout(Duration.ofMillis(jettyConfig.getLong("idle_timeout").orElse(-1L)));
-                    h3Client.getQuicConfiguration().setSessionRecvWindow(64 * 1024 * 1024);
-                    ClientConnectionFactoryOverHTTP3.HTTP3 http3 = new ClientConnectionFactoryOverHTTP3.HTTP3(h3Client);
+                    HttpClientTransportDynamic transport = null;
+                    if (configuration.getBoolean("client.ssl.enabled").orElse(false))
+                    {
+
+                        SslContextFactory.Client sslClientContextFactory = new SslContextFactory.Client();
+                        sslClientContextFactory.setKeyStoreType(configuration.getString("client.ssl.keystore.type").orElse("PKCS12"));
+                        sslClientContextFactory.setKeyStorePath(configuration.getString("client.ssl.keystore.path")
+                                .orElseGet(()->getClass().getResource("/keystore.p12").toExternalForm()));
+                        sslClientContextFactory.setKeyStorePassword(configuration.getString("client.ssl.keystore.password").orElse("password"));
+
+//                        sslClientContextFactory.setTrustStoreType(configuration.getString("client.ssl.truststore.type").orElse("PKCS12"));
+                        sslClientContextFactory.setTrustStorePath(configuration.getString("client.ssl.truststore.path")
+                                .orElseGet(()->getClass().getResource("/keystore.p12").toExternalForm()));
+                        sslClientContextFactory.setTrustStorePassword(configuration.getString("client.ssl.truststore.password").orElse("password"));
+
+                        sslClientContextFactory.setEndpointIdentificationAlgorithm("HTTPS");
+                        sslClientContextFactory.setHostnameVerifier((hostName, session) -> true);
+                        sslClientContextFactory.setTrustAll(configuration.getBoolean("client.ssl.trustall").orElse(false));
+                        sslClientContextFactory.setSNIProvider(NON_DOMAIN_SNI_PROVIDER);
+
+                        connector.setSslContextFactory(sslClientContextFactory);
+
+                        // HTTP/3
+                        HTTP3Client h3Client = new HTTP3Client();
+                        h3Client.getClientConnector().setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
+                        h3Client.getQuicConfiguration().setSessionRecvWindow(64 * 1024 * 1024);
+                        ClientConnectionFactoryOverHTTP3.HTTP3 http3 = new ClientConnectionFactoryOverHTTP3.HTTP3(h3Client);
+
+                        bind(sslClientContextFactory);
+
+                        h3Client.getClientConnector().setSslContextFactory(sslClientContextFactory);
+
+                        transport = new HttpClientTransportDynamic(connector, http1, http2, http3);
+                    } else {
+                        transport = new HttpClientTransportDynamic(connector, http1, http2);
+                    }
 
 //                    HttpClientTransportDynamic transport = new HttpClientTransportDynamic(connector, http1);
-                    HttpClientTransportDynamic transport = new HttpClientTransportDynamic(connector, http1, http2, http3);
 //                    HttpClientTransportOverHTTP3 transport = new HttpClientTransportOverHTTP3(h3Client);
                     HttpClient client = new HttpClient(transport);
                     client.start();
@@ -343,9 +387,8 @@ public class Server
                     bind(ctx);
                     bind(Server.this);
 
-                    bind(sslContextFactory);
-                    bind(sslClientContextFactory);
-
+                    if (sslContextFactory != null)
+                        bind(sslContextFactory);
                 } catch (Exception e) {
                     throw new RuntimeIOException(e);
                 }

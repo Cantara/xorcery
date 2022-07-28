@@ -1,6 +1,7 @@
-name: server1
+name: genericserver
 host: localhost
 home: "{{ SYSTEM.user_dir }}"
+resources: "{{ home }}/target/classes"
 
 environment: development
 tag: default
@@ -9,8 +10,40 @@ idle_timeout: -1
 
 server:
   port: 8889
-  secure_port: 8443
   idle_timeout: "{{ idle_timeout }}"
+
+  http2:
+    enabled: true
+
+  http3:
+    enabled: false
+
+  ssl:
+    enabled: true
+    port: 8443
+    trustall: true
+    wantclientauth: true
+    keystore:
+      type: "PKCS12"
+      path: "{{ resources }}/keystore.p12"
+      password: "password"
+    truststore:
+      type: "PKCS12"
+      path: "{{ resources }}/truststore.jks"
+      password: "password"
+
+client:
+  ssl:
+    enabled: true
+    trustall: true
+    keystore:
+      type: "PKCS12"
+      path: "{{ resources }}/keystore.p12"
+      password: "password"
+    truststore:
+      type: "PKCS12"
+      path: "{{ resources }}/truststore.jks"
+      password: "password"
 
 jaxrs:
   register:
@@ -28,7 +61,6 @@ registry:
   dnsdiscovery: false
 
 conductor:
-  enabled: true
   templates: []
 #    - /conductor/metrics.yaml
 #    - /conductor/metrics_opensearch.yaml
@@ -37,59 +69,42 @@ conductor:
 #    - /conductor/certmanager.yaml
 
 certificatemanager:
-  enabled: true
   is_master: true
   renew_on_startup: true
 
 # Logging
-log4jappender:
-  enabled: true
+log4jappender: {}
 
-soutlogging:
-  enabled: true
+soutlogging: {}
 
-logs:
-  enabled: true
+logs: {}
 
 # Metrics
-metrics:
-  enabled: true
+metrics: {}
 
-soutmetrics:
-  enabled: false
+soutmetrics: {}
 
-jmxmetrics:
-  enabled: true
+jmxmetrics: {}
 
 # Domain events
 neo4jdatabase:
-  enabled: true
   path: "{{ home }}/target/neo4j"
   settings:
     dbms:
       allow_upgrade: true
-  databases:
-    - neo4j
 
-neo4jprojections:
-  enabled: true
+neo4jprojections: {}
 
 eventstore:
-  enabled: false
   url: esdb://localhost:2113?tls=false
 
 opensearch:
-  enabled: false
   url: http://localhost:9200
   templates:
     common: /opensearch/common.json
     domainevents: /opensearch/domainevents.json
 
-domainevents:
-  enabled: true
+domainevents: {}
 
 # Misc
-
-visualizer:
-  enabled: false
-
+visualizer: {}

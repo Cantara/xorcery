@@ -4,6 +4,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,8 +16,13 @@ public class ServerApplication
     public ServerApplication() throws IOException {
         property(ServerProperties.WADL_FEATURE_DISABLE, "true");
 
-        String mediaTypes = Files.readString(Path.of(URI.create(getClass().getResource("/mediatypes.conf").toString())), StandardCharsets.UTF_8)
-                .replace('\n',',');
-        property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypes);
+        try (InputStream mediaTypesStream = getClass().getResourceAsStream("/mediatypes.conf"))
+        {
+            if (mediaTypesStream != null)
+            {
+                String mediaTypes = new String(mediaTypesStream.readAllBytes(), StandardCharsets.UTF_8).replace('\n',',');
+                property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypes);
+            }
+        }
     }
 }
