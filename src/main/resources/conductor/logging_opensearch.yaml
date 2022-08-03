@@ -1,6 +1,6 @@
 data:
   - id: logging_opensearch
-    type: grouptemplate,
+    type: grouptemplate
     attributes:
       name: Log messages to OpenSearch
       sources:

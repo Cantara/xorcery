@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch.eventstore;
 
+import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
@@ -11,7 +12,6 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opensearch.client.RestHighLevelClient;
 
 public class EventStoreConductorListener extends AbstractConductorListener {
 
@@ -19,9 +19,9 @@ public class EventStoreConductorListener extends AbstractConductorListener {
 
     private ReactiveStreams reactiveStreams;
     private Listeners<ProjectionListener> listeners;
-    private RestHighLevelClient client;
+    private OpenSearchClient client;
 
-    public EventStoreConductorListener(RestHighLevelClient client, ReactiveStreams reactiveStreams, ServiceIdentifier serviceIdentifier, String rel, Listeners<ProjectionListener> listeners) {
+    public EventStoreConductorListener(OpenSearchClient client, ReactiveStreams reactiveStreams, ServiceIdentifier serviceIdentifier, String rel, Listeners<ProjectionListener> listeners) {
         super(serviceIdentifier, rel);
         this.client = client;
         this.reactiveStreams = reactiveStreams;

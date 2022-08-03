@@ -11,6 +11,8 @@ import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.CompletionException;
+
 import static com.exoreaction.xorcery.jaxrs.MediaTypes.APPLICATION_JSON_API;
 
 @Provider
@@ -22,6 +24,11 @@ public class JsonApiExceptionMapper
     @Override
     public Response toResponse(Throwable exception)
     {
+        if (exception instanceof CompletionException)
+        {
+            exception = exception.getCause();
+        }
+
         try {
             throw exception;
         } catch (WebApplicationException e) {

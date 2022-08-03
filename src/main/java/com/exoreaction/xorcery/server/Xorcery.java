@@ -2,7 +2,6 @@ package com.exoreaction.xorcery.server;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.cqrs.UUIDs;
 import com.exoreaction.xorcery.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.xorcery.jsonapi.model.*;
@@ -12,7 +11,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.jsonp.JSONPModule;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.ws.rs.core.UriBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -38,6 +36,7 @@ import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.Jetty;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.utilities.Binder;
@@ -50,11 +49,7 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.URI;
-import java.net.URL;
-import java.security.KeyStore;
 import java.time.Duration;
-import java.util.Enumeration;
-import java.util.EventListener;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -67,10 +62,10 @@ import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NO
  * @since 12/04/2022
  */
 
-public class Server
+public class Xorcery
         implements Closeable {
 
-    private static final Logger logger = LogManager.getLogger(Server.class);
+    private static final Logger logger = LogManager.getLogger(Xorcery.class);
 
     private final String serverId;
     private Configuration configuration;
@@ -80,7 +75,7 @@ public class Server
     private org.eclipse.jetty.server.Server server;
     private List<ResourceObject> services = new CopyOnWriteArrayList<>();
 
-    public Server(File configurationFile, String id) throws Exception {
+    public Xorcery(File configurationFile, String id) throws Exception {
         this.configuration = configuration(configurationFile);
 
         serverId = configuration.getString("id").orElseGet(() -> Optional.ofNullable(id).orElse(UUIDs.newId()));
@@ -129,58 +124,7 @@ public class Server
     }
 
     private Configuration configuration(File configFile) throws Exception {
-        Configuration.Builder builder = new Configuration.Builder();
-
-        // Load system properties and environment variables
-        builder.addSystemProperties("SYSTEM");
-        builder.addEnvironmentVariables("ENV");
-
-        // Load defaults
-        {
-            URL resource = Configuration.class.getResource("/server-defaults.yaml");
-            try(InputStream in = resource.openStream())
-            {
-                builder = builder.addYaml(in);
-                logger.info("Loaded "+resource);
-            }
-        }
-
-        // Load custom
-        Enumeration<URL> serverConfigurationURLs = Configuration.class.getClassLoader().getResources("server.yaml");
-        while (serverConfigurationURLs.hasMoreElements()) {
-            URL resource = serverConfigurationURLs.nextElement();
-            try (InputStream configurationStream = resource.openStream())
-            {
-                builder = builder.addYaml(configurationStream);
-                logger.info("Loaded "+resource);
-            }
-        }
-
-        // Load user directory overrides
-        Configuration partialConfig = builder.build();
-        StandardConfiguration standardConfiguration = new StandardConfiguration.Impl(partialConfig);
-        builder = partialConfig.asBuilder();
-        File overridesYamlFile = new File(standardConfiguration.home(), "server.yaml");
-        if (overridesYamlFile.exists()) {
-            FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
-            builder = builder.addYaml(overridesYamlStream);
-            logger.info("Loaded "+overridesYamlFile);
-        }
-
-        // Load specified overrides
-        if (configFile != null) {
-            builder = builder.addYaml(new FileInputStream(configFile));
-            logger.info("Loaded "+configFile);
-        } else {
-        }
-
-        // Load user overrides
-        File userYamlFile = new File(System.getProperty("user.home"), "xorcery/server.yaml");
-        if (userYamlFile.exists()) {
-            FileInputStream userYamlStream = new FileInputStream(userYamlFile);
-            builder = builder.addYaml(userYamlStream);
-            logger.info("Loaded "+userYamlFile);
-        }
+        Configuration.Builder builder = Configuration.Builder.load(configFile);
 
         // Log final configuration
         StringWriter out = new StringWriter();
@@ -379,13 +323,12 @@ public class Server
                     ObjectMapper objectMapper = new ObjectMapper();
                     objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
                     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                    objectMapper.registerModule(new JSONPModule());
                     bind(objectMapper);
 
                     bind(metricRegistry);
                     bind(configuration);
                     bind(ctx);
-                    bind(Server.this);
+                    bind(Xorcery.this);
 
                     if (sslContextFactory != null)
                         bind(sslContextFactory);

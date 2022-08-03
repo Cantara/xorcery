@@ -5,7 +5,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.server.Server;
+import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
@@ -57,7 +57,7 @@ public class Log4jAppenderEventPublisher
     }
 
     private final ReactiveStreams reactiveStreams;
-    private Server server;
+    private Xorcery xorcery;
     private ServiceResourceObject sro;
     private Configuration configuration;
 
@@ -65,11 +65,11 @@ public class Log4jAppenderEventPublisher
     private final List<EventSink<Event<LogEvent>>> subscribers = new CopyOnWriteArrayList<>();
 
     @Inject
-    public Log4jAppenderEventPublisher(ReactiveStreams reactiveStreams, Server server,
+    public Log4jAppenderEventPublisher(ReactiveStreams reactiveStreams, Xorcery xorcery,
                                        @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                        Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
-        this.server = server;
+        this.xorcery = xorcery;
         this.sro = sro;
         this.configuration = configuration;
 

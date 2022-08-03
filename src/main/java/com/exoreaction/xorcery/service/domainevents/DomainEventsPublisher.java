@@ -9,7 +9,7 @@ import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.server.Server;
+import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventPublisher;
@@ -67,7 +67,7 @@ public class DomainEventsPublisher
     private final Disruptor<DomainEventHolder> disruptor;
 
     @Inject
-    public DomainEventsPublisher(ReactiveStreams reactiveStreams, Server server,
+    public DomainEventsPublisher(ReactiveStreams reactiveStreams, Xorcery xorcery,
                                  @Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
                                  Configuration configuration) {
         this.reactiveStreams = reactiveStreams;

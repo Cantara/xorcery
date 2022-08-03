@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jsonapi.model.Link;
+import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams.Publisher;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
@@ -30,12 +31,11 @@ import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -52,7 +52,7 @@ import java.util.concurrent.*;
 
 @Singleton
 public class ReactiveStreamsService
-        implements ReactiveStreams, ContainerLifecycleListener {
+        implements ReactiveStreams, LifeCycle.Listener {
 
     private static final Logger logger = LogManager.getLogger(ReactiveStreamsService.class);
     public static final String SERVICE_TYPE = "reactivestreams";
@@ -73,7 +73,7 @@ public class ReactiveStreamsService
                 webSocketClient.setIdleTimeout(Duration.ofSeconds(httpClient.getIdleTimeout()));
                 webSocketClient.start();
                 bind(webSocketClient).named(SERVICE_TYPE);
-                context.register(ReactiveStreamsService.class, ReactiveStreams.class, ContainerLifecycleListener.class);
+                context.register(ReactiveStreamsService.class, ReactiveStreams.class);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -101,6 +101,7 @@ public class ReactiveStreamsService
                                   @Named(SERVICE_TYPE) WebSocketClient webSocketClient,
                                   jakarta.inject.Provider<Registry> registryService,
                                   Configuration configuration,
+                                  Xorcery xorcery,
                                   MessageBodyWorkers messageBodyWorkers,
                                   ObjectMapper objectMapper) {
         this.servletContextHandler = servletContextHandler;
@@ -112,20 +113,13 @@ public class ReactiveStreamsService
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
         this.timer = new Timer();
 
+        xorcery.getServer().addEventListener(this);
+
         byteBufferPool = new ArrayByteBufferPool();
     }
 
     @Override
-    public void onStartup(Container container) {
-    }
-
-    @Override
-    public void onReload(Container container) {
-
-    }
-
-    @Override
-    public void onShutdown(Container container) {
+    public void lifeCycleStopping(LifeCycle event) {
         logger.info("SHUTDOWN REACTIVE SERVICES!");
 
         timer.cancel();

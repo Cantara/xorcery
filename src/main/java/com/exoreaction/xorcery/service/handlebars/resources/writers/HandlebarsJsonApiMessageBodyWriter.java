@@ -24,6 +24,7 @@ import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
+import org.glassfish.jersey.logging.LoggingFeature;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -52,11 +53,12 @@ public class HandlebarsJsonApiMessageBodyWriter
                                               JettyHttpClientSupplier clientSupplier) {
         this.handlebars = handlebars;
         this.requestContext = requestContext;
-        ClientConfig config = new ClientConfig();
-        config.register(new JsonApiMessageBodyReader(new ObjectMapper()));
-        config.connectorProvider(new JettyConnectorProvider());
-        config.register(clientSupplier);
-        client = ClientBuilder.newBuilder().withConfig(config).build();
+        client = ClientBuilder.newBuilder().withConfig(new ClientConfig()
+                        .register(new JsonApiMessageBodyReader(new ObjectMapper()))
+                        .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.sandbox")).build())
+                        .connectorProvider(new JettyConnectorProvider())
+                        .register(clientSupplier))
+                .build();
     }
 
     @Override

@@ -15,6 +15,8 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.neo4j.graphdb.GraphDatabaseService;
 
+import java.util.concurrent.CompletionStage;
+
 class DomainEventsSubscriber
         implements ReactiveEventStreams.Subscriber<EventWithResult<ArrayNode, Metadata>> {
 
@@ -39,7 +41,7 @@ class DomainEventsSubscriber
         disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Neo4jDomainEventsProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
-        disruptor.handleEventsWith(new Neo4jDomainEventEventHandler(graphDatabaseService, subscription, sourceConfiguration, listeners));
+        disruptor.handleEventsWith(new Neo4jDomainEventEventHandler(graphDatabaseService, subscription, sourceConfiguration, consumerConfiguration, listeners));
         disruptor.start();
         subscription.request(4096);
         return disruptor.getRingBuffer();

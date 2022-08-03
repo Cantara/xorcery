@@ -4,34 +4,30 @@ import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
+import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
+import com.exoreaction.xorcery.service.opensearch.client.document.BulkResponse;
+import com.exoreaction.xorcery.service.opensearch.client.document.IndexBulkRequest;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
-import org.opensearch.action.bulk.BulkRequest;
-import org.opensearch.action.bulk.BulkResponse;
-import org.opensearch.action.index.IndexRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.common.xcontent.XContentType;
+import org.apache.logging.log4j.LogManager;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.concurrent.TimeUnit;
 
 public class RequestLogEventsSubscriber
         implements ReactiveEventStreams.Subscriber<ObjectNode>, EventHandler<Event<ObjectNode>> {
-    private RestHighLevelClient client;
+    private OpenSearchClient client;
     private ReactiveEventStreams.Subscription subscription;
-    private ObjectMapper objectMapper;
 
-    private BulkRequest bulkRequest;
+    private IndexBulkRequest.Builder bulkRequest;
 
-    public RequestLogEventsSubscriber(RestHighLevelClient client, Configuration consumerConfiguration, Configuration sourceConfiguration) {
+    public RequestLogEventsSubscriber(OpenSearchClient client, Configuration consumerConfiguration, Configuration sourceConfiguration) {
         this.client = client;
-        this.objectMapper = new ObjectMapper();
     }
 
     @Override
@@ -51,27 +47,29 @@ public class RequestLogEventsSubscriber
     public void onEvent(Event<ObjectNode> event, long sequence, boolean endOfBatch) throws Exception {
 
         LoggingMetadata lmd = new LoggingMetadata(event.metadata);
-        LocalDate date = LocalDate.ofInstant(Instant.ofEpochMilli(lmd.getTimestamp()), ZoneId.systemDefault());
-        String indexName = "requests-"+lmd.getEnvironment()+"-"+lmd.getTag()+"-"+lmd.getName()+"-"+ date.getYear()+""+date.getMonthValue();
-
-        IndexRequest request = new IndexRequest(indexName); //Add a document to the custom-index we created.
-        request.id(lmd.getHost()+lmd.getTimestamp()); //Assign an ID to the document.
 
         ObjectNode document = event.metadata.metadata().objectNode();
         document.set("@timestamp", event.metadata.getJsonNode("timestamp").orElse(document.numberNode(0L)));
         document.set("metadata", event.metadata.metadata());
         document.set("data", event.event);
-        byte[] data = objectMapper.writeValueAsBytes(document);
-        request.source(data, XContentType.JSON); //Place your content into the index's source.
 
         if (bulkRequest == null)
-            bulkRequest = new BulkRequest();
+            bulkRequest = new IndexBulkRequest.Builder();
 
-        bulkRequest.add(request);
+        bulkRequest.create(null, document);
 
         if (endOfBatch)
         {
-            BulkResponse indexResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            LocalDate date = LocalDate.ofInstant(Instant.ofEpochMilli(lmd.getTimestamp()), ZoneId.systemDefault());
+            String indexName = "requestlogs-"+lmd.getEnvironment()+"-"+lmd.getTag()+"-"+ date.getYear()+"-"+date.getMonthValue();
+
+            BulkResponse bulkResponse = client.documents().bulk(indexName, bulkRequest.build())
+                    .toCompletableFuture().get(10, TimeUnit.SECONDS);
+
+            if (bulkResponse.hasErrors())
+            {
+                LogManager.getLogger(getClass()).error("OpenSearch update errors:\n"+bulkResponse.json().toPrettyString());
+            }
 
             bulkRequest = null;
         }

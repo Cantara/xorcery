@@ -1,12 +1,17 @@
 package com.exoreaction.xorcery.service.eventstore.resources.api;
 
+import com.exoreaction.xorcery.cqrs.model.CommonModel;
 import com.exoreaction.xorcery.hyperschema.model.HyperSchema;
+import com.exoreaction.xorcery.hyperschema.model.Link;
 import com.exoreaction.xorcery.jaxrs.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapi.resources.JsonSchemaMixin;
+import com.exoreaction.xorcery.jsonapi.schema.ResourceDocumentSchema;
+import com.exoreaction.xorcery.jsonapi.schema.ResourceObjectSchema;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
+import com.exoreaction.xorcery.service.eventstore.model.EventStoreModel;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -27,14 +32,19 @@ public class EventStoreResource
     @GET
     @Produces(MediaTypes.APPLICATION_JSON_SCHEMA)
     public JsonSchema schema() {
-        HyperSchema.Builder builder = new HyperSchema.Builder(new JsonSchema.Builder());
-        builder.links(new com.exoreaction.xorcery.hyperschema.model.Links.Builder()
+        return new ResourceDocumentSchema.Builder()
+                .resources(streamSchema())
+                .builder()
+                .links(new com.exoreaction.xorcery.hyperschema.model.Links.Builder()
                         .link(selfLink()).link(describedbyLink(getAbsolutePath().toASCIIString()))
-                        .with(websocket("eventstorestreams", EventStoreParameters.class))
+                        .with(websocket("events", EventStoreParameters.class),
+                                l -> l.link(new Link.UriTemplateBuilder("stream")
+                                        .parameter("id", "Stream id", "Stream id")
+                                        .build()))
                         .build())
                 .builder()
-                .title("Forum application");
-        return builder.build().schema();
+                .title("EventStore")
+                .build();
     }
 
     @GET
@@ -43,10 +53,20 @@ public class EventStoreResource
                 .links(new Links.Builder()
                         .link(self, getUriInfo().getRequestUri().toASCIIString())
                         .link(describedby, getAbsolutePathBuilder().path(".schema"))
-                        .link("eventstorestreams", getBaseUriBuilder()
+                        .link("stream", getUriBuilderFor(StreamResource.class).toTemplate())
+                        .link("events", getBaseUriBuilder()
                                 .scheme(getBaseUri().getScheme().equals("https") ? "wss" : "ws")
-                                .path("ws/eventstorestreams"))
+                                .path("ws/events"))
                         .build())
                 .build();
     }
+
+    private ResourceObjectSchema streamSchema() {
+        return new ResourceObjectSchema.Builder()
+                .type(ApiTypes.stream)
+                .attributes(attributes(EventStoreModel.Stream.values()))
+                .with(b -> b.builder().builder().title("Stream"))
+                .build();
+    }
+
 }

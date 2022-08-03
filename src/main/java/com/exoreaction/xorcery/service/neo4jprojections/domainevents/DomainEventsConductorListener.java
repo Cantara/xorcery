@@ -15,6 +15,10 @@ import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
+
 public class DomainEventsConductorListener extends AbstractConductorListener {
 
     private Logger logger = LogManager.getLogger(getClass());
@@ -22,16 +26,19 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
     private GraphDatabases graphDatabases;
     private ReactiveStreams reactiveStreams;
     private Listeners<ProjectionListener> listeners;
+    private Function<String, CompletableFuture<Void>> isLive;
 
     public DomainEventsConductorListener(GraphDatabases graphDatabases,
                                          ReactiveStreams reactiveStreams,
                                          ServiceIdentifier serviceIdentifier,
                                          String rel,
-                                         Listeners<ProjectionListener> listeners) {
+                                         Listeners<ProjectionListener> listeners,
+                                         Function<String, CompletableFuture<Void>> isLive) {
         super(serviceIdentifier, rel);
         this.graphDatabases = graphDatabases;
         this.reactiveStreams = reactiveStreams;
         this.listeners = listeners;
+        this.isLive = isLive;
     }
 
     @Override
@@ -41,15 +48,15 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
         GraphDatabase graphDatabase = graphDatabases.apply(databaseName);
 
         // Check if we already have written data for this projection before
-        String streamName = sourceConfiguration.getString("stream").orElseThrow(() -> new IllegalStateException("Missing 'stream' configuration setting"));
+        String projectionId = consumerConfiguration.getString("id").orElse("default");
 
-        graphDatabase.query("MATCH (Projection:Projection {name:$projection_name})")
-                .parameter(Projection.name, streamName)
+        graphDatabase.query("MATCH (Projection:Projection {id:$projection_id})")
+                .parameter(Projection.id, projectionId)
                 .results(Projection.revision)
                 .first(row -> row.row().getNumber("projection_revision").longValue()).whenComplete((position, exception) ->
                 {
                     if (exception != null && !(exception.getCause() instanceof NotFoundException)) {
-                        logger.error("Error looking up existing projection stream position", exception);
+                        logger.error("Error looking up existing projection stream revision", exception);
                     }
 
                     if (position != null) {
@@ -61,6 +68,9 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
                                     sourceConfiguration,
                                     graphDatabase.getGraphDatabaseService(),
                                     listeners), sourceConfiguration);
+
+                    // No catchup, we're live
+                    isLive.apply(projectionId).complete(null);
                 });
     }
 }

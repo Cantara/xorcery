@@ -1,11 +1,16 @@
 {
-  "version": 2,
+  "version": 1,
   "index_patterns": [
-    "domainevents-*"
+    "test-*"
   ],
-  "aliases": {
-    "domainevents": {}
-  },
+  "template": {
+    "aliases": {
+      "test": {}
+    },
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
     "mappings": {
       "dynamic_templates": [
         {
@@ -24,4 +29,8 @@
         }
       }
     }
+  },
+  "composed_of": [
+    "common"
+  ]
 }

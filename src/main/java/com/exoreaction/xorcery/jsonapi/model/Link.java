@@ -33,6 +33,11 @@ public record Link(String rel, JsonNode value) {
         return new UriTemplate(getHref());
     }
 
+    public Link createURI(String... values)
+    {
+        return new Link(rel, new UriTemplate(getHref()).createURI(values));
+    }
+
     public boolean isTemplate() {
         return !new UriTemplate(getHref()).getTemplateVariables().isEmpty();
     }

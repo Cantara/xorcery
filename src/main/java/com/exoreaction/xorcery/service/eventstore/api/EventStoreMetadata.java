@@ -4,6 +4,8 @@ import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.cqrs.metadata.RequestMetadata;
 
+import java.util.Optional;
+
 public record EventStoreMetadata(Metadata metadata)
     implements RequestMetadata, DeploymentMetadata
 {
@@ -21,6 +23,11 @@ public record EventStoreMetadata(Metadata metadata)
             return this;
         }
 
+        public Builder lastRevision(long value) {
+            builder.add("lastRevision", value);
+            return this;
+        }
+
         public Builder contentType(String value) {
             builder.add("contentType", value);
             return this;
@@ -33,6 +40,10 @@ public record EventStoreMetadata(Metadata metadata)
 
     public long revision() {
         return metadata.getLong("revision").orElseThrow();
+    }
+
+    public Optional<Long> lastRevision() {
+        return metadata.getLong("lastRevision");
     }
 
     public String contentType() {

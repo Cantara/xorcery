@@ -14,6 +14,8 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.neo4j.graphdb.GraphDatabaseService;
 
+import java.util.concurrent.CompletableFuture;
+
 class EventStoreSubscriber
         implements ReactiveEventStreams.Subscriber<ArrayNode> {
 
@@ -21,16 +23,22 @@ class EventStoreSubscriber
     private EventStoreParameters sourceParameters;
     private GraphDatabaseService graphDatabaseService;
     private Listeners<ProjectionListener> listeners;
+    private long lastRevision;
+    private CompletableFuture<Void> isLive;
     private Configuration consumerConfiuration;
 
     public EventStoreSubscriber(Configuration consumerConfiuration,
                                 EventStoreParameters sourceParameters,
                                 GraphDatabaseService graphDatabaseService,
-                                Listeners<ProjectionListener> listeners) {
+                                Listeners<ProjectionListener> listeners,
+                                long lastRevision,
+                                CompletableFuture<Void> isLive) {
         this.consumerConfiuration = consumerConfiuration;
         this.sourceParameters = sourceParameters;
         this.graphDatabaseService = graphDatabaseService;
         this.listeners = listeners;
+        this.lastRevision = lastRevision;
+        this.isLive = isLive;
     }
 
     @Override
@@ -38,7 +46,7 @@ class EventStoreSubscriber
         disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Neo4jEventStoreProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
-        disruptor.handleEventsWith(new Neo4jEventStoreEventHandler(graphDatabaseService, subscription, sourceParameters, listeners));
+        disruptor.handleEventsWith(new Neo4jEventStoreEventHandler(graphDatabaseService, subscription, sourceParameters, consumerConfiuration, listeners, lastRevision, isLive));
         disruptor.start();
         subscription.request(4096);
         return disruptor.getRingBuffer();

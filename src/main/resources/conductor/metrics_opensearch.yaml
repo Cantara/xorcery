@@ -1,6 +1,6 @@
 data:
   - id: metrics_opensearch
-    type: grouptemplate,
+    type: grouptemplate
     attributes:
       name: Log metrics to OpenSearch
       sources:

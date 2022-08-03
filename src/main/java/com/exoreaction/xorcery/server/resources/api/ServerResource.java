@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.server.resources.api;
 
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.resources.JsonApiResource;
-import com.exoreaction.xorcery.server.Server;
+import com.exoreaction.xorcery.server.Xorcery;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -16,17 +16,17 @@ import jakarta.ws.rs.Path;
 public class ServerResource
     extends JsonApiResource
 {
-    private Server server;
+    private Xorcery xorcery;
 
     @Inject
-    public ServerResource( Server server )
+    public ServerResource( Xorcery xorcery)
     {
-        this.server = server;
+        this.xorcery = xorcery;
     }
 
     @GET
     public ResourceDocument get()
     {
-        return server.getServerDocument();
+        return xorcery.getServerDocument();
     }
 }

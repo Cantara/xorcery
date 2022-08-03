@@ -4,17 +4,17 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
+import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
-import org.opensearch.client.RestHighLevelClient;
 
 public class RequestLogConductorListener extends AbstractConductorListener {
-    private RestHighLevelClient client;
+    private OpenSearchClient client;
     private ReactiveStreams reactiveStreams;
     private final ServiceIdentifier serviceIdentifier;
     private final String rel;
 
-    public RequestLogConductorListener(RestHighLevelClient client, ReactiveStreams reactiveStreams,
+    public RequestLogConductorListener(OpenSearchClient client, ReactiveStreams reactiveStreams,
                                        ServiceIdentifier serviceIdentifier, String rel) {
         super(serviceIdentifier, rel);
         this.client = client;

@@ -28,14 +28,14 @@ public class Main
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         Logger logger = LogManager.getLogger( Main.class );
 
-        Server server = new Server(configuration, id);
+        Xorcery xorcery = new Xorcery(configuration, id);
 
         Runtime.getRuntime().addShutdownHook( new Thread( () ->
         {
             logger.info( "Shutting down server" );
             try
             {
-                server.close();
+                xorcery.close();
             }
             catch ( Exception e )
             {

@@ -1,0 +1,22 @@
+---
+version: 1
+index_patterns:
+  - requestlogs-*
+template:
+  aliases:
+    requestlogs: {}
+  settings:
+    number_of_shards: 1
+    number_of_replicas: 0
+  mappings:
+    dynamic_templates:
+      - on_as_dates:
+          match: "*_on"
+          mapping:
+            type: date
+            format: epoch_millis
+    properties:
+      data:
+        type: object
+composed_of:
+  - common

@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.jaxrs;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
-import com.exoreaction.xorcery.server.Server;
+import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
@@ -56,9 +56,9 @@ public abstract class AbstractFeature
     {
 
     }
-    protected Server server()
+    protected Xorcery server()
     {
-        return injectionManager.getInstance(Server.class);
+        return injectionManager.getInstance(Xorcery.class);
     }
     protected Configuration configuration()
     {

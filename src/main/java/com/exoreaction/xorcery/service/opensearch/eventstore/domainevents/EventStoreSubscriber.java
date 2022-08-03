@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch.eventstore.domainevents;
 
+import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
@@ -10,20 +11,19 @@ import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
-import org.opensearch.client.RestHighLevelClient;
 
 public class EventStoreSubscriber
         implements ReactiveEventStreams.Subscriber<ArrayNode> {
 
     private Disruptor<Event<ArrayNode>> disruptor;
     private final String indexName;
-    private final RestHighLevelClient client;
+    private final OpenSearchClient client;
     private Listeners<ProjectionListener> listeners;
     private Configuration consumerConfiguration;
 
     public EventStoreSubscriber(Configuration consumerConfiguration,
                                 String indexName,
-                                RestHighLevelClient client,
+                                OpenSearchClient client,
                                 Listeners<ProjectionListener> listeners) {
         this.consumerConfiguration = consumerConfiguration;
         this.indexName = indexName;

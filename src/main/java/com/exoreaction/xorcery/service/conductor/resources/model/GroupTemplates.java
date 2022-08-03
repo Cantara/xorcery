@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.jsonapi.model.Relationships;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GroupTemplates {
+
+    private final Logger logger = LogManager.getLogger(getClass());
 
     public interface GroupTemplatesListener {
         default void addedTemplate(GroupTemplate groupTemplate) {
@@ -78,12 +81,12 @@ public class GroupTemplates {
                                     partialGroups.remove(groupTemplate.resourceObject().getId());
 
                                     // New group based on template has been created
-                                    LogManager.getLogger(getClass()).info("Match:" + updatedGroup);
+                                    logger.info("Match:" + updatedGroup);
 
                                     matchedTemplates.add(groupTemplate.resourceObject().getId());
                                     groups.addOrUpdateGroup(updatedGroup);
                                 } else {
-                                    LogManager.getLogger(getClass()).info("Partial match:" + updatedGroup);
+                                    logger.debug("Partial match:" + updatedGroup);
                                     partialGroups.put(groupTemplate.resourceObject().getId(), updatedGroup);
                                 }
                             });
@@ -115,19 +118,19 @@ public class GroupTemplates {
                                     partialGroups.remove(groupTemplate.resourceObject().getId());
 
                                     // New group based on template has been created
-                                    LogManager.getLogger(getClass()).info("Match:" + updatedGroup);
+                                    logger.info("Match:" + updatedGroup);
 
                                     matchedTemplates.add(groupTemplate.resourceObject().getId());
                                     groups.addOrUpdateGroup(updatedGroup);
                                 } else {
-                                    LogManager.getLogger(getClass()).info("Partial match:" + updatedGroup);
+                                    logger.debug("Partial match:" + updatedGroup);
                                     partialGroups.put(groupTemplate.resourceObject().getId(), updatedGroup);
                                 }
                             });
                 }
             }
         } catch (Exception e) {
-            LogManager.getLogger(getClass()).error("Could not handle service", e);
+            logger.error("Could not handle service", e);
         }
     }
 }

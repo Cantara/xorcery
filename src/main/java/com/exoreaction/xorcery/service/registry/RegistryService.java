@@ -11,7 +11,7 @@ import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import com.exoreaction.xorcery.rest.RestProcess;
-import com.exoreaction.xorcery.server.Server;
+import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
@@ -31,7 +31,6 @@ import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
@@ -72,7 +71,7 @@ public class RegistryService
     private ReactiveStreams reactiveStreams;
     private final Configuration configuration;
     private final JsonApiClient jsonApiClient;
-    private final Server server;
+    private final Xorcery xorcery;
 
     @Provider
     public static class Feature
@@ -90,16 +89,6 @@ public class RegistryService
 
         @Override
         protected void configure() {
-            JettyHttpClientContract instance = injectionManager.getInstance(JettyHttpClientContract.class);
-            Client client = ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                    .register(new JsonApiMessageBodyReader(new ObjectMapper()))
-                    .register(LoggingFeature.class)
-                    .register(instance)
-                    .connectorProvider(new JettyConnectorProvider())
-                    .property( "jersey.config.logging.logger.level", "INFO" )
-            ).build();
-            bind(new JsonApiClient(client));
-
             context.register(RegistryService.class, Registry.class, ContainerLifecycleListener.class);
 
             if (configuration().getBoolean("registry.dnsdiscovery").orElse(false)) {
@@ -121,14 +110,19 @@ public class RegistryService
     public RegistryService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
                            ReactiveStreams reactiveStreams,
                            Configuration configuration,
-                           JsonApiClient jsonApiClient,
-                           Server server,
+                           JettyHttpClientContract clientInstance,
+                           Xorcery xorcery,
                            ServletContextHandler servletContextHandler) {
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
         this.configuration = configuration;
-        this.jsonApiClient = jsonApiClient;
-        this.server = server;
+        this.jsonApiClient = new JsonApiClient(ClientBuilder.newBuilder().withConfig(new ClientConfig()
+                .register(new JsonApiMessageBodyReader(new ObjectMapper()))
+                .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.registry")).build())
+                .register(clientInstance)
+                .connectorProvider(new JettyConnectorProvider())
+        ).build());
+        this.xorcery = xorcery;
 
         this.registryLink = new Link("master", this.configuration.getString("registry.master").orElseThrow());
 
@@ -139,7 +133,7 @@ public class RegistryService
 
         registration = new StartupRegistration(
                 reactiveStreams, jsonApiClient, resourceObject.serviceIdentifier(), registryLink,
-                server.getServerDocument(), upstreamSubscriber,
+                xorcery.getServerDocument(), upstreamSubscriber,
                 new CompletableFuture<ResourceObject>().thenApply(v ->
                 {
                     LogManager.getLogger(RegistryService.class).info("Registered server");

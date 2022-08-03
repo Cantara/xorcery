@@ -1,6 +1,6 @@
 data:
   - id: metrics_sysout
-    type: grouptemplate,
+    type: grouptemplate
     attributes:
       name: Log metrics to Sysout
       sources:
@@ -10,7 +10,7 @@ data:
         pattern: type=='soutmetrics'
 
   - id: metrics_jmx
-    type: grouptemplate,
+    type: grouptemplate
     attributes:
       name: Expose metrics to JMX for VisualVM integration
       sources:

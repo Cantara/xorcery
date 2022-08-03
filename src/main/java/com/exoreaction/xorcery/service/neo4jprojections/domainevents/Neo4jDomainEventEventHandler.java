@@ -5,15 +5,14 @@ import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
-import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
+import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.jknack.handlebars.internal.Files;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -37,6 +36,7 @@ public class Neo4jDomainEventEventHandler
 
     private ReactiveEventStreams.Subscription subscription;
     private final Configuration sourceConfiguration;
+    private Configuration consumerConfiguration;
     private final Listeners<ProjectionListener> listeners;
     long version = 0;
     private GraphDatabaseService graphDatabaseService;
@@ -49,15 +49,17 @@ public class Neo4jDomainEventEventHandler
     public Neo4jDomainEventEventHandler(GraphDatabaseService graphDatabaseService,
                                         ReactiveEventStreams.Subscription subscription,
                                         Configuration sourceConfiguration,
+                                        Configuration consumerConfiguration,
                                         Listeners<ProjectionListener> listeners) {
         this.graphDatabaseService = graphDatabaseService;
         this.subscription = subscription;
         this.sourceConfiguration = sourceConfiguration;
+        this.consumerConfiguration = consumerConfiguration;
         this.listeners = listeners;
 
         sourceConfiguration.getLong("from").ifPresent(from -> version = from);
 
-        updateParameters.put("projection_name", sourceConfiguration.getString("stream").orElseThrow());
+        updateParameters.put(Cypher.toField(Projection.id), consumerConfiguration.getString(Projection.id.name()).orElseThrow());
     }
 
     @Override
@@ -120,7 +122,7 @@ public class Neo4jDomainEventEventHandler
             try {
                 // Update Projection node with current revision
                 updateParameters.put("projection_revision", version + futures.size());
-                tx.execute("MERGE (projection:Projection {name:$projection_name}) SET projection.revision=$projection_revision",
+                tx.execute("MERGE (projection:Projection {id:$projection_id}) SET projection.revision=$projection_revision",
                         updateParameters);
 
                 tx.commit();
@@ -140,6 +142,7 @@ public class Neo4jDomainEventEventHandler
                     future.completeExceptionally(e);
                 }
             }
+
             futures.clear();
         }
 

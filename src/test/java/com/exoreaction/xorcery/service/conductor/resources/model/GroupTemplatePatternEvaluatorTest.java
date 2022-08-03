@@ -1,4 +1,4 @@
-package com.exoreaction.service.conductor.resources.model;
+package com.exoreaction.xorcery.service.conductor.resources.model;
 
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.Link;

@@ -67,6 +67,7 @@ public class Neo4jService
                             List.of(new DatabaseConfiguration(JsonNodeFactory.instance.objectNode().put("name", "neo4j"))
                             ));
             for (DatabaseConfiguration database : databases) {
+                logger.info("Starting Neo4j database:" + database.getName());
                 GraphDatabaseService graphDb = null;
                 try {
                     graphDb = managementService.database(database.getName());
@@ -79,6 +80,7 @@ public class Neo4jService
                 // Run startup Cypher
                 for (String cypherResource : database.getStartup()) {
                     try {
+                        logger.info("Running Neo4j startup script:"+cypherResource);
                         List<String> statements = Cypher.getCypherStatements(cypherResource);
 
                         for (String statement : statements) {
@@ -94,6 +96,9 @@ public class Neo4jService
             }
 
             context.register(new Neo4jService(managementService), GraphDatabases.class, ContainerLifecycleListener.class);
+
+            logger.info("Neo4j initialized");
+
         }
     }
 

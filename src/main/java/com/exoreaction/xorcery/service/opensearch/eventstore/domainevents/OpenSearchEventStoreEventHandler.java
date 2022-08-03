@@ -1,21 +1,20 @@
 package com.exoreaction.xorcery.service.opensearch.eventstore.domainevents;
 
-import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
+import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
+import com.exoreaction.xorcery.service.opensearch.client.document.BulkResponse;
+import com.exoreaction.xorcery.service.opensearch.client.document.IndexBulkRequest;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opensearch.action.bulk.BulkRequest;
-import org.opensearch.action.bulk.BulkResponse;
-import org.opensearch.action.index.IndexRequest;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.common.xcontent.XContentType;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author rickardoberg
@@ -25,7 +24,7 @@ import org.opensearch.common.xcontent.XContentType;
 public class OpenSearchEventStoreEventHandler
         implements DefaultEventHandler<Event<ArrayNode>> {
 
-    private final RestHighLevelClient client;
+    private final OpenSearchClient client;
     private final String indexName;
     private final ObjectMapper objectMapper;
     private Logger logger = LogManager.getLogger(getClass());
@@ -33,9 +32,10 @@ public class OpenSearchEventStoreEventHandler
     private ReactiveEventStreams.Subscription subscription;
     private Listeners<ProjectionListener> listeners;
 
-    private BulkRequest bulkRequest;
+    private IndexBulkRequest.Builder bulkRequest;
+    private int requestCount = 0;
 
-    public OpenSearchEventStoreEventHandler(RestHighLevelClient client,
+    public OpenSearchEventStoreEventHandler(OpenSearchClient client,
                                             ReactiveEventStreams.Subscription subscription,
                                             String indexName,
                                             Listeners<ProjectionListener> listeners) {
@@ -51,27 +51,32 @@ public class OpenSearchEventStoreEventHandler
 
         DomainEventMetadata dem = new DomainEventMetadata(event.metadata);
 
-        IndexRequest request = new IndexRequest(indexName); //Add a document to the custom-index we created.
-        request.id(dem.getHost()+dem.getTimestamp()); //Assign an ID to the document.
-
         ObjectNode document = event.metadata.metadata().objectNode();
         document.set("@timestamp", event.metadata.getJsonNode("timestamp").orElse(document.numberNode(0L)));
         document.set("metadata", event.metadata.metadata());
         document.set("data", event.event);
-        byte[] data = objectMapper.writeValueAsBytes(document);
-        request.source(data, XContentType.JSON); //Place your content into the index's source.
 
         if (bulkRequest == null)
-            bulkRequest = new BulkRequest();
+            bulkRequest = new IndexBulkRequest.Builder();
 
-        bulkRequest.add(request);
+        bulkRequest.create(dem.getHost()+dem.getTimestamp(), document);
+        requestCount++;
 
         if (endOfBatch)
         {
-            BulkResponse indexResponse = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            BulkResponse bulkResponse = client.documents().bulk(indexName, bulkRequest.build())
+                    .toCompletableFuture().get(10, TimeUnit.SECONDS);
 
-            subscription.request(bulkRequest.numberOfActions());
+            if (bulkResponse.hasErrors())
+            {
+                LogManager.getLogger(getClass()).error("OpenSearch update errors:\n"+bulkResponse.json().toPrettyString());
+            }
+
+            subscription.request(requestCount);
             bulkRequest = null;
+            requestCount = 0;
+
+//            listeners.listener().onCommit(indexName, );
         }
     }
 }

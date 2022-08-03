@@ -7,10 +7,12 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventSink;
 import jakarta.inject.Singleton;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
@@ -41,6 +43,23 @@ public class JsonRequestLog
                 // Request
                 node.set("method", node.textNode(req.getMethod()));
                 node.set("uri", node.textNode(req.getRequestURI()));
+                String remoteHost = req.getRemoteHost();
+                if (!remoteHost.equals(""))
+                    node.set("remote", node.textNode(remoteHost));
+                String user = req.getRemoteUser();
+                if (user != null)
+                    node.set("user", node.textNode(user));
+                String agent = req.getHeader(HttpHeader.USER_AGENT.lowerCaseName());
+                if (agent != null)
+                    node.set("agent", node.textNode(agent));
+
+                String httpVersion = req.getHttpVersion().asString();
+                if (httpVersion != null)
+                    node.set("httpversion", node.textNode(httpVersion));
+
+                String referer = req.getHeader(HttpHeader.REFERER.lowerCaseName());
+                if (referer != null)
+                    node.set("referer", node.textNode(referer));
 
                 // Response
                 node.set("status", node.numberNode(res.getStatus()));

@@ -95,6 +95,10 @@ public interface JsonElement {
         return getJson(name).map(ArrayNode.class::cast).map(array -> getValuesAs(array, mapper));
     }
 
+    default <T> Optional<List<T>> getObjectListAs(String name, Function<ObjectNode, T> mapper) {
+        return getJson(name).map(ArrayNode.class::cast).map(array -> getValuesAs(array, mapper));
+    }
+
     default Map<String, JsonNode> asMap() {
         return JsonElement.asMap(object());
     }

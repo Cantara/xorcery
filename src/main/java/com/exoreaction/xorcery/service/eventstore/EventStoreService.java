@@ -13,6 +13,7 @@ import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.eventstore.disruptor.EventStoreDomainEventEventHandler;
+import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
 import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
@@ -32,11 +33,15 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.MarkerManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.spi.Contract;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.*;
 
+@Contract
 @Singleton
 public class EventStoreService
         implements
@@ -64,12 +69,12 @@ public class EventStoreService
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
             builder.api("eventstore", "api/eventstore");
-            builder.websocket("eventstorestreams", "ws/eventstorestreams");
+            builder.websocket("events", "ws/events");
         }
 
         @Override
         protected void configure() {
-            context.register(EventStoreService.class, ContainerLifecycleListener.class);
+            context.register(EventStoreService.class, EventStoreService.class, ContainerLifecycleListener.class);
         }
     }
 
@@ -81,7 +86,7 @@ public class EventStoreService
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
         this.objectMapper = new ObjectMapper();
-        String connectionString = configuration.getConfiguration("eventstore").getString("url").orElseThrow();
+        String connectionString = configuration.getString("eventstore.url").orElseThrow();
 
         EventStoreDBClientSettings settings = EventStoreDBConnectionString.parse(connectionString);
         client = EventStoreDBClient.create(settings);
@@ -94,7 +99,7 @@ public class EventStoreService
     @Override
     public void onStartup(Container container) {
         // Read
-        sro.getLinkByRel("eventstorestreams").ifPresent(link ->
+        sro.getLinkByRel("events").ifPresent(link ->
         {
             reactiveStreams.publish(sro.serviceIdentifier(), link, this);
         });
@@ -113,19 +118,21 @@ public class EventStoreService
 
     }
 
+    public CompletionStage<StreamModel> getStream(String id)
+    {
+        return client.getStreamMetadata(id).thenCombine(client.readStream(id, 1, ReadStreamOptions.get().backwards().fromEnd()),
+                (streamMetaData, readResult)->
+                {
+
+                    return new StreamModel(id, readResult.getEvents().stream().findFirst().map(event -> event.getEvent().getStreamRevision().getValueUnsigned()).orElse(-1L));
+                });
+    }
+
     @Override
     public void subscribe(ReactiveEventStreams.Subscriber<ByteBuffer> subscriber, Configuration configuration) {
 
         try {
             EventStoreParameters parameters = objectMapper.treeToValue(configuration.json(), EventStoreParameters.class);
-
-            HashMap<String, Object> customProperties = new HashMap<>();
-            customProperties.put("foo", "bar");
-            StreamMetadata metadata = new StreamMetadata();
-            metadata.setCustomProperties(customProperties);
-            LogManager.getLogger(getClass()).info("Setting Stream metadata for {}:{}", parameters.stream, metadata.serialize());
-            client.setStreamMetadata(parameters.stream, metadata).get();
-            LogManager.getLogger(getClass()).info("Stream metadata for {}:{}", parameters.stream, metadata.serialize());
 
             DomainEventsProcessor processor = new DomainEventsProcessor(subscriber);
             processor.setSink(subscriber.onSubscribe(processor));
@@ -213,7 +220,6 @@ public class EventStoreService
                             .streamId(e.getEvent().getStreamId())
                             .revision(e.getEvent().getStreamRevision().getValueUnsigned())
                             .contentType(e.getEvent().getContentType());
-
                 } catch (IOException ex) {
                     subscriber.onError(ex);
                 }

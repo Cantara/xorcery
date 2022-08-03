@@ -8,7 +8,7 @@ import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
-import com.exoreaction.xorcery.server.Server;
+import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
@@ -27,6 +27,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
@@ -74,7 +75,7 @@ public class CertificateManagerService
     private SslContextFactory.Server serverSslContextFactory;
     private SslContextFactory.Client clientSslContextFactory;
     private Configuration configuration;
-    private Server server;
+    private Xorcery xorcery;
     private JsonApiClient client;
 
     @Inject
@@ -89,9 +90,6 @@ public class CertificateManagerService
         this.serverSslContextFactory = serverSslContextFactory;
         this.clientSslContextFactory = clientSslContextFactory;
         this.configuration = configuration.getConfiguration("certificatemanager");
-        ClientConfig config = new ClientConfig(new JsonApiMessageBodyReader(new ObjectMapper()));
-        config.connectorProvider(new JettyConnectorProvider())
-                .register(instance);
 
 /*
         KeyStore keyStore = KeyStore.getInstance(new File(new File(".").toURI().relativize(getClass().getResource("/keystore.p12").toURI()).getPath()), "password".toCharArray());
@@ -104,7 +102,11 @@ public class CertificateManagerService
 */
 
         Client client = ClientBuilder.newBuilder()
-                .withConfig(config)
+                .withConfig(new ClientConfig()
+                        .register(new JsonApiMessageBodyReader(new ObjectMapper()))
+                        .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.certmanager")).build())
+                        .register(instance)
+                        .connectorProvider(new JettyConnectorProvider()))
                 .build();
         this.client = new JsonApiClient(client);
     }
@@ -112,8 +114,7 @@ public class CertificateManagerService
     @Override
     public void onStartup(Container container) {
 
-        if (configuration.getBoolean("renew_on_startup").orElse(false))
-        {
+        if (configuration.getBoolean("renew_on_startup").orElse(false)) {
             conductor.addConductorListener(new CheckCertConductorListener(sro.serviceIdentifier(), "certificatemanager"));
         }
     }

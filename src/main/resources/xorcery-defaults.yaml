@@ -1,7 +1,8 @@
 name: genericserver
 host: localhost
-home: "{{ SYSTEM.user_dir }}"
-resources: "{{ home }}/target/classes"
+home: "{{ ENV.HOME | SYSTEM.user_dir }}"
+build_resources: "{{ home }}/target/classes"
+resources: "{{ ENV.RESOURCES | build_resources }}"
 
 environment: development
 tag: default
@@ -79,6 +80,8 @@ soutlogging: {}
 
 logs: {}
 
+requestlog: {}
+
 # Metrics
 metrics: {}
 
@@ -88,7 +91,7 @@ jmxmetrics: {}
 
 # Domain events
 neo4jdatabase:
-  path: "{{ home }}/target/neo4j"
+  path: "{{ home }}/neo4j"
   settings:
     dbms:
       allow_upgrade: true
@@ -96,13 +99,12 @@ neo4jdatabase:
 neo4jprojections: {}
 
 eventstore:
-  url: esdb://localhost:2113?tls=false
+  url: "esdb://{{ ENV.EVENTSTORE_HOST | \"localhost\" }}:2113?tls=false"
 
 opensearch:
-  url: http://localhost:9200
-  templates:
-    common: /opensearch/common.json
-    domainevents: /opensearch/domainevents.json
+  url: "http://{{ ENV.OPENSEARCH_HOST | \"localhost\" }}:9200"
+  component_templates: {}
+  index_templates: {}
 
 domainevents: {}
 

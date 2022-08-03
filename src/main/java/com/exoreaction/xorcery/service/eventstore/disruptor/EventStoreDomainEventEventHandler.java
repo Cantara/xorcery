@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.eventstore.disruptor;
 
 import com.eventstore.dbclient.EventData;
+import com.eventstore.dbclient.EventDataBuilder;
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.Event;
@@ -36,7 +37,7 @@ public class EventStoreDomainEventEventHandler
         UUID eventId = emd.getCorrelationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
         DomainEventMetadata domainEventMetadata = new DomainEventMetadata(event.metadata);
         String eventType = domainEventMetadata.getCommandType();
-        EventData eventData = EventData.builderAsBinary(eventId, eventType, event.event.event().array())
+        EventData eventData = EventDataBuilder.json(eventId, eventType, event.event.event().array())
                 .metadataAsJson(event.metadata)
                 .build();
 
