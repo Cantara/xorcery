@@ -61,10 +61,7 @@ public record Configuration(ObjectNode json)
             }
 
             // Load user directory overrides
-            Configuration partialConfig = builder.build();
-            StandardConfiguration standardConfiguration = new StandardConfiguration.Impl(partialConfig);
-            builder = partialConfig.asBuilder();
-            File overridesYamlFile = new File(standardConfiguration.home(), "xorcery.yaml");
+            File overridesYamlFile = new File(System.getProperty("user.dir"), "xorcery.yaml");
             if (overridesYamlFile.exists()) {
                 FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
                 builder = builder.addYaml(overridesYamlStream);

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.ws.rs.core.UriBuilder;
@@ -127,12 +128,14 @@ public class Xorcery
         Configuration.Builder builder = Configuration.Builder.load(configFile);
 
         // Log final configuration
-        StringWriter out = new StringWriter();
-        new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter().writeValue(out, builder.builder());
+        ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
+        logger.debug("Configuration:\n" + objectWriter.writeValueAsString(builder.builder()));
 
-        logger.debug("Configuration:\n" + out);
+        Configuration configuration = builder.build();
 
-        return builder.build();
+        logger.info("Resolved configuration:\n" + objectWriter.writeValueAsString(configuration.json()));
+
+        return configuration;
     }
 
     private MetricRegistry metrics() {
