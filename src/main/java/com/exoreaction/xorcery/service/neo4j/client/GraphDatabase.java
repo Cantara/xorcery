@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 public class GraphDatabase {
 
-    private final Logger logger = LogManager.getLogger("queries");
+    private final Logger logger = LogManager.getLogger("queries.neo4j");
     private final GraphDatabaseService graphDatabaseService;
     private Function<Enum<?>, String> defaultFieldMapping;
 
@@ -52,7 +52,7 @@ public class GraphDatabase {
             Result result = tx.execute(cypherQuery, parameters);
             future.complete(new GraphResult(tx, result, ()->
             {
-                logger.info( cypherQuery.replace( '\n', ' ' ));
+                logger.debug( cypherQuery.replace( '\n', ' ' ));
             }));
         } catch (Throwable e) {
             future.completeExceptionally(e);

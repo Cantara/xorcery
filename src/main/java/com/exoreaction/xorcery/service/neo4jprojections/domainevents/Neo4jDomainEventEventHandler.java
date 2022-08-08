@@ -134,7 +134,6 @@ public class Neo4jDomainEventEventHandler
                     Metadata result = new Metadata.Builder().add("revision", version).build();
                     future.complete(result);
                 }
-                System.out.println("Completed future " + version);
                 listeners.listener().onCommit(sourceConfiguration.getString("stream").orElse(""), version);
 
             } catch (Exception e) {

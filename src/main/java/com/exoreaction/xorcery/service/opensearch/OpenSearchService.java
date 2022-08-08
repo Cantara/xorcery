@@ -121,6 +121,7 @@ public class OpenSearchService
                 logger.info("Index template:" + templateName);
             }
 
+            // TODO Split these out into their own services that depend on OpenSearchService
             conductor.addConductorListener(new LoggingConductorListener(
                     new OpenSearchClient(new ClientConfig()
                             .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.logs")).build())

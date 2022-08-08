@@ -231,10 +231,16 @@ public class Xorcery
             SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, alpn.getProtocol());
 
             // Create and configure the secure HTTP 1.1/2 connector
-            HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpConfig);
-            final ServerConnector https = new ServerConnector(server, tls, alpn, h2, http11);
+            ServerConnector https;
+            if (configuration.getBoolean("server.http2.enabled").orElse(false))
+            {
+                HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpConfig);
+                https = new ServerConnector(server, tls, alpn, h2, http11);
+            } else
+            {
+                https = new ServerConnector(server, tls, alpn, http11);
+            }
             https.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
-//        final ServerConnector https = new ServerConnector(server, tls, alpn, http11);
             https.setPort(httpsPort);
             server.addConnector(https);
 
@@ -243,7 +249,7 @@ public class Xorcery
             {
                 HTTP3ServerConnector connector = new HTTP3ServerConnector(server, sslContextFactory, new HTTP3ServerConnectionFactory(httpConfig));
                 connector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
-                connector.setPort(httpsPort);
+                connector.setPort(configuration.getInteger("server.http3.port").orElse(httpsPort));
                 server.addConnector(connector);
             }
 
@@ -269,11 +275,16 @@ public class Xorcery
                     // HTTP 1.1
                     ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
 
-                    // HTTP/2
-                    HTTP2Client http2Client = new HTTP2Client(connector);
-                    http2Client.setIdleTimeout(configuration.getLong("client.idle_timeout").orElse(-1L));
+                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 = null;
+                    ClientConnectionFactoryOverHTTP3.HTTP3 http3 = null;
 
-                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
+                    if (configuration.getBoolean("client.http2.enabled").orElse(false)) {
+                        // HTTP/2
+                        HTTP2Client http2Client = new HTTP2Client(connector);
+                        http2Client.setIdleTimeout(configuration.getLong("client.idle_timeout").orElse(-1L));
+
+                        http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
+                    }
 
                     HttpClientTransportDynamic transport = null;
                     if (configuration.getBoolean("client.ssl.enabled").orElse(false))
@@ -298,22 +309,36 @@ public class Xorcery
                         connector.setSslContextFactory(sslClientContextFactory);
 
                         // HTTP/3
-                        HTTP3Client h3Client = new HTTP3Client();
-                        h3Client.getClientConnector().setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
-                        h3Client.getQuicConfiguration().setSessionRecvWindow(64 * 1024 * 1024);
-                        ClientConnectionFactoryOverHTTP3.HTTP3 http3 = new ClientConnectionFactoryOverHTTP3.HTTP3(h3Client);
+                        if (configuration.getBoolean("client.http3.enabled").orElse(false)) {
+                            HTTP3Client h3Client = new HTTP3Client();
+                            h3Client.getClientConnector().setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
+                            h3Client.getQuicConfiguration().setSessionRecvWindow(64 * 1024 * 1024);
+                            http3 = new ClientConnectionFactoryOverHTTP3.HTTP3(h3Client);
+                            h3Client.getClientConnector().setSslContextFactory(sslClientContextFactory);
+                        }
 
                         bind(sslClientContextFactory);
 
-                        h3Client.getClientConnector().setSslContextFactory(sslClientContextFactory);
-
-                        transport = new HttpClientTransportDynamic(connector, http1, http2, http3);
-                    } else {
-                        transport = new HttpClientTransportDynamic(connector, http1, http2);
                     }
 
-//                    HttpClientTransportDynamic transport = new HttpClientTransportDynamic(connector, http1);
-//                    HttpClientTransportOverHTTP3 transport = new HttpClientTransportOverHTTP3(h3Client);
+                    // Figure out correct transport dynamics
+                    if (http3 != null)
+                    {
+                        if (http2 != null)
+                        {
+                            transport = new HttpClientTransportDynamic(connector, http1, http3, http2);
+                        } else
+                        {
+                            transport = new HttpClientTransportDynamic(connector, http1, http3);
+                        }
+                    } else if (http2 != null)
+                    {
+                        transport = new HttpClientTransportDynamic(connector, http1, http2);
+                    } else
+                    {
+                        transport = new HttpClientTransportDynamic(connector, http1);
+                    }
+
                     HttpClient client = new HttpClient(transport);
                     client.start();
                     server.addManaged(client);

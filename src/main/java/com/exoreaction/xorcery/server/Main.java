@@ -22,10 +22,23 @@ public class Main
     @CommandLine.Option(names="-id", description = "Server id")
     private String id;
 
+    @CommandLine.Option(names="-log4j", description = "Log4j configuration")
+    private File log4jConfiguration;
+
     @Override
     public Integer call() throws Exception {
 
+        // Allow for additive log4j configuration file
+        if (log4jConfiguration != null && log4jConfiguration.exists())
+        {
+            String log4jProperty = System.getProperty("log4j2.configurationFile");
+            System.setProperty("log4j2.configurationFile", log4jProperty == null ?
+                    log4jConfiguration.getAbsolutePath() :
+                    log4jProperty+","+log4jConfiguration.getAbsolutePath());
+        }
+
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+
         Logger logger = LogManager.getLogger( Main.class );
 
         Xorcery xorcery = new Xorcery(configuration, id);

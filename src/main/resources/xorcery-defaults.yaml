@@ -1,6 +1,6 @@
 name: genericserver
 host: localhost
-home: "{{ ENV.HOME | SYSTEM.user_dir }}"
+home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
 build_resources: "{{ home }}/target/classes"
 resources: "{{ ENV.RESOURCES | build_resources }}"
 
@@ -34,6 +34,12 @@ server:
       password: "password"
 
 client:
+  http2:
+    enabled: true
+
+  http3:
+    enabled: true
+
   ssl:
     enabled: true
     trustall: true
