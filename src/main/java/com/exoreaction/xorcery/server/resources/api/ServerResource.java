@@ -27,6 +27,6 @@ public class ServerResource
     @GET
     public ResourceDocument get()
     {
-        return xorcery.getServerDocument();
+        return xorcery.getServerDocument().resolve(getBaseUri());
     }
 }

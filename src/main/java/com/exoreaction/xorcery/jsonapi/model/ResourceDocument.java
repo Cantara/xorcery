@@ -6,8 +6,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import jakarta.ws.rs.core.UriBuilder;
 
-import java.util.Optional;
+import java.net.URI;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -164,5 +167,46 @@ public record ResourceDocument(ObjectNode json)
                                         .build())
                                 .build()))
                 .orElse(Stream.of(this));
+    }
+
+    /**
+     * Return copy of ResourceDocument, but with all links having their host and port replaced
+     * @param baseUri URI with host and port to use
+     * @return
+     */
+    public ResourceDocument resolve(URI baseUri)
+    {
+        ResourceDocument resolved = new ResourceDocument(json.deepCopy());
+
+        resolve(baseUri, resolved.getLinks());
+        resolved.getResource().ifPresent(ro -> resolve(baseUri, ro.getLinks()));
+        resolved.getResources().ifPresent(ros -> ros.forEach(ro -> resolve(baseUri, ro.getLinks())));
+        resolved.getIncluded().getIncluded().forEach(ro -> resolve(baseUri, ro.getLinks()));
+
+        return resolved;
+    }
+
+    private void resolve(URI baseUri, Links links)
+    {
+        ObjectNode linksJson = links.json();
+        Iterator<Map.Entry<String, JsonNode>> fields = linksJson.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> next = fields.next();
+            if (next.getValue() instanceof TextNode textNode)
+            {
+                String resolvedUri = UriBuilder.fromUri(textNode.textValue())
+                        .host(baseUri.getHost())
+                        .port(baseUri.getPort())
+                        .toTemplate();
+                linksJson.set(next.getKey(), linksJson.textNode(resolvedUri));
+            } else if (next.getValue() instanceof ObjectNode objectNode)
+            {
+                String resolvedUri = UriBuilder.fromUri(objectNode.get("href").textValue())
+                        .host(baseUri.getHost())
+                        .port(baseUri.getPort())
+                        .toTemplate();
+                objectNode.set(next.getKey(), linksJson.textNode(resolvedUri));
+            }
+        }
     }
 }
