@@ -1,23 +1,31 @@
+id: "{{ ENV.SERVER_ID | host}}"
 name: genericserver
 host: localhost
+environment: development
+tag: default
+
 home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
 build_resources: "{{ home }}/target/classes"
 resources: "{{ ENV.RESOURCES | build_resources }}"
 
-environment: development
-tag: default
-
 idle_timeout: -1
 
 server:
-  port: 8889
+  scheme: "{{ server.ssl.enabled ? \"https\" | \"http\" }}"
+  port: "{{ server.ssl.enabled ? server.ssl.port | server.http.port }}"
+  uri: "{{server.scheme}}://{{host}}:{{server.port}}/"
+
   idle_timeout: "{{ idle_timeout }}"
+
+  http:
+    port: 8889
 
   http2:
     enabled: true
 
   http3:
     enabled: false
+    port: "{{ server.ssl.port }}"
 
   ssl:
     enabled: true
@@ -64,7 +72,7 @@ reactivestreams:
   allowlocal: false
 
 registry:
-  master: https://localhost:8443/
+  master: "{{ server.uri }}"
   dnsdiscovery: false
 
 conductor:

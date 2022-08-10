@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.jaxrs;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
+import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import jakarta.ws.rs.core.Feature;
@@ -14,59 +15,51 @@ import java.util.Objects;
 
 public abstract class AbstractFeature
         extends AbstractBinder
-    implements Feature
-{
+        implements Feature {
     protected FeatureContext context;
     protected InjectionManager injectionManager;
 
     protected ServiceResourceObject resourceObject;
 
     @Override
-    public boolean configure(FeatureContext context)
-    {
+    public boolean configure(FeatureContext context) {
         this.context = context;
         this.injectionManager = ((InjectionManagerSupplier) context).getInjectionManager();
-        if (isEnabled())
-        {
+        if (isEnabled()) {
             Configuration configuration = injectionManager.getInstance(Configuration.class);
             String serviceType = Objects.requireNonNull(serviceType(), "Service type may not be null");
-            ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(server(), serviceType);
-            configuration.getString("environment")
-                    .ifPresent(env -> builder.attributes().attribute("environment", env));
-            configuration.getString("tag")
-                    .ifPresent(tag -> builder.attributes().attribute("tag", tag));
+            StandardConfiguration.Impl standardConfiguration = new StandardConfiguration.Impl(configuration);
+            ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(standardConfiguration, serviceType);
+            builder.attributes().attribute("environment", standardConfiguration.getEnvironment());
+            builder.attributes().attribute("tag", standardConfiguration.getTag());
             buildResourceObject(builder);
-            resourceObject = builder.build();           ;
-            server().addService(resourceObject.resourceObject());
+            resourceObject = builder.build();
+            xorcery().addService(resourceObject.resourceObject());
             bind(resourceObject).named(serviceType);
 
-            if (!super.getBindings().isEmpty())
-            {
+            if (!super.getBindings().isEmpty()) {
                 injectionManager.register(this);
             }
             return true;
-        }
-        else
+        } else
             return false;
     }
 
     abstract protected String serviceType();
 
-    protected void buildResourceObject(ServiceResourceObject.Builder builder)
-    {
+    protected void buildResourceObject(ServiceResourceObject.Builder builder) {
 
     }
-    protected Xorcery server()
-    {
+
+    protected Xorcery xorcery() {
         return injectionManager.getInstance(Xorcery.class);
     }
-    protected Configuration configuration()
-    {
+
+    protected Configuration configuration() {
         return injectionManager.getInstance(Configuration.class);
     }
 
-    protected boolean isEnabled()
-    {
+    protected boolean isEnabled() {
         return new ServiceConfiguration(configuration().getConfiguration(serviceType())).isEnabled();
     }
 }

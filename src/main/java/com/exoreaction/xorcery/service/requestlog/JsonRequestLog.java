@@ -9,6 +9,7 @@ import com.lmax.disruptor.EventSink;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
@@ -66,9 +67,9 @@ public class JsonRequestLog
             if (agent != null)
                 node.set("agent", node.textNode(agent));
 
-            String httpVersion = req.getHttpVersion().asString();
+            HttpVersion httpVersion = req.getHttpVersion();
             if (httpVersion != null)
-                node.set("httpversion", node.textNode(httpVersion));
+                node.set("httpversion", node.textNode(httpVersion.asString()));
 
             String referer = req.getHeader(HttpHeader.REFERER.lowerCaseName());
             if (referer != null)

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.*;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.Iterator;
 import java.util.Optional;
@@ -14,20 +13,28 @@ import java.util.regex.Pattern;
 
 /**
  * Resolve variables in JSON values.
- *
- * Includes support for hierarchical lookups, recursive lookups, and default values.
- *
+ * <p>
+ * Includes support for hierarchical lookups, recursive lookups, conditional lookups, and default values.
+ * <p>
  * Syntax for strings with variables:
  * some {{ other.variable.name }} value
  * If the JSON source has a path other.variable.name that resolves to "foo" then the resulting value
  * is: "some foo value"
- *
+ * <p>
  * Default values are expressed with |, like so:
  * some {{ other.variable.name | bar }} value
  * If the JSON source tree does not have a path other.variable.name then the resulting value is: "some bar value"
+ * <p>
+ * Conditionals are expressed using ?, like so:
+ * {{myflag ? valuea | valueb}}
+ * If the setting "myflag" resolves to true, then valuea is resolved, otherwise it continues to use valueb. Note that
+ * each step in the default value resolution chain may use a conditional to decide whether it is valid
  */
 public class VariableResolver
         implements BiFunction<ObjectNode, ObjectNode, ObjectNode> {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     /**
      * Resolve variables in root object values from source object. These may or may not be the same.
      *
@@ -91,67 +98,92 @@ public class VariableResolver
         Matcher matcher = Pattern.compile("\\{\\{([^}]+)}}").matcher(textValue);
         int idx = 0;
         while (matcher.find()) {
-            String subName = matcher.group(1);
-            String[] subNameWithDefault = subName.split("\\|");
-            JsonNode replacedValue = lookup(source, subNameWithDefault[0].trim()).orElseGet(() ->
-            {
-                if (subNameWithDefault.length > 1) {
-                    for (int i = 1; i < subNameWithDefault.length; i++) {
-                        String defaultKey = subNameWithDefault[i];
-                        JsonNode defaultValue;
-                        try {
-                            defaultValue = new ObjectMapper().readTree(new StringReader(defaultKey.trim()));
-                            if (defaultValue instanceof TextNode textNode)
-                            {
-                                JsonNode resolvedValue = resolveValue(source, textNode);
-                                if (!(resolvedValue instanceof MissingNode))
-                                    defaultValue = resolvedValue;
-                            }
-                        } catch (IOException e) {
-                            defaultValue =  resolveValue(source, JsonNodeFactory.instance.textNode("{{"+defaultKey.trim()+"}}"));
-                        }
-                        if (!(defaultValue instanceof MissingNode))
-                            return defaultValue;
-                    }
-                    return MissingNode.getInstance();
-                } else {
-                    return MissingNode.getInstance();
-                }
-            });
+            String expression = matcher.group(1);
+            JsonNode replacement = replaceExpression(source, expression);
 
-            if (textValue.length() == subName.length() + 4) {
-                if (replacedValue instanceof TextNode replacedText)
-                    return resolveValue(source, replacedText);
-                else if (replacedValue instanceof ObjectNode replacedObject)
-                    return resolveObject(source, replacedObject);
-                else
-                    return replacedValue;
+            if (matcher.start() == 0 && matcher.end() == textValue.length()) {
+                // Complete replacement found
+                return replacement;
             } else {
-                // Resolve again
-                if (replacedValue instanceof TextNode replacedText)
-                    replacedValue = resolveValue(source, replacedText);
-
-                newValue += textValue.substring(idx, matcher.start()) + replacedValue.asText();
+                newValue += textValue.substring(idx, matcher.start()) + replacement.asText();
                 idx = matcher.end();
             }
         }
         newValue += textValue.substring(idx);
-        if (!newValue.equals(textValue))
-            return resolveValue(source, JsonNodeFactory.instance.textNode(newValue));
-        else
-            return value;
+        return source.textNode(newValue);
+    }
+
+    private JsonNode replaceExpression(ObjectNode source, String expression) {
+        String[] expressions = expression.split("\\|");
+
+        for (String expr : expressions) {
+            if (expr.contains("?")) {
+                String[] withConditional = expr.split("\\?");
+                JsonNode resolvedConditional = lookupAndResolve(source, withConditional[0].trim())
+                        .orElse(MissingNode.getInstance());
+                if ((resolvedConditional instanceof BooleanNode conditionalValue) && conditionalValue.booleanValue()) {
+                    expr = withConditional[1];
+                } else {
+                    continue;
+                }
+            }
+
+            expr = expr.trim();
+
+            try {
+                JsonNode value = objectMapper.readTree(new StringReader(expr));
+                if (value instanceof TextNode textNode) {
+                    JsonNode resolvedValue = lookupAndResolve(source, textNode.textValue()).orElse(textNode);
+                    if (!resolvedValue.isMissingNode())
+                        return resolvedValue;
+                    else
+                        return textNode;
+                } else {
+                    return value;
+                }
+            } catch (Throwable e) {
+                JsonNode resolvedValue = lookupAndResolve(source, expr).orElse(null);
+                if (resolvedValue != null && !resolvedValue.isMissingNode())
+                    return resolvedValue;
+            }
+        }
+
+        return MissingNode.getInstance();
+    }
+
+    private Optional<JsonNode> lookupAndResolve(ObjectNode source, String name) {
+        return lookup(source, name)
+                .map(result ->
+                {
+                    if (result instanceof TextNode textResult) {
+                        return resolveValue(source, textResult);
+                    } else if (result instanceof ObjectNode objectResult) {
+                        return resolveObject(source, objectResult);
+                    } else if (result instanceof ArrayNode arrayResult) {
+                        return resolveArray(source, arrayResult);
+                    } else {
+                        return result;
+                    }
+                });
     }
 
     private Optional<JsonNode> lookup(ObjectNode source, String name) {
-        ObjectNode c = source;
+        ObjectNode context = source;
         String[] names = name.split("\\.");
         for (int i = 0; i < names.length - 1; i++) {
-            JsonNode node = c.get(names[i]);
+            JsonNode node = context.get(names[i]);
+
+            // Might be an intermediary lookup
+            if (node instanceof TextNode textNode)
+            {
+                node = resolveValue(source, textNode);
+            }
+
             if (node instanceof ObjectNode object)
-                c = resolveObject(source, object);
+                context = object;
             else
                 return Optional.empty();
         }
-        return Optional.ofNullable(c.get(names[names.length - 1]));
+        return Optional.ofNullable(context.get(names[names.length - 1]));
     }
 }

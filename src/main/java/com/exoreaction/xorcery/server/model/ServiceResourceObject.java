@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.server.model;
 
+import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.Links;
@@ -11,11 +12,11 @@ import java.util.Optional;
 
 public record ServiceResourceObject(ResourceObject resourceObject) {
 
-    public record Builder(Xorcery xorcery, ResourceObject.Builder builder, Links.Builder links,
+    public record Builder(StandardConfiguration configuration, ResourceObject.Builder builder, Links.Builder links,
                           Attributes.Builder attributes) {
 
-        public Builder(Xorcery xorcery, String serviceType) {
-            this(xorcery, new ResourceObject.Builder(serviceType, xorcery.getServerId()), new Links.Builder(), new Attributes.Builder());
+        public Builder(StandardConfiguration configuration, String serviceType) {
+            this(configuration, new ResourceObject.Builder(serviceType, configuration.getId()), new Links.Builder(), new Attributes.Builder());
         }
 
         public Builder version(String v) {
@@ -29,14 +30,14 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
         }
 
         public Builder api(String rel, String path) {
-            links.link(rel, xorcery.getBaseUriBuilder().path(path));
+            links.link(rel, configuration.getServerUriBuilder().path(path));
 
             return this;
         }
 
         public Builder websocket(String rel, String path) {
-            links.link(rel, xorcery.getBaseUriBuilder()
-                    .scheme(xorcery.getBaseUri().getScheme().equals("https") ? "wss" : "ws")
+            links.link(rel, configuration.getServerUriBuilder()
+                    .scheme(configuration.getServerUri().getScheme().equals("https") ? "wss" : "ws")
                     .path(path));
             return this;
         }

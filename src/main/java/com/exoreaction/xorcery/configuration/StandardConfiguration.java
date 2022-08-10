@@ -1,7 +1,10 @@
 package com.exoreaction.xorcery.configuration;
 
+import jakarta.ws.rs.core.UriBuilder;
+
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 
 /**
  * @author rickardoberg
@@ -15,15 +18,24 @@ public interface StandardConfiguration {
 
     Configuration configuration();
 
-    default String host() {
+    default String getId()
+    {
+        return configuration().getString("id").orElse(null);
+    }
+
+    default String getHost() {
         return configuration().getString("host").orElse(null);
     }
 
-    default String environment() {
+    default String getEnvironment() {
         return configuration().getString("environment").orElse(null);
     }
 
-    default String home() {
+    default String getTag() {
+        return configuration().getString("tag").orElse(null);
+    }
+
+    default String getHome() {
         return configuration().getString("home").orElseGet(() ->
         {
             try {
@@ -32,5 +44,13 @@ public interface StandardConfiguration {
                 return new File(".").getAbsolutePath();
             }
         });
+    }
+
+    default URI getServerUri() {
+        return configuration().getURI("server.uri").orElseThrow();
+    }
+
+    default UriBuilder getServerUriBuilder() {
+        return UriBuilder.fromUri(getServerUri());
     }
 }

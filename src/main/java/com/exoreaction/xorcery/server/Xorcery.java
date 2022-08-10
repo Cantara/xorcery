@@ -72,16 +72,18 @@ public class Xorcery
     private Configuration configuration;
     private URI baseUri;
 
-    private Marker serverLogMarker;
     private org.eclipse.jetty.server.Server server;
     private List<ResourceObject> services = new CopyOnWriteArrayList<>();
 
     public Xorcery(File configurationFile, String id) throws Exception {
         this.configuration = configuration(configurationFile);
 
-        serverId = configuration.getString("id").orElseGet(() -> Optional.ofNullable(id).orElse(UUIDs.newId()));
-
-        serverLogMarker = MarkerManager.getMarker("server:" + serverId);
+        serverId = configuration.getString("id").orElseGet(() ->
+                {
+                    String newId = Optional.ofNullable(id).orElse(UUIDs.newId());
+                    configuration.json().set("id", configuration.json().textNode(newId));
+                    return newId;
+                });
 
         services.add(new ResourceObject.Builder("server", serverId)
                 .attributes(new Attributes.Builder()
@@ -92,24 +94,8 @@ public class Xorcery
         webServer(metricRegistry);
     }
 
-    public String getServerId() {
-        return serverId;
-    }
-
     public void addService(ResourceObject serviceResource) {
         services.add(serviceResource);
-    }
-
-    public Marker getServerLogMarker() {
-        return serverLogMarker;
-    }
-
-    public URI getBaseUri() {
-        return baseUri;
-    }
-
-    public UriBuilder getBaseUriBuilder() {
-        return UriBuilder.fromUri(baseUri);
     }
 
     public ResourceDocument getServerDocument() {
@@ -120,7 +106,7 @@ public class Xorcery
         return serverDocument;
     }
 
-    public org.eclipse.jetty.server.Server getServer() {
+    public Server getServer() {
         return server;
     }
 
@@ -155,7 +141,7 @@ public class Xorcery
 
         Configuration jettyConfig = configuration.getConfiguration("server");
 
-        int httpPort = jettyConfig.getInteger("port").orElse(8889);
+        int httpPort = jettyConfig.getInteger("http.port").orElse(8889);
         int httpsPort = jettyConfig.getInteger("ssl.port").orElse(8443);
 
 /*
@@ -192,8 +178,7 @@ public class Xorcery
         // Setup protocols
         HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
 
-        if (configuration.getBoolean("server.http2.enabled").orElse(false))
-        {
+        if (configuration.getBoolean("server.http2.enabled").orElse(false)) {
             // The ConnectionFactory for clear-text HTTP/2.
             HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
 
@@ -201,8 +186,7 @@ public class Xorcery
             final ServerConnector http = new ServerConnector(server, http11, h2c);
             http.setPort(httpPort);
             server.addConnector(http);
-        } else
-        {
+        } else {
             // Create and configure the HTTP 1.1 connector
             final ServerConnector http = new ServerConnector(server, http11);
             http.setPort(httpPort);
@@ -211,8 +195,7 @@ public class Xorcery
 
         // Configure the SslContextFactory with the keyStore information.
         SslContextFactory.Server sslContextFactory = configuration.getBoolean("server.ssl.enabled").orElse(false) ? new SslContextFactory.Server() : null;
-        if (configuration.getBoolean("server.ssl.enabled").orElse(false))
-        {
+        if (configuration.getBoolean("server.ssl.enabled").orElse(false)) {
             // The ALPN ConnectionFactory.
             ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
             // The default protocol to use in case there is no negotiation.
@@ -220,12 +203,12 @@ public class Xorcery
 
             sslContextFactory.setKeyStoreType(configuration.getString("server.ssl.keystore.type").orElse("PKCS12"));
             sslContextFactory.setKeyStorePath(configuration.getString("server.ssl.keystore.path")
-                    .orElseGet(()->getClass().getResource("/keystore.p12").toExternalForm()));
+                    .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
             sslContextFactory.setKeyStorePassword(configuration.getString("server.ssl.keystore.password").orElse("password"));
 
 //            sslContextFactory.setTrustStoreType(configuration.getString("server.ssl.truststore.type").orElse("PKCS12"));
             sslContextFactory.setTrustStorePath(configuration.getString("server.ssl.truststore.path")
-                    .orElseGet(()->getClass().getResource("/keystore.p12").toExternalForm()));
+                    .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
             sslContextFactory.setTrustStorePassword(configuration.getString("server.ssl.truststore.password").orElse("password"));
             sslContextFactory.setHostnameVerifier((hostName, session) -> true);
             sslContextFactory.setTrustAll(configuration.getBoolean("server.ssl.trustall").orElse(false));
@@ -235,12 +218,10 @@ public class Xorcery
 
             // Create and configure the secure HTTP 1.1/2 connector
             ServerConnector https;
-            if (configuration.getBoolean("server.http2.enabled").orElse(false))
-            {
+            if (configuration.getBoolean("server.http2.enabled").orElse(false)) {
                 HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpConfig);
                 https = new ServerConnector(server, tls, alpn, h2, http11);
-            } else
-            {
+            } else {
                 https = new ServerConnector(server, tls, alpn, http11);
             }
             https.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
@@ -248,18 +229,18 @@ public class Xorcery
             server.addConnector(https);
 
             // Create and configure the HTTP/3 connector
-            if (configuration.getBoolean("server.http3.enabled").orElse(false))
-            {
+            if (configuration.getBoolean("server.http3.enabled").orElse(false)) {
                 HTTP3ServerConnector connector = new HTTP3ServerConnector(server, sslContextFactory, new HTTP3ServerConnectionFactory(httpConfig));
                 connector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
                 connector.setPort(configuration.getInteger("server.http3.port").orElse(httpsPort));
                 server.addConnector(connector);
             }
-
-            baseUri = URI.create("https://" + configuration.getString("host").orElse("localhost") + ":" + httpsPort + "/");
-        } else {
-            baseUri = URI.create("http://" + configuration.getString("host").orElse("localhost") + ":" + httpPort + "/");
         }
+
+        // Construct base URI
+        baseUri = URI.create(jettyConfig.getString("scheme").orElse("http") + "://" +
+                configuration.getString("host").orElse("localhost") +
+                ":" + jettyConfig.getInteger("port").orElse(httpPort) + "/");
 
         ServletContextHandler ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         ctx.setContextPath("/");
@@ -290,18 +271,17 @@ public class Xorcery
                     }
 
                     HttpClientTransportDynamic transport = null;
-                    if (configuration.getBoolean("client.ssl.enabled").orElse(false))
-                    {
+                    if (configuration.getBoolean("client.ssl.enabled").orElse(false)) {
 
                         SslContextFactory.Client sslClientContextFactory = new SslContextFactory.Client();
                         sslClientContextFactory.setKeyStoreType(configuration.getString("client.ssl.keystore.type").orElse("PKCS12"));
                         sslClientContextFactory.setKeyStorePath(configuration.getString("client.ssl.keystore.path")
-                                .orElseGet(()->getClass().getResource("/keystore.p12").toExternalForm()));
+                                .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
                         sslClientContextFactory.setKeyStorePassword(configuration.getString("client.ssl.keystore.password").orElse("password"));
 
 //                        sslClientContextFactory.setTrustStoreType(configuration.getString("client.ssl.truststore.type").orElse("PKCS12"));
                         sslClientContextFactory.setTrustStorePath(configuration.getString("client.ssl.truststore.path")
-                                .orElseGet(()->getClass().getResource("/keystore.p12").toExternalForm()));
+                                .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
                         sslClientContextFactory.setTrustStorePassword(configuration.getString("client.ssl.truststore.password").orElse("password"));
 
                         sslClientContextFactory.setEndpointIdentificationAlgorithm("HTTPS");
@@ -325,20 +305,15 @@ public class Xorcery
                     }
 
                     // Figure out correct transport dynamics
-                    if (http3 != null)
-                    {
-                        if (http2 != null)
-                        {
+                    if (http3 != null) {
+                        if (http2 != null) {
                             transport = new HttpClientTransportDynamic(connector, http1, http3, http2);
-                        } else
-                        {
+                        } else {
                             transport = new HttpClientTransportDynamic(connector, http1, http3);
                         }
-                    } else if (http2 != null)
-                    {
+                    } else if (http2 != null) {
                         transport = new HttpClientTransportDynamic(connector, http1, http2);
-                    } else
-                    {
+                    } else {
                         transport = new HttpClientTransportDynamic(connector, http1);
                     }
 

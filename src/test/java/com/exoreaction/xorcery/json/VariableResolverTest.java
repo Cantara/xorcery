@@ -31,14 +31,23 @@ class VariableResolverTest {
                 level3: abc
 
             lvl1:
-              level2: "{{level1.level2}}"
+              lvl2: "{{level1.level2}}"
 
             hierarchy: some {{ level1.level2.level3 }} value
-            importedhierarchy: "{{ lvl1.level2.level3 }}"
+            importedhierarchy: "{{ lvl1.lvl2.level3 }}"
             missing: some {{ level1.level3.missing| "defaultvalue" }} value
             defaultnumber: "{{ somenumber | 5 }}"
             resolvemissing: some {{level1.level3.missing | foo}} value            
-            resolvemissingwithdefault: some {{level1.level3.missing | level1.level3.missing | "test"}} value            
+            resolvemissingwithdefault: some {{level1.level3.missing | level1.level3.missing | "test"}} value
+            
+            trueflag: true
+            falseflag: false
+            sometrueconditional: "{{ trueflag ? foo | \\"abc\\"}}"
+            somefalseconditional: "{{ falseflag ? 3 | number}}"
+            somedefaultsconditional: "{{ falseflag ? 3 | falseflag ? 7 | number}}"
+            somedefaultsconditional2: "{{ falseflag ? 3 | trueflag ? 7 | number}}"
+            
+            somedefaultsconditionaltree: "{{ falseflag ? level1 | trueflag ? lvl1 | importedhierarchy}}"
                         """;
 
     @BeforeAll
@@ -103,5 +112,14 @@ class VariableResolverTest {
     @Test
     public void testResolveNumberWithDefault() throws IOException {
         assertThat(config.getInteger("defaultnumber").orElse(null), equalTo(5));
+    }
+
+    @Test
+    public void testResolveConditionalWithDefault() throws IOException {
+        assertThat(config.getString("sometrueconditional").orElse(null), equalTo("bar"));
+        assertThat(config.getInteger("somefalseconditional").orElse(null), equalTo(5));
+        assertThat(config.getInteger("somedefaultsconditional").orElse(null), equalTo(5));
+        assertThat(config.getInteger("somedefaultsconditional2").orElse(null), equalTo(7));
+        assertThat(config.getJson("somedefaultsconditionaltree").get().toString(), equalTo("{\"lvl2\":{\"level3\":\"abc\"}}"));
     }
 }

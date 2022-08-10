@@ -121,7 +121,7 @@ public record Configuration(ObjectNode json)
             Configuration partialConfig = builder.build();
             StandardConfiguration standardConfiguration = new StandardConfiguration.Impl(partialConfig);
             builder = partialConfig.asBuilder();
-            File overridesYamlFile = new File(standardConfiguration.home(), "xorcery-test.yaml");
+            File overridesYamlFile = new File(standardConfiguration.getHome(), "xorcery-test.yaml");
             if (overridesYamlFile.exists()) {
                 FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
                 builder = builder.addYaml(overridesYamlStream);
