@@ -40,7 +40,8 @@ public class JsonApiMessageBodyWriter
         return JsonElement.class.isAssignableFrom(type) &&
                 (mediaType.isCompatible(MediaTypes.APPLICATION_JSON_API_TYPE) ||
                         mediaType.isCompatible(MediaTypes.APPLICATION_JSON_SCHEMA_TYPE) ||
-                        mediaType.isCompatible(MediaTypes.APPLICATION_YAML_TYPE));
+                        mediaType.isCompatible(MediaTypes.APPLICATION_YAML_TYPE) ||
+                        mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE));
     }
 
     @Override
