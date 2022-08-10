@@ -14,7 +14,8 @@ public class ServerApplication
     extends ResourceConfig
 {
     public ServerApplication() throws IOException {
-        property(ServerProperties.WADL_FEATURE_DISABLE, "true");
+        property(ServerProperties.WADL_FEATURE_DISABLE, Boolean.TRUE);
+        property(ServerProperties.UNWRAP_COMPLETION_STAGE_IN_WRITER_ENABLE, Boolean.TRUE);
 
         try (InputStream mediaTypesStream = getClass().getResourceAsStream("/mediatypes.conf"))
         {

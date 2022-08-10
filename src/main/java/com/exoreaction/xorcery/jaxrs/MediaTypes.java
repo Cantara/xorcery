@@ -28,7 +28,5 @@ public class MediaTypes
             new MediaType("application", "schema+json");
 
     // For resources that produce JSON-API ResourceDocument that can be also be rendered as HTML or YAML
-    public static final String PRODUCES_JSON_API_TEXT_HTML_YAML = MediaType.TEXT_HTML+"; qs=0.9,"+APPLICATION_JSON_API+","+APPLICATION_YAML;
-
-    public static final String PRODUCES_JSON_SCHEMA = APPLICATION_JSON_SCHEMA + ";qs=0.1";
+    public static final String PRODUCES_JSON_API_TEXT_HTML_YAML = MediaType.TEXT_HTML+";qs=1,"+APPLICATION_JSON_API+";qs=0.5,"+APPLICATION_YAML+";qs=0.5";
 }
