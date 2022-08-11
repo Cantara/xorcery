@@ -170,7 +170,11 @@ public class Xorcery
         final HttpConfiguration httpConfig = new HttpConfiguration();
         httpConfig.setOutputBufferSize(32768);
         httpConfig.setRequestHeaderSize(1024 * 16);
-        httpConfig.addCustomizer(new SecureRequestCustomizer());
+
+        SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+        customizer.setSniRequired(configuration.getBoolean("server.ssl.snirequired").orElse(true));
+        customizer.setSniHostCheck(configuration.getBoolean("server.ssl.snihostcheck").orElse(true));
+        httpConfig.addCustomizer(customizer);
 
         // Added for X-Forwarded-For support, from ALB
         httpConfig.addCustomizer(new ForwardedRequestCustomizer());
