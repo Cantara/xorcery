@@ -100,6 +100,10 @@ public class Neo4jResource
 
     private String getId(Node node)
     {
-        return (String) node.getProperty("id");
+        try {
+            return (String) node.getProperty("id");
+        } catch (NotFoundException e) {
+            return "";
+        }
     }
 }

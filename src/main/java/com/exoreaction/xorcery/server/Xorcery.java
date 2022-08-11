@@ -38,6 +38,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.component.LifeCycle;
+import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.utilities.Binder;
@@ -46,10 +47,16 @@ import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.servlet.ServletContainer;
 
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.net.URI;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -79,11 +86,11 @@ public class Xorcery
         this.configuration = configuration(configurationFile);
 
         serverId = configuration.getString("id").orElseGet(() ->
-                {
-                    String newId = Optional.ofNullable(id).orElse(UUIDs.newId());
-                    configuration.json().set("id", configuration.json().textNode(newId));
-                    return newId;
-                });
+        {
+            String newId = Optional.ofNullable(id).orElse(UUIDs.newId());
+            configuration.json().set("id", configuration.json().textNode(newId));
+            return newId;
+        });
 
         services.add(new ResourceObject.Builder("server", serverId)
                 .attributes(new Attributes.Builder()
@@ -198,7 +205,15 @@ public class Xorcery
         }
 
         // Configure the SslContextFactory with the keyStore information.
-        SslContextFactory.Server sslContextFactory = configuration.getBoolean("server.ssl.enabled").orElse(false) ? new SslContextFactory.Server() : null;
+        SslContextFactory.Server sslContextFactory = configuration.getBoolean("server.ssl.enabled").orElse(false) ?
+                new SslContextFactory.Server() {
+                    @Override
+                    protected KeyStore loadTrustStore(Resource resource) throws Exception {
+                        KeyStore keyStore = super.loadTrustStore(resource);
+                        addDefaultRootCaCertificates(keyStore);
+                        return keyStore;
+                    }
+                } : null;
         if (configuration.getBoolean("server.ssl.enabled").orElse(false)) {
             // The ALPN ConnectionFactory.
             ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
@@ -277,7 +292,14 @@ public class Xorcery
                     HttpClientTransportDynamic transport = null;
                     if (configuration.getBoolean("client.ssl.enabled").orElse(false)) {
 
-                        SslContextFactory.Client sslClientContextFactory = new SslContextFactory.Client();
+                        SslContextFactory.Client sslClientContextFactory = new SslContextFactory.Client() {
+                            @Override
+                            protected KeyStore loadTrustStore(Resource resource) throws Exception {
+                                KeyStore keyStore = super.loadTrustStore(resource);
+                                addDefaultRootCaCertificates(keyStore);
+                                return keyStore;
+                            }
+                        };
                         sslClientContextFactory.setKeyStoreType(configuration.getString("client.ssl.keystore.type").orElse("PKCS12"));
                         sslClientContextFactory.setKeyStorePath(configuration.getString("client.ssl.keystore.path")
                                 .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
@@ -292,6 +314,7 @@ public class Xorcery
                         sslClientContextFactory.setHostnameVerifier((hostName, session) -> true);
                         sslClientContextFactory.setTrustAll(configuration.getBoolean("client.ssl.trustall").orElse(false));
                         sslClientContextFactory.setSNIProvider(NON_DOMAIN_SNI_PROVIDER);
+
 
                         connector.setSslContextFactory(sslClientContextFactory);
 
@@ -382,6 +405,19 @@ public class Xorcery
 
         // Start Jetty
         server.start();
+    }
+
+    private static void addDefaultRootCaCertificates(KeyStore trustStore) throws GeneralSecurityException {
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        // Loads default Root CA certificates (generally, from JAVA_HOME/lib/cacerts)
+        trustManagerFactory.init((KeyStore) null);
+        for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {
+            if (trustManager instanceof X509TrustManager) {
+                for (X509Certificate acceptedIssuer : ((X509TrustManager) trustManager).getAcceptedIssuers()) {
+                    trustStore.setCertificateEntry(acceptedIssuer.getSubjectDN().getName(), acceptedIssuer);
+                }
+            }
+        }
     }
 
     public void close() throws IOException {
