@@ -2,6 +2,8 @@ package com.exoreaction.xorcery.jaxrs;
 
 import jakarta.ws.rs.core.MediaType;
 
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+
 public class MediaTypes
 {
     public final static String APPLICATION_JSON_API = "application/vnd.api+json";
@@ -28,5 +30,8 @@ public class MediaTypes
             new MediaType("application", "schema+json");
 
     // For resources that produce JSON-API ResourceDocument that can be also be rendered as HTML or YAML
-    public static final String PRODUCES_JSON_API_TEXT_HTML_YAML = MediaType.TEXT_HTML+";qs=1,"+APPLICATION_JSON_API+";qs=0.5,"+APPLICATION_YAML+";qs=0.5";
+    public static final String PRODUCES_JSON_API_TEXT_HTML_YAML = MediaType.TEXT_HTML+";qs=1,"+APPLICATION_JSON_API+";qs=0.5,"+APPLICATION_JSON+";qs=0.4,"+APPLICATION_YAML+";qs=0.3";
+
+    // For resources that produce JSON that can be also be rendered as HTML or YAML
+    public static final String PRODUCES_JSON_TEXT_HTML_YAML = MediaType.TEXT_HTML+";qs=1,"+APPLICATION_JSON+";qs=0.5,"+APPLICATION_YAML+";qs=0.5";
 }

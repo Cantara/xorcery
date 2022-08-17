@@ -12,6 +12,7 @@ import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
@@ -19,12 +20,17 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.logging.LoggingFeature;
+import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.uri.UriTemplate;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,6 +38,7 @@ import java.io.OutputStreamWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.describedby;
@@ -42,6 +49,8 @@ import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.describedby;
 @Produces(MediaType.TEXT_HTML)
 public class HandlebarsJsonApiMessageBodyWriter
         implements MessageBodyWriter<JsonElement> {
+
+    private static final Logger logger = LogManager.getLogger(HandlebarsJsonApiMessageBodyWriter.class);
 
     private final Client client;
     private final Handlebars handlebars;
@@ -84,7 +93,7 @@ public class HandlebarsJsonApiMessageBodyWriter
         Context context = builder.build();
 
         OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8);
-        String path = "jsonapi/" + requestContext.get().getUriInfo().getPath();
+        String path = "jsonapi" + calculateTemplate(requestContext.get().getUriInfo());
         try {
             handlebars.compile(path).apply(context, writer);
         } catch (IOException e) {
@@ -108,5 +117,44 @@ public class HandlebarsJsonApiMessageBodyWriter
                         .filter(link -> link.getRel().equals(describedby))
                         .findFirst()
                         .map(link -> new Link(link.getRel(), link.getUri().toASCIIString())));
+    }
+
+    protected String calculateTemplate( UriInfo uriInfo )
+    {
+        String htmlTemplateResult = "";
+
+        if ( uriInfo instanceof ExtendedUriInfo)
+        {
+            ExtendedUriInfo extendedUriInfo = (ExtendedUriInfo) uriInfo;
+            htmlTemplateResult = calculateTemplateFromExtendedUriInfo( extendedUriInfo );
+        }
+        else
+        {
+            logger.error( "Expected ExtendedUriInfo, got {}", uriInfo.getClass().getCanonicalName() );
+            throw new InternalServerErrorException( "Can't calculate template" );
+        }
+
+        return htmlTemplateResult;
+    }
+
+
+    private String calculateTemplateFromExtendedUriInfo( ExtendedUriInfo extendedUriInfo )
+    {
+        String htmlTemplate = "";
+        List<UriTemplate> matchedTemplates = extendedUriInfo.getMatchedTemplates();
+
+        if ( matchedTemplates == null || matchedTemplates.size() == 0 )
+        {
+            return htmlTemplate;
+        }
+
+        for (int i = matchedTemplates.size()-1; i >= 0; i--) {
+            String uriTemplate = matchedTemplates.get(i).getTemplate();
+            htmlTemplate += uriTemplate.replaceAll( "\\{|\\}", "" );
+        }
+
+        if ( htmlTemplate.charAt( 0 ) != '/' )
+        { htmlTemplate = "/".concat( htmlTemplate ); }
+        return htmlTemplate;
     }
 }

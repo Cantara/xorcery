@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.opensearch.requestlog.logging;
+package com.exoreaction.xorcery.service.opensearch.requestlog;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
