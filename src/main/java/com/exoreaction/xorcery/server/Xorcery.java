@@ -2,9 +2,11 @@ package com.exoreaction.xorcery.server;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.cqrs.UUIDs;
 import com.exoreaction.xorcery.jetty.server.JettyConnectorThreadPool;
-import com.exoreaction.xorcery.jsonapi.model.*;
+import com.exoreaction.xorcery.jsonapi.model.Attributes;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.server.resources.ServerApplication;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -13,11 +15,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
-import jakarta.ws.rs.core.UriBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
@@ -32,12 +31,10 @@ import org.eclipse.jetty.http3.server.HTTP3ServerConnectionFactory;
 import org.eclipse.jetty.http3.server.HTTP3ServerConnector;
 import org.eclipse.jetty.io.ClientConnectionFactory;
 import org.eclipse.jetty.io.ClientConnector;
-import org.eclipse.jetty.io.RuntimeIOException;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.Jetty;
-import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
@@ -50,17 +47,16 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-import java.io.*;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
-import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.codahale.metrics.MetricRegistry.name;
 import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
@@ -69,55 +65,38 @@ import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NO
  * @author rickardoberg
  * @since 12/04/2022
  */
-
 public class Xorcery
         implements Closeable {
 
     private static final Logger logger = LogManager.getLogger(Xorcery.class);
 
-    private final String serverId;
-    private Configuration configuration;
-    private URI baseUri;
-
     private org.eclipse.jetty.server.Server server;
-    private List<ResourceObject> services = new CopyOnWriteArrayList<>();
 
     public Xorcery(File configurationFile, String id) throws Exception {
-        this.configuration = configuration(configurationFile);
+        Configuration configuration = createConfiguration(configurationFile);
 
-        serverId = configuration.getString("id").orElseGet(() ->
+        // Ensure this server has an id
+        configuration.getString("id").orElseGet(() ->
         {
             String newId = Optional.ofNullable(id).orElse(UUIDs.newId());
             configuration.json().set("id", configuration.json().textNode(newId));
             return newId;
         });
 
-        services.add(new ResourceObject.Builder("server", serverId)
-                .attributes(new Attributes.Builder()
-                        .attribute("jetty.version", Jetty.VERSION)
-                        .build()).build());
-        MetricRegistry metricRegistry = metrics();
+        MetricRegistry metricRegistry = createMetrics(configuration);
 
-        webServer(metricRegistry);
+        HttpClient client = createClient(configuration, metricRegistry);
+//        client.start();
+
+        Server server = createServer(configuration, metricRegistry);
+        Handler handler = createHandler(configuration, metricRegistry, client, server);
+
+        server.setHandler(handler);
+
+        server.start();
     }
 
-    public void addService(ResourceObject serviceResource) {
-        services.add(serviceResource);
-    }
-
-    public ResourceDocument getServerDocument() {
-        ResourceDocument serverDocument = new ResourceDocument.Builder()
-                .links(new Links.Builder().link(JsonApiRels.self, baseUri).build())
-                .data(services.stream().collect(ResourceObjects.toResourceObjects()))
-                .build();
-        return serverDocument;
-    }
-
-    public Server getServer() {
-        return server;
-    }
-
-    private Configuration configuration(File configFile) throws Exception {
+    protected Configuration createConfiguration(File configFile) throws Exception {
         Configuration.Builder builder = Configuration.Builder.load(configFile);
 
         // Log final configuration
@@ -131,7 +110,7 @@ public class Xorcery
         return configuration;
     }
 
-    private MetricRegistry metrics() {
+    protected MetricRegistry createMetrics(Configuration configuration) {
         MetricRegistry metricRegistry = new MetricRegistry();
 
         // Setup Jvm mem metric
@@ -144,24 +123,86 @@ public class Xorcery
         return metricRegistry;
     }
 
-    private void webServer(MetricRegistry metricRegistry) throws Exception {
+    protected HttpClient createClient(Configuration configuration, MetricRegistry metricRegistry) throws Exception {
+        // Client setup
+        ClientConnector connector = new ClientConnector();
+        connector.setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
+
+        // HTTP 1.1
+        ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
+
+        ClientConnectionFactoryOverHTTP2.HTTP2 http2 = null;
+        ClientConnectionFactoryOverHTTP3.HTTP3 http3 = null;
+
+        if (configuration.getBoolean("client.http2.enabled").orElse(false)) {
+            // HTTP/2
+            HTTP2Client http2Client = new HTTP2Client(connector);
+            http2Client.setIdleTimeout(configuration.getLong("client.idle_timeout").orElse(-1L));
+
+            http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
+        }
+
+        HttpClientTransportDynamic transport = null;
+        if (configuration.getBoolean("client.ssl.enabled").orElse(false)) {
+
+            SslContextFactory.Client sslClientContextFactory = new SslContextFactory.Client() {
+                @Override
+                protected KeyStore loadTrustStore(Resource resource) throws Exception {
+                    KeyStore keyStore = super.loadTrustStore(resource);
+                    addDefaultRootCaCertificates(keyStore);
+                    return keyStore;
+                }
+            };
+            sslClientContextFactory.setKeyStoreType(configuration.getString("client.ssl.keystore.type").orElse("PKCS12"));
+            sslClientContextFactory.setKeyStorePath(configuration.getString("client.ssl.keystore.path")
+                    .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
+            sslClientContextFactory.setKeyStorePassword(configuration.getString("client.ssl.keystore.password").orElse("password"));
+
+//                        sslClientContextFactory.setTrustStoreType(configuration.getString("client.ssl.truststore.type").orElse("PKCS12"));
+            sslClientContextFactory.setTrustStorePath(configuration.getString("client.ssl.truststore.path")
+                    .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
+            sslClientContextFactory.setTrustStorePassword(configuration.getString("client.ssl.truststore.password").orElse("password"));
+
+            sslClientContextFactory.setEndpointIdentificationAlgorithm("HTTPS");
+            sslClientContextFactory.setHostnameVerifier((hostName, session) -> true);
+            sslClientContextFactory.setTrustAll(configuration.getBoolean("client.ssl.trustall").orElse(false));
+            sslClientContextFactory.setSNIProvider(NON_DOMAIN_SNI_PROVIDER);
+
+
+            connector.setSslContextFactory(sslClientContextFactory);
+
+            // HTTP/3
+            if (configuration.getBoolean("client.http3.enabled").orElse(false)) {
+                HTTP3Client h3Client = new HTTP3Client();
+                h3Client.getClientConnector().setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
+                h3Client.getQuicConfiguration().setSessionRecvWindow(64 * 1024 * 1024);
+                http3 = new ClientConnectionFactoryOverHTTP3.HTTP3(h3Client);
+                h3Client.getClientConnector().setSslContextFactory(sslClientContextFactory);
+            }
+        }
+
+        // Figure out correct transport dynamics
+        if (http3 != null) {
+            if (http2 != null) {
+                transport = new HttpClientTransportDynamic(connector, http1, http3, http2);
+            } else {
+                transport = new HttpClientTransportDynamic(connector, http1, http3);
+            }
+        } else if (http2 != null) {
+            transport = new HttpClientTransportDynamic(connector, http1, http2);
+        } else {
+            transport = new HttpClientTransportDynamic(connector, http1);
+        }
+
+        return new HttpClient(transport);
+    }
+
+    protected Server createServer(Configuration configuration, MetricRegistry metricRegistry) throws Exception {
 
         Configuration jettyConfig = configuration.getConfiguration("server");
 
         int httpPort = jettyConfig.getInteger("http.port").orElse(8889);
         int httpsPort = jettyConfig.getInteger("ssl.port").orElse(8443);
-
-/*
-        // Ensure Conscrypt is used
-        ConscryptHostnameVerifier hostnameVerifier = new ConscryptHostnameVerifier() {
-            @Override
-            public boolean verify(X509Certificate[] certs, String hostname, SSLSession session) {
-                return true;
-            }
-        };
-        Conscrypt.setDefaultHostnameVerifier(hostnameVerifier);
-        java.security.Security.insertProviderAt(new org.conscrypt.OpenSSLProvider(), 1);
-*/
 
         // Setup thread pool
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
@@ -170,7 +211,7 @@ public class Xorcery
         jettyConnectorThreadPool.setMaxThreads(150);
 
         // Create server
-        server = new org.eclipse.jetty.server.Server(jettyConnectorThreadPool);
+        server = new Server(jettyConnectorThreadPool);
         server.setStopAtShutdown(true);
 
         // Setup connector
@@ -214,6 +255,7 @@ public class Xorcery
                         return keyStore;
                     }
                 } : null;
+
         if (configuration.getBoolean("server.ssl.enabled").orElse(false)) {
             // The ALPN ConnectionFactory.
             ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
@@ -256,11 +298,19 @@ public class Xorcery
             }
         }
 
-        // Construct base URI
-        baseUri = URI.create(jettyConfig.getString("scheme").orElse("http") + "://" +
-                configuration.getString("host").orElse("localhost") +
-                ":" + jettyConfig.getInteger("port").orElse(httpPort) + "/");
+        Slf4jRequestLogWriter requestLog = new Slf4jRequestLogWriter();
+        requestLog.setLoggerName("jetty");
+        server.setRequestLog(
+                new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
 
+        // Start Jetty
+//        server.start();
+
+        return server;
+    }
+
+    protected Handler createHandler(Configuration configuration, MetricRegistry metricRegistry, HttpClient client, Server server)
+            throws IOException {
         ServletContextHandler ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         ctx.setContextPath("/");
 
@@ -269,84 +319,9 @@ public class Xorcery
         Binder binder = new AbstractBinder() {
             @Override
             protected void configure() {
-                try {
-
-                    // Client setup
-                    ClientConnector connector = new ClientConnector();
-                    connector.setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
-
-                    // HTTP 1.1
-                    ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
-
-                    ClientConnectionFactoryOverHTTP2.HTTP2 http2 = null;
-                    ClientConnectionFactoryOverHTTP3.HTTP3 http3 = null;
-
-                    if (configuration.getBoolean("client.http2.enabled").orElse(false)) {
-                        // HTTP/2
-                        HTTP2Client http2Client = new HTTP2Client(connector);
-                        http2Client.setIdleTimeout(configuration.getLong("client.idle_timeout").orElse(-1L));
-
-                        http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
-                    }
-
-                    HttpClientTransportDynamic transport = null;
-                    if (configuration.getBoolean("client.ssl.enabled").orElse(false)) {
-
-                        SslContextFactory.Client sslClientContextFactory = new SslContextFactory.Client() {
-                            @Override
-                            protected KeyStore loadTrustStore(Resource resource) throws Exception {
-                                KeyStore keyStore = super.loadTrustStore(resource);
-                                addDefaultRootCaCertificates(keyStore);
-                                return keyStore;
-                            }
-                        };
-                        sslClientContextFactory.setKeyStoreType(configuration.getString("client.ssl.keystore.type").orElse("PKCS12"));
-                        sslClientContextFactory.setKeyStorePath(configuration.getString("client.ssl.keystore.path")
-                                .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
-                        sslClientContextFactory.setKeyStorePassword(configuration.getString("client.ssl.keystore.password").orElse("password"));
-
-//                        sslClientContextFactory.setTrustStoreType(configuration.getString("client.ssl.truststore.type").orElse("PKCS12"));
-                        sslClientContextFactory.setTrustStorePath(configuration.getString("client.ssl.truststore.path")
-                                .orElseGet(() -> getClass().getResource("/keystore.p12").toExternalForm()));
-                        sslClientContextFactory.setTrustStorePassword(configuration.getString("client.ssl.truststore.password").orElse("password"));
-
-                        sslClientContextFactory.setEndpointIdentificationAlgorithm("HTTPS");
-                        sslClientContextFactory.setHostnameVerifier((hostName, session) -> true);
-                        sslClientContextFactory.setTrustAll(configuration.getBoolean("client.ssl.trustall").orElse(false));
-                        sslClientContextFactory.setSNIProvider(NON_DOMAIN_SNI_PROVIDER);
-
-
-                        connector.setSslContextFactory(sslClientContextFactory);
-
-                        // HTTP/3
-                        if (configuration.getBoolean("client.http3.enabled").orElse(false)) {
-                            HTTP3Client h3Client = new HTTP3Client();
-                            h3Client.getClientConnector().setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
-                            h3Client.getQuicConfiguration().setSessionRecvWindow(64 * 1024 * 1024);
-                            http3 = new ClientConnectionFactoryOverHTTP3.HTTP3(h3Client);
-                            h3Client.getClientConnector().setSslContextFactory(sslClientContextFactory);
-                        }
-
-                        bind(sslClientContextFactory);
-
-                    }
-
-                    // Figure out correct transport dynamics
-                    if (http3 != null) {
-                        if (http2 != null) {
-                            transport = new HttpClientTransportDynamic(connector, http1, http3, http2);
-                        } else {
-                            transport = new HttpClientTransportDynamic(connector, http1, http3);
-                        }
-                    } else if (http2 != null) {
-                        transport = new HttpClientTransportDynamic(connector, http1, http2);
-                    } else {
-                        transport = new HttpClientTransportDynamic(connector, http1);
-                    }
-
-                    HttpClient client = new HttpClient(transport);
-                    client.start();
-                    server.addManaged(client);
+                    if (client.getSslContextFactory() != null)
+                        bind(client.getSslContextFactory());
+                    Xorcery.this.server.addManaged(client);
                     bind(new JettyHttpClientSupplier(client)).to(JettyHttpClientContract.class);
 
                     // Create default ObjectMapper
@@ -359,14 +334,17 @@ public class Xorcery
                     bind(configuration);
                     bind(ctx);
                     bind(Xorcery.this);
+                    bind(server);
+                    bind(new ResourceObject.Builder("server", new StandardConfiguration.Impl(configuration).getId())
+                            .attributes(new Attributes.Builder()
+                                    .attribute("jetty.version", Jetty.VERSION)
+                                    .build()).build()).named("server");
 
-                    if (sslContextFactory != null)
-                        bind(sslContextFactory);
-                } catch (Exception e) {
-                    throw new RuntimeIOException(e);
-                }
+//                    if (server.getConnectors()[0].getDefaultConnectionFactory().sslContextFactory != null)
+//                        bind(sslContextFactory);
             }
         };
+
         app.register(binder);
 
         configuration.getList("jaxrs.register").ifPresent(jsonNodes ->
@@ -395,19 +373,10 @@ public class Xorcery
 
         InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry, "jetty");
         instrumentedHandler.setHandler(ctx);
-
-        server.setHandler(instrumentedHandler);
-
-        Slf4jRequestLogWriter requestLog = new Slf4jRequestLogWriter();
-        requestLog.setLoggerName("jetty");
-        server.setRequestLog(
-                new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
-
-        // Start Jetty
-        server.start();
+        return instrumentedHandler;
     }
 
-    private static void addDefaultRootCaCertificates(KeyStore trustStore) throws GeneralSecurityException {
+    protected void addDefaultRootCaCertificates(KeyStore trustStore) throws GeneralSecurityException {
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
         // Loads default Root CA certificates (generally, from JAVA_HOME/lib/cacerts)
         trustManagerFactory.init((KeyStore) null);

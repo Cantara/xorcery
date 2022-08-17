@@ -28,6 +28,7 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
@@ -90,6 +91,7 @@ public class OpenSearchService
                              Configuration configuration,
                              JettyHttpClientSupplier instance,
                              Xorcery xorcery,
+                             Server server,
                              @Named(SERVICE_TYPE) ServiceResourceObject sro) {
         this.conductor = conductor;
         this.reactiveStreams = reactiveStreams;
@@ -97,7 +99,7 @@ public class OpenSearchService
         this.instance = instance;
         this.sro = sro;
         this.objectMapper = new ObjectMapper(new YAMLFactory());
-        xorcery.getServer().addEventListener(this);
+        server.addEventListener(this);
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
         client = new OpenSearchClient(new ClientConfig()

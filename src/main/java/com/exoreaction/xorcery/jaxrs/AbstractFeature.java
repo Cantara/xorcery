@@ -34,7 +34,6 @@ public abstract class AbstractFeature
             builder.attributes().attribute("tag", standardConfiguration.getTag());
             buildResourceObject(builder);
             resourceObject = builder.build();
-            xorcery().addService(resourceObject.resourceObject());
             bind(resourceObject).named(serviceType);
 
             if (!super.getBindings().isEmpty()) {

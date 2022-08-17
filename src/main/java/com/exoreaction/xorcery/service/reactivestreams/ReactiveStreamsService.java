@@ -29,6 +29,7 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.LifeCycle;
@@ -101,6 +102,7 @@ public class ReactiveStreamsService
                                   @Named(SERVICE_TYPE) WebSocketClient webSocketClient,
                                   jakarta.inject.Provider<Registry> registryService,
                                   Configuration configuration,
+                                  Server server,
                                   Xorcery xorcery,
                                   MessageBodyWorkers messageBodyWorkers,
                                   ObjectMapper objectMapper) {
@@ -113,7 +115,7 @@ public class ReactiveStreamsService
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
         this.timer = new Timer();
 
-        xorcery.getServer().addEventListener(this);
+        server.addEventListener(this);
 
         byteBufferPool = new ArrayByteBufferPool();
     }

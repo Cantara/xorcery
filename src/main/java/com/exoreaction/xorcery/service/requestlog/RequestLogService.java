@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.ext.Provider;
+import org.eclipse.jetty.server.Server;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
@@ -47,7 +48,7 @@ public class RequestLogService
     @Inject
     public RequestLogService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
                    ReactiveStreams reactiveStreams,
-                   Xorcery xorcery,
+                   Server server,
                    Configuration configuration) {
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
@@ -55,7 +56,7 @@ public class RequestLogService
         requestLog = new JsonRequestLog(new LoggingMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
                 .build());
-        xorcery.getServer().setRequestLog(requestLog);
+        server.setRequestLog(requestLog);
     }
 
     @Override

@@ -2,14 +2,12 @@ package com.exoreaction.xorcery.service.registry;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.jsonapi.model.Link;
-import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
-import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
-import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
+import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
@@ -36,6 +34,7 @@ import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
@@ -68,10 +67,10 @@ public class RegistryService
 
     private final Disruptor<Event<RegistryChange>> disruptor;
     private ServiceResourceObject resourceObject;
+    private IterableProvider<ServiceResourceObject> serviceResources;
     private ReactiveStreams reactiveStreams;
     private final Configuration configuration;
     private final JsonApiClient jsonApiClient;
-    private final Xorcery xorcery;
 
     @Provider
     public static class Feature
@@ -101,19 +100,19 @@ public class RegistryService
     private StartupRegistration registration;
     private final List<ServerResourceDocument> servers = new CopyOnWriteArrayList<>();
 
-    private final List<ServiceResourceObject> services = new CopyOnWriteArrayList<>();
     private List<SubscriberEventSink<RegistryChange>> subscribers = new CopyOnWriteArrayList<>();
 
     private List<RegistryListener> listeners = new CopyOnWriteArrayList<>();
 
     @Inject
     public RegistryService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
+                           IterableProvider<ServiceResourceObject> serviceResources,
                            ReactiveStreams reactiveStreams,
                            Configuration configuration,
                            JettyHttpClientContract clientInstance,
-                           Xorcery xorcery,
                            ServletContextHandler servletContextHandler) {
         this.resourceObject = resourceObject;
+        this.serviceResources = serviceResources;
         this.reactiveStreams = reactiveStreams;
         this.configuration = configuration;
         this.jsonApiClient = new JsonApiClient(ClientBuilder.newBuilder().withConfig(new ClientConfig()
@@ -122,7 +121,6 @@ public class RegistryService
                 .register(clientInstance)
                 .connectorProvider(new JettyConnectorProvider())
         ).build());
-        this.xorcery = xorcery;
 
         this.registryLink = new Link("master", this.configuration.getString("registry.master").orElseThrow());
 
@@ -133,7 +131,7 @@ public class RegistryService
 
         registration = new StartupRegistration(
                 reactiveStreams, jsonApiClient, resourceObject.serviceIdentifier(), registryLink,
-                xorcery.getServerDocument(), upstreamSubscriber,
+                getServer().resourceDocument(), upstreamSubscriber,
                 new CompletableFuture<ResourceObject>().thenApply(v ->
                 {
                     LogManager.getLogger(RegistryService.class).info("Registered server");
@@ -147,17 +145,6 @@ public class RegistryService
         {
             reactiveStreams.publish(resourceObject.serviceIdentifier(), link, new RegistryPublisher());
         });
-
-/*
-        ForkJoinPool.commonPool().execute(()->
-        {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
-*/
         registration.start();
     }
 
@@ -175,6 +162,19 @@ public class RegistryService
         }
 
         disruptor.shutdown();
+    }
+
+    @Override
+    public ServerResourceDocument getServer() {
+        ResourceObjects.Builder builder = new ResourceObjects.Builder();
+        for (ServiceResourceObject serviceResource : serviceResources) {
+            builder.resource(serviceResource.resourceObject());
+        }
+        ResourceDocument serverDocument = new ResourceDocument.Builder()
+                .links(new Links.Builder().link(JsonApiRels.self, new StandardConfiguration.Impl(configuration).getServerUri()).build())
+                .data(builder.build())
+                .build();
+        return new ServerResourceDocument(serverDocument);
     }
 
     @Override

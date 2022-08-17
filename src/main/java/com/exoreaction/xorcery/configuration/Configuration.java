@@ -41,11 +41,21 @@ public record Configuration(ObjectNode json)
             builder.addSystemProperties("SYSTEM");
             builder.addEnvironmentVariables("ENV");
 
-            // Load defaults
+            // Load Xorcery defaults
             {
-                URL resource = Configuration.class.getResource("/xorcery-defaults.yaml");
+                URL resource = Configuration.class.getClassLoader().getResource("META-INF/xorcery-defaults.yaml");
                 try (InputStream in = resource.openStream()) {
                     builder = builder.addYaml(in);
+                    logger.info("Loaded " + resource);
+                }
+            }
+
+            // Load extensions
+            Enumeration<URL> extensionConfigurationURLs = Configuration.class.getClassLoader().getResources("META-INF/xorcery.yaml");
+            while (extensionConfigurationURLs.hasMoreElements()) {
+                URL resource = extensionConfigurationURLs.nextElement();
+                try (InputStream configurationStream = resource.openStream()) {
+                    builder = builder.addYaml(configurationStream);
                     logger.info("Loaded " + resource);
                 }
             }
@@ -98,22 +108,63 @@ public record Configuration(ObjectNode json)
                 throws IOException {
             Configuration.Builder builder = load(configFile);
 
-            // Load defaults
+            // Load Xorcery defaults
             {
-                URL resource = Configuration.class.getResource("/xorcery-defaults-test.yaml");
+                URL resource = Configuration.class.getClassLoader().getResource("META-INF/xorcery-defaults.yaml");
+                try (InputStream in = resource.openStream()) {
+                    builder = builder.addYaml(in);
+                    logger.info("Loaded " + resource);
+                }
+            }
+            {
+                URL resource = Configuration.class.getClassLoader().getResource("META-INF/xorcery-defaults-test.yaml");
                 try (InputStream in = resource.openStream()) {
                     builder = builder.addYaml(in);
                     logger.info("Loaded " + resource);
                 }
             }
 
+            // Load extensions
+            {
+                Enumeration<URL> extensionConfigurationURLs = Configuration.class.getClassLoader().getResources("META-INF/xorcery.yaml");
+                while (extensionConfigurationURLs.hasMoreElements()) {
+                    URL resource = extensionConfigurationURLs.nextElement();
+                    try (InputStream configurationStream = resource.openStream()) {
+                        builder = builder.addYaml(configurationStream);
+                        logger.info("Loaded " + resource);
+                    }
+                }
+            }
+            {
+                Enumeration<URL> extensionConfigurationURLs = Configuration.class.getClassLoader().getResources("META-INF/xorcery-test.yaml");
+                while (extensionConfigurationURLs.hasMoreElements()) {
+                    URL resource = extensionConfigurationURLs.nextElement();
+                    try (InputStream configurationStream = resource.openStream()) {
+                        builder = builder.addYaml(configurationStream);
+                        logger.info("Loaded " + resource);
+                    }
+                }
+            }
+
             // Load custom
-            Enumeration<URL> configurationURLs = Configuration.class.getClassLoader().getResources("xorcery-test.yaml");
-            while (configurationURLs.hasMoreElements()) {
-                URL resource = configurationURLs.nextElement();
-                try (InputStream configurationStream = resource.openStream()) {
-                    builder = builder.addYaml(configurationStream);
-                    logger.info("Loaded " + resource);
+            {
+                Enumeration<URL> configurationURLs = Configuration.class.getClassLoader().getResources("xorcery.yaml");
+                while (configurationURLs.hasMoreElements()) {
+                    URL resource = configurationURLs.nextElement();
+                    try (InputStream configurationStream = resource.openStream()) {
+                        builder = builder.addYaml(configurationStream);
+                        logger.info("Loaded " + resource);
+                    }
+                }
+            }
+            {
+                Enumeration<URL> configurationURLs = Configuration.class.getClassLoader().getResources("xorcery-test.yaml");
+                while (configurationURLs.hasMoreElements()) {
+                    URL resource = configurationURLs.nextElement();
+                    try (InputStream configurationStream = resource.openStream()) {
+                        builder = builder.addYaml(configurationStream);
+                        logger.info("Loaded " + resource);
+                    }
                 }
             }
 

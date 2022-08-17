@@ -18,7 +18,7 @@ server:
   idle_timeout: "{{ idle_timeout }}"
 
   http:
-    port: 8889
+    port: 80
 
   http2:
     enabled: true
@@ -29,7 +29,7 @@ server:
 
   ssl:
     enabled: true
-    port: 8443
+    port: 443
     trustall: true
     wantclientauth: true
     snirequired: false

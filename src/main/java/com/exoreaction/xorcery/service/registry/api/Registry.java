@@ -16,6 +16,8 @@ public interface Registry {
     void removeServer(String serverSelfUri);
 
     // Read
+    ServerResourceDocument getServer();
+
     List<ServerResourceDocument> getServers();
 
     Optional<ServiceResourceObject> getService(ServiceIdentifier serviceIdentifier);
