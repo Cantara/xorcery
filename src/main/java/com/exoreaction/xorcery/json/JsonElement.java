@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.*;
 import java.net.URI;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collector;
 
 /**
  * Marker interface with helper methods to denote a model that is backed by JSON.
@@ -143,6 +144,13 @@ public interface JsonElement {
             array.add(array.textNode(value));
         }
         return array;
+    }
+
+    static Collector<JsonNode, ArrayNode, ArrayNode> toArray() {
+        return Collector.of(JsonNodeFactory.instance::arrayNode,
+                (array, node) -> {
+            if (node != null) array.add(node);
+        }, (builder1, builder2) -> builder1, Function.identity());
     }
 
     static <T, U extends JsonNode> List<T> getValuesAs(ContainerNode<?> arrayNode, Function<U, T> mapFunction) {

@@ -7,6 +7,9 @@ import com.exoreaction.xorcery.disruptor.EventWithResult;
 import com.exoreaction.xorcery.jetty.client.WriteCallbackCompletableFuture;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.lmax.disruptor.EventSink;
@@ -23,7 +26,6 @@ import org.eclipse.jetty.websocket.api.*;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.io.UncheckedIOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
@@ -43,7 +45,6 @@ public class SubscriberWebSocketEndpoint<T>
     private MessageBodyWriter<Object> messageBodyWriter;
     private ObjectMapper objectMapper;
     private EventSink<Event<T>> eventSink;
-    private ByteBuffer metadata;
     private Session session;
     private Type eventType;
     private Marker marker;
@@ -117,33 +118,29 @@ public class SubscriberWebSocketEndpoint<T>
 
     private void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
-            if (metadata == null) {
-                metadata = byteBuffer;
-            } else {
 //                logger.info(marker, "Received:"+ Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+            JsonFactory jf = new JsonFactory(objectMapper);
+            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
+            JsonParser jp = jf.createParser(inputStream);
+            JsonToken metadataToken = jp.nextToken();
+            Metadata metadata = jp.readValueAs(Metadata.class);
+            long location = jp.getCurrentLocation().getByteOffset();
+            byteBuffer.position((int) location);
 
-                ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-                Object event = messageBodyReader.readFrom((Class<Object>) eventType, eventType, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, inputStream);
-                byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
-                eventSink.publishEvent((holder, seq, m, e) ->
-                {
-                    try {
-                        holder.metadata = objectMapper.readValue(new ByteBufferBackedInputStream(metadata), Metadata.class);
-                    } catch (IOException ex) {
-                        throw new UncheckedIOException(ex);
-                    }
-                    byteBufferAccumulator.getByteBufferPool().release(metadata);
-                    if (messageBodyWriter == null) {
-                        holder.event = (T) e;
-                    } else {
-                        CompletableFuture<?> resultFuture = new CompletableFuture<>();
-                        resultFuture.whenComplete(this::sendResult);
+            Object event = messageBodyReader.readFrom((Class<Object>) eventType, eventType, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, inputStream);
+            byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
+            eventSink.publishEvent((holder, seq, m, e) ->
+            {
+                holder.metadata = m;
+                if (messageBodyWriter == null) {
+                    holder.event = (T) e;
+                } else {
+                    CompletableFuture<?> resultFuture = new CompletableFuture<>();
+                    resultFuture.whenComplete(this::sendResult);
 
-                        holder.event = (T) new EventWithResult<>(e, resultFuture);
-                    }
-                }, metadata, event);
-                metadata = null;
-            }
+                    holder.event = (T) new EventWithResult<>(e, resultFuture);
+                }
+            }, metadata, event);
         } catch (IOException e) {
             logger.error("Could not receive value", e);
             session.close();
@@ -216,7 +213,7 @@ public class SubscriberWebSocketEndpoint<T>
         }
 
         @Override
-        public void request(long n) {
+        public synchronized void request(long n) {
             if (!session.isOpen())
                 return;
 
@@ -226,10 +223,12 @@ public class SubscriberWebSocketEndpoint<T>
                 sendRequests.set(new CompletableFuture<>());
                 sendRequests.get().whenComplete((v, t) ->
                 {
-                    sendRequests.set(null);
-                    long rn = requests.getAndSet(0);
-                    if (rn > 0) {
-                        request(rn);
+                    synchronized (SubscriberWebSocketEndpoint.this) {
+                        sendRequests.set(null);
+                        long rn = requests.getAndSet(0);
+                        if (rn > 0) {
+                            request(rn);
+                        }
                     }
                 });
 
@@ -237,20 +236,25 @@ public class SubscriberWebSocketEndpoint<T>
                 session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
                     @Override
                     public void writeFailed(Throwable x) {
-                        logger.error(marker, "Could not send request", x);
-                        sendRequests.get().completeExceptionally(x);
+                        synchronized (SubscriberWebSocketEndpoint.this) {
+                            logger.error(marker, "Could not send request", x);
+                            sendRequests.get().completeExceptionally(x);
+                        }
                     }
 
                     @Override
                     public void writeSuccess() {
-                        sendRequests.get().complete(null);
+                        synchronized (SubscriberWebSocketEndpoint.this) {
+                            sendRequests.get().complete(null);
+                            logger.debug(marker, "Sent request {}", rn);
+                        }
                     }
                 });
             }
         }
 
         @Override
-        public void cancel() {
+        public synchronized void cancel() {
             requests.set(0);
             request(Long.MIN_VALUE);
         }

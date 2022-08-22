@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.neo4jprojections;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.util.Listeners;
@@ -64,6 +65,7 @@ public class Neo4jProjectionsService
     }
 
     private final Logger logger = LogManager.getLogger(getClass());
+    private MetricRegistry metricRegistry;
     private final JsonApiClient jsonApiClient;
     private final ReactiveStreams reactiveStreams;
     private final Conductor conductor;
@@ -78,11 +80,13 @@ public class Neo4jProjectionsService
                                    ReactiveStreams reactiveStreams,
                                    @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                    GraphDatabases graphDatabases,
+                                   MetricRegistry metricRegistry,
                                    JettyHttpClientContract clientInstance) {
         this.conductor = conductor;
         this.reactiveStreams = reactiveStreams;
         this.sro = sro;
         this.graphDatabases = graphDatabases;
+        this.metricRegistry = metricRegistry;
 
         this.jsonApiClient = new JsonApiClient(ClientBuilder.newBuilder().withConfig(new ClientConfig()
                 .register(new JsonApiMessageBodyReader(new ObjectMapper()))
@@ -94,7 +98,7 @@ public class Neo4jProjectionsService
 
     @Override
     public void onStartup(Container container) {
-        conductor.addConductorListener(new DomainEventsConductorListener(graphDatabases, reactiveStreams, sro.serviceIdentifier(), "domainevents", listeners, this::isLive));
+        conductor.addConductorListener(new DomainEventsConductorListener(graphDatabases, reactiveStreams, sro.serviceIdentifier(), "domainevents", metricRegistry, listeners, this::isLive));
         conductor.addConductorListener(new EventStoreConductorListener(graphDatabases, reactiveStreams, jsonApiClient, sro.serviceIdentifier(), "events", listeners, this::isLive));
     }
 

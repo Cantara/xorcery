@@ -18,7 +18,6 @@ import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
-import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
@@ -29,10 +28,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author rickardoberg
@@ -52,23 +52,27 @@ public class PublisherWebSocketEndpoint<T>
 
     private Type resultType;
     private final ObjectMapper objectMapper;
+    private ByteBufferPool pool;
     private Marker marker;
     private boolean redundancyNotificationIssued = false;
 
-    private final AtomicReference<CompletableFuture<Object>> resultFuture = new AtomicReference<>();
+    private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private Disruptor<Event<T>> disruptor;
 
     public PublisherWebSocketEndpoint(String webSocketPath, ReactiveEventStreams.Publisher<T> publisher,
                                       MessageBodyWriter<T> messageBodyWriter,
                                       MessageBodyReader<?> messageBodyReader,
                                       Type resultType,
-                                      ObjectMapper objectMapper, Marker marker) {
+                                      ObjectMapper objectMapper,
+                                      ByteBufferPool pool,
+                                      Marker marker) {
         this.webSocketPath = webSocketPath;
         this.publisher = publisher;
         this.messageBodyWriter = messageBodyWriter;
         this.messageBodyReader = messageBodyReader;
         this.resultType = resultType;
         this.objectMapper = objectMapper;
+        this.pool = pool;
         this.marker = marker;
     }
 
@@ -84,7 +88,7 @@ public class PublisherWebSocketEndpoint<T>
     }
 
     @Override
-    public void onWebSocketText(String message) {
+    public synchronized void onWebSocketText(String message) {
 
         if (publisherConfiguration == null)
         {
@@ -124,7 +128,7 @@ public class PublisherWebSocketEndpoint<T>
                     ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
                     ObjectInputStream oin = new ObjectInputStream(bin);
                     Throwable throwable = (Throwable) oin.readObject();
-                    resultFuture.get().completeExceptionally(throwable);
+                    resultQueue.remove().completeExceptionally(throwable);
                 } else
                 {
                     // Deserialize result
@@ -132,7 +136,7 @@ public class PublisherWebSocketEndpoint<T>
                     Object result = messageBodyReader.readFrom((Class)resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE,
                             new MultivaluedHashMap<String, String>(), bin);
 
-                    resultFuture.get().complete((Object) result);
+                    resultQueue.remove().complete(result);
                 }
             } else
             {
@@ -144,7 +148,7 @@ public class PublisherWebSocketEndpoint<T>
             }
         } catch (Throwable e) {
             logger.error(marker,"Could not read result", e);
-            resultFuture.get().completeExceptionally(e);
+            resultQueue.remove().completeExceptionally(e);
         }
     }
 
@@ -198,8 +202,6 @@ public class PublisherWebSocketEndpoint<T>
     public class Sender
             implements EventHandler<Event<T>> {
 
-        ByteBufferPool pool = new ArrayByteBufferPool();
-
         @Override
         public void onEvent(Event<T> event, long sequence, boolean endOfBatch) throws Exception {
             while (!semaphore.tryAcquire(1, TimeUnit.SECONDS)) {
@@ -207,63 +209,47 @@ public class PublisherWebSocketEndpoint<T>
                     return;
             }
 
-            ByteBufferOutputStream2 metadataOutputStream = new ByteBufferOutputStream2(pool, true);
+            ByteBufferOutputStream2 outputStream = new ByteBufferOutputStream2(pool, true);
 
-            objectMapper.writeValue(metadataOutputStream, event.metadata);
-            ByteBuffer metadataBuffer = metadataOutputStream.takeByteBuffer();
+            // Write metadata
+            objectMapper.writeValue(outputStream, event.metadata);
 
-            session.getRemote().sendBytes(metadataBuffer, new WriteCallback() {
+            // Write event data
+            try {
+                if (messageBodyWriter != null)
+                {
+                    if (messageBodyReader == null) {
+                        messageBodyWriter.writeTo(event.event, event.event.getClass(), event.event.getClass(), new Annotation[0], null, null, outputStream);
+                    } else {
+
+                        EventWithResult<?, Object> eventWithResult = (EventWithResult<?, Object>) event.event;
+                        CompletableFuture<Object> result = eventWithResult.result().toCompletableFuture();
+                        resultQueue.add(result);
+
+                        messageBodyWriter.writeTo((T)eventWithResult.event(), event.event.getClass(), event.event.getClass(), new Annotation[0], null, null, outputStream);
+                    }
+                } else {
+                    ByteBuffer eventBuffer = (ByteBuffer) event.event;
+                    outputStream.writeTo(eventBuffer);
+                }
+            } catch (Throwable t) {
+                logger.error(marker,"Could not send event", t);
+                subscription.cancel();
+            }
+
+            // Send it
+            ByteBuffer eventBuffer = outputStream.takeByteBuffer();
+
+            session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable t) {
-                    pool.release(metadataBuffer);
+                    pool.release(eventBuffer);
                     onWebSocketError(t);
                 }
 
                 @Override
                 public void writeSuccess() {
-                    pool.release(metadataBuffer);
-
-                    ByteBufferOutputStream2 eventOutputStream = new ByteBufferOutputStream2(pool, true);
-                    try {
-                        if (messageBodyWriter != null)
-                        {
-                            if (messageBodyReader == null) {
-                                messageBodyWriter.writeTo(event.event, event.event.getClass(), event.event.getClass(), new Annotation[0], null, null, eventOutputStream);
-                            } else {
-                                messageBodyWriter.writeTo(((EventWithResult<T, ?>) event.event).event(), event.event.getClass(), event.event.getClass(), new Annotation[0], null, null, eventOutputStream);
-                            }
-                            ByteBuffer eventBuffer = eventOutputStream.takeByteBuffer();
-
-                            session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
-                                @Override
-                                public void writeFailed(Throwable t) {
-                                    pool.release(eventBuffer);
-                                    onWebSocketError(t);
-                                }
-
-                                @Override
-                                public void writeSuccess() {
-                                    pool.release(eventBuffer);
-                                }
-                            });
-                        } else {
-                            ByteBuffer eventBuffer = (ByteBuffer) event.event;
-                            session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
-                                @Override
-                                public void writeFailed(Throwable t) {
-                                    onWebSocketError(t);
-                                }
-
-                                @Override
-                                public void writeSuccess() {
-                                    // Done
-                                }
-                            });
-                        }
-                    } catch (Throwable t) {
-                        logger.error(marker,"Could not send event", t);
-                        subscription.cancel();
-                    }
+                    pool.release(eventBuffer);
                 }
             });
 
@@ -277,11 +263,6 @@ public class PublisherWebSocketEndpoint<T>
         @Override
         public void onEvent(Event<T> event, long sequence, boolean endOfBatch) throws Exception {
 
-            CompletableFuture<Object> result = ((EventWithResult<?, Object>) event.event).result().toCompletableFuture();
-            resultFuture.set(result);
-
-            // Wait for result
-            result.join();
         }
     }
 }

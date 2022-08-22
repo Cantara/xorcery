@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.neo4jprojections.domainevents;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
@@ -15,35 +16,27 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.neo4j.graphdb.GraphDatabaseService;
 
-import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 
 class DomainEventsSubscriber
         implements ReactiveEventStreams.Subscriber<EventWithResult<ArrayNode, Metadata>> {
 
-    private final Configuration consumerConfiguration;
-    private final Configuration sourceConfiguration;
+    private final Function<ReactiveEventStreams.Subscription, Neo4jDomainEventEventHandler> handlerFactory;
     private Disruptor<Event<EventWithResult<ArrayNode, Metadata>>> disruptor;
-    private GraphDatabaseService graphDatabaseService;
-    private Listeners<ProjectionListener> listeners;
 
-    public DomainEventsSubscriber(Configuration consumerConfiguration,
-                                  Configuration sourceConfiguration,
-                                  GraphDatabaseService graphDatabaseService,
-                                  Listeners<ProjectionListener> listeners) {
-        this.consumerConfiguration = consumerConfiguration;
-        this.sourceConfiguration = sourceConfiguration;
-        this.graphDatabaseService = graphDatabaseService;
-        this.listeners = listeners;
+    public DomainEventsSubscriber(Function<ReactiveEventStreams.Subscription, Neo4jDomainEventEventHandler> handlerFactory) {
+        this.handlerFactory = handlerFactory;
     }
 
     @Override
     public EventSink<Event<EventWithResult<ArrayNode, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
-        disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Neo4jDomainEventsProjection-"),
+        disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("Neo4jDomainEventsProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
-        disruptor.handleEventsWith(new Neo4jDomainEventEventHandler(graphDatabaseService, subscription, sourceConfiguration, consumerConfiguration, listeners));
+
+        disruptor.handleEventsWith(handlerFactory.apply(subscription));
         disruptor.start();
-        subscription.request(4096);
+        subscription.request(disruptor.getBufferSize());
         return disruptor.getRingBuffer();
     }
 

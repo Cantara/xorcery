@@ -201,7 +201,7 @@ public class ReactiveStreamsService
         }
 
         String path = URI.create(websocketLink.getHrefAsUriTemplate().createURI()).getPath();
-        PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, new PublisherTracker<>(publisher), writer, reader, resultType, configuration, objectMapper, MarkerManager.getMarker(selfServiceIdentifier.toString()));
+        PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, new PublisherTracker<>(publisher), writer, reader, resultType, configuration, objectMapper, byteBufferPool, MarkerManager.getMarker(selfServiceIdentifier.toString()));
 
         servletContextHandler.addServlet(new ServletHolder(servlet), path);
         logger.info("Published websocket for " + selfServiceIdentifier);

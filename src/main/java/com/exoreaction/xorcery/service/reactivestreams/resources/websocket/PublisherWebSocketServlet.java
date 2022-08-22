@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.apache.logging.log4j.Marker;
+import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
@@ -26,6 +27,7 @@ public class PublisherWebSocketServlet<T>
     private Type resultType;
     private Configuration configuration;
     private ObjectMapper objectMapper;
+    private ByteBufferPool pool;
     private Marker marker;
 
     public PublisherWebSocketServlet(String path,
@@ -34,7 +36,9 @@ public class PublisherWebSocketServlet<T>
                                      MessageBodyReader<Object> messageBodyReader,
                                      Type resultType,
                                      Configuration configuration,
-                                     ObjectMapper objectMapper, Marker marker) {
+                                     ObjectMapper objectMapper,
+                                     ByteBufferPool pool,
+                                     Marker marker) {
 
         this.path = path;
         this.publisher = publisher;
@@ -43,6 +47,7 @@ public class PublisherWebSocketServlet<T>
         this.resultType = resultType;
         this.configuration = configuration;
         this.objectMapper = objectMapper;
+        this.pool = pool;
         this.marker = marker;
     }
 
@@ -53,7 +58,7 @@ public class PublisherWebSocketServlet<T>
 
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
         {
-            return new PublisherWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), publisher, messageBodyWriter, messageBodyReader, resultType, objectMapper, marker);
+            return new PublisherWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), publisher, messageBodyWriter, messageBodyReader, resultType, objectMapper, pool, marker);
         });
     }
 }

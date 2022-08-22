@@ -5,16 +5,16 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.jknack.handlebars.internal.Files;
 import org.neo4j.graphdb.Node;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class Cypher {
 
@@ -134,7 +134,9 @@ public final class Cypher {
             if (resourceAsStream == null)
                 throw new IllegalArgumentException("No such resource file:" + statementResourceFile);
 
-            return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
+            return Stream.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"))
+                    .map(String::trim).filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load Cypher statements", e);
         }
