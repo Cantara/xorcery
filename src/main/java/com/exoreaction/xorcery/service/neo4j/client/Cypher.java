@@ -117,6 +117,16 @@ public final class Cypher {
             return JsonNodeFactory.instance.numberNode(v);
         } else if (value instanceof Boolean v) {
             return JsonNodeFactory.instance.booleanNode(v);
+        } else if (value instanceof List list) {
+            ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode(list.size());
+            for (Object child : list) {
+                arrayNode.add(toJsonNode(child));
+            }
+            return arrayNode;
+        } else if (value instanceof Map map) {
+            ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+            map.forEach((k, v)-> objectNode.set(k.toString(), toJsonNode(v)));
+            return objectNode;
         } else if (value instanceof Node node) {
             ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
             for (Map.Entry<String, Object> entry : node.getAllProperties().entrySet()) {
@@ -124,7 +134,7 @@ public final class Cypher {
             }
             return objectNode;
         } else {
-            return null;
+            return NullNode.getInstance();
         }
     }
 

@@ -2,14 +2,15 @@ package com.exoreaction.xorcery.service.neo4jprojections.aggregates;
 
 import com.exoreaction.xorcery.cqrs.aggregate.Aggregate;
 import com.exoreaction.xorcery.cqrs.aggregate.AggregateSnapshot;
-import com.exoreaction.xorcery.cqrs.model.CommonModel;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
+import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.RowModel;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.jknack.handlebars.internal.Files;
 import jakarta.ws.rs.NotFoundException;
 import org.neo4j.graphdb.Result;
 
@@ -34,6 +35,7 @@ public class AggregateSnapshotLoader {
 
         this.database = database;
         this.objectMapper = new ObjectMapper();
+        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
     }
 
     public <T extends AggregateSnapshot> T load(DomainEventMetadata metadata, Aggregate<T> aggregate)
@@ -51,8 +53,10 @@ public class AggregateSnapshotLoader {
                     }
                 });
 
-        return database.query(cypher).parameter(CommonModel.Entity.id, metadata.getAggregateId())
-                .execute().thenCompose(result ->
+        Map<String, Object> metadataMap = Cypher.toMap(metadata.metadata().metadata());
+
+        return database.execute(cypher, Map.of("metadata", metadataMap), 30)
+                .thenCompose(result ->
                 {
                     try (result) {
                         AtomicReference<T> snapshot = new AtomicReference<>();

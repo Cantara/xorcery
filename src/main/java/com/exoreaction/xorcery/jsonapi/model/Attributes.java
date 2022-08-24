@@ -117,7 +117,7 @@ public record Attributes(ObjectNode json)
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
             JsonNode value = entry.getValue();
-            String mapValue = value.asText();
+            String mapValue = value.toPrettyString();
             map.put(entry.getKey(), mapValue);
         }
         return map;

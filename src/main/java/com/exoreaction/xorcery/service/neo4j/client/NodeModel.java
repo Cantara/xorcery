@@ -36,20 +36,6 @@ public record NodeModel(Node node) {
     }
 
     public JsonNode getJsonNode(String name) {
-        Object value = node.getProperty(name, null);
-        if (value == null) {
-            return NullNode.getInstance();
-        } else if (value instanceof String v) {
-            return JsonNodeFactory.instance.textNode(v);
-        } else if (value instanceof Long v) {
-            return JsonNodeFactory.instance.numberNode(v);
-        } else if (value instanceof Double v) {
-            return JsonNodeFactory.instance.numberNode(v);
-        } else if (value instanceof Boolean v) {
-            return JsonNodeFactory.instance.booleanNode(v);
-        } else
-        {
-            return null;
-        }
+        return Cypher.toJsonNode(node.getProperty(name, null));
     }
 }

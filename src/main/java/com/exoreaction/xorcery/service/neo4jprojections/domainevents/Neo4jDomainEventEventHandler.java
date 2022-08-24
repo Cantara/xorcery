@@ -46,6 +46,7 @@ public class Neo4jDomainEventEventHandler
     private final Listeners<ProjectionListener> listeners;
     private MetricRegistry metrics;
     private long version;
+    private int appliedEvents;
     private GraphDatabaseService graphDatabaseService;
 
     private Transaction tx;
@@ -70,7 +71,7 @@ public class Neo4jDomainEventEventHandler
         this.listeners = listeners;
         this.metrics = metrics;
         metrics.gauge("neo4j.projections." + projectionId + ".revision", (MetricRegistry.MetricSupplier<Gauge<Long>>) () -> () -> version);
-        batchSize = metrics.histogram( "neo4j.projections." + projectionId + ".batchsize" );
+        batchSize = metrics.histogram("neo4j.projections." + projectionId + ".batchsize");
 
         sourceConfiguration.getLong("from").ifPresent(from -> version = from);
 
@@ -82,8 +83,7 @@ public class Neo4jDomainEventEventHandler
 
         try {
 
-            if (tx == null)
-            {
+            if (tx == null) {
                 tx = graphDatabaseService.beginTx();
             }
 
@@ -134,48 +134,59 @@ public class Neo4jDomainEventEventHandler
                         try {
                             tx.execute(stmt, parameters);
                         } catch (Throwable e) {
-                            logger.error("Could not apply Neo4j statement:"+stmt, e);
+                            logger.error("Could not apply Neo4j statement for event " + type + ": \n" + stmt, e);
                             throw e;
                         }
                     }
                 } catch (Throwable e) {
                     logger.error("Could not apply Neo4j event update", e);
                     event.event.result().completeExceptionally(e);
+                    tx = graphDatabaseService.beginTx();
                 }
+
+                appliedEvents++;
             }
 
             if (!event.event.result().isCompletedExceptionally())
                 futures.add(event.event.result());
 
             if (endOfBatch) {
-                try {
-                    // Update Projection node with current revision
-                    updateParameters.put("projection_revision", version + futures.size());
-                    tx.execute("MERGE (projection:Projection {id:$projection_id}) SET projection.revision=$projection_revision",
-                            updateParameters);
+                if (appliedEvents > 0) {
+                    try {
+                        // Update Projection node with current revision
+                        updateParameters.put("projection_revision", version + futures.size());
+                        tx.execute("MERGE (projection:Projection {id:$projection_id}) SET projection.revision=$projection_revision",
+                                updateParameters);
 
-                    tx.commit();
-                    tx.close();
+                        tx.commit();
+                        tx.close();
 
+                        for (CompletableFuture<Metadata> future : futures) {
+                            version++;
+                            Metadata result = new Metadata.Builder().add("revision", version).build();
+                            future.complete(result);
+                        }
+                        listeners.listener().onCommit(sourceConfiguration.getString("stream").orElse(""), version);
+
+                        batchSize.update(futures.size());
+                    } catch (Throwable e) {
+                        logger.error("Could not commit Neo4j updates", e);
+                        for (CompletableFuture<Metadata> future : futures) {
+                            future.completeExceptionally(e);
+                        }
+                    }
+
+                    logger.info("Applied " + futures.size());
+                } else {
+                    // No changes applied
                     for (CompletableFuture<Metadata> future : futures) {
-                        version++;
                         Metadata result = new Metadata.Builder().add("revision", version).build();
                         future.complete(result);
                     }
-                    listeners.listener().onCommit(sourceConfiguration.getString("stream").orElse(""), version);
-
-                    batchSize.update(futures.size());
-                } catch (Exception e) {
-                    logger.error("Could not commit Neo4j updates", e);
-                    for (CompletableFuture<Metadata> future : futures) {
-                        future.completeExceptionally(e);
-                    }
-                } finally
-                {
-                    tx = null;
                 }
+                appliedEvents = 0;
+                tx = null;
 
-                logger.info("Applied "+futures.size());
                 subscription.request(futures.size());
                 futures.clear();
             }
@@ -189,7 +200,10 @@ public class Neo4jDomainEventEventHandler
 
     @Override
     public void onShutdown() {
-        tx.rollback();
-        tx.close();
+        if (tx != null)
+        {
+            tx.rollback();
+            tx.close();
+        }
     }
 }
