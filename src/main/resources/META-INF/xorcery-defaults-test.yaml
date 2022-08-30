@@ -1,5 +1,7 @@
 ---
 server:
+  http:
+    port: 8889
   ssl:
     enabled: false
 client:
