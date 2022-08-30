@@ -30,6 +30,6 @@ public class MetricsConductorListener extends AbstractConductorListener {
 
     @Override
     public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
-        reactiveStreams.subscribe(serviceIdentifier, link, new MetricEventsSubscriber(client, consumerConfiguration, sourceConfiguration, scheduledExecutorService), sourceConfiguration);
+        reactiveStreams.subscribe(serviceIdentifier, link, new MetricEventsSubscriber(client, consumerConfiguration, sourceConfiguration, scheduledExecutorService), sourceConfiguration, Configuration.empty());
     }
 }

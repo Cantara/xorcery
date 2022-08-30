@@ -87,7 +87,7 @@ public class Log4jAppenderEventPublisher
     public void onStartup(Container container) {
         sro.getLinkByRel("logevents").ifPresent(link ->
         {
-            reactiveStreams.publish(sro.serviceIdentifier(), link, this);
+            reactiveStreams.publisher(sro.serviceIdentifier(), link, this);
         });
 
         disruptor.start();
@@ -121,7 +121,7 @@ public class Log4jAppenderEventPublisher
             public void cancel() {
                 subscribers.remove(handler.get());
             }
-        }));
+        }, Configuration.empty()));
         subscribers.add(handler.get());
     }
 }

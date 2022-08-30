@@ -29,7 +29,7 @@ class DomainEventsSubscriber
     }
 
     @Override
-    public EventSink<Event<EventWithResult<ArrayNode, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+    public EventSink<Event<EventWithResult<ArrayNode, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
         disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("Neo4jDomainEventsProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());

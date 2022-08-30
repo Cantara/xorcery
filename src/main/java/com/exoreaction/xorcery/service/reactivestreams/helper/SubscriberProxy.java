@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.helper;
 
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.lmax.disruptor.EventSink;
@@ -34,7 +35,7 @@ public abstract class SubscriberProxy<T>
     }
 
     @Override
-    public EventSink<Event<T>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+    public EventSink<Event<T>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
         this.subscription = subscription;
         multiSubscriber.add(this);
         try {

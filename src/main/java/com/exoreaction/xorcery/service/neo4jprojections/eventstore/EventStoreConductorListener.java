@@ -102,7 +102,8 @@ public class EventStoreConductorListener extends AbstractConductorListener {
                                     }
 
                                     reactiveStreams.subscribe(sro.serviceIdentifier(), link,
-                                            new EventStoreSubscriber(consumerConfiguration, parameters, graphDatabase.getGraphDatabaseService(), listeners, finalLastRevision, isLive.apply(projectionId)), sourceConfiguration);
+                                            new EventStoreSubscriber(consumerConfiguration, parameters, graphDatabase.getGraphDatabaseService(), listeners, finalLastRevision, isLive.apply(projectionId)),
+                                            sourceConfiguration, Configuration.empty());
                                 });
                     });
         } catch (JsonProcessingException e) {

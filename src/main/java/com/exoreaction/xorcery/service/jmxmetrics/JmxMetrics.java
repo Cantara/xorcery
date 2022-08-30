@@ -145,7 +145,7 @@ public class JmxMetrics
         }
 
         @Override
-        public EventSink<Event<ObjectNode>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<ObjectNode>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
             this.subscription = subscription;
             Optional.ofNullable(subscriptions.put(serverId, subscription))
                     .ifPresent(ReactiveEventStreams.Subscription::cancel);
@@ -286,7 +286,7 @@ public class JmxMetrics
         private void pollMetrics(Link metricevents, String serverId, Collection<String> metricNames) {
             ObjectNode parameters = JsonNodeFactory.instance.objectNode();
             parameters.set("metric_names", parameters.textNode(String.join(",", metricNames)));
-            reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), new Configuration(parameters));
+            reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), new Configuration(parameters), Configuration.empty());
         }
 
 

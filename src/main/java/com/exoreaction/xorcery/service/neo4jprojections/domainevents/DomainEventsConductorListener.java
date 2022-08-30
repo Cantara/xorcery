@@ -70,7 +70,7 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
                     reactiveStreams.subscribe(sro.serviceIdentifier(), link,
                             new DomainEventsSubscriber(
                                     subscription -> new Neo4jDomainEventEventHandler(graphDatabase.getGraphDatabaseService(), subscription, sourceConfiguration, consumerConfiguration, listeners, metricRegistry)),
-                            sourceConfiguration);
+                            sourceConfiguration, Configuration.empty());
 
                     // No catchup, we're live
                     isLive.apply(projectionId).complete(null);

@@ -76,7 +76,7 @@ public class Metrics
     public void onStartup(Container container) {
         resourceObject.getLinkByRel("metricevents").ifPresent(link ->
         {
-            reactiveStreams.publish(resourceObject.serviceIdentifier(), link, this);
+            reactiveStreams.publisher(resourceObject.serviceIdentifier(), link, this);
         });
     }
 
@@ -121,7 +121,7 @@ public class Metrics
             this.metricNames = metricNames;
             this.metricRegistry = metricRegistry;
             this.subscriber = subscriber;
-            this.eventSink.complete(subscriber.onSubscribe(this));
+            this.eventSink.complete(subscriber.onSubscribe(this, Configuration.empty()));
         }
 
         @Override

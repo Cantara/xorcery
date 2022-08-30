@@ -31,6 +31,10 @@ public record Configuration(ObjectNode json)
         implements JsonElement {
     private static final Logger logger = LogManager.getLogger(Configuration.class);
 
+    public static Configuration empty() {
+        return new Configuration(JsonNodeFactory.instance.objectNode());
+    }
+
     public record Builder(ObjectNode builder) {
 
         public static Builder load(File configFile)
@@ -87,8 +91,7 @@ public record Configuration(ObjectNode json)
                 } else if (configFile.getName().endsWith("properties")) {
                     builder = builder.addProperties(new FileInputStream(configFile));
                     logger.info("Loaded " + configFile);
-                } else
-                {
+                } else {
                     logger.warn("Unknown configuration filetype: " + configFile);
                 }
             }
@@ -188,8 +191,7 @@ public record Configuration(ObjectNode json)
                 } else if (configFile.getName().endsWith("properties")) {
                     builder = builder.addProperties(new FileInputStream(configFile));
                     logger.info("Loaded " + configFile);
-                } else
-                {
+                } else {
                     logger.warn("Unknown configuration filetype: " + configFile);
                 }
             }

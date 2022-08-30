@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.requestlog;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
@@ -47,9 +46,9 @@ public class RequestLogService
 
     @Inject
     public RequestLogService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
-                   ReactiveStreams reactiveStreams,
-                   Server server,
-                   Configuration configuration) {
+                             ReactiveStreams reactiveStreams,
+                             Server server,
+                             Configuration configuration) {
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
 
@@ -63,7 +62,7 @@ public class RequestLogService
     public void onStartup(Container container) {
         resourceObject.getLinkByRel("requestlogevents").ifPresent(link ->
         {
-            reactiveStreams.publish(resourceObject.serviceIdentifier(), link, this);
+            reactiveStreams.publisher(resourceObject.serviceIdentifier(), link, this);
         });
     }
 
@@ -90,6 +89,6 @@ public class RequestLogService
                 requestLog.setEventSink(null);
                 subscriber.onComplete();
             }
-        }));
+        }, Configuration.empty()));
     }
 }

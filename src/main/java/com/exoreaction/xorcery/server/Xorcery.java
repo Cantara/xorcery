@@ -40,6 +40,8 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -60,6 +62,7 @@ import java.util.Optional;
 
 import static com.codahale.metrics.MetricRegistry.name;
 import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
+import static org.glassfish.jersey.internal.inject.Bindings.service;
 
 /**
  * @author rickardoberg
@@ -70,7 +73,8 @@ public class Xorcery
 
     private static final Logger logger = LogManager.getLogger(Xorcery.class);
 
-    private org.eclipse.jetty.server.Server server;
+    private Server server;
+    private ServletContainer servletContainer;
 
     public Xorcery(File configurationFile, String id) throws Exception {
         Configuration configuration = createConfiguration(configurationFile);
@@ -82,6 +86,17 @@ public class Xorcery
             configuration.json().set("id", configuration.json().textNode(newId));
             return newId;
         });
+
+        initialize(configuration);
+    }
+
+    public Xorcery(Configuration configuration) throws Exception {
+        ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
+        logger.info("Resolved configuration:\n" + objectWriter.writeValueAsString(configuration.json()));
+        initialize(configuration);
+    }
+
+    protected void initialize(Configuration configuration) throws Exception {
 
         MetricRegistry metricRegistry = createMetrics(configuration);
 
@@ -316,29 +331,29 @@ public class Xorcery
 
         ServerApplication app = new ServerApplication();
 
-        Binder binder = new AbstractBinder() {
+        AbstractBinder binder = new AbstractBinder() {
             @Override
             protected void configure() {
-                    if (client.getSslContextFactory() != null)
-                        bind(client.getSslContextFactory());
-                    Xorcery.this.server.addManaged(client);
-                    bind(new JettyHttpClientSupplier(client)).to(JettyHttpClientContract.class);
+                if (client.getSslContextFactory() != null)
+                    bind(client.getSslContextFactory());
+                Xorcery.this.server.addManaged(client);
+                bind(new JettyHttpClientSupplier(client)).to(JettyHttpClientContract.class);
 
-                    // Create default ObjectMapper
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-                    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                    bind(objectMapper);
+                // Create default ObjectMapper
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                bind(objectMapper);
 
-                    bind(metricRegistry);
-                    bind(configuration);
-                    bind(ctx);
-                    bind(Xorcery.this);
-                    bind(server);
-                    bind(new ResourceObject.Builder("server", new StandardConfiguration.Impl(configuration).getId())
-                            .attributes(new Attributes.Builder()
-                                    .attribute("jetty.version", Jetty.VERSION)
-                                    .build()).build()).named("server");
+                bind(metricRegistry);
+                bind(configuration);
+                bind(ctx);
+                bind(Xorcery.this);
+                bind(server);
+                bind(new ResourceObject.Builder("server", new StandardConfiguration.Impl(configuration).getId())
+                        .attributes(new Attributes.Builder()
+                                .attribute("jetty.version", Jetty.VERSION)
+                                .build()).build()).named("server");
 
 //                    if (server.getConnectors()[0].getDefaultConnectionFactory().sslContextFactory != null)
 //                        bind(sslContextFactory);
@@ -365,9 +380,11 @@ public class Xorcery
             }
         });
 
-        ServletHolder serHol = new ServletHolder(new ServletContainer(app));
-        ctx.addServlet(serHol, "/*");
-        serHol.setInitOrder(1);
+        servletContainer = new ServletContainer(app);
+
+        ServletHolder servletHolder = new ServletHolder(servletContainer);
+        ctx.addServlet(servletHolder, "/*");
+        servletHolder.setInitOrder(1);
 
         JettyWebSocketServletContainerInitializer.configure(ctx, null);
 
@@ -387,6 +404,10 @@ public class Xorcery
                 }
             }
         }
+    }
+
+    public InjectionManager getInjectionManager() {
+        return servletContainer.getApplicationHandler().getInjectionManager();
     }
 
     public void close() throws IOException {

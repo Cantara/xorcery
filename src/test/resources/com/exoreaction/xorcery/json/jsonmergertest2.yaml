@@ -15,3 +15,8 @@ object:
   value3:
     bar: foo
 
+object.value1: newvalue1
+object.value4: newvalue4
+object.value3.foo: newvalue3foo
+
+newobject.enabled: true

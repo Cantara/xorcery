@@ -5,13 +5,13 @@ import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jsonapi.model.Link;
-import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams.Publisher;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams.Subscriber;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.PublisherWebSocketServlet;
-import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscriberWebSocketEndpoint;
+import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscriberWebSocketServlet;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lmax.disruptor.EventSink;
@@ -24,7 +24,6 @@ import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
@@ -33,12 +32,10 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.LifeCycle;
-import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -48,7 +45,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.*;
 
 @Singleton
@@ -82,20 +78,22 @@ public class ReactiveStreamsService
     }
 
     private final boolean allowLocal;
-    private ServletContextHandler servletContextHandler;
-    private jakarta.inject.Provider<Registry> registryService;
-    private WebSocketClient webSocketClient;
-    private Configuration configuration;
-    private MessageBodyWorkers messageBodyWorkers;
-    private ObjectMapper objectMapper;
-    private Timer timer;
+    private final ServletContextHandler servletContextHandler;
+    private final jakarta.inject.Provider<Registry> registryService;
+    private final WebSocketClient webSocketClient;
+    private final Configuration configuration;
+    private final MessageBodyWorkers messageBodyWorkers;
+    private final ObjectMapper objectMapper;
+    private final Timer timer;
 
-    private ByteBufferPool byteBufferPool;
+    private final ByteBufferPool byteBufferPool;
 
     private final Map<String, Publisher> publishers = new ConcurrentHashMap<>();
+    private final Map<String, Subscriber> subscribers = new ConcurrentHashMap<>();
 
     private final List<CompletableFuture<Void>> activeSubscriptionProcesses = new CopyOnWriteArrayList<>();
     private final List<ReactiveEventStreams.Subscription> activeSubscriptions = new CopyOnWriteArrayList<>();
+    private final List<CompletableFuture<Void>> activePublishingProcesses = new CopyOnWriteArrayList<>();
 
     @Inject
     public ReactiveStreamsService(ServletContextHandler servletContextHandler,
@@ -103,7 +101,6 @@ public class ReactiveStreamsService
                                   jakarta.inject.Provider<Registry> registryService,
                                   Configuration configuration,
                                   Server server,
-                                  Xorcery xorcery,
                                   MessageBodyWorkers messageBodyWorkers,
                                   ObjectMapper objectMapper) {
         this.servletContextHandler = servletContextHandler;
@@ -156,7 +153,7 @@ public class ReactiveStreamsService
         }
     }
 
-    public <T> void publish(ServiceIdentifier selfServiceIdentifier, Link websocketLink, Publisher<T> publisher) {
+    public <T> CompletionStage<Void> publisher(ServiceIdentifier selfServiceIdentifier, Link websocketLink, Publisher<T> publisher) {
         publishers.put(websocketLink.getHref(), publisher);
 
         MessageBodyWriter<T> writer = null;
@@ -174,20 +171,20 @@ public class ReactiveStreamsService
                     resultType = eventWithResultType.getActualTypeArguments()[1];
 
                     if (!eventType.equals(ByteBuffer.class)) {
-                        writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) eventType, eventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                        writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) eventType, eventType, new Annotation[0], MediaType.WILDCARD_TYPE);
                         if (writer == null) {
                             throw new IllegalStateException("Could not find MessageBodyWriter for " + eventType);
                         }
                     }
 
-                    reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                    reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) resultType, resultType, new Annotation[0], MediaType.WILDCARD_TYPE);
                     if (reader == null) {
                         throw new IllegalStateException("Could not find MessageBodyReader for " + resultType);
                     }
 
                 } else {
                     if (!publisherEventType.equals(ByteBuffer.class)) {
-                        writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) publisherEventType, publisherEventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                        writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) publisherEventType, publisherEventType, new Annotation[0], MediaType.WILDCARD_TYPE);
                         if (writer == null) {
                             throw new IllegalStateException("Could not find MessageBodyWriter for " + publisherEventType);
                         }
@@ -197,20 +194,24 @@ public class ReactiveStreamsService
         }
 
         if (writer == null && !ByteBuffer.class.equals(publisherEventType)) {
-            throw new IllegalStateException("Could not find MessageBodyWriter for " + publisher.getClass());
+            throw new IllegalStateException("Could not find MessageBodyWriter for " + publisher.getClass()+" (type "+publisherEventType.getTypeName()+")");
         }
 
         String path = URI.create(websocketLink.getHrefAsUriTemplate().createURI()).getPath();
         PublisherWebSocketServlet<T> servlet = new PublisherWebSocketServlet<T>(path, new PublisherTracker<>(publisher), writer, reader, resultType, configuration, objectMapper, byteBufferPool, MarkerManager.getMarker(selfServiceIdentifier.toString()));
 
         servletContextHandler.addServlet(new ServletHolder(servlet), path);
-        logger.info("Published websocket for " + selfServiceIdentifier);
+        logger.info("Added publisher websocket for " + selfServiceIdentifier);
+
+        // TODO Shutdown the above on completable cancel
+        return new CompletableFuture<>();
     }
 
     public <T> CompletionStage<Void> subscribe(ServiceIdentifier selfServiceIdentifier,
                                                Link websocketLink,
-                                               ReactiveEventStreams.Subscriber<T> subscriber,
-                                               Configuration publisherConfiguration) {
+                                               Subscriber<T> subscriber,
+                                               Configuration publisherConfiguration,
+                                               Configuration subscriberConfiguration) {
 
         CompletableFuture<Void> result = new CompletableFuture<>();
 
@@ -234,20 +235,20 @@ public class ReactiveStreamsService
             Type eventType = null;
 
             for (Type genericInterface : subscriber.getClass().getGenericInterfaces()) {
-                if (genericInterface instanceof ParameterizedType && ((ParameterizedType) genericInterface).getRawType().equals(ReactiveEventStreams.Subscriber.class)) {
+                if (genericInterface instanceof ParameterizedType && ((ParameterizedType) genericInterface).getRawType().equals(Subscriber.class)) {
                     ParameterizedType subscriberType = ((ParameterizedType) genericInterface);
                     Type subscriberEventType = subscriberType.getActualTypeArguments()[0];
                     if (subscriberEventType instanceof ParameterizedType && ((ParameterizedType) subscriberEventType).getRawType().equals(EventWithResult.class)) {
                         ParameterizedType eventWithResultType = ((ParameterizedType) subscriberEventType);
                         eventType = eventWithResultType.getActualTypeArguments()[0];
                         Type resultType = eventWithResultType.getActualTypeArguments()[1];
-                        reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) eventType, eventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                        reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) eventType, eventType, new Annotation[0], MediaType.WILDCARD_TYPE);
                         if (reader == null) {
                             result.completeExceptionally(new IllegalStateException("Could not find MessageBodyReader for " + eventType));
                             return result;
                         }
 
-                        writer = (MessageBodyWriter<Object>) messageBodyWorkers.getMessageBodyWriter((Class<?>) resultType, resultType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                        writer = (MessageBodyWriter<Object>) messageBodyWorkers.getMessageBodyWriter((Class<?>) resultType, resultType, new Annotation[0], MediaType.WILDCARD_TYPE);
                         if (writer == null) {
                             result.completeExceptionally(new IllegalStateException("Could not find MessageBodyWriter for " + resultType));
                             return result;
@@ -255,7 +256,7 @@ public class ReactiveStreamsService
 
                     } else {
                         eventType = subscriberEventType;
-                        reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) subscriberEventType, subscriberEventType, new Annotation[0], MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                        reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) subscriberEventType, subscriberEventType, new Annotation[0], MediaType.WILDCARD_TYPE);
                         if (reader == null) {
                             result.completeExceptionally(new IllegalStateException("Could not find MessageBodyReader for " + subscriberEventType));
                             return result;
@@ -273,79 +274,171 @@ public class ReactiveStreamsService
             subscriber = new SubscriberTracker<T>(subscriber);
 
             // Start subscription process
-            new SubscriptionProcess<T>(webSocketClient, objectMapper, timer, byteBufferPool,
+            new SubscriptionProcess<T>(webSocketClient, objectMapper, timer, logger, byteBufferPool,
                     reader, writer,
-                    selfServiceIdentifier, websocketLink, publisherConfiguration,
+                    selfServiceIdentifier, websocketLink, publisherConfiguration,subscriberConfiguration,
                     subscriber, eventType,
                     result).start();
             return result;
         }
     }
 
-    public record SubscriptionProcess<T>(WebSocketClient webSocketClient, ObjectMapper objectMapper, Timer timer,
-                                         ByteBufferPool byteBufferPool, MessageBodyReader<Object> reader,
-                                         MessageBodyWriter<Object> writer, ServiceIdentifier selfServiceIdentifier,
-                                         Link websocketLink,
-                                         Configuration publisherConfiguration,
-                                         ReactiveEventStreams.Subscriber<T> subscriber,
-                                         Type eventType, CompletableFuture<Void> result
-    ) {
-        public void start() {
-            if (result.isDone()) {
-                return;
-            }
+    @Override
+    public <T> CompletionStage<Void> subscriber(ServiceIdentifier selfServiceIdentifier,
+                                                Link subscriberWebsocketLink,
+                                                Subscriber<T> subscriber) {
 
-            if (!webSocketClient.isStarted()) {
-                retry();
-            }
+        subscribers.put(subscriberWebsocketLink.getHref(), subscriber);
 
-            ForkJoinPool.commonPool().execute(() ->
-            {
-                try {
-                    Marker marker = MarkerManager.getMarker(selfServiceIdentifier.toString());
+        CompletableFuture<Void> result = new CompletableFuture<>();
 
-                    URI websocketEndpointUri = websocketLink.getHrefAsUri();
-                    webSocketClient.connect(new SubscriberWebSocketEndpoint<T>(subscriber(), reader, writer, objectMapper, eventType, marker,
-                                    byteBufferPool, this, websocketEndpointUri.toASCIIString(), publisherConfiguration, timer), websocketEndpointUri)
-                            .whenComplete(this::complete);
-                } catch (IOException e) {
-                    logger.error("Could not subscribe to " + websocketLink.getHref(), e);
+        // Track the subscription process itself. Need to ensure they are cancelled on shutdown
+        result.whenComplete((r, t) ->
+        {
+            subscribers.remove(subscriberWebsocketLink.getHref());
+        });
 
-                    retry();
+        MessageBodyWriter<Object> writer = null;
+        MessageBodyReader<Object> reader = null;
+        Type eventType = null;
+
+        for (Type genericInterface : subscriber.getClass().getGenericInterfaces()) {
+            if (genericInterface instanceof ParameterizedType && ((ParameterizedType) genericInterface).getRawType().equals(Subscriber.class)) {
+                ParameterizedType subscriberType = ((ParameterizedType) genericInterface);
+                Type subscriberEventType = subscriberType.getActualTypeArguments()[0];
+                if (subscriberEventType instanceof ParameterizedType && ((ParameterizedType) subscriberEventType).getRawType().equals(EventWithResult.class)) {
+                    ParameterizedType eventWithResultType = ((ParameterizedType) subscriberEventType);
+                    eventType = eventWithResultType.getActualTypeArguments()[0];
+                    Type resultType = eventWithResultType.getActualTypeArguments()[1];
+                    reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) eventType, eventType, new Annotation[0], MediaType.WILDCARD_TYPE);
+                    if (reader == null) {
+                        result.completeExceptionally(new IllegalStateException("Could not find MessageBodyReader for " + eventType));
+                        return result;
+                    }
+
+                    writer = (MessageBodyWriter<Object>) messageBodyWorkers.getMessageBodyWriter((Class<?>) resultType, resultType, new Annotation[0], MediaType.WILDCARD_TYPE);
+                    if (writer == null) {
+                        result.completeExceptionally(new IllegalStateException("Could not find MessageBodyWriter for " + resultType));
+                        return result;
+                    }
+
+                } else {
+                    eventType = subscriberEventType;
+                    reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) subscriberEventType, subscriberEventType, new Annotation[0], MediaType.WILDCARD_TYPE);
+                    if (reader == null) {
+                        result.completeExceptionally(new IllegalStateException("Could not find MessageBodyReader for " + subscriberEventType));
+                        return result;
+                    }
                 }
-            });
+            }
         }
 
-        private void complete(Session session, Throwable throwable) {
-            if (throwable != null) {
-                logger.error("Could not subscribe to " + websocketLink.getHref(), throwable);
-                retry();
-            }
+        if (reader == null) {
+            result.completeExceptionally(new IllegalStateException("Could not find MessageBodyReader for " + subscriber.getClass()));
+            return result;
         }
 
-        public void retry() {
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    start();
+        String path = URI.create(subscriberWebsocketLink.getHrefAsUriTemplate().createURI()).getPath();
+        SubscriberWebSocketServlet<T> servlet = new SubscriberWebSocketServlet<T>(path, new SubscriberTracker<>(subscriber), writer, reader, eventType, configuration, objectMapper, byteBufferPool, MarkerManager.getMarker(selfServiceIdentifier.toString()));
+
+        servletContextHandler.addServlet(new ServletHolder(servlet), path);
+        logger.info("Added subscriber websocket for " + selfServiceIdentifier);
+
+        // TODO Shutdown the above on completable cancel
+        return result;
+    }
+
+    @Override
+    public <T> CompletionStage<Void> publish(ServiceIdentifier selfServiceIdentifier,
+                                             Link subscriberWebsocketLink,
+                                             Publisher<T> publisher,
+                                             Configuration publisherConfiguration,
+                                             Configuration subscriberConfiguration) {
+
+        CompletableFuture<Void> result = new CompletableFuture<>();
+
+        // Track the publishing process itself. Need to ensure they are cancelled on shutdown
+        result.whenComplete((r, t) ->
+        {
+            activePublishingProcesses.remove(result);
+        });
+        activePublishingProcesses.add(result);
+
+        Subscriber<T> subscriber = subscribers.get(subscriberWebsocketLink.getHref());
+
+        if (allowLocal && subscriber != null) {
+            // Local
+            publisher.subscribe(subscriber, publisherConfiguration);
+            return result;
+        } else {
+
+            MessageBodyWriter<T> writer = null;
+            MessageBodyReader<Object> reader = null;
+            Type resultType = null;
+
+            Type publisherEventType = null;
+            for (Type genericInterface : publisher.getClass().getGenericInterfaces()) {
+                if (genericInterface instanceof ParameterizedType && ((ParameterizedType) genericInterface).getRawType().equals(Publisher.class)) {
+                    ParameterizedType publisherType = ((ParameterizedType) genericInterface);
+                    publisherEventType = publisherType.getActualTypeArguments()[0];
+                    if (publisherEventType instanceof ParameterizedType && ((ParameterizedType) publisherEventType).getRawType().equals(EventWithResult.class)) {
+                        ParameterizedType eventWithResultType = ((ParameterizedType) publisherEventType);
+                        Type eventType = eventWithResultType.getActualTypeArguments()[0];
+                        resultType = eventWithResultType.getActualTypeArguments()[1];
+
+                        if (!eventType.equals(ByteBuffer.class)) {
+                            writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) eventType, eventType, new Annotation[0], MediaType.WILDCARD_TYPE);
+                            if (writer == null) {
+                                throw new IllegalStateException("Could not find MessageBodyWriter for " + eventType);
+                            }
+                        }
+
+                        reader = (MessageBodyReader<Object>) messageBodyWorkers.getMessageBodyReader((Class<?>) resultType, resultType, new Annotation[0], MediaType.WILDCARD_TYPE);
+                        if (reader == null) {
+                            throw new IllegalStateException("Could not find MessageBodyReader for " + resultType);
+                        }
+
+                    } else {
+                        if (!publisherEventType.equals(ByteBuffer.class)) {
+                            writer = (MessageBodyWriter<T>) messageBodyWorkers.getMessageBodyWriter((Class<T>) publisherEventType, publisherEventType, new Annotation[0], MediaType.WILDCARD_TYPE);
+                            if (writer == null) {
+                                throw new IllegalStateException("Could not find MessageBodyWriter for " + publisherEventType);
+                            }
+                        }
+                    }
                 }
-            }, 10000);
+            }
+
+            if (writer == null && !ByteBuffer.class.equals(publisherEventType)) {
+                throw new IllegalStateException("Could not find MessageBodyWriter for " + publisher.getClass()+" (type "+publisherEventType.getTypeName()+")");
+            }
+
+            // Publisher wrapper so we can track active subscriptions
+            publisher = new PublisherTracker<T>(publisher);
+
+            // Start publishing process
+            new PublishingProcess<T>(webSocketClient, objectMapper, timer, logger, byteBufferPool,
+                    reader, writer,
+                    selfServiceIdentifier, subscriberWebsocketLink, publisherConfiguration,subscriberConfiguration,
+                    publisher, publisherEventType,
+                    result).start();
+            return result;
         }
     }
 
-    private class SubscriberTracker<T> implements ReactiveEventStreams.Subscriber<T> {
-        private ReactiveEventStreams.Subscriber<T> subscriber;
+    private class SubscriberTracker<T> implements Subscriber<T> {
+        private Subscriber<T> subscriber;
         private SubscriptionTracker trackedSubscription;
 
-        public SubscriberTracker(ReactiveEventStreams.Subscriber<T> subscriber) {
+        public SubscriberTracker(Subscriber<T> subscriber) {
             this.subscriber = subscriber;
         }
 
         @Override
-        public EventSink<Event<T>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<T>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
             trackedSubscription = new SubscriptionTracker(subscription);
             activeSubscriptions.add(trackedSubscription);
-            return subscriber.onSubscribe(trackedSubscription);
+            return subscriber.onSubscribe(trackedSubscription, configuration);
         }
 
         @Override
@@ -386,7 +479,7 @@ public class ReactiveStreamsService
         }
 
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<T> subscriber, Configuration parameters) {
+        public void subscribe(Subscriber<T> subscriber, Configuration parameters) {
             publisher.subscribe(new SubscriberTracker<>(subscriber), parameters);
         }
     }

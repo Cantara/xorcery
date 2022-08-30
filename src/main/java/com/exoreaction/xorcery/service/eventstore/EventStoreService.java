@@ -37,8 +37,6 @@ import org.glassfish.jersey.spi.Contract;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.*;
 
 @Contract
@@ -101,7 +99,7 @@ public class EventStoreService
         // Read
         sro.getLinkByRel("events").ifPresent(link ->
         {
-            reactiveStreams.publish(sro.serviceIdentifier(), link, this);
+            reactiveStreams.publisher(sro.serviceIdentifier(), link, this);
         });
 
         // Write
@@ -135,7 +133,7 @@ public class EventStoreService
             EventStoreParameters parameters = objectMapper.treeToValue(configuration.json(), EventStoreParameters.class);
 
             DomainEventsProcessor processor = new DomainEventsProcessor(subscriber);
-            processor.setSink(subscriber.onSubscribe(processor));
+            processor.setSink(subscriber.onSubscribe(processor, Configuration.empty()));
             SubscribeToStreamOptions subscribeToStreamOptions = parameters.from == 0 ?
                     SubscribeToStreamOptions.get().fromStart() :
                     SubscribeToStreamOptions.get().fromRevision(parameters.from);
@@ -147,7 +145,7 @@ public class EventStoreService
     }
 
     public void connect(Link domainEventSource) {
-        reactiveStreams.subscribe(sro.serviceIdentifier(), domainEventSource, new EventStoreService.DomainEventsSubscriber());
+        reactiveStreams.subscribe(sro.serviceIdentifier(), domainEventSource, new EventStoreService.DomainEventsSubscriber(), Configuration.empty(), Configuration.empty());
     }
 
     private class DomainEventsConductorListener extends AbstractConductorListener {
@@ -158,7 +156,7 @@ public class EventStoreService
 
         @Override
         public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
-            reactiveStreams.subscribe(this.serviceIdentifier, link, new DomainEventsSubscriber(), sourceConfiguration);
+            reactiveStreams.subscribe(this.serviceIdentifier, link, new DomainEventsSubscriber(), sourceConfiguration, Configuration.empty());
         }
     }
 
@@ -168,7 +166,7 @@ public class EventStoreService
         private Disruptor<Event<EventWithResult<ByteBuffer, Metadata>>> disruptor;
 
         @Override
-        public EventSink<Event<EventWithResult<ByteBuffer, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<EventWithResult<ByteBuffer, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
             disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("EventStoreDomainEventsDisruptorIn-"),
                     ProducerType.SINGLE,
                     new BlockingWaitStrategy());

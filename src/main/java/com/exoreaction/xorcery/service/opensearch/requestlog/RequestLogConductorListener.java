@@ -25,6 +25,6 @@ public class RequestLogConductorListener extends AbstractConductorListener {
 
     @Override
     public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
-        reactiveStreams.subscribe(serviceIdentifier, link, new RequestLogEventsSubscriber(client, consumerConfiguration, sourceConfiguration), sourceConfiguration);
+        reactiveStreams.subscribe(serviceIdentifier, link, new RequestLogEventsSubscriber(client, consumerConfiguration, sourceConfiguration), sourceConfiguration, Configuration.empty());
     }
 }

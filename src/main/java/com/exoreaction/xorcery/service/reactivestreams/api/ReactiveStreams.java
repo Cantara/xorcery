@@ -10,13 +10,24 @@ import java.util.concurrent.CompletionStage;
 
 @Contract
 public interface ReactiveStreams {
-    <T> void publish(ServiceIdentifier selfServiceIdentifier, Link websocketLink, Publisher<T> publisher);
+    <T> CompletionStage<Void> publisher(ServiceIdentifier selfServiceIdentifier,
+                                        Link publisherWebsocketLink,
+                                        Publisher<T> publisher);
 
-    <T> CompletionStage<Void> subscribe(ServiceIdentifier selfServiceIdentifier, Link websocketLink,
-                                        ReactiveEventStreams.Subscriber<T> subscriber, Configuration configuration);
+    <T> CompletionStage<Void> subscribe(ServiceIdentifier selfServiceIdentifier,
+                                        Link publisherWebsocketLink,
+                                        ReactiveEventStreams.Subscriber<T> subscriber,
+                                        Configuration publisherConfiguration,
+                                        Configuration subscriberConfiguration);
 
-    default <T> CompletionStage<Void> subscribe(ServiceIdentifier selfServiceIdentifier, Link websocketLink,
-                               ReactiveEventStreams.Subscriber<T> subscriber) {
-        return subscribe(selfServiceIdentifier, websocketLink, subscriber, new Configuration(JsonNodeFactory.instance.objectNode()));
-    }
+    // Inverted (publishers connects to subscribers)
+    <T> CompletionStage<Void> subscriber(ServiceIdentifier selfServiceIdentifier,
+                                         Link subscriberWebsocketLink,
+                                        ReactiveEventStreams.Subscriber<T> subscriber);
+
+    <T> CompletionStage<Void> publish(ServiceIdentifier selfServiceIdentifier,
+                                      Link subscriberWebsocketLink,
+                                      Publisher<T> publisher,
+                                      Configuration publisherConfiguration,
+                                      Configuration subscriberConfiguration);
 }

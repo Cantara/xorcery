@@ -42,7 +42,7 @@ class EventStoreSubscriber
     }
 
     @Override
-    public EventSink<Event<ArrayNode>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+    public EventSink<Event<ArrayNode>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
         disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Neo4jEventStoreProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());

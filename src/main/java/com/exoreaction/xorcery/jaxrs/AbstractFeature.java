@@ -7,6 +7,7 @@ import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
+import org.glassfish.jersey.InjectionManagerProvider;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
@@ -24,7 +25,7 @@ public abstract class AbstractFeature
     @Override
     public boolean configure(FeatureContext context) {
         this.context = context;
-        this.injectionManager = ((InjectionManagerSupplier) context).getInjectionManager();
+        this.injectionManager = InjectionManagerProvider.getInjectionManager(context);
         if (isEnabled()) {
             Configuration configuration = injectionManager.getInstance(Configuration.class);
             String serviceType = Objects.requireNonNull(serviceType(), "Service type may not be null");

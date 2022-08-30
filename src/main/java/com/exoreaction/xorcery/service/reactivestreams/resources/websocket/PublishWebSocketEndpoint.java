@@ -4,6 +4,8 @@ import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.EventWithResult;
+import com.exoreaction.xorcery.jetty.client.WriteCallbackCompletableFuture;
+import com.exoreaction.xorcery.service.reactivestreams.PublishingProcess;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,11 +38,10 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author rickardoberg
- * @since 13/04/2022
  */
-public class PublisherWebSocketEndpoint<T>
+public class PublishWebSocketEndpoint<T>
         implements WebSocketListener, ReactiveEventStreams.Subscriber<T> {
-    private final static Logger logger = LogManager.getLogger(PublisherWebSocketEndpoint.class);
+    private final static Logger logger = LogManager.getLogger(PublishWebSocketEndpoint.class);
     private Session session;
     private Semaphore semaphore = new Semaphore(0);
     private String webSocketPath;
@@ -51,29 +52,37 @@ public class PublisherWebSocketEndpoint<T>
     private ReactiveEventStreams.Subscription subscription;
 
     private Type resultType;
+    private Configuration subscriberConfiguration;
     private final ObjectMapper objectMapper;
     private ByteBufferPool pool;
     private Marker marker;
+    private PublishingProcess<T> publishingProcess;
     private boolean redundancyNotificationIssued = false;
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private Disruptor<Event<T>> disruptor;
 
-    public PublisherWebSocketEndpoint(String webSocketPath, ReactiveEventStreams.Publisher<T> publisher,
-                                      MessageBodyWriter<T> messageBodyWriter,
-                                      MessageBodyReader<?> messageBodyReader,
-                                      Type resultType,
-                                      ObjectMapper objectMapper,
-                                      ByteBufferPool pool,
-                                      Marker marker) {
+    public PublishWebSocketEndpoint(String webSocketPath, ReactiveEventStreams.Publisher<T> publisher,
+                                    MessageBodyWriter<T> messageBodyWriter,
+                                    MessageBodyReader<?> messageBodyReader,
+                                    Type resultType,
+                                    Configuration publisherConfiguration,
+                                    Configuration subscriberConfiguration,
+                                    ObjectMapper objectMapper,
+                                    ByteBufferPool pool,
+                                    Marker marker,
+                                    PublishingProcess<T> publishingProcess) {
         this.webSocketPath = webSocketPath;
         this.publisher = publisher;
         this.messageBodyWriter = messageBodyWriter;
         this.messageBodyReader = messageBodyReader;
         this.resultType = resultType;
+        this.publisherConfiguration = publisherConfiguration;
+        this.subscriberConfiguration = subscriberConfiguration;
         this.objectMapper = objectMapper;
         this.pool = pool;
         this.marker = marker;
+        this.publishingProcess = publishingProcess;
     }
 
     public Semaphore getSemaphore() {
@@ -84,36 +93,39 @@ public class PublisherWebSocketEndpoint<T>
     @Override
     public void onWebSocketConnect(Session session) {
         this.session = session;
-        session.getRemote().setBatchMode(BatchMode.ON);
+
+        // First send parameters, if available
+        String parameterString = subscriberConfiguration.json().toPrettyString();
+        session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture().with(f ->
+                f.future().thenAccept(Void ->
+                {
+                    publisher.subscribe(this, publisherConfiguration);
+                    logger.info(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
+                }).exceptionally(t ->
+                {
+                    session.close(StatusCode.SERVER_ERROR, t.getMessage());
+                    logger.error(marker, "Parameter handshake failed", t);
+                    return null;
+                })
+        ));
+
     }
 
     @Override
-    public synchronized void onWebSocketText(String message) {
+    public void onWebSocketText(String message) {
 
-        if (publisherConfiguration == null)
+        long requestAmount = Long.parseLong(message);
+
+        if (requestAmount == Long.MIN_VALUE)
         {
-            // Read JSON parameters
-            try {
-                publisherConfiguration = new Configuration((ObjectNode) objectMapper.readTree(message));
-                publisher.subscribe(this, publisherConfiguration);
-            } catch (JsonProcessingException e) {
-                session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
-            }
-        } else
-        {
-            long requestAmount = Long.parseLong(message);
+            logger.info(marker, "Received cancel on websocket "+webSocketPath);
+            subscription.cancel();
+        } else {
+            if (logger.isDebugEnabled())
+                logger.debug(marker, "Received request:"+requestAmount);
 
-            if (requestAmount == Long.MIN_VALUE)
-            {
-                logger.info(marker, "Received cancel on websocket "+webSocketPath);
-                subscription.cancel();
-            } else {
-                if (logger.isDebugEnabled())
-                    logger.debug(marker, "Received request:"+requestAmount);
-
-                semaphore.release((int) requestAmount);
-                subscription.request(requestAmount);
-            }
+            semaphore.release((int) requestAmount);
+            subscription.request(requestAmount);
         }
     }
 
@@ -154,8 +166,16 @@ public class PublisherWebSocketEndpoint<T>
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        if (statusCode != 1006 && (reason == null || !reason.equals("complete")))
+
+        if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
+            logger.info(marker, "Complete subscription to {}:{} {}", webSocketPath, statusCode, reason);
             subscription.cancel();
+            publishingProcess.result().complete(null); // Now considered done
+        } else {
+            logger.info(marker, "Close websocket {}:{} {}", webSocketPath, statusCode, reason);
+            logger.info(marker, "Starting subscription process again");
+            publishingProcess.retry();
+        }
     }
 
     @Override
@@ -164,6 +184,7 @@ public class PublisherWebSocketEndpoint<T>
         {
             // Ignore
             subscription.cancel();
+            publishingProcess.result().completeExceptionally(cause); // Now considered done
         } else {
             logger.error(marker,"Publisher websocket error", cause);
         }
@@ -193,8 +214,9 @@ public class PublisherWebSocketEndpoint<T>
 
     @Override
     public void onComplete() {
-        logger.info(marker,"Sending complete on websocket {} for session {}",webSocketPath, session.getRemote().getRemoteAddress());
+        logger.info(marker,"Waiting for oustanding events to be sent to {}",session.getRemote().getRemoteAddress());
         disruptor.shutdown();
+        logger.info(marker,"Sending complete on websocket {} for session {}",webSocketPath, session.getRemote().getRemoteAddress());
         session.close(1000, "complete");
     }
 

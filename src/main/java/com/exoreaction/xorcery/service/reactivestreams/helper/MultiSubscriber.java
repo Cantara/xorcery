@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.helper;
 
 
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams.Subscriber;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams.Subscription;
@@ -36,7 +37,7 @@ public class MultiSubscriber<T> {
                     proxy.cancel();
                 }
             }
-        });
+        }, Configuration.empty());
     }
 
     public void add(SubscriberProxy<T> subscriberProxy) {

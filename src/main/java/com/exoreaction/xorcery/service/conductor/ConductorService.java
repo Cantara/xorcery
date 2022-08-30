@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
@@ -130,33 +131,43 @@ public class ConductorService
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         for (JsonNode templateJson : configuration.getList("conductor.templates").orElseThrow(()->
                 new IllegalStateException("Missing conductor.templates configuration"))) {
-            String templateName = templateJson.textValue();
-            logger.info("Loading conductor template from:" + templateName);
+
             ObjectNode templateNode = null;
-            try {
-                URI templateUri = URI.create(templateName);
-                templateNode = (ObjectNode) objectMapper.readTree(templateUri.toURL().openStream());
-
-            } catch (IllegalArgumentException | IOException e) {
-                // Just load from classpath
+            if (templateJson.isTextual()) {
+                String templateName = templateJson.textValue();
+                logger.info("Loading conductor template from:" + templateName);
                 try {
-                    templateNode = (ObjectNode) objectMapper.readTree(getClass().getResourceAsStream(templateName));
-                } catch (IOException ex) {
-                    logger.error("Could not load template " + templateName, ex);
-                }
-            }
+                    URI templateUri = URI.create(templateName);
+                    templateNode = (ObjectNode) objectMapper.readTree(templateUri.toURL().openStream());
 
-            if (templateNode != null) {
+                } catch (IllegalArgumentException | IOException e) {
+                    // Just load from classpath
+                    try {
+                        templateNode = (ObjectNode) objectMapper.readTree(getClass().getResourceAsStream(templateName));
+                    } catch (IOException ex) {
+                        logger.error("Could not load template " + templateName, ex);
+                    }
+                }
+
+                if (templateNode != null) {
+                    templateNode = new VariableResolver().apply(configuration.json(), templateNode);
+                    ResourceDocument templates = new ResourceDocument(templateNode);
+                    templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
+                    templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
+                }
+            } else if (templateJson.isObject())
+            {
+                templateNode = (ObjectNode)templateJson;
+
                 templateNode = new VariableResolver().apply(configuration.json(), templateNode);
-                ResourceDocument templates = new ResourceDocument(templateNode);
-                templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
-                templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
+                ResourceObject template = new ResourceObject(templateNode);
+                addTemplate(new GroupTemplate(template));
             }
         }
 
         sro.getLinkByRel("conductorevents").ifPresent(link ->
         {
-            reactiveStreams.publish(sro.serviceIdentifier(), link, new ConductorPublisher());
+            reactiveStreams.publisher(sro.serviceIdentifier(), link, new ConductorPublisher());
         });
 
         registry.addRegistryListener(new ConductorRegistryListener());

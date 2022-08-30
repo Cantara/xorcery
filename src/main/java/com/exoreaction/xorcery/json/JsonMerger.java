@@ -26,23 +26,42 @@ public class JsonMerger
     public ObjectNode merge(ObjectNode current, ObjectNode adding) {
         Iterator<Map.Entry<String, JsonNode>> fields = adding.fields();
         while (fields.hasNext()) {
+            JsonNode currentNode = current;
             Map.Entry<String, JsonNode> entry = fields.next();
+
+            String[] keys = entry.getKey().split("\\.");
+            for (int i = 0; i < keys.length - 1; i++) {
+                JsonNode nextNode = currentNode.path(keys[i]);
+                if (nextNode.isMissingNode())
+                {
+                    nextNode = current.objectNode();
+                    ((ObjectNode) currentNode).set(keys[i], nextNode);
+                }
+                currentNode = nextNode;
+            }
+            String key = keys[keys.length-1];
+
+            if (!currentNode.isObject())
+                continue;
+
+            ObjectNode currentObject = (ObjectNode)currentNode;
+
             if (entry.getValue() instanceof ObjectNode addingObject) {
-                JsonNode currentNode = current.path(entry.getKey());
-                if (currentNode instanceof MissingNode) {
-                    current.set(entry.getKey(), entry.getValue());
-                } else if (currentNode instanceof ObjectNode currentObject) {
-                    current.set(entry.getKey(), apply(currentObject, addingObject));
+                JsonNode currentValue = currentObject.path(key);
+                if (currentValue instanceof MissingNode) {
+                    currentObject.set(entry.getKey(), entry.getValue());
+                } else if (currentValue instanceof ObjectNode currentValueObject) {
+                    currentObject.set(entry.getKey(), apply(currentValueObject, addingObject));
                 }
             } else if (entry.getValue() instanceof ArrayNode addingarray) {
-                JsonNode currentNode = current.path(entry.getKey());
-                if (currentNode instanceof MissingNode) {
-                    current.set(entry.getKey(), addingarray);
-                } else if (currentNode instanceof ArrayNode currentArray) {
+                JsonNode currentValue = current.path(key);
+                if (currentValue instanceof MissingNode) {
+                    currentObject.set(entry.getKey(), addingarray);
+                } else if (currentValue instanceof ArrayNode currentArray) {
                     currentArray.addAll(addingarray);
                 }
             } else {
-                current.set(entry.getKey(), entry.getValue());
+                currentObject.set(key, entry.getValue());
             }
 
         }

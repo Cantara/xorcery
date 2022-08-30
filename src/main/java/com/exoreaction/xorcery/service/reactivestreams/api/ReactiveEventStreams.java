@@ -14,7 +14,7 @@ public final class ReactiveEventStreams {
     }
 
     public interface Subscriber<T> {
-        EventSink<Event<T>> onSubscribe(Subscription subscription);
+        EventSink<Event<T>> onSubscribe(Subscription subscription, Configuration parameters);
 
         default void onError(Throwable throwable)
         {}

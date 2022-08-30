@@ -88,7 +88,7 @@ public class DomainEventsPublisher
         disruptor.start();
         resourceObject.getLinkByRel("domainevents").ifPresent(link ->
         {
-            reactiveStreams.publish(resourceObject.serviceIdentifier(), link, this);
+            reactiveStreams.publisher(resourceObject.serviceIdentifier(), link, this);
         });
     }
 
@@ -115,7 +115,7 @@ public class DomainEventsPublisher
             public void cancel() {
                 subscribers.remove(handler.get());
             }
-        }));
+        }, parameters));
         subscribers.add(handler.get());
     }
 

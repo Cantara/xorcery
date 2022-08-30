@@ -38,7 +38,7 @@ public class EventStoreConductorListener extends AbstractConductorListener {
             // Check if we already have written data for this stream before
 //            client.search(Requests.searchRequest(indexName), RequestOptions.DEFAULT).getHits().getHits()
 
-            reactiveStreams.subscribe(serviceIdentifier, link, new EventStoreSubscriber(consumerConfiguration, indexName, client, listeners), sourceConfiguration);
+            reactiveStreams.subscribe(serviceIdentifier, link, new EventStoreSubscriber(consumerConfiguration, indexName, client, listeners), sourceConfiguration, Configuration.empty());
         }
     }
 }

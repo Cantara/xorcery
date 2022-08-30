@@ -9,7 +9,6 @@ import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.rest.RestProcess;
-import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
@@ -143,7 +142,7 @@ public class RegistryService
     public void onStartup(Container container) {
         resourceObject.getLinkByRel("registryevents").ifPresent(link ->
         {
-            reactiveStreams.publish(resourceObject.serviceIdentifier(), link, new RegistryPublisher());
+            reactiveStreams.publisher(resourceObject.serviceIdentifier(), link, new RegistryPublisher());
         });
         registration.start();
     }
@@ -293,7 +292,7 @@ public class RegistryService
                     subscribers.remove(eventSink.get());
                     subscriber.onComplete();
                 }
-            })));
+            }, null)));
 
             subscribers.add(eventSink.get());
 
@@ -349,7 +348,7 @@ public class RegistryService
                                     return sro.getLinkByRel("registryevents").map(link ->
                                     {
                                         logger.info("Subscribing to upstream registry");
-                                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, new Configuration(JsonNodeFactory.instance.objectNode()));
+                                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Configuration.empty(), Configuration.empty());
                                         return CompletableFuture.completedStage(registry);
                                     }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry")));
                                 }
@@ -406,7 +405,7 @@ public class RegistryService
         }
 
         @Override
-        public EventSink<Event<RegistryChange>> onSubscribe(ReactiveEventStreams.Subscription subscription) {
+        public EventSink<Event<RegistryChange>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
             logger.debug("Registry upstream onSubscribe");
             this.subscription = subscription;
             subscription.request(1);
