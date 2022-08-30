@@ -134,7 +134,7 @@ public class Neo4jDomainEventEventHandler
                         try {
                             tx.execute(stmt, parameters);
                         } catch (Throwable e) {
-                            logger.error("Could not apply Neo4j statement for event " + type + ": \n" + stmt, e);
+                            logger.error(String.format("Could not apply Neo4j statement for event %s (metadata:%s,parameters:%s):\n%s",type,metadataMap.toString(),parameters.toString(),stmt), e);
                             throw e;
                         }
                     }
