@@ -1,6 +1,6 @@
-# Reactive Services Architecture
+# Xorcery
 
-Proof of concept for Reactive Services Architecture.
+Xorcery, a boostrap like library designed to help you grow your solution and helping the developers with common service design features, such as REST API clients and servers, as well as reactive streaming of data in a way that doesn't suck.
 
 ## Installation
 
