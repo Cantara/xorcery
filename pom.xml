@@ -20,7 +20,7 @@
         <jackson.version>2.13.3</jackson.version>
         <metrics.version>4.2.11</metrics.version>
 
-        <neo4j.version>4.4.10</neo4j.version>
+        <neo4j.version>4.4.11</neo4j.version>
 
         <junit.version>5.9.0</junit.version>
         <junit.platform.version>1.9.0</junit.platform.version>
