@@ -501,7 +501,7 @@
                         <argument>--add-opens=java.base/java.io=ALL-UNNAMED</argument>
                         <argument>--add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</argument>
                         <argument>-classpath</argument>
-                        <classpath />
+                        <classpath/>
                         <argument>com.exoreaction.xorcery.server.Main</argument>
                     </arguments>
                 </configuration>
