@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.helpers;
 
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 

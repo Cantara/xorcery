@@ -12,7 +12,7 @@ import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;

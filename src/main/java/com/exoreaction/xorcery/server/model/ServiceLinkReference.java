@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.reactivestreams.api;
+package com.exoreaction.xorcery.server.model;
 
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 

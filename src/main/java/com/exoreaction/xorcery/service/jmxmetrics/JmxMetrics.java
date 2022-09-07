@@ -3,7 +3,7 @@ package com.exoreaction.xorcery.service.jmxmetrics;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.disruptor.Event;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
@@ -13,16 +13,14 @@ import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -36,6 +34,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.logging.LoggingFeature;
+import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
@@ -53,7 +52,8 @@ import java.util.function.Supplier;
 
 @Singleton
 public class JmxMetrics
-        implements ContainerLifecycleListener {
+        extends AbstractContainerLifecycleListener {
+
     public static final String SERVICE_TYPE = "jmxmetrics";
 
     private final Logger logger = LogManager.getLogger(getClass());
@@ -77,14 +77,14 @@ public class JmxMetrics
     }
 
     private ServiceResourceObject sro;
-    private ReactiveStreams reactiveStreams;
+    private ReactiveStreams2 reactiveStreams;
     private Conductor conductor;
     private Registry registry;
     private JsonApiClient client;
 
     @Inject
     public JmxMetrics(@Named(SERVICE_TYPE) ServiceResourceObject sro,
-                      ReactiveStreams reactiveStreams,
+                      ReactiveStreams2 reactiveStreams,
                       Conductor conductor,
                       Registry registry,
                       JettyHttpClientContract instance) {
@@ -107,36 +107,22 @@ public class JmxMetrics
     public void onStartup(Container container) {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
         conductor.addConductorListener(new JmxServersConductorListener(sro.serviceIdentifier(), "metrics"));
-/*
-
-        reporter = JmxReporter.forRegistry(container.getApplicationHandler().getInjectionManager().getInstance(MetricRegistry.class))
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .build();
-        reporter.start();
-*/
-    }
-
-    @Override
-    public void onReload(Container container) {
-
     }
 
     @Override
     public void onShutdown(Container container) {
         scheduledExecutorService.shutdown();
-//        reporter.stop();
     }
 
-    private Map<String, ReactiveEventStreams.Subscription> subscriptions = new ConcurrentHashMap<>();
+    private Map<String, Flow.Subscription> subscriptions = new ConcurrentHashMap<>();
     private Map<String, Map<String, AtomicReference<JsonNode>>> polledMetrics = new ConcurrentHashMap<>();
 
     private class MetricEventSubscriber
-            implements ReactiveEventStreams.Subscriber<ObjectNode>, EventHandler<Event<ObjectNode>> {
+            implements Flow.Subscriber<WithMetadata<ObjectNode>>, EventHandler<WithMetadata<ObjectNode>> {
         private final ScheduledExecutorService scheduledExecutorService;
         private String serverId;
-        private ReactiveEventStreams.Subscription subscription;
-        private Disruptor<Event<ObjectNode>> disruptor;
+        private Flow.Subscription subscription;
+        private Disruptor<WithMetadata<ObjectNode>> disruptor;
 
         public MetricEventSubscriber(ScheduledExecutorService scheduledExecutorService, String serverId) {
 
@@ -145,24 +131,27 @@ public class JmxMetrics
         }
 
         @Override
-        public EventSink<Event<ObjectNode>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
+        public void onSubscribe(Flow.Subscription subscription) {
             this.subscription = subscription;
             Optional.ofNullable(subscriptions.put(serverId, subscription))
-                    .ifPresent(ReactiveEventStreams.Subscription::cancel);
+                    .ifPresent(Flow.Subscription::cancel);
 
-            disruptor = new Disruptor<>(Event::new, 8, new NamedThreadFactory("JmxMetrics-"));
+            disruptor = new Disruptor<>(WithMetadata::new, 8, new NamedThreadFactory("JmxMetrics-"));
             disruptor.handleEventsWith(this);
             disruptor.start();
 
             subscription.request(1);
-
-            return disruptor.getRingBuffer();
         }
 
         @Override
-        public void onEvent(Event<ObjectNode> event, long sequence, boolean endOfBatch) throws Exception {
+        public void onNext(WithMetadata<ObjectNode> item) {
+            disruptor.publishEvent((ref, seq, e) -> ref.set(e), item);
+        }
 
-            Iterator<Map.Entry<String, JsonNode>> fields = event.event.fields();
+        @Override
+        public void onEvent(WithMetadata<ObjectNode> event, long sequence, boolean endOfBatch) throws Exception {
+
+            Iterator<Map.Entry<String, JsonNode>> fields = event.event().fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> next = fields.next();
                 AtomicReference<JsonNode> jsonNodeAtomicReference = polledMetrics.get(serverId).get(next.getKey());
@@ -186,6 +175,12 @@ public class JmxMetrics
             } catch (Throwable e) {
                 logger.error("Could not unregister MBean", e);
             }
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            logger.error("JMX publisher error", throwable);
+            onComplete();
         }
     }
 
@@ -216,11 +211,9 @@ public class JmxMetrics
             client.get(link)
                     .whenComplete((rd, throwable) ->
                     {
-                        if (throwable != null)
-                        {
+                        if (throwable != null) {
                             logger.error("Could not sync server metrics", throwable);
-                        } else
-                        {
+                        } else {
                             // Sync server and metrics beans
                             try {
                                 String serverId = sro.getServerId();
@@ -286,10 +279,7 @@ public class JmxMetrics
         private void pollMetrics(Link metricevents, String serverId, Collection<String> metricNames) {
             ObjectNode parameters = JsonNodeFactory.instance.objectNode();
             parameters.set("metric_names", parameters.textNode(String.join(",", metricNames)));
-            reactiveStreams.subscribe(sro.serviceIdentifier(), metricevents, new MetricEventSubscriber(scheduledExecutorService, serverId), new Configuration(parameters), Configuration.empty());
+            reactiveStreams.subscribe(metricevents.getHrefAsUri(), new Configuration(parameters), new MetricEventSubscriber(scheduledExecutorService, serverId));
         }
-
-
     }
-
 }

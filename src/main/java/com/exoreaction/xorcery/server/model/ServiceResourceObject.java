@@ -5,8 +5,6 @@ import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
-import com.exoreaction.xorcery.server.Xorcery;
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
 
 import java.util.Optional;
 

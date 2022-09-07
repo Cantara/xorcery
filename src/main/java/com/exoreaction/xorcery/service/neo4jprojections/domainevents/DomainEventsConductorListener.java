@@ -9,9 +9,9 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import com.exoreaction.xorcery.util.Listeners;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
@@ -25,13 +25,13 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
     private Logger logger = LogManager.getLogger(getClass());
 
     private GraphDatabases graphDatabases;
-    private ReactiveStreams reactiveStreams;
+    private ReactiveStreams2 reactiveStreams;
     private MetricRegistry metricRegistry;
     private Listeners<ProjectionListener> listeners;
     private Function<String, CompletableFuture<Void>> isLive;
 
     public DomainEventsConductorListener(GraphDatabases graphDatabases,
-                                         ReactiveStreams reactiveStreams,
+                                         ReactiveStreams2 reactiveStreams,
                                          ServiceIdentifier serviceIdentifier,
                                          String rel,
                                          MetricRegistry metricRegistry,
@@ -67,10 +67,10 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
                         sourceConfiguration.json().set("from", sourceConfiguration.json().numberNode(position));
                     }
 
-                    reactiveStreams.subscribe(sro.serviceIdentifier(), link,
+                    reactiveStreams.subscribe(link.getHrefAsUri(),
+                            sourceConfiguration,
                             new DomainEventsSubscriber(
-                                    subscription -> new Neo4jDomainEventEventHandler(graphDatabase.getGraphDatabaseService(), subscription, sourceConfiguration, consumerConfiguration, listeners, metricRegistry)),
-                            sourceConfiguration, Configuration.empty());
+                                    subscription -> new Neo4jDomainEventEventHandler(graphDatabase.getGraphDatabaseService(), subscription, sourceConfiguration, consumerConfiguration, listeners, metricRegistry)));
 
                     // No catchup, we're live
                     isLive.apply(projectionId).complete(null);

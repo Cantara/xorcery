@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.neo4jprojections.eventstore;
 
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.rest.RestProcess;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
@@ -13,7 +14,7 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.NotFoundException;
@@ -28,13 +29,13 @@ public class EventStoreConductorListener extends AbstractConductorListener {
     private Logger logger = LogManager.getLogger(getClass());
 
     private GraphDatabases graphDatabases;
-    private ReactiveStreams reactiveStreams;
+    private ReactiveStreams2 reactiveStreams;
     private JsonApiClient client;
     private Listeners<ProjectionListener> listeners;
     private Function<String, CompletableFuture<Void>> isLive;
 
     public EventStoreConductorListener(GraphDatabases graphDatabases,
-                                       ReactiveStreams reactiveStreams,
+                                       ReactiveStreams2 reactiveStreams,
                                        JsonApiClient client,
                                        ServiceIdentifier serviceIdentifier,
                                        String rel,
@@ -101,9 +102,9 @@ public class EventStoreConductorListener extends AbstractConductorListener {
                                         }
                                     }
 
-                                    reactiveStreams.subscribe(sro.serviceIdentifier(), link,
-                                            new EventStoreSubscriber(consumerConfiguration, parameters, graphDatabase.getGraphDatabaseService(), listeners, finalLastRevision, isLive.apply(projectionId)),
-                                            sourceConfiguration, Configuration.empty());
+                                    reactiveStreams.subscribe(link.getHrefAsUri(),
+                                            sourceConfiguration,
+                                            new EventStoreSubscriber(consumerConfiguration, parameters, graphDatabase.getGraphDatabaseService(), listeners, finalLastRevision, isLive.apply(projectionId)));
                                 });
                     });
         } catch (JsonProcessingException e) {

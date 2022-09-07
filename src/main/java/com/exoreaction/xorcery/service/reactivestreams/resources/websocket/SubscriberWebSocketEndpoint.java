@@ -1,97 +1,80 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
-import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.Event;
-import com.exoreaction.xorcery.disruptor.EventWithResult;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventSink;
-import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.Charset;
-import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Flow;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * @author rickardoberg
  * @since 13/04/2022
  */
-public class SubscriberWebSocketEndpoint<T>
+public class SubscriberWebSocketEndpoint
         implements WebSocketPartialListener, WebSocketConnectionListener {
     private final static Logger logger = LogManager.getLogger(SubscriberWebSocketEndpoint.class);
+    private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
+
+    private final String webSocketPath;
     private Session session;
-    private Semaphore semaphore = new Semaphore(0);
-    private String webSocketPath;
-    private ReactiveEventStreams.Subscriber<T> subscriber;
+
+    private final Semaphore semaphore = new Semaphore(0);
+
+    private final Function<Configuration, Flow.Subscriber<Object>> subscriberFactory;
     private String configurationMessage = "";
     private Configuration subscriberConfiguration;
-    private MessageBodyWriter<Object> messageBodyWriter;
-    private MessageBodyReader<Object> messageBodyReader;
+    private Flow.Subscriber<Object> subscriber;
 
-    // Dummy variables for readers
-    private final Annotation[] annotations = new Annotation[0];
+    private final MessageBodyReader<Object> eventReader;
+    private final MessageBodyWriter<Object> resultWriter;
 
-    private EventSink<Event<T>> eventSink;
-
-    private ByteBufferAccumulator byteBufferAccumulator;
-    private ByteBufferPool byteBufferPool;
+    private final ByteBufferAccumulator byteBufferAccumulator;
+    private final ByteBufferPool byteBufferPool;
 
     private Type eventType;
     private final ObjectMapper objectMapper;
     private Marker marker;
 
     public SubscriberWebSocketEndpoint(String webSocketPath,
-                                       ReactiveEventStreams.Subscriber<T> subscriber,
-                                       MessageBodyWriter<Object> messageBodyWriter,
-                                       MessageBodyReader<Object> messageBodyReader,
+                                       Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
+                                       MessageBodyWriter<Object> resultWriter,
+                                       MessageBodyReader<Object> eventReader,
                                        ObjectMapper objectMapper,
                                        Type eventType,
-                                       ByteBufferPool byteBufferPool,
-                                       Marker marker) {
+                                       ByteBufferPool byteBufferPool) {
         this.webSocketPath = webSocketPath;
-        this.subscriber = subscriber;
-        this.messageBodyWriter = messageBodyWriter;
-        this.messageBodyReader = messageBodyReader;
+        this.subscriberFactory = subscriberFactory;
+        this.resultWriter = resultWriter;
+        this.eventReader = eventReader;
         this.eventType = eventType;
         this.objectMapper = objectMapper;
         this.byteBufferPool = byteBufferPool;
         this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, false);
-        this.marker = marker;
-    }
-
-    public Semaphore getSemaphore() {
-        return semaphore;
+        this.marker = MarkerManager.getMarker(webSocketPath);
     }
 
     // WebSocket
@@ -110,11 +93,13 @@ public class SubscriberWebSocketEndpoint<T>
                 // Read JSON parameters
                 try {
                     subscriberConfiguration = new Configuration((ObjectNode) objectMapper.readTree(configurationMessage));
-                    eventSink = subscriber.onSubscribe(new WebSocketSubscription(session, marker), subscriberConfiguration);
+                    subscriber = subscriberFactory.apply(subscriberConfiguration);
+                    subscriber.onSubscribe(new WebSocketSubscription(session, marker));
 
                     logger.info(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
 
                 } catch (JsonProcessingException e) {
+                    logger.error("Could not parse subscriber configuration", e);
                     session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
                 }
             }
@@ -133,31 +118,28 @@ public class SubscriberWebSocketEndpoint<T>
     private void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
             logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+/* Move this to reader that can delegate
             JsonFactory jf = new JsonFactory(objectMapper);
-            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             JsonParser jp = jf.createParser(inputStream);
             JsonToken metadataToken = jp.nextToken();
             Metadata metadata = jp.readValueAs(Metadata.class);
             long location = jp.getCurrentLocation().getByteOffset();
             byteBuffer.position((int) location);
-
-            Object event = messageBodyReader.readFrom((Class<Object>) eventType, eventType, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, inputStream);
+*/
+            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
+            Object event = eventReader.readFrom((Class<Object>) eventType, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, null, inputStream);
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
-            eventSink.publishEvent((holder, seq, m, e) ->
-            {
-                holder.metadata = m;
-                if (messageBodyWriter == null) {
-                    holder.event = (T) e;
-                } else {
-                    CompletableFuture<?> resultFuture = new CompletableFuture<>();
-                    resultFuture.whenComplete(this::sendResult);
 
-                    holder.event = (T) new EventWithResult<>(e, resultFuture);
-                }
-            }, metadata, event);
+            if (resultWriter != null) {
+                CompletableFuture<?> resultFuture = new CompletableFuture<>();
+                resultFuture.whenComplete(this::sendResult);
+                event = new WithResult<>(event, resultFuture);
+            }
+
+            subscriber.onNext(event);
         } catch (IOException e) {
             logger.error("Could not receive value", e);
-            session.close();
+            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
         }
     }
 
@@ -170,7 +152,7 @@ public class SubscriberWebSocketEndpoint<T>
                 ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
                 out.writeObject(throwable);
             } else {
-                messageBodyWriter.writeTo(result, null, null, annotations, MediaType.APPLICATION_OCTET_STREAM_TYPE, null, resultOutputStream);
+                resultWriter.writeTo(result, null, null, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, null, resultOutputStream);
             }
 
             ByteBuffer data = resultOutputStream.takeByteBuffer();
@@ -187,7 +169,7 @@ public class SubscriberWebSocketEndpoint<T>
             });
         } catch (IOException ex) {
             logger.error(marker, "Could not send result", ex);
-            subscriber.onError(ex);
+            session.close(StatusCode.SERVER_ERROR, ex.getMessage());
         }
     }
 
@@ -196,14 +178,21 @@ public class SubscriberWebSocketEndpoint<T>
         if (cause instanceof ClosedChannelException) {
             // Ignore
         } else {
-            logger.error(marker, "Subscriber websocket error", cause);
-            subscriber.onError(cause);
+            logger.warn(marker, "Subscriber websocket error", cause);
+            if (subscriber != null) {
+                subscriber.onError(cause);
+            }
         }
     }
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         logger.info(marker, "Complete subscription to {}:{} {}", webSocketPath, statusCode, reason);
-        subscriber.onComplete();
+        try {
+            if (subscriber != null)
+                subscriber.onComplete();
+        } catch (Exception e) {
+            logger.warn(marker, "Could not close subscription sink", e);
+        }
     }
 }

@@ -1,10 +1,11 @@
 package com.exoreaction.xorcery.disruptor.handlers;
 
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.Event;
-import com.lmax.disruptor.EventSink;
+import com.lmax.disruptor.EventHandler;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Flow;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author rickardoberg
@@ -12,28 +13,18 @@ import java.util.List;
  */
 
 public class UnicastEventHandler<T>
-    implements DefaultEventHandler<Event<T>>
+    extends AbstractRoutingEventHandler<T>
 {
-    private final List<EventSink<Event<T>>> subscribers;
-
-    public UnicastEventHandler(List<EventSink<Event<T>>> subscribers)
-    {
-        this.subscribers = subscribers;
-    }
-
     @Override
-    public void onEvent( Event<T> event, long sequence, boolean endOfBatch ) throws Exception
-    {
-        while (true)
-        {
-            for (EventSink<Event<T>> subscriber : subscribers) {
-                boolean isPublished = subscriber.tryPublishEvent((e, seq, e2) ->
+    public void onEvent(T event, long sequence, boolean endOfBatch) throws Exception {
+        while (true) {
+            for (SubscriptionTracker<T> tracker : subscribers) {
+                if (tracker.requests().get()>0)
                 {
-                    e.metadata = new Metadata.Builder().add(e2.metadata).build();
-                    e.event = e2.event;
-                }, event);
-                if (isPublished)
+                    tracker.requests().getAndDecrement();
+                    tracker.subscriber().onNext(event);
                     return;
+                }
             }
 
             // Try again
@@ -43,15 +34,5 @@ public class UnicastEventHandler<T>
                 return;
             }
         }
-    }
-
-    @Override
-    public void onStart()
-    {
-    }
-
-    @Override
-    public void onShutdown()
-    {
     }
 }

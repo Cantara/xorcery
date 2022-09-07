@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.neo4jprojections;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -67,7 +68,7 @@ public class Neo4jProjectionsService
     private final Logger logger = LogManager.getLogger(getClass());
     private MetricRegistry metricRegistry;
     private final JsonApiClient jsonApiClient;
-    private final ReactiveStreams reactiveStreams;
+    private final ReactiveStreams2 reactiveStreams;
     private final Conductor conductor;
     private final ServiceResourceObject sro;
     private final GraphDatabases graphDatabases;
@@ -77,7 +78,7 @@ public class Neo4jProjectionsService
 
     @Inject
     public Neo4jProjectionsService(Conductor conductor,
-                                   ReactiveStreams reactiveStreams,
+                                   ReactiveStreams2 reactiveStreams,
                                    @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                    GraphDatabases graphDatabases,
                                    MetricRegistry metricRegistry,

@@ -1,7 +1,6 @@
 package com.exoreaction.xorcery.server.model;
 
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
 
 import java.util.Optional;
 import java.util.stream.Stream;

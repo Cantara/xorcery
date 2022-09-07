@@ -4,16 +4,18 @@ import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.EventDataBuilder;
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.Event;
-import com.exoreaction.xorcery.disruptor.EventWithResult;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import java.util.concurrent.Flow;
 
 /**
  * @author rickardoberg
@@ -21,27 +23,27 @@ import java.util.UUID;
  */
 
 public class EventStoreDomainEventEventHandler
-        implements DefaultEventHandler<Event<EventWithResult<ByteBuffer, Metadata>>> {
+        implements EventHandler<WithResult<WithMetadata<ByteBuffer>, Metadata>> {
     private final EventStoreDBClient client;
-    private ReactiveEventStreams.Subscription subscription;
+    private Flow.Subscription subscription;
 
-    public EventStoreDomainEventEventHandler(EventStoreDBClient client, ReactiveEventStreams.Subscription subscription) {
+    public EventStoreDomainEventEventHandler(EventStoreDBClient client, Flow.Subscription subscription) {
 
         this.client = client;
         this.subscription = subscription;
     }
 
     @Override
-    public void onEvent(Event<EventWithResult<ByteBuffer, Metadata>> event, long sequence, boolean endOfBatch) throws Exception {
-        EventStoreMetadata emd = new EventStoreMetadata(event.metadata);
+    public void onEvent(WithResult<WithMetadata<ByteBuffer>, Metadata> event, long sequence, boolean endOfBatch) throws Exception {
+        EventStoreMetadata emd = new EventStoreMetadata(event.event().metadata());
         UUID eventId = emd.getCorrelationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
-        DomainEventMetadata domainEventMetadata = new DomainEventMetadata(event.metadata);
+        DomainEventMetadata domainEventMetadata = new DomainEventMetadata(event.event().metadata());
         String eventType = domainEventMetadata.getCommandType();
-        EventData eventData = EventDataBuilder.json(eventId, eventType, event.event.event().array())
-                .metadataAsJson(event.metadata)
+        EventData eventData = EventDataBuilder.json(eventId, eventType, event.event().event().array())
+                .metadataAsJson(event.event().metadata().metadata())
                 .build();
 
-        event.event.event().clear();
+        event.event().event().clear();
         String streamId = emd.getEnvironment() + "-" +
                 emd.getTag() + "-" +
                 domainEventMetadata.getDomain();
@@ -53,14 +55,13 @@ public class EventStoreDomainEventEventHandler
             client.appendToStream(streamId, eventData).whenComplete((wr, t) ->
             {
                 if (t == null) {
-                    event.event.result().complete(new EventStoreMetadata.Builder(new Metadata.Builder())
+                    event.result().complete(new EventStoreMetadata.Builder(new Metadata.Builder())
                             .streamId(streamId)
                             .revision(wr.getNextExpectedRevision().getValueUnsigned())
                             .build().metadata());
                 } else {
-                    event.event.result().completeExceptionally(t);
+                    event.result().completeExceptionally(t);
                 }
-
 
                 subscription.request(1);
             });

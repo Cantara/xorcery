@@ -2,15 +2,16 @@ package com.exoreaction.xorcery.service.log4jappender;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.disruptor.Event;
+import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
+import com.exoreaction.xorcery.service.conductor.api.Conductor;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams.Publisher;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.*;
+import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -28,12 +29,13 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 @WebListener
 public class Log4jAppenderEventPublisher
-        implements ContainerLifecycleListener, Publisher<LogEvent> {
+        implements ContainerLifecycleListener, Flow.Publisher<WithMetadata<LogEvent>> {
 
     public static final String SERVICE_TYPE = "log4jappender";
 
@@ -56,40 +58,34 @@ public class Log4jAppenderEventPublisher
         }
     }
 
-    private final ReactiveStreams reactiveStreams;
-    private Xorcery xorcery;
+    private final ReactiveStreams2 reactiveStreams;
     private ServiceResourceObject sro;
     private Configuration configuration;
 
-    private final Disruptor<Event<LogEvent>> disruptor;
-    private final List<EventSink<Event<LogEvent>>> subscribers = new CopyOnWriteArrayList<>();
+    private final Disruptor<WithMetadata<LogEvent>> disruptor;
+    private final UnicastEventHandler<WithMetadata<LogEvent>> unicastEventHandler = new UnicastEventHandler<>();
 
     @Inject
-    public Log4jAppenderEventPublisher(ReactiveStreams reactiveStreams, Xorcery xorcery,
+    public Log4jAppenderEventPublisher(ReactiveStreams2 reactiveStreams, Conductor conductor,
                                        @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                        Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
-        this.xorcery = xorcery;
         this.sro = sro;
         this.configuration = configuration;
 
         disruptor =
-                new Disruptor<>(Event::new, 4096, new NamedThreadFactory("Log4jDisruptor-"),
+                new Disruptor<>(WithMetadata::new, 4096, new NamedThreadFactory("Log4jDisruptor-"),
                         ProducerType.MULTI,
                         new BlockingWaitStrategy());
 
-        disruptor.handleEventsWith(
-                        new LoggingMetadataEventHandler(configuration))
-                .then(new BroadcastEventHandler<>(subscribers));
+        disruptor.handleEventsWith(new LoggingMetadataEventHandler(configuration))
+                .then(unicastEventHandler);
+
+        conductor.addConductorListener(new ClientPublisherConductorListener(sro.serviceIdentifier(), cfg -> this, "logevents", reactiveStreams));
     }
 
     @Override
     public void onStartup(Container container) {
-        sro.getLinkByRel("logevents").ifPresent(link ->
-        {
-            reactiveStreams.publisher(sro.serviceIdentifier(), link, this);
-        });
-
         disruptor.start();
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
         DisruptorAppender appender = lc.getConfiguration().getAppender("DISRUPTOR");
@@ -106,12 +102,11 @@ public class Log4jAppenderEventPublisher
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<LogEvent> subscriber, Configuration configuration) {
+    public void subscribe(Flow.Subscriber<? super WithMetadata<LogEvent>> subscriber) {
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
         DisruptorAppender appender = lc.getConfiguration().getAppender("DISRUPTOR");
 
-        final AtomicReference<EventSink<Event<LogEvent>>> handler = new AtomicReference<>();
-        handler.set(subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
+        subscriber.onSubscribe(unicastEventHandler.add(subscriber, new Flow.Subscription() {
             @Override
             public void request(long n) {
                 // Ignore for now
@@ -119,9 +114,8 @@ public class Log4jAppenderEventPublisher
 
             @Override
             public void cancel() {
-                subscribers.remove(handler.get());
+                unicastEventHandler.remove(subscriber);
             }
-        }, Configuration.empty()));
-        subscribers.add(handler.get());
+        }));
     }
 }

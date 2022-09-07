@@ -1,15 +1,15 @@
 package com.exoreaction.xorcery.service.neo4jprojections.eventstore;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
 import com.exoreaction.xorcery.util.Listeners;
-import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 
 /**
  * @author rickardoberg
@@ -31,12 +32,12 @@ import java.util.concurrent.CompletableFuture;
  */
 
 public class Neo4jEventStoreEventHandler
-        implements DefaultEventHandler<Event<ArrayNode>> {
+        implements DefaultEventHandler<WithMetadata<ArrayNode>> {
 
     private final String projectionId;
     private Logger logger = LogManager.getLogger(getClass());
 
-    private ReactiveEventStreams.Subscription subscription;
+    private Flow.Subscription subscription;
     private EventStoreParameters sourceParameters;
     private Configuration consumerConfiuration;
     private Listeners<ProjectionListener> listeners;
@@ -52,7 +53,7 @@ public class Neo4jEventStoreEventHandler
     private Map<String, String> cachedEventCypher = new HashMap<>();
 
     public Neo4jEventStoreEventHandler(GraphDatabaseService graphDatabaseService,
-                                       ReactiveEventStreams.Subscription subscription,
+                                       Flow.Subscription subscription,
                                        EventStoreParameters sourceParameters,
                                        Configuration consumerConfiuration,
                                        Listeners<ProjectionListener> listeners,
@@ -71,9 +72,9 @@ public class Neo4jEventStoreEventHandler
     }
 
     @Override
-    public void onEvent(Event<ArrayNode> event, long sequence, boolean endOfBatch) throws Exception {
-        ArrayNode eventsJson = event.event;
-        Map<String, Object> metadataMap = Cypher.toMap(event.metadata.metadata());
+    public void onEvent(WithMetadata<ArrayNode> event, long sequence, boolean endOfBatch) throws Exception {
+        ArrayNode eventsJson = event.event();
+        Map<String, Object> metadataMap = Cypher.toMap(event.metadata().metadata());
 
         for (JsonNode jsonNode : eventsJson) {
             ObjectNode objectNode = (ObjectNode) jsonNode;
@@ -85,7 +86,7 @@ public class Neo4jEventStoreEventHandler
 
             try {
                 String statement = cachedEventCypher.computeIfAbsent(type, t ->
-                        event.metadata.getString("domain")
+                        event.metadata().getString("domain")
                                 .map(domain ->
                                 {
                                     String statementFile = "/neo4j/" + domain + "/" + t + ".cyp";
@@ -124,7 +125,7 @@ public class Neo4jEventStoreEventHandler
         if (endOfBatch) {
             try {
                 // Update Projection node with current revision
-                long revision = new EventStoreMetadata(event.metadata).revision();
+                long revision = new EventStoreMetadata(event.metadata()).revision();
                 updateParameters.put("projection_revision", revision);
                 tx.execute("MERGE (projection:Projection {id:$projection_id}) SET projection.revision=$projection_revision",
                         updateParameters);

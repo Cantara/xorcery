@@ -1,19 +1,21 @@
 package com.exoreaction.xorcery.service.opensearch.eventstore.domainevents;
 
-import com.exoreaction.xorcery.disruptor.Event;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.document.BulkResponse;
 import com.exoreaction.xorcery.service.opensearch.client.document.IndexBulkRequest;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -22,21 +24,21 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class OpenSearchEventStoreEventHandler
-        implements DefaultEventHandler<Event<ArrayNode>> {
+        implements EventHandler<WithMetadata<ArrayNode>> {
 
     private final OpenSearchClient client;
     private final String indexName;
     private final ObjectMapper objectMapper;
     private Logger logger = LogManager.getLogger(getClass());
 
-    private ReactiveEventStreams.Subscription subscription;
+    private Flow.Subscription subscription;
     private Listeners<ProjectionListener> listeners;
 
     private IndexBulkRequest.Builder bulkRequest;
     private int requestCount = 0;
 
     public OpenSearchEventStoreEventHandler(OpenSearchClient client,
-                                            ReactiveEventStreams.Subscription subscription,
+                                            Flow.Subscription subscription,
                                             String indexName,
                                             Listeners<ProjectionListener> listeners) {
         this.client = client;
@@ -47,14 +49,14 @@ public class OpenSearchEventStoreEventHandler
     }
 
     @Override
-    public void onEvent(Event<ArrayNode> event, long sequence, boolean endOfBatch) throws Exception {
+    public void onEvent(WithMetadata<ArrayNode> event, long sequence, boolean endOfBatch) throws Exception {
 
-        DomainEventMetadata dem = new DomainEventMetadata(event.metadata);
+        DomainEventMetadata dem = new DomainEventMetadata(event.metadata());
 
-        ObjectNode document = event.metadata.metadata().objectNode();
-        document.set("@timestamp", event.metadata.getJsonNode("timestamp").orElse(document.numberNode(0L)));
-        document.set("metadata", event.metadata.metadata());
-        document.set("data", event.event);
+        ObjectNode document = event.metadata().metadata().objectNode();
+        document.set("@timestamp", event.metadata().getJsonNode("timestamp").orElse(document.numberNode(0L)));
+        document.set("metadata", event.metadata().metadata());
+        document.set("data", event.event());
 
         if (bulkRequest == null)
             bulkRequest = new IndexBulkRequest.Builder();

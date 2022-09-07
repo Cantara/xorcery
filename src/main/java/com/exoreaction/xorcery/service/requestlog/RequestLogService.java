@@ -5,18 +5,21 @@ import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.*;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.ext.Provider;
 import org.eclipse.jetty.server.Server;
+import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
+import java.util.concurrent.Flow;
+
 public class RequestLogService
-        implements ContainerLifecycleListener, ReactiveEventStreams.Publisher<ObjectNode> {
+        extends AbstractContainerLifecycleListener
+        implements Flow.Publisher<WithMetadata<ObjectNode>> {
 
     public static final String SERVICE_TYPE = "requestlog";
 
@@ -41,12 +44,12 @@ public class RequestLogService
     }
 
     private final ServiceResourceObject resourceObject;
-    private final ReactiveStreams reactiveStreams;
+    private final ReactiveStreams2 reactiveStreams;
     private final JsonRequestLog requestLog;
 
     @Inject
     public RequestLogService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
-                             ReactiveStreams reactiveStreams,
+                             ReactiveStreams2 reactiveStreams,
                              Server server,
                              Configuration configuration) {
         this.resourceObject = resourceObject;
@@ -62,7 +65,7 @@ public class RequestLogService
     public void onStartup(Container container) {
         resourceObject.getLinkByRel("requestlogevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(resourceObject.serviceIdentifier(), link, this);
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> this);
         });
     }
 
@@ -76,9 +79,8 @@ public class RequestLogService
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<ObjectNode> subscriber, Configuration parameters) {
-
-        requestLog.setEventSink(subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
+    public void subscribe(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
+        subscriber.onSubscribe(new Flow.Subscription() {
             @Override
             public void request(long n) {
                 // Ignore
@@ -86,9 +88,10 @@ public class RequestLogService
 
             @Override
             public void cancel() {
-                requestLog.setEventSink(null);
+                requestLog.setSubscriber(null);
                 subscriber.onComplete();
             }
-        }, Configuration.empty()));
+        });
+        requestLog.setSubscriber(subscriber);
     }
 }

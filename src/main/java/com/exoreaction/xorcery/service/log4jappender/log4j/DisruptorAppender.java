@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.log4jappender.log4j;
 
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.Event;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.EventSink;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.Appender;
@@ -43,7 +43,7 @@ public class DisruptorAppender
         return new DisruptorAppender.Builder<B>().asBuilder();
     }
 
-    private final AtomicReference<EventSink<Event<LogEvent>>> logEventSink = new AtomicReference<>();
+    private final AtomicReference<EventSink<WithMetadata<LogEvent>>> logEventSink = new AtomicReference<>();
 
     public DisruptorAppender(final String name, final Layout<? extends Serializable> layout, final Filter filter,
                              final boolean ignoreExceptions, final Property[] properties) {
@@ -54,15 +54,14 @@ public class DisruptorAppender
     @Override
     public void append(final LogEvent event) {
 
-        EventSink<Event<LogEvent>> sink = logEventSink.get();
+        EventSink<WithMetadata<LogEvent>> sink = logEventSink.get();
         if (sink != null)
             sink.publishEvent((holder, seq, e) ->
-        {
-            Metadata.Builder builder = new Metadata.Builder();
-            ThreadContext.getContext().forEach(builder::add);
-            holder.metadata = builder.build();
-            holder.event = e;
-        }, event);
+            {
+                Metadata.Builder builder = new Metadata.Builder();
+                ThreadContext.getContext().forEach(builder::add);
+                holder.set(builder.build(), e);
+            }, event);
     }
 
     @Override
@@ -73,8 +72,7 @@ public class DisruptorAppender
         return stopped;
     }
 
-    public void setEventSink(EventSink<Event<LogEvent>> eventSink)
-    {
+    public void setEventSink(EventSink<WithMetadata<LogEvent>> eventSink) {
         this.logEventSink.set(eventSink);
     }
 

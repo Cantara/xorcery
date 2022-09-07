@@ -1,14 +1,10 @@
 package com.exoreaction.xorcery.service.reactivestreams;
 
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.lmax.disruptor.EventSink;
+import com.exoreaction.xorcery.service.reactivestreams.api.*;
+import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -19,6 +15,7 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -27,9 +24,7 @@ import static com.exoreaction.xorcery.service.reactivestreams.ClientPublisherSer
 @Contract
 @Singleton
 public class ClientPublisherService
-        implements ContainerLifecycleListener, ReactiveEventStreams.Publisher<String> {
-    private Conductor conductor;
-
+        implements ContainerLifecycleListener, Flow.Publisher<String> {
     @Provider
     public static class ClientFeature
             extends AbstractFeature {
@@ -52,8 +47,8 @@ public class ClientPublisherService
     @Inject
     public ClientPublisherService(@Named(SERVICE_TYPE) ServiceResourceObject sro,
                                   Conductor conductor,
-                                  ReactiveStreams reactiveStreams) {
-        conductor.addConductorListener(new ClientPublisherConductorListener<>(sro.serviceIdentifier(), this, ServerSubscriberService.SUBSCRIBER_REL, reactiveStreams));
+                                  ReactiveStreams2 reactiveStreams) {
+        conductor.addConductorListener(new ClientPublisherConductorListener(sro.serviceIdentifier(), c -> this, ServerSubscriberService.SUBSCRIBER_REL, reactiveStreams));
     }
 
     @Override
@@ -76,17 +71,15 @@ public class ClientPublisherService
     }
 
     @Override
-    public void subscribe(ReactiveEventStreams.Subscriber<String> subscriber, Configuration parameters) {
-
+    public void subscribe(Flow.Subscriber<? super String> subscriber) {
         Semaphore semaphore = new Semaphore(0);
         AtomicLong initialRequest = new AtomicLong(-1);
 
-        EventSink<Event<String>> eventSink = subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
+        subscriber.onSubscribe(new Flow.Subscription() {
             @Override
             public void request(long n) {
                 semaphore.release((int) n);
-                if (initialRequest.get() == -1)
-                {
+                if (initialRequest.get() == -1) {
                     initialRequest.set(n);
                 }
             }
@@ -95,26 +88,20 @@ public class ClientPublisherService
             public void cancel() {
 
             }
-        }, parameters);
+        });
 
         CompletableFuture.runAsync(() ->
         {
-            Metadata metadata = new Metadata.Builder().build();
-
             try {
                 for (int i = 0; i < 100; i++) {
                     semaphore.acquire();
-                    eventSink.publishEvent((event, sequence, e, m) ->
-                            {
-                                event.event = e;
-                                event.metadata = m;
-                            }, i + "", metadata);
+                    subscriber.onNext(i+"");
                 }
 
-                semaphore.acquire((int)initialRequest.get());
+                semaphore.acquire((int) initialRequest.get());
                 LogManager.getLogger(getClass()).info("All events published, and requests back to original value. Done!");
                 subscriber.onComplete();
-            } catch (InterruptedException e) {
+            } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
         }).whenComplete((r, t) -> done.complete(null));

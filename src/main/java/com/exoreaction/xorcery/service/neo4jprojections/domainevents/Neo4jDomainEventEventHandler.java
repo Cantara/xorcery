@@ -5,17 +5,18 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.Event;
-import com.exoreaction.xorcery.disruptor.EventWithResult;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 
 /**
  * @author rickardoberg
@@ -36,11 +38,11 @@ import java.util.concurrent.CompletableFuture;
  */
 
 public class Neo4jDomainEventEventHandler
-        implements DefaultEventHandler<Event<EventWithResult<ArrayNode, Metadata>>> {
+        implements EventHandler<WithResult<WithMetadata<ArrayNode>, Metadata>> {
 
     private Logger logger = LogManager.getLogger(getClass());
 
-    private ReactiveEventStreams.Subscription subscription;
+    private Flow.Subscription subscription;
     private final Configuration sourceConfiguration;
     private Configuration consumerConfiguration;
     private final Listeners<ProjectionListener> listeners;
@@ -57,7 +59,7 @@ public class Neo4jDomainEventEventHandler
     private final Histogram batchSize;
 
     public Neo4jDomainEventEventHandler(GraphDatabaseService graphDatabaseService,
-                                        ReactiveEventStreams.Subscription subscription,
+                                        Flow.Subscription subscription,
                                         Configuration sourceConfiguration,
                                         Configuration consumerConfiguration,
                                         Listeners<ProjectionListener> listeners,
@@ -79,16 +81,15 @@ public class Neo4jDomainEventEventHandler
     }
 
     @Override
-    public synchronized void onEvent(Event<EventWithResult<ArrayNode, Metadata>> event, long sequence, boolean endOfBatch) throws Exception {
-
+    public void onEvent(WithResult<WithMetadata<ArrayNode>, Metadata> event, long sequence, boolean endOfBatch) throws Exception {
         try {
 
             if (tx == null) {
                 tx = graphDatabaseService.beginTx();
             }
 
-            ArrayNode eventsJson = event.event.event();
-            Map<String, Object> metadataMap = Cypher.toMap(event.metadata.metadata());
+            ArrayNode eventsJson = event.event().event();
+            Map<String, Object> metadataMap = Cypher.toMap(event.event().metadata().metadata());
 
             for (JsonNode jsonNode : eventsJson) {
                 ObjectNode objectNode = (ObjectNode) jsonNode;
@@ -100,7 +101,7 @@ public class Neo4jDomainEventEventHandler
 
                 try {
                     List<String> statement = cachedEventCypher.computeIfAbsent(type, t ->
-                            event.metadata.getString("domain")
+                            event.event().metadata().getString("domain")
                                     .map(domain ->
                                     {
                                         String statementFile = "/neo4j/" + domain + "/" + t + ".cyp";
@@ -140,15 +141,15 @@ public class Neo4jDomainEventEventHandler
                     }
                 } catch (Throwable e) {
                     logger.error("Could not apply Neo4j event update", e);
-                    event.event.result().completeExceptionally(e);
+                    event.result().completeExceptionally(e);
                     tx = graphDatabaseService.beginTx();
                 }
 
                 appliedEvents++;
             }
 
-            if (!event.event.result().isCompletedExceptionally())
-                futures.add(event.event.result());
+            if (!event.result().isCompletedExceptionally())
+                futures.add(event.result());
 
             if (endOfBatch) {
                 if (appliedEvents > 0) {

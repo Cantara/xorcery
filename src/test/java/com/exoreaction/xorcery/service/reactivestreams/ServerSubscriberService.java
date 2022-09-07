@@ -1,15 +1,8 @@
 package com.exoreaction.xorcery.service.reactivestreams;
 
-import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.disruptor.Event;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventSink;
-import com.lmax.disruptor.dsl.Disruptor;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.ext.Provider;
@@ -18,11 +11,13 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
+import java.util.concurrent.Flow;
+
 @Contract
 public class ServerSubscriberService
         implements ContainerLifecycleListener,
-        ReactiveEventStreams.Subscriber<String> {
-    private ReactiveStreams reactiveStreams;
+        Flow.Subscriber<String> {
+    private ReactiveStreams2 reactiveStreams;
     private ServiceResourceObject serviceResourceObject;
 
     public static final String SUBSCRIBER_REL = "eventsubscriber";
@@ -50,7 +45,7 @@ public class ServerSubscriberService
     }
 
     @Inject
-    public ServerSubscriberService(ReactiveStreams reactiveStreams,
+    public ServerSubscriberService(ReactiveStreams2 reactiveStreams,
                                    @Named(ServerFeature.SERVICE_TYPE) ServiceResourceObject serviceResourceObject) {
         this.reactiveStreams = reactiveStreams;
         this.serviceResourceObject = serviceResourceObject;
@@ -58,7 +53,7 @@ public class ServerSubscriberService
 
     @Override
     public void onStartup(Container container) {
-        reactiveStreams.subscriber(serviceResourceObject.serviceIdentifier(), serviceResourceObject.getLinkByRel(SUBSCRIBER_REL).orElseThrow(), this);
+        reactiveStreams.subscriber(serviceResourceObject.getLinkByRel(SUBSCRIBER_REL).orElseThrow().getHrefAsUri().getPath(), cfg -> this);
         LogManager.getLogger(getClass()).info("Startup");
     }
 
@@ -73,47 +68,22 @@ public class ServerSubscriberService
     }
 
     @Override
-    public EventSink<Event<String>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
-        Disruptor<Event<String>> disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("ServerSubscriber-"));
-        disruptor.handleEventsWith(new SubscriberEventHandler(subscription));
-        disruptor.start();
+    public void onSubscribe(Flow.Subscription subscription) {
 
-        subscription.request(1024);
+    }
 
-        return disruptor.getRingBuffer();
+    @Override
+    public void onNext(String item) {
+        System.out.println(item);
     }
 
     @Override
     public void onError(Throwable throwable) {
-        System.out.println(throwable);
+
     }
 
     @Override
     public void onComplete() {
-        System.out.println("Done!");
-    }
 
-    public class SubscriberEventHandler
-            implements EventHandler<Event<String>>
-    {
-        private ReactiveEventStreams.Subscription subscription;
-        private long batchSize;
-
-        public SubscriberEventHandler(ReactiveEventStreams.Subscription subscription) {
-            this.subscription = subscription;
-        }
-
-        @Override
-        public void onEvent(Event<String> event, long sequence, boolean endOfBatch) throws Exception {
-            System.out.println(event.event);
-
-            if (endOfBatch)
-                subscription.request(batchSize);
-        }
-
-        @Override
-        public void onBatchStart(long batchSize) {
-            this.batchSize = batchSize;
-        }
     }
 }

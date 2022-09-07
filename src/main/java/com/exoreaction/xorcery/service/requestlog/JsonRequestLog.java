@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.requestlog;
 
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.Event;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -13,16 +13,17 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
+import org.reactivestreams.Subscriber;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 public class JsonRequestLog
         implements RequestLog {
-    private final AtomicReference<EventSink<Event<ObjectNode>>> eventSink = new AtomicReference<>();
+    private final AtomicReference<Flow.Subscriber<? super WithMetadata<ObjectNode>>> subscriber = new AtomicReference<>();
     private LoggingMetadata loggingMetadata;
 
     public JsonRequestLog(LoggingMetadata loggingMetadata) {
@@ -30,17 +31,13 @@ public class JsonRequestLog
     }
 
     // Backlog if no subscriber
-    List<RequestLog> backlog = new ArrayList<>();
+    List<WithMetadata<ObjectNode>> backlog = new ArrayList<>();
 
-    public void setEventSink(EventSink<Event<ObjectNode>> eventSink) {
-        this.eventSink.set(eventSink);
+    public void setSubscriber(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
+        this.subscriber.set(subscriber);
 
-        for (RequestLog requestResponse : backlog) {
-            eventSink.publishEvent((e, seq, md, ev) ->
-            {
-                e.metadata = md;
-                e.event = ev;
-            }, requestResponse.metadata, requestResponse.event);
+        for (WithMetadata<ObjectNode> requestResponse : backlog) {
+            subscriber.onNext(requestResponse);
         }
         backlog.clear();
     }
@@ -81,16 +78,12 @@ public class JsonRequestLog
 
             ObjectNode event = node;
 
-            EventSink<Event<ObjectNode>> sink = eventSink.get();
+            Flow.Subscriber<? super WithMetadata<ObjectNode>> sink = subscriber.get();
             if (sink != null) {
-                sink.publishEvent((e, seq, md, ev) ->
-                {
-                    e.metadata = md;
-                    e.event = ev;
-                }, metadata, event);
+                sink.onNext(new WithMetadata<>(metadata, event));
             } else
             {
-                backlog.add(new RequestLog(metadata, event));
+                backlog.add(new WithMetadata<>(metadata, event));
             }
         } catch (Exception e) {
             LogManager.getLogger(getClass()).error("Could not log request", e);

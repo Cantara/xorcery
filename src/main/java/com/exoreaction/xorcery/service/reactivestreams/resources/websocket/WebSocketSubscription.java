@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -9,10 +9,11 @@ import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-class WebSocketSubscription implements ReactiveEventStreams.Subscription {
+class WebSocketSubscription implements Flow.Subscription {
 
     private static final Logger logger = LogManager.getLogger(WebSocketSubscription.class);
 

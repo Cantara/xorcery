@@ -17,6 +17,7 @@ import com.exoreaction.xorcery.service.opensearch.logging.LoggingConductorListen
 import com.exoreaction.xorcery.service.opensearch.metrics.MetricsConductorListener;
 import com.exoreaction.xorcery.service.opensearch.requestlog.RequestLogConductorListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,7 +58,7 @@ public class OpenSearchService
     private final OpenSearchClient client;
     private final ObjectMapper objectMapper;
     private Conductor conductor;
-    private ReactiveStreams reactiveStreams;
+    private ReactiveStreams2 reactiveStreams;
     private ScheduledExecutorService scheduledExecutorService;
     private Configuration configuration;
     private JettyHttpClientSupplier instance;
@@ -87,7 +88,7 @@ public class OpenSearchService
 
     @Inject
     public OpenSearchService(Conductor conductor,
-                             ReactiveStreams reactiveStreams,
+                             ReactiveStreams2 reactiveStreams,
                              Configuration configuration,
                              JettyHttpClientSupplier instance,
                              Xorcery xorcery,

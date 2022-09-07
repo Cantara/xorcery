@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
@@ -12,43 +12,42 @@ import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.util.concurrent.Flow;
+import java.util.function.Function;
 
 /**
  * @author rickardoberg
  * @since 15/04/2022
  */
 
-public class SubscriberWebSocketServlet<T>
+public class SubscriberWebSocketServlet
         extends JettyWebSocketServlet {
     private String path;
-    private ReactiveEventStreams.Subscriber<T> subscriber;
+    private Function<Configuration, Flow.Subscriber<Object>> subscriberFactory;
     private MessageBodyWriter<Object> messageBodyWriter;
     private MessageBodyReader<Object> messageBodyReader;
     private Type eventType;
     private Configuration configuration;
     private ObjectMapper objectMapper;
     private ByteBufferPool pool;
-    private Marker marker;
 
     public SubscriberWebSocketServlet(String path,
-                                      ReactiveEventStreams.Subscriber<T> subscriber,
+                                      Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
                                       MessageBodyWriter<Object> messageBodyWriter,
                                       MessageBodyReader<Object> messageBodyReader,
                                       Type eventType,
                                       Configuration configuration,
                                       ObjectMapper objectMapper,
-                                      ByteBufferPool pool,
-                                      Marker marker) {
+                                      ByteBufferPool pool) {
 
         this.path = path;
-        this.subscriber = subscriber;
+        this.subscriberFactory = subscriberFactory;
         this.messageBodyWriter = messageBodyWriter;
         this.messageBodyReader = messageBodyReader;
         this.eventType = eventType;
         this.configuration = configuration;
         this.objectMapper = objectMapper;
         this.pool = pool;
-        this.marker = marker;
     }
 
     @Override
@@ -57,8 +56,6 @@ public class SubscriberWebSocketServlet<T>
         factory.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idle_timeout").orElse(-1L)));
 
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
-        {
-            return new SubscriberWebSocketEndpoint<T>(jettyServerUpgradeRequest.getRequestPath(), subscriber, messageBodyWriter, messageBodyReader, objectMapper, eventType, pool, marker);
-        });
+                new SubscriberWebSocketEndpoint(jettyServerUpgradeRequest.getRequestPath(), subscriberFactory, messageBodyWriter, messageBodyReader, objectMapper, eventType, pool));
     }
 }

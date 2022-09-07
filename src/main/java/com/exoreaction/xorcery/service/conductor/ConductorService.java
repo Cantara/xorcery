@@ -14,8 +14,10 @@ import com.exoreaction.xorcery.service.conductor.resources.model.Group;
 import com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplate;
 import com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplates;
 import com.exoreaction.xorcery.service.conductor.resources.model.Groups;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.Publisher;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.exoreaction.xorcery.service.registry.api.RegistryListener;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,6 +39,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Flow;
 
 /**
  * @author rickardoberg
@@ -74,7 +77,7 @@ public class ConductorService
     private Registry registry;
     private ServiceResourceObject sro;
     private Configuration configuration;
-    private ReactiveStreams reactiveStreams;
+    private ReactiveStreams2 reactiveStreams;
 
 
     private final GroupTemplates groupTemplates;
@@ -82,7 +85,7 @@ public class ConductorService
     private List<ConductorListener> listeners = new CopyOnWriteArrayList<>();
 
     @Inject
-    public ConductorService(ReactiveStreams reactiveStreams, Registry registry,
+    public ConductorService(ReactiveStreams2 reactiveStreams, Registry registry,
                             @Named(SERVICE_TYPE) ServiceResourceObject sro, Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
         this.registry = registry;
@@ -167,7 +170,7 @@ public class ConductorService
 
         sro.getLinkByRel("conductorevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(sro.serviceIdentifier(), link, new ConductorPublisher());
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new ConductorPublisher());
         });
 
         registry.addRegistryListener(new ConductorRegistryListener());
@@ -219,9 +222,9 @@ public class ConductorService
     }
 
     private class ConductorPublisher
-            implements ReactiveEventStreams.Publisher<ConductorChange> {
+            implements Flow.Publisher<ConductorChange> {
         @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<ConductorChange> subscriber, Configuration configuration) {
+        public void subscribe(Flow.Subscriber<? super ConductorChange> subscriber) {
 
         }
     }

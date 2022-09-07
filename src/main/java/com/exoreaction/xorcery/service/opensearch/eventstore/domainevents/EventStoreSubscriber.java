@@ -1,21 +1,24 @@
 package com.exoreaction.xorcery.service.opensearch.eventstore.domainevents;
 
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
 import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.disruptor.Event;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 
-public class EventStoreSubscriber
-        implements ReactiveEventStreams.Subscriber<ArrayNode> {
+import java.util.concurrent.Flow;
 
-    private Disruptor<Event<ArrayNode>> disruptor;
+public class EventStoreSubscriber
+        implements Flow.Subscriber<WithMetadata<ArrayNode>> {
+
+    private Disruptor<WithMetadata<ArrayNode>> disruptor;
     private final String indexName;
     private final OpenSearchClient client;
     private Listeners<ProjectionListener> listeners;
@@ -32,16 +35,27 @@ public class EventStoreSubscriber
     }
 
     @Override
-    public EventSink<Event<ArrayNode>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
-        disruptor = new Disruptor<>(Event::new, 4096, new NamedThreadFactory("OpenSearchEventStoreDomainEventsDisruptorIn-"),
+    public void onSubscribe(Flow.Subscription subscription) {
+        disruptor = new Disruptor<>(WithMetadata::new, 4096, new NamedThreadFactory("OpenSearchEventStoreDomainEventsDisruptorIn-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
         disruptor.handleEventsWith(new OpenSearchEventStoreEventHandler(client, subscription, indexName, listeners));
         disruptor.start();
         subscription.request(4096);
-        return disruptor.getRingBuffer();
     }
 
+    @Override
+    public void onNext(WithMetadata<ArrayNode> item) {
+        disruptor.publishEvent((e, seq, event) ->
+        {
+            e.set(event);
+        }, item);
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+        disruptor.shutdown();
+    }
     @Override
     public void onComplete() {
         disruptor.shutdown();

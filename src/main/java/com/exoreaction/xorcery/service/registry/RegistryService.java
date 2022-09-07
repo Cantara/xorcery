@@ -3,7 +3,7 @@ package com.exoreaction.xorcery.service.registry;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
-import com.exoreaction.xorcery.disruptor.Event;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
@@ -11,10 +11,8 @@ import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
-import com.exoreaction.xorcery.service.reactivestreams.api.SubscriberEventSink;
+import com.exoreaction.xorcery.service.reactivestreams.api.*;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.service.registry.api.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -47,7 +45,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 /**
  * @author rickardoberg
@@ -64,10 +64,10 @@ public class RegistryService
 
     private static final Logger logger = LogManager.getLogger(RegistryService.class);
 
-    private final Disruptor<Event<RegistryChange>> disruptor;
+    private final Disruptor<WithMetadata<RegistryChange>> disruptor;
     private ServiceResourceObject resourceObject;
     private IterableProvider<ServiceResourceObject> serviceResources;
-    private ReactiveStreams reactiveStreams;
+    private ReactiveStreams2 reactiveStreams;
     private final Configuration configuration;
     private final JsonApiClient jsonApiClient;
 
@@ -99,14 +99,14 @@ public class RegistryService
     private StartupRegistration registration;
     private final List<ServerResourceDocument> servers = new CopyOnWriteArrayList<>();
 
-    private List<SubscriberEventSink<RegistryChange>> subscribers = new CopyOnWriteArrayList<>();
+    private List<Flow.Subscriber<? super RegistryChange>> subscribers = new CopyOnWriteArrayList<>();
 
     private List<RegistryListener> listeners = new CopyOnWriteArrayList<>();
 
     @Inject
     public RegistryService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
                            IterableProvider<ServiceResourceObject> serviceResources,
-                           ReactiveStreams reactiveStreams,
+                           ReactiveStreams2 reactiveStreams,
                            Configuration configuration,
                            JettyHttpClientContract clientInstance,
                            ServletContextHandler servletContextHandler) {
@@ -123,8 +123,8 @@ public class RegistryService
 
         this.registryLink = new Link("master", this.configuration.getString("registry.master").orElseThrow());
 
-        disruptor = new Disruptor<>(Event::new, 16, new NamedThreadFactory("RegistryChanges"));
-        UpstreamSubscriber upstreamSubscriber = new UpstreamSubscriber(disruptor.getRingBuffer());
+        disruptor = new Disruptor<>(WithMetadata::new, 16, new NamedThreadFactory("RegistryChanges"));
+        UpstreamSubscriber upstreamSubscriber = new UpstreamSubscriber(disruptor);
         disruptor.handleEventsWith(upstreamSubscriber);
         disruptor.start();
 
@@ -142,10 +142,20 @@ public class RegistryService
     public void onStartup(Container container) {
         resourceObject.getLinkByRel("registryevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(resourceObject.serviceIdentifier(), link, new RegistryPublisher());
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), new PublisherFactory());
         });
         registration.start();
     }
+
+    class PublisherFactory
+        implements Function<Configuration, RegistryPublisher>
+    {
+        @Override
+        public RegistryPublisher apply(Configuration configuration) {
+            return new RegistryPublisher(configuration);
+        }
+    }
+
 
     @Override
     public void onReload(Container container) {
@@ -155,10 +165,6 @@ public class RegistryService
     @Override
     public void onShutdown(Container container) {
         registration.stop();
-
-        for (SubscriberEventSink<RegistryChange> subscriber : subscribers) {
-            subscriber.subscriber().onComplete();
-        }
 
         disruptor.shutdown();
     }
@@ -200,11 +206,8 @@ public class RegistryService
     private void publish(RegistryChange registryChange) {
 
         if (!(registryChange instanceof AddedListener)) {
-            for (SubscriberEventSink<RegistryChange> subscriber : subscribers) {
-                subscriber.sink().publishEvent((event, seq, rc) ->
-                {
-                    event.event = rc;
-                }, registryChange);
+            for (Flow.Subscriber<? super RegistryChange> subscriber : subscribers) {
+                subscriber.onNext(registryChange);
             }
         }
     }
@@ -229,7 +232,7 @@ public class RegistryService
         {
             disruptor.getRingBuffer().publishEvent((e, seq, l) ->
             {
-                e.event = change;
+                e.set(null, change);
             }, change);
         });
     }
@@ -276,12 +279,14 @@ public class RegistryService
     }
 
     private class RegistryPublisher
-            implements ReactiveEventStreams.Publisher<RegistryChange> {
-        @Override
-        public void subscribe(ReactiveEventStreams.Subscriber<RegistryChange> subscriber, Configuration parameters) {
-            AtomicReference<SubscriberEventSink<RegistryChange>> eventSink = new AtomicReference<>();
+            implements Flow.Publisher<RegistryChange> {
 
-            eventSink.set(new SubscriberEventSink<>(subscriber, subscriber.onSubscribe(new ReactiveEventStreams.Subscription() {
+        public RegistryPublisher(Configuration configuration) {
+        }
+
+        @Override
+        public void subscribe(Flow.Subscriber<? super RegistryChange> subscriber) {
+            subscriber.onSubscribe(new Flow.Subscription() {
                 @Override
                 public void request(long n) {
 
@@ -289,12 +294,12 @@ public class RegistryService
 
                 @Override
                 public void cancel() {
-                    subscribers.remove(eventSink.get());
+                    subscribers.remove(subscriber);
                     subscriber.onComplete();
                 }
-            }, null)));
+            });
 
-            subscribers.add(eventSink.get());
+            subscribers.add(subscriber);
 
             ResourceObjects.Builder resourceObjects = new ResourceObjects.Builder();
             for (ServerResourceDocument serverResourceDocument : servers) {
@@ -311,15 +316,12 @@ public class RegistryService
             servers.forEach(srd -> serverDocuments.add(srd.resourceDocument().json()));
 
             RegistrySnapshot snapshot = new RegistrySnapshot(serverDocuments);
-            eventSink.get().sink().publishEvent((event, seq, rc) ->
-            {
-                event.event = rc;
-            }, snapshot);
+            subscriber.onNext(snapshot);
             logger.debug("Sent registry snapshot:" + snapshot);
         }
     }
 
-    public record StartupRegistration(ReactiveStreams reactiveStreams, JsonApiClient client,
+    public record StartupRegistration(ReactiveStreams2 reactiveStreams, JsonApiClient client,
                                       ServiceIdentifier serviceIdentifier,
                                       Link registryUri,
                                       ResourceDocument server,
@@ -348,7 +350,7 @@ public class RegistryService
                                     return sro.getLinkByRel("registryevents").map(link ->
                                     {
                                         logger.info("Subscribing to upstream registry");
-                                        reactiveStreams.subscribe(serviceIdentifier, link, upstreamSubscriber, Configuration.empty(), Configuration.empty());
+                                        reactiveStreams.subscribe(link.getHrefAsUri(), Configuration.empty(), upstreamSubscriber);
                                         return CompletableFuture.completedStage(registry);
                                     }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry")));
                                 }
@@ -395,30 +397,43 @@ public class RegistryService
     }
 
     private class UpstreamSubscriber
-            implements ReactiveEventStreams.Subscriber<RegistryChange>, EventHandler<Event<RegistryChange>> {
+            implements Flow.Subscriber<WithMetadata<RegistryChange>>, EventHandler<WithMetadata<RegistryChange>> {
 
-        private RingBuffer<Event<RegistryChange>> disruptor;
-        private ReactiveEventStreams.Subscription subscription;
+        private Disruptor<WithMetadata<RegistryChange>> disruptor;
+        private Flow.Subscription subscription;
 
-        public UpstreamSubscriber(RingBuffer<Event<RegistryChange>> disruptor) {
+        public UpstreamSubscriber(Disruptor<WithMetadata<RegistryChange>> disruptor) {
             this.disruptor = disruptor;
         }
 
         @Override
-        public EventSink<Event<RegistryChange>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
+        public void onSubscribe(Flow.Subscription subscription) {
             logger.debug("Registry upstream onSubscribe");
             this.subscription = subscription;
             subscription.request(1);
-            return disruptor;
+        }
+
+        @Override
+        public void onNext(WithMetadata<RegistryChange> item) {
+            disruptor.publishEvent((e, s, event) ->
+            {
+                e.set(event);
+            }, item);
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            disruptor.shutdown();
         }
 
         @Override
         public void onComplete() {
+            disruptor.shutdown();
         }
 
         @Override
-        public void onEvent(Event<RegistryChange> event, long sequence, boolean endOfBatch) throws Exception {
-            handleChange(event.event);
+        public void onEvent(WithMetadata<RegistryChange> event, long sequence, boolean endOfBatch) throws Exception {
+            handleChange(event.event());
             if (subscription != null) // Might be local event publish before subscription is established
                 subscription.request(1);
         }

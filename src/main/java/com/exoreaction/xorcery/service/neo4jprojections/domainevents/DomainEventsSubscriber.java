@@ -1,43 +1,54 @@
 package com.exoreaction.xorcery.service.neo4jprojections.domainevents;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.disruptor.Event;
-import com.exoreaction.xorcery.disruptor.EventWithResult;
-import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveEventStreams;
-import com.exoreaction.xorcery.util.Listeners;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
+import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
-import org.neo4j.graphdb.GraphDatabaseService;
 
+import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 class DomainEventsSubscriber
-        implements ReactiveEventStreams.Subscriber<EventWithResult<ArrayNode, Metadata>> {
+        implements Flow.Subscriber<WithResult<WithMetadata<ArrayNode>, Metadata>> {
 
-    private final Function<ReactiveEventStreams.Subscription, Neo4jDomainEventEventHandler> handlerFactory;
-    private Disruptor<Event<EventWithResult<ArrayNode, Metadata>>> disruptor;
+    private final Function<Flow.Subscription, Neo4jDomainEventEventHandler> handlerFactory;
+    private Disruptor<WithResult<WithMetadata<ArrayNode>, Metadata>> disruptor;
 
-    public DomainEventsSubscriber(Function<ReactiveEventStreams.Subscription, Neo4jDomainEventEventHandler> handlerFactory) {
+    public DomainEventsSubscriber(Function<Flow.Subscription, Neo4jDomainEventEventHandler> handlerFactory) {
         this.handlerFactory = handlerFactory;
     }
 
     @Override
-    public EventSink<Event<EventWithResult<ArrayNode, Metadata>>> onSubscribe(ReactiveEventStreams.Subscription subscription, Configuration configuration) {
-        disruptor = new Disruptor<>(Event::new, 1024, new NamedThreadFactory("Neo4jDomainEventsProjection-"),
+    public void onSubscribe(Flow.Subscription subscription) {
+        disruptor = new Disruptor<>(WithResult::new, 1024, new NamedThreadFactory("Neo4jDomainEventsProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
 
         disruptor.handleEventsWith(handlerFactory.apply(subscription));
         disruptor.start();
         subscription.request(disruptor.getBufferSize());
-        return disruptor.getRingBuffer();
+    }
+
+    @Override
+    public void onNext(WithResult<WithMetadata<ArrayNode>, Metadata> item) {
+
+        disruptor.publishEvent((e, seq, event) ->
+        {
+            e.set(event);
+        }, item);
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+        disruptor.shutdown();
     }
 
     @Override

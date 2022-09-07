@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.resources.model.Group;
-import com.exoreaction.xorcery.service.reactivestreams.api.ServiceIdentifier;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,12 +22,10 @@ public abstract class AbstractConductorListener
     protected final ServiceIdentifier serviceIdentifier;
     private final String rel;
     private final Map<String, List<Link>> groupServiceConnections = new ConcurrentHashMap<>();
-    private final Marker marker;
     private final Logger logger = LogManager.getLogger(getClass());
 
     public AbstractConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
         this.serviceIdentifier = serviceIdentifier;
-        this.marker = MarkerManager.getMarker(serviceIdentifier.toString());
         this.rel = rel;
     }
 
@@ -52,11 +50,10 @@ public abstract class AbstractConductorListener
                         sro.getLinkByRel(rel).ifPresent(link ->
                         {
                             List<Link> current = groupServiceConnections.computeIfAbsent(group.resourceObject().getId(), id -> new ArrayList<>());
-                            if (!current.contains(link))
-                            {
+                            if (!current.contains(link)) {
                                 current.add(link);
                                 connect(sro, link, group.getSourceConfiguration(), group.getConsumerConfiguration());
-                                logger.info(marker, "Connect {} to {}", serviceIdentifier, link.getHref());
+                                logger.info(MarkerManager.getMarker(link.getHref()), "Connect {} to {}", serviceIdentifier, link.getHref());
                             }
                         });
                     });
