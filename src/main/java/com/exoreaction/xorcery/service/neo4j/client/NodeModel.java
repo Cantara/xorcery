@@ -1,8 +1,6 @@
 package com.exoreaction.xorcery.service.neo4j.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.NullNode;
 import org.neo4j.graphdb.Node;
 
 import java.util.Optional;

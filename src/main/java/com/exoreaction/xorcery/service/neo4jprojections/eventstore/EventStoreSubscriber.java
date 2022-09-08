@@ -1,16 +1,13 @@
 package com.exoreaction.xorcery.service.neo4jprojections.eventstore;
 
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
-import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.neo4j.graphdb.GraphDatabaseService;

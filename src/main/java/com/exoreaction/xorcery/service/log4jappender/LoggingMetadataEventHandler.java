@@ -5,8 +5,6 @@ import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.core.LogEvent;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 public record LoggingMetadataEventHandler(Configuration configuration)
         implements EventHandler<WithMetadata<LogEvent>> {
 

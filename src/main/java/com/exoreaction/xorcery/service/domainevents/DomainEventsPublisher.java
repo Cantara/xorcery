@@ -10,7 +10,8 @@ import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventPublisher;
-import com.exoreaction.xorcery.service.reactivestreams.api.*;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -82,7 +83,7 @@ public class DomainEventsPublisher
         disruptor.start();
         resourceObject.getLinkByRel("domainevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> this);
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> this, DomainEventsPublisher.class);
         });
     }
 

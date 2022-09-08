@@ -1,14 +1,12 @@
 package com.exoreaction.xorcery.service.metrics;
 
-import com.codahale.metrics.*;
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.reactivestreams.api.*;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -16,11 +14,6 @@ import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.concurrent.Flow;
-import java.util.regex.Pattern;
 
 @Singleton
 public class Metrics
@@ -72,7 +65,7 @@ public class Metrics
     public void onStartup(Container container) {
         resourceObject.getLinkByRel("metricevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry));
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class);
         });
     }
 }

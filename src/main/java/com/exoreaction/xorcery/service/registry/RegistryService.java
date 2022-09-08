@@ -3,24 +3,22 @@ package com.exoreaction.xorcery.service.registry;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
-import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.reactivestreams.api.*;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
+import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.registry.api.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventSink;
-import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
@@ -46,7 +44,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Flow;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -142,7 +139,7 @@ public class RegistryService
     public void onStartup(Container container) {
         resourceObject.getLinkByRel("registryevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), new PublisherFactory());
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), RegistryPublisher::new, RegistryPublisher.class);
         });
         registration.start();
     }
@@ -350,7 +347,7 @@ public class RegistryService
                                     return sro.getLinkByRel("registryevents").map(link ->
                                     {
                                         logger.info("Subscribing to upstream registry");
-                                        reactiveStreams.subscribe(link.getHrefAsUri(), Configuration.empty(), upstreamSubscriber);
+                                        reactiveStreams.subscribe(link.getHrefAsUri(), Configuration.empty(), upstreamSubscriber, UpstreamSubscriber.class);
                                         return CompletableFuture.completedStage(registry);
                                     }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry")));
                                 }

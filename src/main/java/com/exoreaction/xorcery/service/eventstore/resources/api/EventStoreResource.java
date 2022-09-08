@@ -1,7 +1,5 @@
 package com.exoreaction.xorcery.service.eventstore.resources.api;
 
-import com.exoreaction.xorcery.cqrs.model.CommonModel;
-import com.exoreaction.xorcery.hyperschema.model.HyperSchema;
 import com.exoreaction.xorcery.hyperschema.model.Link;
 import com.exoreaction.xorcery.jaxrs.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.Links;

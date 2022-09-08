@@ -2,23 +2,18 @@ package com.exoreaction.xorcery.service.reactivestreams.resources.providers;
 
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.MediaTypes;
-import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.ext.MessageBodyReader;
-import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -28,7 +23,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-@Singleton
 @Provider
 @Consumes(MediaTypes.APPLICATION_JSON_API)
 public class WithMetadataMessageBodyReader
@@ -50,7 +44,7 @@ public class WithMetadataMessageBodyReader
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
         if (type.equals(WithMetadata.class)) {
-            Class<?> eventType = (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[1];
+            Class<?> eventType = (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
             return !messageBodyWorkers.getMessageBodyReadersForType(eventType).isEmpty();
         }
         return false;
@@ -59,13 +53,18 @@ public class WithMetadataMessageBodyReader
     @Override
     public WithMetadata<Object> readFrom(Class<WithMetadata<Object>> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
         try {
+            entityStream.mark(entityStream.available());
             JsonFactory jf = new JsonFactory(objectMapper);
             JsonParser jp = jf.createParser(entityStream);
-            JsonToken metadataToken = jp.nextToken();
+//            JsonToken metadataToken = jp.nextToken();
             Metadata metadata = jp.readValueAs(Metadata.class);
+            long offset = jp.getCurrentLocation().getByteOffset();
 
-            Type eventType = ((ParameterizedType) genericType).getActualTypeArguments()[1];
-            Class<?> eventClass = (Class<?>) eventType;
+            entityStream.reset();
+            entityStream.skip(offset);
+
+            Type eventType = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            Class<?> eventClass = Classes.getClass(eventType);
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(eventClass, eventType, new Annotation[0], MediaType.WILDCARD_TYPE);
 
             Object event = reader.readFrom(eventClass, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS, entityStream);

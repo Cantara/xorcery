@@ -5,7 +5,8 @@ import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.*;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -65,7 +66,7 @@ public class RequestLogService
     public void onStartup(Container container) {
         resourceObject.getLinkByRel("requestlogevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> this);
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> this, RequestLogService.class);
         });
     }
 

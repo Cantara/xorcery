@@ -38,9 +38,7 @@ import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
-import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.internal.inject.Bindings;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
@@ -62,7 +60,6 @@ import java.util.Optional;
 
 import static com.codahale.metrics.MetricRegistry.name;
 import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
-import static org.glassfish.jersey.internal.inject.Bindings.service;
 
 /**
  * @author rickardoberg

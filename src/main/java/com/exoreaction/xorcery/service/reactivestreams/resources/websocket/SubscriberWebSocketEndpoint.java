@@ -1,12 +1,15 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
+import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.apache.logging.log4j.LogManager;
@@ -38,6 +41,8 @@ public class SubscriberWebSocketEndpoint
         implements WebSocketPartialListener, WebSocketConnectionListener {
     private final static Logger logger = LogManager.getLogger(SubscriberWebSocketEndpoint.class);
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
+    private static final MultivaluedHashMap<String, String> EMPTY_HTTP_HEADERS = new MultivaluedHashMap<>();
+    private static final MultivaluedHashMap<String, Object> EMPTY_HTTP_HEADERS2 = new MultivaluedHashMap<>();
 
     private final String webSocketPath;
     private Session session;
@@ -55,9 +60,13 @@ public class SubscriberWebSocketEndpoint
     private final ByteBufferAccumulator byteBufferAccumulator;
     private final ByteBufferPool byteBufferPool;
 
-    private Type eventType;
+    private final Type eventType;
+    private final Class<Object> eventClass;
+    private final Type resultType;
+    private final Class<Object> resultClass;
+
     private final ObjectMapper objectMapper;
-    private Marker marker;
+    private final Marker marker;
 
     public SubscriberWebSocketEndpoint(String webSocketPath,
                                        Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
@@ -65,12 +74,16 @@ public class SubscriberWebSocketEndpoint
                                        MessageBodyReader<Object> eventReader,
                                        ObjectMapper objectMapper,
                                        Type eventType,
+                                       Type resultType,
                                        ByteBufferPool byteBufferPool) {
         this.webSocketPath = webSocketPath;
         this.subscriberFactory = subscriberFactory;
         this.resultWriter = resultWriter;
         this.eventReader = eventReader;
         this.eventType = eventType;
+        this.eventClass = Classes.getClass(eventType);
+        this.resultType = resultType;
+        this.resultClass = Classes.getClass(resultType);
         this.objectMapper = objectMapper;
         this.byteBufferPool = byteBufferPool;
         this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, false);
@@ -118,16 +131,8 @@ public class SubscriberWebSocketEndpoint
     private void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
             logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
-/* Move this to reader that can delegate
-            JsonFactory jf = new JsonFactory(objectMapper);
-            JsonParser jp = jf.createParser(inputStream);
-            JsonToken metadataToken = jp.nextToken();
-            Metadata metadata = jp.readValueAs(Metadata.class);
-            long location = jp.getCurrentLocation().getByteOffset();
-            byteBuffer.position((int) location);
-*/
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-            Object event = eventReader.readFrom((Class<Object>) eventType, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, null, inputStream);
+            Object event = eventReader.readFrom(eventClass, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS, inputStream);
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
             if (resultWriter != null) {
@@ -149,10 +154,11 @@ public class SubscriberWebSocketEndpoint
 
         try {
             if (throwable != null) {
+                resultOutputStream.write(ReactiveStreamsService.XOR);
                 ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
                 out.writeObject(throwable);
             } else {
-                resultWriter.writeTo(result, null, null, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, null, resultOutputStream);
+                resultWriter.writeTo(result, resultClass, resultType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS2, resultOutputStream);
             }
 
             ByteBuffer data = resultOutputStream.takeByteBuffer();

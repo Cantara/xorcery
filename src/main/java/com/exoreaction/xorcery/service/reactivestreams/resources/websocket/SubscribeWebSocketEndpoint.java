@@ -2,8 +2,10 @@ package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jetty.client.WriteCallbackCompletableFuture;
+import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.SubscriptionProcess;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
@@ -23,6 +25,7 @@ import org.eclipse.jetty.websocket.api.*;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.concurrent.CompletableFuture;
@@ -36,22 +39,29 @@ public class SubscribeWebSocketEndpoint
     private static final MultivaluedHashMap<String, String> EMPTY_HTTP_HEADERS = new MultivaluedHashMap<>();
     private static final MultivaluedHashMap<String, Object> EMPTY_HTTP_HEADERS2 = new MultivaluedHashMap<>();
 
+    private final String webSocketHref;
     private final Flow.Subscriber<Object> subscriber;
-    private MessageBodyReader<Object> eventReader;
-    private MessageBodyWriter<Object> resultWriter;
-    private ObjectMapper objectMapper;
-    private Session session;
-    private Marker marker;
+    private final MessageBodyReader<Object> eventReader;
+    private final MessageBodyWriter<Object> resultWriter;
+    private final Type eventType;
+    private final Class<Object> eventClass;
+    private final Type resultType;
+    private final Class<Object> resultClass;
 
-    private ByteBufferAccumulator byteBufferAccumulator;
-    private ByteBufferPool byteBufferPool;
-    private SubscriptionProcess subscriptionProcess;
-    private String webSocketHref;
-    private Configuration publisherConfiguration;
+    private final ObjectMapper objectMapper;
+    private final Marker marker;
+    private final ByteBufferAccumulator byteBufferAccumulator;
+    private final ByteBufferPool byteBufferPool;
+    private final SubscriptionProcess subscriptionProcess;
+    private final Configuration publisherConfiguration;
+
+    private Session session;
 
     public SubscribeWebSocketEndpoint(Flow.Subscriber<Object> subscriber,
                                       MessageBodyReader<Object> eventReader,
                                       MessageBodyWriter<Object> resultWriter,
+                                      Type eventType,
+                                      Type resultType,
                                       ObjectMapper objectMapper,
                                       ByteBufferPool byteBufferPool,
                                       SubscriptionProcess subscriptionProcess,
@@ -61,6 +71,10 @@ public class SubscribeWebSocketEndpoint
         this.subscriber = subscriber;
         this.eventReader = eventReader;
         this.resultWriter = resultWriter;
+        this.eventType = eventType;
+        this.eventClass = Classes.getClass(eventType);
+        this.resultType = resultType;
+        this.resultClass = Classes.getClass(resultType);
         this.objectMapper = objectMapper;
         this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, false);
         this.byteBufferPool = byteBufferPool;
@@ -116,7 +130,7 @@ public class SubscribeWebSocketEndpoint
             byteBuffer.position((int) location);
 */
 
-            Object event = eventReader.readFrom(null, null, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS, inputStream);
+            Object event = eventReader.readFrom(eventClass, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS, inputStream);
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
             if (resultWriter != null) {
@@ -135,10 +149,11 @@ public class SubscribeWebSocketEndpoint
 
         try {
             if (throwable != null) {
+                resultOutputStream.write(ReactiveStreamsService.XOR);
                 ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
                 out.writeObject(throwable);
             } else {
-                resultWriter.writeTo(result, null, null, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS2, resultOutputStream);
+                resultWriter.writeTo(result, resultClass, resultType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS2, resultOutputStream);
             }
 
             ByteBuffer data = resultOutputStream.takeByteBuffer();

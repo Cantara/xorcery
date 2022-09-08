@@ -1,19 +1,14 @@
 package com.exoreaction.xorcery.service.metrics;
 
 import com.codahale.metrics.*;
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.lmax.disruptor.EventSink;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 
 class MetricSubscription

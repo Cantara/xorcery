@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.registry.api;
 
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
-import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
+import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 
 import java.util.Collection;
 

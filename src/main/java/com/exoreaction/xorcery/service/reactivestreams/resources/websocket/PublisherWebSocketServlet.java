@@ -1,11 +1,9 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.service.reactivestreams.api.Publisher;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
-import org.apache.logging.log4j.Marker;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
@@ -24,8 +22,9 @@ public class PublisherWebSocketServlet
         extends JettyWebSocketServlet {
     private String path;
     private Function<Configuration, Flow.Publisher<Object>> publisherFactory;
-    private MessageBodyWriter<Object> messageBodyWriter;
-    private MessageBodyReader<Object> messageBodyReader;
+    private MessageBodyWriter<Object> eventWriter;
+    private MessageBodyReader<Object> resultReader;
+    private Type eventType;
     private Type resultType;
     private Configuration configuration;
     private ObjectMapper objectMapper;
@@ -33,8 +32,9 @@ public class PublisherWebSocketServlet
 
     public PublisherWebSocketServlet(String path,
                                      Function<Configuration, Flow.Publisher<Object>> publisherFactory,
-                                     MessageBodyWriter<Object> messageBodyWriter,
-                                     MessageBodyReader<Object> messageBodyReader,
+                                     MessageBodyWriter<Object> eventWriter,
+                                     MessageBodyReader<Object> resultReader,
+                                     Type eventType,
                                      Type resultType,
                                      Configuration configuration,
                                      ObjectMapper objectMapper,
@@ -42,8 +42,9 @@ public class PublisherWebSocketServlet
 
         this.path = path;
         this.publisherFactory = publisherFactory;
-        this.messageBodyWriter = messageBodyWriter;
-        this.messageBodyReader = messageBodyReader;
+        this.eventWriter = eventWriter;
+        this.resultReader = resultReader;
+        this.eventType = eventType;
         this.resultType = resultType;
         this.configuration = configuration;
         this.objectMapper = objectMapper;
@@ -56,6 +57,6 @@ public class PublisherWebSocketServlet
         factory.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idle_timeout").orElse(-1L)));
 
         factory.addMapping(path, (jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
-                new PublisherWebSocketEndpoint(jettyServerUpgradeRequest.getRequestPath(), publisherFactory, messageBodyWriter, messageBodyReader, resultType, objectMapper, pool));
+                new PublisherWebSocketEndpoint(jettyServerUpgradeRequest.getRequestPath(), publisherFactory, eventWriter, resultReader, eventType, resultType, objectMapper, pool));
     }
 }

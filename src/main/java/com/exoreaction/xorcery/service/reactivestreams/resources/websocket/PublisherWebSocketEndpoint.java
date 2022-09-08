@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -39,6 +40,8 @@ public class PublisherWebSocketEndpoint
         implements WebSocketListener, Flow.Subscriber<Object> {
     private final static Logger logger = LogManager.getLogger(PublisherWebSocketEndpoint.class);
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
+    private static final MultivaluedHashMap<String, String> EMPTY_HTTP_HEADERS = new MultivaluedHashMap<>();
+    private static final MultivaluedHashMap<String, Object> EMPTY_HTTP_HEADERS2 = new MultivaluedHashMap<>();
 
     private final String webSocketPath;
     private Session session;
@@ -49,7 +52,10 @@ public class PublisherWebSocketEndpoint
     private Flow.Subscription subscription;
     private final Semaphore requestSemaphore = new Semaphore(0);
 
+    private final Type eventType;
+    private final Class<Object> eventClass;
     private final Type resultType;
+    private final Class<Object> resultClass;
     private final MessageBodyWriter<Object> messageBodyWriter;
     private final MessageBodyReader<Object> messageBodyReader;
 
@@ -65,6 +71,7 @@ public class PublisherWebSocketEndpoint
     public PublisherWebSocketEndpoint(String webSocketPath, Function<Configuration, Flow.Publisher<Object>> publisherFactory,
                                       MessageBodyWriter<Object> messageBodyWriter,
                                       MessageBodyReader<Object> messageBodyReader,
+                                      Type eventType,
                                       Type resultType,
                                       ObjectMapper objectMapper,
                                       ByteBufferPool pool) {
@@ -72,7 +79,10 @@ public class PublisherWebSocketEndpoint
         this.publisherFactory = publisherFactory;
         this.messageBodyWriter = messageBodyWriter;
         this.messageBodyReader = messageBodyReader;
+        this.eventType = eventType;
+        this.eventClass = Classes.getClass(eventType);
         this.resultType = resultType;
+        this.resultClass = Classes.getClass(resultType);
         this.objectMapper = objectMapper;
         this.pool = pool;
         marker = MarkerManager.getMarker(webSocketPath);
@@ -127,8 +137,8 @@ public class PublisherWebSocketEndpoint
                 } else {
                     // Deserialize result
                     ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
-                    Object result = messageBodyReader.readFrom((Class) resultType, resultType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE,
-                            new MultivaluedHashMap<String, String>(), bin);
+                    Object result = messageBodyReader.readFrom(resultClass, resultType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE,
+                            EMPTY_HTTP_HEADERS, bin);
 
                     resultQueue.remove().complete(result);
                 }
@@ -215,13 +225,13 @@ public class PublisherWebSocketEndpoint
                 Object item = event.get();
                 if (messageBodyWriter != null) {
                     if (messageBodyReader == null) {
-                        messageBodyWriter.writeTo(item, item.getClass(), item.getClass(), EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, null, outputStream);
+                        messageBodyWriter.writeTo(item, eventClass, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS2, outputStream);
                     } else {
                         WithResult<?, Object> withResult = (WithResult<?, Object>) item;
                         CompletableFuture<Object> result = withResult.result().toCompletableFuture();
                         resultQueue.add(result);
 
-                        messageBodyWriter.writeTo(withResult.event(), withResult.event().getClass(), withResult.event().getClass(), EMPTY_ANNOTATIONS, null, null, outputStream);
+                        messageBodyWriter.writeTo(withResult.event(), eventClass, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS2, outputStream);
                     }
                 } else {
                     ByteBuffer eventBuffer = (ByteBuffer) event.get();

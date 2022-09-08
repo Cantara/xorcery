@@ -8,7 +8,6 @@ import com.exoreaction.xorcery.service.eventstore.EventStoreService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 
-import javax.ws.rs.core.Response;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 

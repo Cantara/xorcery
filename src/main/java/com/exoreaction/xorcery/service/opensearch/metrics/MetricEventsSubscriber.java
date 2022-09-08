@@ -2,16 +2,13 @@ package com.exoreaction.xorcery.service.opensearch.metrics;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.metrics.MetricsMetadata;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.document.BulkResponse;
 import com.exoreaction.xorcery.service.opensearch.client.document.IndexBulkRequest;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.apache.logging.log4j.LogManager;
 

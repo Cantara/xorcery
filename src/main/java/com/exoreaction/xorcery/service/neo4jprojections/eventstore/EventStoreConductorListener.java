@@ -1,27 +1,28 @@
 package com.exoreaction.xorcery.service.neo4jprojections.eventstore;
 
-import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.rest.RestProcess;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
-import com.exoreaction.xorcery.util.Listeners;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.Link;
+import com.exoreaction.xorcery.rest.RestProcess;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
-import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.server.model.ServiceIdentifier;
+import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class EventStoreConductorListener extends AbstractConductorListener {
@@ -104,7 +105,7 @@ public class EventStoreConductorListener extends AbstractConductorListener {
 
                                     reactiveStreams.subscribe(link.getHrefAsUri(),
                                             sourceConfiguration,
-                                            new EventStoreSubscriber(consumerConfiguration, parameters, graphDatabase.getGraphDatabaseService(), listeners, finalLastRevision, isLive.apply(projectionId)));
+                                            new EventStoreSubscriber(consumerConfiguration, parameters, graphDatabase.getGraphDatabaseService(), listeners, finalLastRevision, isLive.apply(projectionId)), EventStoreSubscriber.class);
                                 });
                     });
         } catch (JsonProcessingException e) {

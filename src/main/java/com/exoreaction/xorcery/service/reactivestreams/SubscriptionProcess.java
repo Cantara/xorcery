@@ -1,9 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.jsonapi.model.Link;
-import com.exoreaction.xorcery.server.model.ServiceIdentifier;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
+import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscribeWebSocketEndpoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.ext.MessageBodyReader;
@@ -24,15 +22,21 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ForkJoinPool;
 
-public record SubscriptionProcess(WebSocketClient webSocketClient, ObjectMapper objectMapper, Timer timer,
+public record SubscriptionProcess(WebSocketClient webSocketClient,
+                                  ObjectMapper objectMapper,
+                                  Timer timer,
                                   Logger logger,
-                                  ByteBufferPool byteBufferPool, MessageBodyReader<Object> reader,
-                                  MessageBodyWriter<Object> writer,
+                                  ByteBufferPool byteBufferPool,
+                                  MessageBodyReader<Object> eventReader,
+                                  MessageBodyWriter<Object> resultWriter,
+                                  Type eventType,
+                                  Type resultType,
                                   URI publisherWebsocketUri,
                                   Configuration publisherConfiguration,
                                   Flow.Subscriber<Object> subscriber,
                                   CompletableFuture<Void> result
-) {
+)
+        implements RestProcess<Void> {
     public void start() {
         if (result.isDone()) {
             return;
@@ -47,8 +51,17 @@ public record SubscriptionProcess(WebSocketClient webSocketClient, ObjectMapper 
             Marker marker = MarkerManager.getMarker(publisherWebsocketUri.toASCIIString());
 
             try {
-                webSocketClient.connect(new SubscribeWebSocketEndpoint(subscriber(), reader, writer, objectMapper,
-                                byteBufferPool, this, publisherWebsocketUri.toASCIIString(), publisherConfiguration), publisherWebsocketUri)
+                webSocketClient.connect(new SubscribeWebSocketEndpoint(
+                                subscriber(),
+                                eventReader,
+                                resultWriter,
+                                eventType,
+                                resultType,
+                                objectMapper,
+                                byteBufferPool,
+                                this,
+                                publisherWebsocketUri.toASCIIString(),
+                                publisherConfiguration), publisherWebsocketUri)
                         .whenComplete(this::complete);
             } catch (IOException e) {
                 logger.error(marker, "Could not subscribe to " + publisherWebsocketUri.toASCIIString(), e);

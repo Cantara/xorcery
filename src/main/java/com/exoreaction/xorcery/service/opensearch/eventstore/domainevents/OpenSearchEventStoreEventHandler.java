@@ -1,12 +1,10 @@
 package com.exoreaction.xorcery.service.opensearch.eventstore.domainevents;
 
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.disruptor.handlers.DefaultEventHandler;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.document.BulkResponse;
 import com.exoreaction.xorcery.service.opensearch.client.document.IndexBulkRequest;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscription;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

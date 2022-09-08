@@ -8,6 +8,7 @@ import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.PublisherWebSocketServlet;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscriberWebSocketServlet;
 import com.exoreaction.xorcery.service.registry.api.Registry;
+import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -28,21 +29,18 @@ import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.reactivestreams.Publisher;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Timer;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 @Singleton
 public class ReactiveStreamsService
@@ -50,6 +48,9 @@ public class ReactiveStreamsService
 
     private static final Logger logger = LogManager.getLogger(ReactiveStreamsService.class);
     public static final String SERVICE_TYPE = "reactivestreams";
+
+    // Magic bytes for sending exceptions
+    public static final byte[] XOR = "XOR".getBytes(StandardCharsets.UTF_8);
 
     @Provider
     public static class Feature
@@ -169,7 +170,8 @@ public class ReactiveStreamsService
     // Server
     @Override
     public CompletionStage<Void> publisher(String publisherWebsocketPath,
-                                           Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory) {
+                                           Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,
+                                           Class<? extends Flow.Publisher<?>> publisherType) {
         publishers.put(publisherWebsocketPath, publisherFactory);
 
         CompletableFuture<Void> result = new CompletableFuture<>();
@@ -180,11 +182,22 @@ public class ReactiveStreamsService
             publishers.remove(publisherWebsocketPath);
         });
 
-        MessageBodyWriter<Object> writer = getPublisherFactoryEventWriter(publisherFactory);
-        MessageBodyReader<Object> reader = getPublisherFactoryResultReader(publisherFactory).orElse(null);
-        Type resultType = getResultType(publisherFactory);
+        Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
+        Type eventType = getEventType(type);
+        Optional<Type> resultType = getResultType(type);
+        MessageBodyWriter<Object> eventWriter = getWriter(eventType);
+        MessageBodyReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
 
-        PublisherWebSocketServlet servlet = new PublisherWebSocketServlet(publisherWebsocketPath, config -> new PublisherTracker((Flow.Publisher<Object>) publisherFactory.apply(config)), writer, reader, resultType, configuration.configuration(), objectMapper, byteBufferPool);
+        PublisherWebSocketServlet servlet = new PublisherWebSocketServlet(
+                publisherWebsocketPath,
+                config -> new PublisherTracker((Flow.Publisher<Object>) publisherFactory.apply(config)),
+                eventWriter,
+                resultReader,
+                eventType,
+                resultType.orElse(null),
+                configuration.configuration(),
+                objectMapper,
+                byteBufferPool);
 
         servletContextHandler.addServlet(new ServletHolder(servlet), publisherWebsocketPath);
         logger.info("Added publisher websocket for " + publisherWebsocketPath);
@@ -194,9 +207,7 @@ public class ReactiveStreamsService
     }
 
     @Override
-    public CompletionStage<Void> subscriber(String subscriberWebsocketPath,
-                                            Function<Configuration, Flow.Subscriber<?>> subscriberFactory) {
-
+    public CompletionStage<Void> subscriber(String subscriberWebsocketPath, Function<Configuration, Flow.Subscriber<?>> subscriberFactory, Class<? extends Flow.Subscriber<?>> subscriberType) {
         subscribers.put(subscriberWebsocketPath, subscriberFactory);
 
         CompletableFuture<Void> result = new CompletableFuture<>();
@@ -207,11 +218,22 @@ public class ReactiveStreamsService
             subscribers.remove(subscriberWebsocketPath);
         });
 
-        MessageBodyReader<Object> reader = getSubscriberFactoryEventReader(subscriberFactory);
-        MessageBodyWriter<Object> writer = getSubscriberFactoryResultWriter(subscriberFactory).orElse(null);
-        Type resultType = null;
+        Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
+        Type eventType = getEventType(type);
+        Optional<Type> resultType = getResultType(type);
+        MessageBodyReader<Object> eventReader = getReader(eventType);
+        MessageBodyWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
-        SubscriberWebSocketServlet servlet = new SubscriberWebSocketServlet(subscriberWebsocketPath, config -> new SubscriberTracker((Flow.Subscriber<Object>) subscriberFactory.apply(config)), writer, reader, resultType, configuration.configuration(), objectMapper, byteBufferPool);
+        SubscriberWebSocketServlet servlet = new SubscriberWebSocketServlet(
+                subscriberWebsocketPath,
+                config -> new SubscriberTracker((Flow.Subscriber<Object>) subscriberFactory.apply(config)),
+                resultWriter,
+                eventReader,
+                eventType,
+                resultType.orElse(null),
+                configuration.configuration(),
+                objectMapper,
+                byteBufferPool);
 
         servletContextHandler.addServlet(new ServletHolder(servlet), subscriberWebsocketPath);
         logger.info("Added subscriber websocket for " + subscriberWebsocketPath);
@@ -221,11 +243,13 @@ public class ReactiveStreamsService
     }
 
     // Client
-
-
     @Override
-    public CompletionStage<Void> publish(URI subscriberWebsocketUri, Configuration subscriberConfiguration, Flow.Publisher<?> publisher) {
+    public CompletionStage<Void> publish(URI subscriberWebsocketUri, Configuration subscriberConfiguration, Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType) {
+        if (publisherType == null)
+            publisherType = (Class<? extends Flow.Publisher<?>>) publisher.getClass();
+
         CompletableFuture<Void> result = new CompletableFuture<>();
+
 
         // TODO Track the publishing process itself. Need to ensure they are cancelled on shutdown
         result.whenComplete((r, t) ->
@@ -244,24 +268,39 @@ public class ReactiveStreamsService
             }
         }
 
-        MessageBodyWriter<Object> writer = getPublisherEventWriter(publisher);
-        MessageBodyReader<Object> reader = getPublisherResultReader(publisher).orElse(null);
-        Type resultType = getResultType(publisher);
+        Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
+        Type eventType = getEventType(type);
+        Optional<Type> resultType = getResultType(type);
+
+        MessageBodyWriter<Object> eventWriter = getWriter(eventType);
+        MessageBodyReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
 
         // Publisher wrapper so we can track active subscriptions
         publisher = new PublisherTracker((Flow.Publisher<Object>) publisher);
 
         // Start publishing process
-        new PublishingProcess(webSocketClient, objectMapper, timer, logger, byteBufferPool,
-                reader, writer,
-                subscriberWebsocketUri, subscriberConfiguration,
+        new PublishingProcess(
+                webSocketClient,
+                objectMapper,
+                timer,
+                logger,
+                byteBufferPool,
+                resultReader,
+                eventWriter,
+                eventType,
+                resultType.orElse(null),
+                subscriberWebsocketUri,
+                subscriberConfiguration,
                 (Flow.Publisher<Object>) publisher,
                 result).start();
         return result;
     }
 
     @Override
-    public CompletionStage<Void> subscribe(URI publisherWebsocketUri, Configuration publisherConfiguration, Flow.Subscriber<?> subscriber) {
+    public CompletionStage<Void> subscribe(URI publisherWebsocketUri, Configuration publisherConfiguration, Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType) {
+        if (subscriberType == null)
+            subscriberType = (Class<? extends Flow.Subscriber<?>>) subscriber.getClass();
+
         CompletableFuture<Void> result = new CompletableFuture<>();
 
         // Track the subscription process itself. Need to ensure they are cancelled on shutdown
@@ -281,16 +320,27 @@ public class ReactiveStreamsService
             }
         }
 
-        MessageBodyReader<Object> reader = getSubscriberEventReader(subscriber);
-        MessageBodyWriter<Object> writer = getSubscriberResultWriter(subscriber).orElse(null);
-        Type resultType = getResultType(subscriber);
+        Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
+        Type eventType = getEventType(type);
+        Optional<Type> resultType = getResultType(type);
+
+        MessageBodyReader<Object> eventReader = getReader(eventType);
+        MessageBodyWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
         // Subscriber wrapper so we can track active subscriptions
         subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber);
 
         // Start subscription process
-        new SubscriptionProcess(webSocketClient, objectMapper, timer, logger, byteBufferPool,
-                reader, writer,
+        new SubscriptionProcess(
+                webSocketClient,
+                objectMapper,
+                timer,
+                logger,
+                byteBufferPool,
+                eventReader,
+                resultWriter,
+                eventType,
+                resultType.orElse(null),
                 publisherWebsocketUri,
                 publisherConfiguration,
                 (Flow.Subscriber<Object>) subscriber,
@@ -298,165 +348,112 @@ public class ReactiveStreamsService
         return result;
     }
 
-    private Type getResultType(Object value) {
-        return null; // TODO
+    private Type getEventType(Type type) {
+        return type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class) ? pt.getActualTypeArguments()[0] : type;
     }
 
-    private MessageBodyWriter<Object> getPublisherFactoryEventWriter(Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory) {
-        return Stream.of(publisherFactory.getClass().getGenericInterfaces())
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(Function.class))
-                .map(ParameterizedType.class::cast) // Function<C,Publisher<T>>
-                .map(pt -> pt.getActualTypeArguments()[1])
-                .map(Class.class::cast)
-                .flatMap(t -> Stream.of(t.getGenericInterfaces()))
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(Flow.Publisher.class))
-                .map(ParameterizedType.class::cast) // Publisher<T>
-                .map(pt -> pt.getActualTypeArguments()[0])
-                .map(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class) ? pt.getActualTypeArguments()[0] : type) // T or WithResult<T,R>
-                .map(type ->
-                {
-                    if (!type.equals(ByteBuffer.class)) {
-                        return Optional.ofNullable(messageBodyWorkers.getMessageBodyWriter((Class<Object>) type, type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                                .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyWriter for " + type));
-                    } else {
-                        return null;
-                    }
-                }).findFirst().orElseThrow(() ->
-                {
-                    return new IllegalArgumentException("Wrong type for publisherfactory");
-                });
+    private Optional<Type> getResultType(Type type) {
+        return Optional.ofNullable(type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class) ? pt.getActualTypeArguments()[1] : null);
     }
 
-    private Optional<MessageBodyReader<Object>> getPublisherFactoryResultReader(Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory) {
-        return Stream.of(publisherFactory.getClass().getGenericInterfaces())
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(Function.class))
-                .map(ParameterizedType.class::cast) // Function<C,Publisher<T>>
-                .map(pt -> pt.getActualTypeArguments()[1])
-                .map(Class.class::cast)
-                .flatMap(t -> Stream.of(t.getGenericInterfaces()))
-                .map(ParameterizedType.class::cast) // Publisher<T>
-                .map(pt -> pt.getActualTypeArguments()[0])
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class))
-                .map(ParameterizedType.class::cast) // WithResult<T,R>
-                .map(pt -> pt.getActualTypeArguments()[1]) // R
-                .map(type ->
-                {
-                    if (!type.equals(ByteBuffer.class)) {
-                        return Optional.ofNullable(messageBodyWorkers.getMessageBodyReader((Class<Object>) type, type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                                .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyReader for " + type));
-                    } else {
-                        return null;
+    /**
+     * From https://stackoverflow.com/questions/17297308/how-do-i-resolve-the-actual-type-for-a-generic-return-type-using-reflection
+     * <p>
+     * Resolves the actual generic type arguments for a base class, as viewed from a subclass or implementation.
+     *
+     * @param <T>        base type
+     * @param offspring  class or interface subclassing or extending the base type
+     * @param base       base class
+     * @param actualArgs the actual type arguments passed to the offspring class
+     * @return actual generic type arguments, must match the type parameters of the offspring class. If omitted, the
+     * type parameters will be used instead.
+     */
+    public static <T> Type[] resolveActualTypeArgs(Class<? extends T> offspring, Class<T> base, Type... actualArgs) {
+
+        assert offspring != null;
+        assert base != null;
+        assert actualArgs.length == 0 || actualArgs.length == offspring.getTypeParameters().length;
+
+        //  If actual types are omitted, the type parameters will be used instead.
+        if (actualArgs.length == 0) {
+            actualArgs = offspring.getTypeParameters();
+        }
+        // map type parameters into the actual types
+        Map<String, Type> typeVariables = new HashMap<String, Type>();
+        for (int i = 0; i < actualArgs.length; i++) {
+            TypeVariable<?> typeVariable = (TypeVariable<?>) offspring.getTypeParameters()[i];
+            typeVariables.put(typeVariable.getName(), actualArgs[i]);
+        }
+
+        // Find direct ancestors (superclass, interfaces)
+        List<Type> ancestors = new LinkedList<Type>();
+        if (offspring.getGenericSuperclass() != null) {
+            ancestors.add(offspring.getGenericSuperclass());
+        }
+        for (Type t : offspring.getGenericInterfaces()) {
+            ancestors.add(t);
+        }
+
+        // Recurse into ancestors (superclass, interfaces)
+        for (Type type : ancestors) {
+            if (type instanceof Class<?>) {
+                // ancestor is non-parameterized. Recurse only if it matches the base class.
+                Class<?> ancestorClass = (Class<?>) type;
+                if (base.isAssignableFrom(ancestorClass)) {
+                    Type[] result = resolveActualTypeArgs((Class<? extends T>) ancestorClass, base);
+                    if (result != null) {
+                        return result;
                     }
-                }).findFirst();
+                }
+            }
+            if (type instanceof ParameterizedType) {
+                // ancestor is parameterized. Recurse only if the raw type matches the base class.
+                ParameterizedType parameterizedType = (ParameterizedType) type;
+                Type rawType = parameterizedType.getRawType();
+                if (rawType instanceof Class<?>) {
+                    Class<?> rawTypeClass = (Class<?>) rawType;
+                    if (base.isAssignableFrom(rawTypeClass)) {
+
+                        // loop through all type arguments and replace type variables with the actually known types
+                        List<Type> resolvedTypes = new LinkedList<Type>();
+                        for (Type t : parameterizedType.getActualTypeArguments()) {
+                            if (t instanceof TypeVariable<?>) {
+                                Type resolvedType = typeVariables.get(((TypeVariable<?>) t).getName());
+                                resolvedTypes.add(resolvedType != null ? resolvedType : t);
+                            } else {
+                                resolvedTypes.add(t);
+                            }
+                        }
+
+                        Type[] result = resolveActualTypeArgs((Class<? extends T>) rawTypeClass, base, resolvedTypes.toArray(new Type[]{}));
+                        if (result != null) {
+                            return result;
+                        }
+                    }
+                }
+            }
+        }
+
+        // we have a result if we reached the base class.
+        return offspring.equals(base) ? actualArgs : null;
     }
 
-    private MessageBodyReader<Object> getSubscriberFactoryEventReader(Function<Configuration, Flow.Subscriber<?>> subscriberFactory) {
-        return Stream.of(subscriberFactory.getClass().getGenericInterfaces())
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(Function.class))
-                .map(ParameterizedType.class::cast) // Function<C,Subscriber<T>>
-                .map(pt -> pt.getActualTypeArguments()[1])
-                .map(ParameterizedType.class::cast) // Subscriber<T>
-                .map(pt -> pt.getActualTypeArguments()[0])
-                .map(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class) ? pt.getActualTypeArguments()[0] : type) // T or WithResult<T,R>
-                .map(type ->
-                {
-                    if (!type.equals(ByteBuffer.class)) {
-                        return Optional.ofNullable(messageBodyWorkers.getMessageBodyReader((Class<Object>) type, type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                                .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyWriter for " + type));
-                    } else {
-                        return null;
-                    }
-                }).findFirst().orElseThrow(() -> new IllegalArgumentException("Wrong type for subscriberfactory:" + subscriberFactory.getClass()));
+    private MessageBodyWriter<Object> getWriter(Type type) {
+        if (!type.equals(ByteBuffer.class)) {
+            return Optional.ofNullable(messageBodyWorkers.getMessageBodyWriter(Classes.getClass(type), type, new Annotation[0], MediaType.WILDCARD_TYPE))
+                    .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyWriter for " + type));
+        } else {
+            return null;
+        }
     }
 
-    private Optional<MessageBodyWriter<Object>> getSubscriberFactoryResultWriter(Function<Configuration, Flow.Subscriber<?>> subscriberFactory) {
-        return Stream.of(subscriberFactory.getClass().getGenericInterfaces())
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(Function.class))
-                .map(ParameterizedType.class::cast) // Function<C,Publisher<T>>
-                .map(pt -> pt.getActualTypeArguments()[1])
-                .map(ParameterizedType.class::cast) // Publisher<T>
-                .map(pt -> pt.getActualTypeArguments()[0])
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class))
-                .map(ParameterizedType.class::cast) // WithResult<T,R>
-                .map(pt -> pt.getActualTypeArguments()[1]) // R
-                .map(type ->
-                {
-                    if (!type.equals(ByteBuffer.class)) {
-                        return Optional.ofNullable(messageBodyWorkers.getMessageBodyWriter((Class<Object>) type, type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                                .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyReader for " + type));
-                    } else {
-                        return null;
-                    }
-                }).findFirst();
-    }
-
-    private MessageBodyWriter<Object> getPublisherEventWriter(Flow.Publisher<?> publisher) {
-        return Stream.of(publisher.getClass().getGenericInterfaces())
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(Publisher.class))
-                .map(ParameterizedType.class::cast) // Publisher<T>
-                .map(pt -> pt.getActualTypeArguments()[0])
-                .map(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class) ? pt.getActualTypeArguments()[0] : type) // T or WithResult<T,R>
-                .map(type ->
-                {
-                    if (!type.equals(ByteBuffer.class)) {
-                        return Optional.ofNullable(messageBodyWorkers.getMessageBodyWriter((Class<Object>) type, type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                                .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyWriter for " + type));
-                    } else {
-                        return null;
-                    }
-                }).findFirst().orElseThrow(() -> new IllegalArgumentException("Wrong type for publisherfactory"));
-    }
-
-    private Optional<MessageBodyReader<Object>> getPublisherResultReader(Flow.Publisher<?> publisherFactory) {
-        return Stream.of(publisherFactory.getClass().getGenericInterfaces())
-                .map(ParameterizedType.class::cast) // Publisher<T>
-                .map(pt -> pt.getActualTypeArguments()[0])
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class))
-                .map(ParameterizedType.class::cast) // WithResult<T,R>
-                .map(pt -> pt.getActualTypeArguments()[1]) // R
-                .map(type ->
-                {
-                    if (!type.equals(ByteBuffer.class)) {
-                        return Optional.ofNullable(messageBodyWorkers.getMessageBodyReader((Class<Object>) type, type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                                .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyReader for " + type));
-                    } else {
-                        return null;
-                    }
-                }).findFirst();
-    }
-
-    private MessageBodyReader<Object> getSubscriberEventReader(Flow.Subscriber<?> subscriber) {
-        return Stream.of(subscriber.getClass().getGenericInterfaces())
-                .map(ParameterizedType.class::cast) // Subscriber<T>
-                .map(pt -> pt.getActualTypeArguments()[0])
-                .map(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class) ? pt.getActualTypeArguments()[0] : type) // T or WithResult<T,R>
-                .map(type ->
-                {
-                    if (!type.equals(ByteBuffer.class)) {
-                        return Optional.ofNullable(messageBodyWorkers.getMessageBodyReader((Class<Object>) type, type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                                .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyWriter for " + type));
-                    } else {
-                        return null;
-                    }
-                }).findFirst().orElseThrow(() -> new IllegalArgumentException("Wrong type for subscriberfactory:" + subscriber.getClass()));
-    }
-
-    private Optional<MessageBodyWriter<Object>> getSubscriberResultWriter(Flow.Subscriber<?> subscriber) {
-        return Stream.of(subscriber.getClass().getGenericInterfaces())
-                .map(ParameterizedType.class::cast) // Subscriber<T>
-                .map(pt -> pt.getActualTypeArguments()[0])
-                .filter(type -> type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class))
-                .map(ParameterizedType.class::cast) // WithResult<T,R>
-                .map(pt -> pt.getActualTypeArguments()[1]) // R
-                .map(type ->
-                {
-                    if (!type.equals(ByteBuffer.class)) {
-                        return Optional.ofNullable(messageBodyWorkers.getMessageBodyWriter((Class<Object>) type, type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                                .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyReader for " + type));
-                    } else {
-                        return null;
-                    }
-                }).findFirst();
+    private MessageBodyReader<Object> getReader(Type type) {
+        if (!type.equals(ByteBuffer.class)) {
+            return Optional.ofNullable(messageBodyWorkers.getMessageBodyReader(Classes.getClass(type), type, new Annotation[0], MediaType.WILDCARD_TYPE))
+                    .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyReader for " + type));
+        } else {
+            return null;
+        }
     }
 
     private class SubscriberTracker implements Flow.Subscriber<Object> {

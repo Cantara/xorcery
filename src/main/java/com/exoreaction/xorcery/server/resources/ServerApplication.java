@@ -5,10 +5,7 @@ import org.glassfish.jersey.server.ServerProperties;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class ServerApplication
     extends ResourceConfig

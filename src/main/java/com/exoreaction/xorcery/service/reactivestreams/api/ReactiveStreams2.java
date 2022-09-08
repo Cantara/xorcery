@@ -12,17 +12,21 @@ import java.util.function.Function;
 public interface ReactiveStreams2 {
     // Server
     CompletionStage<Void> publisher(String publisherWebsocketPath,
-                                    Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory);
+                                    Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,
+                                    Class<? extends Flow.Publisher<?>> publisherType);
 
     CompletionStage<Void> subscriber(String subscriberWebsocketPath,
-                                     Function<Configuration, Flow.Subscriber<?>> subscriberFactory);
+                                     Function<Configuration, Flow.Subscriber<?>> subscriberFactory,
+                                     Class<? extends Flow.Subscriber<?>> subscriberType);
 
     // Client
     CompletionStage<Void> publish(URI subscriberWebsocketUri,
                                   Configuration subscriberConfiguration,
-                                  Flow.Publisher<?> publisher);
+                                  Flow.Publisher<?> publisher,
+                                  Class<? extends Flow.Publisher<?>> publisherType);
 
     CompletionStage<Void> subscribe(URI publisherWebsocketUri,
                                     Configuration publisherConfiguration,
-                                    Flow.Subscriber<?> subscriber);
+                                    Flow.Subscriber<?> subscriber,
+                                    Class<? extends Flow.Subscriber<?>> subscriberType);
 }

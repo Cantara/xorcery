@@ -2,13 +2,12 @@ package com.exoreaction.xorcery.service.conductor.api;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.resources.model.Group;
-import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
 import java.util.ArrayList;

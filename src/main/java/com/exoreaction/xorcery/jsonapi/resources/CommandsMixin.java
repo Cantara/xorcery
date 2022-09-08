@@ -23,7 +23,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static com.exoreaction.xorcery.jaxrs.MediaTypes.APPLICATION_JSON_API;
 import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.self;
 
 public interface CommandsMixin

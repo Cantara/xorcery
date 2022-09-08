@@ -2,7 +2,8 @@ package com.exoreaction.xorcery.service.opensearch.client.document;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
-import com.exoreaction.xorcery.service.opensearch.client.index.*;
+import com.exoreaction.xorcery.service.opensearch.client.index.CreateComponentTemplateRequest;
+import com.exoreaction.xorcery.service.opensearch.client.index.CreateIndexTemplateRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -24,9 +25,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
 
 @Disabled
 public class DocumentClientIT {

@@ -10,7 +10,6 @@ import jakarta.ws.rs.core.FeatureContext;
 import org.glassfish.jersey.InjectionManagerProvider;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
-import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
 
 import java.util.Objects;
 

@@ -14,10 +14,7 @@ import com.exoreaction.xorcery.service.conductor.resources.model.Group;
 import com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplate;
 import com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplates;
 import com.exoreaction.xorcery.service.conductor.resources.model.Groups;
-import com.exoreaction.xorcery.service.reactivestreams.api.Publisher;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
-import com.exoreaction.xorcery.service.reactivestreams.api.Subscriber;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.exoreaction.xorcery.service.registry.api.RegistryListener;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -170,7 +167,7 @@ public class ConductorService
 
         sro.getLinkByRel("conductorevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new ConductorPublisher());
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new ConductorPublisher(), ConductorPublisher.class);
         });
 
         registry.addRegistryListener(new ConductorRegistryListener());

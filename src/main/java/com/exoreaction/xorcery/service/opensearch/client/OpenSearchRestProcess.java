@@ -7,7 +7,6 @@ import jakarta.ws.rs.client.WebTarget;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public record OpenSearchRestProcess(Supplier<WebTarget> requests,

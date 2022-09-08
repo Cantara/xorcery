@@ -3,18 +3,18 @@ package com.exoreaction.xorcery.service.jmxmetrics;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.rest.RestProcess;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +38,9 @@ import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
-import javax.management.*;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.concurrent.*;
@@ -279,7 +281,7 @@ public class JmxMetrics
         private void pollMetrics(Link metricevents, String serverId, Collection<String> metricNames) {
             ObjectNode parameters = JsonNodeFactory.instance.objectNode();
             parameters.set("metric_names", parameters.textNode(String.join(",", metricNames)));
-            reactiveStreams.subscribe(metricevents.getHrefAsUri(), new Configuration(parameters), new MetricEventSubscriber(scheduledExecutorService, serverId));
+            reactiveStreams.subscribe(metricevents.getHrefAsUri(), new Configuration(parameters), new MetricEventSubscriber(scheduledExecutorService, serverId), MetricEventSubscriber.class);
         }
     }
 }

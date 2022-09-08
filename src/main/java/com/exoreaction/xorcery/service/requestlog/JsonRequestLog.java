@@ -1,11 +1,10 @@
 package com.exoreaction.xorcery.service.requestlog;
 
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.lmax.disruptor.EventSink;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.http.HttpHeader;
@@ -13,7 +12,6 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
-import org.reactivestreams.Subscriber;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,17 +1,16 @@
 package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
-import com.exoreaction.xorcery.util.Listeners;
-import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.domainevents.DomainEventsConductorListener;
 import com.exoreaction.xorcery.service.neo4jprojections.eventstore.EventStoreConductorListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -30,7 +29,6 @@ import org.glassfish.jersey.spi.Contract;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

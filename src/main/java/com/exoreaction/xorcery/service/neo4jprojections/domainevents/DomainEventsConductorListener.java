@@ -3,14 +3,13 @@ package com.exoreaction.xorcery.service.neo4jprojections.domainevents;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
+import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
-import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.server.model.ServiceIdentifier;
+import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import com.exoreaction.xorcery.util.Listeners;
 import jakarta.ws.rs.NotFoundException;
@@ -70,7 +69,7 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
                     reactiveStreams.subscribe(link.getHrefAsUri(),
                             sourceConfiguration,
                             new DomainEventsSubscriber(
-                                    subscription -> new Neo4jDomainEventEventHandler(graphDatabase.getGraphDatabaseService(), subscription, sourceConfiguration, consumerConfiguration, listeners, metricRegistry)));
+                                    subscription -> new Neo4jDomainEventEventHandler(graphDatabase.getGraphDatabaseService(), subscription, sourceConfiguration, consumerConfiguration, listeners, metricRegistry)), DomainEventsSubscriber.class);
 
                     // No catchup, we're live
                     isLive.apply(projectionId).complete(null);

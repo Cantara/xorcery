@@ -16,7 +16,6 @@ import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.Projec
 import com.exoreaction.xorcery.service.opensearch.logging.LoggingConductorListener;
 import com.exoreaction.xorcery.service.opensearch.metrics.MetricsConductorListener;
 import com.exoreaction.xorcery.service.opensearch.requestlog.RequestLogConductorListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;

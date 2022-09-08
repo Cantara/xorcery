@@ -6,7 +6,6 @@ import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -19,7 +18,7 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletionStage;
 
 @Contract
 @Singleton
@@ -81,13 +80,13 @@ public class EventStoreService
         // Read
         sro.getLinkByRel(EventStoreRels.readevents.name()).ifPresent(link ->
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new EventStorePublisher(client, objectMapper, cfg));
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
         });
 
         // Write
         sro.getLinkByRel(EventStoreRels.writeevents.name()).ifPresent(link ->
         {
-            reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new EventStoreSubscriber(client, cfg));
+            reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
         });
     }
 

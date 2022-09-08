@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public record Neo4jConfiguration(Configuration configuration) {
     Path databasePath() {

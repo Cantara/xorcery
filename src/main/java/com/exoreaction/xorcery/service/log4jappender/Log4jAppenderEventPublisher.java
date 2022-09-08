@@ -3,17 +3,14 @@ package com.exoreaction.xorcery.service.log4jappender;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
-import com.exoreaction.xorcery.service.reactivestreams.api.*;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
@@ -27,10 +24,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Flow;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 @WebListener
@@ -81,7 +75,7 @@ public class Log4jAppenderEventPublisher
         disruptor.handleEventsWith(new LoggingMetadataEventHandler(configuration))
                 .then(unicastEventHandler);
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(sro.serviceIdentifier(), cfg -> this, "logevents", reactiveStreams));
+        conductor.addConductorListener(new ClientPublisherConductorListener(sro.serviceIdentifier(), cfg -> this, getClass(), "logevents", reactiveStreams));
     }
 
     @Override
