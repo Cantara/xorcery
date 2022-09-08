@@ -4,9 +4,11 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -45,12 +47,13 @@ public class RequestLogService
     }
 
     private final ServiceResourceObject resourceObject;
-    private final ReactiveStreams2 reactiveStreams;
+    private final ReactiveStreams reactiveStreams;
     private final JsonRequestLog requestLog;
 
     @Inject
     public RequestLogService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
-                             ReactiveStreams2 reactiveStreams,
+                             ReactiveStreams reactiveStreams,
+                             Conductor conductor,
                              Server server,
                              Configuration configuration) {
         this.resourceObject = resourceObject;
@@ -60,6 +63,8 @@ public class RequestLogService
                 .configuration(configuration)
                 .build());
         server.setRequestLog(requestLog);
+
+        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> this, RequestLogService.class, "opensearch", reactiveStreams));
     }
 
     @Override

@@ -16,7 +16,7 @@ import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.Projec
 import com.exoreaction.xorcery.service.opensearch.logging.LoggingConductorListener;
 import com.exoreaction.xorcery.service.opensearch.metrics.MetricsConductorListener;
 import com.exoreaction.xorcery.service.opensearch.requestlog.RequestLogConductorListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,7 +57,7 @@ public class OpenSearchService
     private final OpenSearchClient client;
     private final ObjectMapper objectMapper;
     private Conductor conductor;
-    private ReactiveStreams2 reactiveStreams;
+    private ReactiveStreams reactiveStreams;
     private ScheduledExecutorService scheduledExecutorService;
     private Configuration configuration;
     private JettyHttpClientSupplier instance;
@@ -76,7 +76,7 @@ public class OpenSearchService
 
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-
+            builder.websocket("opensearch", "ws/opensearch");
         }
 
         @Override
@@ -87,7 +87,7 @@ public class OpenSearchService
 
     @Inject
     public OpenSearchService(Conductor conductor,
-                             ReactiveStreams2 reactiveStreams,
+                             ReactiveStreams reactiveStreams,
                              Configuration configuration,
                              JettyHttpClientSupplier instance,
                              Xorcery xorcery,
@@ -149,6 +149,14 @@ public class OpenSearchService
                             .register(instance)
                             .connectorProvider(new JettyConnectorProvider()), host),
                     reactiveStreams, sro.serviceIdentifier(), "requestlogevents"));
+
+            sro.getLinkByRel("opensearch").ifPresent(link ->
+            {
+                reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new OpenSearchServerSubscriber(new OpenSearchClient(new ClientConfig()
+                        .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.subscriber")).build())
+                        .register(instance)
+                        .connectorProvider(new JettyConnectorProvider()), host), cfg), OpenSearchServerSubscriber.class);
+            });
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

@@ -8,7 +8,7 @@ import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.EventStoreSubscriber;
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.ProjectionListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,11 +17,11 @@ public class EventStoreConductorListener extends AbstractConductorListener {
 
     private static final Logger logger = LogManager.getLogger(EventStoreConductorListener.class);
 
-    private ReactiveStreams2 reactiveStreams;
+    private ReactiveStreams reactiveStreams;
     private Listeners<ProjectionListener> listeners;
     private OpenSearchClient client;
 
-    public EventStoreConductorListener(OpenSearchClient client, ReactiveStreams2 reactiveStreams, ServiceIdentifier serviceIdentifier, String rel, Listeners<ProjectionListener> listeners) {
+    public EventStoreConductorListener(OpenSearchClient client, ReactiveStreams reactiveStreams, ServiceIdentifier serviceIdentifier, String rel, Listeners<ProjectionListener> listeners) {
         super(serviceIdentifier, rel);
         this.client = client;
         this.reactiveStreams = reactiveStreams;

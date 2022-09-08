@@ -6,7 +6,9 @@ import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.conductor.api.Conductor;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -16,7 +18,7 @@ import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 @Singleton
-public class Metrics
+public class MetricsService
         extends AbstractContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "metrics";
@@ -38,23 +40,26 @@ public class Metrics
 
         @Override
         protected void configure() {
-            context.register(Metrics.class, ContainerLifecycleListener.class);
+            context.register(MetricsService.class, ContainerLifecycleListener.class);
         }
     }
 
     private ServiceResourceObject resourceObject;
-    private final ReactiveStreams2 reactiveStreams;
+    private final ReactiveStreams reactiveStreams;
+    private Conductor conductor;
     private MetricRegistry metricRegistry;
 
     private final DeploymentMetadata deploymentMetadata;
 
     @Inject
-    public Metrics(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
-                   ReactiveStreams2 reactiveStreams,
-                   MetricRegistry metricRegistry,
-                   Configuration configuration) {
+    public MetricsService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
+                          ReactiveStreams reactiveStreams,
+                          Conductor conductor,
+                          MetricRegistry metricRegistry,
+                          Configuration configuration) {
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
+        this.conductor = conductor;
         this.metricRegistry = metricRegistry;
         this.deploymentMetadata = new MetricsMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
@@ -67,5 +72,6 @@ public class Metrics
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class);
         });
+        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class, "opensearch", reactiveStreams));
     }
 }

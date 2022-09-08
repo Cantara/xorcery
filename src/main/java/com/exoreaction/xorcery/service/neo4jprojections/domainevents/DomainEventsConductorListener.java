@@ -10,7 +10,7 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
@@ -24,13 +24,13 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
     private Logger logger = LogManager.getLogger(getClass());
 
     private GraphDatabases graphDatabases;
-    private ReactiveStreams2 reactiveStreams;
+    private ReactiveStreams reactiveStreams;
     private MetricRegistry metricRegistry;
     private Listeners<ProjectionListener> listeners;
     private Function<String, CompletableFuture<Void>> isLive;
 
     public DomainEventsConductorListener(GraphDatabases graphDatabases,
-                                         ReactiveStreams2 reactiveStreams,
+                                         ReactiveStreams reactiveStreams,
                                          ServiceIdentifier serviceIdentifier,
                                          String rel,
                                          MetricRegistry metricRegistry,

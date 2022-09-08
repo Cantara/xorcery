@@ -10,8 +10,9 @@ import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventPublisher;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -27,9 +28,8 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
 @Singleton
-public class DomainEventsPublisher
+public class DomainEventsService
         implements DomainEventPublisher,
-        Flow.Publisher<DomainEventHolder>,
         ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "domainevents";
@@ -50,20 +50,20 @@ public class DomainEventsPublisher
 
         @Override
         protected void configure() {
-            context.register(DomainEventsPublisher.class, DomainEventPublisher.class, ContainerLifecycleListener.class);
+            context.register(DomainEventsService.class, DomainEventPublisher.class, ContainerLifecycleListener.class);
         }
     }
 
-    private final ReactiveStreams2 reactiveStreams;
+    private final ReactiveStreams reactiveStreams;
     private final DeploymentMetadata deploymentMetadata;
     private ServiceResourceObject resourceObject;
-    private final UnicastEventHandler<DomainEventHolder> subscribers = new UnicastEventHandler<>();
-    private final Disruptor<DomainEventHolder> disruptor;
+    private final UnicastEventHandler<WithResult<WithMetadata<DomainEvents>, Metadata>> subscribers = new UnicastEventHandler<>();
+    private final Disruptor<WithResult<WithMetadata<DomainEvents>, Metadata>> disruptor;
 
     @Inject
-    public DomainEventsPublisher(ReactiveStreams2 reactiveStreams,
-                                 @Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
-                                 Configuration configuration) {
+    public DomainEventsService(ReactiveStreams reactiveStreams,
+                               @Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
+                               Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
         this.resourceObject = resourceObject;
         this.deploymentMetadata = new DomainEventMetadata.Builder(new Metadata.Builder())
@@ -71,7 +71,7 @@ public class DomainEventsPublisher
                 .build();
 
         disruptor =
-                new Disruptor<>(DomainEventHolder::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
+                new Disruptor<>(WithResult::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
                         ProducerType.MULTI,
                         new BlockingWaitStrategy());
 
@@ -83,7 +83,7 @@ public class DomainEventsPublisher
         disruptor.start();
         resourceObject.getLinkByRel("domainevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> this, DomainEventsPublisher.class);
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new DomainEventsPublisher(), DomainEventsPublisher.class);
         });
     }
 
@@ -97,27 +97,13 @@ public class DomainEventsPublisher
         disruptor.shutdown();
     }
 
-    @Override
-    public void subscribe(Flow.Subscriber<? super DomainEventHolder> subscriber) {
-        subscriber.onSubscribe(subscribers.add(subscriber, new Flow.Subscription() {
-            @Override
-            public void request(long n) {
-                // Ignore for now
-            }
-
-            @Override
-            public void cancel() {
-
-            }
-        }));
-    }
 
     public CompletionStage<Metadata> publish(Metadata metadata, DomainEvents events) {
         CompletableFuture<Metadata> future = new CompletableFuture<>();
         disruptor.getRingBuffer().publishEvent((event, seq, m, e, f) ->
         {
             event.set(new WithMetadata<>(deploymentMetadata.metadata()
-                    .toBuilder().add(m).build(),e ), f);
+                    .toBuilder().add(m).build(), e), f);
         }, metadata, events, future);
 
         return future.thenApply(md ->
@@ -126,5 +112,24 @@ public class DomainEventsPublisher
             metadata.metadata().setAll(md.metadata());
             return metadata;
         });
+    }
+
+    public class DomainEventsPublisher
+            implements Flow.Publisher<WithResult<WithMetadata<DomainEvents>, Metadata>> {
+
+        @Override
+        public void subscribe(Flow.Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber) {
+            subscriber.onSubscribe(subscribers.add(subscriber, new Flow.Subscription() {
+                @Override
+                public void request(long n) {
+                    // Ignore for now
+                }
+
+                @Override
+                public void cancel() {
+                    subscribers.remove(subscriber);
+                }
+            }));
+        }
     }
 }

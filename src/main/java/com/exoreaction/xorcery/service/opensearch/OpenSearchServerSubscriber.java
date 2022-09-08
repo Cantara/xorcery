@@ -1,8 +1,8 @@
-package com.exoreaction.xorcery.service.opensearch.metrics;
+package com.exoreaction.xorcery.service.opensearch;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.service.metrics.MetricsMetadata;
+import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.document.BulkResponse;
 import com.exoreaction.xorcery.service.opensearch.client.document.IndexBulkRequest;
@@ -12,46 +12,42 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import org.apache.logging.log4j.LogManager;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.concurrent.Flow;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class MetricEventsSubscriber
+public class OpenSearchServerSubscriber
         implements Flow.Subscriber<WithMetadata<ObjectNode>>, EventHandler<WithMetadata<ObjectNode>> {
-    private OpenSearchClient client;
-    private final ScheduledExecutorService scheduledExecutorService;
-    private Flow.Subscription subscription;
-    private final long delay;
 
-    private IndexBulkRequest.Builder bulkRequest;
+    private final OpenSearchClient client;
+    private final String index;
+
+    private Flow.Subscription subscription;
     private Disruptor<WithMetadata<ObjectNode>> disruptor;
 
-    public MetricEventsSubscriber(OpenSearchClient client, Configuration consumerConfiguration, ScheduledExecutorService scheduledExecutorService) {
-        this.client = client;
+    private IndexBulkRequest.Builder bulkRequest;
 
-        this.scheduledExecutorService = scheduledExecutorService;
-        this.delay = Duration.parse(consumerConfiguration.getString("delay").orElse("PT5S")).toSeconds();
+    public OpenSearchServerSubscriber(OpenSearchClient client, Configuration configuration) {
+        this.client = client;
+        this.index = configuration.getString("index").orElseThrow();
     }
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
         this.subscription = subscription;
 
-        disruptor = new Disruptor<>(WithMetadata::new, 1024, new NamedThreadFactory("OpenSearchMetrics-"));
+        disruptor = new Disruptor<>(WithMetadata::new, 1024, new NamedThreadFactory("OpenSearchServerSubscriber-"));
         disruptor.handleEventsWith(this);
         disruptor.start();
 
-        scheduledExecutorService.schedule(() -> subscription.request(1), delay, TimeUnit.SECONDS);
-
+        subscription.request(disruptor.getBufferSize());
     }
 
     @Override
     public void onNext(WithMetadata<ObjectNode> item) {
-        disruptor.publishEvent((e, seq, event) ->
+        disruptor.publishEvent((e, s, event) ->
         {
             e.set(event);
         }, item);
@@ -70,7 +66,7 @@ public class MetricEventsSubscriber
     @Override
     public void onEvent(WithMetadata<ObjectNode> event, long sequence, boolean endOfBatch) throws Exception {
 
-        MetricsMetadata mmd = new MetricsMetadata(event.metadata());
+        LoggingMetadata lmd = new LoggingMetadata(event.metadata());
 
         ObjectNode document = event.metadata().metadata().objectNode();
         document.set("@timestamp", event.metadata().getJsonNode("timestamp").orElse(document.numberNode(0L)));
@@ -80,11 +76,12 @@ public class MetricEventsSubscriber
         if (bulkRequest == null)
             bulkRequest = new IndexBulkRequest.Builder();
 
-        bulkRequest.create(mmd.getHost() + mmd.getTimestamp(), document);
+        bulkRequest.create(null, document);
 
         if (endOfBatch) {
-            LocalDate date = LocalDate.ofInstant(Instant.ofEpochMilli(mmd.getTimestamp()), ZoneId.systemDefault());
-            String indexName = "metrics-" + mmd.getEnvironment() + "-" + mmd.getTag() + "-" + date.getYear() + "-" + date.getMonthValue();
+            LocalDate date = LocalDate.ofInstant(Instant.ofEpochMilli(lmd.getTimestamp()), ZoneId.systemDefault());
+            String indexName = String.format(index, date);
+
             BulkResponse bulkResponse = client.documents().bulk(indexName, bulkRequest.build())
                     .toCompletableFuture().get(10, TimeUnit.SECONDS);
 
@@ -95,6 +92,6 @@ public class MetricEventsSubscriber
             bulkRequest = null;
         }
 
-        scheduledExecutorService.schedule(() -> subscription.request(1), delay, TimeUnit.SECONDS);
+        subscription.request(1);
     }
 }

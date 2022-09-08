@@ -12,7 +12,7 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,13 +30,13 @@ public class EventStoreConductorListener extends AbstractConductorListener {
     private Logger logger = LogManager.getLogger(getClass());
 
     private GraphDatabases graphDatabases;
-    private ReactiveStreams2 reactiveStreams;
+    private ReactiveStreams reactiveStreams;
     private JsonApiClient client;
     private Listeners<ProjectionListener> listeners;
     private Function<String, CompletableFuture<Void>> isLive;
 
     public EventStoreConductorListener(GraphDatabases graphDatabases,
-                                       ReactiveStreams2 reactiveStreams,
+                                       ReactiveStreams reactiveStreams,
                                        JsonApiClient client,
                                        ServiceIdentifier serviceIdentifier,
                                        String rel,

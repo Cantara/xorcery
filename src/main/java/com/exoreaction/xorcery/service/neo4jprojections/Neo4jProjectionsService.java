@@ -9,7 +9,7 @@ import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.domainevents.DomainEventsConductorListener;
 import com.exoreaction.xorcery.service.neo4jprojections.eventstore.EventStoreConductorListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -66,7 +66,7 @@ public class Neo4jProjectionsService
     private final Logger logger = LogManager.getLogger(getClass());
     private MetricRegistry metricRegistry;
     private final JsonApiClient jsonApiClient;
-    private final ReactiveStreams2 reactiveStreams;
+    private final ReactiveStreams reactiveStreams;
     private final Conductor conductor;
     private final ServiceResourceObject sro;
     private final GraphDatabases graphDatabases;
@@ -76,7 +76,7 @@ public class Neo4jProjectionsService
 
     @Inject
     public Neo4jProjectionsService(Conductor conductor,
-                                   ReactiveStreams2 reactiveStreams,
+                                   ReactiveStreams reactiveStreams,
                                    @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                    GraphDatabases graphDatabases,
                                    MetricRegistry metricRegistry,

@@ -3,7 +3,7 @@ package com.exoreaction.xorcery.service.reactivestreams;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.PublisherWebSocketServlet;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscriberWebSocketServlet;
@@ -44,7 +44,7 @@ import java.util.function.Function;
 
 @Singleton
 public class ReactiveStreamsService
-        implements ReactiveStreams2, LifeCycle.Listener {
+        implements ReactiveStreams, LifeCycle.Listener {
 
     private static final Logger logger = LogManager.getLogger(ReactiveStreamsService.class);
     public static final String SERVICE_TYPE = "reactivestreams";
@@ -68,7 +68,7 @@ public class ReactiveStreamsService
                 webSocketClient.setIdleTimeout(Duration.ofSeconds(httpClient.getIdleTimeout()));
                 webSocketClient.start();
                 bind(webSocketClient).named(SERVICE_TYPE);
-                context.register(ReactiveStreamsService.class, ReactiveStreams2.class);
+                context.register(ReactiveStreamsService.class, ReactiveStreams.class);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

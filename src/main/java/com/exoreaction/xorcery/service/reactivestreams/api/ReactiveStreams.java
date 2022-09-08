@@ -9,7 +9,7 @@ import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 @Contract
-public interface ReactiveStreams2 {
+public interface ReactiveStreams {
     // Server
     CompletionStage<Void> publisher(String publisherWebsocketPath,
                                     Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,

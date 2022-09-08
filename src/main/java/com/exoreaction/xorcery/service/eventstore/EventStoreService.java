@@ -6,7 +6,7 @@ import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -32,7 +32,7 @@ public class EventStoreService
     private final EventStoreDBClient client;
     private final ObjectMapper objectMapper;
     private ServiceResourceObject sro;
-    private ReactiveStreams2 reactiveStreams;
+    private ReactiveStreams reactiveStreams;
     private Conductor conductor;
 
     @Provider
@@ -59,7 +59,7 @@ public class EventStoreService
 
     @Inject
     public EventStoreService(@Named(SERVICE_TYPE) ServiceResourceObject sro,
-                             Configuration configuration, ReactiveStreams2 reactiveStreams,
+                             Configuration configuration, ReactiveStreams reactiveStreams,
                              Conductor conductor) throws ParseError {
         this.sro = sro;
         this.reactiveStreams = reactiveStreams;

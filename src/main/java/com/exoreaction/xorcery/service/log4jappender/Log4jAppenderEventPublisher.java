@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -52,7 +52,7 @@ public class Log4jAppenderEventPublisher
         }
     }
 
-    private final ReactiveStreams2 reactiveStreams;
+    private final ReactiveStreams reactiveStreams;
     private ServiceResourceObject sro;
     private Configuration configuration;
 
@@ -60,7 +60,7 @@ public class Log4jAppenderEventPublisher
     private final UnicastEventHandler<WithMetadata<LogEvent>> unicastEventHandler = new UnicastEventHandler<>();
 
     @Inject
-    public Log4jAppenderEventPublisher(ReactiveStreams2 reactiveStreams, Conductor conductor,
+    public Log4jAppenderEventPublisher(ReactiveStreams reactiveStreams, Conductor conductor,
                                        @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                        Configuration configuration) {
         this.reactiveStreams = reactiveStreams;

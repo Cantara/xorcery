@@ -14,7 +14,7 @@ import com.exoreaction.xorcery.service.conductor.resources.model.Group;
 import com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplate;
 import com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplates;
 import com.exoreaction.xorcery.service.conductor.resources.model.Groups;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.exoreaction.xorcery.service.registry.api.RegistryListener;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -74,7 +74,7 @@ public class ConductorService
     private Registry registry;
     private ServiceResourceObject sro;
     private Configuration configuration;
-    private ReactiveStreams2 reactiveStreams;
+    private ReactiveStreams reactiveStreams;
 
 
     private final GroupTemplates groupTemplates;
@@ -82,7 +82,7 @@ public class ConductorService
     private List<ConductorListener> listeners = new CopyOnWriteArrayList<>();
 
     @Inject
-    public ConductorService(ReactiveStreams2 reactiveStreams, Registry registry,
+    public ConductorService(ReactiveStreams reactiveStreams, Registry registry,
                             @Named(SERVICE_TYPE) ServiceResourceObject sro, Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
         this.registry = registry;

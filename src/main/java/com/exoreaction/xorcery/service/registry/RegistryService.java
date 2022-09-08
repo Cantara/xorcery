@@ -11,7 +11,7 @@ import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.registry.api.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,7 +64,7 @@ public class RegistryService
     private final Disruptor<WithMetadata<RegistryChange>> disruptor;
     private ServiceResourceObject resourceObject;
     private IterableProvider<ServiceResourceObject> serviceResources;
-    private ReactiveStreams2 reactiveStreams;
+    private ReactiveStreams reactiveStreams;
     private final Configuration configuration;
     private final JsonApiClient jsonApiClient;
 
@@ -103,7 +103,7 @@ public class RegistryService
     @Inject
     public RegistryService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
                            IterableProvider<ServiceResourceObject> serviceResources,
-                           ReactiveStreams2 reactiveStreams,
+                           ReactiveStreams reactiveStreams,
                            Configuration configuration,
                            JettyHttpClientContract clientInstance,
                            ServletContextHandler servletContextHandler) {
@@ -318,7 +318,7 @@ public class RegistryService
         }
     }
 
-    public record StartupRegistration(ReactiveStreams2 reactiveStreams, JsonApiClient client,
+    public record StartupRegistration(ReactiveStreams reactiveStreams, JsonApiClient client,
                                       ServiceIdentifier serviceIdentifier,
                                       Link registryUri,
                                       ResourceDocument server,

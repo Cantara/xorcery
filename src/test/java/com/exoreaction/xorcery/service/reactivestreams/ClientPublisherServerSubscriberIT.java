@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
 import com.exoreaction.xorcery.server.Xorcery;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams2;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import jakarta.ws.rs.core.UriBuilder;
@@ -14,31 +14,16 @@ import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 
-public class ServerSubscriberIT {
+public class ClientPublisherServerSubscriberIT {
 
     private static final String config = """
-            eventclient.enabled: true
-            eventserver.enabled: true
-            registry.enabled: true
-            conductor:
-                enabled: true
-                templates:
-                  - id: clientpublisher_serversubscriber
-                    type: grouptemplate
-                    attributes:
-                      name: Client publishes events to server subscriber
-                      sources:
-                        pattern: rel=='eventsubscriber'
-                      consumers:
-                        pattern: type=='eventclient'
-                            
             reactivestreams.enabled: true
             """;
 
     @Test
     public void givenSubscriberWhenPublishEventsThenSubscriberConsumesEvents2() throws Exception {
         try (Xorcery xorcery = new Xorcery(Configuration.Builder.loadTest(null).addYaml(config).build())) {
-            ReactiveStreams2 reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams2.class);
+            ReactiveStreams reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams.class);
 
             // Server subscriber
             reactiveStreams.subscriber("/serversubscriber", cfg -> new StringServerSubscriber(), StringServerSubscriber.class);
@@ -57,7 +42,7 @@ public class ServerSubscriberIT {
     @Test
     public void givenSubscriberWhenPublishEventsWithResultsThenSubscriberCalculatesResults() throws Exception {
         try (Xorcery xorcery = new Xorcery(Configuration.Builder.loadTest(null).addYaml(config).build())) {
-            ReactiveStreams2 reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams2.class);
+            ReactiveStreams reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams.class);
 
             // Server subscriber
             ServerSubscriber<WithResult<String, Integer>> serverSubscriber = new ServerSubscriber<>() {
@@ -98,7 +83,7 @@ public class ServerSubscriberIT {
     @Test
     public void givenSubscriberWhenPublishEventsWithResultsAndMetadataThenSubscriberCalculatesResults() throws Exception {
         try (Xorcery xorcery = new Xorcery(Configuration.Builder.loadTest(null).addYaml(config).build())) {
-            ReactiveStreams2 reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams2.class);
+            ReactiveStreams reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams.class);
 
             // Server subscriber
             ServerSubscriber<WithResult<WithMetadata<String>, Integer>> serverSubscriber = new ServerSubscriber<>() {

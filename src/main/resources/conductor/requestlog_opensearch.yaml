@@ -8,3 +8,14 @@ data:
         many: true
       consumers:
         pattern: type=='opensearch'
+
+  - id: requestlog_opensearch
+    type: grouptemplate
+    attributes:
+      name: Log requests to OpenSearch
+      sources:
+        pattern: type=='requestlog'
+      consumers:
+        pattern: rel=='opensearch'
+        configuration:
+          index: "requestlogs-{{environment}}-{{tag}}-%1$tF"

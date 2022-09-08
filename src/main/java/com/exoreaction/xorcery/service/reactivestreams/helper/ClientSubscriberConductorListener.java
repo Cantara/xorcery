@@ -10,20 +10,20 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
-public class ClientPublisherConductorListener extends AbstractConductorListener {
-    private Class<? extends Flow.Publisher<?>> publisherType;
+public class ClientSubscriberConductorListener extends AbstractConductorListener {
+    private Class<? extends Flow.Subscriber<?>> subscriberType;
     private ReactiveStreams reactiveStreams;
-    private Function<Configuration, Flow.Publisher<?>> publisherFactory;
+    private Function<Configuration, Flow.Subscriber<?>> subscriberFactory;
 
-    public ClientPublisherConductorListener(ServiceIdentifier serviceIdentifier, Function<Configuration, Flow.Publisher<?>> publisherFactory, Class<? extends Flow.Publisher<?>> publisherType, String rel, ReactiveStreams reactiveStreams) {
+    public ClientSubscriberConductorListener(ServiceIdentifier serviceIdentifier, Function<Configuration, Flow.Subscriber<?>> subscriberFactory, Class<? extends Flow.Subscriber<?>> subscriberType, String rel, ReactiveStreams reactiveStreams) {
         super(serviceIdentifier, rel);
-        this.publisherFactory = publisherFactory;
-        this.publisherType = publisherType;
+        this.subscriberFactory = subscriberFactory;
+        this.subscriberType = subscriberType;
         this.reactiveStreams = reactiveStreams;
     }
 
     @Override
     public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {
-        reactiveStreams.publish(link.getHrefAsUri(), consumerConfiguration, publisherFactory.apply(sourceConfiguration), publisherType);
+        reactiveStreams.subscribe(link.getHrefAsUri(), consumerConfiguration, subscriberFactory.apply(sourceConfiguration), subscriberType);
     }
 }
