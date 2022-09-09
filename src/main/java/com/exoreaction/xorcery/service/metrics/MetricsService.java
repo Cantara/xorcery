@@ -17,6 +17,11 @@ import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
+import javax.management.MBeanServer;
+import java.lang.management.ManagementFactory;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 @Singleton
 public class MetricsService
         extends AbstractContainerLifecycleListener {
@@ -35,7 +40,8 @@ public class MetricsService
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
             builder.api("metrics", "api/metrics")
-                    .websocket("metricevents", "ws/metricevents");
+                    .websocket("metricevents", "ws/metricevents")
+                    .websocket("jmxmetrics", "ws/jmxmetrics");
         }
 
         @Override
@@ -48,6 +54,9 @@ public class MetricsService
     private final ReactiveStreams reactiveStreams;
     private Conductor conductor;
     private MetricRegistry metricRegistry;
+    private final MBeanServer managementServer;
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+
 
     private final DeploymentMetadata deploymentMetadata;
 
@@ -61,6 +70,7 @@ public class MetricsService
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
         this.metricRegistry = metricRegistry;
+        this.managementServer = ManagementFactory.getPlatformMBeanServer();
         this.deploymentMetadata = new MetricsMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
                 .build();
@@ -72,6 +82,14 @@ public class MetricsService
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class);
         });
-        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class, "opensearch", reactiveStreams));
+//        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class, null, reactiveStreams));
+
+        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class, null, reactiveStreams));
+
+    }
+
+    @Override
+    public void onShutdown(Container container) {
+        scheduledExecutorService.shutdown();
     }
 }

@@ -10,10 +10,8 @@ import com.exoreaction.xorcery.service.opensearch.client.index.AcknowledgedRespo
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateComponentTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateIndexTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.IndexTemplate;
-import com.exoreaction.xorcery.service.opensearch.eventstore.EventStoreConductorListener;
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.OpenSearchProjections;
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.ProjectionListener;
-import com.exoreaction.xorcery.service.opensearch.metrics.MetricsConductorListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -122,18 +120,14 @@ public class OpenSearchService
             }
 
             // TODO Split these out into their own services that depend on OpenSearchService
-            conductor.addConductorListener(new MetricsConductorListener(
-                    new OpenSearchClient(new ClientConfig()
-                            .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.metrics")).build())
-                            .register(instance)
-                            .connectorProvider(new JettyConnectorProvider()), host),
-                    reactiveStreams, scheduledExecutorService, sro.serviceIdentifier(), "metricevents"));
+/*
             conductor.addConductorListener(new EventStoreConductorListener(
                     new OpenSearchClient(new ClientConfig()
                             .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.events")).build())
                             .register(instance)
                             .connectorProvider(new JettyConnectorProvider()), host),
                     reactiveStreams, sro.serviceIdentifier(), "events", listeners));
+*/
 
             sro.getLinkByRel("opensearch").ifPresent(link ->
             {

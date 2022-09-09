@@ -2,9 +2,15 @@ data:
   - id: metrics_opensearch
     type: grouptemplate
     attributes:
-      name: Log metrics to OpenSearch
+      name: Metrics to OpenSearch
       sources:
-        pattern: rel=='metricevents'
-        many: true
+        pattern: type=='metrics'
+        configuration:
+          delay: PT5S
+          filter:
+            - java.lang:type=OperatingSystem
+          rel: opensearch
       consumers:
         pattern: type=='opensearch'
+        configuration:
+          index: "metrics-{{environment}}-{{tag}}-%1$tF"
