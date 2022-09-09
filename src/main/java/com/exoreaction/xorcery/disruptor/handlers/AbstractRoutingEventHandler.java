@@ -22,10 +22,11 @@ public abstract class AbstractRoutingEventHandler<T>
 
     public Flow.Subscription add(Flow.Subscriber<? super T> subscriber, Flow.Subscription subscription) {
         SubscriptionTracker<T> tracker = new SubscriptionTracker<>(subscriber, new AtomicLong());
+        subscribers.add(tracker);
         return new Flow.Subscription() {
             @Override
             public void request(long n) {
-                tracker.requests().incrementAndGet();
+                tracker.requests().addAndGet(n);
                 subscription.request(n);
             }
 
@@ -48,6 +49,9 @@ public abstract class AbstractRoutingEventHandler<T>
 
     @Override
     public void onShutdown() {
+        for (SubscriptionTracker<T> subscriber : subscribers) {
+            subscriber.subscriber.onComplete();
+        }
     }
 
     public record SubscriptionTracker<T>(Flow.Subscriber<? super T> subscriber, AtomicLong requests) {

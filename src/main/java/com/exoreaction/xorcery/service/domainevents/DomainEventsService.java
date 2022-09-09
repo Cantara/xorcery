@@ -127,7 +127,6 @@ public class DomainEventsService
 
                 @Override
                 public void cancel() {
-                    subscribers.remove(subscriber);
                 }
             }));
         }

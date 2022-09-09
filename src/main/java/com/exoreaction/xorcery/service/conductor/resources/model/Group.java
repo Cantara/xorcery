@@ -11,18 +11,21 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public record Group(ResourceObject resourceObject) {
+public record Group(ResourceObject resourceObject, List<ServiceResourceObject> serviceResourceObjects) {
+
+    public Group(ResourceObject resourceObject) {
+        this(resourceObject, new ArrayList<>());
+    }
+
     public boolean isTemplate(GroupTemplate groupTemplate) {
         return resourceObject().getId().equals(groupTemplate.resourceObject().getId());
     }
 
     public Group addSource(ServiceResourceObject serviceResourceObject) {
+        serviceResourceObjects.add(serviceResourceObject);
         ArrayNode builder = resourceObject.getRelationships()
                 .getRelationship("sources")
                 .flatMap(Relationship::getResourceObjectIdentifiers)
@@ -34,10 +37,11 @@ public record Group(ResourceObject resourceObject) {
                         .relationship("sources", new Relationship.Builder()
                                 .resourceIdentifiers(new ResourceObjectIdentifiers.Builder(builder)
                                         .resource(serviceResourceObject.resourceObject())
-                                        .build()))).build());
+                                        .build()))).build(), serviceResourceObjects);
     }
 
     public Group addConsumer(ServiceResourceObject serviceResourceObject) {
+        serviceResourceObjects.add(serviceResourceObject);
         ArrayNode builder = resourceObject.getRelationships()
                 .getRelationship("consumers")
                 .flatMap(Relationship::getResourceObjectIdentifiers)
@@ -49,7 +53,7 @@ public record Group(ResourceObject resourceObject) {
                         .relationship("consumers", new Relationship.Builder()
                                 .resourceIdentifiers(new ResourceObjectIdentifiers.Builder(builder)
                                         .resource(serviceResourceObject.resourceObject())
-                                        .build()))).build());
+                                        .build()))).build(), serviceResourceObjects);
     }
 
     public List<ServiceIdentifier> getSources() {
@@ -68,6 +72,14 @@ public record Group(ResourceObject resourceObject) {
                 .map(ResourceObjectIdentifiers::getResources)
                 .map(roi -> roi.stream().map(ServiceIdentifier::new).collect(Collectors.toList()))
                 .orElseGet(Collections::emptyList);
+    }
+
+    public ServiceResourceObject getServiceResourceObject(ServiceIdentifier serviceIdentifier)
+    {
+        return serviceResourceObjects.stream().filter(sro -> sro.serviceIdentifier().equals(serviceIdentifier)).findFirst().orElseThrow(()->
+        {
+            return new IllegalStateException();
+        });
     }
 
     public Configuration getSourceConfiguration() {

@@ -10,6 +10,8 @@ import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
+import com.exoreaction.xorcery.service.requestlog.RequestLogService;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -28,10 +30,11 @@ import java.util.concurrent.Flow;
 
 @Singleton
 @WebListener
-public class Log4jAppenderEventPublisher
-        implements ContainerLifecycleListener, Flow.Publisher<WithMetadata<LogEvent>> {
+public class Log4jAppenderService
+        implements ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "log4jappender";
+    private final DisruptorAppender appender;
 
     @Provider
     public static class Feature
@@ -48,42 +51,34 @@ public class Log4jAppenderEventPublisher
 
         @Override
         protected void configure() {
-            context.register(Log4jAppenderEventPublisher.class);
+            context.register(Log4jAppenderService.class);
         }
     }
 
     private final ReactiveStreams reactiveStreams;
     private ServiceResourceObject sro;
-    private Configuration configuration;
 
-    private final Disruptor<WithMetadata<LogEvent>> disruptor;
-    private final UnicastEventHandler<WithMetadata<LogEvent>> unicastEventHandler = new UnicastEventHandler<>();
 
     @Inject
-    public Log4jAppenderEventPublisher(ReactiveStreams reactiveStreams, Conductor conductor,
-                                       @Named(SERVICE_TYPE) ServiceResourceObject sro,
-                                       Configuration configuration) {
+    public Log4jAppenderService(ReactiveStreams reactiveStreams, Conductor conductor,
+                                @Named(SERVICE_TYPE) ServiceResourceObject sro,
+                                Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
         this.sro = sro;
-        this.configuration = configuration;
 
-        disruptor =
-                new Disruptor<>(WithMetadata::new, 4096, new NamedThreadFactory("Log4jDisruptor-"),
-                        ProducerType.MULTI,
-                        new BlockingWaitStrategy());
+        LoggerContext lc = (LoggerContext) LogManager.getContext(false);
+        appender = lc.getConfiguration().getAppender("DISRUPTOR");
+        appender.setConfiguration(configuration);
 
-        disruptor.handleEventsWith(new LoggingMetadataEventHandler(configuration))
-                .then(unicastEventHandler);
-
-        conductor.addConductorListener(new ClientPublisherConductorListener(sro.serviceIdentifier(), cfg -> this, getClass(), "logevents", reactiveStreams));
+        conductor.addConductorListener(new ClientPublisherConductorListener(sro.serviceIdentifier(), cfg -> new LogPublisher(), LogPublisher.class, null, reactiveStreams));
     }
 
     @Override
     public void onStartup(Container container) {
-        disruptor.start();
-        LoggerContext lc = (LoggerContext) LogManager.getContext(false);
-        DisruptorAppender appender = lc.getConfiguration().getAppender("DISRUPTOR");
-        appender.setEventSink(disruptor.getRingBuffer());
+        sro.getLinkByRel("logevents").ifPresent(link ->
+        {
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new LogPublisher(), LogPublisher.class);
+        });
     }
 
     @Override
@@ -92,24 +87,22 @@ public class Log4jAppenderEventPublisher
 
     @Override
     public void onShutdown(Container container) {
-        disruptor.shutdown();
     }
 
-    @Override
-    public void subscribe(Flow.Subscriber<? super WithMetadata<LogEvent>> subscriber) {
-        LoggerContext lc = (LoggerContext) LogManager.getContext(false);
-        DisruptorAppender appender = lc.getConfiguration().getAppender("DISRUPTOR");
+    public class LogPublisher
+            implements Flow.Publisher<WithMetadata<LogEvent>> {
+        @Override
+        public void subscribe(Flow.Subscriber<? super WithMetadata<LogEvent>> subscriber) {
+            subscriber.onSubscribe(appender.getUnicastEventHandler().add(subscriber, new Flow.Subscription() {
+                @Override
+                public void request(long n) {
+                    // Ignore for now
+                }
 
-        subscriber.onSubscribe(unicastEventHandler.add(subscriber, new Flow.Subscription() {
-            @Override
-            public void request(long n) {
-                // Ignore for now
-            }
-
-            @Override
-            public void cancel() {
-                unicastEventHandler.remove(subscriber);
-            }
-        }));
+                @Override
+                public void cancel() {
+                }
+            }));
+        }
     }
 }

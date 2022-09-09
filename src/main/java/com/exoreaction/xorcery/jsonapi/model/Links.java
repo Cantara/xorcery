@@ -19,8 +19,7 @@ public record Links(ObjectNode json)
         implements JsonElement {
 
     public record Builder(ObjectNode builder)
-            implements With<Builder>
-    {
+            implements With<Builder> {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
@@ -67,8 +66,7 @@ public record Links(ObjectNode json)
         }
     }
 
-    public boolean isEmpty()
-    {
+    public boolean isEmpty() {
         return object().isEmpty();
     }
 
@@ -77,7 +75,11 @@ public record Links(ObjectNode json)
     }
 
     public Optional<Link> getByRel(String name) {
-        return Optional.ofNullable(object().get(name)).map(v -> new Link(name, v));
+        if (name == null) {
+            return Optional.empty();
+        } else {
+            return Optional.ofNullable(object().get(name)).map(v -> new Link(name, v));
+        }
     }
 
     public List<Link> getLinks() {

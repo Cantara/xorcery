@@ -55,7 +55,7 @@ public class GroupTemplates {
             // Check if any group templates match
             // TODO This algo can be simplified
             for (GroupTemplate groupTemplate : groupTemplates) {
-                if (groupTemplate.getSources().isSource(service)) {
+                if (groupTemplate.getSources().matches(service)) {
                     // Check if group exists already
                     groups.getGroupByTemplate(groupTemplate)
                             .ifPresentOrElse(existingGroup ->
@@ -92,7 +92,7 @@ public class GroupTemplates {
                             });
                 }
 
-                if (groupTemplate.getConsumers().isConsumer(service)) {
+                if (groupTemplate.getConsumers().matches(service)) {
                     // Check if group exists already
                     groups.getGroupByTemplate(groupTemplate)
                             .ifPresentOrElse(existingGroup ->

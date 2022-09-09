@@ -1,7 +1,9 @@
 package com.exoreaction.xorcery.service.requestlog;
 
+import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
@@ -10,6 +12,7 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.ext.Provider;
@@ -21,10 +24,10 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import java.util.concurrent.Flow;
 
 public class RequestLogService
-        extends AbstractContainerLifecycleListener
-        implements Flow.Publisher<WithMetadata<ObjectNode>> {
+        extends AbstractContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "requestlog";
+    private final Disruptor<WithMetadata<ObjectNode>> disruptor;
 
     @Provider
     public static class Feature
@@ -36,11 +39,6 @@ public class RequestLogService
         }
 
         @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.websocket("requestlogevents", "ws/requestlogevents");
-        }
-
-        @Override
         protected void configure() {
             context.register(RequestLogService.class, ContainerLifecycleListener.class);
         }
@@ -48,7 +46,7 @@ public class RequestLogService
 
     private final ServiceResourceObject resourceObject;
     private final ReactiveStreams reactiveStreams;
-    private final JsonRequestLog requestLog;
+    private final BroadcastEventHandler<WithMetadata<ObjectNode>> broadcastEventHandler = new BroadcastEventHandler<>();
 
     @Inject
     public RequestLogService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
@@ -59,19 +57,24 @@ public class RequestLogService
         this.resourceObject = resourceObject;
         this.reactiveStreams = reactiveStreams;
 
-        requestLog = new JsonRequestLog(new LoggingMetadata.Builder(new Metadata.Builder())
+        disruptor = new Disruptor<>(WithMetadata::new, 4096, new NamedThreadFactory("RequestLogPublisher-"));
+        disruptor.handleEventsWith(broadcastEventHandler);
+
+        JsonRequestLog requestLog = new JsonRequestLog(new LoggingMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
-                .build());
+                .build(), disruptor.getRingBuffer());
         server.setRequestLog(requestLog);
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> this, RequestLogService.class, "opensearch", reactiveStreams));
+        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class, null, reactiveStreams));
     }
 
     @Override
     public void onStartup(Container container) {
+        disruptor.start();
+
         resourceObject.getLinkByRel("requestlogevents").ifPresent(link ->
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> this, RequestLogService.class);
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class);
         });
     }
 
@@ -82,22 +85,24 @@ public class RequestLogService
 
     @Override
     public void onShutdown(Container container) {
+        disruptor.shutdown();
     }
 
-    @Override
-    public void subscribe(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
-        subscriber.onSubscribe(new Flow.Subscription() {
-            @Override
-            public void request(long n) {
-                // Ignore
-            }
+    public class RequestLogPublisher
+            implements Flow.Publisher<WithMetadata<ObjectNode>> {
+        @Override
+        public void subscribe(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
+            subscriber.onSubscribe(broadcastEventHandler.add(subscriber, new Flow.Subscription() {
+                @Override
+                public void request(long n) {
+                    // Ignore
+                }
 
-            @Override
-            public void cancel() {
-                requestLog.setSubscriber(null);
-                subscriber.onComplete();
-            }
-        });
-        requestLog.setSubscriber(subscriber);
+                @Override
+                public void cancel() {
+                    subscriber.onComplete();
+                }
+            }));
+        }
     }
 }

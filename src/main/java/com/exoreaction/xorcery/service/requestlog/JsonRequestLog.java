@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.lmax.disruptor.EventSink;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.http.HttpHeader;
@@ -21,23 +22,12 @@ import java.util.concurrent.atomic.AtomicReference;
 @Singleton
 public class JsonRequestLog
         implements RequestLog {
-    private final AtomicReference<Flow.Subscriber<? super WithMetadata<ObjectNode>>> subscriber = new AtomicReference<>();
     private LoggingMetadata loggingMetadata;
+    private EventSink<WithMetadata<ObjectNode>> eventSink;
 
-    public JsonRequestLog(LoggingMetadata loggingMetadata) {
+    public JsonRequestLog(LoggingMetadata loggingMetadata, EventSink<WithMetadata<ObjectNode>> eventSink) {
         this.loggingMetadata = loggingMetadata;
-    }
-
-    // Backlog if no subscriber
-    List<WithMetadata<ObjectNode>> backlog = new ArrayList<>();
-
-    public void setSubscriber(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
-        this.subscriber.set(subscriber);
-
-        for (WithMetadata<ObjectNode> requestResponse : backlog) {
-            subscriber.onNext(requestResponse);
-        }
-        backlog.clear();
+        this.eventSink = eventSink;
     }
 
     @Override
@@ -76,17 +66,16 @@ public class JsonRequestLog
 
             ObjectNode event = node;
 
-            Flow.Subscriber<? super WithMetadata<ObjectNode>> sink = subscriber.get();
-            if (sink != null) {
-                sink.onNext(new WithMetadata<>(metadata, event));
-            } else
+            boolean isPublished = eventSink.tryPublishEvent((item, s, md, e) ->
             {
-                backlog.add(new WithMetadata<>(metadata, event));
+                item.set(md, e);
+            }, metadata, event);
+
+            if (!isPublished) {
+                LogManager.getLogger(getClass()).warn("Pending request log full, dropping requests");
             }
         } catch (Exception e) {
             LogManager.getLogger(getClass()).error("Could not log request", e);
         }
     }
-
-    record RequestLog(Metadata metadata, ObjectNode event){}
 }

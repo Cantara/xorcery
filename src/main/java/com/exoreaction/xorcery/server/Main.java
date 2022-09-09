@@ -33,7 +33,7 @@ public class Main
         {
             String log4jProperty = System.getProperty("log4j2.configurationFile");
             System.setProperty("log4j2.configurationFile", log4jProperty == null ?
-                    log4jConfiguration.getAbsolutePath() :
+                    "log4j2.yaml,"+log4jConfiguration.getAbsolutePath() :
                     log4jProperty+","+log4jConfiguration.getAbsolutePath());
         }
 

@@ -5,13 +5,20 @@ import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.core.LogEvent;
 
-public record LoggingMetadataEventHandler(Configuration configuration)
+import java.util.concurrent.atomic.AtomicReference;
+
+public class LoggingMetadataEventHandler
         implements EventHandler<WithMetadata<LogEvent>> {
+
+    public final AtomicReference<Configuration> configuration = new AtomicReference<>();
 
     @Override
     public void onEvent(WithMetadata<LogEvent> event, long seq, boolean endOfBatch) throws Exception {
-        new LoggingMetadata.Builder(event.metadata().toBuilder())
-                .timestamp(System.currentTimeMillis())
-                .configuration(configuration);
+
+        LoggingMetadata.Builder builder = new LoggingMetadata.Builder(event.metadata().toBuilder())
+                .timestamp(System.currentTimeMillis());
+        Configuration conf = configuration.get();
+        if (conf != null)
+            builder.configuration(conf);
     }
 }

@@ -8,20 +8,26 @@ public class BroadcastEventHandler<T>
         extends AbstractRoutingEventHandler<T> {
     @Override
     public void onEvent(T event, long sequence, boolean endOfBatch) throws Exception {
-        while (true) {
-            for (SubscriptionTracker<T> tracker : subscribers) {
-                while (tracker.requests().get() <= 0) {
-                    // Wait for subscriber to request
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ex) {
-                        return;
-                    }
-                }
-
-                tracker.requests().getAndDecrement();
-                tracker.subscriber().onNext(event);
+        while (subscribers.isEmpty())
+            // Wait for at least one subscriber
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                return;
             }
+
+        for (SubscriptionTracker<T> tracker : subscribers) {
+            while (tracker.requests().get() <= 0) {
+                // Wait for subscriber to request
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    return;
+                }
+            }
+
+            tracker.requests().decrementAndGet();
+            tracker.subscriber().onNext(event);
         }
     }
 }

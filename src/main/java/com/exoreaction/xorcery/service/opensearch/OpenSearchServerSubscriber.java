@@ -38,7 +38,7 @@ public class OpenSearchServerSubscriber
     public void onSubscribe(Flow.Subscription subscription) {
         this.subscription = subscription;
 
-        disruptor = new Disruptor<>(WithMetadata::new, 1024, new NamedThreadFactory("OpenSearchServerSubscriber-"));
+        disruptor = new Disruptor<>(WithMetadata::new, 64, new NamedThreadFactory("OpenSearchServerSubscriber-"));
         disruptor.handleEventsWith(this);
         disruptor.start();
 

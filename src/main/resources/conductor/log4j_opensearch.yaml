@@ -1,13 +1,13 @@
 data:
-  - id: requestlog_opensearch
+  - id: log4j_opensearch
     type: grouptemplate
     attributes:
-      name: Log requests to OpenSearch
+      name: Log4j to OpenSearch
       sources:
-        pattern: type=='requestlog'
+        pattern: type=='log4jappender'
         configuration:
           rel: opensearch
       consumers:
         pattern: type=='opensearch'
         configuration:
-          index: "requestlogs-{{environment}}-{{tag}}-%1$tF"
+          index: "logs-{{environment}}-{{tag}}-%1$tF"

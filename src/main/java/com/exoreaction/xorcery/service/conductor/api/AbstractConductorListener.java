@@ -13,7 +13,6 @@ import org.apache.logging.log4j.MarkerManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractConductorListener
@@ -37,16 +36,35 @@ public abstract class AbstractConductorListener
 
     @Override
     public void updatedGroup(Group group, Registry registry) {
+        // Client is consumer
         if (group.getConsumers().stream().anyMatch(serviceIdentifier::equals)) {
             // Find publisher to connect to
             group.getSources()
                     .stream()
-                    .map(registry::getService)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
+                    .map(group::getServiceResourceObject)
                     .forEach(sro ->
                     {
-                        sro.getLinkByRel(rel).ifPresent(link ->
+                        sro.getLinkByRel(group.getConsumerConfiguration().getString("rel").orElse(rel)).ifPresent(link ->
+                        {
+                            List<Link> current = groupServiceConnections.computeIfAbsent(group.resourceObject().getId(), id -> new ArrayList<>());
+                            if (!current.contains(link)) {
+                                current.add(link);
+                                connect(sro, link, group.getSourceConfiguration(), group.getConsumerConfiguration());
+                                logger.info(MarkerManager.getMarker(link.getHref()), "Connect {} to {}", serviceIdentifier, link.getHref());
+                            }
+                        });
+                    });
+        }
+
+        // Client is publisher
+        if (group.getSources().stream().anyMatch(serviceIdentifier::equals)) {
+            // Find publisher to connect to
+            group.getConsumers()
+                    .stream()
+                    .map(group::getServiceResourceObject)
+                    .forEach(sro ->
+                    {
+                        sro.getLinkByRel(group.getSourceConfiguration().getString("rel").orElse(rel)).ifPresent(link ->
                         {
                             List<Link> current = groupServiceConnections.computeIfAbsent(group.resourceObject().getId(), id -> new ArrayList<>());
                             if (!current.contains(link)) {

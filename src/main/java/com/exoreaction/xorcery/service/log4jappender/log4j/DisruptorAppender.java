@@ -1,8 +1,16 @@
 package com.exoreaction.xorcery.service.log4jappender.log4j;
 
+import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
+import com.exoreaction.xorcery.service.log4jappender.LoggingMetadataEventHandler;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventSink;
+import com.lmax.disruptor.TimeoutException;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Filter;
@@ -28,6 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Plugin(name = "Disruptor", category = Node.CATEGORY, elementType = Appender.ELEMENT_TYPE, printObject = true)
 public class DisruptorAppender
         extends AbstractAppender {
+
     public static class Builder<B extends DisruptorAppender.Builder<B>> extends AbstractOutputStreamAppender.Builder<B>
             implements org.apache.logging.log4j.core.util.Builder<DisruptorAppender> {
         @Override
@@ -43,37 +52,56 @@ public class DisruptorAppender
         return new DisruptorAppender.Builder<B>().asBuilder();
     }
 
-    private final AtomicReference<EventSink<WithMetadata<LogEvent>>> logEventSink = new AtomicReference<>();
+    private final Disruptor<WithMetadata<LogEvent>> disruptor;
+    private final LoggingMetadataEventHandler loggingMetadataEventHandler = new LoggingMetadataEventHandler();
+    private final UnicastEventHandler<WithMetadata<LogEvent>> unicastEventHandler = new UnicastEventHandler<>();
 
     public DisruptorAppender(final String name, final Layout<? extends Serializable> layout, final Filter filter,
                              final boolean ignoreExceptions, final Property[] properties) {
         super(name, filter, layout, ignoreExceptions, properties);
         Objects.requireNonNull(layout, "layout");
+
+        disruptor = new Disruptor<>(WithMetadata::new, 4096, new NamedThreadFactory("Log4jDisruptor-"),
+                ProducerType.MULTI,
+                new BlockingWaitStrategy());
+        disruptor.handleEventsWith(loggingMetadataEventHandler)
+                .then(unicastEventHandler);
     }
 
     @Override
     public void append(final LogEvent event) {
 
-        EventSink<WithMetadata<LogEvent>> sink = logEventSink.get();
-        if (sink != null)
-            sink.publishEvent((holder, seq, e) ->
-            {
-                Metadata.Builder builder = new Metadata.Builder();
-                ThreadContext.getContext().forEach(builder::add);
-                holder.set(builder.build(), e);
-            }, event);
+        disruptor.publishEvent((holder, seq, e) ->
+        {
+            Metadata.Builder builder = new Metadata.Builder();
+            ThreadContext.getContext().forEach(builder::add);
+            holder.set(builder.build(), e);
+        }, event);
+    }
+
+    @Override
+    public void start() {
+        disruptor.start();
+        super.start();
     }
 
     @Override
     public boolean stop(final long timeout, final TimeUnit timeUnit) {
-        setStopping();
-        boolean stopped = super.stop(timeout, timeUnit, false);
-        setStopped();
-        return stopped;
+
+        try {
+            disruptor.shutdown(timeout, timeUnit);
+        } catch (TimeoutException e) {
+            // Ignore
+        }
+        return super.stop(timeout, timeUnit);
     }
 
-    public void setEventSink(EventSink<WithMetadata<LogEvent>> eventSink) {
-        this.logEventSink.set(eventSink);
+    public UnicastEventHandler<WithMetadata<LogEvent>> getUnicastEventHandler() {
+        return unicastEventHandler;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        loggingMetadataEventHandler.configuration.set(configuration);
     }
 
     @Override

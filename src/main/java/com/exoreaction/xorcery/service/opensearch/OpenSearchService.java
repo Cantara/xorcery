@@ -13,9 +13,7 @@ import com.exoreaction.xorcery.service.opensearch.client.index.IndexTemplate;
 import com.exoreaction.xorcery.service.opensearch.eventstore.EventStoreConductorListener;
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.OpenSearchProjections;
 import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.ProjectionListener;
-import com.exoreaction.xorcery.service.opensearch.logging.LoggingConductorListener;
 import com.exoreaction.xorcery.service.opensearch.metrics.MetricsConductorListener;
-import com.exoreaction.xorcery.service.opensearch.requestlog.RequestLogConductorListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -124,13 +122,6 @@ public class OpenSearchService
             }
 
             // TODO Split these out into their own services that depend on OpenSearchService
-            conductor.addConductorListener(new LoggingConductorListener(
-                    new OpenSearchClient(new ClientConfig()
-                            .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.logs")).build())
-                            .register(instance)
-                            .connectorProvider(new JettyConnectorProvider()), host),
-                    reactiveStreams, sro.serviceIdentifier(), "logevents"));
-
             conductor.addConductorListener(new MetricsConductorListener(
                     new OpenSearchClient(new ClientConfig()
                             .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.metrics")).build())
@@ -143,12 +134,6 @@ public class OpenSearchService
                             .register(instance)
                             .connectorProvider(new JettyConnectorProvider()), host),
                     reactiveStreams, sro.serviceIdentifier(), "events", listeners));
-            conductor.addConductorListener(new RequestLogConductorListener(
-                    new OpenSearchClient(new ClientConfig()
-                            .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.requestlogs")).build())
-                            .register(instance)
-                            .connectorProvider(new JettyConnectorProvider()), host),
-                    reactiveStreams, sro.serviceIdentifier(), "requestlogevents"));
 
             sro.getLinkByRel("opensearch").ifPresent(link ->
             {

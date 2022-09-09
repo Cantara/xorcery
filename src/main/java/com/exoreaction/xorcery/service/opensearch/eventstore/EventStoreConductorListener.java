@@ -13,6 +13,8 @@ import com.exoreaction.xorcery.util.Listeners;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.CompletableFuture;
+
 public class EventStoreConductorListener extends AbstractConductorListener {
 
     private static final Logger logger = LogManager.getLogger(EventStoreConductorListener.class);
@@ -37,7 +39,6 @@ public class EventStoreConductorListener extends AbstractConductorListener {
 
             // Check if we already have written data for this stream before
 //            client.search(Requests.searchRequest(indexName), RequestOptions.DEFAULT).getHits().getHits()
-
             reactiveStreams.subscribe(link.getHrefAsUri(), sourceConfiguration, new EventStoreSubscriber(consumerConfiguration, indexName, client, listeners), EventStoreSubscriber.class);
         }
     }

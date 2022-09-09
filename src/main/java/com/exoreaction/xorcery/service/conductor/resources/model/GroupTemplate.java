@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public record GroupTemplate(ResourceObject resourceObject) {
 
-    public TemplateSources getSources()
+    public ServiceTemplate getSources()
     {
-        return new TemplateSources((ObjectNode)resourceObject.getAttributes().getAttribute("sources").orElseThrow());
+        return new ServiceTemplate((ObjectNode)resourceObject.getAttributes().getAttribute("sources").orElseThrow());
     }
 
-    public TemplateConsumers getConsumers()
+    public ServiceTemplate getConsumers()
     {
-        return new TemplateConsumers((ObjectNode)resourceObject.getAttributes().getAttribute("consumers").orElseThrow());
+        return new ServiceTemplate((ObjectNode)resourceObject.getAttributes().getAttribute("consumers").orElseThrow());
     }
 }
