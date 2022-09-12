@@ -11,7 +11,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <slf4j.version>1.7.36</slf4j.version>
+        <slf4j.version>2.0.0</slf4j.version>
         <log4j.version>2.18.0</log4j.version>
         <jetty.version>11.0.11</jetty.version>
         <jersey.version>3.0.6</jersey.version>
@@ -501,7 +501,7 @@
                         <argument>--add-opens=java.base/java.io=ALL-UNNAMED</argument>
                         <argument>--add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</argument>
                         <argument>-classpath</argument>
-                        <classpath />
+                        <classpath/>
                         <argument>com.exoreaction.xorcery.server.Main</argument>
                     </arguments>
                 </configuration>
