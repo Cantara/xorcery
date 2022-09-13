@@ -88,6 +88,10 @@ public interface JsonElement {
         return getJson(name).map(JsonNode::asBoolean);
     }
 
+    default <T> Optional<T> getObjectAs(String name, Function<ObjectNode, T> mapper) {
+        return getJson(name).map(ObjectNode.class::cast).map(mapper);
+    }
+
     default Optional<Iterable<JsonNode>> getList(String name) {
         return getJson(name).map(ArrayNode.class::cast);
     }
@@ -149,8 +153,8 @@ public interface JsonElement {
     static Collector<JsonNode, ArrayNode, ArrayNode> toArray() {
         return Collector.of(JsonNodeFactory.instance::arrayNode,
                 (array, node) -> {
-            if (node != null) array.add(node);
-        }, (builder1, builder2) -> builder1, Function.identity());
+                    if (node != null) array.add(node);
+                }, (builder1, builder2) -> builder1, Function.identity());
     }
 
     static <T, U extends JsonNode> List<T> getValuesAs(ContainerNode<?> arrayNode, Function<U, T> mapFunction) {
@@ -191,13 +195,12 @@ public interface JsonElement {
         Iterator<Map.Entry<String, JsonNode>> fields = object.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> next = fields.next();
-            if (next.getValue().getNodeType().equals(JsonNodeType.OBJECT))
-            {
-                toFlatMap(result, prefix+next.getKey()+".", (ObjectNode)next.getValue(), mapper);
+            if (next.getValue().getNodeType().equals(JsonNodeType.OBJECT)) {
+                toFlatMap(result, prefix + next.getKey() + ".", (ObjectNode) next.getValue(), mapper);
             } else {
                 JsonNode value = next.getValue();
                 T mappedValue = mapper.apply(value);
-                result.put(prefix+next.getKey(), mappedValue);
+                result.put(prefix + next.getKey(), mappedValue);
             }
         }
     }

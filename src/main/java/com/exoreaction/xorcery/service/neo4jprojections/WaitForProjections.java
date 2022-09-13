@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.neo4jprojections;
 
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 
 import java.util.Map;
 import java.util.Optional;

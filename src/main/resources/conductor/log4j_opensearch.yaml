@@ -10,4 +10,4 @@ data:
       consumers:
         pattern: type=='opensearch'
         configuration:
-          index: "logs-{{environment}}-{{tag}}-%1$tF"
+          index: "logs-{{environment}}-{{tag}}-%tF"

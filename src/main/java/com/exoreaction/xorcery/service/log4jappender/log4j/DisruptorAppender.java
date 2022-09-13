@@ -2,12 +2,11 @@ package com.exoreaction.xorcery.service.log4jappender.log4j;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadataEventHandler;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventSink;
 import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -26,7 +25,6 @@ import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author rickardoberg
@@ -74,6 +72,7 @@ public class DisruptorAppender
         disruptor.publishEvent((holder, seq, e) ->
         {
             Metadata.Builder builder = new Metadata.Builder();
+            builder.add("timestamp", System.currentTimeMillis());
             ThreadContext.getContext().forEach(builder::add);
             holder.set(builder.build(), e);
         }, event);

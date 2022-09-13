@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.providers;
 
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.MediaTypes;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.util.Classes;

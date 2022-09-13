@@ -2,9 +2,10 @@ package com.exoreaction.xorcery.service.domainevents;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.aggregate.DomainEvents;
-import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.service.conductor.api.Conductor;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.DomainEvents;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -13,6 +14,7 @@ import com.exoreaction.xorcery.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -62,6 +64,7 @@ public class DomainEventsService
 
     @Inject
     public DomainEventsService(ReactiveStreams reactiveStreams,
+                               Conductor conductor,
                                @Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
                                Configuration configuration) {
         this.reactiveStreams = reactiveStreams;
@@ -76,6 +79,8 @@ public class DomainEventsService
                         new BlockingWaitStrategy());
 
         disruptor.handleEventsWith(subscribers);
+
+        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new DomainEventsPublisher(), DomainEventsPublisher.class, null, reactiveStreams));
     }
 
     @Override
@@ -119,16 +124,7 @@ public class DomainEventsService
 
         @Override
         public void subscribe(Flow.Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber) {
-            subscriber.onSubscribe(subscribers.add(subscriber, new Flow.Subscription() {
-                @Override
-                public void request(long n) {
-                    // Ignore for now
-                }
-
-                @Override
-                public void cancel() {
-                }
-            }));
+            subscriber.onSubscribe(subscribers.add(subscriber));
         }
     }
 }

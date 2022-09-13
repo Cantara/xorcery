@@ -96,7 +96,7 @@ public class PublisherWebSocketEndpoint
     }
 
     @Override
-    public synchronized void onWebSocketText(String message) {
+    public void onWebSocketText(String message) {
 
         if (publisherConfiguration == null) {
             // Read JSON parameters

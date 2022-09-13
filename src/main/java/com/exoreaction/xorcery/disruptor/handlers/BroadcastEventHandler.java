@@ -6,9 +6,16 @@ package com.exoreaction.xorcery.disruptor.handlers;
  */
 public class BroadcastEventHandler<T>
         extends AbstractRoutingEventHandler<T> {
+
+    private boolean dropIfNoSubscribers;
+
+    public BroadcastEventHandler(boolean dropIfNoSubscribers) {
+        this.dropIfNoSubscribers = dropIfNoSubscribers;
+    }
+
     @Override
     public void onEvent(T event, long sequence, boolean endOfBatch) throws Exception {
-        while (subscribers.isEmpty())
+        while (subscribers.isEmpty() && !dropIfNoSubscribers)
             // Wait for at least one subscriber
             try {
                 Thread.sleep(1000);

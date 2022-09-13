@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

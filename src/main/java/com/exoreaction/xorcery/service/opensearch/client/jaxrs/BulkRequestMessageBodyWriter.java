@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.ext.MessageBodyWriter;
@@ -40,11 +41,20 @@ public class BulkRequestMessageBodyWriter
                         MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
                         OutputStream entityStream) throws IOException, WebApplicationException {
 
-        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(entityStream);
-        for (ObjectNode request : bulkRequest.requests()) {
-            objectMapper.writeValue(gzipOutputStream, request);
-            gzipOutputStream.write('\n');
+        if ("gzip".equals(httpHeaders.getFirst(HttpHeaders.CONTENT_ENCODING)))
+        {
+            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(entityStream);
+            for (ObjectNode request : bulkRequest.requests()) {
+                objectMapper.writeValue(gzipOutputStream, request);
+                gzipOutputStream.write('\n');
+            }
+            gzipOutputStream.finish();
+        } else
+        {
+            for (ObjectNode request : bulkRequest.requests()) {
+                objectMapper.writeValue(entityStream, request);
+                entityStream.write('\n');
+            }
         }
-        gzipOutputStream.finish();
     }
 }

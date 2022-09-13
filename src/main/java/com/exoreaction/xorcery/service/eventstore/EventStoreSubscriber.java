@@ -3,8 +3,8 @@ package com.exoreaction.xorcery.service.eventstore;
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.service.eventstore.disruptor.EventStoreDomainEventEventHandler;
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.service.eventstore.disruptor.EventStoreSubscriberEventHandler;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -31,13 +31,17 @@ public class EventStoreSubscriber
         disruptor = new Disruptor<>(WithResult::new, 512, new NamedThreadFactory("EventStoreSubscriber-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
-        disruptor.handleEventsWith(new EventStoreDomainEventEventHandler(client, subscription));
+        disruptor.handleEventsWith(new EventStoreSubscriberEventHandler(client, subscription));
         disruptor.start();
         subscription.request(512);
     }
 
     @Override
     public void onNext(WithResult<WithMetadata<ByteBuffer>, Metadata> item) {
+        disruptor.publishEvent((e, s, event) ->
+        {
+            e.set(event);
+        }, item);
     }
 
     @Override

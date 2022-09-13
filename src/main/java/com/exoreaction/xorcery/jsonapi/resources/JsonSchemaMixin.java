@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
-import com.exoreaction.xorcery.cqrs.aggregate.Command;
-import com.exoreaction.xorcery.cqrs.annotation.Update;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.annotation.Update;
 import com.exoreaction.xorcery.hyperschema.model.Link;
 import com.exoreaction.xorcery.hyperschema.model.Links;
 import com.exoreaction.xorcery.jsonapi.schema.ResourceDocumentSchema;

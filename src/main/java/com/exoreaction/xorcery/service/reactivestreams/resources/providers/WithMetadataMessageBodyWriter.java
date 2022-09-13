@@ -20,7 +20,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 @Provider
-@Produces({MediaType.WILDCARD})
+@Produces(MediaType.WILDCARD)
 public class WithMetadataMessageBodyWriter
         implements MessageBodyWriter<WithMetadata<Object>> {
     private final ObjectMapper objectMapper;
@@ -50,12 +50,11 @@ public class WithMetadataMessageBodyWriter
 
         Type eventType = ((ParameterizedType) genericType).getActualTypeArguments()[0];
         Class<Object> eventClass = Classes.getClass(eventType);
-/*
-        MessageBodyWriter writer = messageBodyWorkers.getMessageBodyWriter(eventClass, eventType, new Annotation[0], MediaType.WILDCARD_TYPE);
 
-*/
+        MessageBodyWriter<Object> writer = messageBodyWorkers.getMessageBodyWriter(eventClass, eventType, new Annotation[0], MediaType.WILDCARD_TYPE);
+
         objectMapper.writeValue(entityStream, withMetadata.metadata().metadata());
 
-        entityWriter.writeTo(withMetadata.event(), eventClass, eventType, new Annotation[0], MediaType.WILDCARD_TYPE, new MultivaluedHashMap<>(), entityStream);
+        writer.writeTo(withMetadata.event(), eventClass, eventType, new Annotation[0], MediaType.WILDCARD_TYPE, new MultivaluedHashMap<>(), entityStream);
     }
 }

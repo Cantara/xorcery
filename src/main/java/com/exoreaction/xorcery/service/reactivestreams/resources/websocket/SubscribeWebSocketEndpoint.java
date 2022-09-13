@@ -5,10 +5,10 @@ import com.exoreaction.xorcery.jetty.client.WriteCallbackCompletableFuture;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.SubscriptionProcess;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.ext.MessageBodyReader;
@@ -48,7 +48,6 @@ public class SubscribeWebSocketEndpoint
     private final Type resultType;
     private final Class<Object> resultClass;
 
-    private final ObjectMapper objectMapper;
     private final Marker marker;
     private final ByteBufferAccumulator byteBufferAccumulator;
     private final ByteBufferPool byteBufferPool;
@@ -62,7 +61,6 @@ public class SubscribeWebSocketEndpoint
                                       MessageBodyWriter<Object> resultWriter,
                                       Type eventType,
                                       Type resultType,
-                                      ObjectMapper objectMapper,
                                       ByteBufferPool byteBufferPool,
                                       SubscriptionProcess subscriptionProcess,
                                       String webSocketHref,
@@ -75,7 +73,6 @@ public class SubscribeWebSocketEndpoint
         this.eventClass = Classes.getClass(eventType);
         this.resultType = resultType;
         this.resultClass = Classes.getClass(resultType);
-        this.objectMapper = objectMapper;
         this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, false);
         this.byteBufferPool = byteBufferPool;
         this.subscriptionProcess = subscriptionProcess;
@@ -90,7 +87,7 @@ public class SubscribeWebSocketEndpoint
         // First send parameters, if available
         String parameterString = publisherConfiguration.json().toPrettyString();
         session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture().with(f ->
-                f.future().thenAccept(Void ->
+                f.future().thenAcceptAsync(Void ->
                 {
                     subscriber.onSubscribe(new WebSocketSubscription(session, marker));
                     logger.info(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
@@ -120,15 +117,7 @@ public class SubscribeWebSocketEndpoint
     private void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
 //                logger.info(marker, "Received:"+ Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
-            JsonFactory jf = new JsonFactory(objectMapper);
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-/* This should be done by reader itself
-            JsonParser jp = jf.createParser(inputStream);
-            JsonToken metadataToken = jp.nextToken();
-            Metadata metadata = jp.readValueAs(Metadata.class);
-            long location = jp.getCurrentLocation().getByteOffset();
-            byteBuffer.position((int) location);
-*/
 
             Object event = eventReader.readFrom(eventClass, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS, inputStream);
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);

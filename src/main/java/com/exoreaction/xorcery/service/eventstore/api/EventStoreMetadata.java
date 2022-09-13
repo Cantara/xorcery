@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.eventstore.api;
 
-import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.cqrs.metadata.RequestMetadata;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.RequestMetadata;
 
 import java.util.Optional;
 

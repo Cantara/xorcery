@@ -10,7 +10,7 @@ public abstract class ServerSubscriber<T>
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
         this.subscription = subscription;
-        subscription.request(1);
+        subscription.request(8192);
     }
 
     @Override

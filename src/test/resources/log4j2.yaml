@@ -25,17 +25,14 @@ Configuration:
       - name: client
         level: debug
 
-      - name: client.opensearch.logs
-        level: info
-
-      - name: client.opensearch.metrics
-        level: info
+      - name: client.opensearch
+        level: debug
 
       - name: com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplates
         level: debug
 
       - name: com.exoreaction.xorcery.service.reactivestreams.resources.websocket
-        level: debug
+        level: info
 
     Root:
       level: info

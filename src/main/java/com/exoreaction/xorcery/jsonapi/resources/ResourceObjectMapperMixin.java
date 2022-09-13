@@ -1,9 +1,9 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
-import com.exoreaction.xorcery.cqrs.aggregate.Command;
-import com.exoreaction.xorcery.cqrs.context.DomainContext;
-import com.exoreaction.xorcery.cqrs.model.EntityModel;
-import com.exoreaction.xorcery.cqrs.model.Model;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
+import com.exoreaction.xorcery.service.domainevents.api.context.DomainContext;
+import com.exoreaction.xorcery.model.EntityModel;
+import com.exoreaction.xorcery.model.Model;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import jakarta.ws.rs.core.UriBuilder;
 

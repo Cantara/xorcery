@@ -3,7 +3,7 @@ package com.exoreaction.xorcery.server;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
-import com.exoreaction.xorcery.cqrs.UUIDs;
+import com.exoreaction.xorcery.service.domainevents.api.UUIDs;
 import com.exoreaction.xorcery.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;

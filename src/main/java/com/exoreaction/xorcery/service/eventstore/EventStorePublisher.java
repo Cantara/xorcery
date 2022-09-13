@@ -5,7 +5,7 @@ import com.eventstore.dbclient.ResolvedEvent;
 import com.eventstore.dbclient.SubscribeToStreamOptions;
 import com.eventstore.dbclient.SubscriptionListener;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Flow;
+import java.util.concurrent.TimeUnit;
 
 public class EventStorePublisher
         implements Flow.Publisher<WithMetadata<ByteBuffer>> {
@@ -36,17 +37,17 @@ public class EventStorePublisher
 
     @Override
     public void subscribe(Flow.Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
-        new DomainEventsProcessor(subscriber);
+        new EventsProcessor(subscriber);
     }
 
-    private class DomainEventsProcessor
+    private class EventsProcessor
             extends SubscriptionListener
             implements Flow.Subscription {
 
         private Flow.Subscriber<? super WithMetadata<ByteBuffer>> subscriber;
         private com.eventstore.dbclient.Subscription subscription;
 
-        public DomainEventsProcessor(Flow.Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
+        public EventsProcessor(Flow.Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
             try {
                 this.subscriber = subscriber;
 
@@ -57,20 +58,22 @@ public class EventStorePublisher
                 SubscribeToStreamOptions subscribeToStreamOptions = parameters.from == 0 ?
                         SubscribeToStreamOptions.get().fromStart() :
                         SubscribeToStreamOptions.get().fromRevision(parameters.from);
-                subscription = client.subscribeToStream(parameters.stream, this, subscribeToStreamOptions).get();
-            } catch (JsonProcessingException | InterruptedException | ExecutionException e) {
+                subscription = client.subscribeToStream(parameters.stream, this, subscribeToStreamOptions).get(10, TimeUnit.SECONDS);
+            } catch (Throwable e) {
+                logger.error("Could not subscribe to EventStore stream", e);
                 subscriber.onError(e);
             }
         }
 
         @Override
         public void request(long n) {
-            // TODO Semaphore this one
+            // TODO Semaphore this one ?
         }
 
         @Override
         public void cancel() {
             subscription.stop();
+            subscriber.onComplete();
         }
 
         public void onEvent(com.eventstore.dbclient.Subscription subscription, ResolvedEvent resolvedEvent) {
@@ -91,15 +94,15 @@ public class EventStorePublisher
                 subscriber.onNext(new WithMetadata<>(metadata.build(), ByteBuffer.wrap(resolvedEvent.getEvent().getEventData())));
 
             } catch (IOException ex) {
-                subscriber.onError(ex);
                 subscription.stop();
+                subscriber.onError(ex);
             }
         }
 
         @Override
         public void onError(com.eventstore.dbclient.Subscription subscription, Throwable throwable) {
-            subscriber.onError(throwable);
             subscription.stop();
+            subscriber.onError(throwable);
         }
 
         @Override

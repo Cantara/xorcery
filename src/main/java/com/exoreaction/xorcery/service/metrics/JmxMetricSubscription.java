@@ -1,9 +1,8 @@
 package com.exoreaction.xorcery.service.metrics;
 
 import com.codahale.metrics.*;
-import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -11,8 +10,6 @@ import org.apache.logging.log4j.LogManager;
 
 import javax.management.*;
 import java.time.Duration;
-import java.time.Period;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.concurrent.*;
 

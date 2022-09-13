@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.metrics;
 
-import com.exoreaction.xorcery.cqrs.metadata.CommonMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.CommonMetadata;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 
 public record MetricsMetadata(Metadata metadata)
     implements CommonMetadata, DeploymentMetadata

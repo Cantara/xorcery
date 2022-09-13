@@ -6,11 +6,11 @@ data:
       sources:
         pattern: type=='metrics'
         configuration:
-          delay: PT5S
+          delay: PT30S
           filter:
             - java.lang:type=OperatingSystem
           rel: opensearch
       consumers:
         pattern: type=='opensearch'
         configuration:
-          index: "metrics-{{environment}}-{{tag}}-%1$tF"
+          index: "metrics-{{environment}}-{{tag}}-%tF"

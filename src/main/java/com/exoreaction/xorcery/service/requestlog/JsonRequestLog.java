@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.requestlog;
 
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -13,11 +13,6 @@ import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Flow;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Singleton
 public class JsonRequestLog

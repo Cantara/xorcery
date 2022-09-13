@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.api;
 
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 
 /**
  * @author rickardoberg

@@ -47,8 +47,8 @@ public class EventStoreService
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
             builder.api(EventStoreRels.eventstore.name(), "api/eventstore");
-            builder.websocket(EventStoreRels.writeevents.name(), "ws/writeevents");
-            builder.websocket(EventStoreRels.readevents.name(), "ws/readevents");
+            builder.websocket(EventStoreRels.eventpublisher.name(), "ws/eventpublisher");
+            builder.websocket(EventStoreRels.eventsubscriber.name(), "ws/eventsubscriber");
         }
 
         @Override
@@ -78,13 +78,13 @@ public class EventStoreService
     @Override
     public void onStartup(Container container) {
         // Read
-        sro.getLinkByRel(EventStoreRels.readevents.name()).ifPresent(link ->
+        sro.getLinkByRel(EventStoreRels.eventpublisher.name()).ifPresent(link ->
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
         });
 
         // Write
-        sro.getLinkByRel(EventStoreRels.writeevents.name()).ifPresent(link ->
+        sro.getLinkByRel(EventStoreRels.eventsubscriber.name()).ifPresent(link ->
         {
             reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
         });

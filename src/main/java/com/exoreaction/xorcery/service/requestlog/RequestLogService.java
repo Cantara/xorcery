@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.requestlog;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -46,7 +46,7 @@ public class RequestLogService
 
     private final ServiceResourceObject resourceObject;
     private final ReactiveStreams reactiveStreams;
-    private final BroadcastEventHandler<WithMetadata<ObjectNode>> broadcastEventHandler = new BroadcastEventHandler<>();
+    private final BroadcastEventHandler<WithMetadata<ObjectNode>> broadcastEventHandler = new BroadcastEventHandler<>(false);
 
     @Inject
     public RequestLogService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
@@ -92,17 +92,7 @@ public class RequestLogService
             implements Flow.Publisher<WithMetadata<ObjectNode>> {
         @Override
         public void subscribe(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
-            subscriber.onSubscribe(broadcastEventHandler.add(subscriber, new Flow.Subscription() {
-                @Override
-                public void request(long n) {
-                    // Ignore
-                }
-
-                @Override
-                public void cancel() {
-                    subscriber.onComplete();
-                }
-            }));
+            subscriber.onSubscribe(broadcastEventHandler.add(subscriber));
         }
     }
 }

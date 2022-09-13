@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.log4jappender;
 
-import com.exoreaction.xorcery.cqrs.metadata.CommonMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.CommonMetadata;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 
 public record LoggingMetadata(Metadata metadata)
     implements CommonMetadata, DeploymentMetadata

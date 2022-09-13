@@ -93,16 +93,7 @@ public class Log4jAppenderService
             implements Flow.Publisher<WithMetadata<LogEvent>> {
         @Override
         public void subscribe(Flow.Subscriber<? super WithMetadata<LogEvent>> subscriber) {
-            subscriber.onSubscribe(appender.getUnicastEventHandler().add(subscriber, new Flow.Subscription() {
-                @Override
-                public void request(long n) {
-                    // Ignore for now
-                }
-
-                @Override
-                public void cancel() {
-                }
-            }));
+            subscriber.onSubscribe(appender.getUnicastEventHandler().add(subscriber));
         }
     }
 }

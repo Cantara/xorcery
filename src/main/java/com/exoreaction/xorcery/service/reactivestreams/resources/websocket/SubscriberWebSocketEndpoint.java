@@ -98,7 +98,7 @@ public class SubscriberWebSocketEndpoint
     }
 
     @Override
-    public synchronized void onWebSocketPartialText(String message, boolean fin) {
+    public void onWebSocketPartialText(String message, boolean fin) {
         if (subscriberConfiguration == null) {
             configurationMessage += message;
 

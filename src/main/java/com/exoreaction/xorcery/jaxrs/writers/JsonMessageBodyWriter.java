@@ -18,7 +18,7 @@ import java.nio.charset.StandardCharsets;
 
 @Singleton
 @Provider
-@Produces(MediaType.APPLICATION_OCTET_STREAM)
+@Produces(MediaType.WILDCARD)
 public class JsonMessageBodyWriter
         implements MessageBodyWriter<Object> {
     private final ObjectMapper objectMapper;

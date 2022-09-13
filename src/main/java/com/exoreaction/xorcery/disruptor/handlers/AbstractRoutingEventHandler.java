@@ -38,6 +38,23 @@ public abstract class AbstractRoutingEventHandler<T>
         };
     }
 
+    public Flow.Subscription add(Flow.Subscriber<? super T> subscriber) {
+        SubscriptionTracker<T> tracker = new SubscriptionTracker<>(subscriber, new AtomicLong());
+        subscribers.add(tracker);
+        return new Flow.Subscription() {
+            @Override
+            public void request(long n) {
+                tracker.requests().addAndGet(n);
+            }
+
+            @Override
+            public void cancel() {
+                subscribers.remove(tracker);
+                subscriber.onComplete();
+            }
+        };
+    }
+
     public void remove(Flow.Subscriber<? super T> subscriber)
     {
         subscribers.removeIf(t -> t.subscriber() == subscriber);

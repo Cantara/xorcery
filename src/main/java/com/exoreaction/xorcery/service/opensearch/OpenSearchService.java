@@ -5,15 +5,16 @@ import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
+import com.exoreaction.xorcery.service.opensearch.api.OpenSearchRels;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.index.AcknowledgedResponse;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateComponentTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateIndexTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.IndexTemplate;
-import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.OpenSearchProjections;
-import com.exoreaction.xorcery.service.opensearch.eventstore.domainevents.ProjectionListener;
+import com.exoreaction.xorcery.service.opensearch.streams.ClientSubscriberConductorListener;
+import com.exoreaction.xorcery.service.opensearch.streams.OpenSearchCommitPublisher;
+import com.exoreaction.xorcery.service.opensearch.streams.OpenSearchSubscriber;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -43,10 +44,11 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 @Singleton
 public class OpenSearchService
-        implements ContainerLifecycleListener, LifeCycle.Listener, OpenSearchProjections {
+        implements ContainerLifecycleListener, LifeCycle.Listener {
     private static Logger logger = LogManager.getLogger(OpenSearchService.class);
 
     public static final String SERVICE_TYPE = "opensearch";
@@ -59,8 +61,6 @@ public class OpenSearchService
     private JettyHttpClientSupplier instance;
     private ServiceResourceObject sro;
 
-    private Listeners<ProjectionListener> listeners = new Listeners<>(ProjectionListener.class);
-
     @Provider
     public static class Feature
             extends AbstractFeature {
@@ -72,12 +72,13 @@ public class OpenSearchService
 
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.websocket("opensearch", "ws/opensearch");
+            builder.websocket(OpenSearchRels.opensearch.name(), "ws/opensearch")
+                    .websocket(OpenSearchRels.opensearchcommits.name(), "ws/opensearchcommits");
         }
 
         @Override
         protected void configure() {
-            context.register(OpenSearchService.class, ContainerLifecycleListener.class, OpenSearchProjections.class);
+            context.register(OpenSearchService.class, ContainerLifecycleListener.class);
         }
     }
 
@@ -86,7 +87,6 @@ public class OpenSearchService
                              ReactiveStreams reactiveStreams,
                              Configuration configuration,
                              JettyHttpClientSupplier instance,
-                             Xorcery xorcery,
                              Server server,
                              @Named(SERVICE_TYPE) ServiceResourceObject sro) {
         this.conductor = conductor;
@@ -99,7 +99,9 @@ public class OpenSearchService
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
         client = new OpenSearchClient(new ClientConfig()
-                .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch")).build())
+                .register(new LoggingFeature.LoggingFeatureBuilder()
+                        .level(Level.INFO)
+                        .withLogger(java.util.logging.Logger.getLogger("client.opensearch")).build())
                 .register(instance)
                 .connectorProvider(new JettyConnectorProvider()), host);
     }
@@ -111,30 +113,27 @@ public class OpenSearchService
         loadComponentTemplates();
         loadIndexTemplates();
 
-        URI host = configuration.getURI("opensearch.url").orElseThrow();
-
         try {
             Map<String, IndexTemplate> templates = client.indices().getIndexTemplates().toCompletableFuture().get(10, TimeUnit.SECONDS).getIndexTemplates();
             for (String templateName : templates.keySet()) {
                 logger.info("Index template:" + templateName);
             }
 
-            // TODO Split these out into their own services that depend on OpenSearchService
-/*
-            conductor.addConductorListener(new EventStoreConductorListener(
-                    new OpenSearchClient(new ClientConfig()
-                            .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.events")).build())
-                            .register(instance)
-                            .connectorProvider(new JettyConnectorProvider()), host),
-                    reactiveStreams, sro.serviceIdentifier(), "events", listeners));
-*/
+            OpenSearchCommitPublisher openSearchCommitPublisher = new OpenSearchCommitPublisher();
 
-            sro.getLinkByRel("opensearch").ifPresent(link ->
+            conductor.addConductorListener(new ClientSubscriberConductorListener(client,
+                    reactiveStreams, openSearchCommitPublisher, sro.serviceIdentifier()));
+
+            sro.getLinkByRel(OpenSearchRels.opensearch.name()).ifPresent(link ->
             {
-                reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new OpenSearchServerSubscriber(new OpenSearchClient(new ClientConfig()
-                        .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch.subscriber")).build())
-                        .register(instance)
-                        .connectorProvider(new JettyConnectorProvider()), host), cfg), OpenSearchServerSubscriber.class);
+                reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new OpenSearchSubscriber(client, openSearchCommitPublisher, cfg), OpenSearchSubscriber.class);
+            });
+
+            sro.getLinkByRel(OpenSearchRels.opensearchcommits.name()).ifPresent(link ->
+            {
+                reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> {
+                    return openSearchCommitPublisher;
+                }, OpenSearchCommitPublisher.class);
             });
         } catch (Throwable e) {
             throw new RuntimeException(e);
@@ -234,39 +233,36 @@ public class OpenSearchService
 
     @Override
     public void lifeCycleStopping(LifeCycle event) {
-        try {
 
-            {
-                // Delete indexes for now
-                AcknowledgedResponse deleteIndexResponse = client.indices().deleteIndex("domainevents-*")
-                        .toCompletableFuture().get(10, TimeUnit.SECONDS);
+        if (configuration.getBoolean("opensearch.deleteonexit").orElse(false))
+        {
+            // Delete standard indexes (useful for testing)
+            try {
+
+                {
+                    AcknowledgedResponse deleteIndexResponse = client.indices().deleteIndex("domainevents-*")
+                            .toCompletableFuture().get(10, TimeUnit.SECONDS);
+                }
+
+                {
+                    AcknowledgedResponse deleteIndexResponse = client.indices().deleteIndex("metrics-*")
+                            .toCompletableFuture().get(10, TimeUnit.SECONDS);
+                }
+
+                {
+                    AcknowledgedResponse deleteIndexResponse = client.indices().deleteIndex("requestlogs-*")
+                            .toCompletableFuture().get(10, TimeUnit.SECONDS);
+                }
+
+                {
+                    AcknowledgedResponse deleteIndexResponse = client.indices().deleteIndex("logs-*")
+                            .toCompletableFuture().get(10, TimeUnit.SECONDS);
+                }
+
+                logger.info("Deleted OpenSearch indices");
+            } catch (Throwable e) {
+                logger.warn("Could not close OpenSearch service", e);
             }
-
-            {
-                // Delete indexes for now
-                AcknowledgedResponse deleteIndexResponse = client.indices().deleteIndex("metrics-*")
-                        .toCompletableFuture().get(10, TimeUnit.SECONDS);
-            }
-
-            {
-                // Delete indexes for now
-                AcknowledgedResponse deleteIndexResponse = client.indices().deleteIndex("requestlogs-*")
-                        .toCompletableFuture().get(10, TimeUnit.SECONDS);
-            }
-
-            {
-                // Delete indexes for now
-                AcknowledgedResponse deleteIndexResponse = client.indices().deleteIndex("logs-*")
-                        .toCompletableFuture().get(10, TimeUnit.SECONDS);
-            }
-
-            logger.info("Deleted OpenSearch indices");
-        } catch (Throwable e) {
-            logger.warn("Could not close OpenSearch service", e);
         }
-    }
-
-    public void addProjectionListener(ProjectionListener listener) {
-        listeners.addListener(listener);
     }
 }

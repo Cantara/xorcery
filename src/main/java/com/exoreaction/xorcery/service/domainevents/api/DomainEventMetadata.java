@@ -1,11 +1,11 @@
 package com.exoreaction.xorcery.service.domainevents.api;
 
-import com.exoreaction.xorcery.cqrs.aggregate.Aggregate;
-import com.exoreaction.xorcery.cqrs.aggregate.Command;
-import com.exoreaction.xorcery.cqrs.metadata.CommonMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
-import com.exoreaction.xorcery.cqrs.metadata.RequestMetadata;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.Aggregate;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
+import com.exoreaction.xorcery.metadata.CommonMetadata;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.RequestMetadata;
 
 public record DomainEventMetadata(Metadata metadata)
     implements CommonMetadata, RequestMetadata, DeploymentMetadata

@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.jaxrs.writers.ObjectNodeMessageBodyWriter;
 import com.exoreaction.xorcery.service.opensearch.client.document.DocumentClient;
 import com.exoreaction.xorcery.service.opensearch.client.index.IndexClient;
 import com.exoreaction.xorcery.service.opensearch.client.jaxrs.BulkRequestMessageBodyWriter;
+import com.exoreaction.xorcery.service.opensearch.client.search.SearchClient;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,12 +39,15 @@ public record OpenSearchClient(Client client, URI host) {
         return new DocumentClient(this::call);
     }
 
+    public SearchClient search() {
+        return new SearchClient(this::call);
+    }
+
     private WebTarget request() {
         return client.target(host);
     }
 
-    private CompletionStage<ObjectNode> call(BiConsumer<WebTarget, InvocationCallback<ObjectNode>> invocation)
-    {
+    private CompletionStage<ObjectNode> call(BiConsumer<WebTarget, InvocationCallback<ObjectNode>> invocation) {
         OpenSearchRestProcess restProcess = new OpenSearchRestProcess(this::request, new CompletableFuture<>(), invocation);
         restProcess.start();
         return restProcess.result();

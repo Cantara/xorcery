@@ -17,7 +17,8 @@ public record DocumentClient(
     public CompletionStage<BulkResponse> bulk(String indexId, IndexBulkRequest request) {
         return requests.apply((target, callback) -> target.path(indexId).path("_bulk")
                         .request(MediaType.APPLICATION_JSON_TYPE).async()
-                        .put(Entity.entity(request, new Variant(MediaType.APPLICATION_JSON_TYPE, "en", "gzip")), callback))
+                        .put(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE), callback))
+//                        .put(Entity.entity(request, new Variant(MediaType.APPLICATION_JSON_TYPE, "en", "gzip")), callback))
                 .thenApply(BulkResponse::new);
     }
 }

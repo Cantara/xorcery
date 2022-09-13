@@ -29,7 +29,7 @@ class WebSocketSubscription implements Flow.Subscription {
     }
 
     @Override
-    public synchronized void request(long n) {
+    public void request(long n) {
         if (!session.isOpen())
             return;
 
@@ -77,7 +77,7 @@ class WebSocketSubscription implements Flow.Subscription {
     }
 
     @Override
-    public synchronized void cancel() {
+    public void cancel() {
         requests.set(0);
         request(Long.MIN_VALUE);
     }

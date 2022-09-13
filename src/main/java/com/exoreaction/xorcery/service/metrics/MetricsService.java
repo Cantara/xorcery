@@ -2,8 +2,8 @@ package com.exoreaction.xorcery.service.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.DeploymentMetadata;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
@@ -78,6 +78,10 @@ public class MetricsService
 
     @Override
     public void onStartup(Container container) {
+        resourceObject.getLinkByRel("jmxmetrics").ifPresent(link ->
+        {
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class);
+        });
         resourceObject.getLinkByRel("metricevents").ifPresent(link ->
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class);

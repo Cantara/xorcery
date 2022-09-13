@@ -1,9 +1,9 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
-import com.exoreaction.xorcery.cqrs.UUIDs;
-import com.exoreaction.xorcery.cqrs.aggregate.Command;
-import com.exoreaction.xorcery.cqrs.context.DomainContext;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.service.domainevents.api.UUIDs;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
+import com.exoreaction.xorcery.service.domainevents.api.context.DomainContext;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.fasterxml.jackson.databind.JsonNode;

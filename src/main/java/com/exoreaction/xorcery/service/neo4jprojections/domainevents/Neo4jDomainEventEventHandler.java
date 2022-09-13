@@ -4,7 +4,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.cqrs.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
@@ -92,40 +92,53 @@ public class Neo4jDomainEventEventHandler
             for (JsonNode jsonNode : eventsJson) {
                 ObjectNode objectNode = (ObjectNode) jsonNode;
                 String type = objectNode.path("@class").textValue();
-                type = type.substring(type.lastIndexOf('$') + 1);
 
                 Map<String, Object> parameters = Cypher.toMap(objectNode);
                 parameters.put("metadata", metadataMap);
 
                 try {
                     List<String> statement = cachedEventCypher.computeIfAbsent(type, t ->
-                            event.event().metadata().getString("domain")
-                                    .map(domain ->
-                                    {
-                                        String statementFile = "/neo4j/" + domain + "/" + t + ".cyp";
-                                        try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
-                                            if (resourceAsStream == null)
-                                                return null;
+                    {
+                        if (t.indexOf('$') == -1)
+                        {
+                            // Normal type, strip package
+                            t = t.substring(t.lastIndexOf('.') + 1);
+                        } else {
+                            // For enclosed types
+                            t = t.substring(t.lastIndexOf('$') + 1);
+                        }
 
-                                            return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
-                                        } catch (IOException e) {
-                                            logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
-                                            return null;
-                                        }
-                                    })
-                                    .orElseGet(() ->
-                                    {
-                                        String statementFile = "/neo4j/" + t + ".cyp";
-                                        try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
-                                            if (resourceAsStream == null)
-                                                return null;
+                        final String shortenedType = t;
 
-                                            return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
-                                        } catch (IOException e) {
-                                            logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+                        return event.event().metadata().getString("domain")
+                                .map(domain ->
+                                {
+                                    String statementFile = "/neo4j/" + domain + "/" + shortenedType + ".cyp";
+                                    try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
+                                        if (resourceAsStream == null)
                                             return null;
+
+                                        return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
+                                    } catch (IOException e) {
+                                        logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+                                        return null;
+                                    }
+                                })
+                                .orElseGet(() ->
+                                        {
+                                            String statementFile = "/neo4j/" + shortenedType + ".cyp";
+                                            try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
+                                                if (resourceAsStream == null)
+                                                    return null;
+
+                                                return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
+                                            } catch (IOException e) {
+                                                logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+                                                return null;
+                                            }
                                         }
-                                    }));
+                                );
+                    });
                     if (statement == null)
                         break;
 
@@ -133,7 +146,7 @@ public class Neo4jDomainEventEventHandler
                         try {
                             tx.execute(stmt, parameters);
                         } catch (Throwable e) {
-                            logger.error(String.format("Could not apply Neo4j statement for event %s (metadata:%s,parameters:%s):\n%s",type,metadataMap.toString(),parameters.toString(),stmt), e);
+                            logger.error(String.format("Could not apply Neo4j statement for event %s (metadata:%s,parameters:%s):\n%s", type, metadataMap.toString(), parameters.toString(), stmt), e);
                             throw e;
                         }
                     }
@@ -199,8 +212,7 @@ public class Neo4jDomainEventEventHandler
 
     @Override
     public void onShutdown() {
-        if (tx != null)
-        {
+        if (tx != null) {
             tx.rollback();
             tx.close();
         }

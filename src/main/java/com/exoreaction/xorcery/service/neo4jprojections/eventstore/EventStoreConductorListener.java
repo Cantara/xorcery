@@ -109,7 +109,7 @@ public class EventStoreConductorListener extends AbstractConductorListener {
                                 });
                     });
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            logger.error("Could not subscribe to stream ", e);
         }
     }
 
