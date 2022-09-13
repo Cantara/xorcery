@@ -4,7 +4,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery</artifactId>
-    <version>0.8.20-SNAPSHOT</version>
+    <version>0.8.20</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -30,7 +30,7 @@
         <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
         <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
         <url>https://github.com/Cantara/xorcery</url>
-        <tag>HEAD</tag>
+        <tag>xorcery-0.8.20</tag>
     </scm>
 
     <dependencyManagement>
@@ -496,7 +496,7 @@
                         <argument>--add-opens=java.base/java.io=ALL-UNNAMED</argument>
                         <argument>--add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED</argument>
                         <argument>-classpath</argument>
-                        <classpath/>
+                        <classpath />
                         <argument>com.exoreaction.xorcery.server.Main</argument>
                     </arguments>
                 </configuration>
