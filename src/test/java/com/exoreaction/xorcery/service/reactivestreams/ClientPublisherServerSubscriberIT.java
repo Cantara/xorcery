@@ -105,7 +105,7 @@ public class ClientPublisherServerSubscriberIT {
             reactiveStreams.subscriber("/serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
 
             // Client publisher
-            final long total = 1000000;
+            final long total = 1000;
             final ClientPublisher<WithResult<WithMetadata<String>, Integer>> clientPublisher = new ClientPublisher<>() {
                 @Override
                 protected void publish(Flow.Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber) {

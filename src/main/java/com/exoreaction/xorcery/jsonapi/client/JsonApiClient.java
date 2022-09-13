@@ -29,7 +29,7 @@ public record JsonApiClient(Client client) {
         CompletableFuture<ResourceObject> future = new CompletableFuture<>();
         client.target(link.getHrefAsUri())
                 .request(MediaTypes.APPLICATION_JSON_API_TYPE)
-                .buildPost(Entity.entity(resourceObject.json(), MediaTypes.APPLICATION_JSON_API_TYPE))
+                .buildPost(Entity.entity(resourceObject, MediaTypes.APPLICATION_JSON_API_TYPE))
                 .submit(new ResourceObjectCallback(future, link));
         return future;
     }
@@ -45,7 +45,7 @@ public record JsonApiClient(Client client) {
         CompletableFuture<ResourceObject> future = new CompletableFuture<>();
         client.target(link.getHrefAsUri())
                 .request(MediaTypes.APPLICATION_JSON_API_TYPE)
-                .buildPost(Entity.entity(resourceDocument.json(), MediaTypes.APPLICATION_JSON_API_TYPE))
+                .buildPost(Entity.entity(resourceDocument, MediaTypes.APPLICATION_JSON_API_TYPE))
                 .submit(new ResourceObjectCallback(future, link));
         return future;
     }

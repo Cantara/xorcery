@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
+import com.exoreaction.xorcery.jaxrs.readers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
@@ -88,7 +88,7 @@ public class Neo4jProjectionsService
         this.metricRegistry = metricRegistry;
 
         this.jsonApiClient = new JsonApiClient(ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                .register(new JsonApiMessageBodyReader(new ObjectMapper()))
+                .register(new JsonElementMessageBodyReader(new ObjectMapper()))
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.neo4jprojections")).build())
                 .register(clientInstance)
                 .connectorProvider(new JettyConnectorProvider()))

@@ -24,13 +24,13 @@ import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.describedby;
 @Singleton
 @Provider
 @Produces({MediaType.WILDCARD})
-public class JsonApiMessageBodyWriter
+public class JsonElementMessageBodyWriter
         implements MessageBodyWriter<JsonElement> {
     private final ObjectMapper objectMapper;
     private final ObjectMapper yamlObjectMapper;
 
     @Inject
-    public JsonApiMessageBodyWriter(ObjectMapper objectMapper) {
+    public JsonElementMessageBodyWriter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
     }

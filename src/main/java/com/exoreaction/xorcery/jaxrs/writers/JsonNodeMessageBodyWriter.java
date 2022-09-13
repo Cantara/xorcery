@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.jaxrs.writers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
@@ -18,23 +19,24 @@ import java.lang.reflect.Type;
 
 @Singleton
 @Provider
-@Produces(MediaType.APPLICATION_JSON)
-public class ObjectNodeMessageBodyWriter
-        implements MessageBodyWriter<ObjectNode> {
+@Produces(MediaType.WILDCARD)
+public class JsonNodeMessageBodyWriter
+        implements MessageBodyWriter<JsonNode> {
     private ObjectMapper objectMapper;
 
     @Inject
-    public ObjectNodeMessageBodyWriter(ObjectMapper objectMapper) {
+    public JsonNodeMessageBodyWriter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return ObjectNode.class.equals(type);
+        boolean result = JsonNode.class.isAssignableFrom(type) && (mediaType.isWildcardType() || mediaType.getSubtype().endsWith("json"));
+        return result;
     }
 
     @Override
-    public void writeTo(ObjectNode jsonObject, Class<?> type, Type genericType, Annotation[] annotations,
+    public void writeTo(JsonNode jsonObject, Class<?> type, Type genericType, Annotation[] annotations,
                         MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
                         OutputStream entityStream) throws IOException, WebApplicationException {
         objectMapper.writeValue(entityStream, jsonObject);

@@ -4,7 +4,9 @@ import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
+import com.exoreaction.xorcery.jaxrs.readers.JsonElementMessageBodyReader;
+import com.exoreaction.xorcery.jaxrs.writers.JsonElementMessageBodyWriter;
+import com.exoreaction.xorcery.jaxrs.writers.JsonNodeMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.rest.RestProcess;
@@ -28,7 +30,6 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
@@ -105,14 +106,14 @@ public class RegistryService
                            IterableProvider<ServiceResourceObject> serviceResources,
                            ReactiveStreams reactiveStreams,
                            Configuration configuration,
-                           JettyHttpClientContract clientInstance,
-                           ServletContextHandler servletContextHandler) {
+                           JettyHttpClientContract clientInstance) {
         this.resourceObject = resourceObject;
         this.serviceResources = serviceResources;
         this.reactiveStreams = reactiveStreams;
         this.configuration = configuration;
         this.jsonApiClient = new JsonApiClient(ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                .register(new JsonApiMessageBodyReader(new ObjectMapper()))
+                .register(new JsonElementMessageBodyReader(new ObjectMapper()))
+                .register(new JsonElementMessageBodyWriter(new ObjectMapper()))
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.registry")).build())
                 .register(clientInstance)
                 .connectorProvider(new JettyConnectorProvider())

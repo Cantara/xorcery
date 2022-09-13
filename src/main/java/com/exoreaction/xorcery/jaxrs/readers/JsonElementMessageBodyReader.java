@@ -21,13 +21,13 @@ import java.lang.reflect.Type;
 @Singleton
 @Provider
 @Consumes(MediaTypes.APPLICATION_JSON_API)
-public class JsonApiMessageBodyReader
+public class JsonElementMessageBodyReader
         implements MessageBodyReader<JsonElement> {
 
     private final ObjectMapper objectMapper;
 
     @Inject
-    public JsonApiMessageBodyReader(ObjectMapper objectMapper) {
+    public JsonElementMessageBodyReader(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 

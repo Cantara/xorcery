@@ -4,7 +4,7 @@ import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
+import com.exoreaction.xorcery.jaxrs.readers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
@@ -96,7 +96,7 @@ public class JmxMetrics
         this.registry = registry;
         Client client = ClientBuilder.newBuilder()
                 .withConfig(new ClientConfig()
-                        .register(new JsonApiMessageBodyReader(new ObjectMapper()))
+                        .register(new JsonElementMessageBodyReader(new ObjectMapper()))
                         .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.jmxmetrics")).build())
                         .connectorProvider(new JettyConnectorProvider())
                         .register(instance))

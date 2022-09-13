@@ -18,7 +18,7 @@ import java.lang.reflect.Type;
 
 @Singleton
 @Provider
-@Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM})
+@Consumes(MediaType.WILDCARD)
 public class JsonNodeMessageBodyReader
         implements MessageBodyReader<JsonNode> {
 
@@ -31,7 +31,8 @@ public class JsonNodeMessageBodyReader
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return JsonNode.class.isAssignableFrom(type);
+        boolean result = JsonNode.class.isAssignableFrom(type) && (mediaType.isWildcardType() || mediaType.getSubtype().endsWith("json"));
+        return result;
     }
 
     @Override

@@ -2,7 +2,8 @@ package com.exoreaction.xorcery.service.certmanager;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.jaxrs.readers.JsonApiMessageBodyReader;
+import com.exoreaction.xorcery.jaxrs.readers.JsonElementMessageBodyReader;
+import com.exoreaction.xorcery.jaxrs.writers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
@@ -40,7 +41,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Base64;
-import java.util.concurrent.CompletableFuture;
 
 @Singleton
 public class CertificateManagerService
@@ -104,7 +104,8 @@ public class CertificateManagerService
 
         Client client = ClientBuilder.newBuilder()
                 .withConfig(new ClientConfig()
-                        .register(new JsonApiMessageBodyReader(new ObjectMapper()))
+                        .register(new JsonElementMessageBodyReader(new ObjectMapper()))
+                        .register(new JsonElementMessageBodyWriter(new ObjectMapper()))
                         .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.certmanager")).build())
                         .register(instance)
                         .connectorProvider(new JettyConnectorProvider()))

@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch.client;
 
 import com.exoreaction.xorcery.jaxrs.readers.JsonNodeMessageBodyReader;
-import com.exoreaction.xorcery.jaxrs.writers.ObjectNodeMessageBodyWriter;
+import com.exoreaction.xorcery.jaxrs.writers.JsonNodeMessageBodyWriter;
 import com.exoreaction.xorcery.service.opensearch.client.document.DocumentClient;
 import com.exoreaction.xorcery.service.opensearch.client.index.IndexClient;
 import com.exoreaction.xorcery.service.opensearch.client.jaxrs.BulkRequestMessageBodyWriter;
@@ -24,7 +24,7 @@ public record OpenSearchClient(Client client, URI host) {
 
     public OpenSearchClient(ClientConfig clientConfig, URI host) {
         this(ClientBuilder.newBuilder().withConfig(clientConfig
-                        .register(new ObjectNodeMessageBodyWriter(new ObjectMapper()))
+                        .register(new JsonNodeMessageBodyWriter(new ObjectMapper()))
                         .register(new JsonNodeMessageBodyReader(new ObjectMapper()))
                         .register(new BulkRequestMessageBodyWriter(new ObjectMapper()
                                 .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false))))
