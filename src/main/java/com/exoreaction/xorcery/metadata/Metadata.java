@@ -73,6 +73,6 @@ public record Metadata(ObjectNode metadata) {
     }
 
     public Builder toBuilder() {
-        return new Builder(metadata.deepCopy());
+        return new Builder(metadata);
     }
 }

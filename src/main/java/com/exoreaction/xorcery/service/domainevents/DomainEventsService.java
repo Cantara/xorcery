@@ -107,8 +107,7 @@ public class DomainEventsService
         CompletableFuture<Metadata> future = new CompletableFuture<>();
         disruptor.getRingBuffer().publishEvent((event, seq, m, e, f) ->
         {
-            event.set(new WithMetadata<>(deploymentMetadata.metadata()
-                    .toBuilder().add(m).build(), e), f);
+            event.set(new WithMetadata<>(metadata.toBuilder().add(deploymentMetadata.metadata()).build(), e), f);
         }, metadata, events, future);
 
         return future.thenApply(md ->
