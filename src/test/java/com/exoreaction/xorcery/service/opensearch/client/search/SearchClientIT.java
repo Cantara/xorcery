@@ -32,6 +32,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+@Disabled
 public class SearchClientIT {
 
     static String json = """
