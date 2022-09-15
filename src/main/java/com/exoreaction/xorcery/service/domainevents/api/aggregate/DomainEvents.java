@@ -6,7 +6,7 @@ import java.util.List;
 
 public record DomainEvents(List<DomainEvent> events) {
 
-    public static DomainEvents events(DomainEvent... events) {
+    public static DomainEvents of(DomainEvent... events) {
         return new DomainEvents(List.of(events));
     }
 

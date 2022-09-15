@@ -11,6 +11,7 @@ import com.exoreaction.xorcery.service.opensearch.client.search.SearchQuery;
 import com.exoreaction.xorcery.service.opensearch.client.search.SearchRequest;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,8 +53,10 @@ public class ClientSubscriberConductorListener extends AbstractConductorListener
                 {
                     builder.add("id", id);
                 });
-
                 builder.add("timestamp", document.timestamp());
+
+                if (document.json().path("_source").path("metadata") instanceof ObjectNode objectNode)
+                    builder.builder().setAll(objectNode);
             });
             return builder.build();
         }).whenComplete((updatedConfiguration, throwable) ->

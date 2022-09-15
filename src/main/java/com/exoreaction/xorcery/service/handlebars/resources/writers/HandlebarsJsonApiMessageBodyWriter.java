@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.handlebars.resources.writers;
 import com.exoreaction.xorcery.hyperschema.client.HyperSchemaClient;
 import com.exoreaction.xorcery.hyperschema.model.HyperSchema;
 import com.exoreaction.xorcery.jaxrs.readers.JsonElementMessageBodyReader;
+import com.exoreaction.xorcery.jaxrs.readers.JsonNodeMessageBodyReader;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.service.handlebars.helpers.OptionalValueResolver;
@@ -63,7 +64,7 @@ public class HandlebarsJsonApiMessageBodyWriter
         this.handlebars = handlebars;
         this.requestContext = requestContext;
         client = ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                        .register(new JsonElementMessageBodyReader(new ObjectMapper()))
+                        .register(new JsonNodeMessageBodyReader(new ObjectMapper()))
                         .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.sandbox")).build())
                         .connectorProvider(new JettyConnectorProvider())
                         .register(clientSupplier))

@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.neo4jprojections.domainevents;
+package com.exoreaction.xorcery.service.neo4jprojections.streams;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
@@ -8,6 +8,10 @@ import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
+import com.exoreaction.xorcery.service.neo4jprojections.api.ProjectionCommit;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jMetadata;
+import com.exoreaction.xorcery.service.opensearch.api.IndexCommit;
+import com.exoreaction.xorcery.service.opensearch.streams.OpenSearchMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.util.Listeners;
@@ -23,71 +27,76 @@ import org.neo4j.graphdb.Transaction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
+import java.util.function.Consumer;
 
 /**
  * @author rickardoberg
  * @since 18/04/2022
  */
 
-public class Neo4jDomainEventEventHandler
-        implements EventHandler<WithResult<WithMetadata<ArrayNode>, Metadata>> {
+public class Neo4jProjectionEventHandler
+        implements EventHandler<WithMetadata<ArrayNode>> {
 
-    private Logger logger = LogManager.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
 
-    private Flow.Subscription subscription;
-    private final Configuration sourceConfiguration;
-    private Configuration consumerConfiguration;
-    private final Listeners<ProjectionListener> listeners;
-    private MetricRegistry metrics;
-    private long version;
-    private int appliedEvents;
-    private GraphDatabaseService graphDatabaseService;
-
-    private Transaction tx;
-    private List<CompletableFuture<Metadata>> futures = new ArrayList<>();
-    private Map<String, Object> updateParameters = new HashMap<>();
-    private Map<String, List<String>> cachedEventCypher = new HashMap<>();
-
+    private final GraphDatabaseService graphDatabaseService;
+    private final MetricRegistry metrics;
     private final Histogram batchSize;
 
-    public Neo4jDomainEventEventHandler(GraphDatabaseService graphDatabaseService,
-                                        Flow.Subscription subscription,
-                                        Configuration sourceConfiguration,
-                                        Configuration consumerConfiguration,
-                                        Listeners<ProjectionListener> listeners,
-                                        MetricRegistry metrics) {
-        String projectionId = consumerConfiguration.getString(Projection.id.name()).orElseThrow();
+    private final Flow.Subscription subscription;
+    private final Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher;
+    private final Configuration consumerConfiguration;
+
+    private final String projectionId;
+
+    private final Map<String, Object> updateParameters = new HashMap<>();
+    private final Map<String, List<String>> cachedEventCypher = new HashMap<>();
+
+    private Transaction tx;
+    private long version;
+    private long lastTimestamp;
+    private int appliedEvents;
+    private long currentBatchSize;
+
+    public Neo4jProjectionEventHandler(GraphDatabaseService graphDatabaseService,
+                                       Flow.Subscription subscription,
+                                       Optional<Long> fromVersion,
+                                       Configuration consumerConfiguration,
+                                       Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,
+                                       MetricRegistry metrics) {
+        this.projectionCommitPublisher = projectionCommitPublisher;
+        projectionId = consumerConfiguration.getString(Projection.id.name()).orElseThrow();
 
         this.graphDatabaseService = graphDatabaseService;
         this.subscription = subscription;
-        this.sourceConfiguration = sourceConfiguration;
         this.consumerConfiguration = consumerConfiguration;
-        this.listeners = listeners;
         this.metrics = metrics;
         metrics.gauge("neo4j.projections." + projectionId + ".revision", (MetricRegistry.MetricSupplier<Gauge<Long>>) () -> () -> version);
         batchSize = metrics.histogram("neo4j.projections." + projectionId + ".batchsize");
 
-        sourceConfiguration.getLong("from").ifPresent(from -> version = from);
+        fromVersion.ifPresent(from -> version = from);
 
         updateParameters.put(Cypher.toField(Projection.id), projectionId);
     }
 
     @Override
-    public void onEvent(WithResult<WithMetadata<ArrayNode>, Metadata> event, long sequence, boolean endOfBatch) throws Exception {
+    public void onEvent(WithMetadata<ArrayNode> event, long sequence, boolean endOfBatch) throws Exception {
         try {
 
             if (tx == null) {
                 tx = graphDatabaseService.beginTx();
             }
 
-            ArrayNode eventsJson = event.event().event();
-            Map<String, Object> metadataMap = Cypher.toMap(event.event().metadata().metadata());
+            event.metadata().getLong("timestamp").ifPresent(value ->
+            {
+                lastTimestamp = Math.max(lastTimestamp, value);
+            });
+
+            ArrayNode eventsJson = event.event();
+            Map<String, Object> metadataMap = Cypher.toMap(event.metadata().metadata());
 
             for (JsonNode jsonNode : eventsJson) {
                 ObjectNode objectNode = (ObjectNode) jsonNode;
@@ -99,8 +108,7 @@ public class Neo4jDomainEventEventHandler
                 try {
                     List<String> statement = cachedEventCypher.computeIfAbsent(type, t ->
                     {
-                        if (t.indexOf('$') == -1)
-                        {
+                        if (t.indexOf('$') == -1) {
                             // Normal type, strip package
                             t = t.substring(t.lastIndexOf('.') + 1);
                         } else {
@@ -110,7 +118,7 @@ public class Neo4jDomainEventEventHandler
 
                         final String shortenedType = t;
 
-                        return event.event().metadata().getString("domain")
+                        return event.metadata().getString("domain")
                                 .map(domain ->
                                 {
                                     String statementFile = "/neo4j/" + domain + "/" + shortenedType + ".cyp";
@@ -152,62 +160,56 @@ public class Neo4jDomainEventEventHandler
                     }
                 } catch (Throwable e) {
                     logger.error("Could not apply Neo4j event update", e);
-                    event.result().completeExceptionally(e);
+
                     tx = graphDatabaseService.beginTx();
                 }
 
                 appliedEvents++;
+                version++;
             }
-
-            if (!event.result().isCompletedExceptionally())
-                futures.add(event.result());
 
             if (endOfBatch) {
                 if (appliedEvents > 0) {
                     try {
                         // Update Projection node with current revision
-                        updateParameters.put("projection_revision", version + futures.size());
+                        updateParameters.put("projection_revision", version);
                         tx.execute("MERGE (projection:Projection {id:$projection_id}) SET projection.revision=$projection_revision",
                                 updateParameters);
 
                         tx.commit();
                         tx.close();
-
-                        for (CompletableFuture<Metadata> future : futures) {
-                            version++;
-                            Metadata result = new Metadata.Builder().add("revision", version).build();
-                            future.complete(result);
-                        }
-                        listeners.listener().onCommit(sourceConfiguration.getString("stream").orElse(""), version);
-
-                        batchSize.update(futures.size());
                     } catch (Throwable e) {
                         logger.error("Could not commit Neo4j updates", e);
-                        for (CompletableFuture<Metadata> future : futures) {
-                            future.completeExceptionally(e);
-                        }
                     }
 
-                    logger.info("Applied " + futures.size());
+                    logger.info("Applied " + currentBatchSize);
+
+                    appliedEvents = 0;
                 } else {
-                    // No changes applied
-                    for (CompletableFuture<Metadata> future : futures) {
-                        Metadata result = new Metadata.Builder().add("revision", version).build();
-                        future.complete(result);
-                    }
+                    tx.commit();
+                    tx.close();
                 }
-                appliedEvents = 0;
+
+                // Always send commit notification, even if no changes were made
+                projectionCommitPublisher.accept(new WithMetadata<>(new Neo4jMetadata.Builder(new Metadata.Builder())
+                        .timestamp(System.currentTimeMillis())
+                        .lastTimestamp(lastTimestamp)
+                        .build().metadata(), new ProjectionCommit(projectionId, version)));
+
                 tx = null;
 
-                subscription.request(futures.size());
-                futures.clear();
+                subscription.request(currentBatchSize);
             }
 
         } catch (Exception e) {
             logger.error("Could not update Neo4j event projection");
         }
+    }
 
-//        subscription.request(1);
+    @Override
+    public void onBatchStart(long batchSize) {
+        this.currentBatchSize = batchSize;
+        this.batchSize.update(batchSize);
     }
 
     @Override

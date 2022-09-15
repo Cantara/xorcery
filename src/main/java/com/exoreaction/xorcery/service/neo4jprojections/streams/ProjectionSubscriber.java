@@ -1,9 +1,7 @@
-package com.exoreaction.xorcery.service.neo4jprojections.domainevents;
+package com.exoreaction.xorcery.service.neo4jprojections.streams;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
-import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -12,19 +10,19 @@ import com.lmax.disruptor.dsl.ProducerType;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
-class DomainEventsSubscriber
-        implements Flow.Subscriber<WithResult<WithMetadata<ArrayNode>, Metadata>> {
+public class ProjectionSubscriber
+        implements Flow.Subscriber<WithMetadata<ArrayNode>> {
 
-    private final Function<Flow.Subscription, Neo4jDomainEventEventHandler> handlerFactory;
-    private Disruptor<WithResult<WithMetadata<ArrayNode>, Metadata>> disruptor;
+    private final Function<Flow.Subscription, Neo4jProjectionEventHandler> handlerFactory;
+    private Disruptor<WithMetadata<ArrayNode>> disruptor;
 
-    public DomainEventsSubscriber(Function<Flow.Subscription, Neo4jDomainEventEventHandler> handlerFactory) {
+    public ProjectionSubscriber(Function<Flow.Subscription, Neo4jProjectionEventHandler> handlerFactory) {
         this.handlerFactory = handlerFactory;
     }
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
-        disruptor = new Disruptor<>(WithResult::new, 1024, new NamedThreadFactory("Neo4jDomainEventsProjection-"),
+        disruptor = new Disruptor<>(WithMetadata::new, 1024, new NamedThreadFactory("Neo4jProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
 
@@ -34,7 +32,7 @@ class DomainEventsSubscriber
     }
 
     @Override
-    public void onNext(WithResult<WithMetadata<ArrayNode>, Metadata> item) {
+    public void onNext(WithMetadata<ArrayNode> item) {
 
         disruptor.publishEvent((e, seq, event) ->
         {

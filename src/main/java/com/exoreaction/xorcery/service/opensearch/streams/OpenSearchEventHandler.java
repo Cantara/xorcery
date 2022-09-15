@@ -43,7 +43,8 @@ public class OpenSearchEventHandler
     private int requestCount = 0;
 
     public OpenSearchEventHandler(OpenSearchClient client,
-                                  Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher, Configuration configuration,
+                                  Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher,
+                                  Configuration configuration,
                                   Flow.Subscription subscription,
                                   String index) {
         this.client = client;

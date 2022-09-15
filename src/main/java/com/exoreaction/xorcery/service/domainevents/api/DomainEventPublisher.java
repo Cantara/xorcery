@@ -9,5 +9,5 @@ import java.util.concurrent.CompletionStage;
 @Contract
 public interface DomainEventPublisher
 {
-    CompletionStage<Metadata> publish(Metadata metadata, DomainEvents events);
+    void publish(Metadata metadata, DomainEvents events);
 }

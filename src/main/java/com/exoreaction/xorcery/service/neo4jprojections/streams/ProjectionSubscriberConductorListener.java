@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.neo4jprojections.domainevents;
+package com.exoreaction.xorcery.service.neo4jprojections.streams;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
@@ -19,29 +19,25 @@ import org.apache.logging.log4j.Logger;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-public class DomainEventsConductorListener extends AbstractConductorListener {
+public class ProjectionSubscriberConductorListener extends AbstractConductorListener {
 
-    private Logger logger = LogManager.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
 
-    private GraphDatabases graphDatabases;
-    private ReactiveStreams reactiveStreams;
-    private MetricRegistry metricRegistry;
-    private Listeners<ProjectionListener> listeners;
-    private Function<String, CompletableFuture<Void>> isLive;
+    private final GraphDatabases graphDatabases;
+    private final ReactiveStreams reactiveStreams;
+    private final MetricRegistry metricRegistry;
+    private Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher;
 
-    public DomainEventsConductorListener(GraphDatabases graphDatabases,
-                                         ReactiveStreams reactiveStreams,
-                                         ServiceIdentifier serviceIdentifier,
-                                         String rel,
-                                         MetricRegistry metricRegistry,
-                                         Listeners<ProjectionListener> listeners,
-                                         Function<String, CompletableFuture<Void>> isLive) {
-        super(serviceIdentifier, rel);
+    public ProjectionSubscriberConductorListener(GraphDatabases graphDatabases,
+                                                 ReactiveStreams reactiveStreams,
+                                                 ServiceIdentifier serviceIdentifier,
+                                                 MetricRegistry metricRegistry,
+                                                 Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher) {
+        super(serviceIdentifier, null);
         this.graphDatabases = graphDatabases;
         this.reactiveStreams = reactiveStreams;
         this.metricRegistry = metricRegistry;
-        this.listeners = listeners;
-        this.isLive = isLive;
+        this.neo4jProjectionCommitPublisher = neo4jProjectionCommitPublisher;
     }
 
     @Override
@@ -64,15 +60,20 @@ public class DomainEventsConductorListener extends AbstractConductorListener {
 
                     if (position != null) {
                         sourceConfiguration.json().set("from", sourceConfiguration.json().numberNode(position));
+//                        neo4jProjectionCommitPublisher.accept();
                     }
 
                     reactiveStreams.subscribe(link.getHrefAsUri(),
                             sourceConfiguration,
-                            new DomainEventsSubscriber(
-                                    subscription -> new Neo4jDomainEventEventHandler(graphDatabase.getGraphDatabaseService(), subscription, sourceConfiguration, consumerConfiguration, listeners, metricRegistry)), DomainEventsSubscriber.class);
-
-                    // No catchup, we're live
-                    isLive.apply(projectionId).complete(null);
+                            new ProjectionSubscriber(
+                                    subscription -> new Neo4jProjectionEventHandler(
+                                            graphDatabase.getGraphDatabaseService(),
+                                            subscription,
+                                            sourceConfiguration.getLong("from"),
+                                            consumerConfiguration,
+                                            neo4jProjectionCommitPublisher,
+                                            metricRegistry)),
+                            ProjectionSubscriber.class);
                 });
     }
 }

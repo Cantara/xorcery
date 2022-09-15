@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.eventstore;
+package com.exoreaction.xorcery.service.eventstore.streams;
 
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.eventstore.dbclient.ResolvedEvent;
@@ -9,7 +9,6 @@ import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreParameters;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
@@ -17,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
@@ -53,12 +51,14 @@ public class EventStorePublisher
 
                 EventStoreParameters parameters = objectMapper.treeToValue(publisherConfiguration.json(), EventStoreParameters.class);
 
-                subscriber.onSubscribe(this);
+                long from = publisherConfiguration.getLong("revision").orElse(parameters.from);
 
-                SubscribeToStreamOptions subscribeToStreamOptions = parameters.from == 0 ?
+                SubscribeToStreamOptions subscribeToStreamOptions = from == 0 ?
                         SubscribeToStreamOptions.get().fromStart() :
-                        SubscribeToStreamOptions.get().fromRevision(parameters.from);
+                        SubscribeToStreamOptions.get().fromRevision(from);
                 subscription = client.subscribeToStream(parameters.stream, this, subscribeToStreamOptions).get(10, TimeUnit.SECONDS);
+
+                subscriber.onSubscribe(this);
             } catch (Throwable e) {
                 logger.error("Could not subscribe to EventStore stream", e);
                 subscriber.onError(e);

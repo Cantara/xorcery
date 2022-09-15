@@ -58,9 +58,9 @@ public class DomainEventsService
 
     private final ReactiveStreams reactiveStreams;
     private final DeploymentMetadata deploymentMetadata;
-    private ServiceResourceObject resourceObject;
-    private final UnicastEventHandler<WithResult<WithMetadata<DomainEvents>, Metadata>> subscribers = new UnicastEventHandler<>();
-    private final Disruptor<WithResult<WithMetadata<DomainEvents>, Metadata>> disruptor;
+    private final ServiceResourceObject resourceObject;
+    private final UnicastEventHandler<WithMetadata<DomainEvents>> subscribers = new UnicastEventHandler<>();
+    private final Disruptor<WithMetadata<DomainEvents>> disruptor;
 
     @Inject
     public DomainEventsService(ReactiveStreams reactiveStreams,
@@ -74,7 +74,7 @@ public class DomainEventsService
                 .build();
 
         disruptor =
-                new Disruptor<>(WithResult::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
+                new Disruptor<>(WithMetadata::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
                         ProducerType.MULTI,
                         new BlockingWaitStrategy());
 
@@ -103,26 +103,18 @@ public class DomainEventsService
     }
 
 
-    public CompletionStage<Metadata> publish(Metadata metadata, DomainEvents events) {
-        CompletableFuture<Metadata> future = new CompletableFuture<>();
-        disruptor.getRingBuffer().publishEvent((event, seq, m, e, f) ->
+    public void publish(Metadata metadata, DomainEvents events) {
+        disruptor.getRingBuffer().publishEvent((event, seq, m, e) ->
         {
-            event.set(new WithMetadata<>(metadata.toBuilder().add(deploymentMetadata.metadata()).build(), e), f);
-        }, metadata, events, future);
-
-        return future.thenApply(md ->
-        {
-            // Return original metadata with this added on top
-            metadata.metadata().setAll(md.metadata());
-            return metadata;
-        });
+            event.set(metadata.toBuilder().add(deploymentMetadata.metadata()).build(), e);
+        }, metadata, events);
     }
 
     public class DomainEventsPublisher
-            implements Flow.Publisher<WithResult<WithMetadata<DomainEvents>, Metadata>> {
+            implements Flow.Publisher<WithMetadata<DomainEvents>> {
 
         @Override
-        public void subscribe(Flow.Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber) {
+        public void subscribe(Flow.Subscriber<? super WithMetadata<DomainEvents>> subscriber) {
             subscriber.onSubscribe(subscribers.add(subscriber));
         }
     }

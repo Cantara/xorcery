@@ -7,8 +7,11 @@ import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
-import com.exoreaction.xorcery.service.neo4jprojections.domainevents.DomainEventsConductorListener;
-import com.exoreaction.xorcery.service.neo4jprojections.eventstore.EventStoreConductorListener;
+import com.exoreaction.xorcery.service.neo4jprojections.api.Neo4jProjectionRels;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionCommitPublisher;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionEventHandler;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriber;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriberConductorListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.util.Listeners;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +31,7 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 @Contract
 public class Neo4jProjectionsService
-        implements ContainerLifecycleListener, Neo4jProjections {
+        implements ContainerLifecycleListener {
 
     public static final String SERVICE_TYPE = "neo4jprojections";
 
@@ -54,25 +58,22 @@ public class Neo4jProjectionsService
 
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-
+            builder.websocket(Neo4jProjectionRels.neo4jprojectionsubscriber.name(), "ws/neo4jprojectionsubscriber")
+                    .websocket(Neo4jProjectionRels.neo4jprojectioncommits.name(), "ws/neo4jprojectioncommits");
         }
 
         @Override
         protected void configure() {
-            context.register(Neo4jProjectionsService.class, ContainerLifecycleListener.class, Neo4jProjections.class);
+            context.register(Neo4jProjectionsService.class, ContainerLifecycleListener.class);
         }
     }
 
     private final Logger logger = LogManager.getLogger(getClass());
-    private MetricRegistry metricRegistry;
-    private final JsonApiClient jsonApiClient;
-    private final ReactiveStreams reactiveStreams;
     private final Conductor conductor;
-    private final ServiceResourceObject sro;
+    private final ReactiveStreams reactiveStreams;
     private final GraphDatabases graphDatabases;
-    private final Map<String, CompletableFuture<Void>> isLive = new ConcurrentHashMap<>();
-
-    private final Listeners<ProjectionListener> listeners = new Listeners<>(ProjectionListener.class);
+    private final MetricRegistry metricRegistry;
+    private final ServiceResourceObject sro;
 
     @Inject
     public Neo4jProjectionsService(Conductor conductor,
@@ -86,19 +87,31 @@ public class Neo4jProjectionsService
         this.sro = sro;
         this.graphDatabases = graphDatabases;
         this.metricRegistry = metricRegistry;
-
-        this.jsonApiClient = new JsonApiClient(ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                .register(new JsonElementMessageBodyReader(new ObjectMapper()))
-                .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.neo4jprojections")).build())
-                .register(clientInstance)
-                .connectorProvider(new JettyConnectorProvider()))
-                .build());
     }
 
     @Override
     public void onStartup(Container container) {
-        conductor.addConductorListener(new DomainEventsConductorListener(graphDatabases, reactiveStreams, sro.serviceIdentifier(), "domainevents", metricRegistry, listeners, this::isLive));
-        conductor.addConductorListener(new EventStoreConductorListener(graphDatabases, reactiveStreams, jsonApiClient, sro.serviceIdentifier(), "events", listeners, this::isLive));
+
+        Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = new Neo4jProjectionCommitPublisher();
+
+        conductor.addConductorListener(new ProjectionSubscriberConductorListener(graphDatabases,
+                reactiveStreams, sro.serviceIdentifier(), metricRegistry, neo4jProjectionCommitPublisher));
+
+        sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectionsubscriber.name()).ifPresent(link ->
+        {
+            reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new ProjectionSubscriber(subscription -> new Neo4jProjectionEventHandler(
+                    graphDatabases.apply(cfg.getString("database").orElse("neo4j")).getGraphDatabaseService(),
+                    subscription,
+                    Optional.empty(),
+                    cfg,
+                    neo4jProjectionCommitPublisher,
+                    metricRegistry)), ProjectionSubscriber.class);
+        });
+
+        sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectioncommits.name()).ifPresent(link ->
+        {
+            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> neo4jProjectionCommitPublisher, Neo4jProjectionCommitPublisher.class);
+        });
     }
 
     @Override
@@ -109,14 +122,5 @@ public class Neo4jProjectionsService
     @Override
     public void onShutdown(Container container) {
 
-    }
-
-    public void addProjectionListener(ProjectionListener listener) {
-        listeners.addListener(listener);
-    }
-
-    public CompletableFuture<Void> isLive(String projectionId)
-    {
-        return isLive.computeIfAbsent(projectionId, id -> new CompletableFuture<>());
     }
 }

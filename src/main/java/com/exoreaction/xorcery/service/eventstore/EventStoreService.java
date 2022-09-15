@@ -6,7 +6,10 @@ import com.exoreaction.xorcery.jaxrs.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
+import com.exoreaction.xorcery.service.eventstore.streams.EventStorePublisher;
+import com.exoreaction.xorcery.service.eventstore.streams.EventStoreSubscriber;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -64,7 +67,8 @@ public class EventStoreService
         this.sro = sro;
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         String connectionString = configuration.getString("eventstore.url").orElseThrow();
 
         EventStoreDBClientSettings settings = EventStoreDBConnectionString.parse(connectionString);
