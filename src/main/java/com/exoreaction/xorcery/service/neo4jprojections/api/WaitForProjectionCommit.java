@@ -7,17 +7,20 @@ import org.apache.logging.log4j.Logger;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class WaitForProjectionCommit
         implements Flow.Subscriber<WithMetadata<ProjectionCommit>>, AutoCloseable {
 
-    record ProjectionWaiter(Optional<Long> version, Optional<Long> timestamp, CompletableFuture<Void> future) {
+    record ProjectionWaiter(Optional<Long> version, Optional<Long> timestamp,
+                            CompletableFuture<WithMetadata<ProjectionCommit>> future) {
     }
 
     private static final Logger logger = LogManager.getLogger(WaitForProjectionCommit.class);
     private final String projectionId;
     private final BlockingQueue<ProjectionWaiter> queue = new ArrayBlockingQueue<>(1024);
     private Flow.Subscription subscription;
+    private final AtomicReference<WithMetadata<ProjectionCommit>> currentCommit = new AtomicReference<>();
     private final AtomicLong currentVersion = new AtomicLong();
     private final AtomicLong currentTimestamp = new AtomicLong();
 
@@ -25,11 +28,11 @@ public class WaitForProjectionCommit
         this.projectionId = projectionId;
     }
 
-    public CompletionStage<Void> waitForVersion(long version) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
+    public CompletionStage<WithMetadata<ProjectionCommit>> waitForVersion(long version) {
+        CompletableFuture<WithMetadata<ProjectionCommit>> future = new CompletableFuture<>();
         if (currentVersion.get() >= version) {
             // Already done
-            future.complete(null);
+            future.complete(currentCommit.get());
             return future;
         }
 
@@ -41,11 +44,11 @@ public class WaitForProjectionCommit
         return future;
     }
 
-    public CompletionStage<Void> waitForTimestamp(long timestamp) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
+    public CompletionStage<WithMetadata<ProjectionCommit>> waitForTimestamp(long timestamp) {
+        CompletableFuture<WithMetadata<ProjectionCommit>> future = new CompletableFuture<>();
         if (currentTimestamp.get() >= timestamp) {
             // Already done
-            future.complete(null);
+            future.complete(currentCommit.get());
             return future;
         }
 
@@ -66,8 +69,9 @@ public class WaitForProjectionCommit
     @Override
     public void onNext(WithMetadata<ProjectionCommit> item) {
         if (item.event().id().equals(projectionId)) {
-            logger.debug("Received projection commit:"+item);
+            logger.debug("Received projection commit:" + item);
 
+            currentCommit.set(item);
             currentVersion.set(item.event().revision());
             item.metadata().getLong("lastTimestamp").ifPresent(currentTimestamp::set);
 
@@ -76,10 +80,10 @@ public class WaitForProjectionCommit
                 if (waiter != null) {
                     if (waiter.version().map(v -> v <= currentVersion.get()).orElse(false)) {
                         waiter = queue.poll();
-                        waiter.future().complete(null);
+                        waiter.future().complete(item);
                     } else if (waiter.timestamp().map(v -> v <= currentTimestamp.get()).orElse(false)) {
                         waiter = queue.poll();
-                        waiter.future().complete(null);
+                        waiter.future().complete(item);
                     } else {
                         break;
                     }
