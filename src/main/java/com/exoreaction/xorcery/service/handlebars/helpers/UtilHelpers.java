@@ -42,4 +42,12 @@ public class UtilHelpers {
     {
         return new EachHelper().apply( new UriTemplate( link.getHref() ).getTemplateVariables(), options );
     }
+
+    public Object stripquotes(String value, Options options)
+    {
+        if (value.startsWith("\"") && value.endsWith("\""))
+            return value.substring(1, value.length()-1);
+        else
+            return value;
+    }
 }

@@ -1,8 +1,8 @@
 <tbody class="form">
 <form action="" METHOD="POST">
-    <input type="hidden" name="id" value="{{id}}"/>
+    <input type="hidden" name="id" value="{{../../id}}"/>
     {{#each attributes.toMap.entrySet}}
-        <tr><td>{{key}}</td><td><input type="text" name="{{key}}" value="{{value}}"/></td></tr>
+        <tr><td>{{key}}</td><td><input type="text" name="{{key}}" value="{{stripquotes value}}"/></td></tr>
     {{/each}}
     <tr><td colspan="2"><input type="submit" value="PATCH"></td></tr>
 </form>
