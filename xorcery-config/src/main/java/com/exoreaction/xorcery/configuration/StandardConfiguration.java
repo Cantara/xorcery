@@ -1,7 +1,5 @@
 package com.exoreaction.xorcery.configuration;
 
-import jakarta.ws.rs.core.UriBuilder;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -18,8 +16,7 @@ public interface StandardConfiguration {
 
     Configuration configuration();
 
-    default String getId()
-    {
+    default String getId() {
         return configuration().getString("id").orElse(null);
     }
 
@@ -50,7 +47,9 @@ public interface StandardConfiguration {
         return configuration().getURI("server.uri").orElseThrow();
     }
 
-    default UriBuilder getServerUriBuilder() {
-        return UriBuilder.fromUri(getServerUri());
+    /*
+    default jakarta.ws.rs.core.UriBuilder getServerUriBuilder() {
+        return jakarta.ws.rs.core.UriBuilder.fromUri(getServerUri());
     }
+     */
 }

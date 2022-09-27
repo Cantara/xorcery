@@ -1,16 +1,17 @@
-package com.exoreaction.xorcery.json;
+package com.exoreaction.xorcery.configuration;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.json.VariableResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 
 class VariableResolverTest {
     private static Configuration config;
@@ -67,59 +68,59 @@ class VariableResolverTest {
 
     @Test
     public void testResolveTextValue() {
-        assertThat(config.getString("resolve").orElse(null), equalTo("bar"));
+        assertThat(config.getString("resolve").orElse(null), Matchers.equalTo("bar"));
     }
 
     @Test
     public void testResolvePartialTextValue() {
-        assertThat(config.getString("partial1").orElse(null), equalTo("bar-abc"));
-        assertThat(config.getString("partial2").orElse(null), equalTo("abc-bar-abc"));
-        assertThat(config.getString("partial3").orElse(null), equalTo("abc-bar"));
+        assertThat(config.getString("partial1").orElse(null), Matchers.equalTo("bar-abc"));
+        assertThat(config.getString("partial2").orElse(null), Matchers.equalTo("abc-bar-abc"));
+        assertThat(config.getString("partial3").orElse(null), Matchers.equalTo("abc-bar"));
     }
 
     @Test
     public void testResolveNumber() {
-        assertThat(config.getInteger("resolvenumber").orElse(null), equalTo(5));
+        assertThat(config.getInteger("resolvenumber").orElse(null), Matchers.equalTo(5));
     }
 
     @Test
     public void testResolveHierarchicalName() throws
             IOException {
-        assertThat(config.getString("hierarchy").orElse(null), equalTo("some abc value"));
+        assertThat(config.getString("hierarchy").orElse(null), Matchers.equalTo("some abc value"));
     }
 
     @Test
     public void testResolveHierarchicalNameWithDefault() throws IOException {
-        assertThat(config.getString("missing").orElse(null), equalTo("some defaultvalue value"));
-        assertThat(config.getString("resolvemissing").orElse(null), equalTo("some bar value"));
-        assertThat(config.getString("resolvemissingwithdefault").orElse(null), equalTo("some test value"));
+        assertThat(config.getString("missing").orElse(null), Matchers.equalTo("some defaultvalue value"));
+        assertThat(config.getString("resolvemissing").orElse(null), Matchers.equalTo("some bar value"));
+        assertThat(config.getString("resolvemissingwithdefault").orElse(null), Matchers.equalTo("some test value"));
     }
 
     @Test
     public void testResolveImportedHierarchicalName() throws IOException {
-        assertThat(config.getString("importedhierarchy").orElse(null), equalTo("abc"));
+        assertThat(config.getString("importedhierarchy").orElse(null), Matchers.equalTo("abc"));
     }
 
     @Test
     public void testResolveRecursive() throws IOException {
         String resolverecursive = config.getString("resolverecursive").orElse(null);
-        assertThat(resolverecursive, equalTo("bar"));
+        MatcherAssert.assertThat(resolverecursive, Matchers.equalTo("bar"));
 
         String resolverecursive2 = config.getString("resolverecursive2").orElse(null);
-        assertThat(resolverecursive2, equalTo("bar/test/abc-bar"));
+        MatcherAssert.assertThat(resolverecursive2, Matchers.equalTo("bar/test/abc-bar"));
     }
 
     @Test
     public void testResolveNumberWithDefault() throws IOException {
-        assertThat(config.getInteger("defaultnumber").orElse(null), equalTo(5));
+        assertThat(config.getInteger("defaultnumber").orElse(null), Matchers.equalTo(5));
     }
 
     @Test
     public void testResolveConditionalWithDefault() throws IOException {
-        assertThat(config.getString("sometrueconditional").orElse(null), equalTo("bar"));
-        assertThat(config.getInteger("somefalseconditional").orElse(null), equalTo(5));
-        assertThat(config.getInteger("somedefaultsconditional").orElse(null), equalTo(5));
-        assertThat(config.getInteger("somedefaultsconditional2").orElse(null), equalTo(7));
-        assertThat(config.getJson("somedefaultsconditionaltree").get().toString(), equalTo("{\"lvl2\":{\"level3\":\"abc\"}}"));
+        assertThat(config.getString("sometrueconditional").orElse(null), Matchers.equalTo("bar"));
+        assertThat(config.getInteger("somefalseconditional").orElse(null), Matchers.equalTo(5));
+        assertThat(config.getInteger("somedefaultsconditional").orElse(null), Matchers.equalTo(5));
+        assertThat(config.getInteger("somedefaultsconditional2").orElse(null), Matchers.equalTo(7));
+        assertThat(config.getJson("somedefaultsconditionaltree").get().toString(), Matchers.equalTo("{\"lvl2\":{\"level3\":\"abc\"}}"));
     }
 }
