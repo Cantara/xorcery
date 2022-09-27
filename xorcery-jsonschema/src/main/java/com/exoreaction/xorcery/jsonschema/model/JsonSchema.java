@@ -5,12 +5,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-
-import static org.apache.commons.lang3.StringUtils.capitalize;
 
 /**
  * @author rickardoberg
@@ -164,7 +163,7 @@ public record JsonSchema(ObjectNode json)
     }
 
     public Types getType() {
-        return getString("type").map(t -> Types.valueOf(capitalize(t))).orElse(Types.Null);
+        return getString("type").map(t -> Types.valueOf(StringUtils.capitalize(t))).orElse(Types.Null);
     }
 
     public Optional<List<String>> getRequired() {

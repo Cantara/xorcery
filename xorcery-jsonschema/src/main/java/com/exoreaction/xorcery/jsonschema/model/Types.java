@@ -1,7 +1,5 @@
 package com.exoreaction.xorcery.jsonschema.model;
 
-import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
-
 /**
  * @author rickardoberg
  */
@@ -20,11 +18,9 @@ public enum Types {
             case "double", "java.lang.Double", "float", "java.lang.Float" -> Types.Number;
             case "boolean", "java.lang.Boolean" -> Types.Boolean;
             case "java.util.List", "java.util.Set", "com.fasterxml.jackson.databind.node.ArrayNode" -> Types.Array;
-            case "java.util.Map", "com.fasterxml.jackson.databind.node.ObjectNode" -> Types.Object;
+            case "java.util.Map", "com.fasterxml.jackson.databind.node.ObjectNode", "com.exoreaction.xorcery.jsonapi.model.ResourceObject" -> Types.Object; // TODO Invisible dependency here, could break later without us knowing about it
             case "java.time.Period", "java.lang.String" -> Types.String;
-            default -> Enum.class.isAssignableFrom(type) ? Types.String :
-                    ResourceObject.class.equals(type) ? Types.Object :
-                            Types.String;
+            default -> Types.String;
         };
     }
 }
