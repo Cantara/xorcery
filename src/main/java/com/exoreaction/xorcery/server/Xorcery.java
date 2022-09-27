@@ -56,6 +56,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -413,5 +414,33 @@ public class Xorcery
         } catch (Exception e) {
             throw new IOException(e);
         }
+    }
+
+    public int getHttpPort() {
+        int port = -3;
+        for (Connector connector : server.getConnectors()) {
+            // the first connector should be the http connector
+            ServerConnector serverConnector = (ServerConnector) connector;
+            List<String> protocols = serverConnector.getProtocols();
+            if (!protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2c"))) {
+                port = serverConnector.getLocalPort();
+                break;
+            }
+        }
+        return port;
+    }
+
+    public int getHttpsPort() {
+        int port = -3;
+        for (Connector connector : server.getConnectors()) {
+            // the first connector should be the http connector
+            ServerConnector serverConnector = (ServerConnector) connector;
+            List<String> protocols = serverConnector.getProtocols();
+            if (protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2"))) {
+                port = serverConnector.getLocalPort();
+                break;
+            }
+        }
+        return port;
     }
 }
