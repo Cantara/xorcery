@@ -29,5 +29,7 @@ class JsonElementTest {
         Map<String, Object> result = JsonElement.toMap(jsonNode, JsonNode::textValue);
 
         System.out.println(result);
+
+        // TODO make value of "first" in map be another map, and not null
     }
 }
