@@ -28,5 +28,16 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
+
+## Here are the commands to re-create the self-signed test keys and certificates
+```
+keytool -genkeypair -alias server -validity 9000 -keyalg RSA -keysize 2048 -keystore test-keystore.p12 -storetype pkcs12 -dname "CN=xorcery.cantara.no, OU=Unit, O=Cantara, L=Oslo, S=, C=Norway" -v
+keytool -list -keystore test-keystore.p12
+keytool -genkeypair -alias certkey -validity 9000 -keyalg RSA -keysize 2048 -keystore tmp.p12 -storetype pkcs12 -dname "CN=xorcery.cantara.no, OU=Unit, O=Cantara, L=Oslo, S=, C=Norway" -v
+keytool --export -alias certkey -file tmp.cer -keystore tmp.p12
+keytool -import -alias minica -file tmp.cer -keystore test-truststore.jks
+keytool -list -keystore test-truststore.jks
+```
+
 ## License
 [ASL2](https://choosealicense.com/licenses/apache-2.0/)
