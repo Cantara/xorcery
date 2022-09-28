@@ -10,6 +10,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -38,13 +39,26 @@ public class ClientPublisherServerSubscriberIT {
             for (int i = 0; i < clients; i++) {
                 final StringClientPublisher clientPublisher = new StringClientPublisher((int)total);
                 URI serverUri = new StandardConfiguration.Impl(xorcery.getInjectionManager().getInstance(Configuration.class)).getServerUri();
-                futures.add(reactiveStreams.publish(UriBuilder.fromUri(serverUri).scheme("ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, clientPublisher.getClass()));
+                URI effectiveServerUri = adjustURIWithDynamicServerPort(xorcery, serverUri);
+                futures.add(reactiveStreams.publish(UriBuilder.fromUri(effectiveServerUri).scheme(effectiveServerUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, clientPublisher.getClass()));
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
             long end = System.currentTimeMillis();
             long time = end - start;
             System.out.printf("Time: %d, Rate:%d\n", time, (clients*total)/time);
         }
+    }
+
+    private static URI adjustURIWithDynamicServerPort(Xorcery xorcery, URI serverUri) throws URISyntaxException {
+        String scheme = serverUri.getScheme();
+        int port = -1;
+        if ("https".equals(scheme)) {
+            port = xorcery.getHttpsPort();
+        } else if ("http".equals(scheme)) {
+            port = xorcery.getHttpPort();
+        }
+        URI effectiveServerUri = new URI(scheme, serverUri.getUserInfo(), serverUri.getHost(), port, serverUri.getPath(), serverUri.getQuery(), serverUri.getFragment());
+        return effectiveServerUri;
     }
 
     @Test
@@ -80,7 +94,8 @@ public class ClientPublisherServerSubscriberIT {
             };
 
             URI serverUri = new StandardConfiguration.Impl(xorcery.getInjectionManager().getInstance(Configuration.class)).getServerUri();
-            reactiveStreams.publish(UriBuilder.fromUri(serverUri).scheme("ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass())
+            URI effectiveServerUri = adjustURIWithDynamicServerPort(xorcery, serverUri);
+            reactiveStreams.publish(UriBuilder.fromUri(effectiveServerUri).scheme(effectiveServerUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass())
                     .toCompletableFuture().get();
 
             System.out.println("DONE!");
@@ -124,7 +139,8 @@ public class ClientPublisherServerSubscriberIT {
 
             long start = System.currentTimeMillis();
             URI serverUri = new StandardConfiguration.Impl(xorcery.getInjectionManager().getInstance(Configuration.class)).getServerUri();
-            reactiveStreams.publish(UriBuilder.fromUri(serverUri).scheme("ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass())
+            URI effectiveServerUri = adjustURIWithDynamicServerPort(xorcery, serverUri);
+            reactiveStreams.publish(UriBuilder.fromUri(effectiveServerUri).scheme(effectiveServerUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass())
                             .whenComplete((r,t)->
                             {
                                 System.out.println("Process complete");
