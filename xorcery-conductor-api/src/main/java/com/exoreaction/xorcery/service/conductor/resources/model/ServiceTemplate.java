@@ -2,7 +2,6 @@ package com.exoreaction.xorcery.service.conductor.resources.model;
 
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.GroupTemplatePatternEvaluator;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.conductor;
+package com.exoreaction.xorcery.service.conductor.resources.model;
 
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import org.apache.commons.jexl3.*;
