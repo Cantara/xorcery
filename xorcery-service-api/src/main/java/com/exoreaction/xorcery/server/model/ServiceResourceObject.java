@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 
+import java.net.URI;
 import java.util.Optional;
 
 public record ServiceResourceObject(ResourceObject resourceObject) {
@@ -28,13 +29,13 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
         }
 
         public Builder api(String rel, String path) {
-            links.link(rel, configuration.getServerUriBuilder().path(path));
+            links.link(rel, getServerUriBuilder(configuration.getServerUri()).path(path));
 
             return this;
         }
 
         public Builder websocket(String rel, String path) {
-            links.link(rel, configuration.getServerUriBuilder()
+            links.link(rel, getServerUriBuilder(configuration.getServerUri())
                     .scheme(configuration.getServerUri().getScheme().equals("https") ? "wss" : "ws")
                     .path(path));
             return this;
@@ -45,6 +46,11 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
                     .attributes(attributes.build())
                     .links(links.build()).build());
         }
+    }
+
+    // TODO Use common method instead, but avoid the UriBuilder class in the basic config library
+    private static jakarta.ws.rs.core.UriBuilder getServerUriBuilder(URI uri) {
+        return jakarta.ws.rs.core.UriBuilder.fromUri(uri);
     }
 
     public ServiceIdentifier serviceIdentifier() {
