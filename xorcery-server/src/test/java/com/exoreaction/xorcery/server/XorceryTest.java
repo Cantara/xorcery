@@ -15,7 +15,7 @@ public class XorceryTest {
             assertTrue(httpPort > 1024);
             System.out.printf("Jetty http port: %d%n", httpPort);
             int httpsPort = xorcery.getHttpsPort();
-            assertTrue(httpsPort > 1024);
+            assertTrue(httpsPort < 0 || httpsPort > 1024);
             System.out.printf("Jetty https port: %d%n", httpsPort);
         }
     }

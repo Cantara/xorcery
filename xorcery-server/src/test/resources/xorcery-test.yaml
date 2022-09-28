@@ -10,7 +10,7 @@ server:
     enabled: false
 
   ssl:
-    enabled: true
+    enabled: false
     port: 0
     keystore:
       type: "PKCS12"
