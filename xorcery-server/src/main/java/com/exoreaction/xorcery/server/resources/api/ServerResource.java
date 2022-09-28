@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.server.resources.api;
 
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
-import com.exoreaction.xorcery.jsonapi.resources.JsonApiResource;
 import com.exoreaction.xorcery.service.registry.api.Registry;
+import com.exoreaction.xorcery.service.registry.jsonapi.resources.JsonApiResource;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

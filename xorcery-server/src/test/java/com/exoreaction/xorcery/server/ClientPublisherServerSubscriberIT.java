@@ -1,9 +1,8 @@
-package com.exoreaction.xorcery.service.reactivestreams;
+package com.exoreaction.xorcery.server;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;

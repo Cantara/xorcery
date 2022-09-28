@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.certmanager;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.jaxrs.AbstractFeature;
+import com.exoreaction.xorcery.jakarta.AbstractFeature;
 import com.exoreaction.xorcery.jaxrs.readers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jaxrs.writers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;

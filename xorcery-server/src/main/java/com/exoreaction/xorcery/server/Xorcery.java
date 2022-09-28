@@ -59,7 +59,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
-import static com.codahale.metrics.MetricRegistry.name;
 import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
 
 /**
@@ -131,7 +130,7 @@ public class Xorcery
         com.sun.management.OperatingSystemMXBean sunOperatingSystemMXBean = (com.sun.management
                 .OperatingSystemMXBean) operatingSystemMXBean;
 
-        metricRegistry.gauge(name("server.mem.free"), () -> sunOperatingSystemMXBean::getFreeMemorySize);
+        metricRegistry.gauge(MetricRegistry.name("server.mem.free"), () -> sunOperatingSystemMXBean::getFreeMemorySize);
 
         return metricRegistry;
     }

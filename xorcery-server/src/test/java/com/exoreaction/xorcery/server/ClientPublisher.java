@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.reactivestreams;
+package com.exoreaction.xorcery.server;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
