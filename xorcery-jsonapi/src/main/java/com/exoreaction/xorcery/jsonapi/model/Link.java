@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.uri.UriTemplate;
 
 import java.net.URI;
 import java.util.Optional;
@@ -29,18 +28,22 @@ public record Link(String rel, JsonNode value) {
         return UriBuilder.fromUri(getHref());
     }
 
+    /*
+    //org.glassfish.jersey.uri.UriTemplate
     public UriTemplate getHrefAsUriTemplate() {
         return new UriTemplate(getHref());
     }
 
     public Link createURI(String... values)
     {
+        UriBuilder
         return new Link(rel, new UriTemplate(getHref()).createURI(values));
     }
 
     public boolean isTemplate() {
         return !new UriTemplate(getHref()).getTemplateVariables().isEmpty();
     }
+     */
 
     public boolean isWebsocket() {
         return getHrefAsUri().getScheme().startsWith("ws");

@@ -9,7 +9,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import javax.ws.rs.HttpMethod;
+import jakarta.ws.rs.HttpMethod;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
