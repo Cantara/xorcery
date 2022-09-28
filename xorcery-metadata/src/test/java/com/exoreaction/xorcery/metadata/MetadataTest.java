@@ -1,6 +1,5 @@
-package com.exoreaction.xorcery.disruptor;
+package com.exoreaction.xorcery.metadata;
 
-import com.exoreaction.xorcery.metadata.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
