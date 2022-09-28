@@ -43,8 +43,8 @@
 
         <!-- Logging -->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-jcl</artifactId>
         </dependency>
 
         <dependency>
@@ -52,7 +52,7 @@
             <artifactId>commons-jexl3</artifactId>
             <version>3.2.1</version>
             <exclusions>
-                <!-- replaced by log4j-jul -->
+                <!-- replaced by log4j-jcl -->
                 <exclusion>
                     <groupId>commons-logging</groupId>
                     <artifactId>commons-logging</artifactId>
