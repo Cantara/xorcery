@@ -17,7 +17,7 @@ public class OptionalValueResolver
 
     @Override
     public Object resolve(Object context, String name) {
-        return UNRESOLVED;
+        return ValueResolver.UNRESOLVED;
     }
 
     @Override
@@ -27,7 +27,7 @@ public class OptionalValueResolver
             return optional.orElse(null);
         } else
         {
-            return UNRESOLVED;
+            return ValueResolver.UNRESOLVED;
         }
     }
 
