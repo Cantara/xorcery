@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
+import com.exoreaction.xorcery.service.registry.jsonapi.resources.ResourceContext;
 import com.exoreaction.xorcery.service.neo4j.client.GraphQuery;
 import org.apache.commons.lang3.StringUtils;
 

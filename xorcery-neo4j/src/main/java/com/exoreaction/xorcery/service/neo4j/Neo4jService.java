@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.neo4j;
 
-import com.exoreaction.xorcery.jaxrs.AbstractFeature;
+import com.exoreaction.xorcery.jakarta.AbstractFeature;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;

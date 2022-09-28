@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
+import com.exoreaction.xorcery.service.registry.jsonapi.resources.ResourceContext;
 import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
 import com.exoreaction.xorcery.service.domainevents.api.aggregate.annotation.Update;
 import com.exoreaction.xorcery.hyperschema.model.Link;

@@ -1,8 +1,15 @@
 package com.exoreaction.xorcery.service.neo4j.resources.api;
 
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.xorcery.jsonapi.model.*;
-import com.exoreaction.xorcery.jsonapi.resources.JsonApiResource;
+import com.exoreaction.xorcery.jsonapi.model.Attributes;
+import com.exoreaction.xorcery.jsonapi.model.Meta;
+import com.exoreaction.xorcery.jsonapi.model.Relationships;
+import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObjectIdentifier;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObjectIdentifiers;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
+import com.exoreaction.xorcery.service.registry.jsonapi.resources.JsonApiResource;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,8 +22,13 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.ExecutionPlanDescription;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.Relationship;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.Result;
 
 import java.util.Collections;
 import java.util.HashMap;

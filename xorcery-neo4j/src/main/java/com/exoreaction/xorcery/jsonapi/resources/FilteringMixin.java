@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
+import com.exoreaction.xorcery.service.registry.jsonapi.resources.ResourceContext;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphQuery;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -10,8 +11,6 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public interface FilteringMixin
         extends ResourceContext {
@@ -38,7 +37,7 @@ public interface FilteringMixin
         filters.forEach((k, v) ->
         {
             String value = getUriInfo().getQueryParameters().getFirst(k);
-            if (!isBlank(value)) {
+            if (!StringUtils.isBlank(value)) {
                 data.parameter(v, value);
             }
         });

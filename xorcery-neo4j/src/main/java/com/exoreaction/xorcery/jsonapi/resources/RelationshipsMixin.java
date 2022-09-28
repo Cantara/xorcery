@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.Relationship;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
+import com.exoreaction.xorcery.service.registry.jsonapi.resources.ResourceContext;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;

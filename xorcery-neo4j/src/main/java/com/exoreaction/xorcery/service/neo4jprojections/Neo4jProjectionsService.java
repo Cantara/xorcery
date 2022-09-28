@@ -1,9 +1,7 @@
 package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.codahale.metrics.MetricRegistry;
-import com.exoreaction.xorcery.jaxrs.AbstractFeature;
-import com.exoreaction.xorcery.jaxrs.readers.JsonElementMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
+import com.exoreaction.xorcery.jakarta.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
@@ -13,27 +11,17 @@ import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionE
 import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriber;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriberConductorListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.util.Listeners;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
-import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author rickardoberg
@@ -80,8 +68,7 @@ public class Neo4jProjectionsService
                                    ReactiveStreams reactiveStreams,
                                    @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                    GraphDatabases graphDatabases,
-                                   MetricRegistry metricRegistry,
-                                   JettyHttpClientContract clientInstance) {
+                                   MetricRegistry metricRegistry) {
         this.conductor = conductor;
         this.reactiveStreams = reactiveStreams;
         this.sro = sro;

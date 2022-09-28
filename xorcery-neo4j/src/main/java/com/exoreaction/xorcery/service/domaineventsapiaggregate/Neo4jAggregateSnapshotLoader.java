@@ -1,6 +1,8 @@
-package com.exoreaction.xorcery.service.domainevents.api.aggregate;
+package com.exoreaction.xorcery.service.domaineventsapiaggregate;
 
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.Aggregate;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.AggregateSnapshot;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.RowModel;

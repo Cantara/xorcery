@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.resources;
 
 import com.exoreaction.xorcery.jsonapi.model.Links;
+import com.exoreaction.xorcery.service.registry.jsonapi.resources.ResourceContext;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.uri.UriComponent;
 

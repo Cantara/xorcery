@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.service.domainevents.api.context.DomainContext;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
+import com.exoreaction.xorcery.service.registry.jsonapi.resources.ResourceContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,8 +16,8 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.HttpHeaders;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
