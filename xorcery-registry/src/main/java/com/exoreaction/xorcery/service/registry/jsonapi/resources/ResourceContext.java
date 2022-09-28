@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.jsonapi.resources;
+package com.exoreaction.xorcery.service.registry.jsonapi.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.container.ContainerRequestContext;

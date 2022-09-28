@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.jsonapi.resources;
+package com.exoreaction.xorcery.service.registry.jsonapi.resources;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.OPTIONS;
