@@ -1,20 +1,13 @@
 package com.exoreaction.xorcery.service.log4jappender;
 
-import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
-import com.exoreaction.xorcery.jaxrs.AbstractFeature;
+import com.exoreaction.xorcery.jakarta.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
-import com.exoreaction.xorcery.service.requestlog.RequestLogService;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
