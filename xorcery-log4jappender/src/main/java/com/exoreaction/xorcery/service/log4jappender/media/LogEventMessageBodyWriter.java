@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.jaxrs.writers;
+package com.exoreaction.xorcery.service.log4jappender.media;
 
 import com.exoreaction.xorcery.jaxrs.MediaTypes;
 import jakarta.inject.Singleton;
