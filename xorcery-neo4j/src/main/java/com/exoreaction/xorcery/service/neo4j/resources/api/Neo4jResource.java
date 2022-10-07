@@ -9,7 +9,7 @@ import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjectIdentifier;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjectIdentifiers;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
-import com.exoreaction.xorcery.service.registry.jsonapi.resources.JsonApiResource;
+import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.fasterxml.jackson.core.JsonProcessingException;

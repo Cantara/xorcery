@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
-import com.exoreaction.xorcery.service.registry.jsonapi.resources.JsonApiResource;
+import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import org.apache.logging.log4j.LogManager;

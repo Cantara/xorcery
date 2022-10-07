@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.rest;
 
-import com.exoreaction.xorcery.jaxrs.MediaTypes;
+import com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes;
 import com.exoreaction.xorcery.jetty.client.ResponseListener;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import org.eclipse.jetty.client.HttpClient;

@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.service.domainevents.api.aggregate.DomainEvents;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
-import com.exoreaction.xorcery.jakarta.AbstractFeature;
+import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventPublisher;

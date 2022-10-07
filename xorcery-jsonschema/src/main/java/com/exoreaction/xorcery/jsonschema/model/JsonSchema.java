@@ -1,11 +1,11 @@
 package com.exoreaction.xorcery.jsonschema.model;
 
 import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.util.Strings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -163,7 +163,7 @@ public record JsonSchema(ObjectNode json)
     }
 
     public Types getType() {
-        return getString("type").map(t -> Types.valueOf(StringUtils.capitalize(t))).orElse(Types.Null);
+        return getString("type").map(t -> Types.valueOf(Strings.capitalize(t))).orElse(Types.Null);
     }
 
     public Optional<List<String>> getRequired() {

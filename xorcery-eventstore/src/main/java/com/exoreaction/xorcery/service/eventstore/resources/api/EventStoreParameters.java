@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.eventstore.resources.api;
 
-import com.exoreaction.xorcery.jsonapi.schema.annotations.AttributeSchema;
+import com.exoreaction.xorcery.jsonschema.server.annotations.AttributeSchema;
 
 public class EventStoreParameters
 {

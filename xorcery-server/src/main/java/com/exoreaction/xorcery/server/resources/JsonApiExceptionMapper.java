@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.CompletionException;
 
-import static com.exoreaction.xorcery.jaxrs.MediaTypes.APPLICATION_JSON_API;
+import static com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes.APPLICATION_JSON_API;
 
 @Provider
 @Produces(APPLICATION_JSON_API)

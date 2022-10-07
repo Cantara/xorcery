@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
-import com.exoreaction.xorcery.jakarta.AbstractFeature;
+import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;

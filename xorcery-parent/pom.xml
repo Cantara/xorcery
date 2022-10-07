@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.exoreaction.xorcery</groupId>
@@ -103,11 +104,13 @@
 
             <!-- Jetty 11 needs Servlet 5 -->
             <!-- java.lang.NoClassDefFoundError: jakarta/servlet/ServletInputStream -->
-            <dependency>
-                <groupId>jakarta.servlet</groupId>
-                <artifactId>jakarta.servlet-api</artifactId>
-                <version>6.0.0</version>
-            </dependency>
+            <!--
+                        <dependency>
+                            <groupId>jakarta.servlet</groupId>
+                            <artifactId>jakarta.servlet-api</artifactId>
+                            <version>6.0.0</version>
+                        </dependency>
+            -->
 
             <dependency>
                 <groupId>jakarta.validation</groupId>
@@ -230,6 +233,7 @@
                 <version>${metrics.version}</version>
             </dependency>
 
+            <!-- Tests -->
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-core</artifactId>
@@ -318,6 +322,12 @@
                 <version>2.9.1</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.parboiled</groupId>
+                <artifactId>parboiled-scala_2.12</artifactId>
+                <version>1.4.1</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -341,17 +351,24 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.2</version>
+                    <version>3.0.0-M7</version>
                     <dependencies>
+<!--
                         <dependency>
                             <groupId>org.junit.platform</groupId>
                             <artifactId>junit-platform-surefire-provider</artifactId>
                             <version>1.3.2</version>
                         </dependency>
+-->
                         <dependency>
                             <groupId>org.junit.jupiter</groupId>
                             <artifactId>junit-jupiter-engine</artifactId>
                             <version>${junit.version}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.ow2.asm</groupId>
+                            <artifactId>asm</artifactId>
+                            <version>9.1</version>
                         </dependency>
                     </dependencies>
                     <configuration>
@@ -359,6 +376,8 @@
                         <skip>true</skip>
                         <!-- Show 100% of the lines from the stack trace (doesn't work) -->
                         <trimStackTrace>false</trimStackTrace>
+                        <!--  allow to use unnamed modules
+                        <useModulePath>false</useModulePath> -->
                     </configuration>
                     <executions>
                         <execution>

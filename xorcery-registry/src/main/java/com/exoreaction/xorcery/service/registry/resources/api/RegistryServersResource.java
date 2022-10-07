@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.service.registry.api.Registry;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 
-import static com.exoreaction.xorcery.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
+import static com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 
 /**
  * @author rickardoberg

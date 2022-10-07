@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.conductor.resources.api;
 
-import com.exoreaction.xorcery.jaxrs.MediaTypes;
+import com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;

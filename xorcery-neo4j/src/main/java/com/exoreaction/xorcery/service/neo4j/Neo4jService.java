@@ -1,11 +1,12 @@
 package com.exoreaction.xorcery.service.neo4j;
 
-import com.exoreaction.xorcery.jakarta.AbstractFeature;
+import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
+import com.exoreaction.xorcery.service.neo4j.dynamic.DynamicTransactionalContextFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,7 +20,10 @@ import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
+import org.neo4j.kernel.impl.query.TransactionalContextFactory;
 
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -76,6 +80,17 @@ public class Neo4jService
                     graphDb = managementService.database(database.getName());
                 }
                 GraphDatabase graphDatabase = new GraphDatabase(graphDb, Cypher.defaultFieldMappings());
+
+                // Hack it
+                try {
+                    Field contextFactoryField = GraphDatabaseFacade.class.getDeclaredField("contextFactory");
+                    contextFactoryField.setAccessible(true);
+                    contextFactoryField.set(graphDb, new DynamicTransactionalContextFactory((TransactionalContextFactory) contextFactoryField.get(graphDb)));
+                } catch (NoSuchFieldException e) {
+                    throw new RuntimeException(e);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
 
                 // Run startup Cypher
                 for (String cypherResource : database.getStartup()) {

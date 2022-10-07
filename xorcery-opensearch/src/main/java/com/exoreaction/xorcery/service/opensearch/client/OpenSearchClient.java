@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch.client;
 
-import com.exoreaction.xorcery.jaxrs.readers.JsonNodeMessageBodyReader;
-import com.exoreaction.xorcery.jaxrs.writers.JsonNodeMessageBodyWriter;
+import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyReader;
+import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyWriter;
 import com.exoreaction.xorcery.service.opensearch.client.document.DocumentClient;
 import com.exoreaction.xorcery.service.opensearch.client.index.IndexClient;
 import com.exoreaction.xorcery.service.opensearch.client.jaxrs.BulkRequestMessageBodyWriter;

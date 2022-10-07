@@ -9,15 +9,10 @@ import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
-import com.exoreaction.xorcery.service.neo4jprojections.ProjectionListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.util.Listeners;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 public class ProjectionSubscriberConductorListener extends AbstractConductorListener {
 

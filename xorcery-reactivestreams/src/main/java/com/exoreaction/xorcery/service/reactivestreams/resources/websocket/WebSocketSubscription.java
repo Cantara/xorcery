@@ -35,35 +35,32 @@ class WebSocketSubscription implements Flow.Subscription {
 
         requests.addAndGet(n);
 
-        if (sendRequests.get() == null) {
-            sendRequests.set(new CompletableFuture<>());
+        // Ensure no other request is running already
+        if (sendRequests.compareAndSet(null, new CompletableFuture<>())) {
+            // After we're done, check if there's more work
             sendRequests.get().whenComplete((v, t) ->
             {
-                synchronized (this) {
-                    sendRequests.set(null);
-                    long rn = requests.getAndSet(0);
-                    if (rn > 0) {
-                        request(rn);
-                    }
+                sendRequests.set(null);
+                long rn = requests.getAndSet(0);
+                if (rn > 0) {
+                    request(rn);
                 }
             });
 
+            // Drain all outstanding requests
             long rn = requests.getAndSet(0);
             session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable x) {
-                    synchronized (this) {
-                        logger.error(marker, "Could not send request", x);
-                        sendRequests.get().completeExceptionally(x);
-                    }
+                    logger.error(marker, "Could not send request", x);
+                    sendRequests.get().completeExceptionally(x);
                 }
 
                 @Override
                 public void writeSuccess() {
-                    synchronized (this) {
-                        sendRequests.get().complete(null);
+                    sendRequests.get().complete(null);
+                    if (logger.isDebugEnabled())
                         logger.debug(marker, "Sent request {}", rn);
-                    }
                 }
             });
             try {
@@ -78,6 +75,7 @@ class WebSocketSubscription implements Flow.Subscription {
 
     @Override
     public void cancel() {
+        // TODO This is probably not correct concurrency wise
         requests.set(0);
         request(Long.MIN_VALUE);
     }

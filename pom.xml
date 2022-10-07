@@ -34,30 +34,44 @@
     </scm>
 
     <modules>
-        <module>xorcery-conductor</module>
-        <module>xorcery-conductor-api</module>
+        <module>xorcery-parent</module>
+
+        <module>xorcery-util</module>
+
+        <module>xorcery-json</module>
         <module>xorcery-config</module>
+        <module>xorcery-metadata</module>
+        <module>xorcery-json-jaxrs</module>
+
+        <module>xorcery-jsonapi</module>
+        <module>xorcery-jsonapi-client</module>
+        <module>xorcery-jsonapi-server</module>
+        <module>xorcery-jsonschema</module>
+
+        <module>xorcery-service-api</module>
+
+        <module>xorcery-reactivestreams-api</module>
+        <module>xorcery-reactivestreams</module>
+        <module>xorcery-registry</module>
+        <module>xorcery-conductor-api</module>
+        <module>xorcery-conductor</module>
+
         <module>xorcery-disruptor</module>
+        <module>xorcery-server</module>
+
         <module>xorcery-domainevents</module>
         <module>xorcery-eventstore</module>
         <module>xorcery-handlebars</module>
-        <module>xorcery-jmxmetrics</module>
-        <module>xorcery-json</module>
-        <module>xorcery-jsonapi</module>
-        <module>xorcery-jsonschema</module>
-        <module>xorcery-log4jappender</module>
-        <module>xorcery-metadata</module>
-        <module>xorcery-metrics</module>
+<!--
+        <module>xorcery-neo4j-shaded</module>
+-->
         <module>xorcery-neo4j</module>
         <module>xorcery-opensearch</module>
-        <module>xorcery-parent</module>
-        <module>xorcery-reactivestreams</module>
-        <module>xorcery-reactivestreams-api</module>
-        <module>xorcery-registry</module>
         <module>xorcery-restclient</module>
-        <module>xorcery-server</module>
-        <module>xorcery-service-api</module>
-        <module>xorcery-util</module>
+        <module>xorcery-jmxmetrics</module>
+        <module>xorcery-log4jappender</module>
+        <module>xorcery-metrics</module>
+        <module>xorcery-test</module>
     </modules>
 
     <build>

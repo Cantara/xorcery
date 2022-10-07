@@ -1,0 +1,21 @@
+open module xorcery.log4jappender {
+    requires xorcery.util;
+    requires xorcery.config;
+    requires xorcery.metadata;
+    requires xorcery.disruptor;
+    requires xorcery.reactivestreams.api;
+    requires xorcery.service.api;
+    requires xorcery.conductor.api;
+    requires xorcery.jsonapi;
+
+    requires com.lmax.disruptor;
+    requires org.apache.logging.log4j;
+    requires org.apache.logging.log4j.core;
+    requires jakarta.inject;
+    requires jakarta.ws.rs;
+    requires jersey.server;
+    requires com.fasterxml.jackson.databind;
+    requires org.eclipse.jetty.http;
+    requires org.eclipse.jetty.server;
+    requires log4j.layout.template.json;
+}

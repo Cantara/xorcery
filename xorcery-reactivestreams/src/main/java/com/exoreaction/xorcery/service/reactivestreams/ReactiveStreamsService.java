@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.reactivestreams;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
-import com.exoreaction.xorcery.jakarta.AbstractFeature;
+import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.PublisherWebSocketServlet;

@@ -2,14 +2,14 @@ package com.exoreaction.xorcery.service.registry.resources.api;
 
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.service.registry.api.Registry;
-import com.exoreaction.xorcery.service.registry.jsonapi.resources.JsonApiResource;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
-import static com.exoreaction.xorcery.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
+import static com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 
 /**
  * @author rickardoberg
