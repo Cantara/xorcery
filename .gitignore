@@ -36,3 +36,5 @@ dependency-reduced-pom.xml
 /.classpath
 /.idea/
 /target/
+
+/xorcery-test/neo4j/
