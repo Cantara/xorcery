@@ -10,20 +10,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-        <slf4j.version>1.7.36</slf4j.version>
-        <log4j.version>2.19.0</log4j.version>
-        <jetty.version>11.0.11</jetty.version>
-        <jersey.version>3.0.8</jersey.version>
-        <jakartaee.version>9.0.0-RC3</jakartaee.version>
-        <javax.activation.version>1.2.0</javax.activation.version>
-        <jackson.version>2.13.4</jackson.version>
-        <metrics.version>4.2.12</metrics.version>
-
-        <neo4j.version>4.4.11</neo4j.version>
-
-        <junit.version>5.9.1</junit.version>
-        <junit.platform.version>1.9.0</junit.platform.version>
     </properties>
 
     <scm>
@@ -141,7 +127,7 @@
                     <dependency>
                         <groupId>org.junit.jupiter</groupId>
                         <artifactId>junit-jupiter-engine</artifactId>
-                        <version>${junit.version}</version>
+                        <version>5.9.1</version>
                     </dependency>
                 </dependencies>
                 <configuration>
