@@ -100,8 +100,8 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>grpc-shaded-jpms</artifactId>
-            <version>1.49.2.1-SNAPSHOT</version>
+            <artifactId>grpc-jpms-shaded</artifactId>
+            <version>1.49.2.1</version>
         </dependency>
 
         <dependency>
