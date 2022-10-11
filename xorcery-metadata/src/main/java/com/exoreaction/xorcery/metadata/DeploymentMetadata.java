@@ -1,8 +1,10 @@
 package com.exoreaction.xorcery.metadata;
 
+import com.exoreaction.xorcery.builders.WithContext;
 import com.exoreaction.xorcery.configuration.Configuration;
 
-public interface DeploymentMetadata {
+public interface DeploymentMetadata
+        extends WithContext<Metadata> {
 
     interface Builder<T> {
         Metadata.Builder builder();
@@ -14,33 +16,27 @@ public interface DeploymentMetadata {
                     .add("name", configuration.getString("name").orElse("noname"))
                     .add("host", configuration.getString("host").orElse("localhost"))
                     .build();
-            return (T)this;
+            return (T) this;
         }
     }
 
-    Metadata metadata();
-
-    default String getEnvironment()
-    {
-        return metadata().getString("environment").orElse("default");
+    default String getEnvironment() {
+        return context().getString("environment").orElse("default");
     }
 
-    default String getTag()
-    {
-        return metadata().getString("tag").orElse("default");
+    default String getTag() {
+        return context().getString("tag").orElse("default");
     }
 
-    default String getVersion()
-    {
-        return metadata().getString("version").orElse("0.1.0");
+    default String getVersion() {
+        return context().getString("version").orElse("0.1.0");
     }
 
-    default String getName()
-    {
-        return metadata().getString("name").orElse("noname");
+    default String getName() {
+        return context().getString("name").orElse("noname");
     }
-    default String getHost()
-    {
-        return metadata().getString("host").orElse("localhost");
+
+    default String getHost() {
+        return context().getString("host").orElse("localhost");
     }
 }

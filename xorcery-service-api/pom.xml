@@ -24,17 +24,20 @@
             <artifactId>xorcery-config</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-json</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!--
+                <dependency>
+                    <groupId>com.exoreaction.xorcery</groupId>
+                    <artifactId>xorcery-json</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+        -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonapi</artifactId>
             <version>${project.version}</version>
         </dependency>
 
+<!--
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -43,9 +46,9 @@
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>
+    -->
 
         <dependency>
-            <!-- TODO Avoid this through xorcery abstraction layer -->
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
         </dependency>

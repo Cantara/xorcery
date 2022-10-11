@@ -1,14 +1,11 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.jetty.client.WriteCallbackCompletableFuture;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.SubscriptionProcess;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.util.Classes;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.ext.MessageBodyReader;

@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch.client.index;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,7 +37,7 @@ public class IndexClientIT {
 
     @BeforeAll
     public static void setup() throws IOException {
-        configuration = Configuration.Builder.loadTest(null).build();
+        configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
         client = new OpenSearchClient(new ClientConfig()

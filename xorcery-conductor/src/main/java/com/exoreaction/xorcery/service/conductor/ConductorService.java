@@ -7,13 +7,7 @@ import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.conductor.api.ConductorChange;
-import com.exoreaction.xorcery.service.conductor.api.ConductorListener;
-import com.exoreaction.xorcery.service.conductor.resources.model.Group;
-import com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplate;
-import com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplates;
-import com.exoreaction.xorcery.service.conductor.resources.model.Groups;
+import com.exoreaction.xorcery.service.conductor.api.*;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.exoreaction.xorcery.service.registry.api.RegistryListener;
@@ -94,7 +88,7 @@ public class ConductorService
 
             @Override
             public void addedGroup(Group group) {
-                listeners.forEach(l -> l.addedGroup(group, registry));
+                listeners.forEach(l -> l.addedGroup(group));
                 try {
                     logger.debug("Added group:\n" + mapper.writeValueAsString(group.resourceObject().object()));
                 } catch (JsonProcessingException e) {
@@ -104,7 +98,7 @@ public class ConductorService
 
             @Override
             public void updatedGroup(Group group) {
-                listeners.forEach(l -> l.updatedGroup(group, registry));
+                listeners.forEach(l -> l.updatedGroup(group));
                 try {
                     logger.debug("Updated group:\n" + mapper.writeValueAsString(group.resourceObject().object()));
                 } catch (JsonProcessingException e) {
@@ -201,7 +195,7 @@ public class ConductorService
 
     @Override
     public void addConductorListener(ConductorListener listener) {
-        groups.getGroups().forEach(group -> listener.addedGroup(group, registry));
+        groups.getGroups().forEach(group -> listener.addedGroup(group));
         listeners.add(listener);
     }
 

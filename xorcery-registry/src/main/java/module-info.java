@@ -8,6 +8,7 @@ open module xorcery.registry {
     requires xorcery.util;
     requires xorcery.restclient;
     requires xorcery.reactivestreams.api;
+    requires xorcery.jsonapi.jaxrs;
     requires xorcery.jsonapi.server;
     requires xorcery.jsonapi.client;
     requires xorcery.service.api;

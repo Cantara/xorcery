@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.jsonapi.client;
 
-import com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes;
+import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;

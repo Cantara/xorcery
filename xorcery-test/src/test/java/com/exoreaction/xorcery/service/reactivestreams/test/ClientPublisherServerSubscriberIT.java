@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.reactivestreams.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
@@ -24,9 +25,12 @@ public class ClientPublisherServerSubscriberIT {
             reactivestreams.enabled: true
             """;
 
+    @SuppressWarnings("unchecked")
     @Test
     public void givenSubscriberWhenPublishEventsThenSubscriberConsumesEvents2() throws Exception {
-        try (Xorcery xorcery = new Xorcery(Configuration.Builder.loadTest(null).addYaml(config).build())) {
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+        try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams.class);
 
             // Server subscriber
@@ -39,7 +43,8 @@ public class ClientPublisherServerSubscriberIT {
             int clients = 1;
             for (int i = 0; i < clients; i++) {
                 final StringClientPublisher clientPublisher = new StringClientPublisher((int)total);
-                URI serverUri = new StandardConfiguration.Impl(xorcery.getInjectionManager().getInstance(Configuration.class)).getServerUri();
+                StandardConfiguration standardConfiguration = ()->xorcery.getInjectionManager().getInstance(Configuration.class);
+                URI serverUri = standardConfiguration.getServerUri();
                 URI effectiveServerUri = adjustURIWithDynamicServerPort(xorcery, serverUri);
                 futures.add(reactiveStreams.publish(UriBuilder.fromUri(effectiveServerUri).scheme(effectiveServerUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, clientPublisher.getClass()));
             }
@@ -64,7 +69,9 @@ public class ClientPublisherServerSubscriberIT {
 
     @Test
     public void givenSubscriberWhenPublishEventsWithResultsThenSubscriberCalculatesResults() throws Exception {
-        try (Xorcery xorcery = new Xorcery(Configuration.Builder.loadTest(null).addYaml(config).build())) {
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+        try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams.class);
 
             // Server subscriber
@@ -94,7 +101,8 @@ public class ClientPublisherServerSubscriberIT {
                 }
             };
 
-            URI serverUri = new StandardConfiguration.Impl(xorcery.getInjectionManager().getInstance(Configuration.class)).getServerUri();
+            StandardConfiguration standardConfiguration = ()->xorcery.getInjectionManager().getInstance(Configuration.class);
+            URI serverUri = standardConfiguration.getServerUri();
             URI effectiveServerUri = adjustURIWithDynamicServerPort(xorcery, serverUri);
             reactiveStreams.publish(UriBuilder.fromUri(effectiveServerUri).scheme(effectiveServerUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass())
                     .toCompletableFuture().get();
@@ -105,7 +113,9 @@ public class ClientPublisherServerSubscriberIT {
 
     @Test
     public void givenSubscriberWhenPublishEventsWithResultsAndMetadataThenSubscriberCalculatesResults() throws Exception {
-        try (Xorcery xorcery = new Xorcery(Configuration.Builder.loadTest(null).addYaml(config).build())) {
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+        try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getInjectionManager().getInstance(ReactiveStreams.class);
 
             // Server subscriber
@@ -139,7 +149,8 @@ public class ClientPublisherServerSubscriberIT {
             };
 
             long start = System.currentTimeMillis();
-            URI serverUri = new StandardConfiguration.Impl(xorcery.getInjectionManager().getInstance(Configuration.class)).getServerUri();
+            StandardConfiguration standardConfiguration = ()->xorcery.getInjectionManager().getInstance(Configuration.class);
+            URI serverUri = standardConfiguration.getServerUri();
             URI effectiveServerUri = adjustURIWithDynamicServerPort(xorcery, serverUri);
             reactiveStreams.publish(UriBuilder.fromUri(effectiveServerUri).scheme(effectiveServerUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass())
                             .whenComplete((r,t)->

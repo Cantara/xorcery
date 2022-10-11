@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch.client.document;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateComponentTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateIndexTemplateRequest;
@@ -69,7 +70,7 @@ public class DocumentClientIT {
 
     @BeforeAll
     public static void setup() throws IOException, ExecutionException, InterruptedException, TimeoutException {
-        configuration = Configuration.Builder.loadTest(null).build();
+        configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
         client = new OpenSearchClient(new ClientConfig()

@@ -1,18 +1,20 @@
 package com.exoreaction.xorcery.metadata;
 
+import com.exoreaction.xorcery.builders.With;
+import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import java.util.Optional;
 
 import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
 
 
-public record Metadata(ObjectNode metadata) {
-    public record Builder(ObjectNode builder) {
+public record Metadata(ObjectNode json)
+        implements JsonElement {
+
+    public record Builder(ObjectNode builder)
+            implements With<Builder> {
 
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
@@ -34,7 +36,7 @@ public record Metadata(ObjectNode metadata) {
         }
 
         public Builder add(Metadata metadata) {
-            this.builder.setAll(metadata.metadata);
+            this.builder.setAll(metadata.json);
             return this;
         }
 
@@ -42,37 +44,17 @@ public record Metadata(ObjectNode metadata) {
             return new Metadata(builder);
         }
     }
+
     @JsonCreator(mode = DELEGATING)
     public Metadata {
     }
 
-    public boolean has(String name) {
-        return metadata.has(name);
-    }
-
-    public Optional<String> getString(String name) {
-        return Optional.ofNullable(metadata.path(name).textValue());
-    }
-
-    public Optional<Long> getLong(String name) {
-        return Optional.ofNullable(metadata.get(name)).map(JsonNode::longValue);
-    }
-
-    public Optional<JsonNode> getJsonNode(String name) {
-        return Optional.ofNullable(metadata.get(name));
-    }
-
-    public Optional<ObjectNode> getObjectNode(String name) {
-        return getJsonNode(name).map(ObjectNode.class::cast);
-    }
-
     @JsonValue
-    public ObjectNode metadata()
-    {
-        return metadata;
+    public ObjectNode metadata() {
+        return json;
     }
 
     public Builder toBuilder() {
-        return new Builder(metadata);
+        return new Builder(json);
     }
 }

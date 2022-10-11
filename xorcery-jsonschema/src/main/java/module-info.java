@@ -4,7 +4,6 @@ open module xorcery.jsonschema {
     exports com.exoreaction.xorcery.jsonschema.jaxrs;
 
     requires transitive xorcery.json;
+    requires transitive xorcery.util;
     requires transitive jakarta.ws.rs;
-
-    requires xorcery.util;
 }

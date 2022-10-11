@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.hyperschema.model;
 
-import com.exoreaction.xorcery.jsonschema.jaxrs.MediaTypes;
 import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.jsonschema.jaxrs.MediaTypes;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
 import com.exoreaction.xorcery.jsonschema.model.Properties;
 import com.exoreaction.xorcery.jsonschema.model.Types;
@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import jakarta.ws.rs.HttpMethod;
 
 import java.util.List;

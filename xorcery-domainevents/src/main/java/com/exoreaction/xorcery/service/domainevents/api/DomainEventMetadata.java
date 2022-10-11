@@ -1,13 +1,13 @@
 package com.exoreaction.xorcery.service.domainevents.api;
 
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.Aggregate;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
 import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.metadata.RequestMetadata;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.Aggregate;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
 
-public record DomainEventMetadata(Metadata metadata)
+public record DomainEventMetadata(Metadata context)
     implements CommonMetadata, RequestMetadata, DeploymentMetadata
 {
     public record Builder(Metadata.Builder builder)
@@ -17,7 +17,7 @@ public record DomainEventMetadata(Metadata metadata)
     {
         public static Metadata aggregateId(String aggregateId, Metadata metadata)
         {
-            return new Builder(metadata).aggregateId(aggregateId).build().metadata();
+            return new Builder(metadata).aggregateId(aggregateId).build().context();
         }
 
         public Builder(Metadata metadata) {
@@ -56,22 +56,22 @@ public record DomainEventMetadata(Metadata metadata)
 
     public String getDomain()
     {
-        return metadata.getString("domain").orElse("default");
+        return context.getString("domain").orElse("default");
     }
 
     public String getAggregateType()
     {
-        return metadata.getString("aggregateType").orElseThrow();
+        return context.getString("aggregateType").orElseThrow();
     }
 
     public String getAggregateId()
     {
-        return metadata.getString("aggregateId").orElseThrow();
+        return context.getString("aggregateId").orElseThrow();
     }
 
     public String getCommandType()
     {
-        return metadata.getString("commandType").orElseThrow();
+        return context.getString("commandType").orElseThrow();
     }
 
 }

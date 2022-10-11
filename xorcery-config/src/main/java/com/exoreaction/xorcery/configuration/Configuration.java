@@ -1,25 +1,14 @@
 package com.exoreaction.xorcery.configuration;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.xorcery.json.JsonMerger;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.javaprop.JavaPropsFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
@@ -29,183 +18,14 @@ import java.util.Map;
  */
 public record Configuration(ObjectNode json)
         implements JsonElement {
-    private static final Logger logger = LogManager.getLogger(Configuration.class);
 
     public static Configuration empty() {
         return new Configuration(JsonNodeFactory.instance.objectNode());
     }
 
-    public record Builder(ObjectNode builder) {
-
-        public static Builder load(File configFile)
-                throws IOException {
-            Configuration.Builder builder = new Configuration.Builder();
-
-            // Load system properties and environment variables
-            builder.addSystemProperties("SYSTEM");
-            builder.addEnvironmentVariables("ENV");
-
-            // Load Xorcery defaults
-            {
-                URL resource = Configuration.class.getClassLoader().getResource("META-INF/xorcery-defaults.yaml");
-                try (InputStream in = resource.openStream()) {
-                    builder = builder.addYaml(in);
-                    logger.info("Loaded " + resource);
-                }
-            }
-
-            // Load extensions
-            Enumeration<URL> extensionConfigurationURLs = Configuration.class.getClassLoader().getResources("META-INF/xorcery.yaml");
-            while (extensionConfigurationURLs.hasMoreElements()) {
-                URL resource = extensionConfigurationURLs.nextElement();
-                try (InputStream configurationStream = resource.openStream()) {
-                    builder = builder.addYaml(configurationStream);
-                    logger.info("Loaded " + resource);
-                }
-            }
-
-            // Load custom
-            Enumeration<URL> configurationURLs = Configuration.class.getClassLoader().getResources("xorcery.yaml");
-            while (configurationURLs.hasMoreElements()) {
-                URL resource = configurationURLs.nextElement();
-                try (InputStream configurationStream = resource.openStream()) {
-                    builder = builder.addYaml(configurationStream);
-                    logger.info("Loaded " + resource);
-                }
-            }
-
-            // Load user directory overrides
-            File overridesYamlFile = new File(System.getProperty("user.dir"), "xorcery.yaml");
-            if (overridesYamlFile.exists()) {
-                FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
-                builder = builder.addYaml(overridesYamlStream);
-                logger.info("Loaded " + overridesYamlFile);
-            }
-
-            // Load specified overrides
-            if (configFile != null) {
-
-                if (configFile.getName().endsWith("yaml") || configFile.getName().endsWith("yml")) {
-                    builder = builder.addYaml(new FileInputStream(configFile));
-                    logger.info("Loaded " + configFile);
-                } else if (configFile.getName().endsWith("properties")) {
-                    builder = builder.addProperties(new FileInputStream(configFile));
-                    logger.info("Loaded " + configFile);
-                } else {
-                    logger.warn("Unknown configuration filetype: " + configFile);
-                }
-            }
-
-            // Load user home overrides
-            File userYamlFile = new File(System.getProperty("user.home"), "xorcery/xorcery.yaml");
-            if (userYamlFile.exists()) {
-                FileInputStream userYamlStream = new FileInputStream(userYamlFile);
-                builder = builder.addYaml(userYamlStream);
-                logger.info("Loaded " + userYamlFile);
-            }
-
-            return builder;
-        }
-
-        public static Builder loadTest(File configFile)
-                throws IOException {
-            Configuration.Builder builder = load(configFile);
-
-            // Load Xorcery defaults
-            {
-                URL resource = Configuration.class.getClassLoader().getResource("META-INF/xorcery-defaults.yaml");
-                try (InputStream in = resource.openStream()) {
-                    builder = builder.addYaml(in);
-                    logger.info("Loaded " + resource);
-                }
-            }
-            {
-                URL resource = Configuration.class.getClassLoader().getResource("META-INF/xorcery-defaults-test.yaml");
-                try (InputStream in = resource.openStream()) {
-                    builder = builder.addYaml(in);
-                    logger.info("Loaded " + resource);
-                }
-            }
-
-            // Load extensions
-            {
-                Enumeration<URL> extensionConfigurationURLs = Configuration.class.getClassLoader().getResources("META-INF/xorcery.yaml");
-                while (extensionConfigurationURLs.hasMoreElements()) {
-                    URL resource = extensionConfigurationURLs.nextElement();
-                    try (InputStream configurationStream = resource.openStream()) {
-                        builder = builder.addYaml(configurationStream);
-                        logger.info("Loaded " + resource);
-                    }
-                }
-            }
-            {
-                Enumeration<URL> extensionConfigurationURLs = Configuration.class.getClassLoader().getResources("META-INF/xorcery-test.yaml");
-                while (extensionConfigurationURLs.hasMoreElements()) {
-                    URL resource = extensionConfigurationURLs.nextElement();
-                    try (InputStream configurationStream = resource.openStream()) {
-                        builder = builder.addYaml(configurationStream);
-                        logger.info("Loaded " + resource);
-                    }
-                }
-            }
-
-            // Load custom
-            {
-                Enumeration<URL> configurationURLs = Configuration.class.getClassLoader().getResources("xorcery.yaml");
-                while (configurationURLs.hasMoreElements()) {
-                    URL resource = configurationURLs.nextElement();
-                    try (InputStream configurationStream = resource.openStream()) {
-                        builder = builder.addYaml(configurationStream);
-                        logger.info("Loaded " + resource);
-                    }
-                }
-            }
-            {
-                Enumeration<URL> configurationURLs = Configuration.class.getClassLoader().getResources("xorcery-test.yaml");
-                while (configurationURLs.hasMoreElements()) {
-                    URL resource = configurationURLs.nextElement();
-                    try (InputStream configurationStream = resource.openStream()) {
-                        builder = builder.addYaml(configurationStream);
-                        logger.info("Loaded " + resource);
-                    }
-                }
-            }
-
-            // Load user directory overrides
-            Configuration partialConfig = builder.build();
-            StandardConfiguration standardConfiguration = new StandardConfiguration.Impl(partialConfig);
-            builder = partialConfig.asBuilder();
-            File overridesYamlFile = new File(standardConfiguration.getHome(), "xorcery-test.yaml");
-            if (overridesYamlFile.exists()) {
-                FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
-                builder = builder.addYaml(overridesYamlStream);
-                logger.info("Loaded " + overridesYamlFile);
-            }
-
-            // Load specified overrides
-            if (configFile != null) {
-
-                if (configFile.getName().endsWith("yaml") || configFile.getName().endsWith("yml")) {
-                    builder = builder.addYaml(new FileInputStream(configFile));
-                    logger.info("Loaded " + configFile);
-                } else if (configFile.getName().endsWith("properties")) {
-                    builder = builder.addProperties(new FileInputStream(configFile));
-                    logger.info("Loaded " + configFile);
-                } else {
-                    logger.warn("Unknown configuration filetype: " + configFile);
-                }
-            }
-
-            // Load user overrides
-            File userYamlFile = new File(System.getProperty("user.home"), "xorcery/xorcery-test.yaml");
-            if (userYamlFile.exists()) {
-                FileInputStream userYamlStream = new FileInputStream(userYamlFile);
-                builder = builder.addYaml(userYamlStream);
-                logger.info("Loaded " + userYamlFile);
-            }
-
-            return builder;
-        }
+    public record Builder(ObjectNode builder)
+        implements With<Builder>
+    {
 
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
@@ -222,34 +42,6 @@ public record Configuration(ObjectNode json)
 
         public Builder add(String name, long value) {
             return add(name, builder.numberNode(value));
-        }
-
-        public Builder addYaml(InputStream yamlStream) throws IOException {
-            try (yamlStream) {
-                ObjectNode yaml = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(yamlStream);
-                new JsonMerger().merge(builder, yaml);
-                return this;
-            }
-        }
-
-        public Builder addYaml(String yamlString) throws IOException {
-            ObjectNode yaml = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(yamlString);
-            new JsonMerger().merge(builder, yaml);
-            return this;
-        }
-
-        private Builder addProperties(InputStream propertiesStream) throws IOException {
-            try (propertiesStream) {
-                ObjectNode properties = (ObjectNode) new ObjectMapper(new JavaPropsFactory()).readTree(propertiesStream);
-                new JsonMerger().merge(builder, properties);
-                return this;
-            }
-        }
-
-        public Builder addProperties(String propertiesString) throws IOException {
-            ObjectNode properties = (ObjectNode) new ObjectMapper(new JavaPropsFactory()).readTree(propertiesString);
-            new JsonMerger().merge(builder, properties);
-            return this;
         }
 
         public Builder addSystemProperties(String nodeName) {

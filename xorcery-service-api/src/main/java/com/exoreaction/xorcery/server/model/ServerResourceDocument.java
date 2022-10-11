@@ -28,5 +28,4 @@ public record ServerResourceDocument(ResourceDocument resourceDocument) {
                         .findFirst())
                 .map(ServiceResourceObject::new);
     }
-
 }

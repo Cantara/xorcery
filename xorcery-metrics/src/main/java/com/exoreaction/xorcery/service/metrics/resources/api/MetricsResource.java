@@ -1,12 +1,6 @@
 package com.exoreaction.xorcery.service.metrics.resources.api;
 
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
+import com.codahale.metrics.*;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
@@ -16,7 +10,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
-import static com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
+import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 import static com.exoreaction.xorcery.jsonapi.model.ResourceObjects.toResourceObjects;
 
 @Path("api/metrics")

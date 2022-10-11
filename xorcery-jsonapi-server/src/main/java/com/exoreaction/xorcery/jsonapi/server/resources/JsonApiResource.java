@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import static com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
+import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 
 @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
 public abstract class JsonApiResource

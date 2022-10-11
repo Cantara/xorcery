@@ -1,5 +1,7 @@
 package com.exoreaction.xorcery.configuration;
 
+import com.exoreaction.xorcery.builders.WithContext;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -9,31 +11,26 @@ import java.net.URI;
  * @since 20/04/2022
  */
 
-public interface StandardConfiguration {
-    record Impl(Configuration configuration)
-            implements StandardConfiguration {
-    }
-
-    Configuration configuration();
-
+public interface StandardConfiguration
+        extends WithContext<Configuration> {
     default String getId() {
-        return configuration().getString("id").orElse(null);
+        return context().getString("id").orElse(null);
     }
 
     default String getHost() {
-        return configuration().getString("host").orElse(null);
+        return context().getString("host").orElse(null);
     }
 
     default String getEnvironment() {
-        return configuration().getString("environment").orElse(null);
+        return context().getString("environment").orElse(null);
     }
 
     default String getTag() {
-        return configuration().getString("tag").orElse(null);
+        return context().getString("tag").orElse(null);
     }
 
     default String getHome() {
-        return configuration().getString("home").orElseGet(() ->
+        return context().getString("home").orElseGet(() ->
         {
             try {
                 return new File(".").getCanonicalPath();
@@ -44,7 +41,7 @@ public interface StandardConfiguration {
     }
 
     default URI getServerUri() {
-        return configuration().getURI("server.uri").orElseThrow();
+        return context().getURI("server.uri").orElseThrow();
     }
 
     /*

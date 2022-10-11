@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.hyperschema.client;
 
 import com.exoreaction.xorcery.hyperschema.model.HyperSchema;
-import com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes;
+import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
 import com.fasterxml.jackson.databind.node.ObjectNode;

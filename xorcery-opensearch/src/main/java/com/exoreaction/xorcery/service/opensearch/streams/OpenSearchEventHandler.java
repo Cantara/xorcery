@@ -60,7 +60,7 @@ public class OpenSearchEventHandler
         DomainEventMetadata dem = new DomainEventMetadata(event.metadata());
 
         ObjectNode document = event.metadata().metadata().objectNode();
-        document.set("@timestamp", event.metadata().getJsonNode("timestamp").orElse(document.numberNode(0L)));
+        document.set("@timestamp", event.metadata().getJson("timestamp").orElse(document.numberNode(0L)));
         document.set("metadata", event.metadata().metadata());
         document.set("data", event.event());
 
@@ -92,7 +92,7 @@ public class OpenSearchEventHandler
                 {
                     openSearchCommitPublisher.accept(new WithMetadata<>(new OpenSearchMetadata.Builder(new Metadata.Builder())
                             .timestamp(dem.getTimestamp())
-                            .build().metadata(), new IndexCommit(indexName, items.get(items.size() - 1).getSequenceNr())));
+                            .build().context(), new IndexCommit(indexName, items.get(items.size() - 1).getSequenceNr())));
                 });
             }
 

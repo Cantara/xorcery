@@ -1,6 +1,10 @@
 package com.exoreaction.xorcery.metadata;
 
-public interface CommonMetadata {
+import com.exoreaction.xorcery.builders.WithContext;
+
+public interface CommonMetadata
+    extends WithContext<Metadata>
+{
 
     interface Builder<T>
     {
@@ -12,9 +16,7 @@ public interface CommonMetadata {
         }
     }
 
-    Metadata metadata();
-
     default long getTimestamp() {
-        return metadata().getLong("timestamp").orElse(0L);
+        return context().getLong("timestamp").orElse(0L);
     }
 }

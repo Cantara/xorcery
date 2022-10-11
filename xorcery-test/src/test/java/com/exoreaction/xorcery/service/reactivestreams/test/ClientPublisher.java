@@ -2,8 +2,6 @@ package com.exoreaction.xorcery.service.reactivestreams.test;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class ClientPublisher<T>
         implements Flow.Publisher<T> {

@@ -32,6 +32,10 @@ public interface JsonElement {
             return null;
     }
 
+    default boolean has(String name) {
+        return lookup(object(), name).isPresent();
+    }
+
     default Optional<JsonNode> getJson(String name) {
         return lookup(object(), name);
     }

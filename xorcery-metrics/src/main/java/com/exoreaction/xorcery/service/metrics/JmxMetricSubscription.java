@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.metrics;
 
-import com.codahale.metrics.*;
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
@@ -11,7 +11,10 @@ import org.apache.logging.log4j.LogManager;
 import javax.management.*;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Flow;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 class JmxMetricSubscription
         implements Flow.Subscription {
@@ -50,7 +53,7 @@ class JmxMetricSubscription
                     addAttributes(managementServer, null, metricsBuilder);
                 });
 
-                subscriber.onNext(new WithMetadata<>(new Metadata.Builder(deploymentMetadata.metadata().metadata().deepCopy())
+                subscriber.onNext(new WithMetadata<>(new Metadata.Builder(deploymentMetadata.context().metadata().deepCopy())
                         .add("timestamp", System.currentTimeMillis())
                         .build(), metricsBuilder));
             } catch (Throwable e) {

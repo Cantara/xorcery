@@ -2,6 +2,8 @@ open module xorcery.server {
     exports com.exoreaction.xorcery.server;
 
     requires transitive xorcery.jsonapi.client;
+    requires transitive xorcery.jsonapi.server;
+    requires xorcery.util;
     requires transitive xorcery.config;
     requires transitive xorcery.service.api;
     requires transitive xorcery.conductor.api;
@@ -38,6 +40,5 @@ open module xorcery.server {
     requires jdk.management;
     requires jersey.client;
     requires java.logging;
-    requires xorcery.jsonapi.server;
-    requires xorcery.util;
+    requires xorcery.jsonapi.jaxrs;
 }

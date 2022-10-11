@@ -21,4 +21,5 @@ open module xorcery.jmxmetrics {
     requires java.management;
     requires java.logging;
     requires xorcery.jsonapi.client;
+    requires xorcery.jsonapi.jaxrs;
 }

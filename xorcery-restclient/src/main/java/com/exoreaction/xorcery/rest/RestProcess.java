@@ -1,8 +1,6 @@
 package com.exoreaction.xorcery.rest;
 
-import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.ServerErrorException;
-import org.apache.logging.log4j.LogManager;
 
 import java.util.concurrent.CompletionStage;
 
@@ -21,30 +19,27 @@ public interface RestProcess<T> {
             return;
 
         if (t != null) {
-            try {
-                throw unwrap(t);
-            } catch (ServerErrorException e) {
+            t = unwrap(t);
+            if (isRetryable(t)) {
                 retry();
-            } catch (ClientErrorException e) {
-                result().toCompletableFuture().completeExceptionally(e);
-            } catch (Throwable e) {
-                LogManager.getLogger(getClass()).error("Unhandled exception", e);
-                result().toCompletableFuture().completeExceptionally(e);
+            } else {
+                result().toCompletableFuture().completeExceptionally(t);
             }
         } else {
             result().toCompletableFuture().complete(value);
         }
     }
 
-    default void retry()
-    {
+    default void retry() {
         start();
     }
 
-    default Throwable unwrap(Throwable t)
-    {
-        while (t.getCause() != null)
-        {
+    default boolean isRetryable(Throwable t) {
+        return t instanceof ServerErrorException;
+    }
+
+    default Throwable unwrap(Throwable t) {
+        while (t.getCause() != null) {
             t = t.getCause();
         }
         return t;

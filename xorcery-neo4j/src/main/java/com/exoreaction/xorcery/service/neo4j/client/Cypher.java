@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.neo4j.client;
 
+import com.exoreaction.xorcery.util.Enums;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -19,7 +20,6 @@ import java.util.stream.Stream;
 public final class Cypher {
 
     private static Map<Enum<?>, String> defaultMappings = new ConcurrentHashMap<>();
-    private static Map<Enum<?>, String> fieldMappings = new ConcurrentHashMap<>();
 
     public static Map<String, Object> toMap(ObjectNode json) {
         Iterator<Map.Entry<String, JsonNode>> fields = json.fields();
@@ -89,13 +89,13 @@ public final class Cypher {
     /**
      * Map an enum Some.name to some_name
      *
+     * @deprecated use Enums.toField instead
      * @param anEnum
      * @return
      */
 
     public static String toField(Enum<?> anEnum) {
-        return fieldMappings.computeIfAbsent(anEnum, e ->
-                e.getDeclaringClass().getSimpleName().toLowerCase() + "_" + e.name());
+        return Enums.toField(anEnum);
     }
 
     public static ObjectNode toObjectNode(Map<String, Object> resultRow) {

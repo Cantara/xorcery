@@ -29,9 +29,9 @@ public class JsonRequestLog
     public void log(Request req, Response res) {
 
         try {
-            Metadata metadata = new LoggingMetadata.Builder(new Metadata.Builder(loggingMetadata.metadata().metadata().deepCopy()))
+            Metadata metadata = new LoggingMetadata.Builder(new Metadata.Builder(loggingMetadata.context().metadata().deepCopy()))
                     .timestamp(System.currentTimeMillis())
-                    .build().metadata();
+                    .build().context();
 
             ObjectNode node = JsonNodeFactory.instance.objectNode();
             // Request

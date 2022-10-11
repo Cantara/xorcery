@@ -1,8 +1,10 @@
 open module xorcery.conductor {
-    requires xorcery.jsonapi;
-    requires xorcery.conductor.api;
-    requires xorcery.config;
-    requires xorcery.service.api;
+    exports com.exoreaction.xorcery.service.conductor;
+
+    requires transitive xorcery.jsonapi;
+    requires transitive xorcery.conductor.api;
+    requires transitive xorcery.config;
+    requires transitive xorcery.service.api;
     requires xorcery.reactivestreams.api;
     requires xorcery.registry;
 
@@ -12,4 +14,6 @@ open module xorcery.conductor {
     requires org.apache.logging.log4j;
     requires jersey.server;
     requires xorcery.jsonapi.server;
+    requires commons.jexl3;
+    requires com.fasterxml.jackson.dataformat.yaml;
 }

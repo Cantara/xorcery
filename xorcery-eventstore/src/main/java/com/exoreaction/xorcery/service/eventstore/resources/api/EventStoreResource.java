@@ -1,15 +1,15 @@
 package com.exoreaction.xorcery.service.eventstore.resources.api;
 
 import com.exoreaction.xorcery.hyperschema.model.Link;
-import com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes;
+import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.model.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonapischema.model.ResourceObjectSchema;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
+import com.exoreaction.xorcery.service.domainevents.resources.JsonSchemaMixin;
 import com.exoreaction.xorcery.service.eventstore.model.EventStoreModel;
-import com.exoreaction.xorcery.neo4j.jsonapi.resources.JsonSchemaMixin;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

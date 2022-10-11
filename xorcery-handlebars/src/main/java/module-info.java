@@ -1,6 +1,7 @@
 open module xorcery.handlebars {
-    requires xorcery.jsonapi.client;
     requires xorcery.restclient;
+    requires xorcery.jsonapi.client;
+    requires xorcery.jsonapi.jaxrs;
 
     requires handlebars;
     requires jakarta.ws.rs;

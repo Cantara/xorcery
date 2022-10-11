@@ -21,32 +21,7 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-util</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-config</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metadata</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-jsonapi</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-service-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -59,27 +34,50 @@
             <artifactId>xorcery-disruptor</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jsonapi-server</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-        <dependency>
-            <groupId>com.lmax</groupId>
-            <artifactId>disruptor</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-        </dependency>
+        <!--
+                <dependency>
+                    <groupId>com.exoreaction.xorcery</groupId>
+                    <artifactId>xorcery-util</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.exoreaction.xorcery</groupId>
+                    <artifactId>xorcery-reactivestreams-api</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.exoreaction.xorcery</groupId>
+                    <artifactId>xorcery-service-api</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>com.lmax</groupId>
+                    <artifactId>disruptor</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>jakarta.inject</groupId>
+                    <artifactId>jakarta.inject-api</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>jakarta.ws.rs</groupId>
+                    <artifactId>jakarta.ws.rs-api</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.glassfish.jersey.core</groupId>
+                    <artifactId>jersey-server</artifactId>
+                </dependency>
+        -->
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>

@@ -5,7 +5,6 @@ import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.InvocationCallback;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Variant;
 
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;

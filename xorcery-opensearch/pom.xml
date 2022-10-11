@@ -21,27 +21,12 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-config</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-json</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-jsonapi</artifactId>
+            <artifactId>xorcery-jsonapi-jaxrs</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-conductor-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-service-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -52,16 +37,6 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-restclient</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-disruptor</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-util</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

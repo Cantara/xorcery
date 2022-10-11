@@ -27,9 +27,9 @@
         <module>xorcery-json</module>
         <module>xorcery-config</module>
         <module>xorcery-metadata</module>
-        <module>xorcery-json-jaxrs</module>
 
         <module>xorcery-jsonapi</module>
+        <module>xorcery-jsonapi-jaxrs</module>
         <module>xorcery-jsonapi-client</module>
         <module>xorcery-jsonapi-server</module>
         <module>xorcery-jsonschema</module>
@@ -48,9 +48,6 @@
         <module>xorcery-domainevents</module>
         <module>xorcery-eventstore</module>
         <module>xorcery-handlebars</module>
-<!--
-        <module>xorcery-neo4j-shaded</module>
--->
         <module>xorcery-neo4j</module>
         <module>xorcery-opensearch</module>
         <module>xorcery-restclient</module>

@@ -23,21 +23,45 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-server</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-registry</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-conductor</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-neo4j</artifactId>
             <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
             <version>${log4j.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

@@ -4,9 +4,9 @@ import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
 import com.exoreaction.xorcery.jersey.AbstractFeature;
+import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
-import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
@@ -172,8 +172,9 @@ public class RegistryService
         for (ServiceResourceObject serviceResource : serviceResources) {
             builder.resource(serviceResource.resourceObject());
         }
+        StandardConfiguration standardConfiguration = ()->configuration;
         ResourceDocument serverDocument = new ResourceDocument.Builder()
-                .links(new Links.Builder().link(JsonApiRels.self, new StandardConfiguration.Impl(configuration).getServerUri()).build())
+                .links(new Links.Builder().link(JsonApiRels.self, standardConfiguration.getServerUri()).build())
                 .data(builder.build())
                 .build();
         return new ServerResourceDocument(serverDocument);

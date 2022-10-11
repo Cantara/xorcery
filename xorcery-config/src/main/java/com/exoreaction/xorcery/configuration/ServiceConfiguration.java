@@ -1,9 +1,12 @@
 package com.exoreaction.xorcery.configuration;
 
-public record ServiceConfiguration(Configuration configuration)
+import com.exoreaction.xorcery.builders.WithContext;
+
+public interface ServiceConfiguration
+    extends WithContext<Configuration>
 {
-    public boolean isEnabled()
+    default boolean isEnabled()
     {
-        return configuration.getBoolean("enabled").orElse(false);
+        return context().getBoolean("enabled").orElse(false);
     }
 }

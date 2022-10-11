@@ -9,7 +9,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 
-import static com.exoreaction.xorcery.jsonapi.jaxrs.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
+import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 
 /**
  * @author rickardoberg

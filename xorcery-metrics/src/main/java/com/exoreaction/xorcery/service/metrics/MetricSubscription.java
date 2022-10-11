@@ -62,7 +62,7 @@ class MetricSubscription
             }
         }
 
-        subscriber.onNext(new WithMetadata<>(new Metadata.Builder(deploymentMetadata.metadata().metadata().deepCopy())
+        subscriber.onNext(new WithMetadata<>(new Metadata.Builder(deploymentMetadata.context().metadata().deepCopy())
                 .add("timestamp", System.currentTimeMillis())
                 .build(), metricsBuilder));
     }

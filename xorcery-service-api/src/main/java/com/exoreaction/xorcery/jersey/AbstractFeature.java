@@ -27,7 +27,7 @@ public abstract class AbstractFeature
         if (isEnabled()) {
             Configuration configuration = injectionManager.getInstance(Configuration.class);
             String serviceType = Objects.requireNonNull(serviceType(), "Service type may not be null");
-            StandardConfiguration.Impl standardConfiguration = new StandardConfiguration.Impl(configuration);
+            StandardConfiguration standardConfiguration = () -> configuration;
             ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(standardConfiguration, serviceType);
             builder.attributes().attribute("environment", standardConfiguration.getEnvironment());
             builder.attributes().attribute("tag", standardConfiguration.getTag());
@@ -49,17 +49,12 @@ public abstract class AbstractFeature
 
     }
 
-    /*
-    protected Xorcery xorcery() {
-        return injectionManager.getInstance(Xorcery.class);
-    }
-     */
-
     protected Configuration configuration() {
         return injectionManager.getInstance(Configuration.class);
     }
 
     protected boolean isEnabled() {
-        return new ServiceConfiguration(configuration().getConfiguration(serviceType())).isEnabled();
+        ServiceConfiguration serviceConfiguration = () -> configuration().getConfiguration(serviceType());
+        return serviceConfiguration.isEnabled();
     }
 }

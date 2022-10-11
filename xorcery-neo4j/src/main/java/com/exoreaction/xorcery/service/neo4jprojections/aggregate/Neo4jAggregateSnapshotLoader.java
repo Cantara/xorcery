@@ -53,7 +53,7 @@ public class Neo4jAggregateSnapshotLoader {
                     }
                 });
 
-        Map<String, Object> metadataMap = Cypher.toMap(metadata.metadata().metadata());
+        Map<String, Object> metadataMap = Cypher.toMap(metadata.context().metadata());
 
         return database.execute(cypher, Map.of("metadata", metadataMap), 30)
                 .thenCompose(result ->

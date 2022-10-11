@@ -190,7 +190,7 @@ public class Neo4jProjectionEventHandler
                 projectionCommitPublisher.accept(new WithMetadata<>(new Neo4jMetadata.Builder(new Metadata.Builder())
                         .timestamp(System.currentTimeMillis())
                         .lastTimestamp(lastTimestamp)
-                        .build().metadata(), new ProjectionCommit(projectionId, version)));
+                        .build().context(), new ProjectionCommit(projectionId, version)));
 
                 tx = null;
 

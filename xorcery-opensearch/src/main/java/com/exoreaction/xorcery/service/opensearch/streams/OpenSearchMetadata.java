@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 
-public record OpenSearchMetadata(Metadata metadata)
+public record OpenSearchMetadata(Metadata context)
         implements CommonMetadata, DeploymentMetadata {
 
     public record Builder(Metadata.Builder builder)

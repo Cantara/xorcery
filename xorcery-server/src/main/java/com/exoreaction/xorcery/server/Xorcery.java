@@ -3,11 +3,12 @@ package com.exoreaction.xorcery.server;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.StandardConfiguration;
-import com.exoreaction.xorcery.util.UUIDs;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.server.resources.ServerApplication;
+import com.exoreaction.xorcery.util.UUIDs;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -109,14 +110,15 @@ public class Xorcery
     }
 
     protected Configuration createConfiguration(File configFile) throws Exception {
-        Configuration.Builder builder = Configuration.Builder.load(configFile);
+        StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
+        Configuration.Builder builder = new Configuration.Builder()
+                .with(standardConfigurationBuilder::addDefaults, standardConfigurationBuilder.addFile(configFile));
 
         // Log final configuration
         ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
         logger.debug("Configuration:\n" + objectWriter.writeValueAsString(builder.builder()));
 
         Configuration configuration = builder.build();
-
         logger.info("Resolved configuration:\n" + objectWriter.writeValueAsString(configuration.json()));
 
         return configuration;
@@ -347,7 +349,9 @@ public class Xorcery
                 bind(ctx);
                 bind(Xorcery.this);
                 bind(server);
-                bind(new ResourceObject.Builder("server", new StandardConfiguration.Impl(configuration).getId())
+
+                StandardConfiguration standardConfiguration = ()->configuration;
+                bind(new ResourceObject.Builder("server", standardConfiguration.getId())
                         .attributes(new Attributes.Builder()
                                 .attribute("jetty.version", Jetty.VERSION)
                                 .build()).build()).named("server");

@@ -28,7 +28,7 @@ Configuration:
       - name: client.opensearch
         level: debug
 
-      - name: com.exoreaction.xorcery.service.conductor.resources.model.GroupTemplates
+      - name: com.exoreaction.xorcery.service.conductor.GroupTemplates
         level: debug
 
       - name: com.exoreaction.xorcery.service.reactivestreams.resources.websocket

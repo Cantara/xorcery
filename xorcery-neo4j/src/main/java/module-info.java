@@ -28,4 +28,6 @@ open module xorcery.neo4j {
     requires com.codahale.metrics;
     requires com.lmax.disruptor;
     requires xorcery.jsonapi;
+//    requires org.neo4j.graphdb;
+//    requires org.neo4j.kernel;
 }

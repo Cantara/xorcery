@@ -5,6 +5,9 @@ open module xorcery.test {
     requires xorcery.config;
     requires xorcery.metadata;
 
+    requires xorcery.conductor;
+    requires xorcery.registry;
+
     requires org.junit.jupiter.api;
 
     requires java.base;

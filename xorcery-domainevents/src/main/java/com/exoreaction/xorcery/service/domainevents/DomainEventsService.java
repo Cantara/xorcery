@@ -2,18 +2,18 @@ package com.exoreaction.xorcery.service.domainevents;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.DomainEvents;
-import com.exoreaction.xorcery.metadata.DeploymentMetadata;
-import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.xorcery.jersey.AbstractFeature;
+import com.exoreaction.xorcery.metadata.DeploymentMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.service.conductor.api.Conductor;
+import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherConductorListener;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventPublisher;
+import com.exoreaction.xorcery.service.domainevents.api.aggregate.DomainEvents;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.service.reactivestreams.helper.ClientPublisherConductorListener;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -103,7 +103,7 @@ public class DomainEventsService
     public void publish(Metadata metadata, DomainEvents events) {
         disruptor.getRingBuffer().publishEvent((event, seq, m, e) ->
         {
-            event.set(metadata.toBuilder().add(deploymentMetadata.metadata()).build(), e);
+            event.set(metadata.toBuilder().add(deploymentMetadata.context()).build(), e);
         }, metadata, events);
     }
 

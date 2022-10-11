@@ -1,2 +1,0 @@
---add-opens=java.base/java.nio=xorcery.neo4j.shaded
---add-opens=java.base/java.lang=xorcery.neo4j.shaded

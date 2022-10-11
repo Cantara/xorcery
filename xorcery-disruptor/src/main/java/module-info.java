@@ -1,4 +1,4 @@
 open module xorcery.disruptor {
     exports com.exoreaction.xorcery.disruptor.handlers;
-    requires com.lmax.disruptor;
+    requires transitive com.lmax.disruptor;
 }

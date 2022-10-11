@@ -5,7 +5,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.AbstractConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.AbstractConductorListener;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;

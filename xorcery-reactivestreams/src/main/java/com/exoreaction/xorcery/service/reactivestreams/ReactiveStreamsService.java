@@ -104,7 +104,7 @@ public class ReactiveStreamsService
         this.servletContextHandler = servletContextHandler;
         this.webSocketClient = webSocketClient;
         this.registryService = registryService;
-        this.configuration = new StandardConfiguration.Impl(configuration);
+        this.configuration = ()->configuration;
         this.messageBodyWorkers = messageBodyWorkers;
         this.objectMapper = objectMapper;
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
@@ -195,7 +195,7 @@ public class ReactiveStreamsService
                 resultReader,
                 eventType,
                 resultType.orElse(null),
-                configuration.configuration(),
+                configuration.context(),
                 objectMapper,
                 byteBufferPool);
 
@@ -231,7 +231,7 @@ public class ReactiveStreamsService
                 eventReader,
                 eventType,
                 resultType.orElse(null),
-                configuration.configuration(),
+                configuration.context(),
                 objectMapper,
                 byteBufferPool);
 

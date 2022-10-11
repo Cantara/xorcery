@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 
-public record Neo4jMetadata(Metadata metadata)
+public record Neo4jMetadata(Metadata context)
         implements CommonMetadata, DeploymentMetadata {
 
     public record Builder(Metadata.Builder builder)
@@ -23,6 +23,6 @@ public record Neo4jMetadata(Metadata metadata)
 
     public long lastTimestamp()
     {
-        return metadata.getLong("lastTimestamp").orElseThrow();
+        return context.getLong("lastTimestamp").orElseThrow();
     }
 }

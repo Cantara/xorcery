@@ -22,4 +22,5 @@ open module xorcery.opensearch {
     requires xorcery.domainevents;
     requires com.lmax.disruptor;
     requires xorcery.util;
+    requires xorcery.jsonapi.jaxrs;
 }

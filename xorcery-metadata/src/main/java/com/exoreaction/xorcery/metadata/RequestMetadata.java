@@ -1,10 +1,12 @@
 package com.exoreaction.xorcery.metadata;
 
+import com.exoreaction.xorcery.builders.WithContext;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Optional;
 
-public interface RequestMetadata {
+public interface RequestMetadata
+        extends WithContext<Metadata> {
     interface Builder<T> {
         Metadata.Builder builder();
 
@@ -29,21 +31,19 @@ public interface RequestMetadata {
         }
     }
 
-    Metadata metadata();
-
     default Optional<String> getCorrelationId() {
-        return metadata().getString("correlationId");
+        return context().getString("correlationId");
     }
 
     default Optional<ObjectNode> getJwtClaims() {
-        return metadata().getObjectNode("jwtClaims");
+        return context().getJson("jwtClaims").map(ObjectNode.class::cast);
     }
 
     default Optional<String> getRemoteIp() {
-        return metadata().getString("remoteIp");
+        return context().getString("remoteIp");
     }
 
     default Optional<String> getAgent() {
-        return metadata().getString("agent");
+        return context().getString("agent");
     }
 }

@@ -1,10 +1,12 @@
 package com.exoreaction.xorcery.service.neo4j.dynamic.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.service.neo4j.Neo4jService;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphResult;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
@@ -29,9 +31,11 @@ public class DynamicNeo4jTest {
             RETURN node
             """;
 
+    @Disabled
     @Test
     public void test() throws Exception {
-        try (Xorcery xorcery = new Xorcery(Configuration.Builder.loadTest(null).addYaml(config).build())) {
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+        try (Xorcery xorcery = new Xorcery(configuration)) {
             // Given
             GraphDatabase neo4j = xorcery.getInjectionManager().getInstance(Neo4jService.class).apply("neo4j");
             GraphDatabaseService graphDatabaseService = neo4j.getGraphDatabaseService();

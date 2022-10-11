@@ -1,0 +1,32 @@
+package com.exoreaction.xorcery.jsonapi.server.resources;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+public interface IncludesMixin
+    extends ResourceContext
+{
+    default boolean shouldInclude( Enum<?> type )
+    {
+        return shouldInclude( type.name() );
+    }
+
+    default List<String> includeList()
+    {
+        String include = getFirstQueryParameter( "include" );
+        if ( StringUtils.isBlank( include ) )
+        { return Collections.emptyList(); }
+        return Arrays.asList( include.split( "," ) );
+    }
+
+    default boolean shouldInclude( String type )
+    {
+        List<String> includes = includeList();
+        return includes.contains( type ) ||
+                (type.indexOf( '.' ) != -1 && includes.contains( type.substring( type.lastIndexOf( '.' ) ) ));
+    }
+
+}
