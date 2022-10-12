@@ -165,7 +165,7 @@ public class ReactiveStreamsService
 
     // Server
     @Override
-    public CompletionStage<Void> publisher(String publisherWebsocketPath,
+    public CompletableFuture<Void> publisher(String publisherWebsocketPath,
                                            Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,
                                            Class<? extends Flow.Publisher<?>> publisherType) {
         publishers.put(publisherWebsocketPath, publisherFactory);
@@ -203,7 +203,7 @@ public class ReactiveStreamsService
     }
 
     @Override
-    public CompletionStage<Void> subscriber(String subscriberWebsocketPath, Function<Configuration, Flow.Subscriber<?>> subscriberFactory, Class<? extends Flow.Subscriber<?>> subscriberType) {
+    public CompletableFuture<Void> subscriber(String subscriberWebsocketPath, Function<Configuration, Flow.Subscriber<?>> subscriberFactory, Class<? extends Flow.Subscriber<?>> subscriberType) {
         subscribers.put(subscriberWebsocketPath, subscriberFactory);
 
         CompletableFuture<Void> result = new CompletableFuture<>();
@@ -240,7 +240,7 @@ public class ReactiveStreamsService
 
     // Client
     @Override
-    public CompletionStage<Void> publish(URI subscriberWebsocketUri, Configuration subscriberConfiguration, Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType) {
+    public CompletableFuture<Void> publish(URI subscriberWebsocketUri, Configuration subscriberConfiguration, Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType) {
         if (publisherType == null)
             publisherType = (Class<? extends Flow.Publisher<?>>) publisher.getClass();
 
@@ -293,7 +293,7 @@ public class ReactiveStreamsService
     }
 
     @Override
-    public CompletionStage<Void> subscribe(URI publisherWebsocketUri, Configuration publisherConfiguration, Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType) {
+    public CompletableFuture<Void> subscribe(URI publisherWebsocketUri, Configuration publisherConfiguration, Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType) {
         if (subscriberType == null)
             subscriberType = (Class<? extends Flow.Subscriber<?>>) subscriber.getClass();
 
