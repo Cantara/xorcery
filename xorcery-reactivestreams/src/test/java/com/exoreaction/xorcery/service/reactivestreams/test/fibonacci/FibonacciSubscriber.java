@@ -35,7 +35,7 @@ public class FibonacciSubscriber implements Flow.Subscriber<Long> {
         System.out.printf("onComplete!%n");
     }
 
-    public List<Long> getAllReceivedNumbers() {
+    public ArrayList<Long> getAllReceivedNumbers() {
         return new ArrayList<>(receivedNumbers);
     }
 }

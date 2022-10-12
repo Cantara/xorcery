@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.test.fibonacci;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,15 +32,17 @@ public class FibonacciPublisher implements Flow.Publisher<Long> {
         private final Flow.Subscriber<? super Long> subscriber;
         private final AtomicLong budget = new AtomicLong(0);
 
-        private long previous = 0;
-        private long current = 1;
-
+        private final Iterator<Long> fibonacciSequence;
         private final Thread thread;
 
         private volatile boolean cancelled = false;
 
+        private final Object sync = new Object();
+
         private MySubscription(Flow.Subscriber<? super Long> subscriber) {
             this.id = nextId.getAndIncrement();
+            FibonacciSequence fibonacciSequence = new FibonacciSequence(maxNumbersInFibonacciSequence);
+            this.fibonacciSequence = fibonacciSequence.iterator();
             this.subscriber = subscriber;
             this.thread = new Thread(this);
         }
@@ -60,31 +63,17 @@ public class FibonacciPublisher implements Flow.Publisher<Long> {
         @Override
         public void run() {
             try {
-                if (maxNumbersInFibonacciSequence <= 0) {
-                    subscriber.onComplete();
-                    return;
-                }
-                while (budget.get() <= 0 && !cancelled) {
-                    Thread.sleep(10);
-                }
-                if (cancelled) {
-                    return;
-                }
-                subscriber.onNext(previous); // the very first item is special
-                final int waitTimeBetweenNumbersInSequenceMs = 125;
-                Thread.sleep(waitTimeBetweenNumbersInSequenceMs);
-                for (int i = 1; i < maxNumbersInFibonacciSequence; i++) {
+                while (fibonacciSequence.hasNext()) {
                     if (cancelled) {
                         return;
                     }
                     if (budget.get() > 0) {
-                        subscriber.onNext(current);
+                        subscriber.onNext(fibonacciSequence.next());
                         budget.decrementAndGet();
-                        long newCurrent = current + previous;
-                        previous = current;
-                        current = newCurrent;
                     }
-                    Thread.sleep(waitTimeBetweenNumbersInSequenceMs);
+                    synchronized (sync) {
+                        sync.wait(100);
+                    }
                 }
                 subscriber.onComplete();
             } catch (Throwable t) {
@@ -100,6 +89,9 @@ public class FibonacciPublisher implements Flow.Publisher<Long> {
                 return;
             }
             budget.addAndGet(n);
+            synchronized (sync) {
+                sync.notify();
+            }
         }
 
         @Override
