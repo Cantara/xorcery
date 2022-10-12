@@ -7,7 +7,6 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.PublisherWebSocketServlet;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscriberWebSocketServlet;
-import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -77,7 +76,6 @@ public class ReactiveStreamsService
 
     private final boolean allowLocal;
     private final ServletContextHandler servletContextHandler;
-    private final jakarta.inject.Provider<Registry> registryService;
     private final WebSocketClient webSocketClient;
     private final StandardConfiguration configuration;
     private final MessageBodyWorkers messageBodyWorkers;
@@ -96,14 +94,12 @@ public class ReactiveStreamsService
     @Inject
     public ReactiveStreamsService(ServletContextHandler servletContextHandler,
                                   @Named(SERVICE_TYPE) WebSocketClient webSocketClient,
-                                  jakarta.inject.Provider<Registry> registryService,
                                   Configuration configuration,
                                   Server server,
                                   MessageBodyWorkers messageBodyWorkers,
                                   ObjectMapper objectMapper) {
         this.servletContextHandler = servletContextHandler;
         this.webSocketClient = webSocketClient;
-        this.registryService = registryService;
         this.configuration = ()->configuration;
         this.messageBodyWorkers = messageBodyWorkers;
         this.objectMapper = objectMapper;
