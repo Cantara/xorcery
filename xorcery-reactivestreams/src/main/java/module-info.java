@@ -4,7 +4,6 @@ open module xorcery.reactivestreams {
     requires xorcery.service.api;
     requires xorcery.util;
     requires xorcery.metadata;
-    requires xorcery.jsonapi;
     requires xorcery.restclient;
 
     requires com.fasterxml.jackson.databind;
