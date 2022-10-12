@@ -2,7 +2,6 @@ open module xorcery.reactivestreams {
     requires transitive xorcery.reactivestreams.api;
 
     requires xorcery.service.api;
-    requires xorcery.registry;
     requires xorcery.util;
     requires xorcery.metadata;
     requires xorcery.jsonapi;
