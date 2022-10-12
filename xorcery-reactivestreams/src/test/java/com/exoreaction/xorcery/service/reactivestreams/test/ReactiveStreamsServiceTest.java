@@ -3,10 +3,12 @@ package com.exoreaction.xorcery.service.reactivestreams.test;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciPublisher;
+import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSequence;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSubscriber;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -15,30 +17,44 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ReactiveStreamsServiceTest {
 
     @Test
-    public void thatClientSubscriberGetsAllExpectedServerPublishedFibonacciNumbers() {
+    public void thatSingleClientSubscriberGetsAllExpectedServerPublishedFibonacciNumbers() {
+        thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(12, 1);
+    }
+
+    @Test
+    public void thatMultipleClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers() {
+        thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(12, 3);
+    }
+
+    private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) {
         JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer();
         testServer.start();
         try {
             ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
 
-            final int NUMBERS_IN_FIBONACCI_SEQUENCE = 12;
-
             // server publishes
-            CompletableFuture<Void> publisherComplete = reactiveStreams.publisher("/fibonacci", config -> new FibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), FibonacciPublisher.class);
+            CompletableFuture<Void> publisherComplete = reactiveStreams.publisher("/fibonacci", config -> new FibonacciPublisher(numbersInFibonacciSequence), FibonacciPublisher.class);
             publisherComplete.thenAccept(v -> {
                 // TODO figure out why this never happens!
                 System.out.printf("publisher completed!%n");
             });
 
             // client subscribes
-            FibonacciSubscriber subscriber = new FibonacciSubscriber();
-            CompletableFuture<Void> subscriberComplete = reactiveStreams.subscribe(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), new Configuration.Builder().build(), subscriber, FibonacciSubscriber.class);
-            subscriberComplete.join();
-
+            CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
+            for (int i = 0; i < numberOfSubscribers; i++) {
+                FibonacciSubscriber subscriber = new FibonacciSubscriber();
+                CompletableFuture<Void> future = reactiveStreams.subscribe(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), new Configuration.Builder().build(), subscriber, FibonacciSubscriber.class)
+                        .thenAccept(v -> {
+                            ArrayList<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
+                            if (!new ArrayList<>(FibonacciSequence.sequenceOf(numbersInFibonacciSequence)).equals(allReceivedNumbers)) {
+                                throw new RuntimeException("Bad list!");
+                            }
+                        });
+                subscriberCompleteArray[i] = future;
+            }
+            CompletableFuture.allOf(subscriberCompleteArray)
+                    .join();
             System.out.printf("subscriber completed!%n");
-
-            List<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
-            assertEquals(List.of(0L, 1L, 1L, 2L, 3L, 5L, 8L, 13L, 21L, 34L, 55L, 89L), allReceivedNumbers);
 
             Thread.sleep(100);
 
@@ -73,7 +89,7 @@ public class ReactiveStreamsServiceTest {
             System.out.printf("publisher completed!%n");
 
             List<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
-            assertEquals(List.of(0L, 1L, 1L, 2L, 3L, 5L, 8L, 13L, 21L, 34L, 55L, 89L), allReceivedNumbers);
+            assertEquals(FibonacciSequence.sequenceOf(NUMBERS_IN_FIBONACCI_SEQUENCE), allReceivedNumbers);
 
             Thread.sleep(100);
 
