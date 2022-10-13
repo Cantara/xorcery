@@ -31,8 +31,33 @@ public record Configuration(ObjectNode json)
             this(JsonNodeFactory.instance.objectNode());
         }
 
+        ObjectNode navigateToParentOfPropertyNameThenAdd(ObjectNode node, String name, JsonNode value) {
+            int i = name.indexOf(".");
+            if (i == -1) {
+                // name is the last element in path to navigate, navigation complete.
+                node.set(name, value);
+                return node;
+            }
+            String childElement = name.substring(0, i);
+            String remainingName = name.substring(i + 1);
+            JsonNode child = node.get(childElement);
+            ObjectNode childObjectNode;
+            if (child == null || child.isNull()) {
+                // non-existent json-node, need to create child object node
+                childObjectNode = node.putObject(childElement);
+            } else {
+                // existing json-node, ensure that it can be navigated through
+                if (!child.isObject()) {
+                    throw new RuntimeException("Attempted to navigate through json key that already exists, but is not a json-object that support navigation.");
+                }
+                childObjectNode = (ObjectNode) child;
+            }
+            // TODO support arrays, for now we only support object navigation
+            return navigateToParentOfPropertyNameThenAdd(childObjectNode, remainingName, value);
+        }
+
         public Builder add(String name, JsonNode value) {
-            builder.set(name, value);
+            navigateToParentOfPropertyNameThenAdd(builder, name, value);
             return this;
         }
 

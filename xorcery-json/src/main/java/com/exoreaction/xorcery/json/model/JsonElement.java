@@ -54,7 +54,10 @@ public interface JsonElement {
         {
             if (value instanceof NumericNode number) {
                 return Optional.of(number.intValue());
-            } else {
+            }
+            try {
+                return Optional.of(Integer.valueOf(value.asText()));
+            } catch (NumberFormatException e) {
                 return Optional.empty();
             }
         });
@@ -65,7 +68,10 @@ public interface JsonElement {
         {
             if (value instanceof NumericNode number) {
                 return Optional.of(number.longValue());
-            } else {
+            }
+            try {
+                return Optional.of(Long.valueOf(value.asText()));
+            } catch (NumberFormatException e) {
                 return Optional.empty();
             }
         });
