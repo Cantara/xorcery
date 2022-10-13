@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.test;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciPublisher;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSequence;
@@ -43,7 +43,7 @@ public class ReactiveStreamsServiceTest {
             CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
             for (int i = 0; i < numberOfSubscribers; i++) {
                 FibonacciSubscriber subscriber = new FibonacciSubscriber();
-                CompletableFuture<Void> future = reactiveStreams.subscribe(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), new Configuration.Builder().build(), subscriber, FibonacciSubscriber.class)
+                CompletableFuture<Void> future = reactiveStreams.subscribe(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), Configuration.empty(), subscriber, FibonacciSubscriber.class)
                         .thenAccept(v -> {
                             ArrayList<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
                             if (!new ArrayList<>(FibonacciSequence.sequenceOf(numbersInFibonacciSequence)).equals(allReceivedNumbers)) {

@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.test;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.fasterxml.jackson.databind.ObjectMapper;

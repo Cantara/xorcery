@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.reactivestreams.api;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import org.glassfish.jersey.spi.Contract;
 
-import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
