@@ -27,7 +27,11 @@ public class ReactiveStreamsServiceTest {
     }
 
     private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) {
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer();
+        Configuration configuration = new Configuration.Builder()
+                .add("server.http2.enabled", "true")
+                .add("client.http2.enabled", "true")
+                .build();
+        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration);
         testServer.start();
         try {
             ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
@@ -67,7 +71,11 @@ public class ReactiveStreamsServiceTest {
 
     @Test
     public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() {
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer();
+        Configuration configuration = new Configuration.Builder()
+                .add("server.http2.enabled", "true")
+                .add("client.http2.enabled", "true")
+                .build();
+        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration);
         testServer.start();
         try {
             ReactiveStreams reactiveStreams = testServer.getReactiveStreams();

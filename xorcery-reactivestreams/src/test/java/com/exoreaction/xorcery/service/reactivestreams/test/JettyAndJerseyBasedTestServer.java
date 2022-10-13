@@ -3,7 +3,11 @@ package com.exoreaction.xorcery.service.reactivestreams.test;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyReader;
+import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.ws.rs.ext.MessageBodyReader;
+import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
@@ -45,17 +49,17 @@ public class JettyAndJerseyBasedTestServer {
     private final ObjectMapper objectMapper;
     private ReactiveStreams reactiveStreams;
 
-    public JettyAndJerseyBasedTestServer() {
-        this.configuration = new Configuration.Builder()
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
+    public JettyAndJerseyBasedTestServer(Configuration configuration) {
+        this.configuration = configuration;
 
         this.server = createServer(configuration);
 
         ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         ctx.setContextPath("/");
-        servletContainer = new ServletContainer(new ResourceConfig());
+        servletContainer = new ServletContainer(new ResourceConfig()
+                .register(LongMessageBodyWriter.class, MessageBodyWriter.class)
+                .register(LongMessageBodyReader.class, MessageBodyReader.class)
+        );
         ServletHolder servletHolder = new ServletHolder(servletContainer);
         ctx.addServlet(servletHolder, "/*");
         servletHolder.setInitOrder(1);
