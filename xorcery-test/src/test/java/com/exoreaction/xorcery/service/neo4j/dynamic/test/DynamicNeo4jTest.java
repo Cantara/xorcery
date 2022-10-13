@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.neo4j.dynamic.test;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.service.neo4j.Neo4jService;

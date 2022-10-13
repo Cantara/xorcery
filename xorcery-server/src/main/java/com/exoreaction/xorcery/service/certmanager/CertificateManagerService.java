@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.certmanager;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;

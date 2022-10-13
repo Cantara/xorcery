@@ -4,7 +4,7 @@ import com.eventstore.dbclient.EventStoreDBClient;
 import com.eventstore.dbclient.ResolvedEvent;
 import com.eventstore.dbclient.SubscribeToStreamOptions;
 import com.eventstore.dbclient.SubscriptionListener;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreParameters;

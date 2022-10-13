@@ -21,7 +21,7 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-config</artifactId>
+            <artifactId>xorcery-config-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

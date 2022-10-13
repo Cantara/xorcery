@@ -25,6 +25,7 @@
         <module>xorcery-util</module>
 
         <module>xorcery-json</module>
+        <module>xorcery-config-api</module>
         <module>xorcery-config</module>
         <module>xorcery-metadata</module>
 

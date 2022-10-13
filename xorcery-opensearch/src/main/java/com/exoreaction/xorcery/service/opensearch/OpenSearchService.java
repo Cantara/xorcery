@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;

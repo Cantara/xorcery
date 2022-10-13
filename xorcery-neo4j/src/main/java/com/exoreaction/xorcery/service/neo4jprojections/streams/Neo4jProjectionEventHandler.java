@@ -3,12 +3,13 @@ package com.exoreaction.xorcery.service.neo4jprojections.streams;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.api.ProjectionCommit;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.util.Enums;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -75,7 +76,7 @@ public class Neo4jProjectionEventHandler
 
         fromVersion.ifPresent(from -> version = from);
 
-        updateParameters.put(Cypher.toField(Projection.id), projectionId);
+        updateParameters.put(Enums.toField(Projection.id), projectionId);
     }
 
     @Override

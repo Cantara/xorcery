@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.PublishWebSocketEndpoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.ext.MessageBodyReader;

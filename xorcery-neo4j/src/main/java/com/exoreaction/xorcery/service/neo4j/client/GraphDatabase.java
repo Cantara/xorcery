@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.neo4j.client;
 
+import com.exoreaction.xorcery.util.Enums;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -36,7 +37,7 @@ public class GraphDatabase {
 
             Map<String, Object> fixedParams = new HashMap<String, Object>(q.getParameters().size());
             for (Map.Entry<Enum<?>, Object> param : q.getParameters().entrySet()) {
-                fixedParams.put(Cypher.toField(param.getKey()), param.getValue());
+                fixedParams.put(Enums.toField(param.getKey()), param.getValue());
             }
 
             return execute(queryString, fixedParams, q.getTimeout());

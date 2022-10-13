@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch.streams;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.opensearch.api.IndexCommit;

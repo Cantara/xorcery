@@ -1,5 +1,7 @@
 package com.exoreaction.xorcery.service.neo4j.client;
 
+import com.exoreaction.xorcery.util.Enums;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +45,7 @@ public class WhereClauseBuilder {
             Function<Object, String> current = whereClauses.computeIfAbsent(parameter, p -> value ->
             {
                 throw new IllegalArgumentException(
-                        "WHERE clause parameter for " + Cypher.toField(parameter) + " is of unknown type " + value + "(" +
+                        "WHERE clause parameter for " + Enums.toField(parameter) + " is of unknown type " + value + "(" +
                                 value.getClass().getName() + ")");
             });
 

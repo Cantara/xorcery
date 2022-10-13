@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.test;
 
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.server.Xorcery;

@@ -56,11 +56,13 @@
             <artifactId>xorcery-domainevents</artifactId>
             <version>${project.version}</version>
         </dependency>
+<!--
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-registry</artifactId>
             <version>${project.version}</version>
         </dependency>
+-->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-disruptor</artifactId>
@@ -73,7 +75,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-config</artifactId>
+            <artifactId>xorcery-config-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

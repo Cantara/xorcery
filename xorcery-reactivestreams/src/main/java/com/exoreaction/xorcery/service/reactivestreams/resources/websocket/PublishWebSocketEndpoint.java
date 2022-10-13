@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.PublishingProcess;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;

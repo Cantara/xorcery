@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.conductor;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;

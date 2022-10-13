@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.eventstore.test;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

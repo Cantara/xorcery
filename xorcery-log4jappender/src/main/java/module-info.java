@@ -1,6 +1,8 @@
 open module xorcery.log4jappender {
+    exports com.exoreaction.xorcery.service.log4jappender.log4j;
+
     requires xorcery.util;
-    requires xorcery.config;
+    requires xorcery.config.api;
     requires xorcery.metadata;
     requires xorcery.disruptor;
     requires xorcery.reactivestreams.api;

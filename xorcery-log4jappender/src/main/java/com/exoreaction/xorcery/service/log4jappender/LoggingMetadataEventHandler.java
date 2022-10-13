@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.log4jappender;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.core.LogEvent;

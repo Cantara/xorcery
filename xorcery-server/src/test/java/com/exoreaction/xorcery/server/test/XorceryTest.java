@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.server.test;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.server.Xorcery;
 import org.junit.jupiter.api.Test;

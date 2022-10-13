@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.neo4j.client;
 
 import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.function.FallbackFunction;
+import com.exoreaction.xorcery.util.Enums;
 import jakarta.ws.rs.NotFoundException;
 import org.neo4j.graphdb.Result;
 
@@ -284,7 +285,7 @@ public class GraphQuery
                 Iterator<Map.Entry<Enum<?>, Order>> itr = sortOrder.entrySet().iterator();
                 while (itr.hasNext()) {
                     Map.Entry<Enum<?>, Order> entry = itr.next();
-                    cypher.append(Cypher.toField(entry.getKey()));
+                    cypher.append(Enums.toField(entry.getKey()));
                     if (entry.getValue() == Order.DESCENDING) {
                         cypher.append(" DESC ");
                     }

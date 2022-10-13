@@ -1,7 +1,7 @@
-package com.exoreaction.xorcery.configuration;
+package com.exoreaction.xorcery.configuration.model;
 
 import com.exoreaction.xorcery.builders.With;
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

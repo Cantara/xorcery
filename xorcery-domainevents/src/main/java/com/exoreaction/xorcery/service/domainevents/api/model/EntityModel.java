@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.model;
+package com.exoreaction.xorcery.service.domainevents.api.model;
 
 public interface EntityModel
         extends Model {

@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.jsonapi.jaxrs.providers;
 
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

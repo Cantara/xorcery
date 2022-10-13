@@ -1,6 +1,6 @@
-package com.exoreaction.xorcery.model;
+package com.exoreaction.xorcery.service.domainevents.api.model;
 
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.json.model.JsonElement;
 
 import java.util.Map;
 import java.util.Optional;

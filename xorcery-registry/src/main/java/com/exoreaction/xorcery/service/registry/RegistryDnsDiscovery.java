@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.registry;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.registry.api.Registry;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;

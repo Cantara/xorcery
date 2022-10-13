@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.jersey;
 
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.ServiceConfiguration;
-import com.exoreaction.xorcery.configuration.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.ServiceConfiguration;
+import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;

@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.server.model;
 
-import com.exoreaction.xorcery.configuration.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.Links;

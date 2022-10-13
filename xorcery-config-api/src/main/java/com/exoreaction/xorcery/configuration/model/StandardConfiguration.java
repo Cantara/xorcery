@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.configuration;
+package com.exoreaction.xorcery.configuration.model;
 
 import com.exoreaction.xorcery.builders.WithContext;
 

@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.resources.websocket;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService;
 import com.exoreaction.xorcery.service.reactivestreams.SubscriptionProcess;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;

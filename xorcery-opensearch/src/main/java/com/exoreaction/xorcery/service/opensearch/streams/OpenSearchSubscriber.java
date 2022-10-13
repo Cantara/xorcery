@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch.streams;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;

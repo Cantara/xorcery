@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch.client.index;
 
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.json.model.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

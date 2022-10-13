@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.neo4j.resources.api;
 
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;

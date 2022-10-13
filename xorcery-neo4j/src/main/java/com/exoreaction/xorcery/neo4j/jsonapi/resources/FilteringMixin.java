@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
 import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
-import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphQuery;
+import com.exoreaction.xorcery.util.Enums;
 import jakarta.ws.rs.core.MultivaluedMap;
 import org.apache.commons.lang3.StringUtils;
 
@@ -25,12 +25,12 @@ public interface FilteringMixin
 
     default Filters filter(Enum<?> field) {
         return filters()
-                .filter("filter[" + Cypher.toField(field) + "]", field);
+                .filter("filter[" + Enums.toField(field) + "]", field);
     }
 
     default Filters filter(Enum<?> field, Function<String, Object> valueMapper) {
         return filters()
-                .filter("filter[" + Cypher.toField(field) + "]", field, valueMapper);
+                .filter("filter[" + Enums.toField(field) + "]", field, valueMapper);
     }
 
     default GraphQuery applyFilters(Map<String, Enum<?>> filters, GraphQuery data) {
@@ -113,11 +113,11 @@ public interface FilteringMixin
         }
 
         public Filters filter(Enum<?> field) {
-            return filter("filter[" + Cypher.toField(field) + "]", field);
+            return filter("filter[" + Enums.toField(field) + "]", field);
         }
 
         public Filters filter(Enum<?> field, Function<String, Object> vm) {
-            return filter("filter[" + Cypher.toField(field) + "]", field, vm);
+            return filter("filter[" + Enums.toField(field) + "]", field, vm);
         }
 
         @Override

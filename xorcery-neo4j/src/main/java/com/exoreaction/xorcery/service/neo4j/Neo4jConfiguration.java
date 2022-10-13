@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.neo4j;
 
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.ServiceConfiguration;
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.ServiceConfiguration;
+import com.exoreaction.xorcery.json.model.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.File;

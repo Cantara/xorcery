@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.eventstore.streams;
 
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;

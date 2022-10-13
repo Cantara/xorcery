@@ -12,7 +12,7 @@ open module xorcery.eventstore {
     requires jakarta.inject;
     requires jakarta.ws.rs;
     requires db.client.java;
-    requires xorcery.config;
+    requires xorcery.config.api;
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
     requires xorcery.util;

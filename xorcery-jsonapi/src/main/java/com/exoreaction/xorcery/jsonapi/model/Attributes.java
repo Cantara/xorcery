@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.model;
 
 import com.exoreaction.xorcery.builders.With;
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.json.model.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

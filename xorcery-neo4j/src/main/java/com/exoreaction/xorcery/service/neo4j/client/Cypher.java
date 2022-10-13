@@ -86,18 +86,6 @@ public final class Cypher {
                 );
     }
 
-    /**
-     * Map an enum Some.name to some_name
-     *
-     * @deprecated use Enums.toField instead
-     * @param anEnum
-     * @return
-     */
-
-    public static String toField(Enum<?> anEnum) {
-        return Enums.toField(anEnum);
-    }
-
     public static ObjectNode toObjectNode(Map<String, Object> resultRow) {
         ObjectNode node = JsonNodeFactory.instance.objectNode();
         for (Map.Entry<String, Object> entry : resultRow.entrySet()) {

@@ -1,4 +1,5 @@
 open module xorcery.domainevents {
+    exports com.exoreaction.xorcery.service.domainevents;
     exports com.exoreaction.xorcery.service.domainevents.api;
     exports com.exoreaction.xorcery.service.domainevents.api.aggregate;
     exports com.exoreaction.xorcery.service.domainevents.api.aggregate.annotation;
@@ -9,7 +10,7 @@ open module xorcery.domainevents {
 
     requires xorcery.metadata;
     requires xorcery.reactivestreams.api;
-    requires xorcery.config;
+    requires xorcery.config.api;
     requires xorcery.conductor.api;
     requires xorcery.disruptor;
     requires xorcery.service.api;

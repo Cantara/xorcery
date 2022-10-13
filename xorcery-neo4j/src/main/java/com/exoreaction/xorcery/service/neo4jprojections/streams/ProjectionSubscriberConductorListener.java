@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.neo4jprojections.streams;
 
 import com.codahale.metrics.MetricRegistry;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;

@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.conductor.api;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Relationship;
 import com.exoreaction.xorcery.jsonapi.model.Relationships;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;

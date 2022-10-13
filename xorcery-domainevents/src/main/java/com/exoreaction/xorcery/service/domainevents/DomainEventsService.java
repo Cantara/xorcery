@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.domainevents;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;

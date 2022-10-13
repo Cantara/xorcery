@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.hyperschema.model;
 
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.jsonschema.jaxrs.MediaTypes;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
 import com.exoreaction.xorcery.jsonschema.model.Properties;

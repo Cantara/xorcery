@@ -2,7 +2,7 @@ open module xorcery.opensearch {
     requires xorcery.json;
     requires com.fasterxml.jackson.databind;
     requires jakarta.ws.rs;
-    requires xorcery.config;
+    requires xorcery.config.api;
     requires xorcery.service.api;
     requires xorcery.conductor.api;
     requires xorcery.reactivestreams.api;

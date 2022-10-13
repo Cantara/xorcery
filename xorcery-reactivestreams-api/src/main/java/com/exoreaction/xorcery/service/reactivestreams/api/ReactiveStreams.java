@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.api;
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import org.glassfish.jersey.spi.Contract;
 
 import java.net.URI;

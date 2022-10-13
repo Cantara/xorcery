@@ -22,12 +22,7 @@
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-json</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-util</artifactId>
+            <artifactId>xorcery-config-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 

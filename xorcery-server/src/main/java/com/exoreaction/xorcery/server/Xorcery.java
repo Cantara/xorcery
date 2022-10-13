@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.server;
 
 import com.codahale.metrics.MetricRegistry;
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
@@ -18,7 +18,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
@@ -272,9 +271,11 @@ public class Xorcery
 
         if (configuration.getBoolean("server.ssl.enabled").orElse(false)) {
             // The ALPN ConnectionFactory.
+/*
             ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
             // The default protocol to use in case there is no negotiation.
             alpn.setDefaultProtocol(http11.getProtocol());
+*/
 
             sslContextFactory.setKeyStoreType(configuration.getString("server.ssl.keystore.type").orElse("PKCS12"));
             sslContextFactory.setKeyStorePath(configuration.getString("server.ssl.keystore.path")
@@ -289,15 +290,16 @@ public class Xorcery
             sslContextFactory.setTrustAll(configuration.getBoolean("server.ssl.trustall").orElse(false));
             sslContextFactory.setWantClientAuth(configuration.getBoolean("server.ssl.wantclientauth").orElse(false));
 
-            SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, alpn.getProtocol());
+//            SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, alpn.getProtocol());
+            SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, http11.getProtocol());
 
             // Create and configure the secure HTTP 1.1/2 connector
             ServerConnector https;
             if (configuration.getBoolean("server.http2.enabled").orElse(false)) {
                 HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpConfig);
-                https = new ServerConnector(server, tls, alpn, h2, http11);
+                https = new ServerConnector(server, tls, h2, http11);
             } else {
-                https = new ServerConnector(server, tls, alpn, http11);
+                https = new ServerConnector(server, tls, http11);
             }
             https.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
             https.setPort(httpsPort);

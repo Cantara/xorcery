@@ -3,7 +3,6 @@ open module xorcery.server {
 
     requires transitive xorcery.jsonapi.client;
     requires transitive xorcery.jsonapi.server;
-    requires xorcery.util;
     requires transitive xorcery.config;
     requires transitive xorcery.service.api;
     requires transitive xorcery.conductor.api;
@@ -11,11 +10,16 @@ open module xorcery.server {
     requires transitive jakarta.ws.rs;
     requires transitive jersey.common;
     requires transitive jakarta.validation;
+    requires transitive jakarta.annotation;
+    requires transitive org.eclipse.jetty.alpn.server;
+
+    requires xorcery.util;
+    requires xorcery.jsonapi.jaxrs;
 
 //    requires xorcery.domainevents;
     requires org.apache.commons.lang3;
     requires org.eclipse.jetty.util;
-    requires org.apache.logging.log4j;
+    requires transitive org.apache.logging.log4j;
     requires jersey.server;
     requires info.picocli;
     requires com.codahale.metrics;
@@ -23,7 +27,6 @@ open module xorcery.server {
     requires com.fasterxml.jackson.databind;
     requires com.fasterxml.jackson.dataformat.yaml;
     requires io.dropwizard.metrics.jetty11;
-    requires org.eclipse.jetty.alpn.server;
     requires org.eclipse.jetty.client;
     requires org.eclipse.jetty.http2.client;
     requires org.eclipse.jetty.http2.http.client.transport;
@@ -40,5 +43,6 @@ open module xorcery.server {
     requires jdk.management;
     requires jersey.client;
     requires java.logging;
-    requires xorcery.jsonapi.jaxrs;
+
+    uses org.eclipse.jetty.io.ssl.ALPNProcessor.Server;
 }

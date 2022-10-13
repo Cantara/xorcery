@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.requestlog;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.metadata.Metadata;
