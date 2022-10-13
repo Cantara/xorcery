@@ -10,7 +10,6 @@ open module xorcery.neo4j {
 
     requires xorcery.domainevents;
     requires xorcery.metadata;
-//    requires xorcery.registry;
     requires xorcery.jsonschema;
     requires xorcery.util;
     requires xorcery.service.api;
@@ -30,6 +29,4 @@ open module xorcery.neo4j {
     requires com.codahale.metrics;
     requires com.lmax.disruptor;
     requires xorcery.jsonapi;
-//    requires org.neo4j.graphdb;
-//    requires org.neo4j.kernel;
 }

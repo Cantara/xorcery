@@ -4,5 +4,6 @@ open module xorcery.server.test {
     requires xorcery.server;
     requires xorcery.metadata;
     requires xorcery.reactivestreams;
+    requires xorcery.registry;
     requires org.junit.jupiter.api;
 }

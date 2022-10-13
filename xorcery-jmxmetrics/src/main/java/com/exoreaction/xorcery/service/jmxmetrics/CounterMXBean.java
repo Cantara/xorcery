@@ -10,14 +10,12 @@ import java.util.function.Supplier;
 
 public interface CounterMXBean
         extends Counting {
-    public record Model(Supplier<JsonNode> value) implements CounterMXBean {
+    record Model(Supplier<JsonNode> value) implements CounterMXBean {
         @Override
         public long getCount() {
             return Optional.ofNullable((NumericNode) value.get()).orElse(JsonNodeFactory.instance.numberNode(0L)).longValue();
         }
     }
-
-    ;
 
     @Override
     long getCount();

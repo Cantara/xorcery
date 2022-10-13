@@ -9,7 +9,9 @@ import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 @Contract
-public interface ReactiveStreams {
+public interface ReactiveStreams
+    extends ReactiveStreamsClient
+{
     // Server
     CompletableFuture<Void> publisher(String publisherWebsocketPath,
                                       Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,
@@ -18,15 +20,4 @@ public interface ReactiveStreams {
     CompletableFuture<Void> subscriber(String subscriberWebsocketPath,
                                        Function<Configuration, Flow.Subscriber<?>> subscriberFactory,
                                        Class<? extends Flow.Subscriber<?>> subscriberType);
-
-    // Client
-    CompletableFuture<Void> publish(URI subscriberWebsocketUri,
-                                    Configuration subscriberConfiguration,
-                                    Flow.Publisher<?> publisher,
-                                    Class<? extends Flow.Publisher<?>> publisherType);
-
-    CompletableFuture<Void> subscribe(URI publisherWebsocketUri,
-                                      Configuration publisherConfiguration,
-                                      Flow.Subscriber<?> subscriber,
-                                      Class<? extends Flow.Subscriber<?>> subscriberType);
 }

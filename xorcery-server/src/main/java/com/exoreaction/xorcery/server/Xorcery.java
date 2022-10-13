@@ -50,6 +50,7 @@ import javax.net.ssl.X509TrustManager;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.security.GeneralSecurityException;
@@ -372,6 +373,7 @@ public class Xorcery
                     app.register(getClass().getClassLoader().loadClass(jsonNode.asText()));
                 } catch (ClassNotFoundException e) {
                     logger.error("Could not load JAX-RS provider " + jsonNode.asText(), e);
+                    throw new RuntimeException(e);
                 }
             }
         });

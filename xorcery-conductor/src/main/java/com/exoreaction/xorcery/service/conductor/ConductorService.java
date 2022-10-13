@@ -5,7 +5,6 @@ import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
-import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.*;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
@@ -27,7 +26,6 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Flow;
@@ -68,6 +66,7 @@ public class ConductorService
     private Registry registry;
     private ServiceResourceObject sro;
     private Configuration configuration;
+    private ConductorConfiguration conductorConfiguration;
     private ReactiveStreams reactiveStreams;
 
 
@@ -82,6 +81,7 @@ public class ConductorService
         this.registry = registry;
         this.sro = sro;
         this.configuration = configuration;
+        this.conductorConfiguration = new ConductorConfiguration(configuration.getConfiguration("conductor"));
 
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         groups = new Groups(new Groups.GroupsListener() {
@@ -123,8 +123,7 @@ public class ConductorService
     public void onStartup(Container container) {
         // Load templates
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        for (JsonNode templateJson : configuration.getList("conductor.templates").orElseThrow(()->
-                new IllegalStateException("Missing conductor.templates configuration"))) {
+        for (JsonNode templateJson : conductorConfiguration.getTemplates()) {
 
             ObjectNode templateNode = null;
             if (templateJson.isTextual()) {
@@ -149,9 +148,8 @@ public class ConductorService
                     templates.getResources().ifPresent(ros -> ros.forEach(ro -> addTemplate(new GroupTemplate(ro))));
                     templates.getResource().ifPresent(ro -> addTemplate(new GroupTemplate(ro)));
                 }
-            } else if (templateJson.isObject())
-            {
-                templateNode = (ObjectNode)templateJson;
+            } else if (templateJson.isObject()) {
+                templateNode = (ObjectNode) templateJson;
 
                 templateNode = new VariableResolver().apply(configuration.json(), templateNode);
                 ResourceObject template = new ResourceObject(templateNode);
@@ -200,11 +198,6 @@ public class ConductorService
     }
 
     private class ConductorRegistryListener implements RegistryListener {
-        @Override
-        public void snapshot(Collection<ServerResourceDocument> servers) {
-            RegistryListener.super.snapshot(servers);
-        }
-
         @Override
         public void addedService(ServiceResourceObject service) {
 //            System.out.println("Conductor Service:"+service.serviceIdentifier());

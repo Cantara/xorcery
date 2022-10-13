@@ -15,7 +15,6 @@ import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.conductor.helpers.AbstractConductorListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.service.registry.api.Registry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -81,19 +80,16 @@ public class JmxMetrics
     private ServiceResourceObject sro;
     private ReactiveStreams reactiveStreams;
     private Conductor conductor;
-    private Registry registry;
     private JsonApiClient client;
 
     @Inject
     public JmxMetrics(@Named(SERVICE_TYPE) ServiceResourceObject sro,
                       ReactiveStreams reactiveStreams,
                       Conductor conductor,
-                      Registry registry,
                       JettyHttpClientContract instance) {
         this.sro = sro;
         this.reactiveStreams = reactiveStreams;
         this.conductor = conductor;
-        this.registry = registry;
         Client client = ClientBuilder.newBuilder()
                 .withConfig(new ClientConfig()
                         .register(new JsonElementMessageBodyReader(new ObjectMapper()))

@@ -2,7 +2,7 @@ open module xorcery.jsonapi.server {
     exports com.exoreaction.xorcery.jsonapi.server.resources;
     exports com.exoreaction.xorcery.jsonschema.server.annotations;
 
-    requires xorcery.jsonapi;
+    requires transitive xorcery.jsonapi;
 
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.api;

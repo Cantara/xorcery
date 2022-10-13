@@ -46,12 +46,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-jsonapi</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-registry</artifactId>
+            <artifactId>xorcery-jsonapi-server</artifactId>
             <version>${project.version}</version>
         </dependency>
 

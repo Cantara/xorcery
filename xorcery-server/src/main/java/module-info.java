@@ -11,15 +11,14 @@ open module xorcery.server {
     requires transitive jersey.common;
     requires transitive jakarta.validation;
     requires transitive jakarta.annotation;
+    requires transitive jakarta.activation;
     requires transitive org.eclipse.jetty.alpn.server;
+    requires transitive org.apache.logging.log4j;
 
-    requires xorcery.util;
     requires xorcery.jsonapi.jaxrs;
 
-//    requires xorcery.domainevents;
     requires org.apache.commons.lang3;
     requires org.eclipse.jetty.util;
-    requires transitive org.apache.logging.log4j;
     requires jersey.server;
     requires info.picocli;
     requires com.codahale.metrics;

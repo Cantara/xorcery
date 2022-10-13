@@ -6,7 +6,7 @@ open module xorcery.conductor {
     requires transitive xorcery.config.api;
     requires transitive xorcery.service.api;
     requires xorcery.reactivestreams.api;
-    requires xorcery.registry;
+    requires xorcery.registry.api;
 
     requires jakarta.inject;
     requires jakarta.ws.rs;

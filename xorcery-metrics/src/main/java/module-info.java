@@ -3,7 +3,6 @@ open module xorcery.metrics {
     requires xorcery.reactivestreams.api;
     requires xorcery.service.api;
     requires xorcery.conductor.api;
-    requires xorcery.registry;
     requires xorcery.jsonapi.server;
 
     requires com.fasterxml.jackson.databind;
