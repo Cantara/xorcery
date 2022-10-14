@@ -11,7 +11,7 @@ open module xorcery.handlebars {
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
 
-    requires handlebars;
+    requires transitive handlebars;
     requires org.apache.logging.log4j;
     requires jersey.client;
     requires jersey.jetty.connector;
