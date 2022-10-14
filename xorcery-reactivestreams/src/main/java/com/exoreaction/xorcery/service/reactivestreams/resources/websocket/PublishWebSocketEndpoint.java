@@ -260,7 +260,7 @@ public class PublishWebSocketEndpoint
                     }
                 } else {
                     ByteBuffer eventBuffer = (ByteBuffer) item;
-                    outputStream.writeTo(eventBuffer);
+                    outputStream.write(eventBuffer);
                 }
             } catch (Throwable t) {
                 logger.error(marker, "Could not send event", t);
