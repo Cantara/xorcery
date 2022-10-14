@@ -131,17 +131,25 @@ public class SubscriberWebSocketEndpoint
     private void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
             logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
-            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-            Object event = eventReader.readFrom(eventClass, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS, inputStream);
-            byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
+            if (eventReader != null) {
+                ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
+                Object event = eventReader.readFrom(eventClass, eventType, EMPTY_ANNOTATIONS, MediaType.WILDCARD_TYPE, EMPTY_HTTP_HEADERS, inputStream);
+                byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
-            if (resultWriter != null) {
-                CompletableFuture<?> resultFuture = new CompletableFuture<>();
-                resultFuture.whenComplete(this::sendResult);
-                event = new WithResult<>(event, resultFuture);
+                if (resultWriter != null) {
+                    CompletableFuture<?> resultFuture = new CompletableFuture<>();
+                    resultFuture.whenComplete(this::sendResult);
+                    event = new WithResult<>(event, resultFuture);
+                }
+
+                subscriber.onNext(event);
+            } else {
+                ByteBuffer result = ByteBuffer.allocate(byteBuffer.limit());
+                result.put(byteBuffer);
+                result.flip();
+                byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
+                subscriber.onNext(result);
             }
-
-            subscriber.onNext(event);
         } catch (IOException e) {
             logger.error("Could not receive value", e);
             session.close(StatusCode.BAD_PAYLOAD, e.getMessage());

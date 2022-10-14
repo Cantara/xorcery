@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.test.fibonacci;
 
+import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
@@ -14,10 +15,62 @@ public class FibonacciSequence implements Iterable<Long> {
                 .collect(Collectors.toList());
     }
 
+    public static List<byte[]> binarySequenceOf(int numbersInFibonacciSequence) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(new FibonacciSequence(numbersInFibonacciSequence).binaryIterator(), Spliterator.ORDERED), false)
+                .collect(Collectors.toList());
+    }
+
+    public static List<ByteBuffer> binaryNioSequenceOf(int numbersInFibonacciSequence) {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(new FibonacciSequence(numbersInFibonacciSequence).binaryIterator(), Spliterator.ORDERED), false)
+                .map(ByteBuffer::wrap)
+                .collect(Collectors.toList());
+    }
+
     private final int maxNumbersInFibonacciSequence;
 
     public FibonacciSequence(int maxNumbersInFibonacciSequence) {
         this.maxNumbersInFibonacciSequence = maxNumbersInFibonacciSequence;
+    }
+
+    public Iterator<byte[]> binaryIterator() {
+        return new Iterator<>() {
+            private final Iterator<Long> delegate = iterator();
+
+            @Override
+            public boolean hasNext() {
+                return delegate.hasNext();
+            }
+
+            @Override
+            public byte[] next() {
+                long next = delegate.next();
+                byte[] buf = new byte[8];
+                ByteBuffer result = ByteBuffer.wrap(buf);
+                result.putLong(next);
+                return buf;
+            }
+        };
+    }
+
+    public Iterator<ByteBuffer> binaryNioIterator() {
+        return new Iterator<>() {
+            private final Iterator<Long> delegate = iterator();
+
+            @Override
+            public boolean hasNext() {
+                return delegate.hasNext();
+            }
+
+            @Override
+            public ByteBuffer next() {
+                long next = delegate.next();
+                byte[] buf = new byte[8];
+                ByteBuffer result = ByteBuffer.wrap(buf);
+                result.putLong(next);
+                result.flip();
+                return result;
+            }
+        };
     }
 
     @Override
