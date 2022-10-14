@@ -26,9 +26,8 @@ public class JsonElementMessageBodyReader
 
     private final ObjectMapper objectMapper;
 
-    @Inject
-    public JsonElementMessageBodyReader(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public JsonElementMessageBodyReader() {
+        this.objectMapper = new ObjectMapper();
     }
 
     @Override

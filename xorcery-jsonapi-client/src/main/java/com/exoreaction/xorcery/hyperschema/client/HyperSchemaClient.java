@@ -13,7 +13,7 @@ import java.util.concurrent.CompletionStage;
 
 public record HyperSchemaClient(Client client) {
 
-    public CompletionStage<HyperSchema> get(Link link) {
+    public CompletableFuture<HyperSchema> get(Link link) {
         CompletableFuture<HyperSchema> future = new CompletableFuture<>();
         client.target(link.getHrefAsUri())
                 .request(MediaTypes.APPLICATION_JSON_SCHEMA)

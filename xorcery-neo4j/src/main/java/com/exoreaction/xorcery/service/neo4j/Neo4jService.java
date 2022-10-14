@@ -7,6 +7,7 @@ import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4j.dynamic.DynamicTransactionalContextFactory;
+import com.exoreaction.xorcery.service.neo4j.log.Log4jLogProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,6 +64,7 @@ public class Neo4jService
             logger.info("Neo4j home:" + home);
             Map<String, String> settings = neo4jConfiguration.settings();
             DatabaseManagementService managementService = new DatabaseManagementServiceBuilder(home)
+                    .setUserLogProvider(new Log4jLogProvider())
                     .setConfigRaw(settings)
                     .build();
 

@@ -28,7 +28,7 @@ public class WaitForProjectionCommit
         this.projectionId = projectionId;
     }
 
-    public CompletionStage<WithMetadata<ProjectionCommit>> waitForVersion(long version) {
+    public CompletableFuture<WithMetadata<ProjectionCommit>> waitForVersion(long version) {
         CompletableFuture<WithMetadata<ProjectionCommit>> future = new CompletableFuture<>();
         if (currentVersion.get() >= version) {
             // Already done
@@ -44,7 +44,7 @@ public class WaitForProjectionCommit
         return future;
     }
 
-    public CompletionStage<WithMetadata<ProjectionCommit>> waitForTimestamp(long timestamp) {
+    public CompletableFuture<WithMetadata<ProjectionCommit>> waitForTimestamp(long timestamp) {
         CompletableFuture<WithMetadata<ProjectionCommit>> future = new CompletableFuture<>();
         if (currentTimestamp.get() >= timestamp) {
             // Already done

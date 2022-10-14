@@ -4,6 +4,7 @@ open module xorcery.domainevents {
     exports com.exoreaction.xorcery.service.domainevents.api.aggregate;
     exports com.exoreaction.xorcery.service.domainevents.api.aggregate.annotation;
     exports com.exoreaction.xorcery.service.domainevents.api.context;
+    exports com.exoreaction.xorcery.service.domainevents.api.model;
     exports com.exoreaction.xorcery.service.domainevents.resources;
 
     requires transitive xorcery.jsonapi.server;

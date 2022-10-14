@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.handlebars;
 
 import com.exoreaction.xorcery.service.handlebars.helpers.UtilHelpers;
 import com.github.jknack.handlebars.Handlebars;
-import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.github.jknack.handlebars.io.FileTemplateLoader;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
@@ -33,16 +32,16 @@ public class HandlebarsFeature
         Handlebars handlebars = new Handlebars()
                 .registerHelpers(new UtilHelpers());
 
-        File file = new File(getClass().getResource("/templates/jsonapi/resourcedocument.html").getFile())
+        File file = new File(ClassLoader.getSystemResource("handlebars/templates/jsonapi/resourcedocument.html").getFile())
                 .getParentFile().getParentFile();
         if (file.exists()) {
             handlebars.with(
                     new FileTemplateLoader(file, ".html"),
-                    new ClassPathTemplateLoader("/templates/", ".html")
+                    new SystemClassLoaderTemplateLoader("handlebars/templates/", ".html")
             );
         } else {
                 handlebars.with(
-                    new ClassPathTemplateLoader("/templates/", ".html")
+                    new SystemClassLoaderTemplateLoader("handlebars/templates/", ".html")
             );
         }
 

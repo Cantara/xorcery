@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.jsonapi.jaxrs.providers;
 
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.WebApplicationException;
@@ -22,7 +21,6 @@ import java.nio.channels.Channels;
 public class ByteBufferMessageBodyReader
         implements MessageBodyReader<ByteBuffer> {
 
-    @Inject
     public ByteBufferMessageBodyReader() {
     }
 

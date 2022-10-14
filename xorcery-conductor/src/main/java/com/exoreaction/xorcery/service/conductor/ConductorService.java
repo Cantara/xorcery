@@ -23,8 +23,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.spi.Contract;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -34,6 +36,7 @@ import java.util.concurrent.Flow;
  * @author rickardoberg
  * @since 15/04/2022
  */
+@Contract
 @Singleton
 public class ConductorService
         implements Conductor, ContainerLifecycleListener {
@@ -57,7 +60,7 @@ public class ConductorService
 
         @Override
         protected void configure() {
-            context.register(ConductorService.class, Conductor.class, ContainerLifecycleListener.class);
+            context.register(ConductorService.class, ConductorService.class, Conductor.class, ContainerLifecycleListener.class);
         }
     }
 
@@ -135,8 +138,14 @@ public class ConductorService
 
                 } catch (IllegalArgumentException | IOException e) {
                     // Just load from classpath
-                    try {
-                        templateNode = (ObjectNode) objectMapper.readTree(getClass().getResourceAsStream(templateName));
+                    try(InputStream in = ClassLoader.getSystemResourceAsStream(templateName)) {
+                        if (in == null)
+                        {
+                            logger.error("Could not find template " + templateName);
+                        } else
+                        {
+                            templateNode = (ObjectNode) objectMapper.readTree(in);
+                        }
                     } catch (IOException ex) {
                         logger.error("Could not load template " + templateName, ex);
                     }

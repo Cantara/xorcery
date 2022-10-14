@@ -44,9 +44,9 @@ public class Neo4jAggregateSnapshotLoader {
                 new Function<Class<?>, String>() {
                     @Override
                     public String apply(Class clazz) {
-                        String statementFile = "/neo4j/" +metadata.getDomain()+"/snapshot/" + clazz.getSimpleName() + ".cyp";
+                        String statementFile = metadata.getDomain()+"/neo4j/snapshot/" + clazz.getSimpleName() + ".cyp";
                         try {
-                            return new String(Objects.requireNonNull(getClass().getResourceAsStream(statementFile)).readAllBytes(), StandardCharsets.UTF_8);
+                            return new String(Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(statementFile)).readAllBytes(), StandardCharsets.UTF_8);
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }

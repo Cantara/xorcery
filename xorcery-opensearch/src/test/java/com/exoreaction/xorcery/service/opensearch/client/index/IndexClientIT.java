@@ -48,8 +48,8 @@ public class IndexClientIT {
 
     @Test
     public void createComponentTemplateTest() throws IOException, ExecutionException, InterruptedException, TimeoutException {
-        InputStream templateSource = getClass().getResourceAsStream("/opensearch/templates/components/common.yaml");
-        CreateComponentTemplateRequest createComponentTemplateRequest = new CreateComponentTemplateRequest.Builder((ObjectNode)objectMapper.readTree(templateSource)).build();
+        InputStream templateSource = ClassLoader.getSystemResourceAsStream("/opensearch/templates/components/common.yaml");
+        CreateComponentTemplateRequest createComponentTemplateRequest = new CreateComponentTemplateRequest.Builder((ObjectNode) objectMapper.readTree(templateSource)).build();
 
         IndexClient indices = client.indices();
         AcknowledgedResponse response = indices.createComponentTemplate("common", createComponentTemplateRequest).toCompletableFuture().get(10, TimeUnit.SECONDS);
@@ -63,8 +63,8 @@ public class IndexClientIT {
 
     @Test
     public void createIndexTemplateTest() throws IOException, ExecutionException, InterruptedException, TimeoutException {
-        InputStream templateSource = getClass().getResourceAsStream("/opensearch/templates/logs.yaml");
-        CreateIndexTemplateRequest createIndexTemplateRequest = new CreateIndexTemplateRequest.Builder((ObjectNode)objectMapper.readTree(templateSource)).build();
+        InputStream templateSource = ClassLoader.getSystemResourceAsStream("/opensearch/templates/logs.yaml");
+        CreateIndexTemplateRequest createIndexTemplateRequest = new CreateIndexTemplateRequest.Builder((ObjectNode) objectMapper.readTree(templateSource)).build();
 
         IndexClient indices = client.indices();
         AcknowledgedResponse response = indices.createIndexTemplate("logs", createIndexTemplateRequest).toCompletableFuture().get(10, TimeUnit.SECONDS);

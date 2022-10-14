@@ -102,16 +102,6 @@
                 <version>${slf4j.version}</version>
             </dependency>
 
-            <!-- Jetty 11 needs Servlet 5 -->
-            <!-- java.lang.NoClassDefFoundError: jakarta/servlet/ServletInputStream -->
-            <!--
-                        <dependency>
-                            <groupId>jakarta.servlet</groupId>
-                            <artifactId>jakarta.servlet-api</artifactId>
-                            <version>6.0.0</version>
-                        </dependency>
-            -->
-
             <dependency>
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>

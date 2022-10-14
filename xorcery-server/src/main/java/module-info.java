@@ -15,7 +15,7 @@ open module xorcery.server {
     requires transitive org.eclipse.jetty.alpn.server;
     requires transitive org.apache.logging.log4j;
 
-    requires xorcery.jsonapi.jaxrs;
+    requires transitive xorcery.jsonapi.jaxrs;
 
     requires org.apache.commons.lang3;
     requires org.eclipse.jetty.util;
@@ -42,6 +42,4 @@ open module xorcery.server {
     requires jdk.management;
     requires jersey.client;
     requires java.logging;
-
-    uses org.eclipse.jetty.io.ssl.ALPNProcessor.Server;
 }

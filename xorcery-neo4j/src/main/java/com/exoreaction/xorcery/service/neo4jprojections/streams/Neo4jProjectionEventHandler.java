@@ -118,8 +118,8 @@ public class Neo4jProjectionEventHandler
                         return event.metadata().getString("domain")
                                 .map(domain ->
                                 {
-                                    String statementFile = "/neo4j/" + domain + "/" + shortenedType + ".cyp";
-                                    try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
+                                    String statementFile = domain + "/neo4j/events/" + shortenedType + ".cyp";
+                                    try (InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(statementFile)) {
                                         if (resourceAsStream == null)
                                             return null;
 
@@ -131,8 +131,8 @@ public class Neo4jProjectionEventHandler
                                 })
                                 .orElseGet(() ->
                                         {
-                                            String statementFile = "/neo4j/" + shortenedType + ".cyp";
-                                            try (InputStream resourceAsStream = getClass().getResourceAsStream(statementFile)) {
+                                            String statementFile = "neo4j/events/" + shortenedType + ".cyp";
+                                            try (InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(statementFile)) {
                                                 if (resourceAsStream == null)
                                                     return null;
 

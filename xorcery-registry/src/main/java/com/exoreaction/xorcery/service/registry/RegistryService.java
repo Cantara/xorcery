@@ -111,8 +111,8 @@ public class RegistryService
         this.reactiveStreams = reactiveStreams;
         this.configuration = configuration;
         this.jsonApiClient = new JsonApiClient(ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                .register(new JsonElementMessageBodyReader(new ObjectMapper()))
-                .register(new JsonElementMessageBodyWriter(new ObjectMapper()))
+                .register(new JsonElementMessageBodyReader())
+                .register(new JsonElementMessageBodyWriter())
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.registry")).build())
                 .register(clientInstance)
                 .connectorProvider(new JettyConnectorProvider())

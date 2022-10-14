@@ -1,0 +1,7 @@
+neo4jdatabase:
+  path: "{{ home }}/neo4j"
+  settings:
+    dbms:
+      allow_upgrade: true
+
+neo4jprojections: {}

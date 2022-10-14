@@ -92,7 +92,7 @@ public class JmxMetrics
         this.conductor = conductor;
         Client client = ClientBuilder.newBuilder()
                 .withConfig(new ClientConfig()
-                        .register(new JsonElementMessageBodyReader(new ObjectMapper()))
+                        .register(new JsonElementMessageBodyReader())
                         .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.jmxmetrics")).build())
                         .connectorProvider(new JettyConnectorProvider())
                         .register(instance))

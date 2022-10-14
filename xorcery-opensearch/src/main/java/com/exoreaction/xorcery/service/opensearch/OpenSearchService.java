@@ -155,7 +155,7 @@ public class OpenSearchService
                 templateSource = Files.readString(Path.of(templateUri));
             } catch (IllegalArgumentException | IOException e) {
                 // Just load from classpath
-                try (InputStream in = getClass().getResourceAsStream(templateName)) {
+                try (InputStream in = ClassLoader.getSystemResourceAsStream(templateName)) {
                     if (in != null)
                         templateSource = new String(in.readAllBytes());
                 } catch (IOException ex) {
@@ -196,7 +196,7 @@ public class OpenSearchService
                 templateSource = Files.readString(Path.of(templateUri));
             } catch (IllegalArgumentException | IOException e) {
                 // Just load from classpath
-                try (InputStream in = getClass().getResourceAsStream(templateName)) {
+                try (InputStream in = ClassLoader.getSystemResourceAsStream(templateName)) {
                     if (in != null)
                         templateSource = new String(in.readAllBytes());
                 } catch (IOException ex) {

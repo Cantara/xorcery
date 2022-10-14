@@ -128,7 +128,7 @@ public final class Cypher {
 
     public static List<String> getCypherStatements(String statementResourceFile)
             throws IllegalArgumentException {
-        try (InputStream resourceAsStream = Cypher.class.getResourceAsStream(statementResourceFile)) {
+        try (InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(statementResourceFile)) {
             if (resourceAsStream == null)
                 throw new IllegalArgumentException("No such resource file:" + statementResourceFile);
 

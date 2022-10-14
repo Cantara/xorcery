@@ -1,0 +1,9 @@
+jaxrs.register:
+    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter
+    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader
+    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyWriter
+    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyReader
+    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonMessageBodyWriter
+    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonMessageBodyReader
+    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.ByteBufferMessageBodyWriter
+    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.ByteBufferMessageBodyReader

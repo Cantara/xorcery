@@ -1,0 +1,2 @@
+eventstore:
+  url: "esdb://{{ ENV.EVENTSTORE_HOST | \"localhost\" }}:2113?tls=false"

@@ -49,14 +49,14 @@ public class JsonMerger
             if (entry.getValue() instanceof ObjectNode addingObject) {
                 JsonNode currentValue = currentObject.path(key);
                 if (currentValue instanceof MissingNode) {
-                    currentObject.set(entry.getKey(), entry.getValue());
+                    currentObject.set(key, entry.getValue());
                 } else if (currentValue instanceof ObjectNode currentValueObject) {
-                    currentObject.set(entry.getKey(), apply(currentValueObject, addingObject));
+                    currentObject.set(key, apply(currentValueObject, addingObject));
                 }
             } else if (entry.getValue() instanceof ArrayNode addingarray) {
-                JsonNode currentValue = current.path(key);
+                JsonNode currentValue = currentObject.path(key);
                 if (currentValue instanceof MissingNode) {
-                    currentObject.set(entry.getKey(), addingarray);
+                    currentObject.set(key, addingarray);
                 } else if (currentValue instanceof ArrayNode currentArray) {
                     currentArray.addAll(addingarray);
                 }

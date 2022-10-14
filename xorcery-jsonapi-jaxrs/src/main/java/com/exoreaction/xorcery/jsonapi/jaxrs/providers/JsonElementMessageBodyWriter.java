@@ -28,9 +28,8 @@ public class JsonElementMessageBodyWriter
     private final ObjectMapper objectMapper;
     private final ObjectMapper yamlObjectMapper;
 
-    @Inject
-    public JsonElementMessageBodyWriter(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public JsonElementMessageBodyWriter() {
+        this.objectMapper = new ObjectMapper();
         this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
     }
 

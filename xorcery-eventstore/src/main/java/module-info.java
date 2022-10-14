@@ -1,7 +1,4 @@
 open module xorcery.eventstore {
-    requires xorcery.metadata;
-    requires xorcery.jsonapi;
-    requires xorcery.jsonschema;
     requires xorcery.jsonapi.server;
     requires xorcery.reactivestreams.api;
     requires xorcery.domainevents;

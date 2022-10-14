@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 public record ConductorConfiguration(Configuration context)
         implements ServiceConfiguration {
     public Iterable<JsonNode> getTemplates() {
-        return context.getList("conductor.templates").orElseThrow(() ->
+        return context.getList("templates").orElseThrow(() ->
                 new IllegalStateException("Missing conductor.templates configuration"));
     }
 }

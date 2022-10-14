@@ -84,7 +84,6 @@
         <dependency>
             <groupId>jakarta.activation</groupId>
             <artifactId>jakarta.activation-api</artifactId>
-            <version>2.1.0</version>
         </dependency>
 
         <!-- CLI -->
@@ -93,25 +92,6 @@
             <artifactId>picocli</artifactId>
         </dependency>
 
-        <!--
-        <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-multipart</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-jetty-api</artifactId>
-        </dependency>
-        -->
-
         <!-- Jersey -->
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
@@ -119,7 +99,7 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet-core</artifactId>
+            <artifactId>jersey-container-servlet</artifactId>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.inject</groupId>
@@ -151,6 +131,7 @@
             <artifactId>jetty-util</artifactId>
         </dependency>
 
+        <!-- Server -->
         <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
             <artifactId>http2-server</artifactId>
@@ -174,40 +155,30 @@
             <artifactId>websocket-jetty-server</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-http-client-transport</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.http3</groupId>
-            <artifactId>http3-http-client-transport</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-io</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.http3</groupId>
-            <artifactId>http3-client</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-client</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty.quic</groupId>
             <artifactId>quic-common</artifactId>
+        </dependency>
+
+        <!-- Client -->
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-jetty-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.http2</groupId>
+            <artifactId>http2-http-client-transport</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.http3</groupId>
+            <artifactId>http3-http-client-transport</artifactId>
         </dependency>
 
         <!-- Metrics -->

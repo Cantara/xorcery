@@ -1,15 +1,15 @@
 open module xorcery.handlebars {
+    exports com.exoreaction.xorcery.service.handlebars.jaxrs.providers;
+    exports com.exoreaction.xorcery.service.handlebars.helpers;
+    exports com.exoreaction.xorcery.service.handlebars.resources;
+    exports com.exoreaction.xorcery.service.handlebars;
+
     requires xorcery.restclient;
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
 
     requires handlebars;
-    requires jakarta.ws.rs;
-    requires jersey.common;
-    requires jakarta.inject;
     requires org.apache.logging.log4j;
-    requires org.eclipse.jetty.client;
-    requires com.fasterxml.jackson.databind;
     requires jersey.client;
     requires jersey.jetty.connector;
     requires jersey.server;

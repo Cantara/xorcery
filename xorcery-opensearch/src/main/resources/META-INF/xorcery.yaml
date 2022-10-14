@@ -1,0 +1,5 @@
+opensearch:
+  url: "http://{{ ENV.OPENSEARCH_HOST | \"localhost\" }}:9200"
+  component_templates: {}
+  index_templates: {}
+  deleteonexit: false

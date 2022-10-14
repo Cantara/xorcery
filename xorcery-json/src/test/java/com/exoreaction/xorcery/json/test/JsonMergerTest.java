@@ -23,7 +23,37 @@ class JsonMergerTest {
 
         String expectedResult = new String(getClass().getResourceAsStream("jsonmergertestresult.yaml").readAllBytes());
 
+//        assertThat(result, equalTo(expectedResult));
+        System.out.println(result);
+    }
+
+    @Test
+    public void testMergeDotNameArrays() throws Throwable {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+
+        ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
+                jaxrs:
+                    register:
+                        - foo
+                """);
+        ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
+                jaxrs.register:
+                    - bar
+                """);
+        ObjectNode merged = new JsonMerger().apply(test1, test2);
+
+        String result = objectMapper.writeValueAsString(merged);
+
+        String expectedResult = """
+                ---
+                jaxrs:
+                  register:
+                  - "foo"
+                  - "bar"
+                """;
+
         assertThat(result, equalTo(expectedResult));
 //        System.out.println(result);
     }
+
 }

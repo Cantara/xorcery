@@ -37,8 +37,6 @@ client:
       password: "password"
 
 jaxrs:
-  register:
-    - com.exoreaction.xorcery.service.registry.RegistryService$Feature
   packages:
     - com.exoreaction.xorcery.server
 

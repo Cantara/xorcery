@@ -1,3 +1,4 @@
+---
 id: "{{ ENV.SERVER_ID | host}}"
 name: genericserver
 host: localhost
@@ -63,67 +64,12 @@ client:
       password: "password"
 
 jaxrs:
-  register:
-    - com.exoreaction.xorcery.service.registry.RegistryService$Feature
   packages:
-    - com.exoreaction.xorcery.jaxrs
     - com.exoreaction.xorcery.server.resources
     - com.exoreaction.xorcery.service
 
-reactivestreams:
-  allowlocal: false
-
-registry:
-  master: "{{ server.uri }}"
-  dnsdiscovery: false
-
-conductor:
-  templates: []
 #    - /conductor/metrics.yaml
 #    - /conductor/metrics_opensearch.yaml
 #    - /conductor/logging_opensearch.yaml
 #    - /conductor/requestlog_opensearch.yaml
 #    - /conductor/certmanager.yaml
-
-certificatemanager:
-  is_master: true
-  renew_on_startup: true
-
-# Logging
-log4jappender: {}
-
-soutlogging: {}
-
-logs: {}
-
-requestlog: {}
-
-# Metrics
-metrics: {}
-
-soutmetrics: {}
-
-jmxmetrics: {}
-
-# Domain events
-neo4jdatabase:
-  path: "{{ home }}/neo4j"
-  settings:
-    dbms:
-      allow_upgrade: true
-
-neo4jprojections: {}
-
-eventstore:
-  url: "esdb://{{ ENV.EVENTSTORE_HOST | \"localhost\" }}:2113?tls=false"
-
-opensearch:
-  url: "http://{{ ENV.OPENSEARCH_HOST | \"localhost\" }}:9200"
-  component_templates: {}
-  index_templates: {}
-  deleteonexit: false
-
-domainevents: {}
-
-# Misc
-visualizer: {}
