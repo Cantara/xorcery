@@ -49,17 +49,21 @@ public class JettyAndJerseyBasedTestServer {
     private final ObjectMapper objectMapper;
     private ReactiveStreams reactiveStreams;
 
-    public JettyAndJerseyBasedTestServer(Configuration configuration) {
+    public JettyAndJerseyBasedTestServer(Configuration configuration, List<Class<? extends MessageBodyWriter<?>>> writerClasses, List<Class<? extends MessageBodyReader<?>>> readerClasses) {
         this.configuration = configuration;
 
         this.server = createServer(configuration);
 
         ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         ctx.setContextPath("/");
-        servletContainer = new ServletContainer(new ResourceConfig()
-                .register(LongMessageBodyWriter.class, MessageBodyWriter.class)
-                .register(LongMessageBodyReader.class, MessageBodyReader.class)
-        );
+        ResourceConfig resourceConfig = new ResourceConfig();
+        for (Class<? extends MessageBodyWriter<?>> writerClass : writerClasses) {
+            resourceConfig.register(writerClass, MessageBodyWriter.class);
+        }
+        for (Class<? extends MessageBodyReader<?>> readerClass : readerClasses) {
+            resourceConfig.register(readerClass, MessageBodyReader.class);
+        }
+        servletContainer = new ServletContainer(resourceConfig);
         ServletHolder servletHolder = new ServletHolder(servletContainer);
         ctx.addServlet(servletHolder, "/*");
         servletHolder.setInitOrder(1);

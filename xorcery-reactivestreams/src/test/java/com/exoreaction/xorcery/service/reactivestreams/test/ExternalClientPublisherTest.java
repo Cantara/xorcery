@@ -4,6 +4,8 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSequence;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSubscriber;
+import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyReader;
+import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyWriter;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +25,7 @@ public class ExternalClientPublisherTest {
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")
                 .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration);
+        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(LongMessageBodyWriter.class), List.of(LongMessageBodyReader.class));
         testServer.start();
         try {
             ReactiveStreams reactiveStreams = testServer.getReactiveStreams();

@@ -5,6 +5,8 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciPublisher;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSequence;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSubscriber;
+import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyReader;
+import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyWriter;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -31,7 +33,7 @@ public class ReactiveStreamsServiceTest {
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")
                 .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration);
+        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(LongMessageBodyWriter.class), List.of(LongMessageBodyReader.class));
         testServer.start();
         try {
             ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
@@ -75,7 +77,7 @@ public class ReactiveStreamsServiceTest {
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")
                 .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration);
+        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(LongMessageBodyWriter.class), List.of(LongMessageBodyReader.class));
         testServer.start();
         try {
             ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
