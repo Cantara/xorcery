@@ -14,4 +14,6 @@ open module xorcery.reactivestreams.test {
     requires org.eclipse.jetty.http2.http.client.transport;
     requires jakarta.inject;
     requires jakarta.ws.rs;
+    requires com.fasterxml.jackson.datatype.jsr310;
+    requires xorcery.jsonapi.jaxrs;
 }
