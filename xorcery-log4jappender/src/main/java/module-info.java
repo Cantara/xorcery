@@ -1,6 +1,7 @@
 open module xorcery.log4jappender {
     exports com.exoreaction.xorcery.service.log4jappender.jaxrs;
     exports com.exoreaction.xorcery.service.log4jappender.jaxrs.providers;
+    exports com.exoreaction.xorcery.service.log4jappender.log4j;
     exports com.exoreaction.xorcery.service.log4jappender;
     exports com.exoreaction.xorcery.service.requestlog;
 
