@@ -8,6 +8,7 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4j.dynamic.DynamicTransactionalContextFactory;
 import com.exoreaction.xorcery.service.neo4j.log.Log4jLogProvider;
+import com.exoreaction.xorcery.service.neo4j.spi.Neo4jProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -20,7 +21,10 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
+import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.internal.kernel.api.Procedures;
+import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 import org.neo4j.kernel.impl.query.TransactionalContextFactory;
 
@@ -29,6 +33,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
@@ -84,6 +89,7 @@ public class Neo4jService
                 GraphDatabase graphDatabase = new GraphDatabase(graphDb, Cypher.defaultFieldMappings());
 
                 // Hack it
+/*
                 try {
                     Field contextFactoryField = GraphDatabaseFacade.class.getDeclaredField("contextFactory");
                     contextFactoryField.setAccessible(true);
@@ -93,11 +99,23 @@ public class Neo4jService
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }
+*/
+
+                // Register procedures
+                try {
+                    GlobalProcedures globalProcedures = ((GraphDatabaseFacade) graphDb).getDependencyResolver().resolveDependency(GlobalProcedures.class);
+                    for (Neo4jProvider neo4jProvider : ServiceLoader.load(Neo4jProvider.class)) {
+                        globalProcedures.registerProcedure(neo4jProvider.getClass());
+                        globalProcedures.registerFunction(neo4jProvider.getClass());
+                    }
+                } catch (KernelException e) {
+                    throw new RuntimeException(e);
+                }
 
                 // Run startup Cypher
                 for (String cypherResource : database.getStartup()) {
                     try {
-                        logger.info("Running Neo4j startup script:"+cypherResource);
+                        logger.info("Running Neo4j startup script:" + cypherResource);
                         List<String> statements = Cypher.getCypherStatements(cypherResource);
 
                         for (String statement : statements) {

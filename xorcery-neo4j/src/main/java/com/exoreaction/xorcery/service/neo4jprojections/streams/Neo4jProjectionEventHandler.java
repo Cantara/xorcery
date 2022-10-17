@@ -8,6 +8,7 @@ import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.api.ProjectionCommit;
+import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.util.Enums;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -40,17 +41,16 @@ public class Neo4jProjectionEventHandler
     private final Logger logger = LogManager.getLogger(getClass());
 
     private final GraphDatabaseService graphDatabaseService;
-    private final MetricRegistry metrics;
+    private List<Neo4jEventProjection> projections;
     private final Histogram batchSize;
 
     private final Flow.Subscription subscription;
     private final Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher;
-    private final Configuration consumerConfiguration;
 
     private final String projectionId;
 
     private final Map<String, Object> updateParameters = new HashMap<>();
-    private final Map<String, List<String>> cachedEventCypher = new HashMap<>();
+    private final Map<String, Neo4jEventProjection> eventProjections = new HashMap<>();
 
     private Transaction tx;
     private long version;
@@ -63,14 +63,14 @@ public class Neo4jProjectionEventHandler
                                        Optional<Long> fromVersion,
                                        Configuration consumerConfiguration,
                                        Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,
+                                       List<Neo4jEventProjection> projections,
                                        MetricRegistry metrics) {
         this.projectionCommitPublisher = projectionCommitPublisher;
         projectionId = consumerConfiguration.getString(Projection.id.name()).orElseThrow();
 
         this.graphDatabaseService = graphDatabaseService;
         this.subscription = subscription;
-        this.consumerConfiguration = consumerConfiguration;
-        this.metrics = metrics;
+        this.projections = projections;
         metrics.gauge("neo4j.projections." + projectionId + ".revision", (MetricRegistry.MetricSupplier<Gauge<Long>>) () -> () -> version);
         batchSize = metrics.histogram("neo4j.projections." + projectionId + ".batchsize");
 
@@ -99,62 +99,20 @@ public class Neo4jProjectionEventHandler
                 ObjectNode objectNode = (ObjectNode) jsonNode;
                 String type = objectNode.path("@class").textValue();
 
-                Map<String, Object> parameters = Cypher.toMap(objectNode);
-                parameters.put("metadata", metadataMap);
-
                 try {
-                    List<String> statement = cachedEventCypher.computeIfAbsent(type, t ->
+
+                    Neo4jEventProjection projection = eventProjections.computeIfAbsent(type, t ->
                     {
-                        if (t.indexOf('$') == -1) {
-                            // Normal type, strip package
-                            t = t.substring(t.lastIndexOf('.') + 1);
-                        } else {
-                            // For enclosed types
-                            t = t.substring(t.lastIndexOf('$') + 1);
+                        for (Neo4jEventProjection eventProjection : projections) {
+                            if (eventProjection.isWritable(t))
+                            {
+                                return eventProjection;
+                            }
                         }
-
-                        final String shortenedType = t;
-
-                        return event.metadata().getString("domain")
-                                .map(domain ->
-                                {
-                                    String statementFile = domain + "/neo4j/events/" + shortenedType + ".cyp";
-                                    try (InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(statementFile)) {
-                                        if (resourceAsStream == null)
-                                            return null;
-
-                                        return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
-                                    } catch (IOException e) {
-                                        logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
-                                        return null;
-                                    }
-                                })
-                                .orElseGet(() ->
-                                        {
-                                            String statementFile = "neo4j/events/" + shortenedType + ".cyp";
-                                            try (InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(statementFile)) {
-                                                if (resourceAsStream == null)
-                                                    return null;
-
-                                                return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
-                                            } catch (IOException e) {
-                                                logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
-                                                return null;
-                                            }
-                                        }
-                                );
+                        throw new IllegalStateException("No projection can handle event with type:"+t);
                     });
-                    if (statement == null)
-                        break;
 
-                    for (String stmt : statement) {
-                        try {
-                            tx.execute(stmt, parameters);
-                        } catch (Throwable e) {
-                            logger.error(String.format("Could not apply Neo4j statement for event %s (metadata:%s,parameters:%s):\n%s", type, metadataMap.toString(), parameters.toString(), stmt), e);
-                            throw e;
-                        }
-                    }
+                    projection.write(metadataMap, objectNode, tx);
                 } catch (Throwable e) {
                     logger.error("Could not apply Neo4j event update", e);
 

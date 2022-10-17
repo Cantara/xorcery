@@ -4,20 +4,38 @@ import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.metadata.RequestMetadata;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.Aggregate;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
+import com.exoreaction.xorcery.service.domainevents.api.entity.Entity;
+import com.exoreaction.xorcery.service.domainevents.api.entity.Command;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public record DomainEventMetadata(Metadata context)
     implements CommonMetadata, RequestMetadata, DeploymentMetadata
 {
+    public DomainEventMetadata(ObjectNode metadata) {
+        this(new Metadata(metadata));
+    }
+
     public record Builder(Metadata.Builder builder)
         implements CommonMetadata.Builder<Builder>,
             RequestMetadata.Builder<Builder>,
             DeploymentMetadata.Builder<Builder>
     {
-        public static Metadata aggregateId(String aggregateId, Metadata metadata)
+        public static DomainEventMetadata aggregateId(String aggregateId, Metadata metadata)
         {
-            return new Builder(metadata).aggregateId(aggregateId).build().context();
+            return new Builder(metadata).aggregateId(aggregateId).build();
+        }
+
+        public static DomainEventMetadata aggregateType(String aggregateType, Metadata metadata)
+        {
+            return new Builder(metadata).aggregateType(aggregateType).build();
+        }
+
+        public static DomainEventMetadata aggregate(String aggregateType, String aggregateId, Metadata metadata)
+        {
+            return new Builder(metadata)
+                    .aggregateType(aggregateType)
+                    .aggregateId(aggregateId)
+                    .build();
         }
 
         public Builder(Metadata metadata) {
@@ -36,9 +54,9 @@ public record DomainEventMetadata(Metadata context)
             return this;
         }
 
-        public Builder aggregateType(Class<? extends Aggregate> aggregateClass)
+        public Builder aggregateType(String name)
         {
-            builder.add("aggregateType", aggregateClass.getName());
+            builder.add("aggregateType", name);
             return this;
         }
 

@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.domainevents.api.aggregate.annotation;
+package com.exoreaction.xorcery.service.domainevents.api.entity.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -7,12 +7,12 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.TYPE;
 
 /**
- * Used to annotate commands that are updates
+ * Used to annotate commands that delete entities
  *
  * @author rickardoberg
 \ */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( value = {TYPE} )
-public @interface Update
+public @interface Delete
 {
 }

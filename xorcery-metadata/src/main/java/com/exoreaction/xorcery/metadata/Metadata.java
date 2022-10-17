@@ -57,4 +57,8 @@ public record Metadata(ObjectNode json)
     public Builder toBuilder() {
         return new Builder(json);
     }
+
+    public Metadata copy() {
+        return new Metadata(json.deepCopy());
+    }
 }

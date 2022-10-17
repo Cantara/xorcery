@@ -1,6 +1,7 @@
-package com.exoreaction.xorcery.service.domainevents.api.aggregate;
+package com.exoreaction.xorcery.service.domainevents.api.entity;
 
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -10,14 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class Aggregate<SNAPSHOT extends AggregateSnapshot> {
+public abstract class Entity<SNAPSHOT extends EntitySnapshot> {
 
     private static final Map<Class<?>, Map<Class<?>, Method>> handleMethods = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Map<Class<?>, Method>> applyMethods = new ConcurrentHashMap<>();
 
     private final List<DomainEvent> changes = new ArrayList<>();
 
-    protected Metadata metadata;
+    protected DomainEventMetadata metadata;
 
     public abstract SNAPSHOT getSnapshot();
 
@@ -35,7 +36,7 @@ public abstract class Aggregate<SNAPSHOT extends AggregateSnapshot> {
     {
     }
 
-    public DomainEvents handle(Metadata metadata, SNAPSHOT snapshot, Command command)
+    public DomainEvents handle(DomainEventMetadata metadata, SNAPSHOT snapshot, Command command)
             throws Throwable {
         this.metadata = metadata;
         setSnapshot(snapshot);

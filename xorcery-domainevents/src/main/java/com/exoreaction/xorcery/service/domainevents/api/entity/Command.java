@@ -1,8 +1,8 @@
-package com.exoreaction.xorcery.service.domainevents.api.aggregate;
+package com.exoreaction.xorcery.service.domainevents.api.entity;
 
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.annotation.Create;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.annotation.Delete;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.annotation.Update;
+import com.exoreaction.xorcery.service.domainevents.api.entity.annotation.Create;
+import com.exoreaction.xorcery.service.domainevents.api.entity.annotation.Delete;
+import com.exoreaction.xorcery.service.domainevents.api.entity.annotation.Update;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

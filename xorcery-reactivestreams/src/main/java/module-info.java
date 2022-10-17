@@ -21,5 +21,6 @@ open module xorcery.reactivestreams {
     requires org.eclipse.jetty.server;
     requires org.eclipse.jetty.websocket.jetty.client;
     requires jakarta.inject;
+    requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
 }

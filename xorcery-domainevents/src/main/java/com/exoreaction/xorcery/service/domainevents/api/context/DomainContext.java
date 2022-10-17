@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.domainevents.api.context;
 
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
+import com.exoreaction.xorcery.service.domainevents.api.entity.Command;
 import jakarta.ws.rs.NotFoundException;
 
 import java.util.Collections;

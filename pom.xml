@@ -51,6 +51,7 @@
         <module>xorcery-eventstore</module>
         <module>xorcery-handlebars</module>
         <module>xorcery-neo4j</module>
+        <module>xorcery-domainevents-neo4j</module>
         <module>xorcery-opensearch</module>
         <module>xorcery-restclient</module>
 

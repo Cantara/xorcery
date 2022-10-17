@@ -28,6 +28,7 @@ import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.jvnet.hk2.annotations.Service;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;

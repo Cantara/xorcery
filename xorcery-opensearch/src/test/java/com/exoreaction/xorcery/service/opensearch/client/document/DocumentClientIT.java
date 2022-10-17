@@ -43,8 +43,8 @@ public class DocumentClientIT {
                   "agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
                   "aggregateId": "5b89b3b6b28f476abc572e15e99e06ed",
                   "domain": "forum",
-                  "aggregateType": "com.exoreaction.xorcery.service.forum.resources.aggregates.PostAggregate",
-                  "commandType": "com.exoreaction.xorcery.service.forum.resources.aggregates.PostAggregate$CreatePost",
+                  "aggregateType": "com.exoreaction.xorcery.service.forum.resources.aggregates.PostEntity",
+                  "commandType": "com.exoreaction.xorcery.service.forum.resources.aggregates.PostEntity$CreatePost",
                   "streamId": "development-default-forum",
                   "revision": 0,
                   "contentType": "application/octet-stream"

@@ -36,6 +36,7 @@ open module xorcery.server {
     requires org.eclipse.jetty.servlet;
     requires org.eclipse.jetty.websocket.jetty.server;
     requires org.glassfish.hk2.api;
+    requires jersey.hk2;
     requires jersey.jetty.connector;
     requires jersey.container.servlet.core;
     requires java.management;

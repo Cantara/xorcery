@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.Command;
+import com.exoreaction.xorcery.service.domainevents.api.entity.Command;
 import com.exoreaction.xorcery.service.domainevents.api.context.DomainContext;
 import com.exoreaction.xorcery.util.UUIDs;
 import com.fasterxml.jackson.databind.JsonNode;

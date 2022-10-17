@@ -1,9 +1,9 @@
 package com.exoreaction.xorcery.server;
 
 import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.jetty.server.JettyConnectorThreadPool;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
@@ -38,8 +38,10 @@ import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.glassfish.jersey.inject.hk2.ImmediateHk2InjectionManager;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -50,7 +52,6 @@ import javax.net.ssl.X509TrustManager;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.security.GeneralSecurityException;
@@ -74,6 +75,8 @@ public class Xorcery
     private Server server;
     private ServletContainer servletContainer;
 
+    private ServiceLocator serviceLocator;
+
     public Xorcery(File configurationFile, String id) throws Exception {
         Configuration configuration = createConfiguration(configurationFile);
 
@@ -96,6 +99,17 @@ public class Xorcery
 
     protected void initialize(Configuration configuration) throws Exception {
 
+        serviceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator();
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, this);
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, configuration);
+
+/*
+        DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
+        DynamicConfiguration dc = dcs.createDynamicConfiguration();
+*/
+
+        List<?> services = serviceLocator.getAllServices(d -> true);
+        services.forEach(System.out::println);
         MetricRegistry metricRegistry = createMetrics(configuration);
 
         HttpClient client = createClient(configuration, metricRegistry);
@@ -106,7 +120,12 @@ public class Xorcery
 
         server.setHandler(handler);
 
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, server, "Server", Server.class);
+
         server.start();
+
+        // Expose application InjectionManager as the ServiceLocator
+        serviceLocator = ((ImmediateHk2InjectionManager) servletContainer.getApplicationHandler().getInjectionManager()).getServiceLocator();
     }
 
     protected Configuration createConfiguration(File configFile) throws Exception {
@@ -320,15 +339,13 @@ public class Xorcery
         server.setRequestLog(
                 new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
 
-        // Start Jetty
-//        server.start();
-
         return server;
     }
 
     protected Handler createHandler(Configuration configuration, MetricRegistry metricRegistry, HttpClient client, Server server)
             throws IOException {
         ServletContextHandler ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        ctx.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
         ctx.setContextPath("/");
 
         ServerApplication app = new ServerApplication();
@@ -348,12 +365,9 @@ public class Xorcery
                 bind(objectMapper);
 
                 bind(metricRegistry);
-                bind(configuration);
                 bind(ctx);
-                bind(Xorcery.this);
-                bind(server);
 
-                StandardConfiguration standardConfiguration = ()->configuration;
+                StandardConfiguration standardConfiguration = () -> configuration;
                 bind(new ResourceObject.Builder("server", standardConfiguration.getId())
                         .attributes(new Attributes.Builder()
                                 .attribute("jetty.version", Jetty.VERSION)
@@ -411,8 +425,8 @@ public class Xorcery
         }
     }
 
-    public InjectionManager getInjectionManager() {
-        return servletContainer.getApplicationHandler().getInjectionManager();
+    public ServiceLocator getServiceLocator() {
+        return serviceLocator;
     }
 
     public void close() throws IOException {
@@ -421,33 +435,7 @@ public class Xorcery
         } catch (Exception e) {
             throw new IOException(e);
         }
-    }
 
-    public int getHttpPort() {
-        int port = -3;
-        for (Connector connector : server.getConnectors()) {
-            // the first connector should be the http connector
-            ServerConnector serverConnector = (ServerConnector) connector;
-            List<String> protocols = serverConnector.getProtocols();
-            if (!protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2c"))) {
-                port = serverConnector.getLocalPort();
-                break;
-            }
-        }
-        return port;
-    }
-
-    public int getHttpsPort() {
-        int port = -3;
-        for (Connector connector : server.getConnectors()) {
-            // the first connector should be the http connector
-            ServerConnector serverConnector = (ServerConnector) connector;
-            List<String> protocols = serverConnector.getProtocols();
-            if (protocols.contains("ssl") && (protocols.contains("http/1.1") || protocols.contains("h2"))) {
-                port = serverConnector.getLocalPort();
-                break;
-            }
-        }
-        return port;
+        serviceLocator.getParent().shutdown();
     }
 }

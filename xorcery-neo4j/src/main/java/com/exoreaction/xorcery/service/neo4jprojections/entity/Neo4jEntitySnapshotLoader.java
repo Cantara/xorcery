@@ -1,8 +1,8 @@
-package com.exoreaction.xorcery.service.neo4jprojections.aggregate;
+package com.exoreaction.xorcery.service.neo4jprojections.entity;
 
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.Aggregate;
-import com.exoreaction.xorcery.service.domainevents.api.aggregate.AggregateSnapshot;
+import com.exoreaction.xorcery.service.domainevents.api.entity.Entity;
+import com.exoreaction.xorcery.service.domainevents.api.entity.EntitySnapshot;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.RowModel;
@@ -24,23 +24,23 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-public class Neo4jAggregateSnapshotLoader {
+public class Neo4jEntitySnapshotLoader {
 
     private final ObjectMapper objectMapper;
     private GraphDatabase database;
     private Map<Class<?>, String> cypherCache = new ConcurrentHashMap<>();
 
 
-    public Neo4jAggregateSnapshotLoader(GraphDatabase database) {
+    public Neo4jEntitySnapshotLoader(GraphDatabase database) {
 
         this.database = database;
         this.objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
     }
 
-    public <T extends AggregateSnapshot> T load(DomainEventMetadata metadata, Aggregate<T> aggregate)
+    public <T extends EntitySnapshot> T load(DomainEventMetadata metadata, Entity<T> entity)
             throws IOException {
-        String cypher = cypherCache.computeIfAbsent(aggregate.getClass(),
+        String cypher = cypherCache.computeIfAbsent(entity.getClass(),
                 new Function<Class<?>, String>() {
                     @Override
                     public String apply(Class clazz) {
@@ -68,7 +68,7 @@ public class Neo4jAggregateSnapshotLoader {
                                 for (String columnName : result.getResult().columns()) {
                                     json.set(columnName, rowModel.getJsonNode(columnName));
                                 }
-                                snapshot.set((T) objectMapper.treeToValue(json, aggregate.getSnapshot().getClass()));
+                                snapshot.set((T) objectMapper.treeToValue(json, entity.getSnapshot().getClass()));
                                 return false;
                             }
                         });

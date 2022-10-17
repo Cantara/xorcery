@@ -16,6 +16,7 @@
         <log4j.version>2.19.0</log4j.version>
         <jetty.version>11.0.12</jetty.version>
         <jersey.version>3.0.8</jersey.version>
+        <hk.version>3.0.3</hk.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <jackson.version>2.13.4.20221013</jackson.version>
@@ -128,8 +129,6 @@
                 <artifactId>jakarta.annotation-api</artifactId>
                 <version>2.1.1</version>
             </dependency>
-
-
             <dependency>
                 <groupId>org.glassfish.hk2</groupId>
                 <artifactId>hk2-api</artifactId>
@@ -141,6 +140,23 @@
                 <groupId>com.lmax</groupId>
                 <artifactId>disruptor</artifactId>
                 <version>4.0.0.RC1</version>
+            </dependency>
+
+            <!-- Neo4j -->
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>neo4j-apoc-jpms-shaded</artifactId>
+                <version>4.4.11.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.logging.log4j</groupId>
+                        <artifactId>log4j-core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- EventStore service -->
@@ -165,34 +181,6 @@
                         </exclusions>
                     </dependency>
             -->
-
-            <!-- Logs service
-            <dependency>
-                <groupId>net.openhft</groupId>
-                <artifactId>chronicle-core</artifactId>
-                <version>2.22.34</version>
-            </dependency>
-            <dependency>
-                <groupId>net.openhft</groupId>
-                <artifactId>chronicle-bytes</artifactId>
-                <version>2.22.24</version>
-            </dependency>
-            <dependency>
-                <groupId>net.openhft</groupId>
-                <artifactId>chronicle-wire</artifactId>
-                <version>2.22.20</version>
-            </dependency>
-            <dependency>
-                <groupId>net.openhft</groupId>
-                <artifactId>chronicle-queue</artifactId>
-                <version>5.22.21</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>net.openhft</groupId>
-                        <artifactId>chronicle-bytes</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>  -->
 
             <!-- Metrics dependencies -->
             <dependency>
@@ -331,6 +319,13 @@
                     <configuration>
                         <source>17</source>
                         <target>17</target>
+                        <annotationProcessorPaths>
+                            <annotationProcessorPath>
+                                <groupId>org.glassfish.hk2</groupId>
+                                <artifactId>hk2-metadata-generator</artifactId>
+                                <version>${hk.version}</version>
+                            </annotationProcessorPath>
+                        </annotationProcessorPaths>
                     </configuration>
                 </plugin>
                 <plugin>

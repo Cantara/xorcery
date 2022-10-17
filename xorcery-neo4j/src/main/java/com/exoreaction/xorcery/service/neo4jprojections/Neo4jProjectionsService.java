@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.api.Neo4jProjectionRels;
+import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionCommitPublisher;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionEventHandler;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriber;
@@ -17,11 +18,16 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.stream.Collectors;
 
 /**
  * @author rickardoberg
@@ -58,6 +64,7 @@ public class Neo4jProjectionsService
 
     private final Logger logger = LogManager.getLogger(getClass());
     private final Conductor conductor;
+    private ServiceLocator serviceLocator;
     private final ReactiveStreams reactiveStreams;
     private final GraphDatabases graphDatabases;
     private final MetricRegistry metricRegistry;
@@ -65,11 +72,13 @@ public class Neo4jProjectionsService
 
     @Inject
     public Neo4jProjectionsService(Conductor conductor,
+                                   ServiceLocator serviceLocator,
                                    ReactiveStreams reactiveStreams,
                                    @Named(SERVICE_TYPE) ServiceResourceObject sro,
                                    GraphDatabases graphDatabases,
                                    MetricRegistry metricRegistry) {
         this.conductor = conductor;
+        this.serviceLocator = serviceLocator;
         this.reactiveStreams = reactiveStreams;
         this.sro = sro;
         this.graphDatabases = graphDatabases;
@@ -79,10 +88,16 @@ public class Neo4jProjectionsService
     @Override
     public void onStartup(Container container) {
 
+        List<Neo4jEventProjection> neo4jEventProjectionList = ServiceLoader.load(Neo4jEventProjection.class)
+                .stream()
+                .map(p -> serviceLocator.create(p.type()))
+                .map(Neo4jEventProjection.class::cast)
+                .toList();
+
         Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = new Neo4jProjectionCommitPublisher();
 
         conductor.addConductorListener(new ProjectionSubscriberConductorListener(graphDatabases,
-                reactiveStreams, sro.serviceIdentifier(), metricRegistry, neo4jProjectionCommitPublisher));
+                reactiveStreams, sro.serviceIdentifier(), neo4jEventProjectionList, metricRegistry, neo4jProjectionCommitPublisher));
 
         sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectionsubscriber.name()).ifPresent(link ->
         {
@@ -92,6 +107,7 @@ public class Neo4jProjectionsService
                     Optional.empty(),
                     cfg,
                     neo4jProjectionCommitPublisher,
+                    neo4jEventProjectionList,
                     metricRegistry)), ProjectionSubscriber.class);
         });
 

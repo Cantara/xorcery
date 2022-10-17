@@ -7,6 +7,6 @@ public interface EntityModel
     }
 
     default String getAggregateId() {
-        return getString(CommonModel.Aggregate.id).orElse(null);
+        return getString(CommonModel.Entity.aggregate_id).orElse(null);
     }
 }

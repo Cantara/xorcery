@@ -1,5 +1,6 @@
 neo4jdatabase:
   path: "{{ home }}/neo4j"
+  startup: []
   settings:
     dbms:
       allow_upgrade: true

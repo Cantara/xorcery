@@ -31,17 +31,16 @@ public class DynamicNeo4jTest {
             RETURN node
             """;
 
-    @Disabled
+    //    @Disabled
     @Test
     public void test() throws Exception {
         Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
             // Given
-            GraphDatabase neo4j = xorcery.getInjectionManager().getInstance(Neo4jService.class).apply("neo4j");
+            GraphDatabase neo4j = xorcery.getServiceLocator().getService(Neo4jService.class).apply("neo4j");
             GraphDatabaseService graphDatabaseService = neo4j.getGraphDatabaseService();
 
-            try (Transaction tx = graphDatabaseService.beginTx())
-            {
+            try (Transaction tx = graphDatabaseService.beginTx()) {
                 for (String cypher : neo4jSetup.split(";")) {
                     tx.execute(cypher, Collections.emptyMap()).close();
                 }
@@ -50,8 +49,7 @@ public class DynamicNeo4jTest {
 
 
             // When
-            try (GraphResult result = neo4j.execute(queryTenantNode, Collections.emptyMap(), 0).toCompletableFuture().join())
-            {
+            try (GraphResult result = neo4j.execute(queryTenantNode, Collections.emptyMap(), 0).toCompletableFuture().join()) {
                 System.out.println(result.getResult().resultAsString());
             }
 

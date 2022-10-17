@@ -9,10 +9,13 @@ import com.exoreaction.xorcery.service.conductor.helpers.AbstractConductorListen
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
+import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.List;
 
 public class ProjectionSubscriberConductorListener extends AbstractConductorListener {
 
@@ -20,17 +23,19 @@ public class ProjectionSubscriberConductorListener extends AbstractConductorList
 
     private final GraphDatabases graphDatabases;
     private final ReactiveStreams reactiveStreams;
+    private List<Neo4jEventProjection> neo4jEventProjectionList;
     private final MetricRegistry metricRegistry;
     private Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher;
 
     public ProjectionSubscriberConductorListener(GraphDatabases graphDatabases,
                                                  ReactiveStreams reactiveStreams,
                                                  ServiceIdentifier serviceIdentifier,
-                                                 MetricRegistry metricRegistry,
+                                                 List<Neo4jEventProjection> neo4jEventProjectionList, MetricRegistry metricRegistry,
                                                  Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher) {
         super(serviceIdentifier, null);
         this.graphDatabases = graphDatabases;
         this.reactiveStreams = reactiveStreams;
+        this.neo4jEventProjectionList = neo4jEventProjectionList;
         this.metricRegistry = metricRegistry;
         this.neo4jProjectionCommitPublisher = neo4jProjectionCommitPublisher;
     }
@@ -67,6 +72,7 @@ public class ProjectionSubscriberConductorListener extends AbstractConductorList
                                             sourceConfiguration.getLong("from"),
                                             consumerConfiguration,
                                             neo4jProjectionCommitPublisher,
+                                            neo4jEventProjectionList,
                                             metricRegistry)),
                             ProjectionSubscriber.class);
                 });

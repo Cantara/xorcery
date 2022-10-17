@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.domainevents.api.aggregate;
+package com.exoreaction.xorcery.service.domainevents.api.entity;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
