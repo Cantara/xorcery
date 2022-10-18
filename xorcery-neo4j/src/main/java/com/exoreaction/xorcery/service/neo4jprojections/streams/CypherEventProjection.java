@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DefaultEventProjection
+public class CypherEventProjection
         implements Neo4jEventProjection {
     private final Logger logger = LogManager.getLogger(getClass());
 
@@ -50,7 +50,7 @@ public class DefaultEventProjection
     private List<String> getCypher(String type) {
         return cachedEventCypher.computeIfAbsent(type, t ->
         {
-            String statementFile = "META-INF/neo4j/events/" + t + ".cyp";
+            String statementFile = "META-INF/neo4j/event/" + t + ".cyp";
             try (InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(statementFile)) {
                 if (resourceAsStream == null)
                     return null;

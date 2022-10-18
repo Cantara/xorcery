@@ -1,5 +1,5 @@
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.service.neo4jprojections.streams.DefaultEventProjection;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.CypherEventProjection;
 
 open module xorcery.neo4j {
     uses com.exoreaction.xorcery.service.neo4j.spi.Neo4jProvider;
@@ -8,9 +8,8 @@ open module xorcery.neo4j {
     exports com.exoreaction.xorcery.service.neo4j.client;
     exports com.exoreaction.xorcery.service.neo4j;
     exports com.exoreaction.xorcery.neo4j.jsonapi.resources;
-    exports com.exoreaction.xorcery.service.neo4jprojections.entity;
-    exports com.exoreaction.xorcery.service.neo4jprojections.api;
     exports com.exoreaction.xorcery.service.neo4j.spi;
+    exports com.exoreaction.xorcery.service.neo4jprojections.api;
     exports com.exoreaction.xorcery.service.neo4jprojections.spi;
 
     requires transitive xorcery.jsonapi.server;
@@ -39,5 +38,5 @@ open module xorcery.neo4j {
     requires com.lmax.disruptor;
     requires xorcery.jsonapi;
 
-    provides Neo4jEventProjection with DefaultEventProjection;
+    provides Neo4jEventProjection with CypherEventProjection;
 }

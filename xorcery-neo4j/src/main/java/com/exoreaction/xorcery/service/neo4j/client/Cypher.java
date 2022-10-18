@@ -10,6 +10,7 @@ import org.neo4j.graphdb.Node;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -132,11 +133,30 @@ public final class Cypher {
             if (resourceAsStream == null)
                 throw new IllegalArgumentException("No such resource file:" + statementResourceFile);
 
-            return Stream.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"))
-                    .map(String::trim).filter(s -> !s.isEmpty())
+            return Stream.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8))
+                    .flatMap(s -> Stream.of(s.split(";")))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load Cypher statements", e);
         }
     }
+
+    public static List<String> getCypherStatements(URL statementResourceFile)
+            throws IllegalArgumentException {
+        try (InputStream resourceAsStream = statementResourceFile.openStream()) {
+            if (resourceAsStream == null)
+                throw new IllegalArgumentException("No such resource file:" + statementResourceFile);
+
+            return Stream.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8))
+                    .flatMap(s -> Stream.of(s.split(";")))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not load Cypher statements", e);
+        }
+    }
+
 }

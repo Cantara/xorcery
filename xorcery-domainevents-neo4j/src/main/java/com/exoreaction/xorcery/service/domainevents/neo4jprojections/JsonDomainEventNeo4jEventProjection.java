@@ -14,6 +14,9 @@ import java.util.Map;
 public class JsonDomainEventNeo4jEventProjection
         implements Neo4jEventProjection {
 
+    private static final Label ENTITY_LABEL = Label.label("Entity");
+    private static final Label AGGREGATE_LABEL = Label.label("Aggregate");
+
     @Override
     public boolean isWritable(String eventClass) {
         return eventClass.equals(JsonDomainEvent.class.getName());
@@ -27,7 +30,7 @@ public class JsonDomainEventNeo4jEventProjection
         String aggregateType = metadataMap.get("aggregateType").toString();
         if (eventJson.has("created")) {
             ObjectNode created = (ObjectNode) eventJson.path("created");
-            Node node = transaction.createNode(Label.label(created.get("type").textValue()));
+            Node node = transaction.createNode(Label.label(created.get("type").textValue()), ENTITY_LABEL);
             node.setProperty("created_on", timestamp);
             node.setProperty("last_updated_on", timestamp);
             String id = created.get("id").textValue();
@@ -44,17 +47,17 @@ public class JsonDomainEventNeo4jEventProjection
             if (aggregateType != null && aggregateId != null) {
                 Node aggregateNode;
                 if (id.equals(aggregateId)) {
-                    aggregateNode = transaction.createNode(Label.label(aggregateType));
+                    aggregateNode = transaction.createNode(Label.label(aggregateType), AGGREGATE_LABEL);
                     aggregateNode.setProperty("created_on", timestamp);
                     aggregateNode.setProperty("id", id);
                 } else {
-                    aggregateNode = transaction.findNode(Label.label(aggregateType), "id", aggregateId);
+                    aggregateNode = transaction.findNode(AGGREGATE_LABEL, "id", aggregateId);
                 }
                 aggregateNode.setProperty("last_updated_on", timestamp);
             }
         } else if (eventJson.has("updated")) {
             ObjectNode updated = (ObjectNode) eventJson.path("created");
-            Node node = transaction.findNode(Label.label(updated.get("type").textValue()), "id", updated.get("id").textValue());
+            Node node = transaction.findNode(ENTITY_LABEL, "id", updated.get("id").textValue());
 
             if (node != null) {
                 node.setProperty("last_updated_on", timestamp);
@@ -65,26 +68,34 @@ public class JsonDomainEventNeo4jEventProjection
 
                 // Update aggregate node
                 if (aggregateType != null && aggregateId != null) {
-                    Node aggregateNode = transaction.findNode(Label.label(aggregateType), "id", aggregateId);
+                    Node aggregateNode = transaction.findNode(AGGREGATE_LABEL, "id", aggregateId);
                     aggregateNode.setProperty("last_updated_on", timestamp);
                 }
             }
         } else if (eventJson.has("deleted")) {
             ObjectNode deleted = (ObjectNode) eventJson.path("deleted");
             String id = deleted.get("id").textValue();
-            Node node = transaction.findNode(Label.label(deleted.get("type").textValue()), "id", id);
 
-            for (Relationship relationship : node.getRelationships()) {
-                relationship.delete();
-            }
-            node.delete();
+            if (id.equals(aggregateId))
+            {
+                try (ResourceIterator<Node> entityNodes = transaction.findNodes(ENTITY_LABEL, "aggregate_id", aggregateId))
+                {
+                    while (entityNodes.hasNext()) {
+                        Node entityNode = entityNodes.next();
+                        detachDelete(entityNode);
+                    }
+                }
 
-            // Update/delete aggregate node
-            if (aggregateType != null && aggregateId != null) {
-                Node aggregateNode = transaction.findNode(Label.label(aggregateType), "id", aggregateId);
-                if (id.equals(aggregateId)) {
-                    aggregateNode.delete();
-                } else {
+                Node aggregateNode = transaction.findNode(AGGREGATE_LABEL, "aggregate_id", aggregateId);
+                aggregateNode.delete();
+            } else
+            {
+                Node node = transaction.findNode(ENTITY_LABEL, "id", id);
+                detachDelete(node);
+
+                // Update aggregate node
+                if (aggregateType != null && aggregateId != null) {
+                    Node aggregateNode = transaction.findNode(AGGREGATE_LABEL, "id", aggregateId);
                     aggregateNode.setProperty("last_updated_on", timestamp);
                 }
             }
@@ -150,4 +161,11 @@ public class JsonDomainEventNeo4jEventProjection
         }
     }
 
+    private void detachDelete(Node node)
+    {
+        for (Relationship relationship : node.getRelationships()) {
+            relationship.delete();
+        }
+        node.delete();
+    }
 }

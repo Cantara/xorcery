@@ -9,8 +9,8 @@ open module xorcery.domainevents {
     exports com.exoreaction.xorcery.service.domainevents.api.event;
 
     requires transitive xorcery.jsonapi.server;
+    requires transitive xorcery.metadata;
 
-    requires xorcery.metadata;
     requires xorcery.reactivestreams.api;
     requires xorcery.config.api;
     requires xorcery.conductor.api;

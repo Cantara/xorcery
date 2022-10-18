@@ -28,12 +28,11 @@ import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 import org.neo4j.kernel.impl.query.TransactionalContextFactory;
 
+import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
@@ -110,6 +109,26 @@ public class Neo4jService
                     }
                 } catch (KernelException e) {
                     throw new RuntimeException(e);
+                }
+
+                // Run Cypher schemas
+                try {
+                    Enumeration<URL> schemas = ClassLoader.getSystemResources("META-INF/neo4j/schema.cyp");
+                    while (schemas.hasMoreElements()) {
+                        URL schema = schemas.nextElement();
+                        try {
+                            logger.info("Running Neo4j schema script:" + schema.toExternalForm());
+                            List<String> statements = Cypher.getCypherStatements(schema);
+
+                            for (String statement : statements) {
+                                graphDb.executeTransactionally(statement);
+                            }
+                        } catch (Throwable e) {
+                            logger.error(e);
+                        }
+                    }
+                } catch (Throwable e) {
+                    logger.error(e);
                 }
 
                 // Run startup Cypher

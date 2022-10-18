@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.neo4jprojections.entity;
+package com.exoreaction.xorcery.service.domainevents.snapshot;
 
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.entity.Entity;
@@ -44,7 +44,7 @@ public class Neo4jEntitySnapshotLoader {
                 new Function<Class<?>, String>() {
                     @Override
                     public String apply(Class clazz) {
-                        String statementFile = metadata.getDomain()+"/neo4j/snapshot/" + clazz.getSimpleName() + ".cyp";
+                        String statementFile = "META-INF/neo4j/snapshot/" + clazz.getSimpleName() + ".cyp";
                         try {
                             return new String(Objects.requireNonNull(ClassLoader.getSystemResourceAsStream(statementFile)).readAllBytes(), StandardCharsets.UTF_8);
                         } catch (IOException e) {

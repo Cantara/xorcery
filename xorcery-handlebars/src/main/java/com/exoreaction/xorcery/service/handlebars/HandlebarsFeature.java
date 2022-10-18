@@ -32,18 +32,9 @@ public class HandlebarsFeature
         Handlebars handlebars = new Handlebars()
                 .registerHelpers(new UtilHelpers());
 
-        File file = new File(ClassLoader.getSystemResource("handlebars/templates/jsonapi/resourcedocument.html").getFile())
-                .getParentFile().getParentFile();
-        if (file.exists()) {
-            handlebars.with(
-                    new FileTemplateLoader(file, ".html"),
-                    new SystemClassLoaderTemplateLoader("handlebars/templates/", ".html")
-            );
-        } else {
-                handlebars.with(
-                    new SystemClassLoaderTemplateLoader("handlebars/templates/", ".html")
-            );
-        }
+        handlebars.with(
+                new SystemClassLoaderTemplateLoader("META-INF/handlebars/templates/", ".html")
+        );
 
         handlebars.getCache().setReload(true);
 

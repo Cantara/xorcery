@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection
 
 open module xorcery.domainevents.neo4j {
     exports com.exoreaction.xorcery.service.domainevents.neo4jprojections;
+    exports com.exoreaction.xorcery.service.domainevents.snapshot;
 
     requires xorcery.neo4j.shaded;
     requires xorcery.neo4j;
