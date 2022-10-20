@@ -19,13 +19,15 @@ public class StandardConfigurationBuilder {
     public void addDefaults(Configuration.Builder builder)
             throws UncheckedIOException {
 
-        addSystemProperties(builder);
-        addEnvironmentVariables(builder);
         addXorceryDefaults(builder);
         addExtensions(builder);
         addApplication(builder);
+
         addUserDirectory(builder);
         addHome(builder);
+
+        addSystemProperties(builder);
+        addEnvironmentVariables(builder);
     }
 
 
@@ -38,6 +40,7 @@ public class StandardConfigurationBuilder {
         addExtensionsTest(builder);
         addApplication(builder);
         addApplicationTest(builder);
+
         addUserDirectory(builder);
     }
 
@@ -51,7 +54,9 @@ public class StandardConfigurationBuilder {
             addExtensionsTest(builder);
             addApplication(builder);
             addApplicationTest(builder);
+
             addUserDirectory(builder);
+
             new YamlConfigurationBuilder(builder).addYaml(yamlString);
         };
     }
@@ -81,7 +86,7 @@ public class StandardConfigurationBuilder {
     public void addExtensions(Configuration.Builder builder) throws UncheckedIOException {
         // Load extensions
         try {
-            Enumeration<URL> extensionConfigurationURLs = Configuration.class.getClassLoader().getResources("META-INF/xorcery.yaml");
+            Enumeration<URL> extensionConfigurationURLs = ClassLoader.getSystemResources("META-INF/xorcery.yaml");
             while (extensionConfigurationURLs.hasMoreElements()) {
                 URL resource = extensionConfigurationURLs.nextElement();
                 try (InputStream configurationStream = resource.openStream()) {
@@ -97,7 +102,7 @@ public class StandardConfigurationBuilder {
     public void addExtensionsTest(Configuration.Builder builder) throws UncheckedIOException {
         // Load extensions
         try {
-            Enumeration<URL> extensionConfigurationURLs = Configuration.class.getClassLoader().getResources("META-INF/xorcery-test.yaml");
+            Enumeration<URL> extensionConfigurationURLs = ClassLoader.getSystemResources("META-INF/xorcery-test.yaml");
             while (extensionConfigurationURLs.hasMoreElements()) {
                 URL resource = extensionConfigurationURLs.nextElement();
                 try (InputStream configurationStream = resource.openStream()) {
@@ -113,7 +118,7 @@ public class StandardConfigurationBuilder {
     public void addApplication(Configuration.Builder builder) throws UncheckedIOException {
         // Load application config file
         try {
-            Enumeration<URL> configurationURLs = Configuration.class.getClassLoader().getResources("xorcery.yaml");
+            Enumeration<URL> configurationURLs = ClassLoader.getSystemResources("xorcery.yaml");
             while (configurationURLs.hasMoreElements()) {
                 URL resource = configurationURLs.nextElement();
                 try (InputStream configurationStream = resource.openStream()) {
@@ -129,7 +134,7 @@ public class StandardConfigurationBuilder {
     public void addApplicationTest(Configuration.Builder builder) throws UncheckedIOException {
         // Load application config file
         try {
-            Enumeration<URL> configurationURLs = Configuration.class.getClassLoader().getResources("xorcery-test.yaml");
+            Enumeration<URL> configurationURLs = ClassLoader.getSystemResources("xorcery-test.yaml");
             while (configurationURLs.hasMoreElements()) {
                 URL resource = configurationURLs.nextElement();
                 try (InputStream configurationStream = resource.openStream()) {
@@ -195,7 +200,7 @@ public class StandardConfigurationBuilder {
     public void addXorceryTestDefaults(Configuration.Builder builder) throws UncheckedIOException {
         // Load Xorcery defaults
         try {
-            URL resource = Configuration.class.getClassLoader().getResource("META-INF/xorcery-defaults-test.yaml");
+            URL resource = ClassLoader.getSystemResource("META-INF/xorcery-defaults-test.yaml");
             try (InputStream in = resource.openStream()) {
                 new YamlConfigurationBuilder(builder).addYaml(in);
                 logger.info("Loaded " + resource);
