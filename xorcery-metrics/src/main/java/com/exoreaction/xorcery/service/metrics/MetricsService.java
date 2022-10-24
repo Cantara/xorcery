@@ -88,7 +88,7 @@ public class MetricsService
         });
 //        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class, null, reactiveStreams));
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class, null, reactiveStreams));
+        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.getServiceIdentifier(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class, null, reactiveStreams));
 
     }
 

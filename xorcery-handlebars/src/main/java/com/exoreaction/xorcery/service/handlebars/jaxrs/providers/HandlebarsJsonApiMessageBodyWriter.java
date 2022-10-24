@@ -7,7 +7,6 @@ import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyReader
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.service.handlebars.helpers.OptionalValueResolver;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
 import jakarta.inject.Inject;
@@ -27,7 +26,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
+import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -59,11 +58,11 @@ public class HandlebarsJsonApiMessageBodyWriter
     @Inject
     public HandlebarsJsonApiMessageBodyWriter(Handlebars handlebars,
                                               jakarta.inject.Provider<ContainerRequestContext> requestContext,
-                                              JettyHttpClientSupplier clientSupplier) {
+                                              JettyHttpClientContract clientSupplier) {
         this.handlebars = handlebars;
         this.requestContext = requestContext;
         client = ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                        .register(new JsonNodeMessageBodyReader(new ObjectMapper()))
+                        .register(new JsonNodeMessageBodyReader())
                         .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.sandbox")).build())
                         .connectorProvider(new JettyConnectorProvider())
                         .register(clientSupplier))

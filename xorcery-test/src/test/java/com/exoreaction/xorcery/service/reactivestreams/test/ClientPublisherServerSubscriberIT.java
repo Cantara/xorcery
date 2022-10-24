@@ -1,25 +1,25 @@
 package com.exoreaction.xorcery.service.reactivestreams.test;
 
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.server.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import jakarta.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.internal.inject.InjectionManager;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
+@Disabled
 public class ClientPublisherServerSubscriberIT {
 
     private static final String config = """

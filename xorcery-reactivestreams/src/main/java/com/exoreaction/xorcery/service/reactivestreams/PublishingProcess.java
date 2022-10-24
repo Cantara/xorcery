@@ -50,7 +50,6 @@ public record PublishingProcess(WebSocketClient webSocketClient, ObjectMapper ob
                                 eventType,
                                 resultType,
                                 subscriberConfiguration,
-                                objectMapper,
                                 byteBufferPool,
                                 this), subscriberWebsocketUri)
                         .whenComplete(this::complete);

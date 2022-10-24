@@ -1,6 +1,6 @@
 open module xorcery.reactivestreams.test {
     requires xorcery.reactivestreams;
-    requires xorcery.config;
+    requires xorcery.configuration;
 
     requires jakarta.validation;
     requires org.junit.jupiter.api;
@@ -16,4 +16,6 @@ open module xorcery.reactivestreams.test {
     requires jakarta.ws.rs;
     requires com.fasterxml.jackson.datatype.jsr310;
     requires xorcery.jsonapi.jaxrs;
+    requires jersey.jetty.connector;
+    requires org.hamcrest;
 }

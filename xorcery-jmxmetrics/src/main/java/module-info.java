@@ -1,5 +1,5 @@
 open module xorcery.jmxmetrics {
-    requires xorcery.config.api;
+    requires xorcery.configuration.api;
     requires xorcery.service.api;
     requires xorcery.jsonapi;
     requires xorcery.restclient;

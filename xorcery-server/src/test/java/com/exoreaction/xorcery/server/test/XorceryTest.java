@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.server.test;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.server.Xorcery;
+import com.exoreaction.xorcery.core.Xorcery;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -14,9 +14,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class XorceryTest {
 
+    String config = """
+            client:
+                enabled: true
+            server.enabled: true    
+            """;
+
     @Test
     public void thatBasicWiringWorks() throws Exception {
-        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
             int httpPort = getHttpPort(xorcery.getServiceLocator().getService(Server.class));
             assertTrue(httpPort > 1024);

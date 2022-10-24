@@ -12,7 +12,7 @@ open module xorcery.domainevents {
     requires transitive xorcery.metadata;
 
     requires xorcery.reactivestreams.api;
-    requires xorcery.config.api;
+    requires xorcery.configuration.api;
     requires xorcery.conductor.api;
     requires xorcery.disruptor;
     requires xorcery.service.api;

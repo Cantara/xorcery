@@ -1,5 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.jaxrs.providers;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -24,8 +26,10 @@ public class JsonNodeMessageBodyWriter
     private ObjectMapper objectMapper;
 
     @Inject
-    public JsonNodeMessageBodyWriter(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public JsonNodeMessageBodyWriter() {
+        objectMapper = new ObjectMapper();
+        objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override

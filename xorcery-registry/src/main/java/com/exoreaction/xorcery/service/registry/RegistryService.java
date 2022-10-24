@@ -15,7 +15,6 @@ import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.registry.api.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -126,7 +125,7 @@ public class RegistryService
         disruptor.start();
 
         registration = new StartupRegistration(
-                reactiveStreams, jsonApiClient, resourceObject.serviceIdentifier(), registryLink,
+                reactiveStreams, jsonApiClient, resourceObject.getServiceIdentifier(), registryLink,
                 getServer().resourceDocument(), upstreamSubscriber,
                 new CompletableFuture<ResourceObject>().thenApply(v ->
                 {
@@ -340,7 +339,7 @@ public class RegistryService
             return registry.getServiceByType("registry")
                     .map(sro ->
                             {
-                                if (sro.serviceIdentifier().equals(serviceIdentifier)) {
+                                if (sro.getServiceIdentifier().equals(serviceIdentifier)) {
                                     // Master is localhost, no need to subscribe
                                     return CompletableFuture.completedStage(registry);
                                 } else {

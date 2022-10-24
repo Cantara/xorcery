@@ -3,7 +3,7 @@ open module xorcery.conductor {
 
     requires transitive xorcery.jsonapi;
     requires transitive xorcery.conductor.api;
-    requires transitive xorcery.config.api;
+    requires transitive xorcery.configuration.api;
     requires transitive xorcery.service.api;
     requires xorcery.reactivestreams.api;
     requires xorcery.registry.api;

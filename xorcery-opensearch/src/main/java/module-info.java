@@ -1,6 +1,12 @@
 open module xorcery.opensearch {
+    requires xorcery.configuration.api;
     requires xorcery.conductor.api;
     requires xorcery.reactivestreams.api;
+    requires xorcery.disruptor;
+    requires xorcery.domainevents;
+    requires xorcery.restclient;
+    requires xorcery.jsonapi.jaxrs;
+
     requires com.fasterxml.jackson.dataformat.yaml;
     requires org.apache.logging.log4j;
     requires org.eclipse.jetty.server;
@@ -10,8 +16,4 @@ open module xorcery.opensearch {
     requires jakarta.inject;
     requires java.logging;
     requires com.lmax.disruptor;
-    requires xorcery.disruptor;
-    requires xorcery.domainevents;
-    requires xorcery.restclient;
-    requires xorcery.jsonapi.jaxrs;
 }

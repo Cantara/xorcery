@@ -32,16 +32,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ReactiveStreamsServiceTest {
 
     @Test
-    public void thatSingleClientSubscriberGetsAllExpectedServerPublishedFibonacciNumbers() {
+    public void thatSingleClientSubscriberGetsAllExpectedServerPublishedFibonacciNumbers() throws Exception {
         thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(12, 1);
     }
 
     @Test
-    public void thatMultipleClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers() {
+    public void thatMultipleClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers() throws Exception {
         thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(12, 3);
     }
 
-    private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) {
+    private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")
@@ -85,7 +85,7 @@ public class ReactiveStreamsServiceTest {
     }
 
     @Test
-    public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() {
+    public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")
@@ -124,16 +124,16 @@ public class ReactiveStreamsServiceTest {
     }
 
     @Test
-    public void thatSingleClientSubscriberGetsAllExpectedServerPublishedBinaryFibonacciNumbers() {
+    public void thatSingleClientSubscriberGetsAllExpectedServerPublishedBinaryFibonacciNumbers() throws Exception {
         thatClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers(12, 1);
     }
 
     @Test
-    public void thatMultipleClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers() {
+    public void thatMultipleClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers() throws Exception {
         thatClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers(12, 3);
     }
 
-    private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) {
+    private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")
@@ -179,7 +179,7 @@ public class ReactiveStreamsServiceTest {
     }
 
     @Test
-    public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryFibonacciNumbers() {
+    public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryFibonacciNumbers() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")
@@ -220,16 +220,16 @@ public class ReactiveStreamsServiceTest {
     }
 
     @Test
-    public void thatSingleClientSubscriberGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers() {
+    public void thatSingleClientSubscriberGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers() throws Exception {
         thatClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers(12, 1);
     }
 
     @Test
-    public void thatMultipleClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers() {
+    public void thatMultipleClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers() throws Exception {
         thatClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers(12, 3);
     }
 
-    private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) {
+    private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")
@@ -275,7 +275,7 @@ public class ReactiveStreamsServiceTest {
     }
 
     @Test
-    public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryNioFibonacciNumbers() {
+    public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryNioFibonacciNumbers() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .add("server.http2.enabled", "true")
                 .add("client.http2.enabled", "true")

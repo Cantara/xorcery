@@ -2,6 +2,8 @@ package com.exoreaction.xorcery.service.reactivestreams.resources.providers;
 
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.util.Classes;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Produces;
@@ -28,8 +30,10 @@ public class WithMetadataMessageBodyWriter
     private MessageBodyWriter<Object> entityWriter;
 
     @Inject
-    public WithMetadataMessageBodyWriter(ObjectMapper objectMapper, MessageBodyWorkers messageBodyWorkers) {
-        this.objectMapper = objectMapper;
+    public WithMetadataMessageBodyWriter(MessageBodyWorkers messageBodyWorkers) {
+        objectMapper = new ObjectMapper();
+        objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.messageBodyWorkers = messageBodyWorkers;
     }
 

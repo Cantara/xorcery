@@ -21,7 +21,7 @@ public interface RegistryListener {
     }
 
     default void removedServer(ServerResourceDocument server) {
-        server.getServices().map(ServiceResourceObject::serviceIdentifier).forEach(this::removedService);
+        server.getServices().map(ServiceResourceObject::getServiceIdentifier).forEach(this::removedService);
     }
 
     default void addedService(ServiceResourceObject service) {

@@ -65,7 +65,7 @@ public class RequestLogService
                 .build(), disruptor.getRingBuffer());
         server.setRequestLog(requestLog);
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class, null, reactiveStreams));
+        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.getServiceIdentifier(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class, null, reactiveStreams));
     }
 
     @Override

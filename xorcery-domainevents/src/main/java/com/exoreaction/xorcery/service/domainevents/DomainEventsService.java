@@ -77,7 +77,7 @@ public class DomainEventsService
 
         disruptor.handleEventsWith(subscribers);
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new DomainEventsPublisher(), DomainEventsPublisher.class, null, reactiveStreams));
+        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.getServiceIdentifier(), cfg -> new DomainEventsPublisher(), DomainEventsPublisher.class, null, reactiveStreams));
     }
 
     @Override

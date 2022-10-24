@@ -44,7 +44,7 @@ public class JettyAndJerseyBasedTestServer {
     private final Configuration configuration;
     private final Server server;
     private final ServletContextHandler ctx;
-    private final WebSocketClient webSocketClient;
+    private final HttpClient httpClient;
     private final ServletContainer servletContainer;
     private final ObjectMapper objectMapper;
     private ReactiveStreams reactiveStreams;
@@ -69,16 +69,7 @@ public class JettyAndJerseyBasedTestServer {
         servletHolder.setInitOrder(1);
         JettyWebSocketServletContainerInitializer.configure(ctx, null);
 
-        HttpClient httpClient = createClient(configuration);
-        webSocketClient = new WebSocketClient(httpClient);
-        webSocketClient.setIdleTimeout(Duration.ofSeconds(httpClient.getIdleTimeout()));
-        try {
-            webSocketClient.start();
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        httpClient = createClient(configuration);
         server.addManaged(httpClient);
 
         server.setHandler(ctx);
@@ -86,7 +77,7 @@ public class JettyAndJerseyBasedTestServer {
         this.objectMapper = new ObjectMapper();
     }
 
-    public void start() {
+    public void start() throws Exception {
         try {
             server.start();
         } catch (RuntimeException e) {
@@ -102,11 +93,10 @@ public class JettyAndJerseyBasedTestServer {
 
         this.reactiveStreams = new ReactiveStreamsService(
                 ctx,
-                webSocketClient,
+                httpClient,
                 configuration,
                 server,
-                messageBodyWorkers,
-                objectMapper
+                servletContainer
         );
 
         System.out.printf("Server started and running http on port: %d%n", httpPort);

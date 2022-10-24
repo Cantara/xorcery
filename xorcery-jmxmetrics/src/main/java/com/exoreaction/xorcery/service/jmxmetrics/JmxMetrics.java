@@ -16,7 +16,6 @@ import com.exoreaction.xorcery.service.conductor.helpers.AbstractConductorListen
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
@@ -104,7 +103,7 @@ public class JmxMetrics
     @Override
     public void onStartup(Container container) {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        conductor.addConductorListener(new JmxServersConductorListener(sro.serviceIdentifier(), "metrics"));
+        conductor.addConductorListener(new JmxServersConductorListener(sro.getServiceIdentifier(), "metrics"));
     }
 
     @Override

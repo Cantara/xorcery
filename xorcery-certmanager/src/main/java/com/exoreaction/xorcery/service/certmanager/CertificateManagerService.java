@@ -114,7 +114,7 @@ public class CertificateManagerService
     public void onStartup(Container container) {
 
         if (configuration.getBoolean("renew_on_startup").orElse(false)) {
-            conductor.addConductorListener(new CheckCertConductorListener(sro.serviceIdentifier(), "certificatemanager"));
+            conductor.addConductorListener(new CheckCertConductorListener(sro.getServiceIdentifier(), "certificatemanager"));
         }
     }
 
@@ -152,7 +152,7 @@ public class CertificateManagerService
                     String base64Cert = resourceObject.getAttributes().getString("base64").orElseThrow();
                     byte[] certBytes = Base64.getDecoder().decode(base64Cert);
 
-                    File keyStoreFile = new File(new File(".").toURI().relativize(getClass().getResource("/keystore.p12").toURI()).getPath());
+                    File keyStoreFile = new File(new File(".").toURI().relativize(ClassLoader.getSystemResource("/keystore.p12").toURI()).getPath());
 
                     Files.write(keyStoreFile.toPath(), certBytes, StandardOpenOption.WRITE);
 

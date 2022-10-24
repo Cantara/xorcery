@@ -116,7 +116,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-config</artifactId>
+            <artifactId>xorcery-configuration</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

@@ -28,7 +28,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
+import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -57,7 +57,7 @@ public class OpenSearchService
     private ReactiveStreams reactiveStreams;
     private ScheduledExecutorService scheduledExecutorService;
     private Configuration configuration;
-    private JettyHttpClientSupplier instance;
+    private JettyHttpClientContract instance;
     private ServiceResourceObject sro;
 
     @Provider
@@ -85,7 +85,7 @@ public class OpenSearchService
     public OpenSearchService(Conductor conductor,
                              ReactiveStreams reactiveStreams,
                              Configuration configuration,
-                             JettyHttpClientSupplier instance,
+                             JettyHttpClientContract instance,
                              Server server,
                              @Named(SERVICE_TYPE) ServiceResourceObject sro) {
         this.conductor = conductor;
@@ -121,7 +121,7 @@ public class OpenSearchService
             OpenSearchCommitPublisher openSearchCommitPublisher = new OpenSearchCommitPublisher();
 
             conductor.addConductorListener(new ClientSubscriberConductorListener(client,
-                    reactiveStreams, openSearchCommitPublisher, sro.serviceIdentifier()));
+                    reactiveStreams, openSearchCommitPublisher, sro.getServiceIdentifier()));
 
             sro.getLinkByRel(OpenSearchRels.opensearch.name()).ifPresent(link ->
             {

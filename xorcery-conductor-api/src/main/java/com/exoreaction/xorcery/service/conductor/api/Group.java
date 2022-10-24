@@ -76,7 +76,7 @@ public record Group(ResourceObject resourceObject, List<ServiceResourceObject> s
 
     public ServiceResourceObject getServiceResourceObject(ServiceIdentifier serviceIdentifier)
     {
-        return serviceResourceObjects.stream().filter(sro -> sro.serviceIdentifier().equals(serviceIdentifier)).findFirst().orElseThrow(()->
+        return serviceResourceObjects.stream().filter(sro -> sro.getServiceIdentifier().equals(serviceIdentifier)).findFirst().orElseThrow(()->
         {
             return new IllegalStateException();
         });

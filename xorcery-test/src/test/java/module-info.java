@@ -2,7 +2,7 @@ open module xorcery.test {
     requires xorcery.server;
     requires xorcery.neo4j;
     requires xorcery.reactivestreams;
-    requires xorcery.config;
+    requires xorcery.configuration;
     requires xorcery.metadata;
 
     requires xorcery.conductor;

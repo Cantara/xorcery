@@ -1,13 +1,12 @@
 package com.exoreaction.xorcery.service.reactivestreams.api;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import org.glassfish.jersey.spi.Contract;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
-@Contract
+@org.jvnet.hk2.annotations.Contract
 public interface ReactiveStreams
     extends ReactiveStreamsClient
 {

@@ -63,7 +63,7 @@ public class Log4jAppenderService
         appender = lc.getConfiguration().getAppender("DISRUPTOR");
         appender.setConfiguration(configuration);
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(sro.serviceIdentifier(), cfg -> new LogPublisher(), LogPublisher.class, null, reactiveStreams));
+        conductor.addConductorListener(new ClientPublisherConductorListener(sro.getServiceIdentifier(), cfg -> new LogPublisher(), LogPublisher.class, null, reactiveStreams));
     }
 
     @Override

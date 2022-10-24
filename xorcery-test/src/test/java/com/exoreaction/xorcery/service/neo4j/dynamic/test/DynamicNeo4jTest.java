@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.neo4j.dynamic.test;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.server.Xorcery;
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.neo4j.Neo4jService;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphResult;
@@ -31,7 +31,7 @@ public class DynamicNeo4jTest {
             RETURN node
             """;
 
-    //    @Disabled
+    @Disabled
     @Test
     public void test() throws Exception {
         Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();

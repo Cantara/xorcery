@@ -19,7 +19,7 @@ public class ExternalClientPublisherTest {
 
     @Test
     @Disabled
-    public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() {
+    public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .add("server.http.port", "60797")
                 .add("server.http2.enabled", "true")

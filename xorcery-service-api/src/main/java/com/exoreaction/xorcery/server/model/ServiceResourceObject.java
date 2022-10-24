@@ -5,17 +5,20 @@ import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;
 import java.util.Optional;
 
 public record ServiceResourceObject(ResourceObject resourceObject) {
 
-    public record Builder(StandardConfiguration configuration, ResourceObject.Builder builder, Links.Builder links,
-                          Attributes.Builder attributes) {
+    public record Builder(ResourceObject.Builder builder, Links.Builder links,
+                          Attributes.Builder attributes, URI baseServerUri) {
 
         public Builder(StandardConfiguration configuration, String serviceType) {
-            this(configuration, new ResourceObject.Builder(serviceType, configuration.getId()), new Links.Builder(), new Attributes.Builder());
+            this(new ResourceObject.Builder(serviceType, configuration.getId()), new Links.Builder(), new Attributes.Builder(), configuration.getServerUri());
+            attributes.attribute("environment", configuration.getEnvironment());
+            attributes.attribute("tag", configuration.getTag());
         }
 
         public Builder version(String v) {
@@ -29,14 +32,14 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
         }
 
         public Builder api(String rel, String path) {
-            links.link(rel, getServerUriBuilder(configuration.getServerUri()).path(path));
+            links.link(rel, UriBuilder.fromUri(baseServerUri).path(path));
 
             return this;
         }
 
         public Builder websocket(String rel, String path) {
-            links.link(rel, getServerUriBuilder(configuration.getServerUri())
-                    .scheme(configuration.getServerUri().getScheme().equals("https") ? "wss" : "ws")
+            links.link(rel, UriBuilder.fromUri(baseServerUri)
+                    .scheme(baseServerUri.getScheme().equals("https") ? "wss" : "ws")
                     .path(path));
             return this;
         }
@@ -48,12 +51,7 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
         }
     }
 
-    // TODO Use common method instead, but avoid the UriBuilder class in the basic config library
-    private static jakarta.ws.rs.core.UriBuilder getServerUriBuilder(URI uri) {
-        return jakarta.ws.rs.core.UriBuilder.fromUri(uri);
-    }
-
-    public ServiceIdentifier serviceIdentifier() {
+    public ServiceIdentifier getServiceIdentifier() {
         return new ServiceIdentifier(resourceObject.getType(), resourceObject.getId());
     }
 

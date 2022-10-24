@@ -1,5 +1,6 @@
 open module xorcery.reactivestreams {
     exports com.exoreaction.xorcery.service.reactivestreams;
+    exports com.exoreaction.xorcery.service.reactivestreams.spi;
     requires transitive xorcery.reactivestreams.api;
 
     requires xorcery.service.api;
@@ -17,6 +18,8 @@ open module xorcery.reactivestreams {
     requires org.eclipse.jetty.websocket.jetty.server;
     requires com.lmax.disruptor;
     requires jersey.jetty.connector;
+    requires jersey.container.servlet.core;
+    requires jersey.server;
     requires org.eclipse.jetty.servlet;
     requires org.eclipse.jetty.server;
     requires org.eclipse.jetty.websocket.jetty.client;

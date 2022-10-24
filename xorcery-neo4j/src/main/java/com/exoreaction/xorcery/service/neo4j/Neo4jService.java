@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
+import com.exoreaction.xorcery.service.neo4j.dynamic.CustomGraphDatabaseFacade;
 import com.exoreaction.xorcery.service.neo4j.dynamic.DynamicTransactionalContextFactory;
 import com.exoreaction.xorcery.service.neo4j.log.Log4jLogProvider;
 import com.exoreaction.xorcery.service.neo4j.spi.Neo4jProvider;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.neo4j.configuration.DatabaseConfig;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
@@ -25,6 +27,9 @@ import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.internal.kernel.api.Procedures;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
+import org.neo4j.kernel.availability.DatabaseAvailabilityGuard;
+import org.neo4j.kernel.database.Database;
+import org.neo4j.kernel.impl.factory.DbmsInfo;
 import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 import org.neo4j.kernel.impl.query.TransactionalContextFactory;
 
@@ -76,16 +81,27 @@ public class Neo4jService
                     .orElseGet(() ->
                             List.of(new DatabaseConfiguration(JsonNodeFactory.instance.objectNode().put("name", "neo4j"))
                             ));
-            for (DatabaseConfiguration database : databases) {
-                logger.info("Starting Neo4j database:" + database.getName());
+            for (DatabaseConfiguration databaseConfiguration : databases) {
+                logger.info("Starting Neo4j database:" + databaseConfiguration.getName());
                 GraphDatabaseService graphDb = null;
                 try {
-                    graphDb = managementService.database(database.getName());
+                    graphDb = managementService.database(databaseConfiguration.getName());
                 } catch (DatabaseNotFoundException e) {
-                    managementService.createDatabase(database.getName());
-                    graphDb = managementService.database(database.getName());
+                    managementService.createDatabase(databaseConfiguration.getName());
+                    graphDb = managementService.database(databaseConfiguration.getName());
                 }
-                GraphDatabase graphDatabase = new GraphDatabase(graphDb, Cypher.defaultFieldMappings());
+                Database database = null;
+                GraphDatabase graphDatabase = null;
+                try {
+                    database = (Database) getAccessibleField(GraphDatabaseFacade.class, "database").get(graphDb);
+                    DatabaseConfig config = (DatabaseConfig) getAccessibleField(GraphDatabaseFacade.class, "config").get(graphDb);
+                    DbmsInfo dbmsInfo = (DbmsInfo) getAccessibleField(GraphDatabaseFacade.class, "dbmsInfo").get(graphDb);
+                    DatabaseAvailabilityGuard availabilityGuard = (DatabaseAvailabilityGuard) getAccessibleField(GraphDatabaseFacade.class, "availabilityGuard").get(graphDb);
+                    CustomGraphDatabaseFacade customGraphDatabaseFacade = new CustomGraphDatabaseFacade(database, config, dbmsInfo, availabilityGuard);
+                    graphDatabase = new GraphDatabase(customGraphDatabaseFacade, Cypher.defaultFieldMappings());
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
 
                 // Hack it
 /*
@@ -132,7 +148,7 @@ public class Neo4jService
                 }
 
                 // Run startup Cypher
-                for (String cypherResource : database.getStartup()) {
+                for (String cypherResource : databaseConfiguration.getStartup()) {
                     try {
                         logger.info("Running Neo4j startup script:" + cypherResource);
                         List<String> statements = Cypher.getCypherStatements(cypherResource);
@@ -145,8 +161,8 @@ public class Neo4jService
                     }
                 }
 
-                bind(graphDb).named(database.getName()).to(GraphDatabaseService.class);
-                bind(graphDatabase).named(database.getName()).to(GraphDatabase.class);
+                bind(graphDb).named(databaseConfiguration.getName()).to(GraphDatabaseService.class);
+                bind(graphDatabase).named(databaseConfiguration.getName()).to(GraphDatabase.class);
             }
 
             context.register(new Neo4jService(managementService), GraphDatabases.class, ContainerLifecycleListener.class);
@@ -154,6 +170,17 @@ public class Neo4jService
             logger.info("Neo4j initialized");
 
         }
+
+        private Field getAccessibleField(Class clazz, String fieldName) {
+            try {
+                Field field = clazz.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                return field;
+            } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
     private final DatabaseManagementService managementService;

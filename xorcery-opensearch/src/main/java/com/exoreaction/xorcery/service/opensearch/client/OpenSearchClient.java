@@ -24,8 +24,8 @@ public record OpenSearchClient(Client client, URI host) {
 
     public OpenSearchClient(ClientConfig clientConfig, URI host) {
         this(ClientBuilder.newBuilder().withConfig(clientConfig
-                        .register(new JsonNodeMessageBodyWriter(new ObjectMapper()))
-                        .register(new JsonNodeMessageBodyReader(new ObjectMapper()))
+                        .register(new JsonNodeMessageBodyWriter())
+                        .register(new JsonNodeMessageBodyReader())
                         .register(new BulkRequestMessageBodyWriter(new ObjectMapper()
                                 .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false))))
                 .build(), host);

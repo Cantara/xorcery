@@ -19,7 +19,6 @@ import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.spi.Contract;
@@ -27,7 +26,6 @@ import org.glassfish.jersey.spi.Contract;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
-import java.util.stream.Collectors;
 
 /**
  * @author rickardoberg
@@ -97,7 +95,7 @@ public class Neo4jProjectionsService
         Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = new Neo4jProjectionCommitPublisher();
 
         conductor.addConductorListener(new ProjectionSubscriberConductorListener(graphDatabases,
-                reactiveStreams, sro.serviceIdentifier(), neo4jEventProjectionList, metricRegistry, neo4jProjectionCommitPublisher));
+                reactiveStreams, sro.getServiceIdentifier(), neo4jEventProjectionList, metricRegistry, neo4jProjectionCommitPublisher));
 
         sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectionsubscriber.name()).ifPresent(link ->
         {

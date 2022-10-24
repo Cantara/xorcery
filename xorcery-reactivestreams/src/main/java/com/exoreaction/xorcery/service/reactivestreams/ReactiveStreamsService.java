@@ -2,7 +2,8 @@ package com.exoreaction.xorcery.service.reactivestreams;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
+import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.server.spi.ServiceResourceObjectProvider;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.PublisherWebSocketServlet;
@@ -11,11 +12,10 @@ import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
+import jakarta.inject.Provider;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.MessageBodyReader;
 import jakarta.ws.rs.ext.MessageBodyWriter;
-import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -26,7 +26,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.jvnet.hk2.annotations.Service;
 
@@ -42,9 +41,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
-@Singleton
+import static com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService.SERVICE_TYPE;
+
+@Service(name = SERVICE_TYPE)
 public class ReactiveStreamsService
-        implements ReactiveStreams, LifeCycle.Listener {
+        implements ReactiveStreams, ServiceResourceObjectProvider, LifeCycle.Listener {
 
     private static final Logger logger = LogManager.getLogger(ReactiveStreamsService.class);
     public static final String SERVICE_TYPE = "reactivestreams";
@@ -52,34 +53,11 @@ public class ReactiveStreamsService
     // Magic bytes for sending exceptions
     public static final byte[] XOR = "XOR".getBytes(StandardCharsets.UTF_8);
 
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void configure() {
-            try {
-                HttpClient httpClient = injectionManager.getInstance(JettyHttpClientSupplier.class).getHttpClient();
-                WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-                webSocketClient.setIdleTimeout(Duration.ofSeconds(httpClient.getIdleTimeout()));
-                webSocketClient.start();
-                bind(webSocketClient).named(SERVICE_TYPE);
-                context.register(ReactiveStreamsService.class, ReactiveStreams.class);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     private final boolean allowLocal;
     private final ServletContextHandler servletContextHandler;
     private final WebSocketClient webSocketClient;
     private final StandardConfiguration configuration;
-    private final MessageBodyWorkers messageBodyWorkers;
+    private final Provider<MessageBodyWorkers> messageBodyWorkers;
     private final ObjectMapper objectMapper;
     private final Timer timer;
 
@@ -94,22 +72,31 @@ public class ReactiveStreamsService
 
     @Inject
     public ReactiveStreamsService(ServletContextHandler servletContextHandler,
-                                  @Named(SERVICE_TYPE) WebSocketClient webSocketClient,
+                                  @Named("client") HttpClient httpClient,
                                   Configuration configuration,
                                   Server server,
-                                  MessageBodyWorkers messageBodyWorkers,
-                                  ObjectMapper objectMapper) {
+                                  org.glassfish.jersey.servlet.ServletContainer servletContainer) throws Exception {
         this.servletContextHandler = servletContextHandler;
-        this.webSocketClient = webSocketClient;
-        this.configuration = ()->configuration;
-        this.messageBodyWorkers = messageBodyWorkers;
-        this.objectMapper = objectMapper;
+
+        this.configuration = () -> configuration;
+        this.messageBodyWorkers = () -> servletContainer.getApplicationHandler().getInjectionManager().getInstance(MessageBodyWorkers.class);
+        this.objectMapper = new ObjectMapper();
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
         this.timer = new Timer();
+
+        WebSocketClient webSocketClient = new WebSocketClient(httpClient);
+        webSocketClient.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idle_timeout").orElse(-1L)));
+        webSocketClient.start();
+        this.webSocketClient = webSocketClient;
 
         server.addEventListener(this);
 
         byteBufferPool = new ArrayByteBufferPool();
+    }
+
+    @Override
+    public ServiceResourceObject getServiceResourceObject() {
+        return new ServiceResourceObject.Builder(configuration, SERVICE_TYPE).build();
     }
 
     @Override
@@ -167,8 +154,8 @@ public class ReactiveStreamsService
     // Server
     @Override
     public CompletableFuture<Void> publisher(String publisherWebsocketPath,
-                                           Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,
-                                           Class<? extends Flow.Publisher<?>> publisherType) {
+                                             Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,
+                                             Class<? extends Flow.Publisher<?>> publisherType) {
         publishers.put(publisherWebsocketPath, publisherFactory);
 
         CompletableFuture<Void> result = new CompletableFuture<>();
@@ -437,7 +424,7 @@ public class ReactiveStreamsService
 
     private MessageBodyWriter<Object> getWriter(Type type) {
         if (!type.equals(ByteBuffer.class)) {
-            return Optional.ofNullable(messageBodyWorkers.getMessageBodyWriter(Classes.getClass(type), type, new Annotation[0], MediaType.WILDCARD_TYPE))
+            return Optional.ofNullable(messageBodyWorkers.get().getMessageBodyWriter(Classes.getClass(type), type, new Annotation[0], MediaType.WILDCARD_TYPE))
                     .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyWriter for " + type));
         } else {
             return null;
@@ -446,7 +433,7 @@ public class ReactiveStreamsService
 
     private MessageBodyReader<Object> getReader(Type type) {
         if (!type.equals(ByteBuffer.class)) {
-            return Optional.ofNullable(messageBodyWorkers.getMessageBodyReader(Classes.getClass(type), type, new Annotation[0], MediaType.WILDCARD_TYPE))
+            return Optional.ofNullable(messageBodyWorkers.get().getMessageBodyReader(Classes.getClass(type), type, new Annotation[0], MediaType.WILDCARD_TYPE))
                     .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyReader for " + type));
         } else {
             return null;

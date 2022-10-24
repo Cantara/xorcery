@@ -26,8 +26,8 @@
         <module>xorcery-disruptor</module>
 
         <module>xorcery-json</module>
-        <module>xorcery-config-api</module>
-        <module>xorcery-config</module>
+        <module>xorcery-configuration-api</module>
+        <module>xorcery-configuration</module>
         <module>xorcery-metadata</module>
 
         <module>xorcery-jsonapi</module>
@@ -37,14 +37,17 @@
         <module>xorcery-jsonschema</module>
         <module>xorcery-service-api</module>
 
+        <module>xorcery-core</module>
+        <module>xorcery-metricregistry</module>
+        <module>xorcery-client</module>
+        <module>xorcery-server</module>
+
         <module>xorcery-reactivestreams-api</module>
         <module>xorcery-reactivestreams</module>
         <module>xorcery-registry-api</module>
         <module>xorcery-registry</module>
         <module>xorcery-conductor-api</module>
         <module>xorcery-conductor</module>
-
-        <module>xorcery-server</module>
 
         <module>xorcery-certmanager</module>
         <module>xorcery-domainevents</module>

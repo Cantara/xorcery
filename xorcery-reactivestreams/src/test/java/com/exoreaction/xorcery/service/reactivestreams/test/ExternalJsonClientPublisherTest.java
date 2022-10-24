@@ -17,7 +17,7 @@ public class ExternalJsonClientPublisherTest {
 
     @Test
     @Disabled
-    public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() {
+    public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .add("server.http.port", "60798")
                 .add("server.http2.enabled", "true")

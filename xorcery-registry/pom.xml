@@ -42,7 +42,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-config-api</artifactId>
+            <artifactId>xorcery-configuration-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

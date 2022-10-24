@@ -1,14 +1,14 @@
 open module xorcery.eventstore {
-    requires xorcery.jsonapi.server;
     requires xorcery.reactivestreams.api;
-    requires xorcery.domainevents;
+    requires xorcery.configuration.api;
     requires xorcery.service.api;
     requires xorcery.conductor.api;
+    requires xorcery.jsonapi.server;
+    requires xorcery.domainevents;
 
     requires jakarta.inject;
     requires jakarta.ws.rs;
     requires db.client.java;
-    requires xorcery.config.api;
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
     requires xorcery.util;

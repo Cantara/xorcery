@@ -60,7 +60,6 @@ public class PublishWebSocketEndpoint
     private final Type resultType;
     private final Class<Object> resultClass;
     private final Configuration subscriberConfiguration;
-    private final ObjectMapper objectMapper;
     private final ByteBufferPool pool;
     private final Marker marker;
     private final PublishingProcess publishingProcess;
@@ -77,7 +76,6 @@ public class PublishWebSocketEndpoint
                                     Type eventType,
                                     Type resultType,
                                     Configuration subscriberConfiguration,
-                                    ObjectMapper objectMapper,
                                     ByteBufferPool pool,
                                     PublishingProcess publishingProcess) {
         this.webSocketPath = webSocketPath;
@@ -89,7 +87,6 @@ public class PublishWebSocketEndpoint
         this.resultType = resultType;
         this.resultClass = Classes.getClass(resultType);
         this.subscriberConfiguration = subscriberConfiguration;
-        this.objectMapper = objectMapper;
         this.pool = pool;
         this.marker = MarkerManager.getMarker(webSocketPath);
         this.publishingProcess = publishingProcess;

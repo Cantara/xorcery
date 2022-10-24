@@ -50,8 +50,8 @@ public class EventStoreService
         @Override
         protected void buildResourceObject(ServiceResourceObject.Builder builder) {
             builder.api(EventStoreRels.eventstore.name(), "api/eventstore");
-            builder.websocket(EventStoreRels.eventpublisher.name(), "ws/eventpublisher");
-            builder.websocket(EventStoreRels.eventsubscriber.name(), "ws/eventsubscriber");
+            builder.websocket(EventStoreRels.eventpublisher.name(), "ws/eventstore/publisher");
+            builder.websocket(EventStoreRels.eventsubscriber.name(), "ws/eventstore/subscriber");
         }
 
         @Override

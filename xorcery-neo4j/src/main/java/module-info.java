@@ -20,7 +20,7 @@ open module xorcery.neo4j {
     requires xorcery.jsonschema;
     requires xorcery.util;
     requires xorcery.service.api;
-    requires xorcery.config.api;
+    requires xorcery.configuration.api;
     requires xorcery.json;
     requires xorcery.reactivestreams.api;
     requires xorcery.conductor.api;
