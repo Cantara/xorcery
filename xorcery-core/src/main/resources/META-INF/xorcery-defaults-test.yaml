@@ -1,0 +1,3 @@
+---
+build_test_resources: "{{ home }}/target/test-classes"
+test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"

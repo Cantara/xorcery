@@ -1,0 +1,12 @@
+---
+id: "{{ ENV.SERVER_ID | SYSTEM.server_id | host}}"
+name: genericserver
+host: localhost
+environment: development
+tag: default
+
+home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
+build_resources: "{{ home }}/target/classes"
+resources: "{{ ENV.RESOURCES | build_resources }}"
+
+idle_timeout: -1

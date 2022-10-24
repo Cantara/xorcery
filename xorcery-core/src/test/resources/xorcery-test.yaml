@@ -1,0 +1,44 @@
+name: xorcery-framework-test
+
+idle_timeout: 30
+
+server:
+  http:
+    port: 0
+
+  http3:
+    enabled: false
+
+  ssl:
+    enabled: false
+    port: 0
+    keystore:
+      type: "PKCS12"
+      path: "{{ test_resources }}/test-keystore.p12"
+      password: "password"
+    truststore:
+      type: "PKCS12"
+      path: "{{ test_resources }}/test-truststore.jks"
+      password: "password"
+
+client:
+  http3:
+    enabled: false
+
+  ssl:
+    enabled: false
+    keystore:
+      type: "PKCS12"
+      path: "{{ test_resources }}/test-keystore.p12"
+      password: "password"
+    truststore:
+      type: "PKCS12"
+      path: "{{ test_resources }}/test-truststore.jks"
+      password: "password"
+
+jaxrs:
+  packages:
+    - com.exoreaction.xorcery.server
+
+reactivestreams:
+  allowlocal: false
