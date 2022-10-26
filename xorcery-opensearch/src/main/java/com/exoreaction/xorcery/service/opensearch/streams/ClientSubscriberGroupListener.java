@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.helpers.AbstractConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
 import com.exoreaction.xorcery.service.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.search.SearchQuery;
@@ -18,15 +18,15 @@ import org.apache.logging.log4j.Logger;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class ClientSubscriberConductorListener extends AbstractConductorListener {
+public class ClientSubscriberGroupListener extends AbstractGroupListener {
 
-    private static final Logger logger = LogManager.getLogger(ClientSubscriberConductorListener.class);
+    private static final Logger logger = LogManager.getLogger(ClientSubscriberGroupListener.class);
 
     private ReactiveStreams reactiveStreams;
     private Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher;
     private OpenSearchClient client;
 
-    public ClientSubscriberConductorListener(OpenSearchClient client, ReactiveStreams reactiveStreams, Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher, ServiceIdentifier serviceIdentifier) {
+    public ClientSubscriberGroupListener(OpenSearchClient client, ReactiveStreams reactiveStreams, Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher, ServiceIdentifier serviceIdentifier) {
         super(serviceIdentifier, null);
         this.client = client;
         this.reactiveStreams = reactiveStreams;

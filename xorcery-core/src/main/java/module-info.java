@@ -6,6 +6,7 @@ open module xorcery.core {
     requires transitive org.apache.logging.log4j;
 
     requires org.glassfish.hk2.api;
+    requires transitive org.glassfish.hk2.extras;
     requires com.fasterxml.jackson.dataformat.yaml;
     requires info.picocli;
 }

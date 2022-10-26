@@ -9,7 +9,6 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.InvocationCallback;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 public record HyperSchemaClient(Client client) {
 

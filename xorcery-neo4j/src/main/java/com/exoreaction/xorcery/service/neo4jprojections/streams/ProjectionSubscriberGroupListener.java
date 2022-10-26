@@ -5,7 +5,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.helpers.AbstractConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
@@ -17,7 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 
-public class ProjectionSubscriberConductorListener extends AbstractConductorListener {
+public class ProjectionSubscriberGroupListener extends AbstractGroupListener {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
@@ -27,11 +27,11 @@ public class ProjectionSubscriberConductorListener extends AbstractConductorList
     private final MetricRegistry metricRegistry;
     private Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher;
 
-    public ProjectionSubscriberConductorListener(GraphDatabases graphDatabases,
-                                                 ReactiveStreams reactiveStreams,
-                                                 ServiceIdentifier serviceIdentifier,
-                                                 List<Neo4jEventProjection> neo4jEventProjectionList, MetricRegistry metricRegistry,
-                                                 Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher) {
+    public ProjectionSubscriberGroupListener(GraphDatabases graphDatabases,
+                                             ReactiveStreams reactiveStreams,
+                                             ServiceIdentifier serviceIdentifier,
+                                             List<Neo4jEventProjection> neo4jEventProjectionList, MetricRegistry metricRegistry,
+                                             Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher) {
         super(serviceIdentifier, null);
         this.graphDatabases = graphDatabases;
         this.reactiveStreams = reactiveStreams;

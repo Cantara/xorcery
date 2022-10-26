@@ -6,7 +6,6 @@ import com.exoreaction.xorcery.jsonapi.model.JsonApiRels;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;

@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.handlebars.jaxrs.providers;
 import com.exoreaction.xorcery.hyperschema.client.HyperSchemaClient;
 import com.exoreaction.xorcery.hyperschema.model.HyperSchema;
 import com.exoreaction.xorcery.json.model.JsonElement;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.service.handlebars.helpers.OptionalValueResolver;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,9 +24,6 @@ import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
-import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriTemplate;
 
@@ -58,15 +54,10 @@ public class HandlebarsJsonApiMessageBodyWriter
     @Inject
     public HandlebarsJsonApiMessageBodyWriter(Handlebars handlebars,
                                               jakarta.inject.Provider<ContainerRequestContext> requestContext,
-                                              JettyHttpClientContract clientSupplier) {
+                                              ClientConfig clientConfig) {
         this.handlebars = handlebars;
         this.requestContext = requestContext;
-        client = ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                        .register(new JsonNodeMessageBodyReader())
-                        .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.sandbox")).build())
-                        .connectorProvider(new JettyConnectorProvider())
-                        .register(clientSupplier))
-                .build();
+        client = ClientBuilder.newClient(clientConfig);
     }
 
     @Override
@@ -118,42 +109,37 @@ public class HandlebarsJsonApiMessageBodyWriter
                         .map(link -> new Link(link.getRel(), link.getUri().toASCIIString())));
     }
 
-    protected String calculateTemplate( UriInfo uriInfo )
-    {
+    protected String calculateTemplate(UriInfo uriInfo) {
         String htmlTemplateResult = "";
 
-        if ( uriInfo instanceof ExtendedUriInfo)
-        {
+        if (uriInfo instanceof ExtendedUriInfo) {
             ExtendedUriInfo extendedUriInfo = (ExtendedUriInfo) uriInfo;
-            htmlTemplateResult = calculateTemplateFromExtendedUriInfo( extendedUriInfo );
-        }
-        else
-        {
-            logger.error( "Expected ExtendedUriInfo, got {}", uriInfo.getClass().getCanonicalName() );
-            throw new InternalServerErrorException( "Can't calculate template" );
+            htmlTemplateResult = calculateTemplateFromExtendedUriInfo(extendedUriInfo);
+        } else {
+            logger.error("Expected ExtendedUriInfo, got {}", uriInfo.getClass().getCanonicalName());
+            throw new InternalServerErrorException("Can't calculate template");
         }
 
         return htmlTemplateResult;
     }
 
 
-    private String calculateTemplateFromExtendedUriInfo( ExtendedUriInfo extendedUriInfo )
-    {
+    private String calculateTemplateFromExtendedUriInfo(ExtendedUriInfo extendedUriInfo) {
         String htmlTemplate = "";
         List<UriTemplate> matchedTemplates = extendedUriInfo.getMatchedTemplates();
 
-        if ( matchedTemplates == null || matchedTemplates.size() == 0 )
-        {
+        if (matchedTemplates == null || matchedTemplates.size() == 0) {
             return htmlTemplate;
         }
 
-        for (int i = matchedTemplates.size()-1; i >= 0; i--) {
+        for (int i = matchedTemplates.size() - 1; i >= 0; i--) {
             String uriTemplate = matchedTemplates.get(i).getTemplate();
-            htmlTemplate += uriTemplate.replaceAll( "\\{|\\}", "" );
+            htmlTemplate += uriTemplate.replaceAll("\\{|\\}", "");
         }
 
-        if ( htmlTemplate.charAt( 0 ) != '/' )
-        { htmlTemplate = "/".concat( htmlTemplate ); }
+        if (htmlTemplate.charAt(0) != '/') {
+            htmlTemplate = "/".concat(htmlTemplate);
+        }
         return htmlTemplate;
     }
 }

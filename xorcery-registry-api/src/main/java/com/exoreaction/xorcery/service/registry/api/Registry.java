@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Contract
+@org.jvnet.hk2.annotations.Contract
 public interface Registry {
     // Write
     void addServer(ServerResourceDocument server);

@@ -4,7 +4,6 @@ import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWorkers;
-import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -15,9 +14,9 @@ import jakarta.inject.Provider;
 import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 
 @Service
 public class WithMetadataMessageReaderFactory
@@ -58,23 +57,18 @@ public class WithMetadataMessageReaderFactory
         }
 
         @Override
-        public WithMetadata<T> readFrom(ByteBuffer buffer) throws IOException {
-            try (ByteBufferBackedInputStream entityStream = new ByteBufferBackedInputStream(buffer)) {
-                entityStream.mark(entityStream.available());
-                JsonFactory jf = new JsonFactory(objectMapper);
-                JsonParser jp = jf.createParser(entityStream);
-//            JsonToken metadataToken = jp.nextToken();
-                Metadata metadata = jp.readValueAs(Metadata.class);
-                long offset = jp.getCurrentLocation().getByteOffset();
+        public WithMetadata<T> readFrom(InputStream entityStream) throws IOException {
+            entityStream.mark(entityStream.available());
+            JsonFactory jf = new JsonFactory(objectMapper);
+            JsonParser jp = jf.createParser(entityStream);
+            Metadata metadata = jp.readValueAs(Metadata.class);
+            long offset = jp.getCurrentLocation().getByteOffset();
 
-                entityStream.reset();
-                entityStream.skip(offset);
+            entityStream.reset();
+            entityStream.skip(offset);
 
-                Object event = eventReader.readFrom(buffer);
-                return (WithMetadata<T>) new WithMetadata<>(metadata, event);
-            } catch (Throwable e) {
-                throw new IOException(e);
-            }
+            Object event = eventReader.readFrom(entityStream);
+            return (WithMetadata<T>) new WithMetadata<>(metadata, event);
         }
     }
 }

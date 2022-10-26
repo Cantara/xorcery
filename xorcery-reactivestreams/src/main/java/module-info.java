@@ -8,18 +8,8 @@ open module xorcery.reactivestreams {
     requires xorcery.metadata;
     requires xorcery.restclient;
 
-/*
-    requires com.fasterxml.jackson.databind;
-    requires jakarta.ws.rs;
-    requires org.eclipse.jetty.io;
-    requires org.eclipse.jetty.websocket.jetty.api;
-    requires jersey.common;
-*/
     requires org.eclipse.jetty.websocket.jetty.server;
     requires com.lmax.disruptor;
-    requires jersey.jetty.connector;
-    requires jersey.container.servlet.core;
-    requires jersey.server;
     requires org.eclipse.jetty.servlet;
     requires org.eclipse.jetty.server;
     requires org.eclipse.jetty.websocket.jetty.client;

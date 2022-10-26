@@ -5,15 +5,15 @@ open module xorcery.conductor {
     requires transitive xorcery.conductor.api;
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.service.api;
-    requires xorcery.reactivestreams.api;
+    requires xorcery.core;
     requires xorcery.registry.api;
+    requires xorcery.jsonapi.server;
 
+    requires org.glassfish.hk2.api;
     requires jakarta.inject;
     requires jakarta.ws.rs;
     requires com.fasterxml.jackson.core;
     requires org.apache.logging.log4j;
-    requires jersey.server;
-    requires xorcery.jsonapi.server;
     requires commons.jexl3;
     requires com.fasterxml.jackson.dataformat.yaml;
 }

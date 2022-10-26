@@ -1,21 +1,14 @@
 package com.exoreaction.xorcery.service.reactivestreams.test;
 
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.ByteBufferMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.ByteBufferMessageBodyWriter;
+import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.BinaryFibonacciPublisher;
-import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.BinaryFibonacciSubscriber;
-import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.BinaryNioFibonacciPublisher;
-import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.BinaryNioFibonacciSubscriber;
-import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciPublisher;
-import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSequence;
-import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSubscriber;
-import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyReader;
-import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyWriter;
+import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.*;
+import jakarta.ws.rs.core.UriBuilder;
 import org.junit.jupiter.api.Test;
 
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,14 +35,10 @@ public class ReactiveStreamsServiceTest {
     }
 
     private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(LongMessageBodyWriter.class), List.of(LongMessageBodyReader.class));
-        testServer.start();
-        try {
-            ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        StandardConfiguration standardConfiguration = () -> configuration;
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
 
             // server publishes
             CompletableFuture<Void> publisherComplete = reactiveStreams.publisher("/fibonacci", config -> new FibonacciPublisher(numbersInFibonacciSequence), FibonacciPublisher.class);
@@ -62,7 +51,7 @@ public class ReactiveStreamsServiceTest {
             CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
             for (int i = 0; i < numberOfSubscribers; i++) {
                 FibonacciSubscriber subscriber = new FibonacciSubscriber();
-                CompletableFuture<Void> future = reactiveStreams.subscribe(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), Configuration.empty(), subscriber, FibonacciSubscriber.class)
+                CompletableFuture<Void> future = reactiveStreams.subscribe(UriBuilder.fromUri(standardConfiguration.getServerUri()).scheme("ws").path("fibonacci").build(), Configuration.empty(), subscriber, FibonacciSubscriber.class)
                         .thenAccept(v -> {
                             ArrayList<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
                             if (!new ArrayList<>(FibonacciSequence.sequenceOf(numbersInFibonacciSequence)).equals(allReceivedNumbers)) {
@@ -79,21 +68,15 @@ public class ReactiveStreamsServiceTest {
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            testServer.stop();
         }
     }
 
     @Test
     public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(LongMessageBodyWriter.class), List.of(LongMessageBodyReader.class));
-        testServer.start();
-        try {
-            ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        StandardConfiguration standardConfiguration = () -> configuration;
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
 
             final int NUMBERS_IN_FIBONACCI_SEQUENCE = 12;
 
@@ -106,7 +89,7 @@ public class ReactiveStreamsServiceTest {
             });
 
             // client publishes
-            CompletableFuture<Void> publisherComplete = reactiveStreams.publish(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), new Configuration.Builder().build(), new FibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), FibonacciPublisher.class);
+            CompletableFuture<Void> publisherComplete = reactiveStreams.publish(UriBuilder.fromUri(standardConfiguration.getServerUri()).scheme("ws").path("fibonacci").build(), Configuration.empty(), new FibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), FibonacciPublisher.class);
             publisherComplete.join();
 
             System.out.printf("publisher completed!%n");
@@ -118,8 +101,6 @@ public class ReactiveStreamsServiceTest {
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            testServer.stop();
         }
     }
 
@@ -134,14 +115,10 @@ public class ReactiveStreamsServiceTest {
     }
 
     private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(), List.of());
-        testServer.start();
-        try {
-            ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        StandardConfiguration standardConfiguration = () -> configuration;
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
 
             // server publishes
             CompletableFuture<Void> publisherComplete = reactiveStreams.publisher("/fibonacci", config -> new BinaryFibonacciPublisher(numbersInFibonacciSequence), BinaryFibonacciPublisher.class);
@@ -154,7 +131,7 @@ public class ReactiveStreamsServiceTest {
             CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
             for (int i = 0; i < numberOfSubscribers; i++) {
                 BinaryFibonacciSubscriber subscriber = new BinaryFibonacciSubscriber();
-                CompletableFuture<Void> future = reactiveStreams.subscribe(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), Configuration.empty(), subscriber, BinaryFibonacciSubscriber.class)
+                CompletableFuture<Void> future = reactiveStreams.subscribe(UriBuilder.fromUri(standardConfiguration.getServerUri()).scheme("ws").path("fibonacci").build(), Configuration.empty(), subscriber, BinaryFibonacciSubscriber.class)
                         .thenAccept(v -> {
                             ArrayList<byte[]> allReceivedNumbers = subscriber.getAllReceivedNumbers();
                             byte[][] allReceivedNumbersArray = allReceivedNumbers.toArray(new byte[0][0]);
@@ -173,21 +150,15 @@ public class ReactiveStreamsServiceTest {
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            testServer.stop();
         }
     }
 
     @Test
     public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryFibonacciNumbers() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(), List.of());
-        testServer.start();
-        try {
-            ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        StandardConfiguration standardConfiguration = () -> configuration;
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
 
             final int NUMBERS_IN_FIBONACCI_SEQUENCE = 12;
 
@@ -200,7 +171,7 @@ public class ReactiveStreamsServiceTest {
             });
 
             // client publishes
-            CompletableFuture<Void> publisherComplete = reactiveStreams.publish(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), new Configuration.Builder().build(), new BinaryFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryFibonacciPublisher.class);
+            CompletableFuture<Void> publisherComplete = reactiveStreams.publish(UriBuilder.fromUri(standardConfiguration.getServerUri()).scheme("ws").path("fibonacci").build(), Configuration.empty(), new BinaryFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryFibonacciPublisher.class);
             publisherComplete.join();
 
             System.out.printf("publisher completed!%n");
@@ -214,8 +185,6 @@ public class ReactiveStreamsServiceTest {
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            testServer.stop();
         }
     }
 
@@ -230,14 +199,10 @@ public class ReactiveStreamsServiceTest {
     }
 
     private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(ByteBufferMessageBodyWriter.class), List.of(ByteBufferMessageBodyReader.class));
-        testServer.start();
-        try {
-            ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        StandardConfiguration standardConfiguration = () -> configuration;
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
 
             // server publishes
             CompletableFuture<Void> publisherComplete = reactiveStreams.publisher("/fibonacci", config -> new BinaryNioFibonacciPublisher(numbersInFibonacciSequence), BinaryNioFibonacciPublisher.class);
@@ -250,7 +215,7 @@ public class ReactiveStreamsServiceTest {
             CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
             for (int i = 0; i < numberOfSubscribers; i++) {
                 BinaryNioFibonacciSubscriber subscriber = new BinaryNioFibonacciSubscriber();
-                CompletableFuture<Void> future = reactiveStreams.subscribe(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), Configuration.empty(), subscriber, BinaryNioFibonacciSubscriber.class)
+                CompletableFuture<Void> future = reactiveStreams.subscribe(UriBuilder.fromUri(standardConfiguration.getServerUri()).scheme("ws").path("fibonacci").build(), Configuration.empty(), subscriber, BinaryNioFibonacciSubscriber.class)
                         .thenAccept(v -> {
                             ArrayList<byte[]> allReceivedNumbers = new ArrayList<>(subscriber.getAllReceivedNumbers().stream().map(ByteBuffer::array).toList());
                             byte[][] allReceivedNumbersArray = allReceivedNumbers.toArray(new byte[0][0]);
@@ -269,21 +234,15 @@ public class ReactiveStreamsServiceTest {
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            testServer.stop();
         }
     }
 
     @Test
     public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryNioFibonacciNumbers() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(ByteBufferMessageBodyWriter.class), List.of(ByteBufferMessageBodyReader.class));
-        testServer.start();
-        try {
-            ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        StandardConfiguration standardConfiguration = () -> configuration;
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
 
             final int NUMBERS_IN_FIBONACCI_SEQUENCE = 12;
 
@@ -296,7 +255,7 @@ public class ReactiveStreamsServiceTest {
             });
 
             // client publishes
-            CompletableFuture<Void> publisherComplete = reactiveStreams.publish(URI.create(String.format("ws://localhost:%d/fibonacci", testServer.getHttpPort())), new Configuration.Builder().build(), new BinaryNioFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryNioFibonacciPublisher.class);
+            CompletableFuture<Void> publisherComplete = reactiveStreams.publish(UriBuilder.fromUri(standardConfiguration.getServerUri()).scheme("ws").path("fibonacci").build(), Configuration.empty(), new BinaryNioFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryNioFibonacciPublisher.class);
             publisherComplete.join();
 
             System.out.printf("publisher completed!%n");
@@ -309,8 +268,6 @@ public class ReactiveStreamsServiceTest {
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            testServer.stop();
         }
     }
 }

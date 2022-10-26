@@ -3,10 +3,10 @@ package com.exoreaction.xorcery.service.domainevents.resources;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.IncludesMixin;
 import com.exoreaction.xorcery.jsonapi.server.resources.RelationshipsMixin;
+import com.exoreaction.xorcery.service.domainevents.api.context.DomainContext;
+import com.exoreaction.xorcery.service.domainevents.api.entity.Command;
 import com.exoreaction.xorcery.service.domainevents.api.model.EntityModel;
 import com.exoreaction.xorcery.service.domainevents.api.model.Model;
-import com.exoreaction.xorcery.service.domainevents.api.entity.Command;
-import com.exoreaction.xorcery.service.domainevents.api.context.DomainContext;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;

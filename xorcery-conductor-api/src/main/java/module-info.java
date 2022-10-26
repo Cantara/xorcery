@@ -5,6 +5,7 @@ open module xorcery.conductor.api {
     requires transitive xorcery.service.api;
     requires xorcery.reactivestreams.api;
 
+    requires org.glassfish.hk2.api;
     requires jersey.common;
     requires org.apache.logging.log4j;
 }

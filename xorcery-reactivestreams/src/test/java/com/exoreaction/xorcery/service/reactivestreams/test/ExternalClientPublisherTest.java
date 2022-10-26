@@ -1,11 +1,12 @@
 package com.exoreaction.xorcery.service.reactivestreams.test;
 
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSequence;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.FibonacciSubscriber;
-import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyReader;
-import com.exoreaction.xorcery.service.reactivestreams.test.media.LongMessageBodyWriter;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -20,15 +21,15 @@ public class ExternalClientPublisherTest {
     @Test
     @Disabled
     public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .add("server.http.port", "60797")
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(LongMessageBodyWriter.class), List.of(LongMessageBodyReader.class));
-        testServer.start();
-        try {
-            ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
+        String yaml = """
+                server.http.port: 60797
+                """;
+
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(yaml)).build();
+
+        StandardConfiguration standardConfiguration = () -> configuration;
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
 
             final int NUMBERS_IN_FIBONACCI_SEQUENCE = 12;
 
@@ -55,8 +56,6 @@ public class ExternalClientPublisherTest {
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            testServer.stop();
         }
     }
 }

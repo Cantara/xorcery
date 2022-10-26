@@ -1,6 +1,3 @@
 registry:
     master: "{{ server.uri }}"
     dnsdiscovery: false
-
-jaxrs.register:
-    - com.exoreaction.xorcery.service.registry.RegistryService$Feature

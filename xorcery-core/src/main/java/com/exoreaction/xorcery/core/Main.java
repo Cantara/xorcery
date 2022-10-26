@@ -1,5 +1,11 @@
 package com.exoreaction.xorcery.core;
 
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
@@ -16,6 +22,8 @@ import java.util.concurrent.Callable;
 public class Main
     implements Callable<Integer>
 {
+    private Logger logger = LogManager.getLogger( Main.class );
+
     @CommandLine.Parameters(index="0", arity = "0..1", description="Configuration file")
     private File configuration;
 
@@ -39,10 +47,11 @@ public class Main
 
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
 
-        Logger logger = LogManager.getLogger( Main.class );
 
         if (id != null)
             System.setProperty("server_id", id);
+
+        Configuration configuration = loadConfiguration();
 
         Xorcery xorcery = new Xorcery(configuration);
 
@@ -65,6 +74,20 @@ public class Main
         Thread.currentThread().join();
 
         return 0;
+    }
+
+    protected Configuration loadConfiguration() throws JsonProcessingException {
+        StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
+        Configuration.Builder builder = new Configuration.Builder()
+                .with(standardConfigurationBuilder::addDefaults, standardConfigurationBuilder.addFile(configuration));
+
+        // Log final configuration
+        ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
+        logger.debug("Configuration:\n" + objectWriter.writeValueAsString(builder.builder()));
+
+        Configuration configuration = builder.build();
+        logger.info("Resolved configuration:\n" + objectWriter.writeValueAsString(configuration.json()));
+        return configuration;
     }
 
     public static void main(String[] args ) throws Exception

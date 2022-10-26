@@ -43,5 +43,4 @@ public class Groups {
                 .filter(group -> group.isTemplate(groupTemplate))
                 .findFirst();
     }
-
 }

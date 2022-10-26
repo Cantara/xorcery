@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.service.jetty.client;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -34,7 +33,7 @@ public class JettyClientService
     private HttpClient client;
 
     @Inject
-    public JettyClientService(Configuration configuration, MetricRegistry metricRegistry) throws Exception {
+    public JettyClientService(Configuration configuration) throws Exception {
         // Client setup
         ClientConnector connector = new ClientConnector();
         connector.setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));

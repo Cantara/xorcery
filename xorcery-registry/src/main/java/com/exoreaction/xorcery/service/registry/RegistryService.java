@@ -3,10 +3,7 @@ package com.exoreaction.xorcery.service.registry;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
@@ -22,20 +19,15 @@ import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.IterableProvider;
+import org.glassfish.hk2.api.messaging.Topic;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
-import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.spi.Contract;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,15 +35,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Flow;
-import java.util.function.Function;
 
 /**
  * @author rickardoberg
  * @since 13/04/2022
  */
-
-@Singleton
-@Contract
+@Service
 @Priority(1)
 public class RegistryService
         implements Registry, ContainerLifecycleListener {
@@ -66,30 +55,7 @@ public class RegistryService
     private ReactiveStreams reactiveStreams;
     private final Configuration configuration;
     private final JsonApiClient jsonApiClient;
-
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.api("registry", "api/registry")
-                    .websocket("registryevents", "ws/registryevents");
-        }
-
-        @Override
-        protected void configure() {
-            context.register(RegistryService.class, Registry.class, ContainerLifecycleListener.class);
-
-            if (configuration().getBoolean("registry.dnsdiscovery").orElse(false)) {
-                context.register(RegistryDnsDiscovery.class, ContainerLifecycleListener.class);
-            }
-        }
-    }
+    private Topic<ServiceResourceObject> registryTopic;
 
     private final Link registryLink;
     private StartupRegistration registration;
@@ -100,22 +66,16 @@ public class RegistryService
     private List<RegistryListener> listeners = new CopyOnWriteArrayList<>();
 
     @Inject
-    public RegistryService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
-                           IterableProvider<ServiceResourceObject> serviceResources,
+    public RegistryService(IterableProvider<ServiceResourceObject> serviceResources,
                            ReactiveStreams reactiveStreams,
                            Configuration configuration,
-                           JettyHttpClientContract clientInstance) {
-        this.resourceObject = resourceObject;
+                           ClientConfig clientConfig,
+                           Topic<ServiceResourceObject> registryTopic) {
         this.serviceResources = serviceResources;
         this.reactiveStreams = reactiveStreams;
         this.configuration = configuration;
-        this.jsonApiClient = new JsonApiClient(ClientBuilder.newBuilder().withConfig(new ClientConfig()
-                .register(new JsonElementMessageBodyReader())
-                .register(new JsonElementMessageBodyWriter())
-                .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.registry")).build())
-                .register(clientInstance)
-                .connectorProvider(new JettyConnectorProvider())
-        ).build());
+        this.jsonApiClient = new JsonApiClient(ClientBuilder.newClient(clientConfig));
+        this.registryTopic = registryTopic;
 
         this.registryLink = new Link("master", this.configuration.getString("registry.master").orElseThrow());
 
@@ -124,6 +84,12 @@ public class RegistryService
         disruptor.handleEventsWith(upstreamSubscriber);
         disruptor.start();
 
+        registryTopic.publish(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .api("registry", "api/registry")
+                .websocket("registryevents", "ws/registryevents")
+                .build());
+
+/*
         registration = new StartupRegistration(
                 reactiveStreams, jsonApiClient, resourceObject.getServiceIdentifier(), registryLink,
                 getServer().resourceDocument(), upstreamSubscriber,
@@ -132,26 +98,19 @@ public class RegistryService
                     LogManager.getLogger(RegistryService.class).info("Registered server");
                     return v;
                 }));
+*/
     }
 
     @Override
     public void onStartup(Container container) {
+/*
         resourceObject.getLinkByRel("registryevents").ifPresent(link ->
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), RegistryPublisher::new, RegistryPublisher.class);
         });
         registration.start();
+*/
     }
-
-    class PublisherFactory
-        implements Function<Configuration, RegistryPublisher>
-    {
-        @Override
-        public RegistryPublisher apply(Configuration configuration) {
-            return new RegistryPublisher(configuration);
-        }
-    }
-
 
     @Override
     public void onReload(Container container) {
@@ -160,7 +119,9 @@ public class RegistryService
 
     @Override
     public void onShutdown(Container container) {
+/*
         registration.stop();
+*/
 
         disruptor.shutdown();
     }
@@ -171,7 +132,7 @@ public class RegistryService
         for (ServiceResourceObject serviceResource : serviceResources) {
             builder.resource(serviceResource.resourceObject());
         }
-        StandardConfiguration standardConfiguration = ()->configuration;
+        StandardConfiguration standardConfiguration = () -> configuration;
         ResourceDocument serverDocument = new ResourceDocument.Builder()
                 .links(new Links.Builder().link(JsonApiRels.self, standardConfiguration.getServerUri()).build())
                 .data(builder.build())
@@ -232,6 +193,7 @@ public class RegistryService
                 e.set(null, change);
             }, change);
         });
+//        registryTopic.publish(change);
     }
 
     private void handleChange(RegistryChange event) {

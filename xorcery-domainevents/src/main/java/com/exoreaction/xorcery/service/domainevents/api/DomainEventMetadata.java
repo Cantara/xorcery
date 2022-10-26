@@ -4,7 +4,6 @@ import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.metadata.RequestMetadata;
-import com.exoreaction.xorcery.service.domainevents.api.entity.Entity;
 import com.exoreaction.xorcery.service.domainevents.api.entity.Command;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

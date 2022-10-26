@@ -6,7 +6,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
-@org.jvnet.hk2.annotations.Contract
 public interface ReactiveStreams
     extends ReactiveStreamsClient
 {

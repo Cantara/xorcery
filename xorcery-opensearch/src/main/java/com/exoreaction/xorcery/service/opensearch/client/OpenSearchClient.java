@@ -1,7 +1,5 @@
 package com.exoreaction.xorcery.service.opensearch.client;
 
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyWriter;
 import com.exoreaction.xorcery.service.opensearch.client.document.DocumentClient;
 import com.exoreaction.xorcery.service.opensearch.client.index.IndexClient;
 import com.exoreaction.xorcery.service.opensearch.client.jaxrs.BulkRequestMessageBodyWriter;
@@ -23,12 +21,9 @@ import java.util.function.BiConsumer;
 public record OpenSearchClient(Client client, URI host) {
 
     public OpenSearchClient(ClientConfig clientConfig, URI host) {
-        this(ClientBuilder.newBuilder().withConfig(clientConfig
-                        .register(new JsonNodeMessageBodyWriter())
-                        .register(new JsonNodeMessageBodyReader())
-                        .register(new BulkRequestMessageBodyWriter(new ObjectMapper()
-                                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false))))
-                .build(), host);
+        this(ClientBuilder.newClient(clientConfig
+                .register(new BulkRequestMessageBodyWriter(new ObjectMapper()
+                        .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)))), host);
     }
 
     public IndexClient indices() {

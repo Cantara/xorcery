@@ -6,7 +6,6 @@ import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 
-@org.jvnet.hk2.annotations.Contract
 public interface ReactiveStreamsClient {
     // Client
     CompletableFuture<Void> publish(URI subscriberWebsocketUri,

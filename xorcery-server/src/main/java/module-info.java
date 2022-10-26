@@ -4,8 +4,8 @@ open module xorcery.server {
     exports com.exoreaction.xorcery.service.jersey.server.resources;
 
     requires transitive xorcery.core;
+    requires transitive xorcery.metricregistry;
     requires xorcery.jsonapi;
-    requires xorcery.metricregistry;
 
     requires transitive jakarta.inject;
     requires transitive jakarta.validation;

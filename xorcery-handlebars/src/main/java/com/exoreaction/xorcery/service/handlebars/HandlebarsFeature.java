@@ -3,15 +3,12 @@ package com.exoreaction.xorcery.service.handlebars;
 
 import com.exoreaction.xorcery.service.handlebars.helpers.UtilHelpers;
 import com.github.jknack.handlebars.Handlebars;
-import com.github.jknack.handlebars.io.FileTemplateLoader;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
 import jakarta.ws.rs.ext.Provider;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.inject.InjectionManagerSupplier;
-
-import java.io.File;
 
 @Provider
 public class HandlebarsFeature

@@ -1,27 +1,24 @@
 package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.codahale.metrics.MetricRegistry;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.api.Neo4jProjectionRels;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionCommitPublisher;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionEventHandler;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriber;
-import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriberConductorListener;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriberGroupListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.spi.Contract;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,59 +29,26 @@ import java.util.ServiceLoader;
  * @since 13/04/2022
  */
 
-@Singleton
-@Contract
-public class Neo4jProjectionsService
-        implements ContainerLifecycleListener {
+@Service
+@Named(Neo4jProjectionsService.SERVICE_TYPE)
+public class Neo4jProjectionsService {
 
     public static final String SERVICE_TYPE = "neo4jprojections";
 
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.websocket(Neo4jProjectionRels.neo4jprojectionsubscriber.name(), "ws/neo4jprojectionsubscriber")
-                    .websocket(Neo4jProjectionRels.neo4jprojectioncommits.name(), "ws/neo4jprojectioncommits");
-        }
-
-        @Override
-        protected void configure() {
-            context.register(Neo4jProjectionsService.class, ContainerLifecycleListener.class);
-        }
-    }
-
     private final Logger logger = LogManager.getLogger(getClass());
-    private final Conductor conductor;
-    private ServiceLocator serviceLocator;
-    private final ReactiveStreams reactiveStreams;
-    private final GraphDatabases graphDatabases;
-    private final MetricRegistry metricRegistry;
     private final ServiceResourceObject sro;
 
     @Inject
-    public Neo4jProjectionsService(Conductor conductor,
+    public Neo4jProjectionsService(Topic<ServiceResourceObject> registryTopic,
                                    ServiceLocator serviceLocator,
                                    ReactiveStreams reactiveStreams,
-                                   @Named(SERVICE_TYPE) ServiceResourceObject sro,
+                                   Configuration configuration,
                                    GraphDatabases graphDatabases,
                                    MetricRegistry metricRegistry) {
-        this.conductor = conductor;
-        this.serviceLocator = serviceLocator;
-        this.reactiveStreams = reactiveStreams;
-        this.sro = sro;
-        this.graphDatabases = graphDatabases;
-        this.metricRegistry = metricRegistry;
-    }
-
-    @Override
-    public void onStartup(Container container) {
+        this.sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .websocket(Neo4jProjectionRels.neo4jprojectionsubscriber.name(), "ws/neo4jprojectionsubscriber")
+                .websocket(Neo4jProjectionRels.neo4jprojectioncommits.name(), "ws/neo4jprojectioncommits")
+                .build();
 
         List<Neo4jEventProjection> neo4jEventProjectionList = ServiceLoader.load(Neo4jEventProjection.class)
                 .stream()
@@ -94,7 +58,7 @@ public class Neo4jProjectionsService
 
         Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = new Neo4jProjectionCommitPublisher();
 
-        conductor.addConductorListener(new ProjectionSubscriberConductorListener(graphDatabases,
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ProjectionSubscriberGroupListener(graphDatabases,
                 reactiveStreams, sro.getServiceIdentifier(), neo4jEventProjectionList, metricRegistry, neo4jProjectionCommitPublisher));
 
         sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectionsubscriber.name()).ifPresent(link ->
@@ -113,15 +77,7 @@ public class Neo4jProjectionsService
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> neo4jProjectionCommitPublisher, Neo4jProjectionCommitPublisher.class);
         });
-    }
 
-    @Override
-    public void onReload(Container container) {
-
-    }
-
-    @Override
-    public void onShutdown(Container container) {
-
+        registryTopic.publish(sro);
     }
 }

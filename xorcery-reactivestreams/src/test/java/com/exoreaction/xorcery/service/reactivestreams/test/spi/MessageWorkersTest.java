@@ -5,8 +5,8 @@ import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -48,8 +48,8 @@ public class MessageWorkersTest {
         static class ObjectMessageWriter
                 implements MessageWriter<Object> {
             @Override
-            public void writeTo(Object instance, ByteBuffer buffer) throws IOException {
-                buffer.put(instance.toString().getBytes(StandardCharsets.UTF_8));
+            public void writeTo(Object instance, OutputStream out) throws IOException {
+                out.write(instance.toString().getBytes(StandardCharsets.UTF_8));
             }
         }
     }
@@ -67,8 +67,8 @@ public class MessageWorkersTest {
         static class StringMessageWriter
                 implements MessageWriter<String> {
             @Override
-            public void writeTo(String instance, ByteBuffer buffer) throws IOException {
-                buffer.put(instance.getBytes(StandardCharsets.UTF_8));
+            public void writeTo(String instance, OutputStream out) throws IOException {
+                out.write(instance.getBytes(StandardCharsets.UTF_8));
             }
         }
     }

@@ -1,34 +1,27 @@
 package com.exoreaction.xorcery.service.certmanager;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.conductor.helpers.AbstractConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
-import org.glassfish.jersey.logging.LoggingFeature;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.jvnet.hk2.annotations.Service;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,51 +33,36 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Base64;
 
-@Singleton
-public class CertificateManagerService
-        implements ContainerLifecycleListener {
+import static com.exoreaction.xorcery.service.certmanager.CertificateManagerService.SERVICE_TYPE;
+
+@Service
+@Named(SERVICE_TYPE)
+public class CertificateManagerService {
     public static final String SERVICE_TYPE = "certificatemanager";
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            if (configuration().getBoolean("certificatemanager.is_master").orElse(false)) {
-                builder.api("certificatemanager", "api/certmanager");
-            }
-        }
-
-        @Override
-        protected void configure() {
-            context.register(CertificateManagerService.class, ContainerLifecycleListener.class);
-        }
-    }
-
     private ServiceResourceObject sro;
-    private Conductor conductor;
     private SslContextFactory.Server serverSslContextFactory;
     private SslContextFactory.Client clientSslContextFactory;
     private Configuration configuration;
     private JsonApiClient client;
 
     @Inject
-    public CertificateManagerService(@Named(SERVICE_TYPE) ServiceResourceObject sro,
-                                     Conductor conductor,
+    public CertificateManagerService(Topic<ServiceResourceObject> registryTopic,
+                                     ServiceLocator serviceLocator,
                                      SslContextFactory.Server serverSslContextFactory,
                                      SslContextFactory.Client clientSslContextFactory,
-                                     JettyHttpClientContract instance,
+                                     ClientConfig clientConfig,
                                      Configuration configuration) throws URISyntaxException, CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException {
-        this.sro = sro;
-        this.conductor = conductor;
+        this.sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .with(b ->
+                {
+                    if (configuration.getBoolean("certificatemanager.is_master").orElse(false)) {
+                        b.api("certificatemanager", "api/certmanager");
+                    }
+                })
+                .build();
         this.serverSslContextFactory = serverSslContextFactory;
         this.clientSslContextFactory = clientSslContextFactory;
         this.configuration = configuration.getConfiguration("certificatemanager");
@@ -98,38 +76,19 @@ public class CertificateManagerService
             logger.info(alias + "=" + keyStore.getCertificate(alias));
         }
 */
-
-        Client client = ClientBuilder.newBuilder()
-                .withConfig(new ClientConfig()
-                        .register(new JsonElementMessageBodyReader())
-                        .register(new JsonElementMessageBodyWriter())
-                        .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.certmanager")).build())
-                        .register(instance)
-                        .connectorProvider(new JettyConnectorProvider()))
-                .build();
+        Client client = ClientBuilder.newClient(clientConfig);
         this.client = new JsonApiClient(client);
-    }
 
-    @Override
-    public void onStartup(Container container) {
-
-        if (configuration.getBoolean("renew_on_startup").orElse(false)) {
-            conductor.addConductorListener(new CheckCertConductorListener(sro.getServiceIdentifier(), "certificatemanager"));
+        if (configuration.getBoolean("certificatemanager.renew_on_startup").orElse(false)) {
+            ServiceLocatorUtilities.addOneConstant(serviceLocator, new CheckCertGroupListener(sro.getServiceIdentifier(), "certificatemanager"));
         }
+
+        registryTopic.publish(sro);
     }
 
-    @Override
-    public void onReload(Container container) {
+    private class CheckCertGroupListener extends AbstractGroupListener {
 
-    }
-
-    @Override
-    public void onShutdown(Container container) {
-    }
-
-    private class CheckCertConductorListener extends AbstractConductorListener {
-
-        public CheckCertConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
+        public CheckCertGroupListener(ServiceIdentifier serviceIdentifier, String rel) {
             super(serviceIdentifier, rel);
         }
 

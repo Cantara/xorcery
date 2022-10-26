@@ -1,8 +1,9 @@
 package com.exoreaction.xorcery.service.reactivestreams.test;
 
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.ByteBufferMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.ByteBufferMessageBodyWriter;
+import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.test.json.JsonByteBufferSubscriber;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,15 +19,15 @@ public class ExternalJsonClientPublisherTest {
     @Test
     @Disabled
     public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .add("server.http.port", "60798")
-                .add("server.http2.enabled", "true")
-                .add("client.http2.enabled", "true")
-                .build();
-        JettyAndJerseyBasedTestServer testServer = new JettyAndJerseyBasedTestServer(configuration, List.of(ByteBufferMessageBodyWriter.class), List.of(ByteBufferMessageBodyReader.class));
-        testServer.start();
-        try {
-            ReactiveStreams reactiveStreams = testServer.getReactiveStreams();
+        String yaml = """
+                server.http.port: 60797
+                """;
+
+        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(yaml)).build();
+
+        StandardConfiguration standardConfiguration = () -> configuration;
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
 
             // server subscribes
             JsonByteBufferSubscriber subscriber = new JsonByteBufferSubscriber();
@@ -46,8 +47,6 @@ public class ExternalJsonClientPublisherTest {
 
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        } finally {
-            testServer.stop();
         }
     }
 }

@@ -3,11 +3,9 @@ package com.exoreaction.xorcery.service.requestlog;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
@@ -15,47 +13,34 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.ws.rs.ext.Provider;
 import org.eclipse.jetty.server.Server;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.Flow;
 
+@Service
+@Named(RequestLogService.SERVICE_TYPE)
 public class RequestLogService
-        extends AbstractContainerLifecycleListener {
+        implements PreDestroy {
 
     public static final String SERVICE_TYPE = "requestlog";
     private final Disruptor<WithMetadata<ObjectNode>> disruptor;
 
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void configure() {
-            context.register(RequestLogService.class, ContainerLifecycleListener.class);
-        }
-    }
-
     private final ServiceResourceObject resourceObject;
-    private final ReactiveStreams reactiveStreams;
     private final BroadcastEventHandler<WithMetadata<ObjectNode>> broadcastEventHandler = new BroadcastEventHandler<>(false);
 
     @Inject
-    public RequestLogService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
+    public RequestLogService(Topic<ServiceResourceObject> registryTopic,
                              ReactiveStreams reactiveStreams,
-                             Conductor conductor,
+                             ServiceLocator serviceLocator,
                              Server server,
                              Configuration configuration) {
-        this.resourceObject = resourceObject;
-        this.reactiveStreams = reactiveStreams;
+        this.resourceObject = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .build();
 
         disruptor = new Disruptor<>(WithMetadata::new, 4096, new NamedThreadFactory("RequestLogPublisher-"));
         disruptor.handleEventsWith(broadcastEventHandler);
@@ -65,26 +50,21 @@ public class RequestLogService
                 .build(), disruptor.getRingBuffer());
         server.setRequestLog(requestLog);
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.getServiceIdentifier(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class, null, reactiveStreams));
-    }
-
-    @Override
-    public void onStartup(Container container) {
         disruptor.start();
 
         resourceObject.getLinkByRel("requestlogevents").ifPresent(link ->
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class);
         });
+
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ClientPublisherGroupListener(resourceObject.getServiceIdentifier(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class, null, reactiveStreams));
+
+        registryTopic.publish(resourceObject);
     }
 
-    @Override
-    public void onReload(Container container) {
-
-    }
 
     @Override
-    public void onShutdown(Container container) {
+    public void preDestroy() {
         disruptor.shutdown();
     }
 

@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.server.test;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;

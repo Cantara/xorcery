@@ -3,16 +3,13 @@ package com.exoreaction.xorcery.service.jmxmetrics;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.conductor.helpers.AbstractConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,16 +22,14 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
-import org.glassfish.jersey.logging.LoggingFeature;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.jvnet.hk2.annotations.Service;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
@@ -50,9 +45,11 @@ import java.util.function.Supplier;
  * @since 13/04/2022
  */
 
+@Service
+@Named(JmxMetrics.SERVICE_TYPE)
 @Singleton
 public class JmxMetrics
-        extends AbstractContainerLifecycleListener {
+        implements PreDestroy {
 
     public static final String SERVICE_TYPE = "jmxmetrics";
 
@@ -61,53 +58,32 @@ public class JmxMetrics
     private ScheduledExecutorService scheduledExecutorService;
     private JmxReporter reporter;
 
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void configure() {
-            context.register(JmxMetrics.class, ContainerLifecycleListener.class);
-        }
-    }
-
     private ServiceResourceObject sro;
     private ReactiveStreams reactiveStreams;
-    private Conductor conductor;
     private JsonApiClient client;
 
     @Inject
-    public JmxMetrics(@Named(SERVICE_TYPE) ServiceResourceObject sro,
+    public JmxMetrics(Topic<ServiceResourceObject> registryTopic,
                       ReactiveStreams reactiveStreams,
-                      Conductor conductor,
-                      JettyHttpClientContract instance) {
-        this.sro = sro;
-        this.reactiveStreams = reactiveStreams;
-        this.conductor = conductor;
-        Client client = ClientBuilder.newBuilder()
-                .withConfig(new ClientConfig()
-                        .register(new JsonElementMessageBodyReader())
-                        .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.jmxmetrics")).build())
-                        .connectorProvider(new JettyConnectorProvider())
-                        .register(instance))
+                      ServiceLocator serviceLocator,
+                      Configuration configuration,
+                      ClientConfig clientConfig) {
+        this.sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
                 .build();
+
+        this.reactiveStreams = reactiveStreams;
+        Client client = ClientBuilder.newClient(clientConfig);
         this.client = new JsonApiClient(client);
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
-    }
-
-    @Override
-    public void onStartup(Container container) {
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        conductor.addConductorListener(new JmxServersConductorListener(sro.getServiceIdentifier(), "metrics"));
+
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, new JmxServersGroupListener(sro.getServiceIdentifier(), "metrics"));
+
+        registryTopic.publish(sro);
     }
 
     @Override
-    public void onShutdown(Container container) {
+    public void preDestroy() {
         scheduledExecutorService.shutdown();
     }
 
@@ -181,9 +157,9 @@ public class JmxMetrics
         }
     }
 
-    private class JmxServersConductorListener extends AbstractConductorListener {
+    private class JmxServersGroupListener extends AbstractGroupListener {
 
-        public JmxServersConductorListener(ServiceIdentifier serviceIdentifier, String rel) {
+        public JmxServersGroupListener(ServiceIdentifier serviceIdentifier, String rel) {
             super(serviceIdentifier, rel);
         }
 

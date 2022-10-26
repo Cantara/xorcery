@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.service.domainevents.api.entity;
 
-import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 
 import java.lang.reflect.InvocationTargetException;

@@ -1,85 +1,50 @@
 package com.exoreaction.xorcery.service.log4jappender;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
 import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-import jakarta.servlet.annotation.WebListener;
-import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.Flow;
 
-@Singleton
-@WebListener
-public class Log4jAppenderService
-        implements ContainerLifecycleListener {
+@Service
+@Named("log4jappender")
+public class Log4jAppenderService {
 
     public static final String SERVICE_TYPE = "log4jappender";
     private final DisruptorAppender appender;
 
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.websocket("logevents", "ws/logevents");
-        }
-
-        @Override
-        protected void configure() {
-            context.register(Log4jAppenderService.class);
-        }
-    }
-
-    private final ReactiveStreams reactiveStreams;
-    private ServiceResourceObject sro;
-
-
     @Inject
-    public Log4jAppenderService(ReactiveStreams reactiveStreams, Conductor conductor,
-                                @Named(SERVICE_TYPE) ServiceResourceObject sro,
+    public Log4jAppenderService(Topic<ServiceResourceObject> registryTopic,
+                                ReactiveStreams reactiveStreams,
+                                ServiceLocator serviceLocator,
                                 Configuration configuration) {
-        this.reactiveStreams = reactiveStreams;
-        this.sro = sro;
+        ServiceResourceObject sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .websocket("logevents", "ws/logevents")
+                .build();
 
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
         appender = lc.getConfiguration().getAppender("DISRUPTOR");
         appender.setConfiguration(configuration);
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(sro.getServiceIdentifier(), cfg -> new LogPublisher(), LogPublisher.class, null, reactiveStreams));
-    }
-
-    @Override
-    public void onStartup(Container container) {
         sro.getLinkByRel("logevents").ifPresent(link ->
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new LogPublisher(), LogPublisher.class);
         });
-    }
 
-    @Override
-    public void onReload(Container container) {
-    }
-
-    @Override
-    public void onShutdown(Container container) {
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ClientPublisherGroupListener(sro.getServiceIdentifier(), cfg -> new LogPublisher(), LogPublisher.class, null, reactiveStreams));
+        registryTopic.publish(sro);
     }
 
     public class LogPublisher

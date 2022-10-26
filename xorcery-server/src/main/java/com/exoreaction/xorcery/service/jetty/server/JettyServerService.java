@@ -9,7 +9,7 @@ import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.glassfish.hk2.api.*;
+import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
 import javax.net.ssl.TrustManager;

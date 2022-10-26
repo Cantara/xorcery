@@ -2,9 +2,7 @@ package com.exoreaction.xorcery.service.eventstore;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
 import com.exoreaction.xorcery.service.eventstore.streams.EventStorePublisher;
 import com.exoreaction.xorcery.service.eventstore.streams.EventStoreSubscriber;
@@ -13,21 +11,16 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.spi.Contract;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.CompletionStage;
 
-@Contract
-@Singleton
-public class EventStoreService
-        implements
-        ContainerLifecycleListener {
+@Service
+@Named("eventstore")
+public class EventStoreService {
 
     private static final Logger logger = LogManager.getLogger(EventStoreService.class);
 
@@ -35,38 +28,17 @@ public class EventStoreService
     private final EventStoreDBClient client;
     private final ObjectMapper objectMapper;
     private ServiceResourceObject sro;
-    private ReactiveStreams reactiveStreams;
-    private Conductor conductor;
-
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.api(EventStoreRels.eventstore.name(), "api/eventstore");
-            builder.websocket(EventStoreRels.eventpublisher.name(), "ws/eventstore/publisher");
-            builder.websocket(EventStoreRels.eventsubscriber.name(), "ws/eventstore/subscriber");
-        }
-
-        @Override
-        protected void configure() {
-            context.register(EventStoreService.class, EventStoreService.class, ContainerLifecycleListener.class);
-        }
-    }
 
     @Inject
-    public EventStoreService(@Named(SERVICE_TYPE) ServiceResourceObject sro,
-                             Configuration configuration, ReactiveStreams reactiveStreams,
-                             Conductor conductor) throws ParseError {
-        this.sro = sro;
-        this.reactiveStreams = reactiveStreams;
-        this.conductor = conductor;
+    public EventStoreService(Topic<ServiceResourceObject> registryTopic,
+                             Configuration configuration,
+                             ReactiveStreams reactiveStreams) throws ParseError {
+        this.sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .api(EventStoreRels.eventstore.name(), "api/eventstore")
+                .websocket(EventStoreRels.eventpublisher.name(), "ws/eventstore/publisher")
+                .websocket(EventStoreRels.eventsubscriber.name(), "ws/eventstore/subscriber")
+                .build();
+
         this.objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         String connectionString = configuration.getString("eventstore.url").orElseThrow();
@@ -77,10 +49,7 @@ public class EventStoreService
         // Test connection
         StreamMetadata metadata = client.getStreamMetadata("$all").join();
         logger.info("$all stream metadata:" + metadata.toString());
-    }
 
-    @Override
-    public void onStartup(Container container) {
         // Read
         sro.getLinkByRel(EventStoreRels.eventpublisher.name()).ifPresent(link ->
         {
@@ -92,16 +61,8 @@ public class EventStoreService
         {
             reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
         });
-    }
 
-    @Override
-    public void onReload(Container container) {
-
-    }
-
-    @Override
-    public void onShutdown(Container container) {
-
+        registryTopic.publish(sro);
     }
 
     public CompletionStage<StreamModel> getStream(String id) {

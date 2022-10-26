@@ -1,7 +1,6 @@
 package com.exoreaction.xorcery.service.registry;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.service.registry.api.Registry;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
@@ -19,12 +18,10 @@ public class RegistryDnsDiscovery
 
     private Logger logger = LogManager.getLogger(getClass());
     private JmDNS jmdns;
-    private Registry registry;
     private Configuration configuration;
 
     @Inject
-    public RegistryDnsDiscovery(Registry registry, Configuration configuration) {
-        this.registry = registry;
+    public RegistryDnsDiscovery(Configuration configuration) {
         this.configuration = configuration;
     }
 

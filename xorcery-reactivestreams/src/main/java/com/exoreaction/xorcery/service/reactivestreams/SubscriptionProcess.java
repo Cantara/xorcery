@@ -3,9 +3,9 @@ package com.exoreaction.xorcery.service.reactivestreams;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscribeWebSocketEndpoint;
+import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
+import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.ws.rs.ext.MessageBodyReader;
-import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -14,7 +14,6 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -27,10 +26,8 @@ public record SubscriptionProcess(WebSocketClient webSocketClient,
                                   Timer timer,
                                   Logger logger,
                                   ByteBufferPool byteBufferPool,
-                                  MessageBodyReader<Object> eventReader,
-                                  MessageBodyWriter<Object> resultWriter,
-                                  Type eventType,
-                                  Type resultType,
+                                  MessageReader<Object> eventReader,
+                                  MessageWriter<Object> resultWriter,
                                   URI publisherWebsocketUri,
                                   Configuration publisherConfiguration,
                                   Flow.Subscriber<Object> subscriber,
@@ -55,8 +52,6 @@ public record SubscriptionProcess(WebSocketClient webSocketClient,
                                 subscriber(),
                                 eventReader,
                                 resultWriter,
-                                eventType,
-                                resultType,
                                 byteBufferPool,
                                 this,
                                 publisherWebsocketUri.toASCIIString(),

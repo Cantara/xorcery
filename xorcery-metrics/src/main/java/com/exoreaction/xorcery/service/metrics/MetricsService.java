@@ -2,20 +2,17 @@ package com.exoreaction.xorcery.service.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.ext.Provider;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
@@ -24,36 +21,11 @@ import java.util.concurrent.ScheduledExecutorService;
 
 @Singleton
 public class MetricsService
-        extends AbstractContainerLifecycleListener {
+        implements PreDestroy {
 
     public static final String SERVICE_TYPE = "metrics";
 
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.api("metrics", "api/metrics")
-                    .websocket("metricevents", "ws/metricevents")
-                    .websocket("jmxmetrics", "ws/jmxmetrics");
-        }
-
-        @Override
-        protected void configure() {
-            context.register(MetricsService.class, ContainerLifecycleListener.class);
-        }
-    }
-
-    private ServiceResourceObject resourceObject;
-    private final ReactiveStreams reactiveStreams;
-    private Conductor conductor;
-    private MetricRegistry metricRegistry;
+    private final ServiceResourceObject resourceObject;
     private final MBeanServer managementServer;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
@@ -61,23 +33,21 @@ public class MetricsService
     private final DeploymentMetadata deploymentMetadata;
 
     @Inject
-    public MetricsService(@Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
+    public MetricsService(Topic<ServiceResourceObject> registryTopic,
                           ReactiveStreams reactiveStreams,
-                          Conductor conductor,
+                          ServiceLocator serviceLocator,
                           MetricRegistry metricRegistry,
                           Configuration configuration) {
-        this.resourceObject = resourceObject;
-        this.reactiveStreams = reactiveStreams;
-        this.conductor = conductor;
-        this.metricRegistry = metricRegistry;
+        this.resourceObject = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .websocket("metricevents", "ws/metricevents")
+                .websocket("jmxmetrics", "ws/jmxmetrics")
+                .build();
+
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
         this.deploymentMetadata = new MetricsMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
                 .build();
-    }
 
-    @Override
-    public void onStartup(Container container) {
         resourceObject.getLinkByRel("jmxmetrics").ifPresent(link ->
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class);
@@ -86,14 +56,13 @@ public class MetricsService
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class);
         });
-//        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.serviceIdentifier(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class, null, reactiveStreams));
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ClientPublisherGroupListener(resourceObject.getServiceIdentifier(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class, null, reactiveStreams));
 
-        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.getServiceIdentifier(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class, null, reactiveStreams));
-
+        registryTopic.publish(resourceObject);
     }
 
     @Override
-    public void onShutdown(Container container) {
+    public void preDestroy() {
         scheduledExecutorService.shutdown();
     }
 }

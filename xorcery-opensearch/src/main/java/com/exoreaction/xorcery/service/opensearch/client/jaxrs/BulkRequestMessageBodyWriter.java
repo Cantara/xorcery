@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.opensearch.client.jaxrs;
 import com.exoreaction.xorcery.service.opensearch.client.document.IndexBulkRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
@@ -11,7 +10,6 @@ import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.ext.MessageBodyWriter;
-import jakarta.ws.rs.ext.Provider;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,13 +18,11 @@ import java.lang.reflect.Type;
 import java.util.zip.GZIPOutputStream;
 
 @Singleton
-@Provider
 @Produces(MediaType.APPLICATION_JSON)
 public class BulkRequestMessageBodyWriter
         implements MessageBodyWriter<IndexBulkRequest> {
     private ObjectMapper objectMapper;
 
-    @Inject
     public BulkRequestMessageBodyWriter(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }

@@ -1,6 +1,19 @@
 {
   "data": [
     {
+      "id": "conductor_conductor",
+      "type": "grouptemplate",
+      "attributes": {
+        "name": "Conductor self group",
+        "sources": {
+          "pattern": "rel=='conductor'"
+        },
+        "consumers": {
+          "pattern": "type=='conductor'"
+        }
+      }
+    },
+    {
       "id": "log4j_sysout",
       "type": "grouptemplate",
       "attributes": {

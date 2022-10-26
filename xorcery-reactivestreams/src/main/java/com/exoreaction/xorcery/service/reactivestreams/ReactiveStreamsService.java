@@ -5,17 +5,18 @@ import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.server.spi.ServiceResourceObjectProvider;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.PublisherWebSocketServlet;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscriberWebSocketServlet;
+import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
+import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWorkers;
+import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Provider;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.ext.MessageBodyReader;
-import jakarta.ws.rs.ext.MessageBodyWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -26,15 +27,13 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
@@ -44,6 +43,7 @@ import java.util.function.Function;
 import static com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsService.SERVICE_TYPE;
 
 @Service(name = SERVICE_TYPE)
+@ContractsProvided({ReactiveStreams.class, ReactiveStreamsClient.class})
 public class ReactiveStreamsService
         implements ReactiveStreams, ServiceResourceObjectProvider, LifeCycle.Listener {
 
@@ -57,7 +57,7 @@ public class ReactiveStreamsService
     private final ServletContextHandler servletContextHandler;
     private final WebSocketClient webSocketClient;
     private final StandardConfiguration configuration;
-    private final Provider<MessageBodyWorkers> messageBodyWorkers;
+    private final MessageWorkers messageWorkers;
     private final ObjectMapper objectMapper;
     private final Timer timer;
 
@@ -75,11 +75,11 @@ public class ReactiveStreamsService
                                   @Named("client") HttpClient httpClient,
                                   Configuration configuration,
                                   Server server,
-                                  org.glassfish.jersey.servlet.ServletContainer servletContainer) throws Exception {
+                                  MessageWorkers messageWorkers) throws Exception {
         this.servletContextHandler = servletContextHandler;
 
         this.configuration = () -> configuration;
-        this.messageBodyWorkers = () -> servletContainer.getApplicationHandler().getInjectionManager().getInstance(MessageBodyWorkers.class);
+        this.messageWorkers = messageWorkers;
         this.objectMapper = new ObjectMapper();
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
         this.timer = new Timer();
@@ -169,16 +169,14 @@ public class ReactiveStreamsService
         Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
-        MessageBodyWriter<Object> eventWriter = getWriter(eventType);
-        MessageBodyReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
+        MessageWriter<Object> eventWriter = getWriter(eventType);
+        MessageReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
 
         PublisherWebSocketServlet servlet = new PublisherWebSocketServlet(
                 publisherWebsocketPath,
                 config -> new PublisherTracker((Flow.Publisher<Object>) publisherFactory.apply(config)),
                 eventWriter,
                 resultReader,
-                eventType,
-                resultType.orElse(null),
                 configuration.context(),
                 objectMapper,
                 byteBufferPool);
@@ -205,16 +203,14 @@ public class ReactiveStreamsService
         Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
-        MessageBodyReader<Object> eventReader = getReader(eventType);
-        MessageBodyWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
+        MessageReader<Object> eventReader = getReader(eventType);
+        MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
         SubscriberWebSocketServlet servlet = new SubscriberWebSocketServlet(
                 subscriberWebsocketPath,
                 config -> new SubscriberTracker((Flow.Subscriber<Object>) subscriberFactory.apply(config)),
                 resultWriter,
                 eventReader,
-                eventType,
-                resultType.orElse(null),
                 configuration.context(),
                 objectMapper,
                 byteBufferPool);
@@ -256,8 +252,8 @@ public class ReactiveStreamsService
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
 
-        MessageBodyWriter<Object> eventWriter = getWriter(eventType);
-        MessageBodyReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
+        MessageWriter<Object> eventWriter = getWriter(eventType);
+        MessageReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
 
         // Publisher wrapper so we can track active subscriptions
         publisher = new PublisherTracker((Flow.Publisher<Object>) publisher);
@@ -271,8 +267,6 @@ public class ReactiveStreamsService
                 byteBufferPool,
                 resultReader,
                 eventWriter,
-                eventType,
-                resultType.orElse(null),
                 subscriberWebsocketUri,
                 subscriberConfiguration,
                 (Flow.Publisher<Object>) publisher,
@@ -308,8 +302,8 @@ public class ReactiveStreamsService
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
 
-        MessageBodyReader<Object> eventReader = getReader(eventType);
-        MessageBodyWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
+        MessageReader<Object> eventReader = getReader(eventType);
+        MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
         // Subscriber wrapper so we can track active subscriptions
         subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber);
@@ -323,8 +317,6 @@ public class ReactiveStreamsService
                 byteBufferPool,
                 eventReader,
                 resultWriter,
-                eventType,
-                resultType.orElse(null),
                 publisherWebsocketUri,
                 publisherConfiguration,
                 (Flow.Subscriber<Object>) subscriber,
@@ -422,22 +414,14 @@ public class ReactiveStreamsService
         return offspring.equals(base) ? actualArgs : null;
     }
 
-    private MessageBodyWriter<Object> getWriter(Type type) {
-        if (!type.equals(ByteBuffer.class)) {
-            return Optional.ofNullable(messageBodyWorkers.get().getMessageBodyWriter(Classes.getClass(type), type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                    .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyWriter for " + type));
-        } else {
-            return null;
-        }
+    private MessageWriter<Object> getWriter(Type type) {
+        return Optional.ofNullable(messageWorkers.newWriter(Classes.getClass(type), type, MediaType.WILDCARD_TYPE.toString()))
+                .orElseThrow(() -> new IllegalStateException("Could not find MessageWriter for " + type));
     }
 
-    private MessageBodyReader<Object> getReader(Type type) {
-        if (!type.equals(ByteBuffer.class)) {
-            return Optional.ofNullable(messageBodyWorkers.get().getMessageBodyReader(Classes.getClass(type), type, new Annotation[0], MediaType.WILDCARD_TYPE))
-                    .orElseThrow(() -> new IllegalStateException("Could not find MessageBodyReader for " + type));
-        } else {
-            return null;
-        }
+    private MessageReader<Object> getReader(Type type) {
+        return Optional.ofNullable(messageWorkers.newReader(Classes.getClass(type), type, MediaType.WILDCARD_TYPE.toString()))
+                .orElseThrow(() -> new IllegalStateException("Could not find MessageReader for " + type));
     }
 
     private class SubscriberTracker implements Flow.Subscriber<Object> {

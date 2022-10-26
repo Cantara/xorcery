@@ -3,12 +3,10 @@ package com.exoreaction.xorcery.service.domainevents;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
-import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherConductorListener;
+import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.xorcery.service.domainevents.api.entity.DomainEvents;
@@ -19,39 +17,22 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-import jakarta.ws.rs.ext.Provider;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.Flow;
 
-@Singleton
+@Service
+@Named(DomainEventsService.SERVICE_TYPE)
+@ContractsProvided({DomainEventPublisher.class, PreDestroy.class})
 public class DomainEventsService
-        implements DomainEventPublisher,
-        ContainerLifecycleListener {
+        implements DomainEventPublisher, PreDestroy {
 
     public static final String SERVICE_TYPE = "domainevents";
-
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.websocket("domainevents", "ws/domainevents");
-        }
-
-        @Override
-        protected void configure() {
-            context.register(DomainEventsService.class, DomainEventPublisher.class, ContainerLifecycleListener.class);
-        }
-    }
 
     private final ReactiveStreams reactiveStreams;
     private final DeploymentMetadata deploymentMetadata;
@@ -60,12 +41,15 @@ public class DomainEventsService
     private final Disruptor<WithMetadata<DomainEvents>> disruptor;
 
     @Inject
-    public DomainEventsService(ReactiveStreams reactiveStreams,
-                               Conductor conductor,
-                               @Named(SERVICE_TYPE) ServiceResourceObject resourceObject,
+    public DomainEventsService(Topic<ServiceResourceObject> registryTopic,
+                               ReactiveStreams reactiveStreams,
+                               ServiceLocator serviceLocator,
                                Configuration configuration) {
+
         this.reactiveStreams = reactiveStreams;
-        this.resourceObject = resourceObject;
+        this.resourceObject = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .websocket("domainevents", "ws/domainevents")
+                .build();
         this.deploymentMetadata = new DomainEventMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
                 .build();
@@ -74,31 +58,21 @@ public class DomainEventsService
                 new Disruptor<>(WithMetadata::new, 4096, new NamedThreadFactory("DomainEventsDisruptor-"),
                         ProducerType.MULTI,
                         new BlockingWaitStrategy());
-
         disruptor.handleEventsWith(subscribers);
-
-        conductor.addConductorListener(new ClientPublisherConductorListener(resourceObject.getServiceIdentifier(), cfg -> new DomainEventsPublisher(), DomainEventsPublisher.class, null, reactiveStreams));
-    }
-
-    @Override
-    public void onStartup(Container container) {
         disruptor.start();
+
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ClientPublisherGroupListener(resourceObject.getServiceIdentifier(), cfg -> new DomainEventsPublisher(), DomainEventsPublisher.class, null, reactiveStreams));
         resourceObject.getLinkByRel("domainevents").ifPresent(link ->
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new DomainEventsPublisher(), DomainEventsPublisher.class);
         });
+        registryTopic.publish(resourceObject);
     }
 
     @Override
-    public void onReload(Container container) {
-
-    }
-
-    @Override
-    public void onShutdown(Container container) {
+    public void preDestroy() {
         disruptor.shutdown();
     }
-
 
     public void publish(Metadata metadata, DomainEvents events) {
         disruptor.getRingBuffer().publishEvent((event, seq, m, e) ->

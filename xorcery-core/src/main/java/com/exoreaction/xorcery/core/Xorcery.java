@@ -5,9 +5,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.Filter;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,25 +25,26 @@ public class Xorcery
     private ServiceLocator serviceLocator;
     private List<Object> started;
 
-    public Xorcery(File configurationFile) throws Exception {
-        serviceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator();
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, configurationFile, "configuration", File.class);
-        initialize();
-    }
-
     public Xorcery(Configuration configuration) throws Exception {
-        serviceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator();
+        serviceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator(configuration.getString("name").orElse(null));
         ServiceLocatorUtilities.addOneConstant(serviceLocator, configuration);
-        initialize();
-    }
-
-    protected void initialize() throws Exception {
-
         ServiceLocatorUtilities.addOneConstant(serviceLocator, this);
+        ServiceLocatorUtilities.addClasses(serviceLocator, DefaultTopicDistributionService.class);
 
-        // Instantiate and start
+        // Instantiate
         Filter configurationFilter = d -> !d.getAdvertisedContracts().contains(Configuration.class.getName());
         List<?> services = serviceLocator.getAllServices(configurationFilter);
+
+        if (logger.isDebugEnabled()) {
+            StringBuilder msg = new StringBuilder();
+            msg.append("Services:");
+            for (Object service : services) {
+                msg.append('\n').append(service.toString());
+            }
+            logger.debug(msg);
+        }
+
+        // "Start" all services
         started = new ArrayList<>();
         for (Object service : services) {
             try {

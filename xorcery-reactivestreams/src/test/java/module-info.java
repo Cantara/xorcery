@@ -18,4 +18,9 @@ open module xorcery.reactivestreams.test {
     requires xorcery.jsonapi.jaxrs;
     requires jersey.jetty.connector;
     requires org.hamcrest;
+    requires org.apache.logging.log4j.core;
+    requires xorcery.core;
+    requires xorcery.server;
+    requires xorcery.client;
+    requires org.glassfish.hk2.api;
 }

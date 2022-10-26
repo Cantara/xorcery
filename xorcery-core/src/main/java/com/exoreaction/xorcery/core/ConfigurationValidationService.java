@@ -11,11 +11,12 @@ import java.util.Optional;
 @Service
 public class ConfigurationValidationService
         implements ValidationService, Validator, Filter {
-    private Provider<Configuration> configuration;
+    private Provider<Configuration> configurationProvider;
+    private Configuration configuration;
 
     @Inject
     public ConfigurationValidationService(Provider<Configuration> configuration) {
-        this.configuration = configuration;
+        this.configurationProvider = configuration;
     }
 
     @Override
@@ -35,8 +36,24 @@ public class ConfigurationValidationService
 
     @Override
     public boolean validate(ValidationInformation info) {
-        return Optional.ofNullable(info.getCandidate().getName())
-                .flatMap(name -> configuration.get().getBoolean(name + ".enabled"))
-                .orElse(true);
+
+        try {
+            if (info.getCandidate().getImplementation().equals(Configuration.class.getName()))
+                return true;
+
+            if (configuration == null)
+            {
+                configuration = configurationProvider.get();
+            }
+
+            boolean result = Optional.ofNullable(info.getCandidate().getName())
+                    .flatMap(name -> configuration.getBoolean(name + ".enabled"))
+                    .orElse(true);
+
+//            System.out.println(info.getCandidate().getImplementation()+":"+result);
+            return result;
+        } catch (Throwable e) {
+            return true;
+        }
     }
 }

@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch.client.search;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.document.BulkResponse;
 import com.exoreaction.xorcery.service.opensearch.client.document.DocumentClientIT;

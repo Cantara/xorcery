@@ -2,8 +2,8 @@ package com.exoreaction.xorcery.service.reactivestreams.spi;
 
 import org.jvnet.hk2.annotations.Contract;
 
+import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.nio.ByteBuffer;
 
 public interface MessageReader<T> {
 
@@ -12,5 +12,5 @@ public interface MessageReader<T> {
         <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType);
     }
 
-    T readFrom(ByteBuffer buffer) throws java.io.IOException;
+    T readFrom(InputStream in) throws java.io.IOException;
 }

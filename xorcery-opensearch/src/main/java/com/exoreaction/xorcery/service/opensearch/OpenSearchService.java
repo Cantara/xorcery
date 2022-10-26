@@ -1,16 +1,14 @@
 package com.exoreaction.xorcery.service.opensearch;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jersey.AbstractFeature;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.Conductor;
 import com.exoreaction.xorcery.service.opensearch.api.OpenSearchRels;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.index.AcknowledgedResponse;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateComponentTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateIndexTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.IndexTemplate;
-import com.exoreaction.xorcery.service.opensearch.streams.ClientSubscriberConductorListener;
+import com.exoreaction.xorcery.service.opensearch.streams.ClientSubscriberGroupListener;
 import com.exoreaction.xorcery.service.opensearch.streams.OpenSearchCommitPublisher;
 import com.exoreaction.xorcery.service.opensearch.streams.OpenSearchSubscriber;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
@@ -20,18 +18,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.util.component.LifeCycle;
+import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
-import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
-import org.glassfish.jersey.logging.LoggingFeature;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,74 +34,36 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
-@Singleton
+@Service
+@Named(OpenSearchService.SERVICE_TYPE)
 public class OpenSearchService
-        implements ContainerLifecycleListener, LifeCycle.Listener {
+        implements PreDestroy {
     private static Logger logger = LogManager.getLogger(OpenSearchService.class);
 
     public static final String SERVICE_TYPE = "opensearch";
     private final OpenSearchClient client;
     private final ObjectMapper objectMapper;
-    private Conductor conductor;
-    private ReactiveStreams reactiveStreams;
-    private ScheduledExecutorService scheduledExecutorService;
-    private Configuration configuration;
-    private JettyHttpClientContract instance;
-    private ServiceResourceObject sro;
-
-    @Provider
-    public static class Feature
-            extends AbstractFeature {
-
-        @Override
-        protected String serviceType() {
-            return SERVICE_TYPE;
-        }
-
-        @Override
-        protected void buildResourceObject(ServiceResourceObject.Builder builder) {
-            builder.websocket(OpenSearchRels.opensearch.name(), "ws/opensearch")
-                    .websocket(OpenSearchRels.opensearchcommits.name(), "ws/opensearchcommits");
-        }
-
-        @Override
-        protected void configure() {
-            context.register(OpenSearchService.class, ContainerLifecycleListener.class);
-        }
-    }
+    private final Configuration configuration;
 
     @Inject
-    public OpenSearchService(Conductor conductor,
+    public OpenSearchService(Topic<ServiceResourceObject> registryTopic,
+                             ServiceLocator serviceLocator,
                              ReactiveStreams reactiveStreams,
                              Configuration configuration,
-                             JettyHttpClientContract instance,
-                             Server server,
-                             @Named(SERVICE_TYPE) ServiceResourceObject sro) {
-        this.conductor = conductor;
-        this.reactiveStreams = reactiveStreams;
+                             ClientConfig clientConfig) {
+
+        ServiceResourceObject sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .websocket(OpenSearchRels.opensearch.name(), "ws/opensearch")
+                .websocket(OpenSearchRels.opensearchcommits.name(), "ws/opensearchcommits")
+                .build();
+
         this.configuration = configuration;
-        this.instance = instance;
-        this.sro = sro;
         this.objectMapper = new ObjectMapper(new YAMLFactory());
-        server.addEventListener(this);
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
-        client = new OpenSearchClient(new ClientConfig()
-                .register(new LoggingFeature.LoggingFeatureBuilder()
-                        .level(Level.INFO)
-                        .withLogger(java.util.logging.Logger.getLogger("client.opensearch")).build())
-                .register(instance)
-                .connectorProvider(new JettyConnectorProvider()), host);
-    }
-
-    @Override
-    public void onStartup(Container container) {
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        client = new OpenSearchClient(clientConfig, host);
 
         loadComponentTemplates();
         loadIndexTemplates();
@@ -120,7 +76,7 @@ public class OpenSearchService
 
             OpenSearchCommitPublisher openSearchCommitPublisher = new OpenSearchCommitPublisher();
 
-            conductor.addConductorListener(new ClientSubscriberConductorListener(client,
+            ServiceLocatorUtilities.addOneConstant(serviceLocator, new ClientSubscriberGroupListener(client,
                     reactiveStreams, openSearchCommitPublisher, sro.getServiceIdentifier()));
 
             sro.getLinkByRel(OpenSearchRels.opensearch.name()).ifPresent(link ->
@@ -137,6 +93,8 @@ public class OpenSearchService
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+
+        registryTopic.publish(sro);
     }
 
     private void loadComponentTemplates() {
@@ -222,19 +180,8 @@ public class OpenSearchService
     }
 
     @Override
-    public void onReload(Container container) {
-
-    }
-
-    @Override
-    public void onShutdown(Container container) {
-    }
-
-    @Override
-    public void lifeCycleStopping(LifeCycle event) {
-
-        if (configuration.getBoolean("opensearch.deleteonexit").orElse(false))
-        {
+    public void preDestroy() {
+        if (configuration.getBoolean("opensearch.deleteonexit").orElse(false)) {
             // Delete standard indexes (useful for testing)
             try {
 
