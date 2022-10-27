@@ -1,11 +1,17 @@
 package com.exoreaction.xorcery.server.model;
 
+import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public record ServerResourceDocument(ResourceDocument resourceDocument) {
+
+    public Link getSelf()
+    {
+        return resourceDocument.getLinks().getSelf().orElseThrow();
+    }
 
     public Stream<ServiceResourceObject> getServices() {
         return resourceDocument.getResources().orElseThrow()

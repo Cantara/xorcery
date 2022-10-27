@@ -2,7 +2,6 @@ open module xorcery.registry {
     exports com.exoreaction.xorcery.service.registry;
     exports com.exoreaction.xorcery.service.registry.resources.api;
 
-    requires transitive xorcery.registry.api;
     requires xorcery.service.api;
     requires xorcery.jsonapi.jaxrs;
     requires xorcery.jsonapi.client;

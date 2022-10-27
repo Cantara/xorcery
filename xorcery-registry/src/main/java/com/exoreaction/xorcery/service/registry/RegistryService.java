@@ -1,181 +1,70 @@
 package com.exoreaction.xorcery.service.registry;
 
-import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.jsonapi.model.*;
-import com.exoreaction.xorcery.rest.RestProcess;
+import com.exoreaction.xorcery.jsonapi.model.JsonApiRels;
+import com.exoreaction.xorcery.jsonapi.model.Links;
+import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.service.registry.api.*;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.dsl.Disruptor;
-import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.hk2.api.IterableProvider;
+import org.glassfish.hk2.api.messaging.MessageReceiver;
+import org.glassfish.hk2.api.messaging.SubscribeTo;
 import org.glassfish.hk2.api.messaging.Topic;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.jvnet.hk2.annotations.Service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Flow;
 
 /**
  * @author rickardoberg
  * @since 13/04/2022
  */
 @Service
-@Priority(1)
-public class RegistryService
-        implements Registry, ContainerLifecycleListener {
+public class RegistryService {
 
     public static final String SERVICE_TYPE = "registry";
 
     private static final Logger logger = LogManager.getLogger(RegistryService.class);
 
-    private final Disruptor<WithMetadata<RegistryChange>> disruptor;
-    private ServiceResourceObject resourceObject;
-    private IterableProvider<ServiceResourceObject> serviceResources;
-    private ReactiveStreams reactiveStreams;
-    private final Configuration configuration;
-    private final JsonApiClient jsonApiClient;
-    private Topic<ServiceResourceObject> registryTopic;
+    private List<ServiceResourceObject> serviceResources = new ArrayList<>();
+    private Set<ServerResourceDocument> serverResourceDocuments = new LinkedHashSet<>();
+    private final StandardConfiguration configuration;
 
-    private final Link registryLink;
-    private StartupRegistration registration;
     private final List<ServerResourceDocument> servers = new CopyOnWriteArrayList<>();
 
-    private List<Flow.Subscriber<? super RegistryChange>> subscribers = new CopyOnWriteArrayList<>();
-
-    private List<RegistryListener> listeners = new CopyOnWriteArrayList<>();
-
     @Inject
-    public RegistryService(IterableProvider<ServiceResourceObject> serviceResources,
-                           ReactiveStreams reactiveStreams,
-                           Configuration configuration,
-                           ClientConfig clientConfig,
+    public RegistryService(Configuration configuration,
                            Topic<ServiceResourceObject> registryTopic) {
-        this.serviceResources = serviceResources;
-        this.reactiveStreams = reactiveStreams;
-        this.configuration = configuration;
-        this.jsonApiClient = new JsonApiClient(ClientBuilder.newClient(clientConfig));
-        this.registryTopic = registryTopic;
-
-        this.registryLink = new Link("master", this.configuration.getString("registry.master").orElseThrow());
-
-        disruptor = new Disruptor<>(WithMetadata::new, 16, new NamedThreadFactory("RegistryChanges"));
-        UpstreamSubscriber upstreamSubscriber = new UpstreamSubscriber(disruptor);
-        disruptor.handleEventsWith(upstreamSubscriber);
-        disruptor.start();
-
-        registryTopic.publish(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+        this.configuration = () -> configuration;
+        registryTopic.publish(new ServiceResourceObject.Builder(this.configuration, SERVICE_TYPE)
                 .api("registry", "api/registry")
-                .websocket("registryevents", "ws/registryevents")
+                .websocket("registrysubscriber", "ws/registrysubscriber")
+                .websocket("registrypublisher", "ws/registrypublisher")
                 .build());
-
-/*
-        registration = new StartupRegistration(
-                reactiveStreams, jsonApiClient, resourceObject.getServiceIdentifier(), registryLink,
-                getServer().resourceDocument(), upstreamSubscriber,
-                new CompletableFuture<ResourceObject>().thenApply(v ->
-                {
-                    LogManager.getLogger(RegistryService.class).info("Registered server");
-                    return v;
-                }));
-*/
     }
 
-    @Override
-    public void onStartup(Container container) {
-/*
-        resourceObject.getLinkByRel("registryevents").ifPresent(link ->
-        {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), RegistryPublisher::new, RegistryPublisher.class);
-        });
-        registration.start();
-*/
-    }
-
-    @Override
-    public void onReload(Container container) {
-
-    }
-
-    @Override
-    public void onShutdown(Container container) {
-/*
-        registration.stop();
-*/
-
-        disruptor.shutdown();
-    }
-
-    @Override
     public ServerResourceDocument getServer() {
         ResourceObjects.Builder builder = new ResourceObjects.Builder();
         for (ServiceResourceObject serviceResource : serviceResources) {
             builder.resource(serviceResource.resourceObject());
         }
-        StandardConfiguration standardConfiguration = () -> configuration;
         ResourceDocument serverDocument = new ResourceDocument.Builder()
-                .links(new Links.Builder().link(JsonApiRels.self, standardConfiguration.getServerUri()).build())
+                .links(new Links.Builder().link(JsonApiRels.self, configuration.getServerUri()).build())
                 .data(builder.build())
                 .build();
         return new ServerResourceDocument(serverDocument);
     }
 
-    @Override
-    public void addRegistryListener(RegistryListener listener) {
-        applyChange(new AddedListener(listener));
-    }
-
-    @Override
-    public void addServer(ServerResourceDocument server) {
-        applyChange(new AddedServer(server.resourceDocument().object()));
-    }
-
-    @Override
-    public void removeServer(String serverSelfUri) {
-        servers.forEach(rd ->
-        {
-            if (rd.resourceDocument().getLinks().getSelf()
-                    .map(s -> s.getHref().equals(serverSelfUri)).orElse(false)) {
-                applyChange(new RemovedServer(rd.resourceDocument().json()));
-            }
-        });
-    }
-
-    private void publish(RegistryChange registryChange) {
-
-        if (!(registryChange instanceof AddedListener)) {
-            for (Flow.Subscriber<? super RegistryChange> subscriber : subscribers) {
-                subscriber.onNext(registryChange);
-            }
-        }
-    }
-
-    @Override
     public List<ServerResourceDocument> getServers() {
         return servers;
     }
 
-    @Override
     public Optional<ServiceResourceObject> getService(ServiceIdentifier serviceIdentifier) {
         return servers.stream()
                 .map(ServerResourceDocument::resourceDocument)
@@ -185,225 +74,37 @@ public class RegistryService
                 .findFirst().map(ServiceResourceObject::new);
     }
 
-    private void applyChange(RegistryChange change) {
-        registration.result().whenComplete((registry, throwable) ->
-        {
-            disruptor.getRingBuffer().publishEvent((e, seq, l) ->
-            {
-                e.set(null, change);
-            }, change);
-        });
-//        registryTopic.publish(change);
-    }
+    @MessageReceiver
+    public static class TopicReceiver {
+        private Provider<RegistryService> registryServiceProvider;
 
-    private void handleChange(RegistryChange event) {
-        logger.debug("Registry upstream event:" + event);
-        if (event instanceof AddedServer addedServer) {
-            {
-                String selfHref = addedServer.server().resourceDocument()
-                        .getLinks().getSelf().map(Link::getHref).orElse("");
-                servers.removeIf(rd ->
-                        rd.resourceDocument().getLinks().getSelf()
-                                .map(s -> s.getHref().equals(selfHref)).orElse(false));
-
-                servers.add(addedServer.server());
-                listeners.forEach(listener -> listener.addedServer(addedServer.server()));
-            }
-        } else if (event instanceof RegistrySnapshot registrySnapshot) {
-            {
-                servers.clear();
-                servers.addAll(registrySnapshot.servers());
-                listeners.forEach(listener -> listener.snapshot(registrySnapshot.servers()));
-            }
-        } else if (event instanceof RemovedServer removedServer) {
-            removedServer.server().resourceDocument().getLinks().getSelf().ifPresent(self ->
-            {
-                for (int i = 0; i < servers.size(); i++) {
-                    ResourceDocument resourceDocument = servers.get(i).resourceDocument();
-                    if (resourceDocument.getLinks().getSelf().map(link -> link.getHref().equals(removedServer)).orElse(false)) {
-                        ServerResourceDocument srd = servers.remove(i);
-                        listeners.forEach(listener -> listener.removedServer(srd));
-                        break;
-                    }
-                }
-            });
-        } else if (event instanceof AddedListener listener) {
-            RegistryListener registryListener = listener.listener();
-            listeners.add(registryListener);
-            registryListener.snapshot(servers);
+        public TopicReceiver(Provider<RegistryService> registryServiceProvider) {
+            this.registryServiceProvider = registryServiceProvider;
         }
 
-        // Publish event downstream
-        publish(event);
-    }
-
-    private class RegistryPublisher
-            implements Flow.Publisher<RegistryChange> {
-
-        public RegistryPublisher(Configuration configuration) {
+        public void service(@SubscribeTo ServiceResourceObject serviceResourceObject) {
+            registryServiceProvider.get().addService(serviceResourceObject);
         }
 
-        @Override
-        public void subscribe(Flow.Subscriber<? super RegistryChange> subscriber) {
-            subscriber.onSubscribe(new Flow.Subscription() {
-                @Override
-                public void request(long n) {
-
-                }
-
-                @Override
-                public void cancel() {
-                    subscribers.remove(subscriber);
-                    subscriber.onComplete();
-                }
-            });
-
-            subscribers.add(subscriber);
-
-            ResourceObjects.Builder resourceObjects = new ResourceObjects.Builder();
-            for (ServerResourceDocument serverResourceDocument : servers) {
-                serverResourceDocument.resourceDocument().getResources().ifPresent(ros ->
-                {
-                    ros.forEach(resourceObjects::resource);
-                });
-            }
-            ResourceDocument snapshotDocument = new ResourceDocument.Builder()
-                    .data(resourceObjects.build())
-                    .build();
-
-            ArrayNode serverDocuments = JsonNodeFactory.instance.arrayNode();
-            servers.forEach(srd -> serverDocuments.add(srd.resourceDocument().json()));
-
-            RegistrySnapshot snapshot = new RegistrySnapshot(serverDocuments);
-            subscriber.onNext(snapshot);
-            logger.debug("Sent registry snapshot:" + snapshot);
+        public void server(@SubscribeTo ServerResourceDocument serverResourceDocument) {
+            registryServiceProvider.get().addServer(serverResourceDocument);
         }
     }
 
-    public record StartupRegistration(ReactiveStreams reactiveStreams, JsonApiClient client,
-                                      ServiceIdentifier serviceIdentifier,
-                                      Link registryUri,
-                                      ResourceDocument server,
-                                      UpstreamSubscriber upstreamSubscriber,
-                                      CompletionStage<ResourceObject> result)
-            implements RestProcess<ResourceObject> {
+    private void addService(ServiceResourceObject serviceResourceObject) {
 
-        public void start() {
-            client.get(registryUri)
-                    .thenApply(ServerResourceDocument::new)
-                    .thenCompose(this::subscribeMaster)
-                    .thenCompose(this::submitServer)
-                    .whenComplete(this::complete);
-        }
-
-        private CompletionStage<ServerResourceDocument> subscribeMaster(ServerResourceDocument registry) {
-
-            return registry.getServiceByType("registry")
-                    .map(sro ->
-                            {
-                                if (sro.getServiceIdentifier().equals(serviceIdentifier)) {
-                                    // Master is localhost, no need to subscribe
-                                    return CompletableFuture.completedStage(registry);
-                                } else {
-
-                                    return sro.getLinkByRel("registryevents").map(link ->
-                                    {
-                                        logger.info("Subscribing to upstream registry");
-                                        reactiveStreams.subscribe(link.getHrefAsUri(), Configuration.empty(), upstreamSubscriber, UpstreamSubscriber.class);
-                                        return CompletableFuture.completedStage(registry);
-                                    }).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry")));
-                                }
-                            }
-                    ).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
-        }
-
-        private <U> CompletionStage<ResourceObject> submitServer(ServerResourceDocument registry) {
-            return registry.getServiceByType("registry")
-                    .map(sro -> sro.getLinkByRel("registry").map(link ->
-                            client.get(link)
-                                    .thenCompose(rd -> rd.getLinks().getByRel("servers").map(serversLink ->
-                                            client.submit(serversLink, server)).orElse(CompletableFuture.failedStage(new IllegalStateException("No link 'servers' in registry"))))).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry"))))
-                    .orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
-        }
-
-        @Override
-        public void complete(ResourceObject value, Throwable t) {
-            logger.info("Startup registration complete");
-            RestProcess.super.complete(value, t);
+        if (serviceResourceObject.getServiceIdentifier().resourceObjectIdentifier().getId().equals(configuration.getId())) {
+            serviceResources.add(serviceResourceObject);
         }
     }
 
-    public record ShutdownDeregistration(JsonApiClient client, Link registryUri,
-                                         ResourceDocument server,
-                                         CompletionStage<ResourceObject> result)
-            implements RestProcess<ResourceObject> {
+    private void addServer(ServerResourceDocument serverResourceDocument) {
 
-        public void start() {
-            client.get(registryUri)
-                    .thenApply(ServerResourceDocument::new)
-                    .thenCompose(this::deleteServer)
-                    .whenComplete(this::complete);
-        }
-
-        private <U> CompletionStage<ResourceObject> deleteServer(ServerResourceDocument registry) {
-            return registry.getServiceByType("registry")
-                    .map(sro -> sro.getLinkByRel("registry").map(link ->
-                            client.get(link)
-                                    .thenCompose(rd -> rd.getLinks().getByRel("servers").map(serversLink ->
-                                            client.submit(serversLink, server)).orElse(CompletableFuture.failedStage(new IllegalStateException("No link 'servers' in registry"))))).orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No link 'registryevents' in registry"))))
-                    .orElseGet(() -> CompletableFuture.failedStage(new IllegalStateException("No service 'registry' in master")));
+        if (serverResourceDocument.resourceDocument().getResources()
+                .map(ro -> ro.getResources().isEmpty()).orElse(false)) {
+            serverResourceDocuments.remove(serverResourceDocument);
+        } else {
+            serverResourceDocuments.add(serverResourceDocument);
         }
     }
-
-    private class UpstreamSubscriber
-            implements Flow.Subscriber<WithMetadata<RegistryChange>>, EventHandler<WithMetadata<RegistryChange>> {
-
-        private Disruptor<WithMetadata<RegistryChange>> disruptor;
-        private Flow.Subscription subscription;
-
-        public UpstreamSubscriber(Disruptor<WithMetadata<RegistryChange>> disruptor) {
-            this.disruptor = disruptor;
-        }
-
-        @Override
-        public void onSubscribe(Flow.Subscription subscription) {
-            logger.debug("Registry upstream onSubscribe");
-            this.subscription = subscription;
-            subscription.request(1);
-        }
-
-        @Override
-        public void onNext(WithMetadata<RegistryChange> item) {
-            disruptor.publishEvent((e, s, event) ->
-            {
-                e.set(event);
-            }, item);
-        }
-
-        @Override
-        public void onError(Throwable throwable) {
-            disruptor.shutdown();
-        }
-
-        @Override
-        public void onComplete() {
-            disruptor.shutdown();
-        }
-
-        @Override
-        public void onEvent(WithMetadata<RegistryChange> event, long sequence, boolean endOfBatch) throws Exception {
-            handleChange(event.event());
-            if (subscription != null) // Might be local event publish before subscription is established
-                subscription.request(1);
-        }
-    }
-
-    private record AddedListener(RegistryListener listener)
-            implements RegistryChange {
-        @Override
-        public ObjectNode json() {
-            return null;
-        }
-    }
-
 }

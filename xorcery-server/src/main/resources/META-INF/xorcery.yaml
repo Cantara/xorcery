@@ -32,3 +32,4 @@ server:
 jaxrs:
   packages:
     - com.exoreaction.xorcery.server.resources
+    - com.exoreaction.xorcery.service

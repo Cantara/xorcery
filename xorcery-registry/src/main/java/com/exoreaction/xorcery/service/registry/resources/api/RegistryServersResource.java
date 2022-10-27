@@ -3,7 +3,7 @@ package com.exoreaction.xorcery.service.registry.resources.api;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
-import com.exoreaction.xorcery.service.registry.api.Registry;
+import com.exoreaction.xorcery.service.registry.RegistryService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 
@@ -16,10 +16,10 @@ import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_
 
 @Path("api/registry/servers")
 public class RegistryServersResource {
-    private final Registry service;
+    private final RegistryService service;
 
     @Inject
-    public RegistryServersResource(Registry service) {
+    public RegistryServersResource(RegistryService service) {
         this.service = service;
     }
 
@@ -33,11 +33,13 @@ public class RegistryServersResource {
                 .build();
     }
 
+/*
     @POST
     @Consumes(PRODUCES_JSON_API_TEXT_HTML_YAML)
     public void add(ResourceDocument resourceDocument) {
         service.addServer(new ServerResourceDocument(resourceDocument));
     }
+*/
 
 /*
     @GET
@@ -51,10 +53,12 @@ public class RegistryServersResource {
             .build().toString();
     }
 */
+/*
 
     @DELETE
     @Path("{id}")
     public void remove(@PathParam("id") String id) {
         service.removeServer(id);
     }
+*/
 }

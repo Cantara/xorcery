@@ -44,7 +44,6 @@
 
         <module>xorcery-reactivestreams-api</module>
         <module>xorcery-reactivestreams</module>
-        <module>xorcery-registry-api</module>
         <module>xorcery-registry</module>
         <module>xorcery-conductor-api</module>
         <module>xorcery-conductor</module>

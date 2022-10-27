@@ -1,3 +1,9 @@
 registry:
-    master: "{{ server.uri }}"
-    dnsdiscovery: false
+    enabled: true
+    upstream:
+        enabled: false
+        url: null
+    publisher:
+        enabled: "{{ registry.enabled }}"
+    dnsdiscovery:
+        enabled: false
