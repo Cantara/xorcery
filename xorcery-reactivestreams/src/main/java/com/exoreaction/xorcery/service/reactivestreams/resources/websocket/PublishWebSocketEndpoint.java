@@ -146,12 +146,13 @@ public class PublishWebSocketEndpoint
     public void onWebSocketClose(int statusCode, String reason) {
 
         if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
-            logger.info(marker, "Complete subscription to {}:{} {}", webSocketPath, statusCode, reason);
-            subscription.cancel();
+            logger.info(marker, "Complete publishing to {}:{} {}", webSocketPath, statusCode, reason);
+            if (subscription != null)
+                subscription.cancel();
             publishingProcess.result().complete(null); // Now considered done
         } else {
             logger.info(marker, "Close websocket {}:{} {}", webSocketPath, statusCode, reason);
-            logger.info(marker, "Starting subscription process again");
+            logger.info(marker, "Starting publishing process again");
             publishingProcess.retry();
         }
     }
@@ -160,7 +161,8 @@ public class PublishWebSocketEndpoint
     public void onWebSocketError(Throwable cause) {
         if (cause instanceof ClosedChannelException) {
             // Ignore
-            subscription.cancel();
+            if (subscription != null)
+                subscription.cancel();
             publishingProcess.result().completeExceptionally(cause); // Now considered done
         } else {
             logger.error(marker, "Publisher websocket error", cause);
@@ -187,7 +189,7 @@ public class PublishWebSocketEndpoint
 
     @Override
     public void onError(Throwable throwable) {
-        logger.info(marker, "Publisher error for {}", session.getRemote().getRemoteAddress(), throwable);
+        logger.info(marker, "Subscriber error for {}", session.getRemote().getRemoteAddress(), throwable);
         disruptor.shutdown();
         logger.info(marker, "Sending close for session {}", session.getRemote().getRemoteAddress());
         session.close(StatusCode.SERVER_ERROR, throwable.getMessage());

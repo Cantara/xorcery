@@ -1,12 +1,4 @@
 ---
-build_test_resources: "{{ home }}/target/test-classes"
-test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"
-
-server:
-  http:
-    port: 8889
-  ssl:
-    enabled: false
-client:
-  ssl:
-    enabled: false
+server.ssl.enabled: false
+client.ssl.keystore.path: "META-INF/test-keystore.p12"
+client.ssl.truststore.path: "META-INF/test-truststore.jks"

@@ -1,6 +1,8 @@
 ---
 client:
   enabled: true
+
+  idle_timeout: "{{ idle_timeout }}"
   http2:
     enabled: true
 
@@ -9,9 +11,9 @@ client:
     trustall: true
     keystore:
       type: "PKCS12"
-      path: "{{ resources }}/keystore.p12"
+      path: "META-INF/keystore.p12"
       password: "password"
     truststore:
       type: "PKCS12"
-      path: "{{ resources }}/truststore.jks"
+      path: "META-INF/truststore.jks"
       password: "password"

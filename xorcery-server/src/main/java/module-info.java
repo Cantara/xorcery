@@ -11,15 +11,17 @@ open module xorcery.server {
     requires transitive jakarta.validation;
     requires transitive jakarta.annotation;
     requires transitive jakarta.activation;
+    requires transitive jakarta.ws.rs;
+    requires transitive org.eclipse.jetty.server;
+    requires transitive jersey.server;
 
     requires org.glassfish.hk2.api;
     requires jersey.hk2;
-    requires jersey.server;
 
     requires io.dropwizard.metrics.jetty11;
 
-    requires org.eclipse.jetty.server;
     requires org.eclipse.jetty.servlet;
+    requires org.eclipse.jetty.alpn.java.server;
     requires org.eclipse.jetty.websocket.jetty.server;
     requires jersey.container.servlet.core;
 

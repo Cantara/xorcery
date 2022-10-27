@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author rickardoberg
@@ -24,8 +26,7 @@ public record Configuration(ObjectNode json)
     }
 
     public record Builder(ObjectNode builder)
-        implements With<Builder>
-    {
+            implements With<Builder> {
 
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
@@ -102,6 +103,25 @@ public record Configuration(ObjectNode json)
                 .map(ArrayNode.class::cast)
                 .map(a -> JsonElement.getValuesAs(a, Configuration::new))
                 .orElseGet(Collections::emptyList);
+    }
+
+    /**
+     * Retrieve a configuration value that represents a resource path.
+     * It will try to resolve the name using ClassLoader.getSystemResource(path), to find the actual
+     * path of the resource, given the current classpath and modules.
+     *
+     * @param name
+     * @return
+     */
+    public Optional<String> getResourcePath(String name) {
+        return getString(name)
+                .map(path ->
+                {
+                    URL systemResource = ClassLoader.getSystemResource(path);
+                    if (systemResource != null)
+                        path = systemResource.toExternalForm();
+                    return path;
+                });
     }
 
     public Builder asBuilder() {

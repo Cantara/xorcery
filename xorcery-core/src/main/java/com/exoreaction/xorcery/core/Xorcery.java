@@ -26,7 +26,7 @@ public class Xorcery
     private List<Object> started;
 
     public Xorcery(Configuration configuration) throws Exception {
-        serviceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator(configuration.getString("name").orElse(null));
+        serviceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator(configuration.getString("id").orElse(null));
         ServiceLocatorUtilities.addOneConstant(serviceLocator, configuration);
         ServiceLocatorUtilities.addOneConstant(serviceLocator, this);
         ServiceLocatorUtilities.addClasses(serviceLocator, DefaultTopicDistributionService.class);

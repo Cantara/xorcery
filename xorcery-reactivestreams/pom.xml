@@ -109,10 +109,20 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-core</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+<!--
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-configuration</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+-->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-server</artifactId>
@@ -125,7 +135,7 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
             <artifactId>http2-server</artifactId>
             <scope>test</scope>
@@ -163,6 +173,7 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+        -->
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>

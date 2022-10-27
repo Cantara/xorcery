@@ -8,28 +8,27 @@ server:
   idle_timeout: "{{ idle_timeout }}"
 
   http:
-    port: 80
+    port: "{{ SYSTEM.server_http_port | 80}}"
 
   http2:
     enabled: true
 
   ssl:
     enabled: true
-    port: 443
+    port: "{{ SYSTEM.server_ssl_port | 443 }}"
     trustall: true
     wantclientauth: true
     snirequired: false
     snihostcheck: false
     keystore:
       type: "PKCS12"
-      path: "{{ resources }}/keystore.p12"
+      path: "META-INF/keystore.p12"
       password: "password"
     truststore:
       type: "PKCS12"
-      path: "{{ resources }}/truststore.jks"
+      path: "META-INF/truststore.jks"
       password: "password"
 
 jaxrs:
   packages:
     - com.exoreaction.xorcery.server.resources
-    - com.exoreaction.xorcery.service

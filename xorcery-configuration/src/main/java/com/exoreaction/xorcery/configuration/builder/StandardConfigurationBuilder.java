@@ -98,6 +98,10 @@ public class StandardConfigurationBuilder {
                 try (InputStream configurationStream = resource.openStream()) {
                     new YamlConfigurationBuilder(builder).addYaml(configurationStream);
                     logger.info("Loaded " + resource);
+                } catch (IOException ex) {
+                    throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex);
+                } catch (UncheckedIOException ex) {
+                    throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex.getCause());
                 }
             }
         } catch (IOException ex) {

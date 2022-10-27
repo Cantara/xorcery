@@ -1,6 +1,8 @@
 package com.exoreaction.xorcery.service.jetty.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -11,6 +13,8 @@ import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
 import org.eclipse.jetty.io.ClientConnectionFactory;
 import org.eclipse.jetty.io.ClientConnector;
+import org.eclipse.jetty.util.Promise;
+import org.eclipse.jetty.util.SocketAddressResolver;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.hk2.api.Factory;
@@ -19,10 +23,12 @@ import org.jvnet.hk2.annotations.Service;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.List;
 
 import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
 
@@ -63,12 +69,12 @@ public class JettyClientService
                 }
             };
             sslClientContextFactory.setKeyStoreType(configuration.getString("client.ssl.keystore.type").orElse("PKCS12"));
-            sslClientContextFactory.setKeyStorePath(configuration.getString("client.ssl.keystore.path")
+            sslClientContextFactory.setKeyStorePath(configuration.getResourcePath("client.ssl.keystore.path")
                     .orElseGet(() -> ClassLoader.getSystemResource("keystore.p12").toExternalForm()));
             sslClientContextFactory.setKeyStorePassword(configuration.getString("client.ssl.keystore.password").orElse("password"));
 
 //                        sslClientContextFactory.setTrustStoreType(configuration.getString("client.ssl.truststore.type").orElse("PKCS12"));
-            sslClientContextFactory.setTrustStorePath(configuration.getString("client.ssl.truststore.path")
+            sslClientContextFactory.setTrustStorePath(configuration.getResourcePath("client.ssl.truststore.path")
                     .orElseGet(() -> ClassLoader.getSystemResource("keystore.p12").toExternalForm()));
             sslClientContextFactory.setTrustStorePassword(configuration.getString("client.ssl.truststore.password").orElse("password"));
 
@@ -83,12 +89,21 @@ public class JettyClientService
 
         // Figure out correct transport dynamics
         if (http2 != null) {
-            transport = new HttpClientTransportDynamic(connector, http1, http2);
+            transport = new HttpClientTransportDynamic(connector, http2, http1);
         } else {
             transport = new HttpClientTransportDynamic(connector, http1);
         }
 
         client = new HttpClient(transport);
+
+        JsonNode hosts = configuration.getJson("hosts").orElse(null);
+        if (hosts instanceof ObjectNode on)
+        {
+            client.setSocketAddressResolver(new ConfigurationSocketAddressResolver(on,
+                    new SocketAddressResolver.Async(connector.getExecutor(), connector.getScheduler(), client.getAddressResolutionTimeout()) ));
+        }
+
+        client.start();
     }
 
     @Override
