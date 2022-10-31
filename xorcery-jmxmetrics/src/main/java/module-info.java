@@ -21,4 +21,5 @@ open module xorcery.jmxmetrics {
     requires jersey.server;
     requires java.management;
     requires java.logging;
+    requires xorcery.core;
 }

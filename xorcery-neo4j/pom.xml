@@ -82,14 +82,6 @@
             <artifactId>neo4j-apoc-jpms-shaded</artifactId>
         </dependency>
 
-        <!--
-                <dependency>
-                    <groupId>org.neo4j</groupId>
-                    <artifactId>neo4j-kernel</artifactId>
-                    <version>4.4.11</version>
-                </dependency>
-        -->
-
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>

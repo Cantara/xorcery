@@ -1,7 +1,10 @@
 package com.exoreaction.xorcery.service.certmanager;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
+import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
+import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
@@ -76,11 +79,13 @@ public class CertificateManagerService {
             logger.info(alias + "=" + keyStore.getCertificate(alias));
         }
 */
-        Client client = ClientBuilder.newClient(clientConfig);
+        Client client = ClientBuilder.newClient(clientConfig
+                .register(JsonElementMessageBodyReader.class)
+                .register(JsonElementMessageBodyWriter.class));
         this.client = new JsonApiClient(client);
 
         if (configuration.getBoolean("certificatemanager.renew_on_startup").orElse(false)) {
-            ServiceLocatorUtilities.addOneConstant(serviceLocator, new CheckCertGroupListener(sro.getServiceIdentifier(), "certificatemanager"));
+            TopicSubscribers.addSubscriber(serviceLocator,new CheckCertGroupListener(sro.getServiceIdentifier(), "certificatemanager"));
         }
 
         registryTopic.publish(sro);

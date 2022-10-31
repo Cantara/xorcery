@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.service.registry.RegistryService;
+import com.exoreaction.xorcery.service.registry.RegistryState;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -20,12 +21,12 @@ import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_
 public class RegistryResource
     extends JsonApiResource
 {
-    private final RegistryService service;
+    private final RegistryState registryState;
 
     @Inject
-    public RegistryResource( RegistryService service )
+    public RegistryResource( RegistryState registryState)
     {
-        this.service = service;
+        this.registryState = registryState;
     }
 
     @GET

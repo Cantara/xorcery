@@ -5,6 +5,9 @@ import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import jakarta.inject.Singleton;
+import org.glassfish.hk2.api.messaging.MessageReceiver;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.Flow;
 import java.util.function.Function;

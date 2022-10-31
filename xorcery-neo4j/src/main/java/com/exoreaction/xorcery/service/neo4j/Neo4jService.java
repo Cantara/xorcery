@@ -122,8 +122,8 @@ public class Neo4jService
                 }
             }
 
-            ServiceLocatorUtilities.addOneConstant(serviceLocator, graphDb, databaseConfiguration.getName(),GraphDatabaseService.class );
-            ServiceLocatorUtilities.addOneConstant(serviceLocator, new GraphDatabase(graphDb, Cypher.defaultFieldMappings()), databaseConfiguration.getName(),GraphDatabaseService.class );
+            ServiceLocatorUtilities.addOneConstant(serviceLocator, graphDb, databaseConfiguration.getName(), GraphDatabaseService.class);
+            ServiceLocatorUtilities.addOneConstant(serviceLocator, new GraphDatabase(graphDb, Cypher.defaultFieldMappings()), databaseConfiguration.getName(), GraphDatabase.class);
         }
 
         logger.info("Neo4j initialized");

@@ -68,7 +68,7 @@ public class UpstreamPublisher
 
             standardConfiguration.context().getURI("registry.upstream.url").ifPresent(uri ->
             {
-                reactiveStreams.get().publish(UriBuilder.fromUri(uri).path("ws/registrysubscriber").build(), Configuration.empty(), this, getClass());
+                reactiveStreams.get().publish(UriBuilder.fromUri(uri).path("ws/registry/subscriber").build(), Configuration.empty(), this, getClass());
             });
 
             ResourceObjects.Builder builder = new ResourceObjects.Builder();

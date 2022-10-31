@@ -12,4 +12,5 @@ open module xorcery.metrics {
     requires jakarta.inject;
     requires jakarta.ws.rs;
     requires jersey.server;
+    requires xorcery.core;
 }

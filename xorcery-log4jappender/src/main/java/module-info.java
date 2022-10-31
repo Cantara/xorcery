@@ -24,4 +24,5 @@ open module xorcery.log4jappender {
     requires org.eclipse.jetty.http;
     requires org.eclipse.jetty.server;
     requires log4j.layout.template.json;
+    requires xorcery.core;
 }

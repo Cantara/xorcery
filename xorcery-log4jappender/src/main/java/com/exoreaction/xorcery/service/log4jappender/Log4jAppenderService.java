@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.log4jappender;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
 import com.exoreaction.xorcery.service.log4jappender.log4j.DisruptorAppender;
@@ -43,7 +44,7 @@ public class Log4jAppenderService {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new LogPublisher(), LogPublisher.class);
         });
 
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ClientPublisherGroupListener(sro.getServiceIdentifier(), cfg -> new LogPublisher(), LogPublisher.class, null, reactiveStreams));
+        TopicSubscribers.addSubscriber(serviceLocator,new ClientPublisherGroupListener(sro.getServiceIdentifier(), cfg -> new LogPublisher(), LogPublisher.class, null, reactiveStreams));
         registryTopic.publish(sro);
     }
 

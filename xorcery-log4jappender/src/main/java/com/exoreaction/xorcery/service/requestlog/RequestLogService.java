@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.requestlog;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -57,7 +58,7 @@ public class RequestLogService
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class);
         });
 
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ClientPublisherGroupListener(resourceObject.getServiceIdentifier(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class, null, reactiveStreams));
+        TopicSubscribers.addSubscriber(serviceLocator,new ClientPublisherGroupListener(resourceObject.getServiceIdentifier(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class, null, reactiveStreams));
 
         registryTopic.publish(resourceObject);
     }

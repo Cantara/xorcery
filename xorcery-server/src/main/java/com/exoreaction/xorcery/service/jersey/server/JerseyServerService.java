@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.jersey.server;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.service.jersey.server.resources.ServerApplication;
@@ -20,32 +21,29 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.glassfish.jersey.internal.inject.Bindings;
+import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
+@Named("jersey")
 public class JerseyServerService
-    implements Factory<ServletContextHandler>
-{
+        implements PreDestroy {
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final ServletContextHandler ctx;
+    private final JerseyServletContainer servletContainer;
 
     @Inject
     public JerseyServerService(
             Configuration configuration,
-            Server server,
-            ServiceLocator serviceLocator,
-            Provider<MetricRegistry> metricRegistry) throws IOException {
-
-        ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        ctx.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
-        ctx.setContextPath("/");
+            ServletContextHandler ctx,
+            ServiceLocator serviceLocator) throws Exception {
 
         ServerApplication app = new ServerApplication();
 
@@ -74,36 +72,15 @@ public class JerseyServerService
             }
         });
 
-        ServletContainer servletContainer = new ServletContainer(app);
-
+        servletContainer = new JerseyServletContainer(app);
         ServletHolder servletHolder = new ServletHolder(servletContainer);
-        ctx.addServlet(servletHolder, "/*");
         servletHolder.setInitOrder(1);
-
-        JettyWebSocketServletContainerInitializer.configure(ctx, null);
-
-        Handler handler = ctx;
-        if (configuration.getBoolean("metrics.enabled").orElse(false).equals(true))
-        {
-            InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry.get(), "jetty");
-            instrumentedHandler.setHandler(ctx);
-            handler = instrumentedHandler;
-        }
-
-        server.setHandler(handler);
-
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, servletContainer);
+        ctx.addServlet(servletHolder, "/*");
+        System.out.println("Started Jersey servlet");
     }
 
     @Override
-    @Singleton
-    @Named("jersey")
-    public ServletContextHandler provide() {
-        return ctx;
-    }
-
-    @Override
-    public void dispose(ServletContextHandler instance) {
-        System.out.println("Dispose Jetty server");
+    public void preDestroy() {
+        servletContainer.stop();
     }
 }

@@ -2,6 +2,9 @@
 client:
   enabled: true
 
+  properties:
+
+
   idle_timeout: "{{ idle_timeout }}"
   http2:
     enabled: true

@@ -1,16 +1,25 @@
 package com.exoreaction.xorcery.service.jetty.server;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
 
 import javax.net.ssl.TrustManager;
@@ -23,11 +32,15 @@ import java.security.cert.X509Certificate;
 
 @Service
 public class JettyServerService
-        implements Factory<Server> {
+        implements Factory<ServletContextHandler> {
     private final Server server;
+    private final ServletContextHandler servletContextHandler;
+    private final Logger logger = LogManager.getLogger(getClass());
 
     @Inject
-    public JettyServerService(Configuration configuration) {
+    public JettyServerService(Configuration configuration,
+                              ServiceLocator serviceLocator,
+                              Provider<MetricRegistry> metricRegistry) throws Exception {
 
         Configuration jettyConfig = configuration.getConfiguration("server");
 
@@ -42,7 +55,7 @@ public class JettyServerService
 
         // Create server
         server = new Server(jettyConnectorThreadPool);
-        server.setStopAtShutdown(true);
+//        server.setStopAtShutdown(false);
 
         // Setup connector
         final HttpConfiguration httpConfig = new HttpConfiguration();
@@ -127,21 +140,40 @@ public class JettyServerService
         requestLog.setLoggerName("jetty");
         server.setRequestLog(
                 new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
+
+        servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+        servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
+        servletContextHandler.setContextPath("/");
+
+        JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
+
+        Handler handler = servletContextHandler;
+        if (configuration.getBoolean("metrics.enabled").orElse(false).equals(true)) {
+            InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry.get(), "jetty");
+            instrumentedHandler.setHandler(servletContextHandler);
+            handler = instrumentedHandler;
+        }
+
+        server.setHandler(handler);
+        server.start();
+
+        ServiceLocatorUtilities.addOneConstant(serviceLocator, server);
     }
 
     @Override
     @Singleton
     @Named("server")
-    public Server provide() {
-        return server;
+    public ServletContextHandler provide() {
+        return servletContextHandler;
     }
 
     @Override
-    public void dispose(Server instance) {
+    public void dispose(ServletContextHandler instance) {
         try {
+            logger.info("Stopping Jetty");
             server.stop();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+            logger.error(e);
         }
     }
 

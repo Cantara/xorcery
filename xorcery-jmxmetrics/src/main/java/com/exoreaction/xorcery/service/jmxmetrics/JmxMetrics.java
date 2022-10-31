@@ -3,7 +3,10 @@ package com.exoreaction.xorcery.service.jmxmetrics;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
+import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
+import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.rest.RestProcess;
@@ -72,12 +75,14 @@ public class JmxMetrics
                 .build();
 
         this.reactiveStreams = reactiveStreams;
-        Client client = ClientBuilder.newClient(clientConfig);
+        Client client = ClientBuilder.newClient(clientConfig
+                .register(JsonElementMessageBodyReader.class)
+                .register(JsonElementMessageBodyWriter.class));
         this.client = new JsonApiClient(client);
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, new JmxServersGroupListener(sro.getServiceIdentifier(), "metrics"));
+        TopicSubscribers.addSubscriber(serviceLocator,new JmxServersGroupListener(sro.getServiceIdentifier(), "metrics"));
 
         registryTopic.publish(sro);
     }

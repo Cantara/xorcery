@@ -1,12 +1,14 @@
 package com.exoreaction.xorcery.service.reactivestreams.spi;
 
 import jakarta.inject.Inject;
+import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 @Service
+@ContractsProvided({MessageWorkers.class})
 public class MessageWorkers {
 
     private final Iterable<MessageWriter.Factory> writers;

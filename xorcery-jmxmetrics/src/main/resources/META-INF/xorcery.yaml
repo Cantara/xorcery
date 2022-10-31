@@ -1,1 +1,3 @@
-jmxmetrics: {}
+jmxmetrics:
+  enabled: true
+

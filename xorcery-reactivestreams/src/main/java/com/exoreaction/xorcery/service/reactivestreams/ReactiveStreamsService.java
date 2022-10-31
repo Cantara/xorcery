@@ -2,8 +2,6 @@ package com.exoreaction.xorcery.service.reactivestreams;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.server.spi.ServiceResourceObjectProvider;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
@@ -25,8 +23,8 @@ import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
@@ -45,7 +43,7 @@ import static com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsSer
 @Service(name = SERVICE_TYPE)
 @ContractsProvided({ReactiveStreams.class, ReactiveStreamsClient.class})
 public class ReactiveStreamsService
-        implements ReactiveStreams, ServiceResourceObjectProvider, LifeCycle.Listener {
+        implements ReactiveStreams, PreDestroy {
 
     private static final Logger logger = LogManager.getLogger(ReactiveStreamsService.class);
     public static final String SERVICE_TYPE = "reactivestreams";
@@ -74,7 +72,6 @@ public class ReactiveStreamsService
     public ReactiveStreamsService(ServletContextHandler servletContextHandler,
                                   @Named("client") HttpClient httpClient,
                                   Configuration configuration,
-                                  Server server,
                                   MessageWorkers messageWorkers) throws Exception {
         this.servletContextHandler = servletContextHandler;
 
@@ -89,19 +86,12 @@ public class ReactiveStreamsService
         webSocketClient.start();
         this.webSocketClient = webSocketClient;
 
-        server.addEventListener(this);
-
         byteBufferPool = new ArrayByteBufferPool();
     }
 
     @Override
-    public ServiceResourceObject getServiceResourceObject() {
-        return new ServiceResourceObject.Builder(configuration, SERVICE_TYPE).build();
-    }
-
-    @Override
-    public void lifeCycleStopping(LifeCycle event) {
-        logger.info("SHUTDOWN REACTIVE SERVICES!");
+    public void preDestroy() {
+        logger.info("Stop reactive streams");
 
         timer.cancel();
 

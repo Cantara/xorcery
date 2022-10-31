@@ -1,3 +1,4 @@
 certificatemanager:
+  enabled: true
   is_master: true
   renew_on_startup: true

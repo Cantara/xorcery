@@ -28,8 +28,8 @@ public class RegistryUpstreamService {
     public RegistryUpstreamService(ReactiveStreams reactiveStreams,
                                    Topic<ServerResourceDocument> serverResourceDocumentTopic) {
         this.serverResourceDocumentTopic = serverResourceDocumentTopic;
-        reactiveStreams.publisher("/ws/registrypublisher", RegistryPublisher::new, RegistryPublisher.class);
-        reactiveStreams.subscriber("/ws/registrysubscriber", RegistrySubscriber::new, RegistrySubscriber.class);
+        reactiveStreams.publisher("/ws/registry/publisher", RegistryPublisher::new, RegistryPublisher.class);
+        reactiveStreams.subscriber("/ws/registry/subscriber", RegistrySubscriber::new, RegistrySubscriber.class);
     }
 
     private class RegistryPublisher

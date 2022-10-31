@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.opensearch.api.OpenSearchRels;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
@@ -76,7 +77,7 @@ public class OpenSearchService
 
             OpenSearchCommitPublisher openSearchCommitPublisher = new OpenSearchCommitPublisher();
 
-            ServiceLocatorUtilities.addOneConstant(serviceLocator, new ClientSubscriberGroupListener(client,
+            TopicSubscribers.addSubscriber(serviceLocator,new ClientSubscriberGroupListener(client,
                     reactiveStreams, openSearchCommitPublisher, sro.getServiceIdentifier()));
 
             sro.getLinkByRel(OpenSearchRels.opensearch.name()).ifPresent(link ->

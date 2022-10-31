@@ -3,7 +3,9 @@ package com.exoreaction.xorcery.core;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Filter;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -18,7 +20,7 @@ import java.util.List;
  * @since 12/04/2022
  */
 public class Xorcery
-        implements AutoCloseable {
+        implements AutoCloseable, PreDestroy {
 
     private static final Logger logger = LogManager.getLogger(Xorcery.class);
 
@@ -26,12 +28,14 @@ public class Xorcery
     private List<Object> started;
 
     public Xorcery(Configuration configuration) throws Exception {
+        logger.info("Creating");
         serviceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator(configuration.getString("id").orElse(null));
         ServiceLocatorUtilities.addOneConstant(serviceLocator, configuration);
         ServiceLocatorUtilities.addOneConstant(serviceLocator, this);
         ServiceLocatorUtilities.addClasses(serviceLocator, DefaultTopicDistributionService.class);
 
         // Instantiate
+        logger.info("Initializing");
         Filter configurationFilter = d -> !d.getAdvertisedContracts().contains(Configuration.class.getName());
         List<?> services = serviceLocator.getAllServices(configurationFilter);
 
@@ -45,7 +49,9 @@ public class Xorcery
         }
 
         // "Start" all services
+        logger.info("Starting");
         started = new ArrayList<>();
+/*
         for (Object service : services) {
             try {
                 Method startMethod = service.getClass().getMethod("start");
@@ -55,6 +61,8 @@ public class Xorcery
                 // Not a startable service, ok!
             }
         }
+*/
+        logger.info("Started");
     }
 
     public ServiceLocator getServiceLocator() {
@@ -63,6 +71,8 @@ public class Xorcery
 
     public void close() {
 
+        logger.info("Stopping");
+/*
         Collections.reverse(started);
         for (Object service : started) {
             try {
@@ -74,7 +84,14 @@ public class Xorcery
                 logger.warn("Exception while stopping a service", t);
             }
         }
+*/
 
         serviceLocator.shutdown();
+        logger.info("Stopped");
+    }
+
+    @Override
+    public void preDestroy() {
+        System.out.println("Xorcery preDestroy");
     }
 }

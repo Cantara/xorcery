@@ -16,4 +16,5 @@ open module xorcery.opensearch {
     requires jakarta.inject;
     requires java.logging;
     requires com.lmax.disruptor;
+    requires xorcery.core;
 }

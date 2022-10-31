@@ -22,4 +22,5 @@ open module xorcery.domainevents {
     requires jersey.common;
     requires jakarta.validation;
     requires jakarta.inject;
+    requires xorcery.core;
 }

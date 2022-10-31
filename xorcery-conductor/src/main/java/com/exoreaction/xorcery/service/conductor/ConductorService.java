@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Group;
 import com.exoreaction.xorcery.service.conductor.api.GroupTemplate;
@@ -40,12 +41,12 @@ public class ConductorService
 
     public static final String SERVICE_TYPE = "conductor";
 
-    private Logger logger = LogManager.getLogger(getClass());
+    private final Logger logger = LogManager.getLogger(getClass());
 
-    private ServiceResourceObject sro;
-    private Topic<ServiceResourceObject> registryTopic;
-    private Configuration configuration;
-    private ConductorConfiguration conductorConfiguration;
+    private final ServiceResourceObject sro;
+    private final Topic<ServiceResourceObject> registryTopic;
+    private final Configuration configuration;
+    private final ConductorConfiguration conductorConfiguration;
 
     private final Queue<ServiceResourceObject> serviceResourceObjectQueue = new ArrayBlockingQueue<>(1024);
     private ScheduledExecutorService resourceProcessor;
@@ -177,6 +178,10 @@ public class ConductorService
     // Start processing of ServiceResourceObjects after startup of Xorcery
     public void addedService(@SubscribeTo ServiceResourceObject service) {
         serviceResourceObjectQueue.add(service);
+    }
+
+    public void addedServer(@SubscribeTo ServerResourceDocument server) {
+        server.getServices().forEach(this::addedService);
     }
 
     public void startResourceProcessing() {

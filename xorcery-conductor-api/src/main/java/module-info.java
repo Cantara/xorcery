@@ -8,4 +8,5 @@ open module xorcery.conductor.api {
     requires org.glassfish.hk2.api;
     requires jersey.common;
     requires org.apache.logging.log4j;
+    requires jakarta.inject;
 }

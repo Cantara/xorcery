@@ -1,2 +1,3 @@
 reactivestreams:
+  enabled: true
   allowlocal: false

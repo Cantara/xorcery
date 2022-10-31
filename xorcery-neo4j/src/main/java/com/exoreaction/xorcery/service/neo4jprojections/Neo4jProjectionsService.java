@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.api.Neo4jProjectionRels;
@@ -46,8 +47,8 @@ public class Neo4jProjectionsService {
                                    GraphDatabases graphDatabases,
                                    MetricRegistry metricRegistry) {
         this.sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
-                .websocket(Neo4jProjectionRels.neo4jprojectionsubscriber.name(), "ws/neo4jprojectionsubscriber")
-                .websocket(Neo4jProjectionRels.neo4jprojectioncommits.name(), "ws/neo4jprojectioncommits")
+                .websocket(Neo4jProjectionRels.neo4jprojectionssubscriber.name(), "ws/neo4jprojections/subscriber")
+                .websocket(Neo4jProjectionRels.neo4jprojectionspublisher.name(), "ws/neo4jprojections/publisher")
                 .build();
 
         List<Neo4jEventProjection> neo4jEventProjectionList = ServiceLoader.load(Neo4jEventProjection.class)
@@ -58,10 +59,10 @@ public class Neo4jProjectionsService {
 
         Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = new Neo4jProjectionCommitPublisher();
 
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ProjectionSubscriberGroupListener(graphDatabases,
+        TopicSubscribers.addSubscriber(serviceLocator, new ProjectionSubscriberGroupListener(graphDatabases,
                 reactiveStreams, sro.getServiceIdentifier(), neo4jEventProjectionList, metricRegistry, neo4jProjectionCommitPublisher));
 
-        sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectionsubscriber.name()).ifPresent(link ->
+        sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectionssubscriber.name()).ifPresent(link ->
         {
             reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new ProjectionSubscriber(subscription -> new Neo4jProjectionEventHandler(
                     graphDatabases.apply(cfg.getString("database").orElse("neo4j")).getGraphDatabaseService(),
@@ -73,7 +74,7 @@ public class Neo4jProjectionsService {
                     metricRegistry)), ProjectionSubscriber.class);
         });
 
-        sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectioncommits.name()).ifPresent(link ->
+        sro.getLinkByRel(Neo4jProjectionRels.neo4jprojectionspublisher.name()).ifPresent(link ->
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> neo4jProjectionCommitPublisher, Neo4jProjectionCommitPublisher.class);
         });

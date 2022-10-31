@@ -70,10 +70,12 @@ public class StandardConfigurationBuilder {
 
     public void addSystemProperties(Configuration.Builder builder) {
         builder.addSystemProperties("SYSTEM");
+        logger.info("Loaded system properties");
     }
 
     public void addEnvironmentVariables(Configuration.Builder builder) {
         builder.addEnvironmentVariables("ENV");
+        logger.info("Loaded environment variables");
     }
 
     public void addXorceryDefaults(Configuration.Builder builder) throws UncheckedIOException {

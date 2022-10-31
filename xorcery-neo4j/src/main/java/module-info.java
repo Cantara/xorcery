@@ -37,6 +37,7 @@ open module xorcery.neo4j {
     requires com.codahale.metrics;
     requires com.lmax.disruptor;
     requires xorcery.jsonapi;
+    requires xorcery.core;
 
     provides Neo4jEventProjection with CypherEventProjection;
 }

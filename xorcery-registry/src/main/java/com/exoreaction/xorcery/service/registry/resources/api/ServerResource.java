@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.registry.resources.api;
 
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
-import com.exoreaction.xorcery.service.registry.RegistryService;
+import com.exoreaction.xorcery.service.registry.RegistryState;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -16,17 +16,17 @@ import jakarta.ws.rs.Path;
 public class ServerResource
     extends JsonApiResource
 {
-    private RegistryService registry;
+    private RegistryState registryState;
 
     @Inject
-    public ServerResource(RegistryService registry)
+    public ServerResource(RegistryState registryState)
     {
-        this.registry = registry;
+        this.registryState = registryState;
     }
 
     @GET
     public ResourceDocument get()
     {
-        return registry.getServer().resourceDocument().resolve(getBaseUri());
+        return registryState.getServer().resourceDocument().resolve(getBaseUri());
     }
 }

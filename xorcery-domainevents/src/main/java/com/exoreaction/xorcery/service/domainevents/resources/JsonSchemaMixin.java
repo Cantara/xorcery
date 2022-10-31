@@ -35,9 +35,6 @@ import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.self;
 
 public interface JsonSchemaMixin
         extends ResourceContext {
-    default ObjectMapper objectMapper() {
-        return service(ObjectMapper.class);
-    }
 
     default Link selfLink() {
         return Link.Builder.link("Self", "Self link", self, APPLICATION_JSON_API);

@@ -11,4 +11,5 @@ open module xorcery.certmanager {
     requires org.eclipse.jetty.util;
     requires jersey.jetty.connector;
     requires java.logging;
+    requires xorcery.core;
 }

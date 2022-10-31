@@ -25,7 +25,7 @@ public class UpstreamSubscriber
         this.registryTopic = registryTopic;
         configuration.getURI("registry.upstream.url").ifPresent(uri ->
         {
-            reactiveStreams.subscribe(UriBuilder.fromUri(uri).path("ws/registrypublisher").build(), Configuration.empty(), this, getClass());
+            reactiveStreams.subscribe(UriBuilder.fromUri(uri).path("ws/registry/publisher").build(), Configuration.empty(), this, getClass());
         });
     }
 
