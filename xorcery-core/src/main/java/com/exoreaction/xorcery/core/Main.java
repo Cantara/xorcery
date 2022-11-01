@@ -82,11 +82,10 @@ public class Main
                 .with(standardConfigurationBuilder::addDefaults, standardConfigurationBuilder.addFile(configuration));
 
         // Log final configuration
-        ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
-        logger.debug("Configuration:\n" + objectWriter.writeValueAsString(builder.builder()));
+        logger.debug("Configuration:\n" + standardConfigurationBuilder.toYaml(builder));
 
         Configuration configuration = builder.build();
-        logger.info("Resolved configuration:\n" + objectWriter.writeValueAsString(configuration.json()));
+        logger.info("Resolved configuration:\n" + standardConfigurationBuilder.toYaml(configuration));
         return configuration;
     }
 

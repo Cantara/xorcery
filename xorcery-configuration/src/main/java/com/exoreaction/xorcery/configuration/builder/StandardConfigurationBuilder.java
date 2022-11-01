@@ -1,6 +1,10 @@
 package com.exoreaction.xorcery.configuration.builder;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -218,6 +222,26 @@ public class StandardConfigurationBuilder {
                 logger.info("Loaded " + resource);
             }
         } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public String toYaml(Configuration.Builder builder)
+    {
+        ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
+        try {
+            return objectWriter.writeValueAsString(builder.builder());
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public String toYaml(Configuration configuration)
+    {
+        ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
+        try {
+            return objectWriter.writeValueAsString(configuration.json());
+        } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }
     }

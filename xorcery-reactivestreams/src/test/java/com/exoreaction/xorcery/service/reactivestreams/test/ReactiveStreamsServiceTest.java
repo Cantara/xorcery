@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.core.test.util.Sockets;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.*;
 import jakarta.ws.rs.core.UriBuilder;
@@ -35,7 +36,10 @@ public class ReactiveStreamsServiceTest {
     }
 
     private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
-        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder()::addTestDefaults)
+                .add("server.http.port", Sockets.nextFreePort())
+                .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
