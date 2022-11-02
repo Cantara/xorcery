@@ -3,7 +3,12 @@ package com.exoreaction.xorcery.service.eventstore.test;
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.service.eventstore.EventStoreService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -20,7 +25,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Testcontainers
+@Disabled
 public class EventStoreIT {
+
+    private final Logger logger = LogManager.getLogger(getClass());
 
     @Container
     public static DockerComposeContainer environment =
@@ -48,21 +56,21 @@ public class EventStoreIT {
 
     @Test
     public void createProjection() throws Exception {
-        LogManager.getLogger(getClass()).info("CREATE PROJECTION TEST");
-        System.out.println("Starting test");
-
-/*
         String config = """
                 eventstore:
+                    publisher.enabled: false
+                    subscriber.enabled: false
                     projections:
                         projections:
                             - name: testprojection
                               query: META-INF/testprojection.js
                 """;
 
+        StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
         Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .with(standardConfigurationBuilder.addTestDefaultsWithYaml(config))
                 .build();
+        logger.info(standardConfigurationBuilder.toYaml(configuration));
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             EventStoreService eventStoreService = xorcery.getServiceLocator().getService(EventStoreService.class);
@@ -72,7 +80,19 @@ public class EventStoreIT {
             for (ProjectionDetails projectionDetail : projectionDetails) {
                 System.out.println(mapper.writeValueAsString(projectionDetail));
             }
+
+            // Write event
+            eventStoreService.getClient().appendToStream("teststream", EventDataBuilder.json("testtype", "{}").build()).join();
+
+            // Check projection state
+            CountState state = eventStoreService.getProjectionManagementClient().getState("testprojection", CountState.class).join();
+
+            System.out.println("Count:"+state.count());
         }
-*/
+
+    }
+
+    public record CountState(int count)
+    {
     }
 }

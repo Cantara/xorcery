@@ -95,6 +95,11 @@ public class EventStoreProjectionsService {
 
         // Delete remaining
         for (ProjectionDetails projectionDetails : projectionsList) {
+            if (projectionDetails.getName().startsWith("$"))
+            {
+                // System projection, ignore
+                continue;
+            }
             try {
                 client.delete(projectionDetails.getName()).join();
             } catch (Exception e) {
@@ -106,8 +111,8 @@ public class EventStoreProjectionsService {
     public record ProjectionsConfiguration(Configuration context)
             implements ServiceConfiguration {
         public Iterable<Projection> getProjections() {
-            return context.getObjectListAs("scripts", Projection::new).orElseThrow(() ->
-                    new IllegalStateException("Missing eventstore.projections.scripts configuration"));
+            return context.getObjectListAs("projections", Projection::new).orElseThrow(() ->
+                    new IllegalStateException("Missing eventstore.projections.projections configuration"));
         }
     }
 

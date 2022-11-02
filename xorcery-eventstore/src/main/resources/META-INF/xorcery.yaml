@@ -5,7 +5,4 @@ eventstore:
   subscriber.enabled: "{{ eventstore.enabled }}"
   projections:
     enabled: "{{ eventstore.enabled }}"
-    projections:
-      - name: testprojection
-      - query:
-
+    projections: []

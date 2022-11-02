@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.messaging.Topic;
@@ -33,7 +34,7 @@ public class EventStoreService {
     @Inject
     public EventStoreService(Topic<ServiceResourceObject> registryTopic,
                              Configuration configuration,
-                             ReactiveStreams reactiveStreams) throws ParseError {
+                             Provider<ReactiveStreams> reactiveStreams) throws ParseError {
         ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
                 .api(EventStoreRels.eventstore.name(), "api/eventstore");
 
@@ -54,14 +55,14 @@ public class EventStoreService {
         if (configuration.getBoolean("eventstore.publisher.enabled").orElse(true))
         {
             builder.websocket(EventStoreRels.eventpublisher.name(), "ws/eventstore/publisher");
-            reactiveStreams.publisher("ws/eventstore/publisher", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
+            reactiveStreams.get().publisher("ws/eventstore/publisher", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
         }
 
         // Write
         if (configuration.getBoolean("eventstore.subscriber.enabled").orElse(true))
         {
             builder.websocket(EventStoreRels.eventsubscriber.name(), "ws/eventstore/subscriber");
-            reactiveStreams.subscriber("ws/eventstore/subscriber", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
+            reactiveStreams.get().subscriber("ws/eventstore/subscriber", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
         }
 
         sro = builder.build();
