@@ -1,10 +1,10 @@
 open module xorcery.eventstore {
+    exports com.exoreaction.xorcery.service.eventstore;
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;
     requires xorcery.service.api;
     requires xorcery.conductor.api;
     requires xorcery.jsonapi.server;
-    requires xorcery.domainevents;
 
     requires jakarta.inject;
     requires jakarta.ws.rs;

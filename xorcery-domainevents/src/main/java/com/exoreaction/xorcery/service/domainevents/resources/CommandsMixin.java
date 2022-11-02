@@ -1,7 +1,6 @@
 package com.exoreaction.xorcery.service.domainevents.resources;
 
 import com.exoreaction.xorcery.jsonapi.model.*;
-import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.context.DomainContext;
@@ -27,7 +26,7 @@ import java.util.function.Predicate;
 import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.self;
 
 public interface CommandsMixin
-        extends ResourceContext {
+        extends CommandsJsonSchemaMixin {
 
     default Consumer<Links.Builder> schemaLink() {
         return links -> {

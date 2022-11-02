@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.eventstore.streams;
 import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.EventDataBuilder;
 import com.eventstore.dbclient.EventStoreDBClient;
-import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.EventHandler;
@@ -23,9 +22,9 @@ import java.util.concurrent.Flow;
 public class EventStoreSubscriberEventHandler
         implements EventHandler<WithMetadata<ByteBuffer>> {
     private final EventStoreDBClient client;
-    private Flow.Subscription subscription;
-    private Optional<String> streamId;
-    private Logger logger = LogManager.getLogger(getClass());
+    private final Optional<String> streamId;
+    private final Logger logger = LogManager.getLogger(getClass());
+    private final Flow.Subscription subscription;
 
     public EventStoreSubscriberEventHandler(EventStoreDBClient client, Flow.Subscription subscription, Optional<String> streamId) {
 
@@ -38,16 +37,13 @@ public class EventStoreSubscriberEventHandler
     public void onEvent(WithMetadata<ByteBuffer> event, long sequence, boolean endOfBatch) throws Exception {
         EventStoreMetadata emd = new EventStoreMetadata(event.metadata());
         UUID eventId = emd.getCorrelationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
-        DomainEventMetadata domainEventMetadata = new DomainEventMetadata(event.metadata());
-        String eventType = domainEventMetadata.getCommandType();
+        String eventType = emd.eventType();
         EventData eventData = EventDataBuilder.json(eventId, eventType, event.event().array())
                 .metadataAsJson(event.metadata().metadata())
                 .build();
 
         event.event().clear();
-        String streamId = this.streamId.orElseGet(()->emd.getEnvironment() + "-" +
-                emd.getTag() + "-" +
-                domainEventMetadata.getDomain());
+        String streamId = this.streamId.orElseGet(emd::streamId);
 
         logger.debug("Write metadata:" + new String(eventData.getUserMetadata()) + "\nWrite data:" + new String(eventData.getEventData()));
 

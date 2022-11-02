@@ -1,3 +1,11 @@
 eventstore:
   enabled: true
   url: "esdb://{{ ENV.EVENTSTORE_HOST | \"localhost\" }}:2113?tls=false"
+  publisher.enabled: "{{ eventstore.enabled }}"
+  subscriber.enabled: "{{ eventstore.enabled }}"
+  projections:
+    enabled: "{{ eventstore.enabled }}"
+    projections:
+      - name: testprojection
+      - query:
+

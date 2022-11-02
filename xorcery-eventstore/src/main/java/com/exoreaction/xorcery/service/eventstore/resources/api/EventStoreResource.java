@@ -8,7 +8,7 @@ import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.model.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonapischema.model.ResourceObjectSchema;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
-import com.exoreaction.xorcery.service.domainevents.resources.JsonSchemaMixin;
+import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaMixin;
 import com.exoreaction.xorcery.service.eventstore.model.EventStoreModel;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;

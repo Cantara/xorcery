@@ -26,6 +26,7 @@ public class EventStoreService {
 
     public static final String SERVICE_TYPE = "eventstore";
     private final EventStoreDBClient client;
+    private final EventStoreDBProjectionManagementClient projectionManagementClient;
     private final ObjectMapper objectMapper;
     private ServiceResourceObject sro;
 
@@ -33,11 +34,8 @@ public class EventStoreService {
     public EventStoreService(Topic<ServiceResourceObject> registryTopic,
                              Configuration configuration,
                              ReactiveStreams reactiveStreams) throws ParseError {
-        this.sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
-                .api(EventStoreRels.eventstore.name(), "api/eventstore")
-                .websocket(EventStoreRels.eventpublisher.name(), "ws/eventstore/publisher")
-                .websocket(EventStoreRels.eventsubscriber.name(), "ws/eventstore/subscriber")
-                .build();
+        ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                .api(EventStoreRels.eventstore.name(), "api/eventstore");
 
         this.objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -50,18 +48,23 @@ public class EventStoreService {
         StreamMetadata metadata = client.getStreamMetadata("$all").join();
         logger.info("$all stream metadata:" + metadata.toString());
 
+        projectionManagementClient = EventStoreDBProjectionManagementClient.create(settings);
+
         // Read
-        sro.getLinkByRel(EventStoreRels.eventpublisher.name()).ifPresent(link ->
+        if (configuration.getBoolean("eventstore.publisher.enabled").orElse(true))
         {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
-        });
+            builder.websocket(EventStoreRels.eventpublisher.name(), "ws/eventstore/publisher");
+            reactiveStreams.publisher("ws/eventstore/publisher", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
+        }
 
         // Write
-        sro.getLinkByRel(EventStoreRels.eventsubscriber.name()).ifPresent(link ->
+        if (configuration.getBoolean("eventstore.subscriber.enabled").orElse(true))
         {
-            reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
-        });
+            builder.websocket(EventStoreRels.eventsubscriber.name(), "ws/eventstore/subscriber");
+            reactiveStreams.subscriber("ws/eventstore/subscriber", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
+        }
 
+        sro = builder.build();
         registryTopic.publish(sro);
     }
 
@@ -72,5 +75,13 @@ public class EventStoreService {
 
                     return new StreamModel(id, readResult.getEvents().stream().findFirst().map(event -> event.getEvent().getStreamRevision().getValueUnsigned()).orElse(-1L));
                 });
+    }
+
+    public EventStoreDBClient getClient() {
+        return client;
+    }
+
+    public EventStoreDBProjectionManagementClient getProjectionManagementClient() {
+        return projectionManagementClient;
     }
 }

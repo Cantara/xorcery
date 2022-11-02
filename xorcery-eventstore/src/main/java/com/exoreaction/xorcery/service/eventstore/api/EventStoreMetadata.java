@@ -33,9 +33,18 @@ public record EventStoreMetadata(Metadata context)
             return this;
         }
 
+        public Builder eventType(String value) {
+            builder.add("eventType", value);
+            return this;
+        }
+
         public EventStoreMetadata build() {
             return new EventStoreMetadata(builder.build());
         }
+    }
+
+    public String streamId() {
+        return context.getString("streamId").orElseThrow();
     }
 
     public long revision() {
@@ -44,6 +53,10 @@ public record EventStoreMetadata(Metadata context)
 
     public Optional<Long> lastRevision() {
         return context.getLong("lastRevision");
+    }
+
+    public String eventType() {
+        return context.getString("eventType").orElseThrow();
     }
 
     public String contentType() {
