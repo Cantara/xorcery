@@ -77,7 +77,10 @@ public class ReactiveStreamsServiceTest {
 
     @Test
     public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
-        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder()::addTestDefaults)
+                .add("server.http.port", Sockets.nextFreePort())
+                .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
@@ -119,7 +122,10 @@ public class ReactiveStreamsServiceTest {
     }
 
     private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
-        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder()::addTestDefaults)
+                .add("server.http.port", Sockets.nextFreePort())
+                .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
@@ -159,7 +165,10 @@ public class ReactiveStreamsServiceTest {
 
     @Test
     public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryFibonacciNumbers() throws Exception {
-        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder()::addTestDefaults)
+                .add("server.http.port", Sockets.nextFreePort())
+                .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
@@ -203,7 +212,10 @@ public class ReactiveStreamsServiceTest {
     }
 
     private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
-        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder()::addTestDefaults)
+                .add("server.http.port", Sockets.nextFreePort())
+                .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
@@ -243,7 +255,10 @@ public class ReactiveStreamsServiceTest {
 
     @Test
     public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryNioFibonacciNumbers() throws Exception {
-        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        Configuration configuration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder()::addTestDefaults)
+                .add("server.http.port", Sockets.nextFreePort())
+                .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
