@@ -29,6 +29,11 @@
             <artifactId>xorcery-jsonapi-jaxrs</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-neo4j</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>

@@ -37,6 +37,10 @@ public record JsonDomainEvent(ObjectNode json)
             return new StateBuilder(builder);
         }
 
+        public StateBuilder created(Enum<?> type, String id) {
+            return created(type.name(), id);
+        }
+
         public StateBuilder updated(String type, String id) {
             builder.set("updated", builder.objectNode()
                     .<ObjectNode>set("type", builder.textNode(type))
@@ -45,12 +49,20 @@ public record JsonDomainEvent(ObjectNode json)
             return new StateBuilder(builder);
         }
 
+        public StateBuilder updated(Enum<?> type, String id) {
+            return updated(type.name(), id);
+        }
+
         public JsonDomainEvent deleted(String type, String id) {
             builder.set("deleted", builder.objectNode()
                     .<ObjectNode>set("type", builder.textNode(type))
                     .set("id", builder.textNode(id)));
 
             return new JsonDomainEvent(builder);
+        }
+
+        public JsonDomainEvent deleted(Enum<?> type, String id) {
+            return deleted(type.name(), id);
         }
     }
 
@@ -74,6 +86,10 @@ public record JsonDomainEvent(ObjectNode json)
             return this;
         }
 
+        public StateBuilder attribute(Enum<?> name, JsonNode value) {
+            return attribute(name.name(), value);
+        }
+
         public StateBuilder attribute(String name, Object value) {
             if (value == null) {
                 attribute(name, NullNode.getInstance());
@@ -86,7 +102,15 @@ public record JsonDomainEvent(ObjectNode json)
             return this;
         }
 
-        public StateBuilder addedRelationships(String relationship, String type, String id) {
+        public StateBuilder attribute(Enum<?> name, Object value) {
+            return attribute(name.name(), value);
+        }
+
+        public StateBuilder addedRelationship(String relationship, String type, String id) {
+
+            if (id == null)
+                return this;
+
             JsonNode relationships = builder.get("addedrelationships");
             if (relationships == null) {
                 relationships = builder.arrayNode();
@@ -103,7 +127,15 @@ public record JsonDomainEvent(ObjectNode json)
             return this;
         }
 
+        public StateBuilder addedRelationship(Enum<?> relationship, Enum<?> type, String id) {
+            return addedRelationship(relationship.name(), type.name(), id);
+        }
+
         public StateBuilder removedRelationship(String relationship, String type, String id) {
+
+            if (id == null)
+                return this;
+
             JsonNode relationships = builder.get("removedrelationships");
             if (relationships == null) {
                 relationships = builder.arrayNode();
@@ -118,6 +150,10 @@ public record JsonDomainEvent(ObjectNode json)
             arrayNode.add(relationshipNode);
 
             return this;
+        }
+
+        public StateBuilder removedRelationship(Enum<?> relationship, Enum<?> type, String id) {
+            return removedRelationship(relationship.name(), type.name(), id);
         }
 
         public JsonDomainEvent build() {

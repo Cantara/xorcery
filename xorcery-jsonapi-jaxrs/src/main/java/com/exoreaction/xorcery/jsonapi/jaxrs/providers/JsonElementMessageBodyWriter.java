@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.JsonApiRels;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.inject.Singleton;
@@ -29,7 +30,9 @@ public class JsonElementMessageBodyWriter
 
     public JsonElementMessageBodyWriter() {
         this.objectMapper = new ObjectMapper();
+        objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
+        yamlObjectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
     }
 
     @Override

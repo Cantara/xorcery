@@ -28,8 +28,12 @@ public class Xorcery
     private List<Object> started;
 
     public Xorcery(Configuration configuration) throws Exception {
+        this(configuration, ServiceLocatorUtilities.createAndPopulateServiceLocator(configuration.getString("name").orElse(null)));
+    }
+
+    public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
         logger.info("Creating");
-        serviceLocator = ServiceLocatorUtilities.createAndPopulateServiceLocator(configuration.getString("id").orElse(null));
+        this.serviceLocator = serviceLocator;
         ServiceLocatorUtilities.addOneConstant(serviceLocator, configuration);
         ServiceLocatorUtilities.addOneConstant(serviceLocator, this);
         ServiceLocatorUtilities.addClasses(serviceLocator, DefaultTopicDistributionService.class);
