@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.registry;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -13,8 +14,7 @@ import org.jvnet.hk2.annotations.Service;
  * @author rickardoberg
  * @since 13/04/2022
  */
-@Service
-@Named("registry")
+@Service(name="registry")
 public class RegistryService {
     public static final String SERVICE_TYPE = "registry";
 
@@ -22,9 +22,8 @@ public class RegistryService {
 
     @Inject
     public RegistryService(Configuration configuration,
-                           RegistryState registryState,
-                           Topic<ServiceResourceObject> registryTopic) {
-        registryTopic.publish(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+                           ServiceResourceObjects serviceResourceObjects) {
+        serviceResourceObjects.publish(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
                 .api("registry", "api/registry")
                 .websocket("registrysubscriber", "ws/registry/subscriber")
                 .websocket("registrypublisher", "ws/registry/publisher")

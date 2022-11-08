@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
 import com.exoreaction.xorcery.service.log4jappender.LoggingMetadata;
@@ -35,7 +36,7 @@ public class RequestLogService
     private final BroadcastEventHandler<WithMetadata<ObjectNode>> broadcastEventHandler = new BroadcastEventHandler<>(false);
 
     @Inject
-    public RequestLogService(Topic<ServiceResourceObject> registryTopic,
+    public RequestLogService(ServiceResourceObjects serviceResourceObjects,
                              ReactiveStreams reactiveStreams,
                              ServiceLocator serviceLocator,
                              Server server,
@@ -60,7 +61,7 @@ public class RequestLogService
 
         TopicSubscribers.addSubscriber(serviceLocator,new ClientPublisherGroupListener(resourceObject.getServiceIdentifier(), cfg -> new RequestLogPublisher(), RequestLogPublisher.class, null, reactiveStreams));
 
-        registryTopic.publish(resourceObject);
+        serviceResourceObjects.publish(resourceObject);
     }
 
 

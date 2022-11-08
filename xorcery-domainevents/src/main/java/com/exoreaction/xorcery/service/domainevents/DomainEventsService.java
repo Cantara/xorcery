@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.disruptor.handlers.UnicastEventHandler;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
@@ -44,7 +45,7 @@ public class DomainEventsService
     private final Disruptor<WithMetadata<DomainEvents>> disruptor;
 
     @Inject
-    public DomainEventsService(Topic<ServiceResourceObject> registryTopic,
+    public DomainEventsService(ServiceResourceObjects serviceResourceObjects,
                                ReactiveStreams reactiveStreams,
                                ServiceLocator serviceLocator,
                                Configuration configuration) {
@@ -71,7 +72,7 @@ public class DomainEventsService
         {
             reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new DomainEventsPublisher(), DomainEventsPublisher.class);
         });
-        registryTopic.publish(resourceObject);
+        serviceResourceObjects.publish(resourceObject);
     }
 
     @Override

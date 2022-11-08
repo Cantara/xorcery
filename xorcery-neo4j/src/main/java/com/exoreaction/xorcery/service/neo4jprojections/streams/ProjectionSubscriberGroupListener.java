@@ -11,11 +11,17 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.api.IterableProvider;
+import org.glassfish.hk2.api.ServiceLocator;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Flow;
 
 public class ProjectionSubscriberGroupListener extends AbstractGroupListener {
 
@@ -65,16 +71,25 @@ public class ProjectionSubscriberGroupListener extends AbstractGroupListener {
 
                     reactiveStreams.subscribe(link.getHrefAsUri(),
                             sourceConfiguration,
-                            new ProjectionSubscriber(
-                                    subscription -> new Neo4jProjectionEventHandler(
-                                            graphDatabase.getGraphDatabaseService(),
-                                            subscription,
-                                            sourceConfiguration.getLong("from"),
-                                            consumerConfiguration,
-                                            neo4jProjectionCommitPublisher,
-                                            neo4jEventProjectionList,
-                                            metricRegistry)),
+                            newSubscriber(sourceConfiguration, consumerConfiguration),
                             ProjectionSubscriber.class);
+
+                    // TODO Setup reconnect functionality here
                 });
+    }
+
+    protected Flow.Subscriber<WithMetadata<ArrayNode>> newSubscriber(Configuration sourceConfiguration, Configuration consumerConfiguration) {
+        String databaseName = consumerConfiguration.getString("database").orElse("neo4j");
+        GraphDatabase graphDatabase = graphDatabases.apply(databaseName);
+
+        return new ProjectionSubscriber(
+                subscription -> new Neo4jProjectionEventHandler(
+                        graphDatabase.getGraphDatabaseService(),
+                        subscription,
+                        sourceConfiguration.getLong("from"),
+                        consumerConfiguration,
+                        neo4jProjectionCommitPublisher,
+                        neo4jEventProjectionList,
+                        metricRegistry));
     }
 }

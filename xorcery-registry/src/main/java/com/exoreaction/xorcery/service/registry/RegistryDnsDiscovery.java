@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.registry;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -25,12 +26,12 @@ public class RegistryDnsDiscovery
     private Logger logger = LogManager.getLogger(getClass());
     private JmDNS jmdns;
     private Configuration configuration;
-    private Topic<ServiceResourceObject> resourceObjectTopic;
+    private RegistryState registryState;
 
     @Inject
-    public RegistryDnsDiscovery(Configuration configuration, Topic<ServiceResourceObject> resourceObjectTopic) {
+    public RegistryDnsDiscovery(Configuration configuration, RegistryState registryState) {
         this.configuration = configuration;
-        this.resourceObjectTopic = resourceObjectTopic;
+        this.registryState = registryState;
 
         try {
             jmdns = JmDNS.create(InetAddress.getLocalHost());

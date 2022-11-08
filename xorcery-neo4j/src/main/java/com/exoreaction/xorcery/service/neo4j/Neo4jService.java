@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.neo4j;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.json.model.JsonElement;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
@@ -13,10 +14,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.hk2.api.PreDestroy;
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.api.messaging.Topic;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.ContractsProvided;
@@ -36,9 +37,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Named(Neo4jService.SERVICE_TYPE)
-@ContractsProvided({GraphDatabases.class})
+@ContractsProvided({GraphDatabases.class, Factory.class})
 public class Neo4jService
-        implements GraphDatabases, PreDestroy {
+        implements Factory<GraphDatabase>, GraphDatabases, PreDestroy {
 
     private static final Logger logger = LogManager.getLogger(Neo4jService.class);
 
@@ -47,11 +48,15 @@ public class Neo4jService
     private final DatabaseManagementService managementService;
 
     private final Map<String, GraphDatabase> databases = new ConcurrentHashMap<>();
+    private final InstantiationService instantiationService;
 
     @Inject
-    public Neo4jService(Topic<ServiceResourceObject> registryTopic,
+    public Neo4jService(ServiceResourceObjects serviceResourceObjects,
                         ServiceLocator serviceLocator,
-                        Configuration configuration) {
+                        Configuration configuration,
+                        InstantiationService instantiationService
+    ) {
+        this.instantiationService = instantiationService;
 
         Neo4jConfiguration neo4jConfiguration = new Neo4jConfiguration(configuration.getConfiguration("neo4jdatabase"));
 
@@ -128,7 +133,7 @@ public class Neo4jService
 
         logger.info("Neo4j initialized");
 
-        registryTopic.publish(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+        serviceResourceObjects.publish(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
                 .api("neo4j", "api/neo4j")
                 .build());
     }
@@ -141,6 +146,20 @@ public class Neo4jService
     @Override
     public GraphDatabase apply(String name) {
         return databases.computeIfAbsent(name, n -> new GraphDatabase(managementService.database(n), Cypher.defaultFieldMappings()));
+    }
+
+    @Override
+    public GraphDatabase provide() {
+        return apply(Optional.ofNullable(instantiationService.getInstantiationData())
+                .map(InstantiationData::getParentInjectee)
+                .map(Injectee::getInjecteeDescriptor)
+                .map(ActiveDescriptor::getName)
+                .orElse("neo4j"));
+    }
+
+    @Override
+    public void dispose(GraphDatabase instance) {
+        // Do nothing
     }
 
     public record DatabaseConfiguration(ObjectNode json)

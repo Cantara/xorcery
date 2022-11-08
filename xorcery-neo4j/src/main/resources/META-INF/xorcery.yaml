@@ -8,3 +8,5 @@ neo4jdatabase:
 
 neo4jprojections:
   enabled: true
+  publisher.enabled: "{{ neo4jprojections.enabled }}"
+  subscriber.enabled: "{{ neo4jprojections.enabled }}"

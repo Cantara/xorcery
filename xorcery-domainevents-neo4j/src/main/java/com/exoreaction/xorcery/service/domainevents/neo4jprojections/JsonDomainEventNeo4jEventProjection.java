@@ -5,12 +5,16 @@ import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 import org.apache.logging.log4j.LogManager;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 import org.neo4j.graphdb.*;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
+@Service(name="jsondomaineventprojection")
+@ContractsProvided({Neo4jEventProjection.class})
 public class JsonDomainEventNeo4jEventProjection
         implements Neo4jEventProjection {
 
@@ -45,18 +49,21 @@ public class JsonDomainEventNeo4jEventProjection
 
             // Create/update aggregate node
             if (aggregateType != null && aggregateId != null) {
-                Node aggregateNode;
-                if (id.equals(aggregateId)) {
+                Node aggregateNode = null;
+                if (!id.equals(aggregateId)) {
+                    aggregateNode = transaction.findNode(AGGREGATE_LABEL, "id", aggregateId);
+                }
+
+                if (aggregateNode == null)
+                {
                     aggregateNode = transaction.createNode(Label.label(aggregateType), AGGREGATE_LABEL);
                     aggregateNode.setProperty("created_on", timestamp);
-                    aggregateNode.setProperty("id", id);
-                } else {
-                    aggregateNode = transaction.findNode(AGGREGATE_LABEL, "id", aggregateId);
+                    aggregateNode.setProperty("id", aggregateId);
                 }
                 aggregateNode.setProperty("last_updated_on", timestamp);
             }
         } else if (eventJson.has("updated")) {
-            ObjectNode updated = (ObjectNode) eventJson.path("created");
+            ObjectNode updated = (ObjectNode) eventJson.path("updated");
             Node node = transaction.findNode(ENTITY_LABEL, "id", updated.get("id").textValue());
 
             if (node != null) {

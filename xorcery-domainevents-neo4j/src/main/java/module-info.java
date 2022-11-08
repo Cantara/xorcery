@@ -11,6 +11,7 @@ open module xorcery.domainevents.neo4j {
     requires xorcery.neo4j;
     requires xorcery.domainevents;
 
+    requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
 
     provides Neo4jProvider with ApplyJsonDomainEvent;

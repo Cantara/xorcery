@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
+import com.exoreaction.xorcery.service.conductor.ConductorAPI;
 import com.exoreaction.xorcery.service.conductor.ConductorService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -19,10 +20,10 @@ import jakarta.ws.rs.Produces;
 public class ConductorResource
     extends JsonApiResource
 {
-    private final ConductorService conductor;
+    private final ConductorAPI conductor;
 
     @Inject
-    public ConductorResource( ConductorService conductor )
+    public ConductorResource( ConductorAPI conductor )
     {
         this.conductor = conductor;
     }

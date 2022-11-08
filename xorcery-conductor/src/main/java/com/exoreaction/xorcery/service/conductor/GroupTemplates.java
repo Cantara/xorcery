@@ -56,6 +56,8 @@ public class GroupTemplates {
 
     public void addedService(ServiceResourceObject service) {
         try {
+            logger.info("Check group templates for service: " + service.getServiceIdentifier());
+
             // Check if any group templates match
             // TODO This algo can be simplified
             for (GroupTemplate groupTemplate : groupTemplates) {

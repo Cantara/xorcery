@@ -9,6 +9,7 @@ import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
@@ -52,7 +53,7 @@ public class CertificateManagerService {
     private JsonApiClient client;
 
     @Inject
-    public CertificateManagerService(Topic<ServiceResourceObject> registryTopic,
+    public CertificateManagerService(ServiceResourceObjects serviceResourceObjects,
                                      ServiceLocator serviceLocator,
                                      SslContextFactory.Server serverSslContextFactory,
                                      SslContextFactory.Client clientSslContextFactory,
@@ -88,7 +89,7 @@ public class CertificateManagerService {
             TopicSubscribers.addSubscriber(serviceLocator,new CheckCertGroupListener(sro.getServiceIdentifier(), "certificatemanager"));
         }
 
-        registryTopic.publish(sro);
+        serviceResourceObjects.publish(sro);
     }
 
     private class CheckCertGroupListener extends AbstractGroupListener {

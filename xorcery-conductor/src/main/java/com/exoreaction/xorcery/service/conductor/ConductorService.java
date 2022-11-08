@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.api.Group;
@@ -34,32 +35,24 @@ import java.util.concurrent.*;
  * @since 15/04/2022
  */
 @Service
-@MessageReceiver
+@MessageReceiver({ServiceResourceObject.class, ServerResourceDocument.class})
 @Named(ConductorService.SERVICE_TYPE)
-public class ConductorService
-        implements PreDestroy {
+public class ConductorService {
 
     public static final String SERVICE_TYPE = "conductor";
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final ServiceResourceObject sro;
-    private final Topic<ServiceResourceObject> registryTopic;
     private final Configuration configuration;
     private final ConductorConfiguration conductorConfiguration;
-
-    private final Queue<ServiceResourceObject> serviceResourceObjectQueue = new ArrayBlockingQueue<>(1024);
-    private ScheduledExecutorService resourceProcessor;
 
     private final GroupTemplates groupTemplates;
     private final Groups groups;
 
     @Inject
-    public ConductorService(Topic<ServiceResourceObject> registryTopic,
-                            Topic<GroupTemplate> groupTemplateTopic,
+    public ConductorService(Topic<GroupTemplate> groupTemplateTopic,
                             Topic<Group> groupTopic,
                             Configuration configuration) {
-        this.registryTopic = registryTopic;
         this.configuration = configuration;
         this.conductorConfiguration = new ConductorConfiguration(configuration.getConfiguration("conductor"));
 
@@ -98,11 +91,6 @@ public class ConductorService
             }
         }, groups);
 
-
-        sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
-                .api("conductor", "api/conductor")
-                .websocket("conductorgroups", "ws/conductor/groups")
-                .build();
 
         loadTemplates();
 
@@ -163,10 +151,6 @@ public class ConductorService
         groupTemplates.addTemplate(groupTemplate);
     }
 
-    public void removeTemplate(String templateId) {
-//        groupTemplates.removeIf(t -> t.resourceObject().getId().equals(templateId));
-    }
-
     public GroupTemplates getGroupTemplates() {
         return groupTemplates;
     }
@@ -175,36 +159,11 @@ public class ConductorService
         return groups;
     }
 
-    // Start processing of ServiceResourceObjects after startup of Xorcery
     public void addedService(@SubscribeTo ServiceResourceObject service) {
-        serviceResourceObjectQueue.add(service);
+        groupTemplates.addedService(service);
     }
 
     public void addedServer(@SubscribeTo ServerResourceDocument server) {
         server.getServices().forEach(this::addedService);
-    }
-
-    public void startResourceProcessing() {
-        registryTopic.publish(sro);
-        resourceProcessor = Executors.newSingleThreadScheduledExecutor();
-        processResources(); // Do this synchronously on startup first, so that after Xorcery has started all groups have been created and processed
-        resourceProcessor.submit(this::processResources);
-    }
-
-    protected void processResources() {
-        if (!resourceProcessor.isShutdown()) {
-            ServiceResourceObject sro;
-            while ((sro = serviceResourceObjectQueue.poll()) != null) {
-                groupTemplates.addedService(sro);
-            }
-            resourceProcessor.schedule(this::processResources, 1, TimeUnit.SECONDS);
-        }
-    }
-
-    @Override
-    public void preDestroy() {
-        if (resourceProcessor != null) {
-            resourceProcessor.shutdown();
-        }
     }
 }

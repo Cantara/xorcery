@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.eventstore;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
 import com.exoreaction.xorcery.service.eventstore.streams.EventStorePublisher;
@@ -32,7 +33,7 @@ public class EventStoreService {
     private ServiceResourceObject sro;
 
     @Inject
-    public EventStoreService(Topic<ServiceResourceObject> registryTopic,
+    public EventStoreService(ServiceResourceObjects serviceResourceObjects,
                              Configuration configuration,
                              Provider<ReactiveStreams> reactiveStreams) throws ParseError {
         ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
@@ -55,18 +56,18 @@ public class EventStoreService {
         if (configuration.getBoolean("eventstore.publisher.enabled").orElse(true))
         {
             builder.websocket(EventStoreRels.eventpublisher.name(), "ws/eventstore/publisher");
-            reactiveStreams.get().publisher("ws/eventstore/publisher", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
+            reactiveStreams.get().publisher("/ws/eventstore/publisher", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
         }
 
         // Write
         if (configuration.getBoolean("eventstore.subscriber.enabled").orElse(true))
         {
             builder.websocket(EventStoreRels.eventsubscriber.name(), "ws/eventstore/subscriber");
-            reactiveStreams.get().subscriber("ws/eventstore/subscriber", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
+            reactiveStreams.get().subscriber("/ws/eventstore/subscriber", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
         }
 
         sro = builder.build();
-        registryTopic.publish(sro);
+        serviceResourceObjects.publish(sro);
     }
 
     public CompletionStage<StreamModel> getStream(String id) {

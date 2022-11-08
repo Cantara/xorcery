@@ -55,6 +55,7 @@ public class PublisherWebSocketEndpoint
 
     private Disruptor<AtomicReference<Object>> disruptor;
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
+    private long outstandingRequestAmount;
 
     public PublisherWebSocketEndpoint(String webSocketPath, Function<Configuration, Flow.Publisher<Object>> publisherFactory,
                                       MessageWriter<Object> messageWriter,
@@ -92,15 +93,19 @@ public class PublisherWebSocketEndpoint
         } else {
             long requestAmount = Long.parseLong(message);
 
-            if (requestAmount == Long.MIN_VALUE) {
-                logger.info(marker, "Received cancel on websocket " + webSocketPath);
-                subscription.cancel();
-            } else {
-                if (logger.isDebugEnabled())
-                    logger.debug(marker, "Received request:" + requestAmount);
-
-                requestSemaphore.release((int) requestAmount);
-                subscription.request(requestAmount);
+            if (subscription != null) {
+                if (requestAmount == Long.MIN_VALUE) {
+                    logger.info(marker, "Received cancel on websocket " + webSocketPath);
+                    subscription.cancel();
+                } else {
+                    if (logger.isDebugEnabled())
+                        logger.debug(marker, "Received request:" + requestAmount);
+                    requestSemaphore.release((int) requestAmount);
+                    subscription.request(requestAmount);
+                }
+            } else
+            {
+                outstandingRequestAmount += requestAmount;
             }
         }
     }
@@ -158,6 +163,12 @@ public class PublisherWebSocketEndpoint
         disruptor = new Disruptor<>(AtomicReference::new, 512, new NamedThreadFactory("PublisherWebSocketDisruptor-" + marker.getName() + "-"));
         disruptor.handleEventsWith(new Sender());
         disruptor.start();
+
+        if (outstandingRequestAmount > 0)
+        {
+            subscription.request(outstandingRequestAmount);
+            outstandingRequestAmount = 0;
+        }
     }
 
     @Override
@@ -179,13 +190,18 @@ public class PublisherWebSocketEndpoint
     }
 
     public void onError(Throwable throwable) {
+        subscription = null;
+
         logger.error(marker, "Reactive publisher error", throwable);
         session.close(StatusCode.SERVER_ERROR, throwable.getMessage());
     }
 
     public void onComplete() {
+        subscription = null;
+
         logger.info(marker, "Sending complete for session with {}", session.getRemote().getRemoteAddress());
         disruptor.shutdown();
+
         // TODO This should wait for results to come in
         session.close(1000, "complete");
     }

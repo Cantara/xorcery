@@ -5,6 +5,8 @@ import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
@@ -14,6 +16,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+@Service(name="cypherprojection")
+@ContractsProvided({Neo4jEventProjection.class})
 public class CypherEventProjection
         implements Neo4jEventProjection {
     private final Logger logger = LogManager.getLogger(getClass());

@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.jsonapi.model.JsonApiRels;
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -17,24 +18,18 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.*;
 
-@MessageReceiver
-@Service
-@Named("registry")
+@MessageReceiver({ServiceResourceObject.class, ServerResourceDocument.class})
+@Service(name="registry")
 public class RegistryState {
 
-    private List<ServiceResourceObject> serviceResources = new ArrayList<>();
     private Set<ServerResourceDocument> serverResourceDocuments = new LinkedHashSet<>();
     private StandardConfiguration configuration;
+    private ServiceResourceObjects serviceResourceObjects;
 
     @Inject
-    public RegistryState(Configuration configuration) {
+    public RegistryState(Configuration configuration, ServiceResourceObjects serviceResourceObjects) {
         this.configuration = ()->configuration;
-    }
-
-    public void service(@SubscribeTo ServiceResourceObject serviceResourceObject) {
-        if (serviceResourceObject.getServiceIdentifier().resourceObjectIdentifier().getId().equals(configuration.getId())) {
-            serviceResources.add(serviceResourceObject);
-        }
+        this.serviceResourceObjects = serviceResourceObjects;
     }
 
     public void server(@SubscribeTo ServerResourceDocument serverResourceDocument) {
@@ -48,7 +43,7 @@ public class RegistryState {
 
     public ServerResourceDocument getServer() {
         ResourceObjects.Builder builder = new ResourceObjects.Builder();
-        for (ServiceResourceObject serviceResource : serviceResources) {
+        for (ServiceResourceObject serviceResource : serviceResourceObjects.getServiceResources()) {
             builder.resource(serviceResource.resourceObject());
         }
         ResourceDocument serverDocument = new ResourceDocument.Builder()
@@ -70,6 +65,4 @@ public class RegistryState {
                 .filter(ro -> ro.getResourceObjectIdentifier().equals(serviceIdentifier.resourceObjectIdentifier()))
                 .findFirst().map(ServiceResourceObject::new);
     }
-
-
 }

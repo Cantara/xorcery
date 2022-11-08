@@ -45,8 +45,7 @@ public class JsonMessageReaderFactory
         @Override
         public Object readFrom(InputStream entityStream) throws IOException {
             try {
-                JsonNode json = objectMapper.readTree(entityStream);
-                return type.getConstructor(json.getClass()).newInstance(json);
+                return objectMapper.readValue(entityStream, type);
             } catch (Throwable e) {
                 throw new IOException(e);
             }

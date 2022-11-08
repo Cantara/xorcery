@@ -48,7 +48,7 @@ public record PublishingProcess(WebSocketClient webSocketClient, ObjectMapper ob
                                 byteBufferPool,
                                 this), subscriberWebsocketUri)
                         .whenComplete(this::complete);
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 logger.error("Could not subscribe to " + subscriberWebsocketUri.toASCIIString(), e);
 
                 retry();

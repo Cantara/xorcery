@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.conductor.resources.api;
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
+import com.exoreaction.xorcery.service.conductor.ConductorAPI;
 import com.exoreaction.xorcery.service.conductor.ConductorService;
 import com.exoreaction.xorcery.service.conductor.api.Group;
 import jakarta.inject.Inject;
@@ -17,10 +18,10 @@ import jakarta.ws.rs.Produces;
 
 @Path("api/conductor/groups")
 public class GroupsResource {
-    private ConductorService conductor;
+    private ConductorAPI conductor;
 
     @Inject
-    public GroupsResource(ConductorService conductor) {
+    public GroupsResource(ConductorAPI conductor) {
         this.conductor = conductor;
     }
 
@@ -28,7 +29,7 @@ public class GroupsResource {
     @Produces(MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML)
     public ResourceDocument get() {
         return new ResourceDocument.Builder()
-                .data(conductor.getGroups().getGroups().stream()
+                .data(conductor.getGroups().stream()
                         .map(Group::resourceObject)
                         .collect(ResourceObjects.toResourceObjects()))
                 .build();

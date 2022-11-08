@@ -3,6 +3,8 @@ package com.exoreaction.xorcery.core;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.*;
 import org.jvnet.hk2.annotations.Service;
 
@@ -11,6 +13,9 @@ import java.util.Optional;
 @Service
 public class ConfigurationValidationService
         implements ValidationService, Validator, Filter {
+
+    private final Logger logger = LogManager.getLogger(getClass());
+
     private Provider<Configuration> configurationProvider;
     private Configuration configuration;
 
@@ -50,6 +55,7 @@ public class ConfigurationValidationService
                     .flatMap(name -> configuration.getBoolean(name + ".enabled"))
                     .orElse(true);
 
+            logger.debug("Enabled: "+info.getCandidate().getImplementation()+":"+result);
 //            System.out.println(info.getCandidate().getImplementation()+":"+result);
             return result;
         } catch (Throwable e) {

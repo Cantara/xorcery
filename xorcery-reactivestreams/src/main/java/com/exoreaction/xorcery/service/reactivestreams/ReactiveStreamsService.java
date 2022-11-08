@@ -215,10 +215,18 @@ public class ReactiveStreamsService
     // Client
     @Override
     public CompletableFuture<Void> publish(URI subscriberWebsocketUri, Configuration subscriberConfiguration, Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType) {
+
+        CompletableFuture<Void> result = new CompletableFuture<>();
+
+        if (!(subscriberWebsocketUri.getScheme().equals("ws") || subscriberWebsocketUri.getScheme().equals("wss")))
+        {
+            result.completeExceptionally(new IllegalArgumentException("Unsupported URL scheme:"+subscriberWebsocketUri.toASCIIString()));
+            return result;
+        }
+
         if (publisherType == null)
             publisherType = (Class<? extends Flow.Publisher<?>>) publisher.getClass();
 
-        CompletableFuture<Void> result = new CompletableFuture<>();
 
 
         // TODO Track the publishing process itself. Need to ensure they are cancelled on shutdown

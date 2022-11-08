@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.opensearch;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.core.TopicSubscribers;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.opensearch.api.OpenSearchRels;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
@@ -49,7 +50,7 @@ public class OpenSearchService
     private final Configuration configuration;
 
     @Inject
-    public OpenSearchService(Topic<ServiceResourceObject> registryTopic,
+    public OpenSearchService(ServiceResourceObjects serviceResourceObjects,
                              ServiceLocator serviceLocator,
                              ReactiveStreams reactiveStreams,
                              Configuration configuration,
@@ -95,7 +96,7 @@ public class OpenSearchService
             throw new RuntimeException(e);
         }
 
-        registryTopic.publish(sro);
+        serviceResourceObjects.publish(sro);
     }
 
     private void loadComponentTemplates() {

@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
@@ -34,7 +35,7 @@ public class MetricsService
     private final DeploymentMetadata deploymentMetadata;
 
     @Inject
-    public MetricsService(Topic<ServiceResourceObject> registryTopic,
+    public MetricsService(ServiceResourceObjects serviceResourceObjects,
                           ReactiveStreams reactiveStreams,
                           ServiceLocator serviceLocator,
                           MetricRegistry metricRegistry,
@@ -59,7 +60,7 @@ public class MetricsService
         });
         TopicSubscribers.addSubscriber(serviceLocator,new ClientPublisherGroupListener(resourceObject.getServiceIdentifier(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class, null, reactiveStreams));
 
-        registryTopic.publish(resourceObject);
+        serviceResourceObjects.publish(resourceObject);
     }
 
     @Override

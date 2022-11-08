@@ -10,6 +10,7 @@ import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWri
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.rest.RestProcess;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
@@ -66,7 +67,7 @@ public class JmxMetrics
     private JsonApiClient client;
 
     @Inject
-    public JmxMetrics(Topic<ServiceResourceObject> registryTopic,
+    public JmxMetrics(ServiceResourceObjects serviceResourceObjects,
                       ReactiveStreams reactiveStreams,
                       ServiceLocator serviceLocator,
                       Configuration configuration,
@@ -84,7 +85,7 @@ public class JmxMetrics
 
         TopicSubscribers.addSubscriber(serviceLocator,new JmxServersGroupListener(sro.getServiceIdentifier(), "metrics"));
 
-        registryTopic.publish(sro);
+        serviceResourceObjects.publish(sro);
     }
 
     @Override
