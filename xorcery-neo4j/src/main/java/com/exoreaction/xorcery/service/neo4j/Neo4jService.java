@@ -7,7 +7,6 @@ import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
-import com.exoreaction.xorcery.service.neo4j.log.Log4jLogProvider;
 import com.exoreaction.xorcery.service.neo4j.spi.Neo4jProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -17,8 +16,10 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.hk2.api.*;
-import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.InstantiationService;
+import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
@@ -29,6 +30,8 @@ import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
+import org.neo4j.logging.log4j.Log4jLogProvider;
+import org.neo4j.logging.log4j.Neo4jLoggerContext;
 
 import java.net.URL;
 import java.nio.file.Path;
@@ -64,8 +67,9 @@ public class Neo4jService
         logger.info("Neo4j home:" + home);
         Map<String, String> settings = neo4jConfiguration.settings();
         managementService = new DatabaseManagementServiceBuilder(home)
-                .setUserLogProvider(new Log4jLogProvider())
-                .setConfigRaw(settings)
+                .setUserLogProvider(new Log4jLogProvider(new Neo4jLoggerContext(LogManager.getContext(), () -> {
+                })))
+//                .loadPropertiesFromFile()setConfigRaw(settings)
                 .build();
 
         List<DatabaseConfiguration> databases = configuration.getListAs("neo4jdatabase.databases", json -> new DatabaseConfiguration((ObjectNode) json))
@@ -149,12 +153,9 @@ public class Neo4jService
     }
 
     @Override
+    @Singleton
     public GraphDatabase provide() {
-        return apply(Optional.ofNullable(instantiationService.getInstantiationData())
-                .map(InstantiationData::getParentInjectee)
-                .map(Injectee::getInjecteeDescriptor)
-                .map(ActiveDescriptor::getName)
-                .orElse("neo4j"));
+        return apply("neo4j");
     }
 
     @Override

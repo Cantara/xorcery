@@ -15,4 +15,5 @@ open module xorcery.client {
     requires jersey.client;
     requires xorcery.jsonapi.jaxrs;
     requires java.logging;
+    requires org.dnsjava;
 }

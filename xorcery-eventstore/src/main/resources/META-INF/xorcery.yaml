@@ -1,5 +1,5 @@
 eventstore:
-  enabled: true
+  enabled: "{{ defaults.enabled }}"
   url: "esdb://{{ ENV.EVENTSTORE_HOST | \"localhost\" }}:2113?tls=false"
   publisher.enabled: "{{ eventstore.enabled }}"
   subscriber.enabled: "{{ eventstore.enabled }}"

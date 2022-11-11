@@ -1,5 +1,5 @@
 neo4jdatabase:
-  enabled: true
+  enabled: "{{ defaults.enabled }}"
   path: "{{ home }}/neo4j"
   startup: []
   settings:
@@ -7,6 +7,6 @@ neo4jdatabase:
       allow_upgrade: true
 
 neo4jprojections:
-  enabled: true
+  enabled: "{{ defaults.enabled }}"
   publisher.enabled: "{{ neo4jprojections.enabled }}"
   subscriber.enabled: "{{ neo4jprojections.enabled }}"

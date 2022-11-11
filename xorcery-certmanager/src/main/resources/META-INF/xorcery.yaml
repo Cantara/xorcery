@@ -1,4 +1,4 @@
 certificatemanager:
-  enabled: true
+  enabled: "{{ defaults.enabled }}"
   is_master: true
   renew_on_startup: true

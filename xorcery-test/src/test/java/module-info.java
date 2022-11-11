@@ -13,4 +13,6 @@ open module xorcery.test {
     requires java.base;
 
     requires jersey.common;
+    requires jersey.client;
+    requires xorcery.jsonapi.jaxrs;
 }

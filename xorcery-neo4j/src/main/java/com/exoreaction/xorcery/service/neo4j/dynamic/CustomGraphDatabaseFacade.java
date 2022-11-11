@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.neo4j.dynamic;
 
 import org.neo4j.configuration.Config;
+import org.neo4j.dbms.systemgraph.TopologyGraphDbmsModel;
 import org.neo4j.internal.kernel.api.connectioninfo.ClientConnectionInfo;
 import org.neo4j.internal.kernel.api.exceptions.TransactionFailureException;
 import org.neo4j.internal.kernel.api.security.LoginContext;
@@ -9,8 +10,10 @@ import org.neo4j.kernel.api.exceptions.Status;
 import org.neo4j.kernel.availability.DatabaseAvailabilityGuard;
 import org.neo4j.kernel.availability.UnavailableException;
 import org.neo4j.kernel.database.Database;
+import org.neo4j.kernel.impl.api.CloseableResourceManager;
 import org.neo4j.kernel.impl.coreapi.InternalTransaction;
 import org.neo4j.kernel.impl.coreapi.TransactionExceptionMapper;
+import org.neo4j.kernel.impl.coreapi.TransactionImpl;
 import org.neo4j.kernel.impl.factory.DbmsInfo;
 import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 
@@ -24,12 +27,8 @@ public class CustomGraphDatabaseFacade
     private DatabaseAvailabilityGuard availabilityGuard;
     private Function<LoginContext, LoginContext> loginContextTransformer;
 
-    public CustomGraphDatabaseFacade(GraphDatabaseFacade facade, Function<LoginContext, LoginContext> loginContextTransformer) {
-        super(facade, loginContextTransformer);
-    }
-
     public CustomGraphDatabaseFacade(Database database, Config config, DbmsInfo dbmsInfo, DatabaseAvailabilityGuard availabilityGuard) {
-        super(database, config, dbmsInfo, availabilityGuard);
+        super(database, config, dbmsInfo, TopologyGraphDbmsModel.HostedOnMode.SINGLE, availabilityGuard);
         this.database = database;
         this.availabilityGuard = availabilityGuard;
         this.loginContextTransformer = Function.identity();
@@ -39,7 +38,7 @@ public class CustomGraphDatabaseFacade
     protected InternalTransaction beginTransactionInternal(KernelTransaction.Type type, LoginContext loginContext, ClientConnectionInfo connectionInfo, long timeoutMillis, Consumer<Status> terminationCallback, TransactionExceptionMapper transactionExceptionMapper) {
 
         KernelTransaction kernelTransaction = this.beginKernelTransaction(type, loginContext, connectionInfo, timeoutMillis);
-        return new CustomTransactionImpl(this.database.getTokenHolders(), this.contextFactory, this.availabilityGuard, this.database.getExecutionEngine(), kernelTransaction, terminationCallback, transactionExceptionMapper);
+        return new CustomTransactionImpl(this.database.getTokenHolders(), this.contextFactory, this.availabilityGuard, this.database.getExecutionEngine(), kernelTransaction, new CloseableResourceManager(), terminationCallback, transactionExceptionMapper, this.database.getElementIdMapper());
     }
 
     KernelTransaction beginKernelTransaction(KernelTransaction.Type type, LoginContext loginContext, ClientConnectionInfo connectionInfo, long timeout) {

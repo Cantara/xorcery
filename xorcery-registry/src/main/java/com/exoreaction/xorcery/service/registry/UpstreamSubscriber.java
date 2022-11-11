@@ -12,8 +12,7 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.Flow;
 
-@Service
-@Named("registry.upstream")
+@Service(name="registry.upstream")
 public class UpstreamSubscriber
         implements Flow.Subscriber<WithMetadata<ServerResourceDocument>> {
     private Topic<ServerResourceDocument> registryTopic;

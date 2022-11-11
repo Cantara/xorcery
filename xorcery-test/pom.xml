@@ -83,19 +83,4 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <argLine>
-                        --add-opens=java.base/java.nio=xorcery.neo4j.shaded
-                        --add-opens=java.base/java.lang=xorcery.neo4j.shaded
-                    </argLine>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>

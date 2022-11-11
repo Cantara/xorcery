@@ -21,4 +21,5 @@ open module xorcery.registry {
     requires jersey.jetty.connector;
     requires java.logging;
     requires org.glassfish.hk2.api;
+    requires org.dnsjava;
 }

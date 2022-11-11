@@ -19,7 +19,7 @@ Configuration:
         AppenderRef:
           ref: STDOUT
 
-      - name: com.exoreaction.xorcery.server.Xorcery
+      - name: com.exoreaction.xorcery.core.Xorcery
         level: debug
 
       - name: client

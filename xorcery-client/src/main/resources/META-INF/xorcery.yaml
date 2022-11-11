@@ -1,16 +1,15 @@
 ---
 client:
-  enabled: true
+  enabled: "{{ defaults.enabled }}"
 
   properties:
 
-
-  idle_timeout: "{{ idle_timeout }}"
+  idle_timeout: "{{ defaults.idle_timeout }}"
   http2:
-    enabled: true
+    enabled: "{{ defaults.enabled }}"
 
   ssl:
-    enabled: true
+    enabled: "{{ defaults.enabled }}"
     trustall: true
     keystore:
       type: "PKCS12"
@@ -20,3 +19,8 @@ client:
       type: "PKCS12"
       path: "META-INF/truststore.jks"
       password: "password"
+
+dns:
+  enabled: "{{ defaults.enabled }}"
+  nameservers: []
+  hosts: {}

@@ -9,4 +9,6 @@ home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
 build_resources: "{{ home }}/target/classes"
 resources: "{{ ENV.RESOURCES | build_resources }}"
 
-idle_timeout: -1
+defaults:
+  enabled: true
+  idle_timeout: -1

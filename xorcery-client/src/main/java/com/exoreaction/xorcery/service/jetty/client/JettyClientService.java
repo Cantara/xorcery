@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.RoundRobinConnectionPool;
 import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
 import org.eclipse.jetty.http2.client.HTTP2Client;
@@ -17,6 +18,8 @@ import org.eclipse.jetty.util.Promise;
 import org.eclipse.jetty.util.SocketAddressResolver;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
@@ -24,6 +27,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
@@ -95,12 +99,35 @@ public class JettyClientService
         }
 
         client = new HttpClient(transport);
+        QueuedThreadPool executor = new QueuedThreadPool();
+        executor.setName(configuration.getString("name").orElseThrow());
+        client.setExecutor(executor);
+        client.setScheduler(new ScheduledExecutorScheduler(configuration.getString("name").orElseThrow() + "-scheduler", false));
 
-        JsonNode hosts = configuration.getJson("hosts").orElse(null);
-        if (hosts instanceof ObjectNode on)
+        client.setSocketAddressResolver(new SocketAddressResolver.Async(client.getExecutor(), client.getScheduler(), client.getAddressResolutionTimeout()));
+
+        if (configuration.getBoolean("dns.enabled").orElse(false))
         {
-            client.setSocketAddressResolver(new ConfigurationSocketAddressResolver(on,
-                    new SocketAddressResolver.Async(connector.getExecutor(), connector.getScheduler(), client.getAddressResolutionTimeout()) ));
+            configuration.getJson("dns.hosts").ifPresent(hosts ->
+            {
+                client.setSocketAddressResolver(new ConfigurationSocketAddressResolver((ObjectNode)hosts,client.getSocketAddressResolver()));
+            });
+
+            HttpClientTransportDynamic finalTransport = transport;
+            configuration.getListAs("dns.nameservers", JsonNode::textValue).ifPresent(nameservers ->
+            {
+                try {
+                    client.setSocketAddressResolver(new SRVSocketAddressResolver(nameservers, client.getSocketAddressResolver()));
+                    finalTransport.setConnectionPoolFactory(destination ->
+                    {
+                        RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, destination);
+                        pool.preCreateConnections(10);
+                        return pool;
+                    });
+                } catch (UnknownHostException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
         client.start();
