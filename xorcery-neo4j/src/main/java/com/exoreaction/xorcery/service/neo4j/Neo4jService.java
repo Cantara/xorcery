@@ -40,7 +40,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Named(Neo4jService.SERVICE_TYPE)
-@ContractsProvided({GraphDatabases.class, Factory.class})
 public class Neo4jService
         implements Factory<GraphDatabase>, GraphDatabases, PreDestroy {
 
@@ -154,6 +153,7 @@ public class Neo4jService
 
     @Override
     @Singleton
+    @Named(Neo4jService.SERVICE_TYPE)
     public GraphDatabase provide() {
         return apply("neo4j");
     }

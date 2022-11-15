@@ -1,4 +1,5 @@
 open module xorcery.test {
+    requires xorcery.client;
     requires xorcery.server;
     requires xorcery.neo4j;
     requires xorcery.reactivestreams;

@@ -70,7 +70,7 @@ public class ReactiveStreamsService
 
     @Inject
     public ReactiveStreamsService(ServletContextHandler servletContextHandler,
-                                  @Named("client") HttpClient httpClient,
+                                  HttpClient httpClient,
                                   Configuration configuration,
                                   MessageWorkers messageWorkers) throws Exception {
         this.servletContextHandler = servletContextHandler;

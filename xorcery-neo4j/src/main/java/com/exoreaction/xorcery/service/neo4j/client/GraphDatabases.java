@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.neo4j.client;
 
-import org.glassfish.jersey.spi.Contract;
+import org.jvnet.hk2.annotations.Contract;
 
 import java.util.function.Function;
 

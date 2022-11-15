@@ -1,0 +1,8 @@
+defaults.enabled: false
+jersey.enabled: true
+registry.enabled: true
+conductor.enabled: true
+dns:
+  enabled: true
+client.enabled: true
+server.enabled: true
