@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author rickardoberg
@@ -38,9 +39,10 @@ public class Xorcery
         ServiceLocatorUtilities.addOneConstant(serviceLocator, this);
         ServiceLocatorUtilities.addClasses(serviceLocator, DefaultTopicDistributionService.class);
 
-        // Instantiate
+        // Instantiate all enabled services
         logger.info("Initializing");
-        Filter configurationFilter = d -> !d.getAdvertisedContracts().contains(Configuration.class.getName());
+
+        Filter configurationFilter = getEnabledServicesFilter(configuration);
         List<?> services = serviceLocator.getAllServices(configurationFilter);
 
         if (logger.isDebugEnabled()) {
@@ -51,22 +53,6 @@ public class Xorcery
             }
             logger.debug(msg);
         }
-
-        // "Start" all services
-        logger.info("Starting");
-        started = new ArrayList<>();
-/*
-        for (Object service : services) {
-            try {
-                Method startMethod = service.getClass().getMethod("start");
-                startMethod.invoke(service);
-                started.add(service);
-            } catch (NoSuchMethodException e) {
-                // Not a startable service, ok!
-            }
-        }
-*/
-        logger.info("Started");
     }
 
     public ServiceLocator getServiceLocator() {
@@ -76,20 +62,6 @@ public class Xorcery
     public void close() {
 
         logger.info("Stopping");
-/*
-        Collections.reverse(started);
-        for (Object service : started) {
-            try {
-                Method stopMethod = service.getClass().getMethod("stop");
-                stopMethod.invoke(service);
-            } catch (NoSuchMethodException e) {
-                // Not a stoppable service, ok!
-            } catch (Throwable t) {
-                logger.warn("Exception while stopping a service", t);
-            }
-        }
-*/
-
         serviceLocator.shutdown();
         logger.info("Stopped");
     }
@@ -97,5 +69,17 @@ public class Xorcery
     @Override
     public void preDestroy() {
         System.out.println("Xorcery preDestroy");
+    }
+
+    protected Filter getEnabledServicesFilter(Configuration configuration) {
+        return d ->
+        {
+            boolean result = Optional.ofNullable(d.getName())
+                    .map(name -> configuration.getBoolean(name + ".enabled")
+                            .orElseGet(() -> configuration.getBoolean("defaults.enabled").orElse(false)))
+                    .orElse(true);
+            System.out.println("Filter:"+d.getImplementation()+":"+d.getName()+":"+result);
+            return result;
+        };
     }
 }

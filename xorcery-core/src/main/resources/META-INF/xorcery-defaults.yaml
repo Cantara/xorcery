@@ -12,3 +12,7 @@ resources: "{{ ENV.RESOURCES | build_resources }}"
 defaults:
   enabled: true
   idle_timeout: -1
+
+HK2TopicDistributionService.enabled: true
+SystemInjectResolver.enabled: true
+default.enabled: true
