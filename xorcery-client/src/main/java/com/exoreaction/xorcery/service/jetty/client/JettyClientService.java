@@ -14,7 +14,6 @@ import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
 import org.eclipse.jetty.io.ClientConnectionFactory;
 import org.eclipse.jetty.io.ClientConnector;
-import org.eclipse.jetty.util.Promise;
 import org.eclipse.jetty.util.SocketAddressResolver;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -26,13 +25,11 @@ import org.jvnet.hk2.annotations.Service;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
-import java.util.List;
 
 import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
 
@@ -135,7 +132,6 @@ public class JettyClientService
 
     @Override
     @Singleton
-    @Named("client")
     public HttpClient provide() {
         return client;
     }

@@ -7,6 +7,7 @@ import org.xbill.DNS.*;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -29,18 +30,24 @@ public class SRVSocketAddressResolver
     private final Map<InetSocketAddress, AtomicInteger> serverRequests = new ConcurrentHashMap<>();
 
     public SRVSocketAddressResolver(List<String> nameservers, SocketAddressResolver delegate) throws UnknownHostException {
-        if (nameservers.isEmpty())
-        {
+        if (nameservers.isEmpty()) {
             resolver = new ExtendedResolver();
-        } else
-        {
-            resolver = new ExtendedResolver(nameservers.toArray(new String[0]));
+        } else {
+            List<Resolver> resolvers = new ArrayList<>();
+            for (String nameserver : nameservers) {
+                String[] hostPort = nameserver.split(":");
+                String host = hostPort[0];
+                int port = hostPort.length == 2 ? Integer.parseInt(hostPort[1]) : 53;
+                resolvers.add(new SimpleResolver(new InetSocketAddress(host, port)));
+            }
+            resolver = new ExtendedResolver(resolvers);
         }
         this.delegate = delegate;
     }
 
     @Override
     public void resolve(String host, int port, Promise<List<InetSocketAddress>> promise) {
+
         try {
             SRVLookup serviceLookup = serviceLookups.compute(host, (h, oldLookup) ->
             {
@@ -48,10 +55,8 @@ public class SRVSocketAddressResolver
                 if (oldLookup != null && oldLookup.expiresOn() > now) {
                     return oldLookup;
                 }
-                System.out.println("LOOKUP "+host);
-
                 try {
-                    Record queryRecord = Record.newRecord(Name.fromString("_" + host + "._tcp.example.com."), Type.SRV, DClass.IN);
+                    Record queryRecord = Record.newRecord(Name.fromString(host+"."), Type.SRV, DClass.IN);
                     Message queryMessage = Message.newQuery(queryRecord);
                     Message queryResponse = resolver.send(queryMessage);
                     long minTTL = Long.MAX_VALUE;
@@ -76,8 +81,13 @@ public class SRVSocketAddressResolver
                 List<ServerEntry> servers = new ArrayList<>();
                 for (Record record : queryResponse.getSection(ANSWER)) {
                     SRVRecord srvRecord = (SRVRecord) record;
-                    String serviceHost = queryResponse.getSection(Section.ADDITIONAL).stream().filter(r -> r.getName().equals(srvRecord.getAdditionalName())).findFirst().orElse(null).rdataToString();
-                    InetSocketAddress address = new InetSocketAddress(serviceHost, srvRecord.getPort());
+                    String serviceHost = queryResponse.getSection(Section.ADDITIONAL)
+                            .stream()
+                            .filter(r -> r.getName().equals(srvRecord.getTarget())).findFirst()
+                            .map(Record::getName)
+                            .orElse(srvRecord.getTarget())
+                            .toString(true);
+                    InetSocketAddress address = new InetSocketAddress(InetAddress.getByName(serviceHost), srvRecord.getPort());
                     servers.add(new ServerEntry(address, srvRecord.getPriority(), serverRequests.computeIfAbsent(address, h -> new AtomicInteger(1)).get(), srvRecord.getWeight()));
                 }
 
