@@ -1,7 +1,7 @@
 defaults.enabled: false
 jersey.enabled: true
-registry.enabled: true
-conductor.enabled: true
+registry.enabled: false
+conductor.enabled: false
 dns:
   enabled: true
 client.enabled: true
