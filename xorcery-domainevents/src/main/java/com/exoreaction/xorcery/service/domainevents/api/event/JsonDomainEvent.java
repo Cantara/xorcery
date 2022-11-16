@@ -5,11 +5,10 @@ import com.exoreaction.xorcery.service.domainevents.api.entity.DomainEvent;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.*;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -165,5 +164,64 @@ public record JsonDomainEvent(ObjectNode json)
     @JsonValue
     public ObjectNode event() {
         return json;
+    }
+
+    public boolean isCreatedOrUpdated() {
+        return json.has("created") || json.has("updated");
+    }
+
+    public JsonEntity getCreated() {
+        ObjectNode created = (ObjectNode) json.get("created");
+        return created == null ? null : new JsonEntity(created);
+    }
+
+    public JsonEntity getUpdated() {
+        ObjectNode updated = (ObjectNode) json.get("updated");
+        return updated == null ? null : new JsonEntity(updated);
+    }
+
+    public JsonEntity getDeleted() {
+        ObjectNode deleted = (ObjectNode) json.get("deleted");
+        return deleted == null ? null : new JsonEntity(deleted);
+    }
+
+    public Map<String, JsonNode> getAttributes() {
+        ObjectNode attrs = (ObjectNode) json.get("attributes");
+        if (attrs == null)
+            return Collections.emptyMap();
+        else
+            return JsonElement.asMap(attrs);
+    }
+
+    public List<JsonRelationship> getAddedRelationships() {
+        return getListAs("addedrelationships", json -> new JsonRelationship((ObjectNode) json))
+                .orElse(Collections.emptyList());
+    }
+
+    public List<JsonRelationship> getRemovedRelationships() {
+        return getListAs("removedrelationships", json -> new JsonRelationship((ObjectNode) json))
+                .orElse(Collections.emptyList());
+    }
+
+    public record JsonEntity(ObjectNode json)
+            implements JsonElement {
+        public String getType() {
+            return getString("type").orElse(null);
+        }
+
+        public String getId() {
+            return getString("id").orElse(null);
+        }
+    }
+
+    public record JsonRelationship(ObjectNode json)
+            implements JsonElement {
+        public JsonEntity getEntity() {
+            return new JsonEntity(json);
+        }
+
+        public String getRelationship() {
+            return getString("relationship").orElseThrow();
+        }
     }
 }

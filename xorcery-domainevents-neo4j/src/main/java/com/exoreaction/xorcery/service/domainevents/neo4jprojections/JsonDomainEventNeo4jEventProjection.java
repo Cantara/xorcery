@@ -13,13 +13,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-@Service(name="jsondomaineventprojection")
+@Service(name = "jsondomaineventprojection")
 @ContractsProvided({Neo4jEventProjection.class})
 public class JsonDomainEventNeo4jEventProjection
         implements Neo4jEventProjection {
 
-    private static final Label ENTITY_LABEL = Label.label("Entity");
-    private static final Label AGGREGATE_LABEL = Label.label("Aggregate");
+    public static final Label ENTITY_LABEL = Label.label("Entity");
+    public static final Label AGGREGATE_LABEL = Label.label("Aggregate");
 
     @Override
     public boolean isWritable(String eventClass) {
@@ -29,12 +29,18 @@ public class JsonDomainEventNeo4jEventProjection
     @Override
     public void write(Map<String, Object> metadataMap, ObjectNode eventJson, Transaction transaction) throws IOException {
 
+        Neo4jJsonDomainEvent neo4jJsonDomainEvent = new Neo4jJsonDomainEvent(new JsonDomainEvent(eventJson));
         Object timestamp = metadataMap.get("timestamp");
         Object aggregateId = metadataMap.get("aggregateId");
         String aggregateType = metadataMap.get("aggregateType").toString();
         if (eventJson.has("created")) {
             ObjectNode created = (ObjectNode) eventJson.path("created");
             Node node = transaction.createNode(Label.label(created.get("type").textValue()), ENTITY_LABEL);
+
+            for (String label : neo4jJsonDomainEvent.labels()) {
+                node.addLabel(Label.label(label));
+            }
+
             node.setProperty("created_on", timestamp);
             node.setProperty("last_updated_on", timestamp);
             String id = created.get("id").textValue();
@@ -54,8 +60,7 @@ public class JsonDomainEventNeo4jEventProjection
                     aggregateNode = transaction.findNode(AGGREGATE_LABEL, "id", aggregateId);
                 }
 
-                if (aggregateNode == null)
-                {
+                if (aggregateNode == null) {
                     aggregateNode = transaction.createNode(Label.label(aggregateType), AGGREGATE_LABEL);
                     aggregateNode.setProperty("created_on", timestamp);
                     aggregateNode.setProperty("id", aggregateId);
@@ -65,6 +70,13 @@ public class JsonDomainEventNeo4jEventProjection
         } else if (eventJson.has("updated")) {
             ObjectNode updated = (ObjectNode) eventJson.path("updated");
             Node node = transaction.findNode(ENTITY_LABEL, "id", updated.get("id").textValue());
+
+            for (String label : neo4jJsonDomainEvent.labels()) {
+                Label labelUpdate = Label.label(label);
+                if (!node.hasLabel(labelUpdate)) {
+                    node.addLabel(labelUpdate);
+                }
+            }
 
             if (node != null) {
                 node.setProperty("last_updated_on", timestamp);
@@ -83,10 +95,8 @@ public class JsonDomainEventNeo4jEventProjection
             ObjectNode deleted = (ObjectNode) eventJson.path("deleted");
             String id = deleted.get("id").textValue();
 
-            if (id.equals(aggregateId))
-            {
-                try (ResourceIterator<Node> entityNodes = transaction.findNodes(ENTITY_LABEL, "aggregate_id", aggregateId))
-                {
+            if (id.equals(aggregateId)) {
+                try (ResourceIterator<Node> entityNodes = transaction.findNodes(ENTITY_LABEL, "aggregate_id", aggregateId)) {
                     while (entityNodes.hasNext()) {
                         Node entityNode = entityNodes.next();
                         detachDelete(entityNode);
@@ -95,8 +105,7 @@ public class JsonDomainEventNeo4jEventProjection
 
                 Node aggregateNode = transaction.findNode(AGGREGATE_LABEL, "aggregate_id", aggregateId);
                 aggregateNode.delete();
-            } else
-            {
+            } else {
                 Node node = transaction.findNode(ENTITY_LABEL, "id", id);
                 detachDelete(node);
 
@@ -168,8 +177,7 @@ public class JsonDomainEventNeo4jEventProjection
         }
     }
 
-    private void detachDelete(Node node)
-    {
+    private void detachDelete(Node node) {
         for (Relationship relationship : node.getRelationships()) {
             relationship.delete();
         }
