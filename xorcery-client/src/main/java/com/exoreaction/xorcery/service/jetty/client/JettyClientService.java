@@ -113,16 +113,19 @@ public class JettyClientService
             HttpClientTransportDynamic finalTransport = transport;
             configuration.getListAs("dns.nameservers", JsonNode::textValue).ifPresent(nameservers ->
             {
-                try {
-                    client.setSocketAddressResolver(new SRVSocketAddressResolver(nameservers, client.getSocketAddressResolver()));
-                    finalTransport.setConnectionPoolFactory(destination ->
-                    {
-                        RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, destination);
-                        pool.preCreateConnections(10);
-                        return pool;
-                    });
-                } catch (UnknownHostException e) {
-                    throw new RuntimeException(e);
+                if (!nameservers.isEmpty())
+                {
+                    try {
+                        client.setSocketAddressResolver(new SRVSocketAddressResolver(nameservers, client.getSocketAddressResolver()));
+                        finalTransport.setConnectionPoolFactory(destination ->
+                        {
+                            RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, destination);
+                            pool.preCreateConnections(10);
+                            return pool;
+                        });
+                    } catch (UnknownHostException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             });
         }

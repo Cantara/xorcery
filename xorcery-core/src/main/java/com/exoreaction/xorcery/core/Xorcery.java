@@ -78,7 +78,6 @@ public class Xorcery
                     .map(name -> configuration.getBoolean(name + ".enabled")
                             .orElseGet(() -> configuration.getBoolean("defaults.enabled").orElse(false)))
                     .orElse(true);
-            System.out.println("Filter:"+d.getImplementation()+":"+d.getName()+":"+result);
             return result;
         };
     }

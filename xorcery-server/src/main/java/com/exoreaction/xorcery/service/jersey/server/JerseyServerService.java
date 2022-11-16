@@ -76,7 +76,6 @@ public class JerseyServerService
         ServletHolder servletHolder = new ServletHolder(servletContainer);
         servletHolder.setInitOrder(1);
         ctx.addServlet(servletHolder, "/*");
-        System.out.println("Started Jersey servlet");
     }
 
     @Override
