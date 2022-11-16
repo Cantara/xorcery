@@ -154,23 +154,6 @@
                 <version>4.0.0.RC1</version>
             </dependency>
 
-            <!-- Neo4j
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>neo4j-apoc-jpms-shaded</artifactId>
-                <version>5.1.0.1-SNAPSHOT</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.logging.log4j</groupId>
-                        <artifactId>log4j-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.logging.log4j</groupId>
-                        <artifactId>log4j-core</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>-->
-
             <!-- EventStore service -->
             <dependency>
                 <groupId>com.eventstore</groupId>

@@ -10,8 +10,10 @@ import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled
 public class SRVResolverTest {
 
     Logger logger = LogManager.getLogger(getClass());
