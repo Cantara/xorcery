@@ -1,18 +1,24 @@
 package com.exoreaction.xorcery.service.reactivestreams.test.json;
 
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Flow;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
-public class JsonByteBufferSubscriber implements Flow.Subscriber<byte[]> {
+public class JsonByteBufferSubscriber implements Flow.Subscriber<WithMetadata<byte[]>> {
     private Flow.Subscription subscription;
 
     private final BlockingDeque<JsonNode> receivedEvents = new LinkedBlockingDeque<>();
@@ -34,15 +40,18 @@ public class JsonByteBufferSubscriber implements Flow.Subscriber<byte[]> {
     }
 
     @Override
-    public void onNext(byte[] item) {
+    public void onNext(WithMetadata<byte[]> item) {
         JsonNode jsonNode;
         try {
-            jsonNode = mapper.readTree(item);
+            jsonNode = mapper.readTree(item.event());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        System.out.printf("onNext: %s%n", jsonNode.toPrettyString());
-        receivedEvents.add(jsonNode);
+        ObjectNode root = mapper.createObjectNode();
+        root.set("metadata", item.metadata().json());
+        root.set("payload", jsonNode);
+        System.out.printf("onNext:%s%n", root.toPrettyString());
+        receivedEvents.add(root);
         subscription.request(1);
     }
 

@@ -14,13 +14,13 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class ExternalJsonClientPublisherTest {
+public class ExternalDomainEventsServerSubscriberTest {
 
     @Test
     @Disabled
-    public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
+    public void thatServerSubscriberGetsAllEvents() throws Exception {
         String yaml = """
-                server.http.port: 60797
+                server.http.port: 60798
                 """;
 
         Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(yaml)).build();
