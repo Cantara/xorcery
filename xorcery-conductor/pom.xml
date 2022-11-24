@@ -21,11 +21,6 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-conductor-api</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -73,6 +68,12 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-core</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

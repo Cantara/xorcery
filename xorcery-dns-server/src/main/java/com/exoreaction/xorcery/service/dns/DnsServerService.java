@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 import static org.xbill.DNS.Record.fromString;
 
 @Service(name = "dns.server")
-public class DnsService
+public class DnsServerService
         implements PreDestroy {
     private final Logger logger = LogManager.getLogger(getClass());
 
@@ -40,7 +40,7 @@ public class DnsService
 
 
     @Inject
-    public DnsService(Configuration configuration) throws IOException {
+    public DnsServerService(Configuration configuration) throws IOException {
         this.configuration = configuration;
         port = configuration.getInteger("dns.server.port").orElse(53);
 

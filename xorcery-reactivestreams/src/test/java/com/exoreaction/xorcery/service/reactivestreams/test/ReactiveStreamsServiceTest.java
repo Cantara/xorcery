@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.core.test.util.Sockets;
+import com.exoreaction.xorcery.util.Sockets;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.*;
 import jakarta.ws.rs.core.UriBuilder;

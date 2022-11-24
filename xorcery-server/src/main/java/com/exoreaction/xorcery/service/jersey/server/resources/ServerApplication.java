@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.jersey.server.resources;
 
+import com.exoreaction.xorcery.util.Resources;
 import org.apache.logging.log4j.LogManager;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -18,10 +19,9 @@ public class ServerApplication
         property(ServerProperties.WADL_FEATURE_DISABLE, Boolean.TRUE);
         property(ServerProperties.UNWRAP_COMPLETION_STAGE_IN_WRITER_ENABLE, Boolean.TRUE);
 
-        Enumeration<URL> mediaTypes = ClassLoader.getSystemResources("META-INF/mediatypes.conf");
+        Iterable<URL> mediaTypes = Resources.getResources("META-INF/mediatypes.conf");
         List<String> mediaTypesList = new ArrayList<>();
-        while (mediaTypes.hasMoreElements()) {
-            URL mediaTypesUrl = mediaTypes.nextElement();
+        for (URL mediaTypesUrl : mediaTypes) {
             try (InputStream mediaTypesStream = mediaTypesUrl.openStream()) {
                 if (mediaTypesStream != null) {
                     String mediaTypesFile = new String(mediaTypesStream.readAllBytes(), StandardCharsets.UTF_8);
@@ -34,6 +34,6 @@ public class ServerApplication
         String mediaTypesString = String.join(",", mediaTypesList);
         property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
-        LogManager.getLogger(getClass()).debug("Media types:\n" + mediaTypesString.replace(',', '\n'));
+        LogManager.getLogger(getClass()).info("Media types:\n" + mediaTypesString.replace(',', '\n'));
     }
 }

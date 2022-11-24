@@ -3,7 +3,7 @@ package com.exoreaction.xorcery.server.test;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.core.test.util.Sockets;
+import com.exoreaction.xorcery.util.Sockets;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;

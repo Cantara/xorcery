@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.core;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
@@ -13,7 +14,8 @@ public class ObjectMapperFactory
     private final ObjectMapper objectMapper;
 
     public ObjectMapperFactory() {
-        objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     @Override

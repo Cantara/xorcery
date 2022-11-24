@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.jetty.client;
+package com.exoreaction.xorcery.service.jetty.client.dns;
 
 import org.eclipse.jetty.util.Promise;
 import org.eclipse.jetty.util.SocketAddressResolver;

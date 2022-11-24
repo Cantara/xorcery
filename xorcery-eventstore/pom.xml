@@ -126,8 +126,6 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-core</artifactId>
             <version>${project.version}</version>
-            <classifier>tests</classifier>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>

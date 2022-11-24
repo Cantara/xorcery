@@ -13,6 +13,7 @@ import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
+import com.exoreaction.xorcery.util.Resources;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.NotFoundException;
@@ -29,6 +30,7 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -112,29 +114,33 @@ public class CertificateManagerService {
         private void checkCert(ResourceDocument cert) {
             ResourceObjects ro = cert.getResources().orElseThrow(NotFoundException::new);
 
-            for (ResourceObject resourceObject : ro) {
-                try {
-                    String base64Cert = resourceObject.getAttributes().getString("base64").orElseThrow();
-                    byte[] certBytes = Base64.getDecoder().decode(base64Cert);
+            configuration.getResourcePath("server.ssl.keystore.path").map(URI::create).ifPresent(keystore ->
+            {
 
-                    File keyStoreFile = new File(new File(".").toURI().relativize(ClassLoader.getSystemResource("/keystore.p12").toURI()).getPath());
+                for (ResourceObject resourceObject : ro) {
+                    try {
+                        String base64Cert = resourceObject.getAttributes().getString("base64").orElseThrow();
+                        byte[] certBytes = Base64.getDecoder().decode(base64Cert);
 
-                    Files.write(keyStoreFile.toPath(), certBytes, StandardOpenOption.WRITE);
+                        File keyStoreFile = new File(keystore.getPath());
 
-                    serverSslContextFactory.reload(scf ->
-                    {
-                        LogManager.getLogger(getClass()).info("Reloaded server cert");
-                    });
-                    clientSslContextFactory.reload(scf ->
-                    {
-                        LogManager.getLogger(getClass()).info("Reloaded client cert");
-                    });
-                } catch (Exception e) {
-                    LogManager.getLogger(getClass()).info("Error updated certificate", e);
+                        Files.write(keyStoreFile.toPath(), certBytes, StandardOpenOption.WRITE);
+
+                        serverSslContextFactory.reload(scf ->
+                        {
+                            LogManager.getLogger(getClass()).info("Reloaded server cert");
+                        });
+                        clientSslContextFactory.reload(scf ->
+                        {
+                            LogManager.getLogger(getClass()).info("Reloaded client cert");
+                        });
+                    } catch (Exception e) {
+                        LogManager.getLogger(getClass()).info("Error updated certificate", e);
+                    }
                 }
-            }
 
-            LogManager.getLogger(getClass()).info("Cert check:" + ro);
+                LogManager.getLogger(getClass()).info("Cert check:" + ro);
+            });
         }
     }
 }

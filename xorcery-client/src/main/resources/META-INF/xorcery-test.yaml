@@ -1,4 +1,3 @@
----
 server.ssl.enabled: false
 client.ssl.keystore.path: "META-INF/test-keystore.p12"
 client.ssl.truststore.path: "META-INF/test-truststore.jks"

@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.jetty.server;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.util.Resources;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -25,7 +26,6 @@ import org.jvnet.hk2.annotations.Service;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
@@ -110,12 +110,12 @@ public class JettyServerService
             sslContextFactory.setKeyStoreType(configuration.getString("server.ssl.keystore.type").orElse("PKCS12"));
 
             sslContextFactory.setKeyStorePath(configuration.getResourcePath("server.ssl.keystore.path")
-                    .orElseGet(() -> ClassLoader.getSystemResource("META-INF/keystore.p12").toExternalForm()));
+                    .orElseGet(() -> Resources.getResource("META-INF/keystore.p12").orElseThrow().getPath()));
             sslContextFactory.setKeyStorePassword(configuration.getString("server.ssl.keystore.password").orElse("password"));
 
 //            sslContextFactory.setTrustStoreType(configuration.getString("server.ssl.truststore.type").orElse("PKCS12"));
             sslContextFactory.setTrustStorePath(configuration.getResourcePath("server.ssl.truststore.path")
-                    .orElseGet(() -> ClassLoader.getSystemResource("META-INF/truststore.jks").toExternalForm()));
+                    .orElseGet(() -> Resources.getResource("META-INF/truststore.jks").orElseThrow().getPath()));
             sslContextFactory.setTrustStorePassword(configuration.getString("server.ssl.truststore.password").orElse("password"));
             sslContextFactory.setHostnameVerifier((hostName, session) -> true);
             sslContextFactory.setTrustAll(configuration.getBoolean("server.ssl.trustall").orElse(false));

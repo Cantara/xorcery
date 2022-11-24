@@ -6,3 +6,6 @@ eventstore:
   projections:
     enabled: "{{ eventstore.enabled }}"
     projections: []
+jaxrs.register:
+  - com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreResource
+  - com.exoreaction.xorcery.service.eventstore.resources.api.StreamResource

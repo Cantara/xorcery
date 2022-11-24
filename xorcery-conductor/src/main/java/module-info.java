@@ -5,7 +5,6 @@ open module xorcery.conductor {
     requires transitive xorcery.conductor.api;
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.service.api;
-    requires xorcery.core;
     requires xorcery.jsonapi.server;
 
     requires org.glassfish.hk2.api;

@@ -1,10 +1,16 @@
 package com.exoreaction.xorcery.service.jetty.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
+import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.jetty.client.dns.ConfigurationSocketAddressResolver;
+import com.exoreaction.xorcery.service.jetty.client.dns.DnsLookupSocketAddressResolver;
+import com.exoreaction.xorcery.service.jetty.client.dns.SRVSocketAddressResolver;
+import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.RoundRobinConnectionPool;
@@ -40,7 +46,7 @@ public class JettyClientService
     private HttpClient client;
 
     @Inject
-    public JettyClientService(Configuration configuration) throws Exception {
+    public JettyClientService(Configuration configuration, Provider<DnsLookup> dnsLookup) throws Exception {
         // Client setup
         ClientConnector connector = new ClientConnector();
         connector.setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
@@ -71,12 +77,12 @@ public class JettyClientService
             };
             sslClientContextFactory.setKeyStoreType(configuration.getString("client.ssl.keystore.type").orElse("PKCS12"));
             sslClientContextFactory.setKeyStorePath(configuration.getResourcePath("client.ssl.keystore.path")
-                    .orElseGet(() -> ClassLoader.getSystemResource("keystore.p12").toExternalForm()));
+                    .orElseGet(() -> Resources.getResource("META-INF/keystore.p12").orElseThrow().getPath()));
             sslClientContextFactory.setKeyStorePassword(configuration.getString("client.ssl.keystore.password").orElse("password"));
 
 //                        sslClientContextFactory.setTrustStoreType(configuration.getString("client.ssl.truststore.type").orElse("PKCS12"));
             sslClientContextFactory.setTrustStorePath(configuration.getResourcePath("client.ssl.truststore.path")
-                    .orElseGet(() -> ClassLoader.getSystemResource("keystore.p12").toExternalForm()));
+                    .orElseGet(() -> Resources.getResource("META-INF/truststore.jks").orElseThrow().getPath()));
             sslClientContextFactory.setTrustStorePassword(configuration.getString("client.ssl.truststore.password").orElse("password"));
 
             sslClientContextFactory.setEndpointIdentificationAlgorithm("HTTPS");
@@ -101,34 +107,18 @@ public class JettyClientService
         client.setExecutor(executor);
         client.setScheduler(new ScheduledExecutorScheduler(configuration.getString("name").orElseThrow() + "-scheduler", false));
 
-        client.setSocketAddressResolver(new SocketAddressResolver.Async(client.getExecutor(), client.getScheduler(), client.getAddressResolutionTimeout()));
-
-        if (configuration.getBoolean("dns.enabled").orElse(false))
-        {
-            configuration.getJson("dns.hosts").ifPresent(hosts ->
-            {
-                client.setSocketAddressResolver(new ConfigurationSocketAddressResolver((ObjectNode)hosts,client.getSocketAddressResolver()));
-            });
-
-            HttpClientTransportDynamic finalTransport = transport;
-            configuration.getListAs("dns.nameservers", JsonNode::textValue).ifPresent(nameservers ->
-            {
-                if (!nameservers.isEmpty())
-                {
-                    try {
-                        client.setSocketAddressResolver(new SRVSocketAddressResolver(nameservers, client.getSocketAddressResolver()));
-                        finalTransport.setConnectionPoolFactory(destination ->
-                        {
-                            RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, destination);
-                            pool.preCreateConnections(10);
-                            return pool;
-                        });
-                    } catch (UnknownHostException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            });
+        if (configuration.getBoolean("dns.enabled").orElse(false) && dnsLookup.get() != null) {
+            client.setSocketAddressResolver(new DnsLookupSocketAddressResolver(dnsLookup.get()));
+        } else {
+            client.setSocketAddressResolver(new SocketAddressResolver.Async(client.getExecutor(), client.getScheduler(), client.getAddressResolutionTimeout()));
         }
+
+        transport.setConnectionPoolFactory(destination ->
+        {
+            RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, destination);
+            pool.preCreateConnections(10);
+            return pool;
+        });
 
         client.start();
     }

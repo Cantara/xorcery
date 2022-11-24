@@ -130,7 +130,8 @@ public interface CommandsMixin
                 ObjectMapper objectMapper = service(ObjectMapper.class);
                 ObjectNode json = resourceObject.getAttributes().json();
                 json.set("@class", json.textNode(commandClass.getName()));
-                json.set("id", json.textNode(resourceObject.getId()));
+                if (resourceObject.getId() != null)
+                    json.set("id", json.textNode(resourceObject.getId()));
                 return objectMapper.<Command>treeToValue(json, objectMapper.constructType(commandClass));
             } catch (IOException e) {
                 throw new BadRequestException(e);

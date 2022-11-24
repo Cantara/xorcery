@@ -21,17 +21,7 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonapi-jaxrs</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-neo4j</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -83,26 +73,17 @@
             <artifactId>jersey-server</artifactId>
         </dependency>
 
-        <!-- Jersey Jetty client connector. TODO: also used by CertificateManagerService, so required on the server side -->
-        <dependency>
-            <groupId>org.glassfish.jersey.connectors</groupId>
-            <artifactId>jersey-jetty-connector</artifactId>
-        </dependency>
-
         <!-- Jetty -->
+<!--
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
         </dependency>
+-->
 
-        <!-- Server -->
         <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
             <artifactId>http2-server</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-alpn-server</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -130,25 +111,16 @@
         <!-- Logging -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-jcl</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-jul</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j2-impl</artifactId>
-            <scope>runtime</scope>
+            <artifactId>log4j-api</artifactId>
         </dependency>
 
         <!-- Testing -->
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-core</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-core</artifactId>

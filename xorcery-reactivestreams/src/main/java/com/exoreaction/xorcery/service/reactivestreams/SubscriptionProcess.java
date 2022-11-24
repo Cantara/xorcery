@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.reactivestreams;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.rest.RestProcess;
+import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.SubscribeWebSocketEndpoint;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
@@ -15,6 +16,7 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
@@ -22,6 +24,7 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.ForkJoinPool;
 
 public record SubscriptionProcess(WebSocketClient webSocketClient,
+                                  DnsLookup dnsLookup,
                                   ObjectMapper objectMapper,
                                   Timer timer,
                                   Logger logger,
@@ -29,6 +32,7 @@ public record SubscriptionProcess(WebSocketClient webSocketClient,
                                   MessageReader<Object> eventReader,
                                   MessageWriter<Object> resultWriter,
                                   URI publisherWebsocketUri,
+                                  List<URI> possiblePublisherWebsocketUris,
                                   Configuration publisherConfiguration,
                                   Flow.Subscriber<Object> subscriber,
                                   CompletableFuture<Void> result
@@ -45,24 +49,36 @@ public record SubscriptionProcess(WebSocketClient webSocketClient,
 
         ForkJoinPool.commonPool().execute(() ->
         {
-            Marker marker = MarkerManager.getMarker(publisherWebsocketUri.toASCIIString());
-
-            try {
-                webSocketClient.connect(new SubscribeWebSocketEndpoint(
-                                subscriber(),
-                                eventReader,
-                                resultWriter,
-                                byteBufferPool,
-                                this,
-                                publisherWebsocketUri.toASCIIString(),
-                                publisherConfiguration), publisherWebsocketUri)
+            if (possiblePublisherWebsocketUris.isEmpty()) {
+                dnsLookup.resolve(publisherWebsocketUri)
+                        .thenApply(uris ->
+                        {
+                            possiblePublisherWebsocketUris.addAll(uris);
+                            return possiblePublisherWebsocketUris.remove(0);
+                        }).thenCompose(this::connect)
                         .whenComplete(this::complete);
-            } catch (IOException e) {
-                logger.error(marker, "Could not subscribe to " + publisherWebsocketUri.toASCIIString(), e);
-
-                retry();
+            } else {
+                connect(possiblePublisherWebsocketUris.remove(0))
+                        .whenComplete(this::complete);
             }
         });
+    }
+
+    private CompletableFuture<Session> connect(URI selectedPublisherUri) {
+        try {
+            return webSocketClient.connect(new SubscribeWebSocketEndpoint(
+                    subscriber(),
+                    eventReader,
+                    resultWriter,
+                    byteBufferPool,
+                    this,
+                    selectedPublisherUri.toASCIIString(),
+                    publisherConfiguration), selectedPublisherUri);
+        } catch (IOException e) {
+            Marker marker = MarkerManager.getMarker(publisherWebsocketUri.toASCIIString());
+            logger.error(marker, "Could not subscribe to " + selectedPublisherUri.toASCIIString(), e);
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     private void complete(Session session, Throwable throwable) {

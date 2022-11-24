@@ -1,0 +1,17 @@
+registry:
+    enabled: "{{ defaults.enabled }}"
+    upstream:
+        enabled: false
+        url: null
+    publisher:
+        enabled: "{{ registry.enabled }}"
+    dnsdiscovery:
+        enabled: false
+
+dns:
+    enabled: "{{ defaults.enabled }}"
+    nameservers: []
+    hosts: {}
+    server:
+       enabled: "{{ defaults.enabled }}"
+       port: 53

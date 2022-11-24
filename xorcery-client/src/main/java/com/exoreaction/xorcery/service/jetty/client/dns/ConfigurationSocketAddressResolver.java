@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.jetty.client;
+package com.exoreaction.xorcery.service.jetty.client.dns;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

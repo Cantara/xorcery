@@ -1,2 +1,4 @@
 metrics:
   enabled: "{{ defaults.enabled }}"
+jaxrs.register:
+  - com.exoreaction.xorcery.service.metrics.resources.api.MetricsResource

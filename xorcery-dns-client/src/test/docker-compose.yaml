@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  xorcery-bind9:
+    image: docker.io/internetsystemsconsortium/bind9:9.19
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    volumes:
+      - "./bind:/etc/bind"
+      - bind9_cache:/var/cache/bind
+      - bind9_log:/var/log
+      - bind9_lib:/var/lib/bind
+
+volumes:
+  bind9_cache:
+  bind9_lib:
+  bind9_log:

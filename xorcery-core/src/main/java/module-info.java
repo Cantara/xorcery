@@ -5,8 +5,8 @@ open module xorcery.core {
     requires transitive jakarta.inject;
     requires transitive org.apache.logging.log4j;
 
-    requires transitive org.glassfish.hk2.api;
-    requires transitive org.glassfish.hk2.extras;
+    requires org.glassfish.hk2.api;
+    requires org.glassfish.hk2.extras;
     requires com.fasterxml.jackson.dataformat.yaml;
     requires info.picocli;
 }

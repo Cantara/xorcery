@@ -3,7 +3,7 @@ open module xorcery.server {
     exports com.exoreaction.xorcery.service.jersey.server;
     exports com.exoreaction.xorcery.service.jersey.server.resources;
 
-    requires transitive xorcery.core;
+    requires transitive xorcery.configuration.api;
     requires transitive xorcery.metricregistry;
     requires xorcery.jsonapi;
 
@@ -13,10 +13,9 @@ open module xorcery.server {
     requires transitive jakarta.activation;
     requires transitive jakarta.ws.rs;
     requires transitive org.eclipse.jetty.server;
-    requires transitive jersey.server;
+    requires jersey.server;
 
     requires org.glassfish.hk2.api;
-    requires jersey.hk2;
 
     requires io.dropwizard.metrics.jetty11;
 

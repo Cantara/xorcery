@@ -21,7 +21,7 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
+            <artifactId>xorcery-dns-client</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -35,7 +35,7 @@
             <artifactId>jersey-hk2</artifactId>
         </dependency>
 
-        <!-- Jersey Jetty client connector. TODO: also used by CertificateManagerService, so required on the server side -->
+        <!-- Jersey Jetty client connector -->
         <dependency>
             <groupId>org.glassfish.jersey.connectors</groupId>
             <artifactId>jersey-jetty-connector</artifactId>

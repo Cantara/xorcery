@@ -3,16 +3,17 @@ package com.exoreaction.xorcery.configuration.model;
 import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.exoreaction.xorcery.json.model.JsonElement;
+import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author rickardoberg
@@ -20,6 +21,8 @@ import java.util.Optional;
  */
 public record Configuration(ObjectNode json)
         implements JsonElement {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public static Configuration empty() {
         return new Configuration(JsonNodeFactory.instance.objectNode());
@@ -70,6 +73,10 @@ public record Configuration(ObjectNode json)
             return add(name, builder.numberNode(value));
         }
 
+        public Builder add(String name, Object value) {
+            return add(name, mapper.valueToTree(value));
+        }
+
         public Builder addSystemProperties(String nodeName) {
             ObjectNode system = builder.objectNode();
             for (Map.Entry<Object, Object> systemProperty : System.getProperties().entrySet()) {
@@ -115,13 +122,7 @@ public record Configuration(ObjectNode json)
      */
     public Optional<String> getResourcePath(String name) {
         return getString(name)
-                .map(path ->
-                {
-                    URL systemResource = ClassLoader.getSystemResource(path);
-                    if (systemResource != null)
-                        path = systemResource.toExternalForm();
-                    return path;
-                });
+                .flatMap(path -> Resources.getResource(path).map(URL::toExternalForm));
     }
 
     public Builder asBuilder() {

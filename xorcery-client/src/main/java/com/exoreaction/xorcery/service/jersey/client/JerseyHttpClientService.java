@@ -26,6 +26,5 @@ public class JerseyHttpClientService
 
     @Override
     public void dispose(JettyHttpClientContract instance) {
-        System.out.println("Dispose Jetty client");
     }
 }

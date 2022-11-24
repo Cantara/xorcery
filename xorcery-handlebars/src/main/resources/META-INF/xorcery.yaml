@@ -1,0 +1,5 @@
+jaxrs.register:
+  - com.exoreaction.xorcery.service.handlebars.resources.api.UriTemplateResource
+  - com.exoreaction.xorcery.service.handlebars.jaxrs.providers.HandlebarsHtmlMessageBodyWriter
+  - com.exoreaction.xorcery.service.handlebars.jaxrs.providers.HandlebarsJsonApiMessageBodyWriter
+  - com.exoreaction.xorcery.service.handlebars.jaxrs.providers.ResourceObjectFormProvider

@@ -1,13 +1,9 @@
 package com.exoreaction.xorcery.service.jersey.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InstantiationService;
@@ -19,7 +15,6 @@ import org.glassfish.jersey.logging.LoggingFeature;
 import org.jvnet.hk2.annotations.Service;
 
 import java.util.Iterator;
-import java.util.List;
 
 @Service
 public class JerseyClientService

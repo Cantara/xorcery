@@ -8,6 +8,7 @@ import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4j.spi.Neo4jProvider;
+import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -98,9 +99,8 @@ public class Neo4jService
 
             // Run Cypher schemas
             try {
-                Enumeration<URL> schemas = ClassLoader.getSystemResources("META-INF/neo4j/schema.cyp");
-                while (schemas.hasMoreElements()) {
-                    URL schema = schemas.nextElement();
+                Iterable<URL> schemas = Resources.getResources("META-INF/neo4j/schema.cyp");
+                for (URL schema : schemas) {
                     try {
                         logger.info("Running Neo4j schema script:" + schema.toExternalForm());
                         List<String> statements = Cypher.getCypherStatements(schema);

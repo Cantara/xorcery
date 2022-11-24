@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.handlebars.resources;
+package com.exoreaction.xorcery.service.handlebars.resources.api;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;

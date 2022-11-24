@@ -1,7 +1,10 @@
 package com.exoreaction.xorcery.service.handlebars;
 
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.util.Resources;
 import com.github.jknack.handlebars.io.URLTemplateLoader;
 
+import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -39,7 +42,8 @@ public class SystemClassLoaderTemplateLoader extends URLTemplateLoader {
     }
 
     @Override
-    protected URL getResource(final String location) {
-        return ClassLoader.getSystemResource(location);
+    protected URL getResource(final String location) throws IOException {
+        return Resources.getResource(location)
+                .orElseThrow(()->new IOException("Could not find resource "+location));
     }
 }

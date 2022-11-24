@@ -1,6 +1,7 @@
-package com.exoreaction.xorcery.core.test.util;
+package com.exoreaction.xorcery.util;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -31,6 +32,14 @@ public final class Sockets {
                 port = ThreadLocalRandom.current().nextInt(from, to);
             }
         }
+    }
+
+    public static InetSocketAddress getInetSocketAddress(String hostPort, int defaultPort)
+    {
+        String[] hostPortArray = hostPort.split(":");
+        String host = hostPortArray[0];
+        int port = hostPortArray.length == 2 ? Integer.parseInt(hostPortArray[1]) : defaultPort;
+        return new InetSocketAddress(host, port);
     }
 
     private static boolean isLocalPortFree(int port) {

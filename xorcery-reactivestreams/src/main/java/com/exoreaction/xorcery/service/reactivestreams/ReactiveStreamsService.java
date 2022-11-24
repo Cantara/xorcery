@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.reactivestreams;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
@@ -14,6 +15,7 @@ import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,6 +58,7 @@ public class ReactiveStreamsService
     private final WebSocketClient webSocketClient;
     private final StandardConfiguration configuration;
     private final MessageWorkers messageWorkers;
+    private Provider<DnsLookup> dnsLookupProvider;
     private final ObjectMapper objectMapper;
     private final Timer timer;
 
@@ -72,11 +75,13 @@ public class ReactiveStreamsService
     public ReactiveStreamsService(ServletContextHandler servletContextHandler,
                                   HttpClient httpClient,
                                   Configuration configuration,
-                                  MessageWorkers messageWorkers) throws Exception {
+                                  MessageWorkers messageWorkers,
+                                  Provider<DnsLookup> dnsLookupProvider) throws Exception {
         this.servletContextHandler = servletContextHandler;
 
         this.configuration = () -> configuration;
         this.messageWorkers = messageWorkers;
+        this.dnsLookupProvider = dnsLookupProvider;
         this.objectMapper = new ObjectMapper();
         this.allowLocal = configuration.getBoolean("reactivestreams.allowlocal").orElse(true);
         this.timer = new Timer();
@@ -218,15 +223,13 @@ public class ReactiveStreamsService
 
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        if (!(subscriberWebsocketUri.getScheme().equals("ws") || subscriberWebsocketUri.getScheme().equals("wss")))
-        {
-            result.completeExceptionally(new IllegalArgumentException("Unsupported URL scheme:"+subscriberWebsocketUri.toASCIIString()));
+        if (!(subscriberWebsocketUri.getScheme().equals("ws") || subscriberWebsocketUri.getScheme().equals("wss"))) {
+            result.completeExceptionally(new IllegalArgumentException("Unsupported URL scheme:" + subscriberWebsocketUri.toASCIIString()));
             return result;
         }
 
         if (publisherType == null)
             publisherType = (Class<? extends Flow.Publisher<?>>) publisher.getClass();
-
 
 
         // TODO Track the publishing process itself. Need to ensure they are cancelled on shutdown
@@ -309,6 +312,7 @@ public class ReactiveStreamsService
         // Start subscription process
         new SubscriptionProcess(
                 webSocketClient,
+                dnsLookupProvider.get(),
                 objectMapper,
                 timer,
                 logger,
@@ -316,6 +320,7 @@ public class ReactiveStreamsService
                 eventReader,
                 resultWriter,
                 publisherWebsocketUri,
+                new ArrayList<>(),
                 publisherConfiguration,
                 (Flow.Subscriber<Object>) subscriber,
                 result).start();

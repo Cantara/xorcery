@@ -3,7 +3,7 @@ package com.exoreaction.xorcery.service.conductor.test;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.core.test.util.Sockets;
+import com.exoreaction.xorcery.util.Sockets;
 import com.exoreaction.xorcery.service.conductor.api.Group;
 import com.exoreaction.xorcery.service.conductor.api.GroupTemplate;
 import org.apache.logging.log4j.LogManager;

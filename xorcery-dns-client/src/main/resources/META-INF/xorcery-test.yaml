@@ -1,0 +1,5 @@
+dns:
+    nameservers:
+        - 127.0.0.1:8853
+    server:
+       port: 8853

@@ -16,4 +16,5 @@ open module xorcery.reactivestreams {
     requires jakarta.inject;
     requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
+    requires xorcery.dns.client;
 }

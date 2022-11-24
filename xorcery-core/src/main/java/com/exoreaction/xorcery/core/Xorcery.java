@@ -3,13 +3,12 @@ package com.exoreaction.xorcery.core;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.hk2.api.ActiveDescriptor;
-import org.glassfish.hk2.api.Filter;
-import org.glassfish.hk2.api.PreDestroy;
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
+import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,38 +20,40 @@ import java.util.Optional;
  * @since 12/04/2022
  */
 public class Xorcery
-        implements AutoCloseable, PreDestroy {
+        implements AutoCloseable {
 
-    private static final Logger logger = LogManager.getLogger(Xorcery.class);
+    private final Logger logger;
 
-    private ServiceLocator serviceLocator;
-    private List<Object> started;
+    private final ServiceLocator serviceLocator;
 
     public Xorcery(Configuration configuration) throws Exception {
-        this(configuration, ServiceLocatorUtilities.createAndPopulateServiceLocator(configuration.getString("name").orElse(null)));
+        this(configuration, ServiceLocatorFactory.getInstance().create(configuration.getString("name").orElse(null)));
     }
 
     public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
-        logger.info("Creating");
+        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+        logger = LogManager.getLogger(Xorcery.class);
+
         this.serviceLocator = serviceLocator;
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, configuration);
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, this);
-        ServiceLocatorUtilities.addClasses(serviceLocator, DefaultTopicDistributionService.class);
+        populateServiceLocator(serviceLocator, configuration);
 
         // Instantiate all enabled services
-        logger.info("Initializing");
+        logger.info("Starting");
 
         Filter configurationFilter = getEnabledServicesFilter(configuration);
+
         List<?> services = serviceLocator.getAllServices(configurationFilter);
 
         if (logger.isDebugEnabled()) {
             StringBuilder msg = new StringBuilder();
             msg.append("Services:");
             for (Object service : services) {
-                msg.append('\n').append(service.toString());
+                msg.append('\n').append(service.getClass().getName());
             }
             logger.debug(msg);
         }
+
+        logger.info("Started");
     }
 
     public ServiceLocator getServiceLocator() {
@@ -66,11 +67,6 @@ public class Xorcery
         logger.info("Stopped");
     }
 
-    @Override
-    public void preDestroy() {
-        System.out.println("Xorcery preDestroy");
-    }
-
     protected Filter getEnabledServicesFilter(Configuration configuration) {
         return d ->
         {
@@ -80,5 +76,26 @@ public class Xorcery
                     .orElse(true);
             return result;
         };
+    }
+
+    protected ServiceLocator populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration) throws MultiException {
+        DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
+
+        DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
+        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(configuration));
+        dynamicConfiguration.addActiveDescriptor(BuilderHelper.createConstantDescriptor(this));
+        dynamicConfiguration.addActiveDescriptor(DefaultTopicDistributionService.class);
+        dynamicConfiguration.commit();
+
+        Populator populator = dcs.getPopulator();
+
+        try {
+            populator.populate();
+        }
+        catch (IOException e) {
+            throw new MultiException(e);
+        }
+
+        return serviceLocator;
     }
 }

@@ -45,9 +45,6 @@ public class Main
                     log4jProperty+","+log4jConfiguration.getAbsolutePath());
         }
 
-        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
-
-
         if (id != null)
             System.setProperty("server_id", id);
 
@@ -91,6 +88,8 @@ public class Main
 
     public static void main(String[] args ) throws Exception
     {
+        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+
         System.exit(new CommandLine(new Main()).execute(args));
     }
 }

@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.configuration.builder;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -10,7 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.URL;
-import java.util.Enumeration;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class StandardConfigurationBuilder {
@@ -84,9 +85,8 @@ public class StandardConfigurationBuilder {
 
     public void addXorceryDefaults(Configuration.Builder builder) throws UncheckedIOException {
         // Load Xorcery defaults
-        URL resource = Configuration.class.getClassLoader().getResource("META-INF/xorcery-defaults.yaml");
-        if (resource == null)
-            throw new UncheckedIOException(new IOException("Resource not found: META-INF/xorcery-defaults.yaml"));
+        URL resource = Resources.getResource("META-INF/xorcery-defaults.yaml")
+                .orElseThrow(()->new UncheckedIOException(new IOException("Resource not found: META-INF/xorcery-defaults.yaml")));
         try (InputStream in = resource.openStream()) {
             new YamlConfigurationBuilder(builder).addYaml(in);
             logger.info("Loaded " + resource);
@@ -97,30 +97,22 @@ public class StandardConfigurationBuilder {
 
     public void addExtensions(Configuration.Builder builder) throws UncheckedIOException {
         // Load extensions
-        try {
-            Enumeration<URL> extensionConfigurationURLs = ClassLoader.getSystemResources("META-INF/xorcery.yaml");
-            while (extensionConfigurationURLs.hasMoreElements()) {
-                URL resource = extensionConfigurationURLs.nextElement();
-                try (InputStream configurationStream = resource.openStream()) {
-                    new YamlConfigurationBuilder(builder).addYaml(configurationStream);
-                    logger.info("Loaded " + resource);
-                } catch (IOException ex) {
-                    throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex);
-                } catch (UncheckedIOException ex) {
-                    throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex.getCause());
-                }
+        for (URL resource : Resources.getResources("META-INF/xorcery.yaml")) {
+            try (InputStream configurationStream = resource.openStream()) {
+                new YamlConfigurationBuilder(builder).addYaml(configurationStream);
+                logger.info("Loaded " + resource);
+            } catch (IOException ex) {
+                throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex);
+            } catch (UncheckedIOException ex) {
+                throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex.getCause());
             }
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
         }
     }
 
     public void addExtensionsTest(Configuration.Builder builder) throws UncheckedIOException {
         // Load extensions
         try {
-            Enumeration<URL> extensionConfigurationURLs = ClassLoader.getSystemResources("META-INF/xorcery-test.yaml");
-            while (extensionConfigurationURLs.hasMoreElements()) {
-                URL resource = extensionConfigurationURLs.nextElement();
+            for (URL resource : Resources.getResources("META-INF/xorcery-test.yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     new YamlConfigurationBuilder(builder).addYaml(configurationStream);
                     logger.info("Loaded " + resource);
@@ -134,9 +126,7 @@ public class StandardConfigurationBuilder {
     public void addApplication(Configuration.Builder builder) throws UncheckedIOException {
         // Load application config file
         try {
-            Enumeration<URL> configurationURLs = ClassLoader.getSystemResources("xorcery.yaml");
-            while (configurationURLs.hasMoreElements()) {
-                URL resource = configurationURLs.nextElement();
+            for (URL resource : Resources.getResources("xorcery.yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     new YamlConfigurationBuilder(builder).addYaml(configurationStream);
                     logger.info("Loaded " + resource);
@@ -150,9 +140,7 @@ public class StandardConfigurationBuilder {
     public void addApplicationTest(Configuration.Builder builder) throws UncheckedIOException {
         // Load application config file
         try {
-            Enumeration<URL> configurationURLs = ClassLoader.getSystemResources("xorcery-test.yaml");
-            while (configurationURLs.hasMoreElements()) {
-                URL resource = configurationURLs.nextElement();
+            for (URL resource : Resources.getResources("xorcery-test.yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     new YamlConfigurationBuilder(builder).addYaml(configurationStream);
                     logger.info("Loaded " + resource);
@@ -215,19 +203,18 @@ public class StandardConfigurationBuilder {
 
     public void addXorceryTestDefaults(Configuration.Builder builder) throws UncheckedIOException {
         // Load Xorcery defaults
-        try {
-            URL resource = ClassLoader.getSystemResource("META-INF/xorcery-defaults-test.yaml");
+        Resources.getResource("META-INF/xorcery-defaults-test.yaml").ifPresent(resource ->
+        {
             try (InputStream in = resource.openStream()) {
                 new YamlConfigurationBuilder(builder).addYaml(in);
                 logger.info("Loaded " + resource);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        });
     }
 
-    public String toYaml(Configuration.Builder builder)
-    {
+    public String toYaml(Configuration.Builder builder) {
         ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
         try {
             return objectWriter.writeValueAsString(builder.builder());
@@ -236,8 +223,7 @@ public class StandardConfigurationBuilder {
         }
     }
 
-    public String toYaml(Configuration configuration)
-    {
+    public String toYaml(Configuration configuration) {
         ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
         try {
             return objectWriter.writeValueAsString(configuration.json());

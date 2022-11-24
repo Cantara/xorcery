@@ -1,4 +1,3 @@
----
 server:
   enabled: "{{ defaults.enabled }}"
   scheme: "{{ server.ssl.enabled ? \"https\" | \"http\" }}"
@@ -30,6 +29,5 @@ server:
       password: "password"
 
 jaxrs:
-  packages:
-    - com.exoreaction.xorcery.server.resources
-    - com.exoreaction.xorcery.service
+  register: []
+  packages: []
