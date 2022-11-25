@@ -12,7 +12,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.release>17</maven.compiler.release>
 
-        <slf4j.version>2.0.4</slf4j.version>
+        <slf4j.version>2.0.5</slf4j.version>
         <log4j.version>2.19.0</log4j.version>
         <jetty.version>11.0.12</jetty.version>
         <jersey.version>3.0.8</jersey.version>
