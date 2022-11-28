@@ -16,7 +16,12 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.websocket.api.*;
+import org.eclipse.jetty.websocket.api.BatchMode;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.WebSocketConnectionListener;
+import org.eclipse.jetty.websocket.api.WebSocketPartialListener;
+import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -161,6 +166,7 @@ public class SubscriberWebSocketEndpoint implements WebSocketPartialListener, We
                     byteBufferPool.release(data);
                 }
             });
+            session.getRemote().flush();
         } catch (IOException ex) {
             logger.error(marker, "Could not send result", ex);
             session.close(StatusCode.SERVER_ERROR, ex.getMessage());
