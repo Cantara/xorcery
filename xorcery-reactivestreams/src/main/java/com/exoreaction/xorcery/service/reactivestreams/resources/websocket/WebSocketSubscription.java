@@ -7,76 +7,103 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
-class WebSocketSubscription implements Flow.Subscription {
+class WebSocketSubscription implements Flow.Subscription, Runnable {
+
+    private static final AtomicLong nextInternalSubscriptionId = new AtomicLong(1);
 
     private static final Logger logger = LogManager.getLogger(WebSocketSubscription.class);
 
-    private final AtomicLong requests;
-    private final AtomicReference<CompletableFuture<Void>> sendRequests;
+    private final AtomicLong requests = new AtomicLong();
     private final Session session;
     private final Marker marker;
+
+    private final Thread thread = new Thread(this, "websocket-subscription-" + nextInternalSubscriptionId.getAndIncrement());
+    private final Semaphore possibleBackPressure = new Semaphore(0);
+    private final AtomicBoolean cancelled = new AtomicBoolean();
 
     public WebSocketSubscription(Session session, Marker marker) {
         this.session = session;
         this.marker = marker;
-        requests = new AtomicLong();
-        sendRequests = new AtomicReference<>();
+        thread.start();
     }
 
     @Override
     public void request(long n) {
-        if (!session.isOpen())
+        logger.trace(marker, "request() called: {}", n);
+        if (cancelled.get()) {
             return;
-
-        requests.addAndGet(n);
-
-        // Ensure no other request is running already
-        if (sendRequests.compareAndSet(null, new CompletableFuture<>())) {
-            // After we're done, check if there's more work
-            sendRequests.get().whenComplete((v, t) ->
-            {
-                sendRequests.set(null);
-                long rn = requests.getAndSet(0);
-                if (rn > 0) {
-                    request(rn);
-                }
-            });
-
-            // Drain all outstanding requests
-            long rn = requests.getAndSet(0);
-            session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
-                @Override
-                public void writeFailed(Throwable x) {
-                    logger.error(marker, "Could not send request", x);
-                    sendRequests.get().completeExceptionally(x);
-                }
-
-                @Override
-                public void writeSuccess() {
-                    sendRequests.get().complete(null);
-                    if (logger.isDebugEnabled())
-                        logger.debug(marker, "Sent request {}", rn);
-                }
-            });
-            try {
-                session.getRemote().flush();
-            } catch (IOException e) {
-                CompletableFuture<Void> completableFuture = sendRequests.get();
-                if (completableFuture != null)
-                    completableFuture.completeExceptionally(e);
-            }
         }
+        requests.addAndGet(n);
+        possibleBackPressure.release();
     }
 
     @Override
     public void cancel() {
-        // TODO This is probably not correct concurrency wise
-        requests.set(0);
-        request(Long.MIN_VALUE);
+        logger.trace(marker, "cancel() called");
+        cancelled.set(true);
+        requests.set(Long.MIN_VALUE);
+        possibleBackPressure.release();
+    }
+
+    @Override
+    public void run() {
+        try {
+            for (; ; ) {
+
+                while (!possibleBackPressure.tryAcquire(5, TimeUnit.SECONDS)) {
+                    if (!session.isOpen()) {
+                        logger.info(marker, "Session closed (semaphore acquire timeout), subscription thread will terminate.");
+                        return;
+                    }
+                }
+
+                possibleBackPressure.drainPermits();
+
+                if (!session.isOpen()) {
+                    logger.info(marker, "Session closed, subscription thread will terminate.");
+                    return;
+                }
+
+                final long rn = requests.getAndSet(0);
+                if (rn == 0) {
+                    if (cancelled.get()) {
+                        logger.info(marker, "Subscription cancelled");
+                        return; // cancel signal has already been sent across socket, so we can safely let this thread die
+                    }
+                    continue;
+                }
+
+                logger.trace(marker, "Sending request: {}", rn);
+                session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
+                    @Override
+                    public void writeFailed(Throwable x) {
+                        logger.error(marker, "Could not send request {}", rn, x);
+                    }
+
+                    @Override
+                    public void writeSuccess() {
+                        logger.trace(marker, "Successfully sent request {}", rn);
+                    }
+                });
+
+                try {
+                    logger.trace(marker, "Flushing remote session...");
+                    session.getRemote().flush();
+                    logger.trace(marker, "Remote session flushed.");
+                } catch (IOException e) {
+                    logger.error(marker, "While flushing remote session", e);
+                }
+            }
+        } catch (Throwable t) {
+            logger.error(marker, "", t);
+        } finally {
+            logger.info(marker, "Subscription thread terminated!");
+        }
     }
 }
