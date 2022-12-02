@@ -63,6 +63,7 @@ public class DnsLookupService
                 .build();
         lookups.add(new SRVLookup(lookupSession));
         lookups.add(new ALookup(lookupSession));
+        lookups.add(new JavaLookup());
     }
 
     @Override

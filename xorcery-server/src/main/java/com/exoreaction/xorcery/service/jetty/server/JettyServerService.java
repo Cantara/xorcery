@@ -80,6 +80,7 @@ public class JettyServerService
 
             // Create and configure the HTTP 1.1/2 connector
             final ServerConnector http = new ServerConnector(server, http11, h2c);
+            http.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
             http.setPort(httpPort);
             server.addConnector(http);
         } else {

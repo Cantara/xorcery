@@ -14,15 +14,21 @@ public class ProjectionSubscriber
         implements Flow.Subscriber<WithMetadata<ArrayNode>> {
 
     private final Function<Flow.Subscription, Neo4jProjectionEventHandler> handlerFactory;
+    private final int ringBufferSize;
     private Disruptor<WithMetadata<ArrayNode>> disruptor;
 
-    public ProjectionSubscriber(Function<Flow.Subscription, Neo4jProjectionEventHandler> handlerFactory) {
+    public ProjectionSubscriber(Function<Flow.Subscription, Neo4jProjectionEventHandler> handlerFactory, int ringBufferSize) {
+        this.ringBufferSize = ringBufferSize;
         this.handlerFactory = handlerFactory;
+    }
+
+    public ProjectionSubscriber(Function<Flow.Subscription, Neo4jProjectionEventHandler> handlerFactory) {
+        this(handlerFactory, 512);
     }
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
-        disruptor = new Disruptor<>(WithMetadata::new, 1024, new NamedThreadFactory("Neo4jProjection-"),
+        disruptor = new Disruptor<>(WithMetadata::new, ringBufferSize, new NamedThreadFactory("Neo4jProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
 
