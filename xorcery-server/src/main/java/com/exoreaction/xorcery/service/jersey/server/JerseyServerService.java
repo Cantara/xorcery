@@ -4,6 +4,8 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
+import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.jersey.server.resources.ServerApplication;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
@@ -15,11 +17,12 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.Jetty;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
-@Named("jersey")
+@Service(name = "jersey")
+@RunLevel(2)
 public class JerseyServerService
         implements PreDestroy {
     private final Logger logger = LogManager.getLogger(getClass());
@@ -27,20 +30,12 @@ public class JerseyServerService
     private final JerseyServletContainer servletContainer;
 
     @Inject
-    public JerseyServerService(
-            Configuration configuration,
-            ServletContextHandler ctx,
-            ServiceLocator serviceLocator) throws Exception {
+    public JerseyServerService(Configuration configuration,
+                               ServletContextHandler ctx) throws Exception {
 
         ServerApplication app = new ServerApplication();
 
-        StandardConfiguration standardConfiguration = () -> configuration;
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, new ResourceObject.Builder("server", standardConfiguration.getId())
-                .attributes(new Attributes.Builder()
-                        .attribute("jetty.version", Jetty.VERSION)
-                        .build()).build(), "server", ResourceObject.class);
-
-        configuration.getList("jaxrs.register").ifPresent(jsonNodes ->
+        configuration.getList("jersey.jaxrs.register").ifPresent(jsonNodes ->
         {
             for (JsonNode jsonNode : jsonNodes) {
                 try {
@@ -50,13 +45,6 @@ public class JerseyServerService
                     logger.error("Could not load JAX-RS provider " + jsonNode.asText(), e);
                     throw new RuntimeException(e);
                 }
-            }
-        });
-
-        configuration.getList("jaxrs.packages").ifPresent(jsonNodes ->
-        {
-            for (JsonNode jsonNode : jsonNodes) {
-                app.packages(jsonNode.asText());
             }
         });
 

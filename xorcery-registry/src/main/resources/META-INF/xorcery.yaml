@@ -7,7 +7,7 @@ registry:
         enabled: "{{ registry.enabled }}"
     dnsdiscovery:
         enabled: false
-jaxrs.register:
+jersey.jaxrs.register:
     - com.exoreaction.xorcery.service.registry.resources.api.RegistryResource
     - com.exoreaction.xorcery.service.registry.resources.api.RegistryServersResource
     - com.exoreaction.xorcery.service.registry.resources.api.ServerResource

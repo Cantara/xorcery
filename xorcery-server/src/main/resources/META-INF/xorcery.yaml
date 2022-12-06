@@ -28,6 +28,9 @@ server:
       path: "META-INF/truststore.jks"
       password: "password"
 
+jersey:
+  enabled: "{{ defaults.enabled }}"
+
 jaxrs:
   register: []
   packages: []

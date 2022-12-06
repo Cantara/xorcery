@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.dns;
+package com.exoreaction.xorcery.service.dns.server;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.*;
@@ -19,12 +20,14 @@ import java.net.SocketException;
 import java.nio.channels.AsynchronousCloseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.xbill.DNS.Record.fromString;
 
 @Service(name = "dns.server")
+@RunLevel(2)
 public class DnsServerService
         implements PreDestroy {
     private final Logger logger = LogManager.getLogger(getClass());
@@ -37,7 +40,7 @@ public class DnsServerService
     private final int port;
 
     private final Map<Name, TSIG> TSIGs = new HashMap<>();
-
+    private final Map<Name, Zone> znames = new ConcurrentHashMap<>();
 
     @Inject
     public DnsServerService(Configuration configuration) throws IOException {

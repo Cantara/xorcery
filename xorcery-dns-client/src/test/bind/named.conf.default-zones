@@ -20,8 +20,7 @@ zone "localhost" {
 zone "xorcery.test" { // Change to desired zone
 	type master;
 	file "/etc/bind/db.xorcery.test";	// Change to zone file path
-	allow-transfer {192.168.0.2; };		// Change to Secondary DNS IP
-//	allow-update {
-//          key "example.com";
-//  };
+	allow-update {
+          key "xorcery.test";
+  };
 };

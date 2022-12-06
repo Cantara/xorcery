@@ -23,43 +23,36 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-core</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-dns-server</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-client</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-server</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-registry</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-conductor</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
 
 
@@ -67,7 +60,6 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-neo4j</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>

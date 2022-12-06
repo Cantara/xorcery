@@ -2,6 +2,8 @@ package com.exoreaction.xorcery.service.jetty.server;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
+import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.util.Resources;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
@@ -15,11 +17,13 @@ import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
 
@@ -30,7 +34,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 
-@Service
+@Service(name="server")
+@RunLevel(2)
 public class JettyServerService
         implements Factory<ServletContextHandler> {
     private final Server server;
@@ -39,6 +44,7 @@ public class JettyServerService
 
     @Inject
     public JettyServerService(Configuration configuration,
+                              ServiceResourceObjects sro,
                               ServiceLocator serviceLocator,
                               Provider<MetricRegistry> metricRegistry) throws Exception {
 
@@ -159,6 +165,10 @@ public class JettyServerService
         server.start();
 
         ServiceLocatorUtilities.addOneConstant(serviceLocator, server);
+
+        sro.add(new ServiceResourceObject.Builder(() -> configuration, "server")
+                .attribute("jetty.version", Jetty.VERSION)
+                .build());
     }
 
     @Override

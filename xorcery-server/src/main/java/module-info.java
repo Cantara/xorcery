@@ -16,6 +16,7 @@ open module xorcery.server {
     requires jersey.server;
 
     requires org.glassfish.hk2.api;
+    requires org.glassfish.hk2.runlevel;
 
     requires io.dropwizard.metrics.jetty11;
 
@@ -26,4 +27,5 @@ open module xorcery.server {
 
     requires org.apache.logging.log4j;
     requires org.eclipse.jetty.http2.server;
+    requires xorcery.service.api;
 }

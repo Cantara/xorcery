@@ -1,10 +1,10 @@
 ---
 name: xorcery-test
 
-host: xorcery.cantara.no
+host: server.xorcery.test
 
 build_test_resources: "{{ home }}/target/test-classes"
 test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"
 
 dns.hosts:
-  xorcery.cantara.no: 127.0.0.1
+  server.xorcery.test: 127.0.0.1

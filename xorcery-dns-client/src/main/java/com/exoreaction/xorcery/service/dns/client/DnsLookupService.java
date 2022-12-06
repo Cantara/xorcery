@@ -12,12 +12,13 @@ import org.xbill.DNS.hosts.HostsFileParser;
 import org.xbill.DNS.lookup.LookupSession;
 
 import java.io.UncheckedIOException;
-import java.net.Inet4Address;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
+import static com.exoreaction.xorcery.util.Exceptions.unwrap;
 
 @Service(name = "dns")
 @ContractsProvided({DnsLookup.class})
@@ -82,7 +83,7 @@ public class DnsLookupService
             }
             return CompletableFuture.completedFuture(List.of(uri));
         } catch (Throwable e) {
-            return CompletableFuture.failedFuture(e);
+            return CompletableFuture.failedFuture(unwrap(e));
         }
     }
 

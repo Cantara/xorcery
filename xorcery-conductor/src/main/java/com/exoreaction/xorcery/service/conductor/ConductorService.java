@@ -30,13 +30,14 @@ import java.net.URI;
 import java.util.Queue;
 import java.util.concurrent.*;
 
+import static com.exoreaction.xorcery.service.conductor.ConductorService.SERVICE_TYPE;
+
 /**
  * @author rickardoberg
  * @since 15/04/2022
  */
-@Service
+@Service(name=SERVICE_TYPE)
 @MessageReceiver({ServiceResourceObject.class, ServerResourceDocument.class})
-@Named(ConductorService.SERVICE_TYPE)
 public class ConductorService {
 
     public static final String SERVICE_TYPE = "conductor";

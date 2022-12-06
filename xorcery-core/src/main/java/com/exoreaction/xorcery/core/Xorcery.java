@@ -5,17 +5,24 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
+import org.glassfish.hk2.runlevel.RunLevelController;
 import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 /**
+ *
+ * Xorcery run level values:
+ * 0: Configuration refresh
+ * 2: Certificate refresh
+ * 4: Servers
+ * 6: Server publishers/subscribers
+ * 8: Client publishers/subscribers
+ * 20: DNS registration
  * @author rickardoberg
  * @since 12/04/2022
  */
@@ -27,7 +34,7 @@ public class Xorcery
     private final ServiceLocator serviceLocator;
 
     public Xorcery(Configuration configuration) throws Exception {
-        this(configuration, ServiceLocatorFactory.getInstance().create(configuration.getString("name").orElse(null)));
+        this(configuration, ServiceLocatorFactory.getInstance().create(configuration.getString("id").orElse(null)));
     }
 
     public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
@@ -42,13 +49,19 @@ public class Xorcery
 
         Filter configurationFilter = getEnabledServicesFilter(configuration);
 
-        List<?> services = serviceLocator.getAllServices(configurationFilter);
+        RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
+        runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.getString("hk2.threadpolicy").orElse("FULLY_THREADED")));
+        runLevelController.setMaximumUseableThreads(configuration.getInteger("hk2.threadcount").orElse(5));
+
+        runLevelController.proceedTo(configuration.getInteger("hk2.runlevel").orElse(20));
+
+        List<ServiceHandle<?>> services = serviceLocator.getAllServiceHandles(configurationFilter);
 
         if (logger.isDebugEnabled()) {
             StringBuilder msg = new StringBuilder();
             msg.append("Services:");
-            for (Object service : services) {
-                msg.append('\n').append(service.getClass().getName());
+            for (ServiceHandle<?> service : services) {
+                msg.append('\n').append(service.getActiveDescriptor().getImplementation());
             }
             logger.debug(msg);
         }
@@ -63,6 +76,8 @@ public class Xorcery
     public void close() {
 
         logger.info("Stopping");
+        RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
+        runLevelController.proceedTo(0);
         serviceLocator.shutdown();
         logger.info("Stopped");
     }
@@ -78,7 +93,7 @@ public class Xorcery
         };
     }
 
-    protected ServiceLocator populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration) throws MultiException {
+    protected void populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration) throws MultiException {
         DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
 
         DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
@@ -90,12 +105,9 @@ public class Xorcery
         Populator populator = dcs.getPopulator();
 
         try {
-            populator.populate();
-        }
-        catch (IOException e) {
+            populator.populate(new ClasspathDescriptorFileFinder(), new ConfigurationPostPopulatorProcessor(configuration));
+        } catch (IOException e) {
             throw new MultiException(e);
         }
-
-        return serviceLocator;
     }
 }

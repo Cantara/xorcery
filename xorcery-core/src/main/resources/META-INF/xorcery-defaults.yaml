@@ -15,4 +15,5 @@ defaults:
 
 HK2TopicDistributionService.enabled: true
 SystemInjectResolver.enabled: true
+DefaultRunLevelContext.enabled: true
 default.enabled: true

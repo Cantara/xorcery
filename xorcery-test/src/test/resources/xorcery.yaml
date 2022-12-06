@@ -4,5 +4,11 @@ registry.enabled: false
 conductor.enabled: false
 dns:
   enabled: true
+  nameservers:
+    - 127.0.0.1:53
+  server:
+    registration.key:
+      name: xorcery.test
+      secret: "BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg=="
 client.enabled: true
 server.enabled: true

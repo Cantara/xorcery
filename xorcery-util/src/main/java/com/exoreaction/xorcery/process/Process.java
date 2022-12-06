@@ -1,5 +1,7 @@
 package com.exoreaction.xorcery.process;
 
+import com.exoreaction.xorcery.util.Exceptions;
+
 import java.util.concurrent.CompletionStage;
 
 public interface Process<T> {
@@ -17,7 +19,7 @@ public interface Process<T> {
             return;
 
         if (t != null) {
-            t = unwrap(t);
+            t = Exceptions.unwrap(t);
             if (isRetryable(t)) {
                 retry();
             } else {
@@ -34,12 +36,5 @@ public interface Process<T> {
 
     default boolean isRetryable(Throwable t) {
         return false;
-    }
-
-    default Throwable unwrap(Throwable t) {
-        while (t.getCause() != null) {
-            t = t.getCause();
-        }
-        return t;
     }
 }

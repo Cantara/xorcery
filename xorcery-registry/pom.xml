@@ -99,7 +99,6 @@
         <dependency>
             <groupId>org.jmdns</groupId>
             <artifactId>jmdns</artifactId>
-            <version>3.5.8</version>
         </dependency>
 
         <dependency>

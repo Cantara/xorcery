@@ -1,1 +1,4 @@
 CREATE CONSTRAINT ProjectionId IF NOT EXISTS FOR (node:Projection) REQUIRE node.id IS UNIQUE;
+CREATE CONSTRAINT AggregateId IF NOT EXISTS FOR (node:Aggregate) REQUIRE node.id IS UNIQUE;
+CREATE CONSTRAINT EntityId IF NOT EXISTS FOR (node:Entity) REQUIRE node.id IS UNIQUE;
+CREATE INDEX EntityAggregateId IF NOT EXISTS FOR (n:Entity) ON (n.aggregateId)

@@ -1,7 +1,7 @@
 conductor:
   enabled: "{{ defaults.enabled }}"
   templates: []
-jaxrs.register:
+jersey.jaxrs.register:
   - com.exoreaction.xorcery.service.conductor.resources.api.ConductorResource
   - com.exoreaction.xorcery.service.conductor.resources.api.GroupsResource
   - com.exoreaction.xorcery.service.conductor.resources.api.TemplatesResource

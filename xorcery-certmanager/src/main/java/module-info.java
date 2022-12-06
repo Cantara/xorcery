@@ -12,4 +12,5 @@ open module xorcery.certmanager {
     requires jersey.jetty.connector;
     requires java.logging;
     requires xorcery.core;
+    requires org.glassfish.hk2.runlevel;
 }

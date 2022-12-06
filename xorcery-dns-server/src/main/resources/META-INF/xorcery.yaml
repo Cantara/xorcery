@@ -15,3 +15,7 @@ dns:
     server:
        enabled: "{{ defaults.enabled }}"
        port: 53
+       discovery:
+           enabled: "{{ defaults.enabled }}"
+       multicast:
+           enabled: "{{ defaults.enabled }}"

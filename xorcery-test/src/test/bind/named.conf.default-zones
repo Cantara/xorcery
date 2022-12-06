@@ -21,6 +21,6 @@ zone "xorcery.test" {
 	type master;
 	file "/etc/bind/db.xorcery.test";	// Change to zone file path
 	allow-update {
-          key "xorcery.test";
-  };
+      key "xorcery.test";
+    };
 };

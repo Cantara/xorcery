@@ -7,6 +7,7 @@ open module xorcery.core {
 
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.extras;
+    requires org.glassfish.hk2.runlevel;
     requires com.fasterxml.jackson.dataformat.yaml;
     requires info.picocli;
 }

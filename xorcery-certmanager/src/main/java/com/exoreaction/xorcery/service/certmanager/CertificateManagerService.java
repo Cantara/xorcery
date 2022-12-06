@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.messaging.Topic;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.client.ClientConfig;
 import org.jvnet.hk2.annotations.Service;
@@ -41,8 +42,8 @@ import java.util.Base64;
 
 import static com.exoreaction.xorcery.service.certmanager.CertificateManagerService.SERVICE_TYPE;
 
-@Service
-@Named(SERVICE_TYPE)
+@Service(name=SERVICE_TYPE)
+@RunLevel(value = 2)
 public class CertificateManagerService {
     public static final String SERVICE_TYPE = "certificatemanager";
 

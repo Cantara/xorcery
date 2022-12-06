@@ -1,2 +1,2 @@
-jaxrs.register:
+jersey.jaxrs.register:
   - com.exoreaction.xorcery.jsonapi.server.providers.JsonApiExceptionMapper

@@ -11,5 +11,5 @@ neo4jprojections:
   publisher.enabled: "{{ neo4jprojections.enabled }}"
   subscriber.enabled: "{{ neo4jprojections.enabled }}"
 
-jaxrs.register:
+jersey.jaxrs.register:
   - com.exoreaction.xorcery.service.neo4j.resources.api.Neo4jResource
