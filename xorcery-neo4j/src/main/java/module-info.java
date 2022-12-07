@@ -22,7 +22,6 @@ open module xorcery.neo4j {
     requires xorcery.configuration.api;
     requires xorcery.json;
     requires xorcery.reactivestreams.api;
-    requires xorcery.conductor.api;
     requires xorcery.disruptor;
 
     requires org.glassfish.hk2.api;

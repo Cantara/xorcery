@@ -1,5 +1,11 @@
 log4jappender:
   enabled: "{{ defaults.enabled }}"
+  host: null
+  stream: "logs"
+  configuration: {}
 
 requestlog:
   enabled: "{{ defaults.enabled }}"
+  host: "{{ log4jappender.host }}"
+  stream: "{{ log4jappender.stream }}"
+  configuration: {}

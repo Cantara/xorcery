@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
 import com.exoreaction.xorcery.service.eventstore.streams.EventStorePublisher;
 import com.exoreaction.xorcery.service.eventstore.streams.EventStoreSubscriber;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
@@ -15,7 +15,6 @@ import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.hk2.api.messaging.Topic;
 import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.CompletionStage;
@@ -35,7 +34,7 @@ public class EventStoreService {
     @Inject
     public EventStoreService(ServiceResourceObjects serviceResourceObjects,
                              Configuration configuration,
-                             Provider<ReactiveStreams> reactiveStreams) throws ParseError {
+                             Provider<ReactiveStreamsServer> reactiveStreams) throws ParseError {
         ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
                 .api(EventStoreRels.eventstore.name(), "api/eventstore");
 
@@ -53,17 +52,15 @@ public class EventStoreService {
         projectionManagementClient = EventStoreDBProjectionManagementClient.create(settings);
 
         // Read
-        if (configuration.getBoolean("eventstore.publisher.enabled").orElse(true))
-        {
-            builder.websocket(EventStoreRels.eventpublisher.name(), "ws/eventstore/publisher");
-            reactiveStreams.get().publisher("/ws/eventstore/publisher", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
+        if (configuration.getBoolean("eventstore.publisher.enabled").orElse(true)) {
+            builder.publisher("eventstore");
+            reactiveStreams.get().publisher("eventstore", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
         }
 
         // Write
-        if (configuration.getBoolean("eventstore.subscriber.enabled").orElse(true))
-        {
-            builder.websocket(EventStoreRels.eventsubscriber.name(), "ws/eventstore/subscriber");
-            reactiveStreams.get().subscriber("/ws/eventstore/subscriber", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
+        if (configuration.getBoolean("eventstore.subscriber.enabled").orElse(true)) {
+            builder.subscriber("eventstore");
+            reactiveStreams.get().subscriber("eventstore", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
         }
 
         sro = builder.build();

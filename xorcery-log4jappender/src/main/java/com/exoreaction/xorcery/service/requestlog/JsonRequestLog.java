@@ -18,11 +18,11 @@ import org.eclipse.jetty.server.Response;
 public class JsonRequestLog
         implements RequestLog {
     private LoggingMetadata loggingMetadata;
-    private EventSink<WithMetadata<ObjectNode>> eventSink;
+    private RequestLogService.RequestLogPublisher requestLogPublisher;
 
-    public JsonRequestLog(LoggingMetadata loggingMetadata, EventSink<WithMetadata<ObjectNode>> eventSink) {
+    public JsonRequestLog(LoggingMetadata loggingMetadata, RequestLogService.RequestLogPublisher requestLogPublisher) {
         this.loggingMetadata = loggingMetadata;
-        this.eventSink = eventSink;
+        this.requestLogPublisher = requestLogPublisher;
     }
 
     @Override
@@ -59,16 +59,7 @@ public class JsonRequestLog
             node.set("status", node.numberNode(res.getStatus()));
             node.set("length", node.numberNode(res.getContentLength()));
 
-            ObjectNode event = node;
-
-            boolean isPublished = eventSink.tryPublishEvent((item, s, md, e) ->
-            {
-                item.set(md, e);
-            }, metadata, event);
-
-            if (!isPublished) {
-                LogManager.getLogger(getClass()).warn("Pending request log full, dropping requests");
-            }
+            requestLogPublisher.send(new WithMetadata<>(metadata, node));
         } catch (Exception e) {
             LogManager.getLogger(getClass()).error("Could not log request", e);
         }

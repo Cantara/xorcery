@@ -44,17 +44,6 @@
             <artifactId>xorcery-reactivestreams</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-registry</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-conductor</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>

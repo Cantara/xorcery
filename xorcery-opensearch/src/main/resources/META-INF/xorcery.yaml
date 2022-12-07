@@ -4,3 +4,13 @@ opensearch:
   component_templates: {}
   index_templates: {}
   deleteonexit: false
+  publishers:
+    - server:
+        authority: "somehost:someport"
+        stream: "somestream"
+        configuration: {}
+      client:
+        alias: "somealias"
+        index: "anindexname"
+        configuration:
+          buffersize: 64

@@ -8,8 +8,12 @@ neo4jdatabase:
 
 neo4jprojections:
   enabled: "{{ defaults.enabled }}"
-  publisher.enabled: "{{ neo4jprojections.enabled }}"
-  subscriber.enabled: "{{ neo4jprojections.enabled }}"
-
+  commitpublisher.enabled: "{{ neo4jprojections.enabled }}"
+  eventsubscriber.enabled: "{{ neo4jprojections.enabled }}"
+  subscribers: []
+#  - authority: "somehost:someport"
+#    stream: somestream
+#    projection: someprojection
+#    configuration: {}
 jersey.jaxrs.register:
   - com.exoreaction.xorcery.service.neo4j.resources.api.Neo4jResource

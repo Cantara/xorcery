@@ -2,19 +2,15 @@ package com.exoreaction.xorcery.service.metrics;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.helpers.ClientPublisherGroupListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.messaging.Topic;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
@@ -36,13 +32,10 @@ public class MetricsService
 
     @Inject
     public MetricsService(ServiceResourceObjects serviceResourceObjects,
-                          ReactiveStreams reactiveStreams,
-                          ServiceLocator serviceLocator,
-                          MetricRegistry metricRegistry,
+                          ReactiveStreamsServer reactiveStreams,
                           Configuration configuration) {
         this.resourceObject = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
-                .websocket("metricevents", "ws/metricevents")
-                .websocket("jmxmetrics", "ws/jmxmetrics")
+                .publisher("metrics")
                 .build();
 
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
@@ -50,16 +43,7 @@ public class MetricsService
                 .configuration(configuration)
                 .build();
 
-        resourceObject.getLinkByRel("jmxmetrics").ifPresent(link ->
-        {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class);
-        });
-        resourceObject.getLinkByRel("metricevents").ifPresent(link ->
-        {
-            reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> new MetricsPublisher(cfg, deploymentMetadata, metricRegistry), MetricsPublisher.class);
-        });
-        TopicSubscribers.addSubscriber(serviceLocator,new ClientPublisherGroupListener(resourceObject.getServiceIdentifier(), cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class, null, reactiveStreams));
-
+        reactiveStreams.publisher("metrics", cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class);
         serviceResourceObjects.publish(resourceObject);
     }
 

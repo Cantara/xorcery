@@ -5,7 +5,8 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import jakarta.ws.rs.core.UriBuilder;
@@ -32,10 +33,11 @@ public class ClientPublisherServerSubscriberIT {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
-            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
+            ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
+            ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
 
             // Server subscriber
-            reactiveStreams.subscriber("/serversubscriber", cfg -> new StringServerSubscriber(), StringServerSubscriber.class);
+            reactiveStreamsServer.subscriber("serversubscriber", cfg -> new StringServerSubscriber(), StringServerSubscriber.class);
 
             // Client publisher
             final long total = 1000;
@@ -46,7 +48,8 @@ public class ClientPublisherServerSubscriberIT {
                 final StringClientPublisher clientPublisher = new StringClientPublisher((int) total);
                 StandardConfiguration standardConfiguration = () -> xorcery.getServiceLocator().getService(Configuration.class);
                 URI serverUri = standardConfiguration.getServerUri();
-                futures.add(reactiveStreams.publish(UriBuilder.fromUri(serverUri).scheme(serverUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, clientPublisher.getClass()));
+                futures.add(reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber",
+                        Configuration::empty, clientPublisher, clientPublisher.getClass(), Configuration.empty()));
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get();
             long end = System.currentTimeMillis();
@@ -60,7 +63,8 @@ public class ClientPublisherServerSubscriberIT {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
-            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
+            ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
+            ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
 
             // Server subscriber
             ServerSubscriber<WithResult<String, Integer>> serverSubscriber = new ServerSubscriber<>() {
@@ -71,7 +75,7 @@ public class ClientPublisherServerSubscriberIT {
                 }
             };
 
-            reactiveStreams.subscriber("/serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
+            reactiveStreamsServer.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
 
             // Client publisher
             final ClientPublisher<WithResult<String, Integer>> clientPublisher = new ClientPublisher<>() {
@@ -91,7 +95,7 @@ public class ClientPublisherServerSubscriberIT {
 
             StandardConfiguration standardConfiguration = () -> xorcery.getServiceLocator().getService(Configuration.class);
             URI serverUri = standardConfiguration.getServerUri();
-            reactiveStreams.publish(UriBuilder.fromUri(serverUri).scheme(serverUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass())
+            reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), Configuration.empty())
                     .toCompletableFuture().get();
 
             System.out.println("DONE!");
@@ -103,7 +107,8 @@ public class ClientPublisherServerSubscriberIT {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
-            ReactiveStreams reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreams.class);
+            ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
+            ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
 
             // Server subscriber
             ServerSubscriber<WithResult<WithMetadata<String>, Integer>> serverSubscriber = new ServerSubscriber<>() {
@@ -114,7 +119,7 @@ public class ClientPublisherServerSubscriberIT {
                 }
             };
 
-            reactiveStreams.subscriber("/serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
+            reactiveStreamsServer.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
 
             // Client publisher
             final long total = 1000;
@@ -138,7 +143,7 @@ public class ClientPublisherServerSubscriberIT {
             long start = System.currentTimeMillis();
             StandardConfiguration standardConfiguration = () -> xorcery.getServiceLocator().getService(Configuration.class);
             URI serverUri = standardConfiguration.getServerUri();
-            reactiveStreams.publish(UriBuilder.fromUri(serverUri).scheme(serverUri.getScheme().equals("https") ? "wss" : "ws").path("serversubscriber").build(), Configuration.empty(), clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass())
+            reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), Configuration.empty())
                     .whenComplete((r, t) ->
                     {
                         System.out.println("Process complete");

@@ -58,12 +58,12 @@ public class Neo4jProjectionEventHandler
     public Neo4jProjectionEventHandler(GraphDatabaseService graphDatabaseService,
                                        Flow.Subscription subscription,
                                        Optional<Long> fromVersion,
-                                       Configuration consumerConfiguration,
+                                       String projectionId,
                                        Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,
                                        List<Neo4jEventProjection> projections,
                                        MetricRegistry metrics) {
         this.projectionCommitPublisher = projectionCommitPublisher;
-        projectionId = consumerConfiguration.getString(Projection.id.name()).orElseThrow();
+        this.projectionId = projectionId;
 
         this.graphDatabaseService = graphDatabaseService;
         this.subscription = subscription;

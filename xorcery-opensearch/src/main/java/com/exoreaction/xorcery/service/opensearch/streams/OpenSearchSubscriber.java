@@ -31,8 +31,8 @@ public class OpenSearchSubscriber
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
 
-        disruptor = new Disruptor<>(WithMetadata::new, 64, new NamedThreadFactory("OpenSearch-" + indexName+"-"));
-        disruptor.handleEventsWith(new OpenSearchEventHandler(client, openSearchCommitPublisher, configuration, subscription, indexName));
+        disruptor = new Disruptor<>(WithMetadata::new, configuration.getInteger("buffersize").orElse(64), new NamedThreadFactory("OpenSearch-" + indexName + "-"));
+        disruptor.handleEventsWith(new OpenSearchEventHandler(client, openSearchCommitPublisher, subscription, indexName));
         disruptor.start();
 
         subscription.request(disruptor.getBufferSize());

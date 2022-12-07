@@ -11,7 +11,6 @@ open module xorcery.log4jappender {
     requires xorcery.disruptor;
     requires xorcery.reactivestreams.api;
     requires xorcery.service.api;
-    requires xorcery.conductor.api;
     requires xorcery.jsonapi;
 
     requires com.lmax.disruptor;

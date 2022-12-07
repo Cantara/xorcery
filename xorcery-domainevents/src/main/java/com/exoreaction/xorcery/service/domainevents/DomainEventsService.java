@@ -7,10 +7,9 @@ import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.domainevents.api.DomainEventPublisher;
 import com.exoreaction.xorcery.service.domainevents.api.entity.DomainEvents;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.UriBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.ContractsProvided;
@@ -30,15 +29,15 @@ public class DomainEventsService
     private Flow.Subscriber<? super WithMetadata<DomainEvents>> subscriber;
 
     @Inject
-    public DomainEventsService(ReactiveStreams reactiveStreams,
+    public DomainEventsService(ReactiveStreamsClient reactiveStreams,
                                Configuration configuration) {
 
         this.deploymentMetadata = new DomainEventMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
                 .build();
-        StandardConfiguration standardConfiguration = () -> configuration;
-        reactiveStreams.publish(UriBuilder.fromUri(standardConfiguration.getServerUri()).scheme("wss").host("domainevents").path(configuration.getString("domainevents.stream").orElseThrow()).build(),
-                        configuration.getConfiguration("domainevents.stream.configuration"), this, DomainEventsService.class)
+        reactiveStreams.publish(configuration.getString("domainevents.host").orElseThrow(), configuration.getString("domainevents.stream.name").orElseThrow(),
+                        () -> configuration.getConfiguration("domainevents.stream.configuration"),
+                        this, DomainEventsService.class, Configuration.empty())
                 .exceptionally(t ->
                 {
                     LogManager.getLogger(getClass()).error("Domain event publisher failed", t);

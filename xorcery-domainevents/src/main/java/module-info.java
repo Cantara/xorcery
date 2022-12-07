@@ -13,9 +13,6 @@ open module xorcery.domainevents {
 
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;
-    requires xorcery.conductor.api;
-    requires xorcery.disruptor;
-    requires xorcery.service.api;
 
     requires com.fasterxml.jackson.annotation;
     requires jersey.server;
@@ -23,4 +20,5 @@ open module xorcery.domainevents {
     requires jakarta.validation;
     requires jakarta.inject;
     requires xorcery.core;
+    requires org.glassfish.hk2.api;
 }

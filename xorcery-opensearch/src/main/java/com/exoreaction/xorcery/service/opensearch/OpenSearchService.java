@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.core.TopicSubscribers;
+import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.opensearch.api.OpenSearchRels;
@@ -10,12 +10,14 @@ import com.exoreaction.xorcery.service.opensearch.client.index.AcknowledgedRespo
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateComponentTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateIndexTemplateRequest;
 import com.exoreaction.xorcery.service.opensearch.client.index.IndexTemplate;
-import com.exoreaction.xorcery.service.opensearch.streams.ClientSubscriberGroupListener;
 import com.exoreaction.xorcery.service.opensearch.streams.OpenSearchCommitPublisher;
 import com.exoreaction.xorcery.service.opensearch.streams.OpenSearchSubscriber;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.opensearch.streams.OpenSearchSubscriberConnector;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ContainerNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.inject.Inject;
@@ -24,8 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.messaging.Topic;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.client.ClientConfig;
 import org.jvnet.hk2.annotations.Service;
 
@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -51,14 +52,14 @@ public class OpenSearchService
 
     @Inject
     public OpenSearchService(ServiceResourceObjects serviceResourceObjects,
-                             ServiceLocator serviceLocator,
-                             ReactiveStreams reactiveStreams,
+                             ReactiveStreamsServer reactiveStreamsServer,
+                             ReactiveStreamsClient reactiveStreamsClient,
                              Configuration configuration,
                              ClientConfig clientConfig) {
 
         ServiceResourceObject sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
-                .websocket(OpenSearchRels.opensearch.name(), "ws/opensearch")
-                .websocket(OpenSearchRels.opensearchcommits.name(), "ws/opensearchcommits")
+                .subscriber("opensearch")
+                .publisher("opensearchcommits")
                 .build();
 
         this.configuration = configuration;
@@ -78,20 +79,17 @@ public class OpenSearchService
 
             OpenSearchCommitPublisher openSearchCommitPublisher = new OpenSearchCommitPublisher();
 
-            TopicSubscribers.addSubscriber(serviceLocator,new ClientSubscriberGroupListener(client,
-                    reactiveStreams, openSearchCommitPublisher, sro.getServiceIdentifier()));
+            reactiveStreamsServer.subscriber("opensearch", cfg -> new OpenSearchSubscriber(client, openSearchCommitPublisher, cfg), OpenSearchSubscriber.class);
+            reactiveStreamsServer.publisher("opensearchcommits", cfg -> openSearchCommitPublisher, OpenSearchCommitPublisher.class);
 
-            sro.getLinkByRel(OpenSearchRels.opensearch.name()).ifPresent(link ->
+            OpenSearchSubscriberConnector connector = new OpenSearchSubscriberConnector(client, reactiveStreamsClient, openSearchCommitPublisher);
+            configuration.getObjectListAs("opensearch.publishers", Publisher::new).ifPresent(publishers ->
             {
-                reactiveStreams.subscriber(link.getHrefAsUri().getPath(), cfg -> new OpenSearchSubscriber(client, openSearchCommitPublisher, cfg), OpenSearchSubscriber.class);
+                for (Publisher publisher : publishers) {
+                    connector.connect(publisher.getAuthority(), publisher.getStream(), publisher.getServerConfiguration().orElseGet(Configuration::empty), publisher.getClientConfiguration().orElseGet(Configuration::empty));
+                }
             });
 
-            sro.getLinkByRel(OpenSearchRels.opensearchcommits.name()).ifPresent(link ->
-            {
-                reactiveStreams.publisher(link.getHrefAsUri().getPath(), cfg -> {
-                    return openSearchCommitPublisher;
-                }, OpenSearchCommitPublisher.class);
-            });
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -211,6 +209,25 @@ public class OpenSearchService
             } catch (Throwable e) {
                 logger.warn("Could not close OpenSearch service", e);
             }
+        }
+    }
+
+    record Publisher(ContainerNode<?> json)
+            implements JsonElement {
+        String getAuthority() {
+            return getString("server.authority").orElseThrow();
+        }
+
+        String getStream() {
+            return getString("server.stream").orElseThrow();
+        }
+
+        Optional<Configuration> getServerConfiguration() {
+            return getObjectAs("server.configuration", Configuration::new);
+        }
+
+        Optional<Configuration> getClientConfiguration() {
+            return getObjectAs("client.configuration", Configuration::new);
         }
     }
 }

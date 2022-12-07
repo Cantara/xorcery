@@ -1,6 +1,6 @@
 domainevents:
   enabled: "{{ defaults.enabled }}"
   stream:
-    name: "ws/neo4jprojections/subscriber"
+    name: "neo4jprojections"
     configuration:
-      name: analyticsadmin
+      projection: analyticsadmin

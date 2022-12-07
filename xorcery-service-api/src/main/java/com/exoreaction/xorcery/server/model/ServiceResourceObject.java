@@ -46,6 +46,20 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
             return this;
         }
 
+        public Builder publisher(String streamName) {
+            links.link(streamName+" publisher", UriBuilder.fromUri(baseServerUri)
+                    .scheme(baseServerUri.getScheme().equals("https") ? "wss" : "ws")
+                    .path("streams/publishers/"+streamName));
+            return this;
+        }
+
+        public Builder subscriber(String streamName) {
+            links.link(streamName+" subscriber", UriBuilder.fromUri(baseServerUri)
+                    .scheme(baseServerUri.getScheme().equals("https") ? "wss" : "ws")
+                    .path("streams/subscribers/"+streamName));
+            return this;
+        }
+
         public ServiceResourceObject build() {
             return new ServiceResourceObject(builder
                     .attributes(attributes.build())

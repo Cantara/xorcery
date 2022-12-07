@@ -5,16 +5,23 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface ReactiveStreamsClient {
-    // Client
-    CompletableFuture<Void> publish(URI subscriberWebsocketUri,
-                                    Configuration subscriberConfiguration,
-                                    Flow.Publisher<?> publisher,
-                                    Class<? extends Flow.Publisher<?>> publisherType);
+    CompletableFuture<Void> publish(String authority,
+                                    String streamName,
+                                    Supplier<Configuration> subscriberConfiguration,
 
-    CompletableFuture<Void> subscribe(URI publisherWebsocketUri,
-                                    Configuration publisherConfiguration,
-                                    Flow.Subscriber<?> subscriber,
-                                    Class<? extends Flow.Subscriber<?>> subscriberType);
+                                    Flow.Publisher<?> publisher,
+                                    Class<? extends Flow.Publisher<?>> publisherType,
+                                    Configuration publisherConfiguration);
+
+    CompletableFuture<Void> subscribe(String authority,
+                                      String streamName,
+                                      Supplier<Configuration> publisherConfiguration,
+
+                                      Flow.Subscriber<?> subscriber,
+                                      Class<? extends Flow.Subscriber<?>> subscriberType,
+                                      Configuration subscriberConfiguration);
 }

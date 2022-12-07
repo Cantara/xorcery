@@ -21,7 +21,7 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
+            <artifactId>xorcery-service-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -42,11 +42,6 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonapi-client</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-conductor-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 

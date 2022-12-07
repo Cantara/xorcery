@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.jmxmetrics;
 import com.codahale.metrics.jmx.JmxReporter;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
@@ -11,10 +10,8 @@ import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.rest.RestProcess;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
-import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreams;
+import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -30,8 +27,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.messaging.Topic;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.client.ClientConfig;
 import org.jvnet.hk2.annotations.Service;
 
@@ -45,6 +40,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
+ * Register to publishers of "metrics" stream, and expose them in local JMX MBeanServer. This allows showing metrics
+ * of other services in VisualVM connected to local JVM.
+ *
  * @author rickardoberg
  * @since 13/04/2022
  */
@@ -63,12 +61,12 @@ public class JmxMetrics
     private JmxReporter reporter;
 
     private ServiceResourceObject sro;
-    private ReactiveStreams reactiveStreams;
+    private ReactiveStreamsClient reactiveStreams;
     private JsonApiClient client;
 
     @Inject
     public JmxMetrics(ServiceResourceObjects serviceResourceObjects,
-                      ReactiveStreams reactiveStreams,
+                      ReactiveStreamsClient reactiveStreams,
                       ServiceLocator serviceLocator,
                       Configuration configuration,
                       ClientConfig clientConfig) {
@@ -83,7 +81,9 @@ public class JmxMetrics
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-        TopicSubscribers.addSubscriber(serviceLocator,new JmxServersGroupListener(sro.getServiceIdentifier(), "metrics"));
+
+
+// TODO        TopicSubscribers.addSubscriber(serviceLocator,new JmxServersGroupListener(sro.getServiceIdentifier(), "metrics"));
 
         serviceResourceObjects.publish(sro);
     }
@@ -163,6 +163,7 @@ public class JmxMetrics
         }
     }
 
+/*
     private class JmxServersGroupListener extends AbstractGroupListener {
 
         public JmxServersGroupListener(ServiceIdentifier serviceIdentifier, String rel) {
@@ -173,6 +174,7 @@ public class JmxMetrics
             new MetricSynchronization(sro, link).start();
         }
     }
+*/
 
     class MetricSynchronization
             implements RestProcess<Void> {
@@ -258,7 +260,8 @@ public class JmxMetrics
         private void pollMetrics(Link metricevents, String serverId, Collection<String> metricNames) {
             ObjectNode parameters = JsonNodeFactory.instance.objectNode();
             parameters.set("metric_names", parameters.textNode(String.join(",", metricNames)));
-            reactiveStreams.subscribe(metricevents.getHrefAsUri(), new Configuration(parameters), new MetricEventSubscriber(scheduledExecutorService, serverId), MetricEventSubscriber.class);
+            reactiveStreams.subscribe(metricevents.getHrefAsUri().getAuthority(), metricevents.rel(), () -> new Configuration(parameters),
+                    new MetricEventSubscriber(scheduledExecutorService, serverId), MetricEventSubscriber.class, Configuration.empty());
         }
     }
 }

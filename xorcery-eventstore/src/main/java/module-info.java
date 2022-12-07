@@ -3,7 +3,6 @@ open module xorcery.eventstore {
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;
     requires xorcery.service.api;
-    requires xorcery.conductor.api;
     requires xorcery.jsonapi.server;
 
     requires jakarta.inject;

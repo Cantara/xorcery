@@ -32,7 +32,6 @@ public class OpenSearchEventHandler
 
     private final OpenSearchClient client;
     private Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher;
-    private Configuration configuration;
     private final String index;
     private Logger logger = LogManager.getLogger(getClass());
 
@@ -44,12 +43,10 @@ public class OpenSearchEventHandler
 
     public OpenSearchEventHandler(OpenSearchClient client,
                                   Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher,
-                                  Configuration configuration,
                                   Flow.Subscription subscription,
                                   String index) {
         this.client = client;
         this.openSearchCommitPublisher = openSearchCommitPublisher;
-        this.configuration = configuration;
         this.index = index;
         this.subscription = subscription;
     }

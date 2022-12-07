@@ -1,6 +1,5 @@
 open module xorcery.opensearch {
     requires xorcery.configuration.api;
-    requires xorcery.conductor.api;
     requires xorcery.reactivestreams.api;
     requires xorcery.disruptor;
     requires xorcery.domainevents;
@@ -17,4 +16,5 @@ open module xorcery.opensearch {
     requires java.logging;
     requires com.lmax.disruptor;
     requires xorcery.core;
+    requires xorcery.service.api;
 }

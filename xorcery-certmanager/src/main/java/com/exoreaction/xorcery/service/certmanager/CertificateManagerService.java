@@ -1,7 +1,6 @@
 package com.exoreaction.xorcery.service.certmanager;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.core.TopicSubscribers;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
@@ -12,10 +11,7 @@ import com.exoreaction.xorcery.jsonapi.model.ResourceObjects;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceIdentifier;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.conductor.helpers.AbstractGroupListener;
-import com.exoreaction.xorcery.util.Resources;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -23,9 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.messaging.Topic;
 import org.glassfish.hk2.runlevel.RunLevel;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.client.ClientConfig;
 import org.jvnet.hk2.annotations.Service;
 
@@ -88,17 +82,19 @@ public class CertificateManagerService {
                 .register(JsonElementMessageBodyWriter.class));
         this.client = new JsonApiClient(client);
 
+/*
         if (configuration.getBoolean("certificatemanager.renew_on_startup").orElse(false)) {
             TopicSubscribers.addSubscriber(serviceLocator,new CheckCertGroupListener(sro.getServiceIdentifier(), "certificatemanager"));
         }
+*/
 
         serviceResourceObjects.publish(sro);
     }
 
-    private class CheckCertGroupListener extends AbstractGroupListener {
+    // TODO Retrofit without conductor
+    private class CheckCertGroupListener  {
 
         public CheckCertGroupListener(ServiceIdentifier serviceIdentifier, String rel) {
-            super(serviceIdentifier, rel);
         }
 
         public void connect(ServiceResourceObject sro, Link link, Configuration sourceConfiguration, Configuration consumerConfiguration) {

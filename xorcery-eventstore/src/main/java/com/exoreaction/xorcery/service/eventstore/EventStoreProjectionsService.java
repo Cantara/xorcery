@@ -1,14 +1,12 @@
 package com.exoreaction.xorcery.service.eventstore;
 
-import com.eventstore.dbclient.*;
+import com.eventstore.dbclient.CreateProjectionOptions;
+import com.eventstore.dbclient.EventStoreDBProjectionManagementClient;
+import com.eventstore.dbclient.ProjectionDetails;
+import com.eventstore.dbclient.UpdateProjectionOptions;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.ServiceConfiguration;
-import com.exoreaction.xorcery.json.VariableResolver;
 import com.exoreaction.xorcery.json.model.JsonElement;
-import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
-import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
-import com.exoreaction.xorcery.service.conductor.api.GroupTemplate;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;

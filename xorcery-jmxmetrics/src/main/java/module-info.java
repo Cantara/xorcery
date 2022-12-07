@@ -3,7 +3,6 @@ open module xorcery.jmxmetrics {
     requires xorcery.service.api;
     requires xorcery.jsonapi;
     requires xorcery.restclient;
-    requires xorcery.conductor.api;
     requires xorcery.reactivestreams.api;
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
@@ -21,5 +20,4 @@ open module xorcery.jmxmetrics {
     requires jersey.server;
     requires java.management;
     requires java.logging;
-    requires xorcery.core;
 }

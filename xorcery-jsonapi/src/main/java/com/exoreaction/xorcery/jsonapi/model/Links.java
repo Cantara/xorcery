@@ -78,7 +78,13 @@ public record Links(ObjectNode json)
         if (name == null) {
             return Optional.empty();
         } else {
-            return Optional.ofNullable(object().get(name)).map(v -> new Link(name, v));
+            Iterator<String> names = object().fieldNames();
+            while (names.hasNext()) {
+                String rel = names.next();
+                if (rel.contains(name))
+                    return Optional.of(new Link(rel, object().get(rel)));
+            }
+            return Optional.empty();
         }
     }
 
