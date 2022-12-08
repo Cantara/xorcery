@@ -3,8 +3,8 @@ package com.exoreaction.xorcery.service.neo4jprojections.streams;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
-import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.service.domainevents.api.event.JsonDomainEvent;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
 import com.exoreaction.xorcery.service.neo4jprojections.api.ProjectionCommit;
@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.function.Consumer;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * @author rickardoberg
@@ -94,7 +96,8 @@ public class Neo4jProjectionEventHandler
 
             for (JsonNode jsonNode : eventsJson) {
                 ObjectNode objectNode = (ObjectNode) jsonNode;
-                String type = objectNode.path("@class").textValue();
+                String type = ofNullable(objectNode.path("@class").textValue())
+                        .orElse(JsonDomainEvent.class.getName()); // default value when @class property is missing
 
                 try {
 
