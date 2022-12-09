@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.neo4jprojections.streams;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.domainevents.api.event.JsonDomainEvent;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
