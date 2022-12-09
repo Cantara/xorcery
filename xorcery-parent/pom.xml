@@ -14,7 +14,7 @@
 
         <slf4j.version>2.0.5</slf4j.version>
         <log4j.version>2.19.0</log4j.version>
-        <jetty.version>11.0.12</jetty.version>
+        <jetty.version>11.0.13</jetty.version>
         <jersey.version>3.0.8</jersey.version>
         <hk2.version>3.0.3</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
