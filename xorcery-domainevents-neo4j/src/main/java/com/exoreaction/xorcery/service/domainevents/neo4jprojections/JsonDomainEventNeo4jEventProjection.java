@@ -3,11 +3,20 @@ package com.exoreaction.xorcery.service.domainevents.neo4jprojections;
 import com.exoreaction.xorcery.service.domainevents.api.event.JsonDomainEvent;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.*;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.NumericNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.apache.logging.log4j.LogManager;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
-import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.ResourceIterator;
+import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -167,7 +176,7 @@ public class JsonDomainEventNeo4jEventProjection
                     String id = relationship.get("id").textValue();
                     for (Relationship nodeRelationship : node.getRelationships(RelationshipType.withName(relationship.get("relationship").textValue()))) {
                         Node otherNode = nodeRelationship.getOtherNode(node);
-                        if (id.equals(otherNode.getProperty("id"))) {
+                        if (id == null || id.equals(otherNode.getProperty("id"))) {
                             nodeRelationship.delete();
                             break;
                         }
