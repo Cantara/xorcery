@@ -9,6 +9,7 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.util.Sockets;
 import jakarta.ws.rs.core.UriBuilder;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,10 @@ public class ClientPublisherServerSubscriberIT {
     public void givenSubscriberWhenPublishEventsThenSubscriberConsumesEvents2() throws Exception {
         //System.setProperty("javax.net.debug", "ssl,handshake");
         Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
+                .build();
 
         System.out.println(StandardConfigurationBuilder.toYaml(configuration));
 
@@ -69,7 +73,10 @@ public class ClientPublisherServerSubscriberIT {
     @Test
     public void givenSubscriberWhenPublishEventsWithResultsThenSubscriberCalculatesResults() throws Exception {
         Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
+                .build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -114,7 +121,10 @@ public class ClientPublisherServerSubscriberIT {
     @Test
     public void givenSubscriberWhenPublishEventsWithResultsAndMetadataThenSubscriberCalculatesResults() throws Exception {
         Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
+                .build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);

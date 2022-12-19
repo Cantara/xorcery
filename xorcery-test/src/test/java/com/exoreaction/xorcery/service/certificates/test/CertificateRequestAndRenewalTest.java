@@ -39,12 +39,12 @@ public class CertificateRequestAndRenewalTest {
         //System.setProperty("javax.net.debug", "ssl,handshake");
 
         int managerPort = Sockets.nextFreePort();
-        managerPort = 443;
+        managerPort = 8443;
         Configuration configuration1 = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery1")
                 .add("host", "server1.xorcery.test")
-                .add("server.http.port", 8080)
+                .add("server.http.port", Sockets.nextFreePort())
                 .add("server.ssl.port", managerPort)
                 .add("certificates.keystore.path", "META-INF/intermediatecakeystore.p12")
                 .add("certificates.truststore.path", "META-INF/intermediatecatruststore.p12")
@@ -57,7 +57,7 @@ public class CertificateRequestAndRenewalTest {
                 .add("id", "xorcery2")
                 .add("host", "server2.xorcery.test")
                 .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", 8443)
+                .add("server.ssl.port", Sockets.nextFreePort())
                 .add("certificates.keystore.path", "META-INF/keystore.p12")
                 .add("certificates.truststore.path", "META-INF/truststore.p12")
                 .add("certificates.client.enabled", true)
