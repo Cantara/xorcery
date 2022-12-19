@@ -6,6 +6,8 @@ open module xorcery.server {
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.metricregistry;
     requires xorcery.jsonapi;
+    requires xorcery.service.api;
+    requires xorcery.certificates;
 
     requires transitive jakarta.inject;
     requires transitive jakarta.validation;
@@ -27,5 +29,4 @@ open module xorcery.server {
 
     requires org.apache.logging.log4j;
     requires org.eclipse.jetty.http2.server;
-    requires xorcery.service.api;
 }

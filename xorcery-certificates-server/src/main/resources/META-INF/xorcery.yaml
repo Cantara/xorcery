@@ -1,0 +1,16 @@
+certificates:
+  keystore:
+    path: "META-INF/intermediatecakeystore.p12"
+    password: "password"
+  truststore:
+    path: "META-INF/intermediatecatruststore.p12"
+    password: "password"
+  server:
+    enabled: "{{ defaults.enabled }}"
+    alias: "intermediate"
+    validity: 90
+
+jersey.jaxrs.register:
+  - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificateRequestResource
+  - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificateRenewalResource
+  - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificatesResource

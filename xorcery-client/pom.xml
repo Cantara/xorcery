@@ -24,6 +24,11 @@
             <artifactId>xorcery-dns-client</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-certificates</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Jersey -->
         <dependency>

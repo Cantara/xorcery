@@ -26,5 +26,11 @@
   },
   "newobject" : {
     "enabled" : true
-  }
+  },
+  "jersey" : {
+    "jaxrs" : {
+      "register" : [ "foobar", "blah" ]
+    }
+  },
+  "foo.some.bar" : "xyzzy"
 }

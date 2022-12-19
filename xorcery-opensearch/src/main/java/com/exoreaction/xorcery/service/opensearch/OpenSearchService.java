@@ -94,7 +94,7 @@ public class OpenSearchService
             throw new RuntimeException(e);
         }
 
-        serviceResourceObjects.publish(sro);
+        serviceResourceObjects.add(sro);
     }
 
     private void loadComponentTemplates() {

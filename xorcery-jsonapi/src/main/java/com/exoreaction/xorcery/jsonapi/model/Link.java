@@ -33,8 +33,7 @@ public record Link(String rel, JsonNode value) {
         return new UriTemplate(getHref());
     }
 
-    public Link createURI(String... values)
-    {
+    public Link createURI(String... values) {
         return new Link(rel, new UriTemplate(getHref()).createURI(values));
     }
 
@@ -43,7 +42,7 @@ public record Link(String rel, JsonNode value) {
     }
 
     public boolean isWebsocket() {
-        return getHref().startsWith("ws");
+        return getHref().startsWith("ws") || getHref().startsWith("wss");
     }
 
     public Optional<Meta> getMeta() {

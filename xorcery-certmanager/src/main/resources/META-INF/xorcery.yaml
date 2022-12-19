@@ -1,6 +1,0 @@
-certificatemanager:
-  enabled: "{{ defaults.enabled }}"
-  is_master: true
-  renew_on_startup: true
-jersey.jaxrs.register:
-  - com.exoreaction.xorcery.service.certmanager.resources.api.CertificateManagerResource

@@ -70,7 +70,7 @@ public class EventStoreIT {
         Configuration configuration = new Configuration.Builder()
                 .with(standardConfigurationBuilder.addTestDefaultsWithYaml(config))
                 .build();
-        logger.info(standardConfigurationBuilder.toYaml(configuration));
+        logger.info(StandardConfigurationBuilder.toYaml(configuration));
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             EventStoreService eventStoreService = xorcery.getServiceLocator().getService(EventStoreService.class);

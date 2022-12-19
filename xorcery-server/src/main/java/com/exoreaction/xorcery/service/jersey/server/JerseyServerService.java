@@ -22,7 +22,7 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "jersey")
-@RunLevel(2)
+@RunLevel(4)
 public class JerseyServerService
         implements PreDestroy {
     private final Logger logger = LogManager.getLogger(getClass());
@@ -52,6 +52,8 @@ public class JerseyServerService
         ServletHolder servletHolder = new ServletHolder(servletContainer);
         servletHolder.setInitOrder(1);
         ctx.addServlet(servletHolder, "/*");
+
+        logger.info("Jersey started");
     }
 
     @Override

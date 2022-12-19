@@ -38,8 +38,8 @@ public class SRVResolverTest {
                         name: xorcery2
                         server.http.port: 8080
                         """)).build();
-        logger.info("Resolved configuration1:\n" + standardConfigurationBuilder.toYaml(configuration1));
-        logger.info("Resolved configuration2:\n" + standardConfigurationBuilder.toYaml(configuration2));
+        logger.info("Resolved configuration1:\n" + StandardConfigurationBuilder.toYaml(configuration1));
+        logger.info("Resolved configuration2:\n" + StandardConfigurationBuilder.toYaml(configuration2));
 
         try (Xorcery xorcery1 = new Xorcery(configuration1)) {
             try (Xorcery xorcery2 = new Xorcery(configuration2)) {

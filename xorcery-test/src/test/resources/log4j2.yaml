@@ -37,6 +37,9 @@ Configuration:
       - name: com.exoreaction.xorcery.service.reactivestreams.resources.websocket
         level: info
 
+      - name: javax
+        level: debug
+
     Root:
       level: info
       AppenderRef:

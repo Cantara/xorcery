@@ -8,6 +8,7 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.util.Sockets;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.*;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -39,6 +40,7 @@ public class ReactiveStreamsTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
                 .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -82,6 +84,7 @@ public class ReactiveStreamsTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
                 .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -129,6 +132,7 @@ public class ReactiveStreamsTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
                 .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -138,7 +142,6 @@ public class ReactiveStreamsTest {
             // server publishes
             CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("fibonacci", config -> new BinaryFibonacciPublisher(numbersInFibonacciSequence), BinaryFibonacciPublisher.class);
             publisherComplete.thenAccept(v -> {
-                // TODO figure out why this never happens!
                 System.out.printf("publisher completed!%n");
             });
 
@@ -174,6 +177,7 @@ public class ReactiveStreamsTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
                 .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -186,7 +190,6 @@ public class ReactiveStreamsTest {
             BinaryFibonacciSubscriber subscriber = new BinaryFibonacciSubscriber();
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("fibonacci", config -> subscriber, BinaryFibonacciSubscriber.class);
             subscriberComplete.thenAccept(v -> {
-                // TODO figure out why this never happens!
                 System.out.printf("subscriber completed!%n");
             });
 
@@ -223,6 +226,7 @@ public class ReactiveStreamsTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
                 .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -232,7 +236,6 @@ public class ReactiveStreamsTest {
             // server publishes
             CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("fibonacci", config -> new BinaryNioFibonacciPublisher(numbersInFibonacciSequence), BinaryNioFibonacciPublisher.class);
             publisherComplete.thenAccept(v -> {
-                // TODO figure out why this never happens!
                 System.out.printf("publisher completed!%n");
             });
 
@@ -268,6 +271,7 @@ public class ReactiveStreamsTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
                 .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {

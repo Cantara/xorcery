@@ -15,6 +15,11 @@ object:
   value1: value1
   value2: value2
 
-jaxrs:
-  register:
-    - "foobar"
+newobject:
+  enabled: true
+
+
+jersey:
+  jaxrs:
+    register:
+      - "foobar"

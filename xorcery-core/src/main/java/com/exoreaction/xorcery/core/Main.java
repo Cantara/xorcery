@@ -79,10 +79,10 @@ public class Main
                 .with(standardConfigurationBuilder::addDefaults, standardConfigurationBuilder.addFile(configuration));
 
         // Log final configuration
-        logger.debug("Configuration:\n" + standardConfigurationBuilder.toYaml(builder));
+        logger.debug("Configuration:\n" + StandardConfigurationBuilder.toYaml(builder));
 
         Configuration configuration = builder.build();
-        logger.info("Resolved configuration:\n" + standardConfigurationBuilder.toYaml(configuration));
+        logger.info("Resolved configuration:\n" + StandardConfigurationBuilder.toYaml(configuration));
         return configuration;
     }
 

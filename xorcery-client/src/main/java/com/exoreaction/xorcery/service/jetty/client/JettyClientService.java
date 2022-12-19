@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.RoundRobinConnectionPool;
 import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
@@ -26,6 +28,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.Service;
 
 import javax.net.ssl.TrustManager;
@@ -41,12 +44,13 @@ import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NO
 
 @Service(name = "client")
 public class JettyClientService
-        implements Factory<HttpClient> {
+        implements Factory<HttpClient>, PreDestroy {
 
+    private final Logger logger = LogManager.getLogger(getClass());
     private HttpClient client;
 
     @Inject
-    public JettyClientService(Configuration configuration, Provider<DnsLookup> dnsLookup) throws Exception {
+    public JettyClientService(Configuration configuration, Provider<DnsLookup> dnsLookup, Provider<SslContextFactory.Client> clientSslContextFactoryProvider) throws Exception {
         // Client setup
         ClientConnector connector = new ClientConnector();
         connector.setIdleTimeout(Duration.ofSeconds(configuration.getLong("client.idle_timeout").orElse(-1L)));
@@ -66,31 +70,7 @@ public class JettyClientService
 
         HttpClientTransportDynamic transport = null;
         if (configuration.getBoolean("client.ssl.enabled").orElse(false)) {
-
-            SslContextFactory.Client sslClientContextFactory = new SslContextFactory.Client() {
-                @Override
-                protected KeyStore loadTrustStore(Resource resource) throws Exception {
-                    KeyStore keyStore = super.loadTrustStore(resource);
-                    addDefaultRootCaCertificates(keyStore);
-                    return keyStore;
-                }
-            };
-            sslClientContextFactory.setKeyStoreType(configuration.getString("client.ssl.keystore.type").orElse("PKCS12"));
-            sslClientContextFactory.setKeyStorePath(configuration.getResourcePath("client.ssl.keystore.path")
-                    .orElseGet(() -> Resources.getResource("META-INF/keystore.p12").orElseThrow().getPath()));
-            sslClientContextFactory.setKeyStorePassword(configuration.getString("client.ssl.keystore.password").orElse("password"));
-
-//                        sslClientContextFactory.setTrustStoreType(configuration.getString("client.ssl.truststore.type").orElse("PKCS12"));
-            sslClientContextFactory.setTrustStorePath(configuration.getResourcePath("client.ssl.truststore.path")
-                    .orElseGet(() -> Resources.getResource("META-INF/truststore.jks").orElseThrow().getPath()));
-            sslClientContextFactory.setTrustStorePassword(configuration.getString("client.ssl.truststore.password").orElse("password"));
-
-            sslClientContextFactory.setEndpointIdentificationAlgorithm("HTTPS");
-            sslClientContextFactory.setHostnameVerifier((hostName, session) -> true);
-            sslClientContextFactory.setTrustAll(configuration.getBoolean("client.ssl.trustall").orElse(false));
-            sslClientContextFactory.setSNIProvider(NON_DOMAIN_SNI_PROVIDER);
-
-
+            SslContextFactory.Client sslClientContextFactory = clientSslContextFactoryProvider.get();
             connector.setSslContextFactory(sslClientContextFactory);
         }
 
@@ -121,6 +101,18 @@ public class JettyClientService
         });
 
         client.start();
+
+        logger.info("Started Jetty client");
+    }
+
+    @Override
+    public void preDestroy() {
+        logger.info("Stopping Jetty client");
+        try {
+            client.stop();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -131,24 +123,5 @@ public class JettyClientService
 
     @Override
     public void dispose(HttpClient instance) {
-        try {
-            client.stop();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
-
-    protected void addDefaultRootCaCertificates(KeyStore trustStore) throws GeneralSecurityException {
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        // Loads default Root CA certificates (generally, from JAVA_HOME/lib/cacerts)
-        trustManagerFactory.init((KeyStore) null);
-        for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {
-            if (trustManager instanceof X509TrustManager) {
-                for (X509Certificate acceptedIssuer : ((X509TrustManager) trustManager).getAcceptedIssuers()) {
-                    trustStore.setCertificateEntry(acceptedIssuer.getSubjectDN().getName(), acceptedIssuer);
-                }
-            }
-        }
-    }
-
 }

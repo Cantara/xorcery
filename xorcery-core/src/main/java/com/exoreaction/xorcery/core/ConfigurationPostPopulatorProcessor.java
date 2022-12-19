@@ -47,7 +47,7 @@ public record ConfigurationPostPopulatorProcessor(Configuration configuration)
                 }).ifPresent(descriptorImpl::addMetadata);
                 return descriptorImpl;
             } else {
-                LogManager.getLogger(getClass()).debug("Disabled "+name);
+                LogManager.getLogger(getClass()).debug("Disabled "+descriptorImpl.getImplementation()+"("+name+".enabled=false)");
                 return null;
             }
         } else {

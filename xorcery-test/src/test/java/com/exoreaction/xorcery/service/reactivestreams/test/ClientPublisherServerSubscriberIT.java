@@ -20,18 +20,26 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
-@Disabled
+//@Disabled
 public class ClientPublisherServerSubscriberIT {
 
     private static final String config = """
+            certificates.enabled: true
             reactivestreams.enabled: true
+            server.ssl.enabled: true
+            server.http2.enabled: true
+            client.ssl.enabled: true
             """;
 
     @SuppressWarnings("unchecked")
     @Test
     public void givenSubscriberWhenPublishEventsThenSubscriberConsumesEvents2() throws Exception {
+        //System.setProperty("javax.net.debug", "ssl,handshake");
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+
+        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -90,6 +98,7 @@ public class ClientPublisherServerSubscriberIT {
                         subscriber.onNext(new WithResult<>(i + "", future));
                     }
                     subscriber.onComplete();
+                    System.out.println("Completed publishing");
                 }
             };
 

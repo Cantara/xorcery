@@ -10,14 +10,7 @@ client:
   ssl:
     enabled: "{{ defaults.enabled }}"
     trustall: true
-    keystore:
-      type: "PKCS12"
-      path: "META-INF/keystore.p12"
-      password: "password"
-    truststore:
-      type: "PKCS12"
-      path: "META-INF/truststore.jks"
-      password: "password"
+    alias: "self"
 
 dns:
   enabled: "{{ defaults.enabled }}"

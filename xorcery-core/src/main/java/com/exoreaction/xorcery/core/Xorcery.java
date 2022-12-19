@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- *
  * Xorcery run level values:
  * 0: Configuration refresh
  * 2: Certificate refresh
@@ -23,6 +22,7 @@ import java.util.Optional;
  * 6: Server publishers/subscribers
  * 8: Client publishers/subscribers
  * 20: DNS registration
+ *
  * @author rickardoberg
  * @since 12/04/2022
  */
@@ -34,7 +34,7 @@ public class Xorcery
     private final ServiceLocator serviceLocator;
 
     public Xorcery(Configuration configuration) throws Exception {
-        this(configuration, ServiceLocatorFactory.getInstance().create(configuration.getString("id").orElse(null)));
+        this(configuration, ServiceLocatorFactory.getInstance().create(null));
     }
 
     public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {

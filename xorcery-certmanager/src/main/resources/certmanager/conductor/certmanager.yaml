@@ -1,9 +1,0 @@
-data:
-    - id: certmanager_check
-      type: grouptemplate
-      attributes:
-        name: Check with certmanager
-        sources:
-          pattern: rel=='certificatemanager'
-        consumers:
-          pattern: type=='certificatemanager'

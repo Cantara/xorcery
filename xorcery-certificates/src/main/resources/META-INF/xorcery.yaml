@@ -1,0 +1,9 @@
+certificates:
+  enabled: "{{ defaults.enabled }}"
+  keystore:
+    path: "META-INF/keystore.p12"
+    password: "password"
+  truststore:
+    path: "META-INF/truststore.p12"
+    password: "password"
+    addrootca: true

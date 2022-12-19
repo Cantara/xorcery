@@ -19,4 +19,5 @@ open module xorcery.reactivestreams {
     requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
     requires xorcery.dns.client;
+    requires org.glassfish.hk2.runlevel;
 }

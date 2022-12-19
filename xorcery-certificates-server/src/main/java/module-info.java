@@ -1,0 +1,18 @@
+open module xorcery.certificates.server {
+    exports com.exoreaction.xorcery.service.certificates.server;
+    exports com.exoreaction.xorcery.service.certificates.server.resources.api;
+
+    requires xorcery.certificates;
+    requires xorcery.jsonapi.server;
+    requires xorcery.jsonapi.jaxrs;
+    requires xorcery.service.api;
+    requires xorcery.configuration.api;
+
+    requires jakarta.inject;
+    requires org.apache.logging.log4j;
+    requires java.logging;
+    requires org.glassfish.hk2.runlevel;
+
+    requires org.bouncycastle.provider;
+    requires org.bouncycastle.pkix;
+}

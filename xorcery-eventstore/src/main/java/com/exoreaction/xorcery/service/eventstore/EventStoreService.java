@@ -64,7 +64,7 @@ public class EventStoreService {
         }
 
         sro = builder.build();
-        serviceResourceObjects.publish(sro);
+        serviceResourceObjects.add(sro);
     }
 
     public CompletionStage<StreamModel> getStream(String id) {

@@ -11,51 +11,25 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Collection of ServiceResourceObjects for this server. Each service should add their own ServiceResourceObject instances
- * here on startup. This will be used by the Registry and Conductor.
+ * here on startup. This will get exposed by the API for the root of the JSON API so that clients can inspect what services are available.
  */
 @Service
-public class ServiceResourceObjects
-        implements InstanceLifecycleListener {
-    private List<ServiceResourceObject> serviceResources = new ArrayList<>();
-    private Topic<ServiceResourceObject> serviceResourceObjectTopic;
-    private boolean started = false;
+public class ServiceResourceObjects {
+    private List<ServiceResourceObject> serviceResources = new CopyOnWriteArrayList<>();
 
     @Inject
-    public ServiceResourceObjects(Topic<ServiceResourceObject> serviceResourceObjectTopic) {
-        this.serviceResourceObjectTopic = serviceResourceObjectTopic;
-    }
-
-    public void publish(ServiceResourceObject serviceResourceObject) {
-        add(serviceResourceObject);
+    public ServiceResourceObjects() {
     }
 
     public void add(ServiceResourceObject serviceResourceObject) {
         serviceResources.add(serviceResourceObject);
-        if (started)
-        {
-            serviceResourceObjectTopic.publish(serviceResourceObject);
-        }
     }
 
     public List<ServiceResourceObject> getServiceResources() {
         return serviceResources;
-    }
-
-    @Override
-    public Filter getFilter() {
-        return d -> d.getImplementation().equals("com.exoreaction.xorcery.core.Xorcery");
-    }
-
-    @Override
-    public void lifecycleEvent(InstanceLifecycleEvent lifecycleEvent) {
-        if (lifecycleEvent.getEventType().equals(InstanceLifecycleEventType.POST_PRODUCTION)) {
-            for (ServiceResourceObject serviceResource : serviceResources) {
-                serviceResourceObjectTopic.publish(serviceResource);
-            }
-            started = true;
-        }
     }
 }

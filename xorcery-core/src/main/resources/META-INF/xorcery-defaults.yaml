@@ -1,7 +1,7 @@
 ---
 id: "{{ ENV.SERVER_ID | SYSTEM.server_id | host}}"
 name: genericserver
-host: localhost
+host: "{{ ENV.HOSTNAME | \"localhost\" }}"
 environment: development
 tag: default
 
@@ -13,7 +13,11 @@ defaults:
   enabled: true
   idle_timeout: -1
 
-HK2TopicDistributionService.enabled: true
-SystemInjectResolver.enabled: true
-DefaultRunLevelContext.enabled: true
-default.enabled: true
+HK2TopicDistributionService:
+  enabled: true
+SystemInjectResolver:
+  enabled: true
+DefaultRunLevelContext:
+  enabled: true
+default:
+  enabled: true

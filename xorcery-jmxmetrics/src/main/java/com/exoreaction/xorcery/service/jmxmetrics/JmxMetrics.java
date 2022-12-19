@@ -85,7 +85,7 @@ public class JmxMetrics
 
 // TODO        TopicSubscribers.addSubscriber(serviceLocator,new JmxServersGroupListener(sro.getServiceIdentifier(), "metrics"));
 
-        serviceResourceObjects.publish(sro);
+        serviceResourceObjects.add(sro);
     }
 
     @Override

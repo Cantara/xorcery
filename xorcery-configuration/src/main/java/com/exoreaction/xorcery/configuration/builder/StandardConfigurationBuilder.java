@@ -39,13 +39,17 @@ public class StandardConfigurationBuilder {
     public void addTestDefaults(Configuration.Builder builder)
             throws UncheckedIOException {
 
+        // First add the standard configuration
         addXorceryDefaults(builder);
-        addXorceryTestDefaults(builder);
         addExtensions(builder);
-        addExtensionsTest(builder);
         addApplication(builder);
+
+        // Then add the test configuration on top
+        addXorceryTestDefaults(builder);
+        addExtensionsTest(builder);
         addApplicationTest(builder);
 
+        // Then any custom and environment configuration
         addUserDirectory(builder);
 
         addSystemProperties(builder);
@@ -56,13 +60,17 @@ public class StandardConfigurationBuilder {
             throws UncheckedIOException {
         return builder ->
         {
+            // First add the standard configuration
             addXorceryDefaults(builder);
-            addXorceryTestDefaults(builder);
             addExtensions(builder);
-            addExtensionsTest(builder);
             addApplication(builder);
+
+            // Then add the test configuration on top
+            addXorceryTestDefaults(builder);
+            addExtensionsTest(builder);
             addApplicationTest(builder);
 
+            // Then any custom and environment configuration
             addUserDirectory(builder);
 
             addSystemProperties(builder);
@@ -214,7 +222,7 @@ public class StandardConfigurationBuilder {
         });
     }
 
-    public String toYaml(Configuration.Builder builder) {
+    public static String toYaml(Configuration.Builder builder) {
         ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
         try {
             return objectWriter.writeValueAsString(builder.builder());
@@ -223,7 +231,7 @@ public class StandardConfigurationBuilder {
         }
     }
 
-    public String toYaml(Configuration configuration) {
+    public static String toYaml(Configuration configuration) {
         ObjectWriter objectWriter = new ObjectMapper(new YAMLFactory()).writer().withDefaultPrettyPrinter();
         try {
             return objectWriter.writeValueAsString(configuration.json());

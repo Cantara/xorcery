@@ -9,6 +9,7 @@ import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import jakarta.inject.Inject;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
@@ -23,6 +24,7 @@ import java.util.function.Supplier;
 
 @Service
 @ContractsProvided({ReactiveStreamsServer.class})
+@RunLevel(6)
 public class ReactiveStreamsServerService
         extends ReactiveStreamsAbstractService
         implements ReactiveStreamsServer {

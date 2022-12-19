@@ -39,6 +39,7 @@ public class SubscribeReactiveStream
 
     private static final Logger logger = LogManager.getLogger(SubscribeReactiveStream.class);
 
+    private final String scheme;
     private final String authority;
     private final String streamName;
     private Configuration subscriberConfiguration;
@@ -60,7 +61,8 @@ public class SubscribeReactiveStream
     private Iterator<URI> uriIterator;
     private Session session;
 
-    public SubscribeReactiveStream(String authority,
+    public SubscribeReactiveStream(String scheme,
+                                   String authority,
                                    String streamName,
                                    Configuration subscriberConfiguration,
                                    DnsLookup dnsLookup,
@@ -85,7 +87,8 @@ public class SubscribeReactiveStream
         this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
         this.byteBufferPool = pool;
         this.result = result;
-        this.marker = MarkerManager.getMarker(authority + ":" + streamName);
+        this.marker = MarkerManager.getMarker(authority + "/" + streamName);
+        this.scheme = subscriberConfiguration.getString("reactivestreams.client.scheme").orElse(scheme);
 
         subscriber.onSubscribe(this);
 
@@ -123,7 +126,8 @@ public class SubscribeReactiveStream
             retry();
         }
 
-        URI uri = URI.create("ws://" + authority + "/streams/publishers/" + streamName);
+        URI uri = URI.create(scheme+"://" + authority + "/streams/publishers/" + streamName);
+        logger.info(marker, "Connecting to "+uri);
         dnsLookup.resolve(uri).thenApply(list ->
         {
             this.uriIterator = list.iterator();
@@ -135,6 +139,7 @@ public class SubscribeReactiveStream
 
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
+            logger.info(marker, "Trying "+subscriberWebsocketUri);
             try {
                 webSocketClient.connect(this, subscriberWebsocketUri)
                         .thenAccept(this::connected)

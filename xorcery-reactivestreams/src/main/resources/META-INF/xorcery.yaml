@@ -1,3 +1,5 @@
 reactivestreams:
   enabled: "{{ defaults.enabled }}"
   allowlocal: false
+  client:
+    scheme: "{{ client.ssl.enabled ? \"wss\" | \"ws\" }}"

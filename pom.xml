@@ -47,7 +47,9 @@
         <module>xorcery-reactivestreams-api</module>
         <module>xorcery-reactivestreams</module>
 
-        <module>xorcery-certmanager</module>
+        <module>xorcery-certificates</module>
+        <module>xorcery-certificates-server</module>
+        <module>xorcery-certificates-client</module>
         <module>xorcery-domainevents</module>
         <module>xorcery-eventstore</module>
         <module>xorcery-handlebars</module>

@@ -14,6 +14,7 @@ import jakarta.inject.Provider;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
@@ -28,12 +29,14 @@ import java.util.function.Supplier;
 
 @Service
 @ContractsProvided({ReactiveStreamsClient.class})
+@RunLevel(8)
 public class ReactiveStreamsClientService
         extends ReactiveStreamsAbstractService
         implements ReactiveStreamsClient, PreDestroy {
 
     private DnsLookup dnsLookup;
     private final Provider<ReactiveStreamsServerService> reactiveStreamsServerServiceProvider;
+    private final String scheme;
     private final WebSocketClient webSocketClient;
 
     private final List<CompletableFuture<Void>> activeSubscribeProcesses = new CopyOnWriteArrayList<>();
@@ -48,6 +51,7 @@ public class ReactiveStreamsClientService
         super(messageWorkers);
         this.dnsLookup = dnsLookup;
         this.reactiveStreamsServerServiceProvider = reactiveStreamsServerServiceProvider;
+        this.scheme = configuration.getString("reactivestreams.client.scheme").orElseThrow();
 
         WebSocketClient webSocketClient = new WebSocketClient(httpClient);
         webSocketClient.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idle_timeout").orElse(-1L)));
@@ -93,7 +97,7 @@ public class ReactiveStreamsClientService
 
         // Start publishing process
         new PublishReactiveStream(
-                authority, streamName,
+                scheme, authority, streamName,
                 publisherConfiguration,
                 dnsLookup,
                 webSocketClient,
@@ -145,7 +149,7 @@ public class ReactiveStreamsClientService
 
         // Start subscription process
         new SubscribeReactiveStream(
-                authority, streamName,
+                scheme, authority, streamName,
                 subscriberConfiguration,
                 dnsLookup,
                 webSocketClient,

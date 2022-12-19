@@ -1,8 +1,5 @@
 build_test_resources: "{{ home }}/target/test-classes"
 test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"
 
-server.ssl.keystore.path: "META-INF/test-keystore.p12"
-server.ssl.truststore.path: "META-INF/test-truststore.jks"
-
 server.http.port: "{{ SYSTEM.server_http_port | 8080 }}"
 server.ssl.port: "{{ SYSTEM.server_ssl_port | 8443 }}"

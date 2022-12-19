@@ -22,6 +22,7 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -35,9 +36,9 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 
 @Service(name="server")
-@RunLevel(2)
+@RunLevel(4)
 public class JettyServerService
-        implements Factory<ServletContextHandler> {
+        implements Factory<ServletContextHandler>, PreDestroy {
     private final Server server;
     private final ServletContextHandler servletContextHandler;
     private final Logger logger = LogManager.getLogger(getClass());
@@ -46,6 +47,7 @@ public class JettyServerService
     public JettyServerService(Configuration configuration,
                               ServiceResourceObjects sro,
                               ServiceLocator serviceLocator,
+                              Provider<SslContextFactory.Server> sslContextFactoryProvider,
                               Provider<MetricRegistry> metricRegistry) throws Exception {
 
         Configuration jettyConfig = configuration.getConfiguration("server");
@@ -61,86 +63,70 @@ public class JettyServerService
 
         // Create server
         server = new Server(jettyConnectorThreadPool);
-//        server.setStopAtShutdown(false);
 
         // Setup connector
         final HttpConfiguration httpConfig = new HttpConfiguration();
         httpConfig.setOutputBufferSize(32768);
         httpConfig.setRequestHeaderSize(1024 * 16);
 
-        SecureRequestCustomizer customizer = new SecureRequestCustomizer();
-        customizer.setSniRequired(configuration.getBoolean("server.ssl.snirequired").orElse(true));
-        customizer.setSniHostCheck(configuration.getBoolean("server.ssl.snihostcheck").orElse(true));
-        httpConfig.addCustomizer(customizer);
-
         // Added for X-Forwarded-For support, from ALB
         httpConfig.addCustomizer(new ForwardedRequestCustomizer());
 
         // Setup protocols
-        HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
 
         // Clear-text protocols
+        HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
+        ServerConnector httpConnector;
         if (configuration.getBoolean("server.http2.enabled").orElse(false)) {
             // The ConnectionFactory for clear-text HTTP/2.
             HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
 
             // Create and configure the HTTP 1.1/2 connector
-            final ServerConnector http = new ServerConnector(server, http11, h2c);
-            http.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
-            http.setPort(httpPort);
-            server.addConnector(http);
+            httpConnector = new ServerConnector(server, http11, h2c);
         } else {
             // Create and configure the HTTP 1.1 connector
-            final ServerConnector http = new ServerConnector(server, http11);
-            http.setPort(httpPort);
-            server.addConnector(http);
+            httpConnector = new ServerConnector(server, http11);
         }
-
-        // Configure the SslContextFactory with the keyStore information.
-        SslContextFactory.Server sslContextFactory = configuration.getBoolean("server.ssl.enabled").orElse(false) ?
-                new SslContextFactory.Server() {
-                    @Override
-                    protected KeyStore loadTrustStore(Resource resource) throws Exception {
-                        KeyStore keyStore = super.loadTrustStore(resource);
-                        addDefaultRootCaCertificates(keyStore);
-                        return keyStore;
-                    }
-                } : null;
+        httpConnector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
+        httpConnector.setPort(httpPort);
+        server.addConnector(httpConnector);
 
         if (configuration.getBoolean("server.ssl.enabled").orElse(false)) {
-            // The ALPN ConnectionFactory.
 
+            SslContextFactory.Server sslContextFactory = sslContextFactoryProvider.get();
+
+            final HttpConfiguration sslHttpConfig = new HttpConfiguration();
+            sslHttpConfig.setOutputBufferSize(32768);
+            sslHttpConfig.setRequestHeaderSize(1024 * 16);
+
+            SecureRequestCustomizer customizer = new SecureRequestCustomizer();
+            customizer.setSniRequired(configuration.getBoolean("server.ssl.snirequired").orElse(true));
+            customizer.setSniHostCheck(configuration.getBoolean("server.ssl.snihostcheck").orElse(true));
+            sslHttpConfig.addCustomizer(customizer);
+
+            // Added for X-Forwarded-For support, from ALB
+            sslHttpConfig.addCustomizer(new ForwardedRequestCustomizer());
+
+            HttpConnectionFactory sslHttp11 = new HttpConnectionFactory(sslHttpConfig);
+
+            // The ALPN ConnectionFactory.
             ALPNServerConnectionFactory alpn = new ALPNServerConnectionFactory();
             // The default protocol to use in case there is no negotiation.
-            alpn.setDefaultProtocol(http11.getProtocol());
-
-            sslContextFactory.setKeyStoreType(configuration.getString("server.ssl.keystore.type").orElse("PKCS12"));
-
-            sslContextFactory.setKeyStorePath(configuration.getResourcePath("server.ssl.keystore.path")
-                    .orElseGet(() -> Resources.getResource("META-INF/keystore.p12").orElseThrow().getPath()));
-            sslContextFactory.setKeyStorePassword(configuration.getString("server.ssl.keystore.password").orElse("password"));
-
-//            sslContextFactory.setTrustStoreType(configuration.getString("server.ssl.truststore.type").orElse("PKCS12"));
-            sslContextFactory.setTrustStorePath(configuration.getResourcePath("server.ssl.truststore.path")
-                    .orElseGet(() -> Resources.getResource("META-INF/truststore.jks").orElseThrow().getPath()));
-            sslContextFactory.setTrustStorePassword(configuration.getString("server.ssl.truststore.password").orElse("password"));
-            sslContextFactory.setHostnameVerifier((hostName, session) -> true);
-            sslContextFactory.setTrustAll(configuration.getBoolean("server.ssl.trustall").orElse(false));
-            sslContextFactory.setWantClientAuth(configuration.getBoolean("server.ssl.wantclientauth").orElse(false));
+            alpn.setDefaultProtocol(sslHttp11.getProtocol());
 
             SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, alpn.getProtocol());
 
             // Create and configure the secure HTTP 1.1/2 connector, with ALPN negotiation
-            ServerConnector https;
+            ServerConnector httpsConnector;
             if (configuration.getBoolean("server.http2.enabled").orElse(false)) {
-                HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(httpConfig);
-                https = new ServerConnector(server, tls, alpn, h2, http11);
+                HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(sslHttpConfig);
+                httpsConnector = new ServerConnector(server, tls, alpn, h2, sslHttp11);
             } else {
-                https = new ServerConnector(server, tls, http11);
+                httpsConnector = new ServerConnector(server, tls, alpn, sslHttp11);
             }
-            https.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
-            https.setPort(httpsPort);
-            server.addConnector(https);
+            httpsConnector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
+            httpsConnector.setPort(httpsPort);
+            server.addConnector(httpsConnector);
         }
 
         Slf4jRequestLogWriter requestLog = new Slf4jRequestLogWriter();
@@ -169,6 +155,18 @@ public class JettyServerService
         sro.add(new ServiceResourceObject.Builder(() -> configuration, "server")
                 .attribute("jetty.version", Jetty.VERSION)
                 .build());
+
+        logger.info("Started Jetty server");
+    }
+
+    @Override
+    public void preDestroy() {
+        logger.info("Stopping Jetty server");
+        try {
+            server.stop();
+        } catch (Throwable e) {
+            logger.error(e);
+        }
     }
 
     @Override
@@ -180,12 +178,6 @@ public class JettyServerService
 
     @Override
     public void dispose(ServletContextHandler instance) {
-        try {
-            logger.info("Stopping Jetty");
-            server.stop();
-        } catch (Throwable e) {
-            logger.error(e);
-        }
     }
 
     protected void addDefaultRootCaCertificates(KeyStore trustStore) throws GeneralSecurityException {

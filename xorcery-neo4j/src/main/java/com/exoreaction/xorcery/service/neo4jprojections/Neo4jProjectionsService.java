@@ -109,7 +109,7 @@ public class Neo4jProjectionsService {
             }
         });
 
-        serviceResourceObjects.publish(sro);
+        serviceResourceObjects.add(sro);
     }
 
     private Optional<Long> getCurrentRevision(String projectionId) {

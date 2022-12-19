@@ -44,7 +44,7 @@ public class MetricsService
                 .build();
 
         reactiveStreams.publisher("metrics", cfg -> new JmxMetricsPublisher(cfg, scheduledExecutorService, deploymentMetadata, managementServer), JmxMetricsPublisher.class);
-        serviceResourceObjects.publish(resourceObject);
+        serviceResourceObjects.add(resourceObject);
     }
 
     @Override

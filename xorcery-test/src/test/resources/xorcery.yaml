@@ -1,7 +1,5 @@
 defaults.enabled: false
 jersey.enabled: true
-registry.enabled: false
-conductor.enabled: false
 dns:
   enabled: true
   nameservers:

@@ -25,46 +25,56 @@ public class JsonMerger
 
     public ObjectNode merge(ObjectNode current, ObjectNode adding) {
         Iterator<Map.Entry<String, JsonNode>> fields = adding.fields();
-        while (fields.hasNext()) {
+        fields: while (fields.hasNext()) {
             JsonNode currentNode = current;
             Map.Entry<String, JsonNode> entry = fields.next();
 
-            String[] keys = entry.getKey().split("\\.");
-            for (int i = 0; i < keys.length - 1; i++) {
-                JsonNode nextNode = currentNode.path(keys[i]);
-                if (nextNode.isMissingNode())
-                {
-                    nextNode = current.objectNode();
-                    ((ObjectNode) currentNode).set(keys[i], nextNode);
+            String key;
+            if (entry.getKey().startsWith("."))
+            {
+                key = entry.getKey().substring(1);
+            } else
+            {
+                String[] keys = entry.getKey().split("\\.");
+                for (int i = 0; i < keys.length - 1; i++) {
+                    JsonNode nextNode = currentNode.path(keys[i]);
+                    if (nextNode.isMissingNode())
+                    {
+                        nextNode = current.objectNode();
+                        ((ObjectNode) currentNode).set(keys[i], nextNode);
+                    }
+                    currentNode = nextNode;
                 }
-                currentNode = nextNode;
+                key = keys[keys.length-1];
             }
-            String key = keys[keys.length-1];
 
             if (!currentNode.isObject())
                 continue;
 
             ObjectNode currentObject = (ObjectNode)currentNode;
-
-            if (entry.getValue() instanceof ObjectNode addingObject) {
-                JsonNode currentValue = currentObject.path(key);
-                if (currentValue instanceof MissingNode) {
-                    currentObject.set(key, entry.getValue());
-                } else if (currentValue instanceof ObjectNode currentValueObject) {
-                    currentObject.set(key, apply(currentValueObject, addingObject));
-                }
-            } else if (entry.getValue() instanceof ArrayNode addingarray) {
-                JsonNode currentValue = currentObject.path(key);
-                if (currentValue instanceof MissingNode) {
-                    currentObject.set(key, addingarray);
-                } else if (currentValue instanceof ArrayNode currentArray) {
-                    currentArray.addAll(addingarray);
-                }
-            } else {
-                currentObject.set(key, entry.getValue());
-            }
-
+            setValue(currentObject, key, entry.getValue());
         }
         return current;
+    }
+
+    private void setValue(ObjectNode currentObject, String key, JsonNode value)
+    {
+        if (value instanceof ObjectNode addingObject) {
+            JsonNode currentValue = currentObject.path(key);
+            if (currentValue instanceof MissingNode) {
+                currentObject.set(key, value);
+            } else if (currentValue instanceof ObjectNode currentValueObject) {
+                currentObject.set(key, apply(currentValueObject, addingObject));
+            }
+        } else if (value instanceof ArrayNode addingarray) {
+            JsonNode currentValue = currentObject.path(key);
+            if (currentValue instanceof MissingNode) {
+                currentObject.set(key, addingarray);
+            } else if (currentValue instanceof ArrayNode currentArray) {
+                currentArray.addAll(addingarray);
+            }
+        } else {
+            currentObject.set(key, value);
+        }
     }
 }

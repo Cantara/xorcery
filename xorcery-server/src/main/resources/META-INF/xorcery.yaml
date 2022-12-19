@@ -16,21 +16,14 @@ server:
     enabled: "{{ defaults.enabled }}"
     port: "{{ SYSTEM.server_ssl_port | 443 }}"
     trustall: true
+    needclientauth: false
     wantclientauth: true
     snirequired: false
     snihostcheck: false
-    keystore:
-      type: "PKCS12"
-      path: "META-INF/keystore.p12"
-      password: "password"
-    truststore:
-      type: "PKCS12"
-      path: "META-INF/truststore.jks"
-      password: "password"
+    alias: "self"
 
 jersey:
   enabled: "{{ defaults.enabled }}"
-
-jaxrs:
-  register: []
-  packages: []
+  jaxrs:
+    register: []
+    packages: []

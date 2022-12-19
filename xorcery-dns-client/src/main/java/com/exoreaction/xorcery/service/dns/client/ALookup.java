@@ -3,28 +3,15 @@ package com.exoreaction.xorcery.service.dns.client;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.*;
-import org.xbill.DNS.lookup.LookupResult;
 import org.xbill.DNS.lookup.LookupSession;
 import org.xbill.DNS.lookup.NoSuchDomainException;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import static org.xbill.DNS.Section.ADDITIONAL;
-import static org.xbill.DNS.Section.ANSWER;
 
 public class ALookup
         implements DnsLookup {

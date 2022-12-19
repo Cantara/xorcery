@@ -22,7 +22,9 @@ import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
+import javax.net.ssl.SSLHandshakeException;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -39,7 +41,9 @@ import java.util.function.Supplier;
  * @author rickardoberg
  */
 public class PublishReactiveStream
-        implements WebSocketListener, Flow.Subscriber<Object> {
+        implements WebSocketListener,
+        Flow.Subscriber<Object>,
+        EventHandler<AtomicReference<Object>> {
 
     private final static Logger logger = LogManager.getLogger(PublishReactiveStream.class);
 
@@ -65,11 +69,13 @@ public class PublishReactiveStream
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private Disruptor<AtomicReference<Object>> disruptor;
+    private String scheme;
     private String authority;
     private String streamName;
     private Iterator<URI> uriIterator;
 
-    public PublishReactiveStream(String authority,
+    public PublishReactiveStream(String scheme,
+                                 String authority,
                                  String streamName,
                                  Configuration publisherConfiguration,
                                  DnsLookup dnsLookup,
@@ -93,13 +99,12 @@ public class PublishReactiveStream
         this.timer = timer;
         this.pool = pool;
         this.result = result;
-        this.marker = MarkerManager.getMarker(authority + ":" + streamName);
+        this.marker = MarkerManager.getMarker(authority + "/" + streamName);
+        this.scheme = publisherConfiguration.getString("reactivestreams.client.scheme").orElse(scheme);
 
         this.disruptor = new Disruptor<>(AtomicReference::new, publisherConfiguration.getInteger("disruptor.size").orElse(512), new NamedThreadFactory("PublishWebSocketDisruptor-" + marker.getName() + "-"));
-        disruptor.handleEventsWith(new Sender());
+        disruptor.handleEventsWith(this);
         disruptor.start();
-        publisher.subscribe(this);
-
         start();
     }
 
@@ -127,19 +132,23 @@ public class PublishReactiveStream
     }
 
     public void onComplete() {
-        logger.info(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
         disruptor.shutdown();
-        logger.info(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
-        while (!resultQueue.isEmpty()) {
-            // Wait for results to finish
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                // Ignore
+        logger.info(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
+        if (!resultQueue.isEmpty())
+        {
+            logger.info(marker, "Waiting for outstanding results to be received from {}", session.getRemote().getRemoteAddress());
+            while (!resultQueue.isEmpty()) {
+                // Wait for results to finish
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    // Ignore
+                }
             }
         }
-        session.close(1000, "complete");
         result.complete(null);
+        logger.info(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
+        session.close(1000, "complete");
     }
 
     // Connection process
@@ -152,22 +161,23 @@ public class PublishReactiveStream
             retry();
         }
 
-        URI uri = URI.create("ws://" + authority + "/streams/subscribers/" + streamName);
+        URI uri = URI.create(scheme + "://" + authority + "/streams/subscribers/" + streamName);
+        logger.info(marker, "Connecting to "+uri);
         dnsLookup.resolve(uri).thenApply(list ->
         {
             this.uriIterator = list.iterator();
             return uriIterator;
-        }).thenAccept(this::connect).exceptionally(this::exceptionally);
+        }).thenAccept(this::connect).whenComplete(this::exceptionally);
     }
 
     private void connect(Iterator<URI> subscriberURIs) {
 
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
+            logger.info(marker, "Trying "+subscriberWebsocketUri);
             try {
                 webSocketClient.connect(this, subscriberWebsocketUri)
-                        .thenAccept(this::connected)
-                        .exceptionally(this::exceptionally);
+                        .whenComplete(this::exceptionally);
             } catch (Throwable e) {
                 logger.error(marker, "Could not subscribe to " + subscriberWebsocketUri.toASCIIString(), e);
                 retry();
@@ -177,18 +187,26 @@ public class PublishReactiveStream
         }
     }
 
-    private Void exceptionally(Throwable throwable) {
-        // TODO Handle exceptions
-        logger.error(marker, "Publish reactive stream error", throwable);
-        retry();
-        return null;
-    }
-
-    private void connected(Session session) {
-        this.session = session;
+    private <T> void exceptionally(T value, Throwable throwable) {
+        if (throwable != null) {
+            logger.error(marker, "Publish reactive stream error", throwable);
+            if (throwable instanceof SSLHandshakeException)
+            {
+                // Give up
+                result.completeExceptionally(throwable);
+            } else
+            {
+                // TODO Handle more exceptions
+                retry();
+            }
+        }
     }
 
     public void retry() {
+        if (result.isDone()) {
+            return;
+        }
+
         if (!uriIterator.hasNext())
             timer.schedule(this::start, 10000, TimeUnit.MILLISECONDS);
         else
@@ -223,10 +241,16 @@ public class PublishReactiveStream
         if (requestAmount == Long.MIN_VALUE) {
             logger.info(marker, "Received cancel on websocket");
             session.close();
+            session = null;
             retry();
         } else {
             if (logger.isDebugEnabled())
                 logger.debug(marker, "Received request:" + requestAmount);
+
+            if (subscription == null)
+            {
+                publisher.subscribe(this);
+            }
 
             semaphore.release((int) requestAmount);
             subscription.request(requestAmount);
@@ -266,6 +290,7 @@ public class PublishReactiveStream
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
 
+        session = null;
         // TODO This has to be reviewed to see what codes should cause retry and what should cause cancellation of the process
         if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
             logger.info(marker, "Subscriber closed session:{} {}", statusCode, reason);
@@ -290,14 +315,18 @@ public class PublishReactiveStream
     }
 
     // EventHandler
-    // TODO This needs to handle resends properly
-    public class Sender
-            implements EventHandler<AtomicReference<Object>> {
+    AtomicReference<Boolean> isShutdown = new AtomicReference<>(false);
 
-        @Override
-        public void onEvent(AtomicReference<Object> event, long sequence, boolean endOfBatch) throws Exception {
-            while (!semaphore.tryAcquire(1, TimeUnit.SECONDS)) {
-                if (!session.isOpen())
+    @Override
+    public void onShutdown() {
+        isShutdown.set(true);
+    }
+
+    @Override
+    public void onEvent(AtomicReference<Object> event, long sequence, boolean endOfBatch) throws Exception {
+        try {
+            while (!semaphore.tryAcquire(1, TimeUnit.SECONDS) && !result.isDone()) {
+                if (session == null || !session.isOpen())
                     return;
             }
 
@@ -344,6 +373,8 @@ public class PublishReactiveStream
 
             if (endOfBatch)
                 session.getRemote().flush();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
     }
 }

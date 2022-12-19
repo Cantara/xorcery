@@ -23,3 +23,5 @@ newobject.enabled: true
 
 jersey.jaxrs.register:
   - blah
+
+.foo.some.bar: xyzzy

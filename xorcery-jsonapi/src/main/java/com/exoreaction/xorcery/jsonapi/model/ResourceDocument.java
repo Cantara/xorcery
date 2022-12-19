@@ -197,6 +197,7 @@ public record ResourceDocument(ObjectNode json)
             if (next.getValue() instanceof TextNode textNode)
             {
                 String resolvedUri = UriBuilder.fromUri(textNode.textValue())
+                        .scheme(baseUri.getScheme())
                         .host(baseUri.getHost())
                         .port(baseUri.getPort())
                         .toTemplate();
@@ -204,6 +205,7 @@ public record ResourceDocument(ObjectNode json)
             } else if (next.getValue() instanceof ObjectNode objectNode)
             {
                 String resolvedUri = UriBuilder.fromUri(objectNode.get("href").textValue())
+                        .scheme(baseUri.getScheme())
                         .host(baseUri.getHost())
                         .port(baseUri.getPort())
                         .toTemplate();

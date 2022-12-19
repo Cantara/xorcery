@@ -1,5 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.test.fibonacci;
 
+import org.apache.logging.log4j.LogManager;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -16,28 +18,27 @@ public class BinaryFibonacciSubscriber implements Flow.Subscriber<byte[]> {
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
-        System.out.printf("received onSubscribe()%n");
+        LogManager.getLogger(getClass()).info("received onSubscribe()");
         this.subscription = subscription;
         subscription.request(2);
     }
 
     @Override
     public void onNext(byte[] item) {
-        System.out.printf("onNext: %s%n", item);
+        LogManager.getLogger(getClass()).info("onNext: {}", item);
         receivedNumbers.add(item);
         subscription.request(1);
     }
 
     @Override
     public void onError(Throwable throwable) {
-        System.out.printf("onError%n");
-        throwable.printStackTrace();
+        LogManager.getLogger(getClass()).error("onError", throwable);
         terminatedLatch.countDown();
     }
 
     @Override
     public void onComplete() {
-        System.out.printf("onComplete!%n");
+        LogManager.getLogger(getClass()).info("onComplete");
         terminatedLatch.countDown();
     }
 

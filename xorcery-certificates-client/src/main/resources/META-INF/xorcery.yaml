@@ -1,0 +1,5 @@
+certificates:
+  client:
+    enabled: "{{ defaults.enabled }}"
+    host: "srv://_certificates"
+    renewonstartup: false

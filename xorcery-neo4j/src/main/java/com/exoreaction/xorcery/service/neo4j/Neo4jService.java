@@ -136,7 +136,7 @@ public class Neo4jService
 
         logger.info("Neo4j initialized");
 
-        serviceResourceObjects.publish(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+        serviceResourceObjects.add(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
                 .api("neo4j", "api/neo4j")
                 .build());
     }

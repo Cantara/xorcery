@@ -23,8 +23,8 @@ class JsonMergerTest {
 
         String expectedResult = new String(getClass().getResourceAsStream("jsonmergertestresult.yaml").readAllBytes());
 
-//        assertThat(result, equalTo(expectedResult));
         System.out.println(result);
+        assertThat(result, equalTo(expectedResult));
     }
 
     @Test

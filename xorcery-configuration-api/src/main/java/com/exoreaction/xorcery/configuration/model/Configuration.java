@@ -10,8 +10,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.*;
 
@@ -113,16 +111,15 @@ public record Configuration(ObjectNode json)
     }
 
     /**
-     * Retrieve a configuration value that represents a resource path.
+     * Retrieve a configuration value that represents a resource path URL.
      * It will try to resolve the name using ClassLoader.getSystemResource(path), to find the actual
      * path of the resource, given the current classpath and modules.
      *
      * @param name
      * @return
      */
-    public Optional<String> getResourcePath(String name) {
-        return getString(name)
-                .flatMap(path -> Resources.getResource(path).map(URL::toExternalForm));
+    public Optional<URL> getResourceURL(String name) {
+        return getString(name).flatMap(Resources::getResource);
     }
 
     public Builder asBuilder() {
