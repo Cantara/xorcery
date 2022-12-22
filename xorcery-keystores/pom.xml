@@ -9,7 +9,7 @@
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>xorcery-certificates</artifactId>
+    <artifactId>xorcery-keystores</artifactId>
     <version>0.12.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 

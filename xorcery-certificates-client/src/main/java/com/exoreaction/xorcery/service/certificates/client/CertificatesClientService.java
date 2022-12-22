@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWri
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.certificates.KeyStores;
+import com.exoreaction.xorcery.service.keystores.KeyStores;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -25,14 +25,12 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
-import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.jersey.client.ClientConfig;
 import org.jvnet.hk2.annotations.Service;
 
 import java.io.*;
 import java.security.*;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.*;
@@ -47,16 +45,16 @@ public class CertificatesClientService {
     private final Logger logger = LogManager.getLogger(getClass());
     private final String alias;
 
-    private KeyStores keyStores;
-    private Configuration configuration;
-    private JsonApiClient client;
-    private KeyStore keyStore;
+    private final KeyStores keyStores;
+    private final Configuration configuration;
+    private final JsonApiClient client;
+    private final KeyStore keyStore;
 
     @Inject
     public CertificatesClientService(KeyStores keyStores,
                                      ClientConfig clientConfig,
                                      Configuration configuration) throws KeyStoreException {
-        this.keyStore = keyStores.getKeyStore("certificates.keystore");
+        this.keyStore = keyStores.getKeyStore("keystores.keystore");
         this.keyStores = keyStores;
         this.configuration = configuration;
         this.alias = configuration.getString("client.ssl.alias").orElse("self");
@@ -133,7 +131,7 @@ public class CertificatesClientService {
                         chain.add(new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificate));
                     }
 
-                    char[] password = configuration.getString("certificates.keystore.password").map(String::toCharArray).orElse(null);
+                    char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
                     keyStore.setKeyEntry(alias, issuedCertKeyPair.getPrivate(), password, chain.toArray(new java.security.cert.Certificate[0]));
 
                     // Remove provisioning cert
@@ -199,7 +197,7 @@ public class CertificatesClientService {
                             chain.add(new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificate));
                         }
 
-                        char[] password = configuration.getString("certificates.keystore.password").map(String::toCharArray).orElse(null);
+                        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
                         PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, password);
                         keyStore.setKeyEntry(alias, privateKey, password,chain.toArray(new java.security.cert.Certificate[0]) );
 

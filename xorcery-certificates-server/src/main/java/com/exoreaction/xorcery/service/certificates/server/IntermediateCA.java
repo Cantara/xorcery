@@ -3,7 +3,7 @@ package com.exoreaction.xorcery.service.certificates.server;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.certificates.KeyStores;
+import com.exoreaction.xorcery.service.keystores.KeyStores;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,8 +58,8 @@ public class IntermediateCA {
     ) throws NoSuchAlgorithmException {
         this.configuration = configuration;
 
-        intermediateCaKeyStore = keyStores.getKeyStore("certificates.keystore");
-        intermediateCaTrustStore = keyStores.getKeyStore("certificates.truststore");
+        intermediateCaKeyStore = keyStores.getKeyStore("keystores.keystore");
+        intermediateCaTrustStore = keyStores.getKeyStore("keystores.truststore");
 
         issuedCertExtUtils = new JcaX509ExtensionUtils();
 
@@ -87,7 +87,7 @@ public class IntermediateCA {
         return createCertificate(csr.getSubject(), csr.getSubjectPublicKeyInfo(), ipAddresses);
     }
 
-    public String createCertificate(X500Name subject, SubjectPublicKeyInfo publicKeyInfo, List<String> ipAddresses) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, OperatorCreationException, PKCSException {
+    public String createCertificate(X500Name subject, SubjectPublicKeyInfo publicKeyInfo, List<String> ipAddresses) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, OperatorCreationException {
         Calendar now = Calendar.getInstance();
         now.add(Calendar.DATE, configuration.getInteger("certificates.server.validity").orElse(90));
         X509Certificate serviceCaCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
@@ -118,7 +118,7 @@ public class IntermediateCA {
         issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(names.toArray(new ASN1Encodable[1])));
 
         JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider(PROVIDER_NAME);
-        char[] password = configuration.getString("certificates.truststore.password").map(String::toCharArray).orElse(null);
+        char[] password = configuration.getString("keystores.truststore.password").map(String::toCharArray).orElse(null);
         ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password));
         X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
 

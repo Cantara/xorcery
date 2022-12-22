@@ -22,7 +22,7 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-certificates</artifactId>
+            <artifactId>xorcery-keystores</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

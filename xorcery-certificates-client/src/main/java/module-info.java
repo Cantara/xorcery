@@ -4,6 +4,8 @@ open module xorcery.certificates.client {
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
     requires xorcery.client;
+    requires xorcery.keystores;
+    requires xorcery.service.api;
 
     requires jakarta.inject;
     requires org.apache.logging.log4j;
@@ -18,6 +20,4 @@ open module xorcery.certificates.client {
     requires org.bouncycastle.util;
     requires xorcery.configuration.api;
     requires org.glassfish.hk2.api;
-    requires xorcery.certificates;
-    requires xorcery.service.api;
 }

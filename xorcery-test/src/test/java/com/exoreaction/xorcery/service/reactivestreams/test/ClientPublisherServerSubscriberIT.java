@@ -10,8 +10,6 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.util.Sockets;
-import jakarta.ws.rs.core.UriBuilder;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -25,14 +23,13 @@ import java.util.concurrent.Flow;
 public class ClientPublisherServerSubscriberIT {
 
     private static final String config = """
-            certificates.enabled: true
+            keystores.enabled: true
             reactivestreams.enabled: true
             server.ssl.enabled: true
             server.http2.enabled: true
             client.ssl.enabled: true
             """;
 
-    @SuppressWarnings("unchecked")
     @Test
     public void givenSubscriberWhenPublishEventsThenSubscriberConsumesEvents2() throws Exception {
         //System.setProperty("javax.net.debug", "ssl,handshake");
@@ -54,7 +51,7 @@ public class ClientPublisherServerSubscriberIT {
             // Client publisher
             final long total = 1000;
             long start = System.currentTimeMillis();
-            List<CompletionStage<Void>> futures = new ArrayList<>();
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
             int clients = 1;
             for (int i = 0; i < clients; i++) {
                 final StringClientPublisher clientPublisher = new StringClientPublisher((int) total);
@@ -99,9 +96,7 @@ public class ClientPublisherServerSubscriberIT {
                     for (int i = 0; i < 100; i++) {
                         CompletableFuture<Integer> future = new CompletableFuture<>();
                         future.whenComplete((r, t) ->
-                        {
-                            System.out.println("Length:" + r);
-                        });
+                                System.out.println("Length:" + r));
                         subscriber.onNext(new WithResult<>(i + "", future));
                     }
                     subscriber.onComplete();
@@ -164,9 +159,7 @@ public class ClientPublisherServerSubscriberIT {
             URI serverUri = standardConfiguration.getServerUri();
             reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), Configuration.empty())
                     .whenComplete((r, t) ->
-                    {
-                        System.out.println("Process complete");
-                    }).toCompletableFuture().get();
+                            System.out.println("Process complete")).toCompletableFuture().get();
 
             long end = System.currentTimeMillis();
             long time = end - start;
@@ -177,7 +170,7 @@ public class ClientPublisherServerSubscriberIT {
     public static class StringClientPublisher
             extends ClientPublisher<String> {
 
-        private int total;
+        private final int total;
 
         public StringClientPublisher(int total) {
             this.total = total;

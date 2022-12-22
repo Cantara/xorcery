@@ -1,14 +1,16 @@
 certificates:
+  server:
+    enabled: "{{ defaults.enabled }}"
+    alias: "intermediate"
+    validity: 90
+
+keystores:
   keystore:
     path: "META-INF/intermediatecakeystore.p12"
     password: "password"
   truststore:
     path: "META-INF/intermediatecatruststore.p12"
     password: "password"
-  server:
-    enabled: "{{ defaults.enabled }}"
-    alias: "intermediate"
-    validity: 90
 
 jersey.jaxrs.register:
   - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificateRequestResource

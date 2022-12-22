@@ -1,11 +1,8 @@
-package com.exoreaction.xorcery.service.certificates;
+package com.exoreaction.xorcery.service.keystores;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.InstantiationService;
-import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.messaging.Topic;
 import org.jvnet.hk2.annotations.Service;
 
@@ -22,10 +19,10 @@ import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service(name = "certificates")
+@Service(name = "keystores")
 public class KeyStores {
-    private Configuration configuration;
-    private Topic<KeyStore> keyStoreTopic;
+    private final Configuration configuration;
+    private final Topic<KeyStore> keyStoreTopic;
     private final Map<String, KeyStore> keyStores = new ConcurrentHashMap<>();
 
     @Inject
@@ -38,7 +35,6 @@ public class KeyStores {
             Security.addProvider(p);
         }
     }
-
 
     public KeyStore getKeyStore(String configurationPrefix) {
         return keyStores.computeIfAbsent(configurationPrefix, keyStoreName ->
@@ -70,6 +66,16 @@ public class KeyStores {
         });
     }
 
+    public KeyStore getDefaultKeyStore()
+    {
+        return getKeyStore("keystores.keystore");
+    }
+
+    public KeyStore getDefaultTrustStore()
+    {
+        return getKeyStore("keystores.truststore");
+    }
+
     public void save(KeyStore keyStore) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
         for (Map.Entry<String, KeyStore> stringKeyStoreEntry : keyStores.entrySet()) {
             if (stringKeyStoreEntry.getValue() == keyStore) {
@@ -94,7 +100,7 @@ public class KeyStores {
         for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {
             if (trustManager instanceof X509TrustManager) {
                 for (X509Certificate acceptedIssuer : ((X509TrustManager) trustManager).getAcceptedIssuers()) {
-                    trustStore.setCertificateEntry(acceptedIssuer.getSubjectDN().getName(), acceptedIssuer);
+                    trustStore.setCertificateEntry(acceptedIssuer.getSubjectX500Principal().getName(), acceptedIssuer);
                 }
             }
         }

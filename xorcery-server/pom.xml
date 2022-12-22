@@ -37,9 +37,8 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-certificates</artifactId>
+            <artifactId>xorcery-keystores</artifactId>
             <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>

@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.certificates.server;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.service.certificates.KeyStores;
+import com.exoreaction.xorcery.service.keystores.KeyStores;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,16 +35,16 @@ public class SelfCertificateService {
     private final Logger logger = LogManager.getLogger(getClass());
     private final String certificateAlias;
 
-    private KeyStore keyStore;
-    private KeyStores keyStores;
-    private Configuration configuration;
-    private IntermediateCA intermediateCA;
+    private final KeyStore keyStore;
+    private final KeyStores keyStores;
+    private final Configuration configuration;
+    private final IntermediateCA intermediateCA;
 
     @Inject
     public SelfCertificateService(KeyStores keyStores,
                                   Configuration configuration,
                                   IntermediateCA intermediateCA) throws GeneralSecurityException, IOException, OperatorCreationException, PKCSException {
-        this.keyStore = keyStores.getKeyStore("certificates.keystore");
+        this.keyStore = keyStores.getKeyStore("keystores.keystore");
         this.keyStores = keyStores;
         this.configuration = configuration;
         this.intermediateCA = intermediateCA;
@@ -90,8 +90,8 @@ public class SelfCertificateService {
         {
             chain.add(new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificate));
         }
-        char[] password = configuration.getString("certificates.keystore.password").map(String::toCharArray).orElse(null);
-        keyStore.setKeyEntry(configuration.getString("server.ssl.alias").orElse("self"), issuedCertKeyPair.getPrivate(), password, chain.toArray(new java.security.cert.Certificate[0]));
+        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+        keyStore.setKeyEntry(certificateAlias, issuedCertKeyPair.getPrivate(), password, chain.toArray(new java.security.cert.Certificate[0]));
         keyStores.save(keyStore);
 
         logger.info("Updated certificate for SSL client/server authentication");

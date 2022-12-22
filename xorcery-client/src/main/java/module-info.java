@@ -3,6 +3,8 @@ open module xorcery.client {
     exports com.exoreaction.xorcery.service.jetty.client.dns;
     exports com.exoreaction.xorcery.service.jersey.client;
 
+    requires xorcery.configuration.api;
+    requires xorcery.keystores;
     requires xorcery.dns.client;
 
     requires org.apache.logging.log4j;
@@ -17,6 +19,4 @@ open module xorcery.client {
     requires java.logging;
     requires org.dnsjava;
     requires jakarta.inject;
-    requires xorcery.configuration.api;
-    requires xorcery.certificates;
 }

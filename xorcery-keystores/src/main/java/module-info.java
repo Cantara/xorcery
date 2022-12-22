@@ -1,5 +1,5 @@
-open module xorcery.certificates {
-    exports com.exoreaction.xorcery.service.certificates;
+open module xorcery.keystores {
+    exports com.exoreaction.xorcery.service.keystores;
 
     requires xorcery.configuration.api;
     requires jakarta.inject;

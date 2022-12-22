@@ -7,7 +7,7 @@ open module xorcery.server {
     requires transitive xorcery.metricregistry;
     requires xorcery.jsonapi;
     requires xorcery.service.api;
-    requires xorcery.certificates;
+    requires xorcery.keystores;
 
     requires transitive jakarta.inject;
     requires transitive jakarta.validation;
