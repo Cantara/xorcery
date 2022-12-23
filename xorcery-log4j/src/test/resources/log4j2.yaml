@@ -1,0 +1,49 @@
+Configuration:
+  name: Xorcery tests
+  status: warn
+  packages: com.exoreaction.xorcery.service.log4jpublisher.log4j
+  properties:
+  thresholdFilter:
+    level: debug
+  appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%d [%t] %-5level %marker %c{1.}: %msg%n%throwable"
+    Log4jPublisher:
+      name: Log4jPublisher
+      PatternLayout:
+        Pattern: "%d [%t] %-5level %marker %c{1.}: %msg%n%throwable"
+
+  Loggers:
+    logger:
+      - name: org.apache.logging.log4j
+        level: debug
+        additivity: false
+        AppenderRef:
+          ref: STDOUT
+
+      - name: com.exoreaction.xorcery.service.log4jsubscriber
+        level: debug
+        additivity: false
+        AppenderRef:
+          ref: STDOUT
+
+      - name: com.exoreaction.xorcery.core
+        level: debug
+
+      - name: com.exoreaction.xorcery.service.dns.server
+        level: debug
+
+      - name: com.exoreaction.xorcery.service.reactivestreams.resources.websocket
+        level: info
+
+      - name: javax
+        level: debug
+
+    Root:
+      level: info
+      AppenderRef:
+#        - ref: STDOUT
+        - ref: Log4jPublisher

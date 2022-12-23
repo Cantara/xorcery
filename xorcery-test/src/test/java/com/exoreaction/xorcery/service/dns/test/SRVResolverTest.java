@@ -43,10 +43,8 @@ public class SRVResolverTest {
 
         try (Xorcery xorcery1 = new Xorcery(configuration1)) {
             try (Xorcery xorcery2 = new Xorcery(configuration2)) {
-                ClientConfig clientConfig = xorcery2.getServiceLocator().getService(ClientConfig.class);
-                Client client = ClientBuilder.newClient(clientConfig
-                        .register(JsonElementMessageBodyReader.class)
-                );
+                ClientBuilder clientConfig = xorcery2.getServiceLocator().getService(ClientBuilder.class);
+                Client client = clientConfig.register(JsonElementMessageBodyReader.class).build();
 
                 for (int i = 0; i < 1; i++) {
 //                    System.out.println(client.target("http://analytics/").request(MediaTypes.APPLICATION_JSON_API_TYPE).get().readEntity(String.class));

@@ -4,7 +4,6 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.opensearch.api.OpenSearchRels;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.index.AcknowledgedResponse;
 import com.exoreaction.xorcery.service.opensearch.client.index.CreateComponentTemplateRequest;
@@ -22,11 +21,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.client.ClientConfig;
 import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
@@ -55,7 +53,7 @@ public class OpenSearchService
                              ReactiveStreamsServer reactiveStreamsServer,
                              ReactiveStreamsClient reactiveStreamsClient,
                              Configuration configuration,
-                             ClientConfig clientConfig) {
+                             ClientBuilder clientBuilder) {
 
         ServiceResourceObject sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
                 .subscriber("opensearch")
@@ -66,7 +64,7 @@ public class OpenSearchService
         this.objectMapper = new ObjectMapper(new YAMLFactory());
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
-        client = new OpenSearchClient(clientConfig, host);
+        client = new OpenSearchClient(clientBuilder, host);
 
         loadComponentTemplates();
         loadIndexTemplates();

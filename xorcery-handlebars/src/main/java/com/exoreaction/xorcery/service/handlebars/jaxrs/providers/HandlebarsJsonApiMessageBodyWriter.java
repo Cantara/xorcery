@@ -24,7 +24,6 @@ import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriTemplate;
 
@@ -55,11 +54,12 @@ public class HandlebarsJsonApiMessageBodyWriter
     @Inject
     public HandlebarsJsonApiMessageBodyWriter(Handlebars handlebars,
                                               jakarta.inject.Provider<ContainerRequestContext> requestContext,
-                                              ClientConfig clientConfig) {
+                                              ClientBuilder clientBuilder) {
         this.handlebars = handlebars;
         this.requestContext = requestContext;
-        client = ClientBuilder.newClient(clientConfig
-                .register(JsonNodeMessageBodyReader.class));
+        client = clientBuilder
+                .register(JsonNodeMessageBodyReader.class)
+                .build();
     }
 
     @Override

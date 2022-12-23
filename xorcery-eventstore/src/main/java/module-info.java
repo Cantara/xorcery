@@ -12,6 +12,5 @@ open module xorcery.eventstore {
     requires org.apache.logging.log4j;
     requires xorcery.util;
     requires com.lmax.disruptor;
-    requires jersey.server;
     requires jersey.common;
 }

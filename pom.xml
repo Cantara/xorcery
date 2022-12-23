@@ -38,7 +38,12 @@
         <module>xorcery-service-api</module>
 
         <module>xorcery-core</module>
+
+        <module>xorcery-log4j</module>
         <module>xorcery-metricregistry</module>
+        <module>xorcery-metrics</module>
+        <module>xorcery-jmxmetrics</module>
+
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
         <module>xorcery-client</module>
@@ -54,13 +59,10 @@
         <module>xorcery-eventstore</module>
         <module>xorcery-handlebars</module>
         <module>xorcery-neo4j</module>
-        <module>xorcery-domainevents-neo4j</module>
+        <module>xorcery-neo4j-projections</module>
+        <module>xorcery-domainevents-neo4jprojection</module>
+        <module>xorcery-jsonapi-server-neo4j</module>
         <module>xorcery-opensearch</module>
-        <module>xorcery-restclient</module>
-
-        <module>xorcery-jmxmetrics</module>
-        <module>xorcery-log4jappender</module>
-        <module>xorcery-metrics</module>
 
         <module>xorcery-test</module>
     </modules>

@@ -1,4 +1,10 @@
 metrics:
   enabled: "{{ defaults.enabled }}"
-jersey.jaxrs.register:
-  - com.exoreaction.xorcery.service.metrics.resources.api.MetricsResource
+  delay: 5S
+  filter: []
+  subscriber:
+    authority: null
+    stream: "metrics"
+    configuration: {}
+  publisher:
+    configuration: {}

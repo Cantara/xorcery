@@ -14,11 +14,9 @@ open module xorcery.domainevents {
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;
 
+    requires org.apache.logging.log4j;
     requires com.fasterxml.jackson.annotation;
-    requires jersey.server;
-    requires jersey.common;
-    requires jakarta.validation;
     requires jakarta.inject;
-    requires xorcery.core;
+    requires jakarta.validation;
     requires org.glassfish.hk2.api;
 }

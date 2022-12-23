@@ -8,9 +8,9 @@ import com.exoreaction.xorcery.service.opensearch.client.index.CreateIndexTempla
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -73,9 +73,9 @@ public class DocumentClientIT {
         configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
-        client = new OpenSearchClient(new ClientConfig()
-                .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch")).build())
-                , host);
+        client = new OpenSearchClient(ClientBuilder.newBuilder()
+                .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch")).build()),
+                host);
 
 
         List<String> testIndices = client.indices().getIndices().toCompletableFuture().get(10, TimeUnit.SECONDS)
@@ -86,12 +86,12 @@ public class DocumentClientIT {
 
         // Upload test index template
         {
-            ObjectNode template = (ObjectNode)objectMapper.readTree(DocumentClientIT.class.getResource("/opensearch/templates/components/common.yaml"));
+            ObjectNode template = (ObjectNode) objectMapper.readTree(DocumentClientIT.class.getResource("/opensearch/templates/components/common.yaml"));
             client.indices().createComponentTemplate("common", new CreateComponentTemplateRequest(template))
                     .toCompletableFuture().get(10, TimeUnit.SECONDS);
         }
         {
-            ObjectNode template = (ObjectNode)objectMapper.readTree(DocumentClientIT.class.getResource("testindextemplate.json"));
+            ObjectNode template = (ObjectNode) objectMapper.readTree(DocumentClientIT.class.getResource("testindextemplate.json"));
             client.indices().createIndexTemplate("test", new CreateIndexTemplateRequest(template))
                     .toCompletableFuture().get(10, TimeUnit.SECONDS);
         }

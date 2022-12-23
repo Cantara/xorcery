@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.reactivestreams.client;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsAbstractService;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.server.ReactiveStreamsServerService;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
@@ -19,7 +18,6 @@ import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.lang.reflect.Type;
-import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +25,7 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@Service
+@Service(name="reactivestreams.client")
 @ContractsProvided({ReactiveStreamsClient.class})
 @RunLevel(8)
 public class ReactiveStreamsClientService
@@ -82,6 +80,9 @@ public class ReactiveStreamsClientService
                 // Local
                 publisher.subscribe((Flow.Subscriber<Object>) subscriberFactory.apply(subscriberConfiguration.get()));
                 return result;
+            } else {
+                result.completeExceptionally(new IllegalArgumentException("No such subscriber:" + streamName));
+                return result;
             }
         }
 
@@ -133,6 +134,9 @@ public class ReactiveStreamsClientService
                 // Local
                 publisher.apply(publisherConfiguration.get())
                         .subscribe((Flow.Subscriber<Object>) subscriber);
+                return result;
+            } else {
+                result.completeExceptionally(new IllegalArgumentException("No such publisher:" + streamName));
                 return result;
             }
         }

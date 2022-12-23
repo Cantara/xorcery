@@ -5,7 +5,6 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
-import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.WriteCallbackCompletableFuture;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.lmax.disruptor.EventHandler;
@@ -24,7 +23,6 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import javax.net.ssl.SSLHandshakeException;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -34,7 +32,6 @@ import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -374,7 +371,8 @@ public class PublishReactiveStream
             if (endOfBatch)
                 session.getRemote().flush();
         } catch (Throwable e) {
-            throw new RuntimeException(e);
+            if (session != null)
+                throw new RuntimeException(e);
         }
     }
 }

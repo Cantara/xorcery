@@ -22,7 +22,7 @@ import java.util.concurrent.Flow;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@Service
+@Service(name="reactivestreams.server")
 @ContractsProvided({ReactiveStreamsServer.class})
 @RunLevel(6)
 public class ReactiveStreamsServerService

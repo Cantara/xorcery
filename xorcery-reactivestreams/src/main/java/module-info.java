@@ -1,14 +1,13 @@
 open module xorcery.reactivestreams {
     exports com.exoreaction.xorcery.service.reactivestreams;
-    exports com.exoreaction.xorcery.service.reactivestreams.spi;
     exports com.exoreaction.xorcery.service.reactivestreams.client;
     exports com.exoreaction.xorcery.service.reactivestreams.server;
-    requires transitive xorcery.reactivestreams.api;
 
+    requires transitive xorcery.reactivestreams.api;
     requires xorcery.service.api;
     requires xorcery.util;
     requires xorcery.metadata;
-    requires xorcery.restclient;
+    requires xorcery.dns.client;
 
     requires org.eclipse.jetty.websocket.jetty.server;
     requires com.lmax.disruptor;
@@ -18,6 +17,5 @@ open module xorcery.reactivestreams {
     requires jakarta.inject;
     requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
-    requires xorcery.dns.client;
     requires org.glassfish.hk2.runlevel;
 }

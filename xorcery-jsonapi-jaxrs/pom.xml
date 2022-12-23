@@ -25,15 +25,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-        </dependency>
-
         <!-- Dataformats -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>

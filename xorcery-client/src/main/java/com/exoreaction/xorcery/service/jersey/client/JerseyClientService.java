@@ -57,7 +57,7 @@ public class JerseyClientService
             }
         });
 
-        return new ClientConfig()
+        return clientConfig
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
                 .register(new JettyHttpClientSupplier(client))
                 .connectorProvider(new JettyConnectorProvider());

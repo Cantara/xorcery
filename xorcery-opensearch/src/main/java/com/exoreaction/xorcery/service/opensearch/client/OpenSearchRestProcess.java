@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch.client;
 
-import com.exoreaction.xorcery.rest.RestProcess;
+import com.exoreaction.xorcery.process.Process;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.client.InvocationCallback;
 import jakarta.ws.rs.client.WebTarget;
@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 public record OpenSearchRestProcess(Supplier<WebTarget> requests,
                                     CompletableFuture<ObjectNode> result,
                                     BiConsumer<WebTarget, InvocationCallback<ObjectNode>> call)
-    implements RestProcess<ObjectNode>
+    implements Process<ObjectNode>
 {
     @Override
     public void start() {

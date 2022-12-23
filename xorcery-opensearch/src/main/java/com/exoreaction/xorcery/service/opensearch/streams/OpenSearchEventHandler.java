@@ -1,8 +1,6 @@
 package com.exoreaction.xorcery.service.opensearch.streams;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.service.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.document.BulkResponse;
@@ -54,7 +52,7 @@ public class OpenSearchEventHandler
     @Override
     public void onEvent(WithMetadata<JsonNode> event, long sequence, boolean endOfBatch) throws Exception {
 
-        DomainEventMetadata dem = new DomainEventMetadata(event.metadata());
+        OpenSearchEventMetadata dem = new OpenSearchEventMetadata(event.metadata());
 
         ObjectNode document = event.metadata().metadata().objectNode();
         document.set("@timestamp", event.metadata().getJson("timestamp").orElse(document.numberNode(0L)));

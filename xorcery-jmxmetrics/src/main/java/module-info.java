@@ -1,8 +1,6 @@
 open module xorcery.jmxmetrics {
     requires xorcery.configuration.api;
     requires xorcery.service.api;
-    requires xorcery.jsonapi;
-    requires xorcery.restclient;
     requires xorcery.reactivestreams.api;
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
@@ -14,10 +12,7 @@ open module xorcery.jmxmetrics {
     requires jakarta.inject;
     requires jakarta.ws.rs;
     requires org.apache.logging.log4j;
-    requires jersey.client;
-    requires jersey.jetty.connector;
-    requires jersey.common;
-    requires jersey.server;
     requires java.management;
     requires java.logging;
+    requires org.glassfish.hk2.api;
 }

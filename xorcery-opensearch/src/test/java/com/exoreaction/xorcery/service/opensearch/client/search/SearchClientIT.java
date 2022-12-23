@@ -11,9 +11,9 @@ import com.exoreaction.xorcery.service.opensearch.client.index.CreateIndexTempla
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -79,7 +79,7 @@ public class SearchClientIT {
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
         java.util.logging.Logger logger1 = java.util.logging.Logger.getLogger("client.opensearch");
-        client = new OpenSearchClient(new ClientConfig()
+        client = new OpenSearchClient(ClientBuilder.newBuilder()
                 .register(new LoggingFeature.LoggingFeatureBuilder()
                         .verbosity(LoggingFeature.Verbosity.PAYLOAD_ANY)
                         .level(Level.INFO)

@@ -60,7 +60,7 @@ public class ClientSslContextFactoryFactory
             factory.reload(scf ->
                     LogManager.getLogger(getClass()).info("Reloaded client keystore"));
         } catch (Exception e) {
-            LogManager.getLogger(getClass()).error("Reloaded client keystore");
+            LogManager.getLogger(getClass()).error("Error reloading client keystore", e);
         }
     }
 }

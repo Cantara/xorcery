@@ -4,7 +4,6 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
-import com.exoreaction.xorcery.service.reactivestreams.resources.websocket.WriteCallbackCompletableFuture;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;

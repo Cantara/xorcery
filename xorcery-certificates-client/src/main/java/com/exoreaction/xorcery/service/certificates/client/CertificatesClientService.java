@@ -52,16 +52,17 @@ public class CertificatesClientService {
 
     @Inject
     public CertificatesClientService(KeyStores keyStores,
-                                     ClientConfig clientConfig,
+                                     ClientBuilder clientBuilder,
                                      Configuration configuration) throws KeyStoreException {
         this.keyStore = keyStores.getKeyStore("keystores.keystore");
         this.keyStores = keyStores;
         this.configuration = configuration;
         this.alias = configuration.getString("client.ssl.alias").orElse("self");
 
-        Client client = ClientBuilder.newClient(clientConfig
+        Client client = clientBuilder
                 .register(JsonElementMessageBodyReader.class)
-                .register(JsonElementMessageBodyWriter.class));
+                .register(JsonElementMessageBodyWriter.class)
+                .build();
         this.client = new JsonApiClient(client);
 
         if (keyStore.containsAlias(alias)) {

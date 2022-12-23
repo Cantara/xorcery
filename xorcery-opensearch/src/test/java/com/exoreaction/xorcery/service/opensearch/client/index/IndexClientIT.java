@@ -6,10 +6,9 @@ import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -40,9 +39,8 @@ public class IndexClientIT {
         configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
-        client = new OpenSearchClient(new ClientConfig()
-                .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch")).build())
-                .connectorProvider(new JettyConnectorProvider()),
+        client = new OpenSearchClient(ClientBuilder.newBuilder()
+                .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch")).build()),
                 host);
     }
 

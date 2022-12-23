@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.service.metrics;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
@@ -10,7 +9,10 @@ import org.apache.logging.log4j.LogManager;
 
 import javax.management.*;
 import java.time.Duration;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -20,9 +22,6 @@ class JmxMetricSubscription
         implements Flow.Subscription {
 
     private final Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber;
-    private Collection<String> metricNames;
-    private MetricRegistry metricRegistry;
-    private Duration delay;
     private ScheduledExecutorService executorService;
     private DeploymentMetadata deploymentMetadata;
     private final Optional<List<String>> filters;
@@ -31,7 +30,6 @@ class JmxMetricSubscription
     private final Set<MBeanAttributeInfo> unsupportedOperationAttributes = new HashSet<>();
 
     public JmxMetricSubscription(Duration delay, ScheduledExecutorService executorService, DeploymentMetadata deploymentMetadata, Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber, Optional<List<String>> filters, MBeanServer managementServer) {
-        this.delay = delay;
         this.executorService = executorService;
         this.deploymentMetadata = deploymentMetadata;
         this.filters = filters;

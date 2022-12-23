@@ -8,8 +8,6 @@ import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyRea
 import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
-import com.exoreaction.xorcery.rest.RestProcess;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
@@ -26,10 +24,8 @@ import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.jersey.client.ClientConfig;
 import org.jvnet.hk2.annotations.Service;
-
+import com.exoreaction.xorcery.process.Process;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -60,32 +56,22 @@ public class JmxMetrics
     private ScheduledExecutorService scheduledExecutorService;
     private JmxReporter reporter;
 
-    private ServiceResourceObject sro;
     private ReactiveStreamsClient reactiveStreams;
     private JsonApiClient client;
 
     @Inject
-    public JmxMetrics(ServiceResourceObjects serviceResourceObjects,
-                      ReactiveStreamsClient reactiveStreams,
-                      ServiceLocator serviceLocator,
+    public JmxMetrics(ReactiveStreamsClient reactiveStreams,
                       Configuration configuration,
-                      ClientConfig clientConfig) {
-        this.sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
-                .build();
+                      ClientBuilder clientBuilder) {
 
         this.reactiveStreams = reactiveStreams;
-        Client client = ClientBuilder.newClient(clientConfig
+        Client client = clientBuilder
                 .register(JsonElementMessageBodyReader.class)
-                .register(JsonElementMessageBodyWriter.class));
+                .register(JsonElementMessageBodyWriter.class)
+                .build();
         this.client = new JsonApiClient(client);
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-
-
-
-// TODO        TopicSubscribers.addSubscriber(serviceLocator,new JmxServersGroupListener(sro.getServiceIdentifier(), "metrics"));
-
-        serviceResourceObjects.add(sro);
     }
 
     @Override
@@ -177,7 +163,7 @@ public class JmxMetrics
 */
 
     class MetricSynchronization
-            implements RestProcess<Void> {
+            implements Process<Void> {
         private CompletableFuture<Void> result = new CompletableFuture<>();
         private ServiceResourceObject sro;
         private Link link;

@@ -6,7 +6,7 @@ open module xorcery.service.api {
     requires transitive xorcery.jsonapi;
 
     requires transitive jakarta.ws.rs;
-    requires transitive org.glassfish.hk2.api;
+    requires org.glassfish.hk2.api;
 
     requires jakarta.inject;
 }

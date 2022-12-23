@@ -6,16 +6,13 @@ open module xorcery.handlebars {
 
     requires xorcery.configuration.api;
     requires xorcery.jsonschema;
-    requires xorcery.restclient;
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
 
     requires org.glassfish.hk2.api;
     requires handlebars;
     requires org.apache.logging.log4j;
-    requires jersey.client;
     requires jersey.server;
-    requires jersey.common;
     requires java.logging;
     requires com.fasterxml.jackson.databind;
     requires jakarta.inject;
