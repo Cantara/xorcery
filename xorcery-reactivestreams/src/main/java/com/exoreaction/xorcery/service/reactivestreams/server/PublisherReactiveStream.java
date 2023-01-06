@@ -37,7 +37,7 @@ import java.util.function.Function;
  * @since 13/04/2022
  */
 public class PublisherReactiveStream
-    extends ServerReactiveStream
+        extends ServerReactiveStream
         implements WebSocketListener, Flow.Subscriber<Object> {
     private final static Logger logger = LogManager.getLogger(PublisherReactiveStream.class);
 
@@ -232,6 +232,13 @@ public class PublisherReactiveStream
     public class Sender
             implements EventHandler<AtomicReference<Object>> {
 
+        private CountDownLatch batchFinished;
+
+        @Override
+        public void onBatchStart(long batchSize) {
+            batchFinished = new CountDownLatch((int)batchSize);
+        }
+
         @Override
         public void onEvent(AtomicReference<Object> event, long sequence, boolean endOfBatch) throws Exception {
 
@@ -266,16 +273,20 @@ public class PublisherReactiveStream
                 public void writeFailed(Throwable t) {
                     pool.release(eventBuffer);
                     onWebSocketError(t);
+                    batchFinished.countDown();
                 }
 
                 @Override
                 public void writeSuccess() {
                     pool.release(eventBuffer);
+                    batchFinished.countDown();
                 }
             });
 
             if (endOfBatch)
                 session.getRemote().flush();
+
+            batchFinished.await(60, TimeUnit.SECONDS);
         }
     }
 }
