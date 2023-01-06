@@ -36,6 +36,7 @@ import java.util.function.Function;
  * @since 13/04/2022
  */
 public class SubscriberReactiveStream
+    extends ServerReactiveStream
         implements WebSocketPartialListener,
         WebSocketConnectionListener,
         Flow.Subscription {
@@ -159,15 +160,22 @@ public class SubscriberReactiveStream
             if (fin) {
                 // Read JSON parameters
                 try {
-                    subscriberConfiguration = new Configuration((ObjectNode) objectMapper.readTree(configurationMessage));
+                    ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(configurationMessage);
+                    subscriberConfiguration = new Configuration.Builder(configurationJson)
+                            .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
+                            .build();
+                } catch (JsonProcessingException e) {
+                    logger.error("Could not parse subscriber configuration", e);
+                    session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+                }
+
+                try {
                     subscriber = subscriberFactory.apply(subscriberConfiguration);
                     subscriber.onSubscribe(this);
 
                     logger.info(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
-
-                } catch (JsonProcessingException e) {
-                    logger.error("Could not parse subscriber configuration", e);
-                    session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+                } catch (Throwable e) {
+                    // TODO Send exception here
                 }
             }
         }
@@ -198,14 +206,16 @@ public class SubscriberReactiveStream
 
                 subscriber.onNext(event);
             } else {
+                // TODO Can this happen now? We have ByteBuffer readers...?
                 ByteBuffer result = ByteBuffer.allocate(byteBuffer.limit());
                 result.put(byteBuffer);
                 result.flip();
                 byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
                 subscriber.onNext(result);
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             logger.error("Could not receive value", e);
+            subscriber.onError(e);
             session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
         }
     }
@@ -228,6 +238,7 @@ public class SubscriberReactiveStream
                 @Override
                 public void writeFailed(Throwable x) {
                     logger.error(marker, "Could not send result", x);
+                    byteBufferPool.release(data);
                 }
 
                 @Override

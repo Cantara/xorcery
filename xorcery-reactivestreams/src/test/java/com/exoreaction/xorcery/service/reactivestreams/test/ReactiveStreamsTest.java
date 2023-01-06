@@ -6,9 +6,8 @@ import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
-import com.exoreaction.xorcery.util.Sockets;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.*;
-import org.glassfish.hk2.api.ServiceLocatorFactory;
+import com.exoreaction.xorcery.util.Sockets;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;

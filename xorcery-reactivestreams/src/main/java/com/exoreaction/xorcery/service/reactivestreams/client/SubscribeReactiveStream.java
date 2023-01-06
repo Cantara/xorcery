@@ -17,11 +17,15 @@ import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
@@ -56,6 +60,7 @@ public class SubscribeReactiveStream
     private final ByteBufferAccumulator byteBufferAccumulator;
     private final AtomicLong requests = new AtomicLong();
     private final AtomicBoolean cancelled = new AtomicBoolean();
+    private String exceptionPayload = "";
 
     private Iterator<URI> uriIterator;
     private Session session;
@@ -88,6 +93,17 @@ public class SubscribeReactiveStream
         this.result = result;
         this.marker = MarkerManager.getMarker(authority + "/" + streamName);
         this.scheme = subscriberConfiguration.getString("reactivestreams.client.scheme").orElse(scheme);
+
+        this.result.exceptionally(throwable ->
+        {
+            // Check if session is open
+            if (session != null)
+                session.close();
+
+            subscriber.onError(throwable);
+
+            return null;
+        });
 
         subscriber.onSubscribe(this);
 
@@ -193,7 +209,19 @@ public class SubscribeReactiveStream
 
     @Override
     public void onWebSocketPartialText(String payload, boolean fin) {
-        // Ignore
+
+        exceptionPayload += payload;
+        if (fin)
+        {
+            try {
+                ByteArrayInputStream bin = new ByteArrayInputStream(Base64.getDecoder().decode(exceptionPayload));
+                ObjectInputStream oin = new ObjectInputStream(bin);
+                Throwable throwable = (Throwable) oin.readObject();
+                result.completeExceptionally(throwable);
+            } catch (Throwable e) {
+                result.completeExceptionally(e);
+            }
+        }
     }
 
     @Override
@@ -279,7 +307,10 @@ public class SubscribeReactiveStream
 
         if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
             try {
-                subscriber.onComplete();
+                if (!result.isCompletedExceptionally())
+                {
+                    subscriber.onComplete();
+                }
             } catch (Exception e) {
                 logger.warn(marker, "Could not close subscription", e);
             }

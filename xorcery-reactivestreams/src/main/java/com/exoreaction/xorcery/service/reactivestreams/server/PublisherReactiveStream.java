@@ -2,14 +2,18 @@ package com.exoreaction.xorcery.service.reactivestreams.server;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
+import jakarta.ws.rs.ClientErrorException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -18,10 +22,11 @@ import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,6 +37,7 @@ import java.util.function.Function;
  * @since 13/04/2022
  */
 public class PublisherReactiveStream
+    extends ServerReactiveStream
         implements WebSocketListener, Flow.Subscriber<Object> {
     private final static Logger logger = LogManager.getLogger(PublisherReactiveStream.class);
 
@@ -85,7 +91,10 @@ public class PublisherReactiveStream
         if (publisherConfiguration == null) {
             // Read JSON parameters
             try {
-                publisherConfiguration = new Configuration((ObjectNode) objectMapper.readTree(message));
+                ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(message);
+                publisherConfiguration = new Configuration.Builder(configurationJson)
+                        .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
+                        .build();
                 publisher = publisherFactory.apply(publisherConfiguration);
                 publisher.subscribe(this);
             } catch (JsonProcessingException e) {
@@ -115,9 +124,8 @@ public class PublisherReactiveStream
         try {
             if (messageReader != null) {
                 // Check if we are getting an exception back
-                // TODO Change this to not require JSON Object as result. Mark exceptions with magic string instead
-                if (((char) payload[0]) != '{') {
-                    ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
+                if (len > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload, offset, offset + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {
+                    ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset + ReactiveStreamsAbstractService.XOR.length, len - ReactiveStreamsAbstractService.XOR.length);
                     ObjectInputStream oin = new ObjectInputStream(bin);
                     Throwable throwable = (Throwable) oin.readObject();
                     resultQueue.remove().completeExceptionally(throwable);
@@ -192,7 +200,22 @@ public class PublisherReactiveStream
         subscription = null;
 
         logger.error(marker, "Reactive publisher error", throwable);
-        session.close(StatusCode.SERVER_ERROR, throwable.getMessage());
+        try {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            ObjectOutputStream out = new ObjectOutputStream(bout);
+            out.writeObject(throwable);
+            out.close();
+            String base64Throwable = Base64.getEncoder().encodeToString(bout.toByteArray());
+            session.getRemote().sendString(base64Throwable);
+        } catch (IOException e) {
+            logger.error(marker, "Could not send exception", e);
+        }
+
+        if (throwable instanceof ClientErrorException) {
+            session.close(StatusCode.BAD_DATA, throwable.getMessage());
+        } else {
+            session.close(StatusCode.SERVER_ERROR, throwable.getMessage());
+        }
     }
 
     public void onComplete() {

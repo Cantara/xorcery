@@ -204,6 +204,7 @@ public class PublishReactiveStream
             return;
         }
 
+        // TODO Turn this into exponential backoff
         if (!uriIterator.hasNext())
             timer.schedule(this::start, 10000, TimeUnit.MILLISECONDS);
         else
