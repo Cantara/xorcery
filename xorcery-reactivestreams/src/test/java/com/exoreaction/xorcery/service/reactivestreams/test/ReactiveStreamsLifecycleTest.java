@@ -286,6 +286,7 @@ public class ReactiveStreamsLifecycleTest {
         Logger logger = LogManager.getLogger(getClass());
         private CompletableFuture<Configuration> future;
         private Configuration config;
+        private Flow.Subscription subscription;
 
 
         public ClientConfigurationSubscriber(CompletableFuture<Configuration> future) {
@@ -294,6 +295,7 @@ public class ReactiveStreamsLifecycleTest {
 
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
+            this.subscription = subscription;
             subscription.request(1);
         }
 
@@ -301,6 +303,7 @@ public class ReactiveStreamsLifecycleTest {
         public void onNext(Configuration item) {
             logger.info("Received configuration:" + item);
             config = item;
+            subscription.cancel();
         }
 
         @Override
@@ -336,13 +339,12 @@ public class ReactiveStreamsLifecycleTest {
                     for (long i = 0; i < n; i++) {
                         subscriber.onNext(configuration);
                     }
-
-                    logger.info("Complete");
-                    subscriber.onComplete();
                 }
 
                 @Override
                 public void cancel() {
+                    logger.info("Complete");
+                    subscriber.onComplete();
                 }
             });
         }

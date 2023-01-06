@@ -284,9 +284,10 @@ public class PublisherReactiveStream
             });
 
             if (endOfBatch)
+            {
                 session.getRemote().flush();
-
-            batchFinished.await(60, TimeUnit.SECONDS);
+                batchFinished.await(60, TimeUnit.SECONDS);
+            }
         }
     }
 }
