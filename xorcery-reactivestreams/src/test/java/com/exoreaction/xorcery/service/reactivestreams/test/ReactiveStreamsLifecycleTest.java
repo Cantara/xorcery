@@ -7,17 +7,17 @@ import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.util.Sockets;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.ws.rs.NotAuthorizedException;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Flow;
+import java.util.concurrent.TimeUnit;
 
 import static com.exoreaction.xorcery.service.reactivestreams.util.ReactiveStreams.cancelStream;
 
@@ -117,15 +117,15 @@ public class ReactiveStreamsLifecycleTest {
                     Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
 
             // Then
-            Assertions.assertThrows(TimeoutException.class, () ->
+            Assertions.assertThrows(NotAuthorizedException.class, () ->
             {
                 try {
                     result.orTimeout(5, TimeUnit.SECONDS)
                             .exceptionallyCompose(cancelStream(stream))
                             .whenComplete(this::report)
                             .toCompletableFuture().join();
-                } catch (Exception e) {
-                    throw e;
+                } catch (Throwable e) {
+                    throw e.getCause();
                 }
             });
         }
