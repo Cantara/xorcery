@@ -44,6 +44,7 @@
         <module>xorcery-metrics</module>
         <module>xorcery-jmxmetrics</module>
 
+        <module>xorcery-keystores</module>
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
         <module>xorcery-client</module>
@@ -52,7 +53,6 @@
         <module>xorcery-reactivestreams-api</module>
         <module>xorcery-reactivestreams</module>
 
-        <module>xorcery-keystores</module>
         <module>xorcery-certificates-server</module>
         <module>xorcery-certificates-client</module>
         <module>xorcery-domainevents</module>

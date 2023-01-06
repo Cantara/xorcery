@@ -6,5 +6,5 @@ host: server.xorcery.test
 build_test_resources: "{{ home }}/target/test-classes"
 test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"
 
-dns.hosts:
+dns.client.hosts:
   .server.xorcery.test: 127.0.0.1

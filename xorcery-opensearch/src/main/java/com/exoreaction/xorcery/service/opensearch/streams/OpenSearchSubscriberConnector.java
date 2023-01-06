@@ -1,23 +1,17 @@
 package com.exoreaction.xorcery.service.opensearch.streams;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.json.model.JsonElement;
-import com.exoreaction.xorcery.jsonapi.model.Link;
-import com.exoreaction.xorcery.server.model.ServiceIdentifier;
-import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.search.SearchQuery;
 import com.exoreaction.xorcery.service.opensearch.client.search.SearchRequest;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.fasterxml.jackson.databind.node.ContainerNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 public class OpenSearchSubscriberConnector {

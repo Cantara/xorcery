@@ -1,14 +1,8 @@
 package com.exoreaction.xorcery.service.jetty.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.service.jetty.client.dns.ConfigurationSocketAddressResolver;
 import com.exoreaction.xorcery.service.jetty.client.dns.DnsLookupSocketAddressResolver;
-import com.exoreaction.xorcery.service.jetty.client.dns.SRVSocketAddressResolver;
-import com.exoreaction.xorcery.util.Resources;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
@@ -23,7 +17,6 @@ import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
 import org.eclipse.jetty.io.ClientConnectionFactory;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.SocketAddressResolver;
-import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
@@ -31,16 +24,7 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.Service;
 
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-import java.net.UnknownHostException;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.cert.X509Certificate;
 import java.time.Duration;
-
-import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
 
 @Service(name = "client")
 public class JettyClientService

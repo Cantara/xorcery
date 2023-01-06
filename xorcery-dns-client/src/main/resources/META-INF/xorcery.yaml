@@ -1,7 +1,5 @@
 dns:
+  client:
     enabled: "{{ defaults.enabled }}"
     nameservers: []
     hosts: {}
-    server:
-       enabled: "{{ defaults.enabled }}"
-       port: 53

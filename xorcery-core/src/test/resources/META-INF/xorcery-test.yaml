@@ -1,4 +1,9 @@
 ---
 server.ssl.enabled: true
-keystores.keystore.path: "META-INF/test-keystore.p12"
-keystores.truststore.path: "META-INF/test-truststore.p12"
+keystores:
+  keystore:
+    path: "META-INF/test-keystore.p12"
+    password: "password"
+  truststore:
+    path: "META-INF/test-truststore.p12"
+    password: "password"

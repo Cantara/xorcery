@@ -11,6 +11,7 @@ open module xorcery.certificates.server {
     requires jakarta.inject;
     requires org.apache.logging.log4j;
     requires java.logging;
+    requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
 
     requires org.bouncycastle.provider;

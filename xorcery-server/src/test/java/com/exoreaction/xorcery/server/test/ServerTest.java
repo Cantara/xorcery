@@ -16,8 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ServerTest {
 
     String config = """
-            client:
-                enabled: true
+            client.enabled: true
             server.enabled: true    
             """;
 
@@ -26,6 +25,7 @@ public class ServerTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", Sockets.nextFreePort())
                 .build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
             int httpPort = getHttpPort(xorcery.getServiceLocator().getService(Server.class));

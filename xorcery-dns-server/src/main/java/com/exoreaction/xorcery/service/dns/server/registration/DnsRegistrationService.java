@@ -12,8 +12,8 @@ import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
-import org.xbill.DNS.*;
 import org.xbill.DNS.Record;
+import org.xbill.DNS.*;
 
 import java.io.IOException;
 import java.net.InetAddress;

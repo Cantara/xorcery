@@ -13,7 +13,6 @@ import org.neo4j.kernel.database.Database;
 import org.neo4j.kernel.impl.api.CloseableResourceManager;
 import org.neo4j.kernel.impl.coreapi.InternalTransaction;
 import org.neo4j.kernel.impl.coreapi.TransactionExceptionMapper;
-import org.neo4j.kernel.impl.coreapi.TransactionImpl;
 import org.neo4j.kernel.impl.factory.DbmsInfo;
 import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 

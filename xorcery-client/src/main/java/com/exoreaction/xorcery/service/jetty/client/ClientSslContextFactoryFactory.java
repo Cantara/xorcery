@@ -28,7 +28,7 @@ public class ClientSslContextFactoryFactory
         factory.setKeyStore(keyStores.getKeyStore("keystores.keystore"));
         factory.setTrustStore(keyStores.getKeyStore("keystores.truststore"));
         factory.setKeyManagerPassword(configuration.getString("keystores.keystore.password").orElse(null));
-        factory.setCertAlias(configuration.getString("client.ssl.keystore.alias").orElse("self"));
+        factory.setCertAlias(configuration.getString("client.ssl.alias").orElse("self"));
         factory.setEndpointIdentificationAlgorithm("HTTPS");
         factory.setHostnameVerifier((hostName, session) -> true);
         factory.setTrustAll(configuration.getBoolean("client.ssl.trustall").orElse(false));

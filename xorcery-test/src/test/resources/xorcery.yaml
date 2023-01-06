@@ -1,8 +1,8 @@
 defaults.enabled: false
 jersey.enabled: true
 dns:
-  enabled: true
-  nameservers:
+  client.enabled: true
+  client.nameservers:
     - 127.0.0.1:53
   server:
     registration.key:

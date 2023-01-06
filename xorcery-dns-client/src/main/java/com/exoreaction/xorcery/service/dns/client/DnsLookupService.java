@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.exoreaction.xorcery.util.Exceptions.unwrap;
 
-@Service(name = "dns")
+@Service(name = "dns.client")
 @ContractsProvided({DnsLookup.class})
 public class DnsLookupService
         implements DnsLookup {
@@ -31,7 +31,7 @@ public class DnsLookupService
     @Inject
     public DnsLookupService(Configuration configuration) {
         this.configuration = configuration;
-        Resolver resolver = configuration.getListAs("dns.nameservers", JsonNode::textValue)
+        Resolver resolver = configuration.getListAs("dns.client.nameservers", JsonNode::textValue)
                 .map(hosts ->
                 {
                     if (hosts.isEmpty()) {
@@ -46,12 +46,12 @@ public class DnsLookupService
                 })
                 .orElseGet(ExtendedResolver::new);
 
-        if (!configuration.getJson("dns.hosts").map(json -> json.isEmpty()).orElse(true)) {
-            lookups.add(new ConfigurationLookup(configuration));
+        if (!configuration.getJson("dns.client.hosts").map(json -> json.isEmpty()).orElse(true)) {
+            lookups.add(new HostsConfigurationLookup(configuration));
         }
 
         LookupSession lookupSession = LookupSession.builder()
-                .searchPath(configuration.getListAs("dns.search", json -> {
+                .searchPath(configuration.getListAs("dns.client.search", json -> {
                     try {
                         return Name.fromString(json.textValue());
                     } catch (TextParseException e) {

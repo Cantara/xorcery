@@ -11,8 +11,3 @@ client:
     enabled: "{{ defaults.enabled }}"
     trustall: true
     alias: "self"
-
-dns:
-  enabled: "{{ defaults.enabled }}"
-  nameservers: []
-  hosts: {}

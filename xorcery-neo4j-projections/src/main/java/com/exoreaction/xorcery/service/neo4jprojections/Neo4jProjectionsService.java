@@ -9,7 +9,9 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.api.Neo4jProjectionStreams;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.service.neo4jprojections.streams.*;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionCommitPublisher;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionEventHandler;
+import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriber;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.fasterxml.jackson.databind.node.ContainerNode;
@@ -18,7 +20,6 @@ import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.IterableProvider;
-import org.glassfish.hk2.api.ServiceLocator;
 import org.jvnet.hk2.annotations.Service;
 
 import java.util.ArrayList;

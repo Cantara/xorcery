@@ -12,6 +12,7 @@ import javax.net.ssl.X509TrustManager;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.security.*;
 import java.security.cert.CertificateException;
@@ -37,42 +38,15 @@ public class KeyStores {
     }
 
     public KeyStore getKeyStore(String configurationPrefix) {
-        return keyStores.computeIfAbsent(configurationPrefix, keyStoreName ->
-        {
-            URL keyStoreUrl = null;
-            try {
-                Configuration keyStoreConfiguration = configuration.getConfiguration(keyStoreName);
-                KeyStore keyStore = KeyStore.getInstance(keyStoreConfiguration.getString("type").orElse("PKCS12"));
-                keyStoreUrl = keyStoreConfiguration.getResourceURL("path").orElseThrow(() -> new IllegalArgumentException("Missing " + keyStoreName + ".path"));
-                try (InputStream inStream = keyStoreUrl.openStream()) {
-                    keyStore.load(inStream, keyStoreConfiguration.getString("password").map(String::toCharArray).orElse(null));
-
-                    if (keyStoreConfiguration.getBoolean("loadrootca").orElse(false)) {
-                        addDefaultRootCaCertificates(keyStore);
-                    }
-
-                    LogManager.getLogger(getClass()).info("Loaded keystore " + configurationPrefix+"("+keyStoreUrl+")");
-                    {
-                        StringBuilder builder = new StringBuilder();
-                        keyStore.aliases().asIterator().forEachRemaining(alias -> builder.append(alias).append("\n"));
-                        LogManager.getLogger(getClass()).debug(keyStoreName + " aliases:\n" + builder);
-                    }
-
-                    return keyStore;
-                }
-            } catch (Throwable e) {
-                throw new RuntimeException("Could not load keystore "+keyStoreName+" from "+keyStoreUrl, e);
-            }
-        });
+        return keyStores.computeIfAbsent(configurationPrefix, this::loadKeyStore
+        );
     }
 
-    public KeyStore getDefaultKeyStore()
-    {
+    public KeyStore getDefaultKeyStore() {
         return getKeyStore("keystores.keystore");
     }
 
-    public KeyStore getDefaultTrustStore()
-    {
+    public KeyStore getDefaultTrustStore() {
         return getKeyStore("keystores.truststore");
     }
 
@@ -103,6 +77,69 @@ public class KeyStores {
                     trustStore.setCertificateEntry(acceptedIssuer.getSubjectX500Principal().getName(), acceptedIssuer);
                 }
             }
+        }
+    }
+
+    private KeyStore loadKeyStore(String keyStoreName) {
+        URL keyStoreUrl = null;
+        try {
+            Configuration keyStoreConfiguration = configuration.getConfiguration(keyStoreName);
+            KeyStore keyStore = KeyStore.getInstance(keyStoreConfiguration.getString("type").orElse("PKCS12"));
+            keyStoreUrl = keyStoreConfiguration.getResourceURL("path").orElseGet(() ->
+            {
+                URL templateStoreUrl = keyStoreConfiguration.getResourceURL("template").orElse(null);
+                if (templateStoreUrl != null) {
+                    try {
+                        // Copy template to file
+                        try (InputStream inputStream = templateStoreUrl.openStream()) {
+                            try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreConfiguration.getString("path").orElseThrow(() -> new IllegalArgumentException("Missing " + keyStoreName + ".path")))) {
+                                fileOutputStream.write(inputStream.readAllBytes());
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                    // Try again
+                    return keyStoreConfiguration.getResourceURL("path")
+                            .orElseThrow(() -> new IllegalArgumentException("Missing " + keyStoreName + ".path"));
+                } else {
+                    throw new IllegalArgumentException("Missing " + keyStoreName + ".path");
+                }
+            });
+
+            try (InputStream inStream = keyStoreUrl.openStream()) {
+                keyStore.load(inStream, keyStoreConfiguration.getString("password").map(String::toCharArray).orElse(null));
+
+                if (keyStoreConfiguration.getBoolean("addrootca").orElse(false)) {
+                    addDefaultRootCaCertificates(keyStore);
+                }
+
+                LogManager.getLogger(getClass()).info("Loaded keystore " + keyStoreName + "(" + keyStoreUrl + ")");
+                {
+                    StringBuilder builder = new StringBuilder();
+                    keyStore.aliases().asIterator().forEachRemaining(alias -> builder.append(alias).append("\n"));
+                    LogManager.getLogger(getClass()).debug(keyStoreName + " aliases:\n" + builder);
+                }
+
+                return keyStore;
+            } catch (Exception ex) {
+                String template = keyStoreConfiguration.getString("template").orElse(null);
+                if (template != null && keyStoreUrl.getProtocol().equals("file")) {
+                    // Copy template to file
+                    URL templateStoreUrl = new URL(template);
+                    try (InputStream inputStream = templateStoreUrl.openStream()) {
+                        try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreUrl.getFile())) {
+                            fileOutputStream.write(inputStream.readAllBytes());
+                        }
+                    }
+                    // Try again
+                    return loadKeyStore(keyStoreName);
+                } else {
+                    throw ex;
+                }
+            }
+        } catch (Throwable e) {
+            throw new RuntimeException("Could not load keystore " + keyStoreName + " from " + keyStoreUrl, e);
         }
     }
 }

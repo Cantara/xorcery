@@ -2,14 +2,8 @@ package com.exoreaction.xorcery.server.api;
 
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import jakarta.inject.Inject;
-import org.glassfish.hk2.api.Filter;
-import org.glassfish.hk2.api.InstanceLifecycleEvent;
-import org.glassfish.hk2.api.InstanceLifecycleEventType;
-import org.glassfish.hk2.api.InstanceLifecycleListener;
-import org.glassfish.hk2.api.messaging.Topic;
 import org.jvnet.hk2.annotations.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 

@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 
 public class DnsLookupTest {
 

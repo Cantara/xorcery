@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.URL;
-import java.util.*;
 import java.util.function.Consumer;
 
 public class StandardConfigurationBuilder {

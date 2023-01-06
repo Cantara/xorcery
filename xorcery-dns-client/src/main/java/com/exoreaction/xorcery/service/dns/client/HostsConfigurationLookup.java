@@ -17,12 +17,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class ConfigurationLookup
+public class HostsConfigurationLookup
         implements DnsLookup {
     private final ObjectNode hosts;
 
-    public ConfigurationLookup(Configuration configuration) {
-        hosts = (ObjectNode) configuration.getJson("dns.hosts").orElseGet(JsonNodeFactory.instance::objectNode);
+    public HostsConfigurationLookup(Configuration configuration) {
+        hosts = (ObjectNode) configuration.getJson("dns.client.hosts").orElseGet(JsonNodeFactory.instance::objectNode);
     }
 
     @Override

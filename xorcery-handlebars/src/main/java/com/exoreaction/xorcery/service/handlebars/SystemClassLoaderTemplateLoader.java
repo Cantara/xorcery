@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.service.handlebars;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.util.Resources;
 import com.github.jknack.handlebars.io.URLTemplateLoader;
 

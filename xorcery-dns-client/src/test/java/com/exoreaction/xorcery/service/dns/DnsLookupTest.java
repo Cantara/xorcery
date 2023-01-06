@@ -2,21 +2,15 @@ package com.exoreaction.xorcery.service.dns;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.xbill.DNS.*;
-import org.xbill.DNS.Record;
+import org.xbill.DNS.TextParseException;
 
-import java.io.IOException;
-import java.net.*;
-import java.util.ArrayList;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
-import static org.xbill.DNS.Record.newRecord;
-import static org.xbill.DNS.Section.ANSWER;
 
 @Disabled
 public class DnsLookupTest {

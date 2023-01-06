@@ -29,4 +29,5 @@ open module xorcery.server {
     requires org.eclipse.jetty.http2.server;
     requires jersey.server;
     requires jersey.container.servlet.core;
+    requires com.codahale.metrics;
 }

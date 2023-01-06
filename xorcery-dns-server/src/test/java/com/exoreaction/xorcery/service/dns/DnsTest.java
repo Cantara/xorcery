@@ -2,18 +2,17 @@ package com.exoreaction.xorcery.service.dns;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.xbill.DNS.*;
 import org.xbill.DNS.Record;
+import org.xbill.DNS.*;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static org.xbill.DNS.Record.*;
+import static org.xbill.DNS.Record.newRecord;
 import static org.xbill.DNS.Section.ANSWER;
 
 @Disabled

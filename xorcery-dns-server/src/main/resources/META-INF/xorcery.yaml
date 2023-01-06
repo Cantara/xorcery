@@ -1,11 +1,8 @@
 dns:
-    enabled: "{{ defaults.enabled }}"
-    nameservers: []
-    hosts: {}
-    server:
-       enabled: "{{ defaults.enabled }}"
-       port: 53
-       discovery:
-           enabled: "{{ defaults.enabled }}"
-       multicast:
-           enabled: "{{ defaults.enabled }}"
+  server:
+     enabled: "{{ defaults.enabled }}"
+     port: 53
+     discovery:
+         enabled: "{{ dns.server.enabled }}"
+     multicast:
+         enabled: "{{ dns.server.enabled }}"
