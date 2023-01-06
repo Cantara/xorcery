@@ -2,10 +2,8 @@ package com.exoreaction.xorcery.service.reactivestreams.api;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 
-import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public interface ReactiveStreamsClient {
