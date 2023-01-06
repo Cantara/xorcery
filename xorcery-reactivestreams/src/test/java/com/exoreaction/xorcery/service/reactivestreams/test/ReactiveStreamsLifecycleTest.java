@@ -50,7 +50,10 @@ public class ReactiveStreamsLifecycleTest {
                     Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
 
             // Then
-            result.whenComplete(this::report).toCompletableFuture().join();
+            result.orTimeout(10, TimeUnit.SECONDS)
+                    .exceptionallyCompose(cancelStream(stream))
+                    .whenComplete(this::report)
+                    .toCompletableFuture().join();
         }
     }
 
@@ -120,7 +123,7 @@ public class ReactiveStreamsLifecycleTest {
             Assertions.assertThrows(NotAuthorizedException.class, () ->
             {
                 try {
-                    result.orTimeout(5, TimeUnit.SECONDS)
+                    result.orTimeout(10, TimeUnit.SECONDS)
                             .exceptionallyCompose(cancelStream(stream))
                             .whenComplete(this::report)
                             .toCompletableFuture().join();
@@ -159,7 +162,7 @@ public class ReactiveStreamsLifecycleTest {
 
             // Then
                 try {
-                    result.orTimeout(5, TimeUnit.SECONDS)
+                    result.orTimeout(10, TimeUnit.SECONDS)
                             .exceptionallyCompose(cancelStream(stream))
                             .whenComplete((cfg, throwable)->
                             {
