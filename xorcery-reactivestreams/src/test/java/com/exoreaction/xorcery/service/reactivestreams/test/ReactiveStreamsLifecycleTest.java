@@ -165,7 +165,7 @@ public class ReactiveStreamsLifecycleTest {
                         .exceptionallyCompose(cancelStream(stream))
                         .whenComplete((cfg, throwable) ->
                         {
-                            logger.info("Configuration sent back:" + cfg);
+                            logger.info("Configuration/throwable:" + cfg, throwable);
                             Assertions.assertEquals("Bearer:abc", cfg.getString("Authorization").orElseThrow());
                         })
                         .toCompletableFuture().join();
