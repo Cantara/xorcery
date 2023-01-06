@@ -136,8 +136,7 @@ public class ReactiveStreamsLifecycleTest {
 
     @Test
     public void testSubscribeWithConfiguration()
-            throws Exception
-    {
+            throws Exception {
         // Given
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
@@ -158,20 +157,21 @@ public class ReactiveStreamsLifecycleTest {
             CompletableFuture<Configuration> result = new CompletableFuture<>();
             ClientConfigurationSubscriber subscriber = new ClientConfigurationSubscriber(result);
             CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getServerUri().getAuthority(), "numbers",
-                    ()->new Configuration.Builder().add(HttpHeaders.AUTHORIZATION, "Bearer:abc").build(), subscriber, ClientConfigurationSubscriber.class, Configuration.empty());
+                    () -> new Configuration.Builder().add(HttpHeaders.AUTHORIZATION, "Bearer:abc").build(), subscriber, ClientConfigurationSubscriber.class, Configuration.empty());
 
             // Then
-                try {
-                    result.orTimeout(10, TimeUnit.SECONDS)
-                            .exceptionallyCompose(cancelStream(stream))
-                            .whenComplete((cfg, throwable)->
-                            {
-                                Assertions.assertEquals("Bearer:abc", cfg.getString("Authorization").orElseThrow());
-                            })
-                            .toCompletableFuture().join();
-                } catch (Exception e) {
-                    throw e;
-                }
+            try {
+                result.orTimeout(10, TimeUnit.SECONDS)
+                        .exceptionallyCompose(cancelStream(stream))
+                        .whenComplete((cfg, throwable) ->
+                        {
+                            logger.info("Configuration sent back:" + cfg);
+                            Assertions.assertEquals("Bearer:abc", cfg.getString("Authorization").orElseThrow());
+                        })
+                        .toCompletableFuture().join();
+            } catch (Exception e) {
+                throw e;
+            }
         }
 
     }
@@ -284,6 +284,7 @@ public class ReactiveStreamsLifecycleTest {
             implements Flow.Subscriber<Configuration> {
 
         private CompletableFuture<Configuration> future;
+        private Configuration config;
 
 
         public ClientConfigurationSubscriber(CompletableFuture<Configuration> future) {
@@ -297,7 +298,7 @@ public class ReactiveStreamsLifecycleTest {
 
         @Override
         public void onNext(Configuration item) {
-            future.complete(item);
+            config = item;
         }
 
         @Override
@@ -307,6 +308,7 @@ public class ReactiveStreamsLifecycleTest {
 
         @Override
         public void onComplete() {
+            future.complete(config);
         }
     }
 
@@ -327,10 +329,12 @@ public class ReactiveStreamsLifecycleTest {
                 @Override
                 public void request(long n) {
 
-                    for (long i = 0; i < n ; i++) {
+                    logger.info("Sending configuration to subscriber");
+                    for (long i = 0; i < n; i++) {
                         subscriber.onNext(configuration);
                     }
 
+                    logger.info("Complete");
                     subscriber.onComplete();
                 }
 
