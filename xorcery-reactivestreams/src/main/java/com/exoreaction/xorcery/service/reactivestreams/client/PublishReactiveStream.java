@@ -44,28 +44,26 @@ public class PublishReactiveStream
 
     private final static Logger logger = LogManager.getLogger(PublishReactiveStream.class);
 
-    private Session session;
+    protected Session session;
 
     private Configuration publisherConfiguration;
     private DnsLookup dnsLookup;
     private WebSocketClient webSocketClient;
     private final Flow.Publisher<Object> publisher;
-    private Flow.Subscription subscription;
-    private final Semaphore semaphore = new Semaphore(0);
+    protected Flow.Subscription subscription;
+    protected final Semaphore semaphore = new Semaphore(0);
 
-    private final MessageWriter<Object> eventWriter;
-    private final MessageReader<Object> resultReader;
+    protected final MessageWriter<Object> eventWriter;
 
     private final Supplier<Configuration> subscriberConfiguration;
     private ScheduledExecutorService timer;
-    private final ByteBufferPool pool;
-    private CompletableFuture<Void> result;
-    private final Marker marker;
+    protected final ByteBufferPool pool;
+    protected CompletableFuture<Void> result;
+    protected final Marker marker;
 
     private boolean redundancyNotificationIssued = false;
 
-    private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
-    private Disruptor<AtomicReference<Object>> disruptor;
+    protected Disruptor<AtomicReference<Object>> disruptor;
     private String scheme;
     private String authority;
     private String streamName;
@@ -79,7 +77,6 @@ public class PublishReactiveStream
                                  WebSocketClient webSocketClient,
                                  Flow.Publisher<Object> publisher,
                                  MessageWriter<Object> eventWriter,
-                                 MessageReader<Object> resultReader,
                                  Supplier<Configuration> subscriberConfiguration,
                                  ScheduledExecutorService timer,
                                  ByteBufferPool pool,
@@ -91,7 +88,6 @@ public class PublishReactiveStream
         this.webSocketClient = webSocketClient;
         this.publisher = publisher;
         this.eventWriter = eventWriter;
-        this.resultReader = resultReader;
         this.subscriberConfiguration = subscriberConfiguration;
         this.timer = timer;
         this.pool = pool;
@@ -129,23 +125,14 @@ public class PublishReactiveStream
     }
 
     public void onComplete() {
-        disruptor.shutdown();
-        logger.info(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
-        if (!resultQueue.isEmpty())
+        CompletableFuture.runAsync(() ->
         {
-            logger.info(marker, "Waiting for outstanding results to be received from {}", session.getRemote().getRemoteAddress());
-            while (!resultQueue.isEmpty()) {
-                // Wait for results to finish
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    // Ignore
-                }
-            }
-        }
-        result.complete(null);
-        logger.info(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
-        session.close(1000, "complete");
+            logger.info(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
+            disruptor.shutdown();
+            result.complete(null);
+            logger.info(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
+            session.close(1000, "complete");
+        });
     }
 
     // Connection process
@@ -159,7 +146,7 @@ public class PublishReactiveStream
         }
 
         URI uri = URI.create(scheme + "://" + authority + "/streams/subscribers/" + streamName);
-        logger.info(marker, "Connecting to "+uri);
+        logger.info(marker, "Connecting to " + uri);
         dnsLookup.resolve(uri).thenApply(list ->
         {
             this.uriIterator = list.iterator();
@@ -171,7 +158,7 @@ public class PublishReactiveStream
 
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
-            logger.info(marker, "Trying "+subscriberWebsocketUri);
+            logger.info(marker, "Trying " + subscriberWebsocketUri);
             try {
                 webSocketClient.connect(this, subscriberWebsocketUri)
                         .whenComplete(this::exceptionally);
@@ -187,12 +174,10 @@ public class PublishReactiveStream
     private <T> void exceptionally(T value, Throwable throwable) {
         if (throwable != null) {
             logger.error(marker, "Publish reactive stream error", throwable);
-            if (throwable instanceof SSLHandshakeException)
-            {
+            if (throwable instanceof SSLHandshakeException) {
                 // Give up
                 result.completeExceptionally(throwable);
-            } else
-            {
+            } else {
                 // TODO Handle more exceptions
                 retry();
             }
@@ -245,8 +230,7 @@ public class PublishReactiveStream
             if (logger.isDebugEnabled())
                 logger.debug(marker, "Received request:" + requestAmount);
 
-            if (subscription == null)
-            {
+            if (subscription == null) {
                 publisher.subscribe(this);
             }
 
@@ -257,31 +241,9 @@ public class PublishReactiveStream
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
-        try {
-            if (resultReader != null) {
-                // Check if we are getting an exception back
-                if (len > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload, offset, offset + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {
-                    ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset + ReactiveStreamsAbstractService.XOR.length, len - ReactiveStreamsAbstractService.XOR.length);
-                    ObjectInputStream oin = new ObjectInputStream(bin);
-                    Throwable throwable = (Throwable) oin.readObject();
-                    resultQueue.remove().completeExceptionally(throwable);
-                } else {
-                    // Deserialize result
-                    ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
-
-                    Object result = resultReader.readFrom(bin);
-
-                    resultQueue.remove().complete(result);
-                }
-            } else {
-                if (!redundancyNotificationIssued) {
-                    logger.warn(marker, "Receiving redundant results from subscriber");
-                    redundancyNotificationIssued = true;
-                }
-            }
-        } catch (Throwable e) {
-            logger.error(marker, "Could not read result", e);
-            resultQueue.remove().completeExceptionally(e);
+        if (!redundancyNotificationIssued) {
+            logger.warn(marker, "Receiving redundant results from subscriber");
+            redundancyNotificationIssued = true;
         }
     }
 
@@ -291,8 +253,8 @@ public class PublishReactiveStream
         session = null;
         // TODO This has to be reviewed to see what codes should cause retry and what should cause cancellation of the process
         if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
-            logger.info(marker, "Subscriber closed session:{} {}", statusCode, reason);
-            retry();
+            logger.info(marker, "Session closed:{} {}", statusCode, reason);
+            result.complete(null);
         } else {
             logger.info(marker, "Close websocket:{} {}", statusCode, reason);
             logger.info(marker, "Starting publishing process again");
@@ -304,7 +266,9 @@ public class PublishReactiveStream
     public void onWebSocketError(Throwable cause) {
         if (cause instanceof ClosedChannelException) {
             // Ignore
-            retry();
+            if (!result.isDone()) {
+                retry();
+            }
         } else {
             logger.error(marker, "Publisher websocket error", cause);
             subscription.cancel();
@@ -333,21 +297,7 @@ public class PublishReactiveStream
             // Write event data
             try {
                 Object item = event.get();
-                if (eventWriter != null) {
-                    if (resultReader == null) {
-                        eventWriter.writeTo(item, outputStream);
-                    } else {
-
-                        WithResult<?, Object> withResult = (WithResult<?, Object>) item;
-                        CompletableFuture<Object> result = withResult.result().toCompletableFuture();
-                        resultQueue.add(result);
-
-                        eventWriter.writeTo(withResult.event(), outputStream);
-                    }
-                } else {
-                    ByteBuffer eventBuffer = (ByteBuffer) item;
-                    outputStream.write(eventBuffer);
-                }
+                eventWriter.writeTo(item, outputStream);
             } catch (Throwable t) {
                 logger.error(marker, "Could not send event", t);
                 subscription.cancel();

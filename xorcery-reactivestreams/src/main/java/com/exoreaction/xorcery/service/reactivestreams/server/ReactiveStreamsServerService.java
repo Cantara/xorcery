@@ -22,7 +22,7 @@ import java.util.concurrent.Flow;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@Service(name="reactivestreams.server")
+@Service(name = "reactivestreams.server")
 @ContractsProvided({ReactiveStreamsServer.class})
 @RunLevel(6)
 public class ReactiveStreamsServerService
@@ -72,7 +72,8 @@ public class ReactiveStreamsServerService
 
         publisherEndpointFactories.put(streamName, () ->
         {
-            return new PublisherReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
+            return resultReader == null ? new PublisherReactiveStream(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool) :
+                    new PublisherWithResultReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
         });
 
         return result;
@@ -98,10 +99,8 @@ public class ReactiveStreamsServerService
         Function<Configuration, Flow.Subscriber<Object>> wrappedSubscriberFactory = (config) -> new ReactiveStreamsAbstractService.SubscriberTracker((Flow.Subscriber<Object>) subscriberFactory.apply(config));
 
         subscriberEndpointFactories.put(streamName, () ->
-        {
-            return new SubscriberReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, timer);
-        });
-
+                resultWriter == null ? new SubscriberReactiveStream(streamName, wrappedSubscriberFactory, eventReader, objectMapper, byteBufferPool, timer) :
+                        new SubscriberWithResultReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, timer));
         return result;
     }
 

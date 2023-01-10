@@ -36,7 +36,7 @@ import java.util.function.Function;
  * @since 13/04/2022
  */
 public class SubscriberReactiveStream
-    extends ServerReactiveStream
+        extends ServerReactiveStream
         implements WebSocketPartialListener,
         WebSocketConnectionListener,
         Flow.Subscription {
@@ -47,19 +47,18 @@ public class SubscriberReactiveStream
     private final Function<Configuration, Flow.Subscriber<Object>> subscriberFactory;
     private String configurationMessage = "";
     private Configuration subscriberConfiguration;
-    private Flow.Subscriber<Object> subscriber;
+    protected Flow.Subscriber<Object> subscriber;
 
-    private final MessageReader<Object> eventReader;
-    private final MessageWriter<Object> resultWriter;
+    protected final MessageReader<Object> eventReader;
 
-    private final ByteBufferAccumulator byteBufferAccumulator;
-    private final ByteBufferPool byteBufferPool;
+    protected final ByteBufferAccumulator byteBufferAccumulator;
+    protected final ByteBufferPool byteBufferPool;
 
-    private final ObjectMapper objectMapper;
-    private final Marker marker;
-    private final Executor executor;
+    protected final ObjectMapper objectMapper;
+    protected final Marker marker;
+    protected final Executor executor;
 
-    private Session session;
+    protected Session session;
 
     // Subscription
     private final AtomicLong requests = new AtomicLong();
@@ -68,12 +67,10 @@ public class SubscriberReactiveStream
     public SubscriberReactiveStream(String streamName,
                                     Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
                                     MessageReader<Object> eventReader,
-                                    MessageWriter<Object> resultWriter,
                                     ObjectMapper objectMapper,
                                     ByteBufferPool byteBufferPool,
                                     Executor executor) {
         this.subscriberFactory = subscriberFactory;
-        this.resultWriter = resultWriter;
         this.eventReader = eventReader;
         this.objectMapper = objectMapper;
         this.byteBufferPool = byteBufferPool;
@@ -190,66 +187,17 @@ public class SubscriberReactiveStream
         }
     }
 
-    private void onWebSocketBinary(ByteBuffer byteBuffer) {
+    protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
             logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
-            if (eventReader != null) {
-                ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-                Object event = eventReader.readFrom(inputStream);
-                byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
-
-                if (resultWriter != null) {
-                    CompletableFuture<?> resultFuture = new CompletableFuture<>();
-                    resultFuture.whenComplete(this::sendResult);
-                    event = new WithResult<>(event, resultFuture);
-                }
-
-                subscriber.onNext(event);
-            } else {
-                // TODO Can this happen now? We have ByteBuffer readers...?
-                ByteBuffer result = ByteBuffer.allocate(byteBuffer.limit());
-                result.put(byteBuffer);
-                result.flip();
-                byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
-                subscriber.onNext(result);
-            }
+            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
+            Object event = eventReader.readFrom(inputStream);
+            byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
+            subscriber.onNext(event);
         } catch (Throwable e) {
             logger.error("Could not receive value", e);
             subscriber.onError(e);
             session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
-        }
-    }
-
-    private void sendResult(Object result, Throwable throwable) {
-        // Send result back
-        ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
-
-        try {
-            if (throwable != null) {
-                resultOutputStream.write(ReactiveStreamsAbstractService.XOR);
-                ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
-                out.writeObject(throwable);
-            } else {
-                resultWriter.writeTo(result, resultOutputStream);
-            }
-
-            ByteBuffer data = resultOutputStream.takeByteBuffer();
-            session.getRemote().sendBytes(data, new WriteCallback() {
-                @Override
-                public void writeFailed(Throwable x) {
-                    logger.error(marker, "Could not send result", x);
-                    byteBufferPool.release(data);
-                }
-
-                @Override
-                public void writeSuccess() {
-                    byteBufferPool.release(data);
-                }
-            });
-            session.getRemote().flush();
-        } catch (IOException ex) {
-            logger.error(marker, "Could not send result", ex);
-            session.close(StatusCode.SERVER_ERROR, ex.getMessage());
         }
     }
 

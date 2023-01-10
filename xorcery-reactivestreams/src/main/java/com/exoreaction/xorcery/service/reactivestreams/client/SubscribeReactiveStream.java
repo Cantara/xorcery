@@ -48,22 +48,21 @@ public class SubscribeReactiveStream
     private Configuration subscriberConfiguration;
     private final DnsLookup dnsLookup;
     private final WebSocketClient webSocketClient;
-    private final Flow.Subscriber<Object> subscriber;
-    private final MessageReader<Object> eventReader;
-    private final MessageWriter<Object> resultWriter;
+    protected final Flow.Subscriber<Object> subscriber;
+    protected final MessageReader<Object> eventReader;
     private final Supplier<Configuration> publisherConfiguration;
     private final ScheduledExecutorService timer;
-    private final ByteBufferPool byteBufferPool;
-    private final CompletableFuture<Void> result;
+    protected final ByteBufferPool byteBufferPool;
+    protected final CompletableFuture<Void> result;
 
-    private final Marker marker;
-    private final ByteBufferAccumulator byteBufferAccumulator;
+    protected final Marker marker;
+    protected final ByteBufferAccumulator byteBufferAccumulator;
     private final AtomicLong requests = new AtomicLong();
     private final AtomicBoolean cancelled = new AtomicBoolean();
     private String exceptionPayload = "";
 
     private Iterator<URI> uriIterator;
-    private Session session;
+    protected Session session;
 
     public SubscribeReactiveStream(String scheme,
                                    String authority,
@@ -73,7 +72,6 @@ public class SubscribeReactiveStream
                                    WebSocketClient webSocketClient,
                                    Flow.Subscriber<Object> subscriber,
                                    MessageReader<Object> eventReader,
-                                   MessageWriter<Object> resultWriter,
                                    Supplier<Configuration> publisherConfiguration,
                                    ScheduledExecutorService timer,
                                    ByteBufferPool pool,
@@ -85,7 +83,6 @@ public class SubscribeReactiveStream
         this.webSocketClient = webSocketClient;
         this.subscriber = subscriber;
         this.eventReader = eventReader;
-        this.resultWriter = resultWriter;
         this.publisherConfiguration = publisherConfiguration;
         this.timer = timer;
         this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
@@ -141,8 +138,8 @@ public class SubscribeReactiveStream
             retry();
         }
 
-        URI uri = URI.create(scheme+"://" + authority + "/streams/publishers/" + streamName);
-        logger.info(marker, "Connecting to "+uri);
+        URI uri = URI.create(scheme + "://" + authority + "/streams/publishers/" + streamName);
+        logger.info(marker, "Connecting to " + uri);
         dnsLookup.resolve(uri).thenApply(list ->
         {
             this.uriIterator = list.iterator();
@@ -154,7 +151,7 @@ public class SubscribeReactiveStream
 
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
-            logger.info(marker, "Trying "+subscriberWebsocketUri);
+            logger.info(marker, "Trying " + subscriberWebsocketUri);
             try {
                 webSocketClient.connect(this, subscriberWebsocketUri)
                         .thenAccept(this::connected)
@@ -211,8 +208,7 @@ public class SubscribeReactiveStream
     public void onWebSocketPartialText(String payload, boolean fin) {
 
         exceptionPayload += payload;
-        if (fin)
-        {
+        if (fin) {
             try {
                 ByteArrayInputStream bin = new ByteArrayInputStream(Base64.getDecoder().decode(exceptionPayload));
                 ObjectInputStream oin = new ObjectInputStream(bin);
@@ -233,61 +229,17 @@ public class SubscribeReactiveStream
         }
     }
 
-    private void onWebSocketBinary(ByteBuffer byteBuffer) {
+    protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
 //                logger.info(marker, "Received:"+ Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
-            if (eventReader != null) {
-                ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-                Object event = eventReader.readFrom(inputStream);
-                byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
-
-                if (resultWriter != null) {
-                    event = new WithResult<>(event, new CompletableFuture<>().whenComplete(this::sendResult));
-                }
-                subscriber.onNext(event);
-            } else {
-                ByteBuffer result = ByteBuffer.allocate(byteBuffer.limit());
-                result.put(byteBuffer);
-                result.flip();
-                byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
-                subscriber.onNext(result);
-            }
+            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
+            Object event = eventReader.readFrom(inputStream);
+            byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
+            subscriber.onNext(event);
         } catch (IOException e) {
             logger.error("Could not receive value", e);
             session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
             result.completeExceptionally(e);
-        }
-    }
-
-    private void sendResult(Object result, Throwable throwable) {
-        // Send result back
-        ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
-
-        try {
-            if (throwable != null) {
-                resultOutputStream.write(ReactiveStreamsAbstractService.XOR);
-                ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
-                out.writeObject(throwable);
-            } else {
-                resultWriter.writeTo(result, resultOutputStream);
-            }
-
-            ByteBuffer data = resultOutputStream.takeByteBuffer();
-            session.getRemote().sendBytes(data, new WriteCallback() {
-                @Override
-                public void writeFailed(Throwable x) {
-                    logger.error(marker, "Could not send result", x);
-                }
-
-                @Override
-                public void writeSuccess() {
-                    byteBufferPool.release(data);
-                }
-            });
-        } catch (IOException ex) {
-            logger.error(marker, "Could not send result", ex);
-            session.close(StatusCode.SERVER_ERROR, ex.getMessage());
-            this.result.completeExceptionally(ex); // TODO This should probably do a retry instead
         }
     }
 
@@ -307,8 +259,7 @@ public class SubscribeReactiveStream
 
         if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
             try {
-                if (!result.isCompletedExceptionally())
-                {
+                if (!result.isCompletedExceptionally()) {
                     subscriber.onComplete();
                 }
             } catch (Exception e) {
@@ -326,39 +277,39 @@ public class SubscribeReactiveStream
     // Send requests
     public void sendRequests() {
         try {
-                if (!session.isOpen()) {
-                    logger.info(marker, "Session closed, cannot send requests");
-                    return;
+            if (!session.isOpen()) {
+                logger.info(marker, "Session closed, cannot send requests");
+                return;
+            }
+
+            final long rn = requests.getAndSet(0);
+            if (rn == 0) {
+                if (cancelled.get()) {
+                    logger.info(marker, "Subscription cancelled");
+                }
+                return;
+            }
+
+            logger.trace(marker, "Sending request: {}", rn);
+            session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
+                @Override
+                public void writeFailed(Throwable x) {
+                    logger.error(marker, "Could not send requests {}", rn, x);
                 }
 
-                final long rn = requests.getAndSet(0);
-                if (rn == 0) {
-                    if (cancelled.get()) {
-                        logger.info(marker, "Subscription cancelled");
-                    }
-                    return;
+                @Override
+                public void writeSuccess() {
+                    logger.trace(marker, "Successfully sent request {}", rn);
                 }
+            });
 
-                logger.trace(marker, "Sending request: {}", rn);
-                session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
-                    @Override
-                    public void writeFailed(Throwable x) {
-                        logger.error(marker, "Could not send requests {}", rn, x);
-                    }
-
-                    @Override
-                    public void writeSuccess() {
-                        logger.trace(marker, "Successfully sent request {}", rn);
-                    }
-                });
-
-                try {
-                    logger.trace(marker, "Flushing remote session...");
-                    session.getRemote().flush();
-                    logger.trace(marker, "Remote session flushed.");
-                } catch (IOException e) {
-                    logger.error(marker, "While flushing remote session", e);
-                }
+            try {
+                logger.trace(marker, "Flushing remote session...");
+                session.getRemote().flush();
+                logger.trace(marker, "Remote session flushed.");
+            } catch (IOException e) {
+                logger.error(marker, "While flushing remote session", e);
+            }
         } catch (Throwable t) {
             logger.error(marker, "Error sending requests", t);
         }

@@ -97,18 +97,35 @@ public class ReactiveStreamsClientService
         publisher = new PublisherTracker((Flow.Publisher<Object>) publisher);
 
         // Start publishing process
-        new PublishReactiveStream(
-                scheme, authority, streamName,
-                publisherConfiguration,
-                dnsLookup,
-                webSocketClient,
-                (Flow.Publisher<Object>) publisher,
-                eventWriter,
-                resultReader,
-                subscriberConfiguration,
-                timer,
-                byteBufferPool,
-                result);
+        if (resultReader != null)
+        {
+            new PublishWithResultReactiveStream(
+                    scheme, authority, streamName,
+                    publisherConfiguration,
+                    dnsLookup,
+                    webSocketClient,
+                    (Flow.Publisher<Object>) publisher,
+                    eventWriter,
+                    resultReader,
+                    subscriberConfiguration,
+                    timer,
+                    byteBufferPool,
+                    result);
+        } else
+        {
+            new PublishReactiveStream(
+                    scheme, authority, streamName,
+                    publisherConfiguration,
+                    dnsLookup,
+                    webSocketClient,
+                    (Flow.Publisher<Object>) publisher,
+                    eventWriter,
+                    subscriberConfiguration,
+                    timer,
+                    byteBufferPool,
+                    result);
+
+        }
         return result;
     }
 
@@ -152,18 +169,34 @@ public class ReactiveStreamsClientService
         subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber);
 
         // Start subscription process
-        new SubscribeReactiveStream(
-                scheme, authority, streamName,
-                subscriberConfiguration,
-                dnsLookup,
-                webSocketClient,
-                (Flow.Subscriber<Object>) subscriber,
-                eventReader,
-                resultWriter,
-                publisherConfiguration,
-                timer,
-                byteBufferPool,
-                result);
+        if (resultWriter != null)
+        {
+            new SubscribeWithResultReactiveStream(
+                    scheme, authority, streamName,
+                    subscriberConfiguration,
+                    dnsLookup,
+                    webSocketClient,
+                    (Flow.Subscriber<Object>) subscriber,
+                    eventReader,
+                    resultWriter,
+                    publisherConfiguration,
+                    timer,
+                    byteBufferPool,
+                    result);
+
+        } else {
+            new SubscribeReactiveStream(
+                    scheme, authority, streamName,
+                    subscriberConfiguration,
+                    dnsLookup,
+                    webSocketClient,
+                    (Flow.Subscriber<Object>) subscriber,
+                    eventReader,
+                    publisherConfiguration,
+                    timer,
+                    byteBufferPool,
+                    result);
+        }
         return result;
     }
 

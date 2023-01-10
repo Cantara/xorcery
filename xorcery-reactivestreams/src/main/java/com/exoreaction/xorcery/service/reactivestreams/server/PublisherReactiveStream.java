@@ -42,37 +42,33 @@ public class PublisherReactiveStream
     private final static Logger logger = LogManager.getLogger(PublisherReactiveStream.class);
 
     private final String streamName;
-    private Session session;
+    protected Session session;
 
     private final Function<Configuration, Flow.Publisher<Object>> publisherFactory;
     private Configuration publisherConfiguration;
     private Flow.Publisher<Object> publisher;
-    private Flow.Subscription subscription;
+    protected Flow.Subscription subscription;
     private final Semaphore requestSemaphore = new Semaphore(0);
 
-    private final MessageWriter<Object> messageWriter;
-    private final MessageReader<Object> messageReader;
+    protected final MessageWriter<Object> messageWriter;
 
     private final ObjectMapper objectMapper;
-    private final ByteBufferPool pool;
-    private final Marker marker;
+    protected final ByteBufferPool pool;
+    protected final Marker marker;
 
     private boolean redundancyNotificationIssued = false;
 
     private Disruptor<AtomicReference<Object>> disruptor;
-    private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private long outstandingRequestAmount;
 
     public PublisherReactiveStream(String streamName,
                                    Function<Configuration, Flow.Publisher<Object>> publisherFactory,
                                    MessageWriter<Object> messageWriter,
-                                   MessageReader<Object> messageReader,
                                    ObjectMapper objectMapper,
                                    ByteBufferPool pool) {
         this.streamName = streamName;
         this.publisherFactory = publisherFactory;
         this.messageWriter = messageWriter;
-        this.messageReader = messageReader;
         this.objectMapper = objectMapper;
         this.pool = pool;
         marker = MarkerManager.getMarker(streamName);
@@ -121,28 +117,9 @@ public class PublisherReactiveStream
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
-        try {
-            if (messageReader != null) {
-                // Check if we are getting an exception back
-                if (len > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload, offset, offset + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {
-                    ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset + ReactiveStreamsAbstractService.XOR.length, len - ReactiveStreamsAbstractService.XOR.length);
-                    ObjectInputStream oin = new ObjectInputStream(bin);
-                    Throwable throwable = (Throwable) oin.readObject();
-                    resultQueue.remove().completeExceptionally(throwable);
-                } else {
-                    // Deserialize result
-                    Object result = messageReader.readFrom(new ByteArrayInputStream(payload, offset, len));
-                    resultQueue.remove().complete(result);
-                }
-            } else {
-                if (!redundancyNotificationIssued) {
-                    logger.warn(marker, "Receiving redundant results from subscriber");
-                    redundancyNotificationIssued = true;
-                }
-            }
-        } catch (Throwable e) {
-            logger.error(marker, "Could not read result", e);
-            resultQueue.remove().completeExceptionally(e);
+        if (!redundancyNotificationIssued) {
+            logger.warn(marker, "Receiving redundant results from subscriber");
+            redundancyNotificationIssued = true;
         }
     }
 
@@ -169,13 +146,17 @@ public class PublisherReactiveStream
         this.subscription = subscription;
 
         disruptor = new Disruptor<>(AtomicReference::new, 512, new NamedThreadFactory("PublisherWebSocketDisruptor-" + marker.getName() + "-"));
-        disruptor.handleEventsWith(new Sender());
+        disruptor.handleEventsWith(createSender());
         disruptor.start();
 
         if (outstandingRequestAmount > 0) {
             subscription.request(outstandingRequestAmount);
             outstandingRequestAmount = 0;
         }
+    }
+
+    protected EventHandler<AtomicReference<Object>> createSender() {
+        return new Sender();
     }
 
     @Override
@@ -236,7 +217,7 @@ public class PublisherReactiveStream
 
         @Override
         public void onBatchStart(long batchSize) {
-            batchFinished = new CountDownLatch((int)batchSize);
+            batchFinished = new CountDownLatch((int) batchSize);
         }
 
         @Override
@@ -247,19 +228,8 @@ public class PublisherReactiveStream
             // Write event data
             try {
                 Object item = event.get();
-                if (messageWriter != null) {
-                    if (messageReader == null) {
-                        messageWriter.writeTo(item, outputStream);
-                    } else {
-                        WithResult<?, Object> withResult = (WithResult<?, Object>) item;
-                        CompletableFuture<Object> result = withResult.result().toCompletableFuture();
-                        resultQueue.add(result);
-                        messageWriter.writeTo(withResult.event(), outputStream);
-                    }
-                } else {
-                    ByteBuffer eventBuffer = (ByteBuffer) event.get();
-                    outputStream.write(eventBuffer);
-                }
+                writeItem(messageWriter, item, outputStream);
+
             } catch (Throwable t) {
                 logger.error(marker, "Could not send event", t);
                 subscription.cancel();
@@ -283,11 +253,14 @@ public class PublisherReactiveStream
                 }
             });
 
-            if (endOfBatch)
-            {
+            if (endOfBatch) {
                 session.getRemote().flush();
                 batchFinished.await(60, TimeUnit.SECONDS);
             }
+        }
+
+        protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
+            messageWriter.writeTo(item, outputStream);
         }
     }
 }
