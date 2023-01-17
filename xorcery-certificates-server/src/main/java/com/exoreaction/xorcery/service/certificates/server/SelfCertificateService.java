@@ -28,7 +28,7 @@ import java.util.List;
 
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
-@Service(name = "certificates.server")
+@Service(name = "certificates.server.self")
 @RunLevel(value = 2)
 public class SelfCertificateService {
 

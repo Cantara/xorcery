@@ -12,11 +12,11 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.cert.jcajce.*;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
@@ -33,9 +33,11 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.security.*;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoField;
 import java.util.*;
 
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
@@ -71,6 +73,7 @@ public class IntermediateCA {
                     b.api("request", "api/certificates/request");
                     b.api("renewal", "api/certificates/renewal");
                     b.api("certificate", "api/certificates/rootca.cer");
+                    b.api("crl", "api/certificates/crl");
                 })
                 .build());
     }
@@ -118,7 +121,7 @@ public class IntermediateCA {
         issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(names.toArray(new ASN1Encodable[1])));
 
         JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider(PROVIDER_NAME);
-        char[] password = configuration.getString("keystores.truststore.password").map(String::toCharArray).orElse(null);
+        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
         ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password));
         X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
 
@@ -150,7 +153,8 @@ public class IntermediateCA {
         }
 
         JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider(PROVIDER_NAME);
-        ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, null));
+        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+        ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password));
         X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
 
         // Create trust chain
@@ -164,6 +168,18 @@ public class IntermediateCA {
         return intermediateCaKeyStore.getCertificate("root").getEncoded();
     }
 
+    public String getCRL() throws GeneralSecurityException, IOException, OperatorCreationException {
+        X509Certificate signingCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
+        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+        X509CRL crl = createEmptyCRL((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password), signingCert);
+
+        StringWriter stringWriter = new StringWriter();
+        PemWriter pWrt = new PemWriter(stringWriter);
+        pWrt.writeObject(new PemObject(PEMParser.TYPE_X509_CRL, crl.getEncoded()));
+        pWrt.close();
+        return stringWriter.toString();
+    }
+
     private String toPEM(X509CertificateHolder certificateHolder) throws CertificateException, IOException {
         X509Certificate issuedCert = new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificateHolder);
 
@@ -173,4 +189,30 @@ public class IntermediateCA {
         pWrt.close();
         return stringWriter.toString();
     }
+
+    private X509CRL createEmptyCRL(
+            PrivateKey caKey,
+            X509Certificate caCert)
+            throws IOException, GeneralSecurityException, OperatorCreationException {
+        LocalDateTime now = LocalDateTime.now(Clock.systemUTC());
+        Date nowDate = new Date(now.toInstant(ZoneOffset.UTC).toEpochMilli());
+        X509v2CRLBuilder crlGen = new JcaX509v2CRLBuilder(caCert.getSubjectX500Principal(), nowDate);
+
+        Date nextWeekDate = new Date(now.plus(7, ChronoField.DAY_OF_YEAR.getBaseUnit()).toInstant(ZoneOffset.UTC).toEpochMilli());
+        crlGen.setNextUpdate(nextWeekDate);
+
+        // add extensions to CRL
+        JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+
+        crlGen.addExtension(Extension.authorityKeyIdentifier, false,
+                extUtils.createAuthorityKeyIdentifier(caCert));
+
+        ContentSigner signer = new JcaContentSignerBuilder("SHA256withECDSA")
+                .setProvider("BC").build(caKey);
+
+        JcaX509CRLConverter converter = new JcaX509CRLConverter().setProvider("BC");
+
+        return converter.getCRL(crlGen.build(signer));
+    }
+
 }

@@ -6,7 +6,10 @@ import jakarta.inject.Singleton;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import org.bouncycastle.operator.OperatorCreationException;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.KeyStoreException;
 import java.security.cert.CertificateEncodingException;
 
@@ -24,7 +27,14 @@ public class CertificatesResource {
     @GET
     @Path("rootca.cer")
     @Produces("application/x-x509-ca-cert")
-    public byte[] get() throws CertificateEncodingException, KeyStoreException {
+    public byte[] getRootCa() throws CertificateEncodingException, KeyStoreException {
         return intermediateCA.getCertificate();
+    }
+
+    @GET
+    @Path("crl")
+    @Produces("application/x-x509-ca-cert")
+    public String getCrl() throws GeneralSecurityException, IOException, OperatorCreationException {
+        return intermediateCA.getCRL();
     }
 }
