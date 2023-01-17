@@ -2,7 +2,6 @@ package com.exoreaction.xorcery.service.jetty.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.service.jetty.client.dns.DnsLookupSocketAddressResolver;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
@@ -71,7 +70,7 @@ public class JettyClientService
         client.setExecutor(executor);
         client.setScheduler(new ScheduledExecutorScheduler(configuration.getString("name").orElseThrow() + "-scheduler", false));
 
-        if (configuration.getBoolean("dns.enabled").orElse(false) && dnsLookup.get() != null) {
+        if (configuration.getBoolean("dns.client.enabled").orElse(false) && dnsLookup.get() != null) {
             client.setSocketAddressResolver(new DnsLookupSocketAddressResolver(dnsLookup.get()));
         } else {
             client.setSocketAddressResolver(new SocketAddressResolver.Async(client.getExecutor(), client.getScheduler(), client.getAddressResolutionTimeout()));

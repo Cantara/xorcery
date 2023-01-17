@@ -1,6 +1,5 @@
 open module xorcery.client {
     exports com.exoreaction.xorcery.service.jetty.client;
-    exports com.exoreaction.xorcery.service.jetty.client.dns;
     exports com.exoreaction.xorcery.service.jersey.client;
 
     requires xorcery.configuration.api;

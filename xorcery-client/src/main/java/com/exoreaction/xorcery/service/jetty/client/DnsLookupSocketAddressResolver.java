@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.jetty.client.dns;
+package com.exoreaction.xorcery.service.jetty.client;
 
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import org.eclipse.jetty.util.Promise;
