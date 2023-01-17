@@ -1,5 +1,4 @@
 defaults.enabled: false
-jersey.enabled: true
 dns:
   client.enabled: true
   client.nameservers:
@@ -10,3 +9,7 @@ dns:
       secret: "BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg=="
 client.enabled: true
 server.enabled: true
+jersey:
+  jaxrs:
+    register:
+      - com.exoreaction.xorcery.service.resources.api.UserPrincipalResource

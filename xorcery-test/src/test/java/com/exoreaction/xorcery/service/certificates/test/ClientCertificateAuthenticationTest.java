@@ -4,24 +4,22 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.service.ClientTester;
 import com.exoreaction.xorcery.util.Sockets;
-import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.InputStream;
-import java.net.URI;
-
-@Disabled
-public class CertificateRequestAndRenewalTest {
+public class ClientCertificateAuthenticationTest {
 
     String config = """
             hk2.threadpolicy: USE_NO_THREADS
             dns.client.hosts:
                 .server1.xorcery.test: 127.0.0.1
+                .wrongserver.xorcery.test: 127.0.0.1
             dns.server.enabled: false
             dns.server.discovery.enabled: false
             dns.server.multicast.enabled: false
@@ -39,48 +37,7 @@ public class CertificateRequestAndRenewalTest {
             """;
 
     @Test
-    public void testCertificateRequestAndRenewal() throws Exception {
-        Logger logger = LogManager.getLogger(getClass());
-
-        //System.setProperty("javax.net.debug", "ssl,handshake");
-
-        int managerPort = Sockets.nextFreePort();
-        managerPort = 8443;
-        Configuration configuration1 = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("id", "xorcery1")
-                .add("host", "server1.xorcery.test")
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", managerPort)
-                .add("keystores.keystore.path", "META-INF/intermediatecakeystore.p12")
-                .add("keystores.truststore.path", "META-INF/intermediatecatruststore.p12")
-                .add("certificates.server.enabled", true)
-                .add("certificates.server.self.enabled", true)
-                .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration1));
-        Configuration configuration2 = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("id", "xorcery2")
-                .add("host", "server2.xorcery.test")
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
-                .add("keystores.keystore.path", "META-INF/keystore.p12")
-                .add("keystores.truststore.path", "META-INF/truststore.p12")
-                .add("certificates.client.enabled", true)
-                .add("certificates.client.renewonstartup", true)
-                .add("certificates.client.host", "https://192.168.1.107:" + managerPort)
-                .build();
-//        System.out.println(StandardConfigurationBuilder.toYaml(configuration2));
-        try (Xorcery xorcery1 = new Xorcery(configuration1)) {
-            try (Xorcery xorcery2 = new Xorcery(configuration2)) {
-                System.out.println("DONE");
-//                Thread.sleep(5000000);
-            }
-        }
-    }
-
-    @Test
-    public void testCRL() throws Exception {
+    public void testSniCheckValid() throws Exception {
         Logger logger = LogManager.getLogger(getClass());
 
         //System.setProperty("javax.net.debug", "ssl,handshake");
@@ -93,15 +50,10 @@ public class CertificateRequestAndRenewalTest {
                 .add("host", "server.xorcery.test")
                 .add("server.http.port", Sockets.nextFreePort())
                 .add("server.ssl.port", managerPort)
-//                .add("server.ssl.enabled", false)
-                .add("keystores.keystore.path", "META-INF/intermediatecakeystore.p12")
-//                .add("keystores.keystore.path", "../xorcery-certificates-server/rootcakeystore.p12")
-//                .add("certificates.server.alias", "root")
-                .add("keystores.truststore.path", "META-INF/intermediatecatruststore.p12")
-                .add("certificates.server.enabled", true)
-                .add("certificates.server.self.enabled", true)
+                .add("server.ssl.snirequired", true)
+                .add("server.security.enabled", true)
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
+//        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
         Configuration clientConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery2")
@@ -117,14 +69,56 @@ public class CertificateRequestAndRenewalTest {
                 System.out.println("DONE");
 
                 StandardConfiguration cfg = () -> serverConfiguration;
-                URI crlUri = cfg.getServerUri().resolve("api/certificates/crl");
-                InputStream input = (InputStream) client.getServiceLocator().getService(ClientTester.class).get(UriBuilder.fromUri(crlUri).build()).get().getEntity();
-                System.out.println(new String(input.readAllBytes()));
-//                CRL crl = CertificateFactory.getInstance("X.509").generateCRL(input);
-//                System.out.println(crl.toString());
+                ResourceDocument doc = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getServerUri()).toCompletableFuture().join();
+                ResourceDocument doc2 = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getServerUri()).toCompletableFuture().join();
+                ResourceDocument doc3 = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getServerUri()).toCompletableFuture().join();
 //                Thread.sleep(5000000);
             }
 
         }
     }
+
+    @Test
+    public void testClientCertAuthInvalid() throws Exception {
+        Logger logger = LogManager.getLogger(getClass());
+
+        //System.setProperty("javax.net.debug", "ssl,handshake");
+
+        int managerPort = Sockets.nextFreePort();
+        managerPort = 8443;
+        Configuration serverConfiguration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .add("id", "xorcery1")
+                .add("host", "server.xorcery.test")
+                .add("server.http.port", Sockets.nextFreePort())
+                .add("server.ssl.port", managerPort)
+                .add("server.ssl.snirequired", true)
+                .add("keystores.truststore.path", "META-INF/intermediatecatruststore.p12")
+                .build();
+//        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
+        Configuration clientConfiguration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .add("id", "xorcery2")
+                .add("host", "server2.xorcery.test")
+                .add("clienttester.enabled", "true")
+                .add("server.enabled", false)
+                .add("server.enabled", false)
+                .build();
+        System.out.println(StandardConfigurationBuilder.toYaml(clientConfiguration));
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                System.out.println("DONE");
+
+                Assertions.assertThrows(BadRequestException.class, ()->
+                {
+                    StandardConfiguration cfg = () -> serverConfiguration;
+                    ResourceDocument doc = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getServerUri()).toCompletableFuture().join();
+                });
+            }
+
+        }
+    }
+
+
 }
