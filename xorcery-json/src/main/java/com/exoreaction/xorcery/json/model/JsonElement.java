@@ -199,7 +199,7 @@ public interface JsonElement {
     }
 
     static Optional<JsonNode> lookup(ObjectNode c, String name) {
-        if (name.indexOf('.') != -1) {
+        if (!name.startsWith(".") && name.indexOf('.') != -1) {
             String[] names = name.split("\\.");
             for (int i = 0; i < names.length - 1; i++) {
                 JsonNode node = c.get(names[i]);
@@ -211,6 +211,10 @@ public interface JsonElement {
             JsonNode value = c.get(names[names.length - 1]);
             return value instanceof NullNode ? Optional.empty() : Optional.ofNullable(value);
         } else {
+            if (name.startsWith("."))
+            {
+                name = name.substring(1);
+            }
             JsonNode value = c.get(name);
             return value instanceof NullNode ? Optional.empty() : Optional.ofNullable(value);
         }
