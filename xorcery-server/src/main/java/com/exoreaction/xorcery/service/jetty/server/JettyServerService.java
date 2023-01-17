@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
+import org.eclipse.jetty.security.*;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.Jetty;
@@ -32,8 +33,9 @@ import javax.net.ssl.X509TrustManager;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.util.Optional;
 
-@Service(name="server")
+@Service(name = "server")
 @RunLevel(4)
 public class JettyServerService
         implements Factory<ServletContextHandler>, PreDestroy {
@@ -46,6 +48,7 @@ public class JettyServerService
                               ServiceResourceObjects sro,
                               ServiceLocator serviceLocator,
                               Provider<SslContextFactory.Server> sslContextFactoryProvider,
+                              Provider<SecurityHandler> securityHandlerProvider,
                               Provider<MetricRegistry> metricRegistry) throws Exception {
 
         Configuration jettyConfig = configuration.getConfiguration("server");
@@ -92,6 +95,7 @@ public class JettyServerService
         if (configuration.getBoolean("server.ssl.enabled").orElse(false)) {
 
             SslContextFactory.Server sslContextFactory = sslContextFactoryProvider.get();
+            server.addBean(sslContextFactory);
 
             final HttpConfiguration sslHttpConfig = new HttpConfiguration();
             sslHttpConfig.setOutputBufferSize(32768);
@@ -143,6 +147,13 @@ public class JettyServerService
             InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry.get(), "jetty");
             instrumentedHandler.setHandler(servletContextHandler);
             handler = instrumentedHandler;
+        }
+
+        SecurityHandler securityHandler = securityHandlerProvider.get();
+        if (securityHandler != null)
+        {
+            securityHandler.setHandler(handler);
+            handler = securityHandler;
         }
 
         server.setHandler(handler);

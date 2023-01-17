@@ -22,8 +22,20 @@ server:
     snihostcheck: false
     alias: "self"
 
+  security:
+    enabled: "{{ defaults.enabled }}"
+    method: "CLIENT_CERT"
+    certificate:
+      enabled: true
+
+
 jersey:
-  enabled: "{{ defaults.enabled }}"
+  enabled: "{{ server.enabled }}"
   jaxrs:
     register: []
     packages: []
+
+jwt:
+  enabled: false
+  issuers: {}
+#    someissuer: somekey

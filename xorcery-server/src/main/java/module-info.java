@@ -2,6 +2,8 @@ open module xorcery.server {
     exports com.exoreaction.xorcery.service.jetty.server;
     exports com.exoreaction.xorcery.service.jersey.server;
     exports com.exoreaction.xorcery.service.jersey.server.resources;
+    exports com.exoreaction.xorcery.service.jetty.server.security;
+    exports com.exoreaction.xorcery.service.jetty.server.security.jwt;
 
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.metricregistry;
@@ -30,4 +32,6 @@ open module xorcery.server {
     requires jersey.server;
     requires jersey.container.servlet.core;
     requires com.codahale.metrics;
+
+    requires jjwt.api;
 }
