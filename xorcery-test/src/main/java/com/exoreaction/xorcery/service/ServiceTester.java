@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.dns;
+package com.exoreaction.xorcery.service;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
