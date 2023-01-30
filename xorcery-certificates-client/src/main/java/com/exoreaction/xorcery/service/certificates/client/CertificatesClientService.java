@@ -229,7 +229,12 @@ public class CertificatesClientService {
 
         // Sign the new KeyPair with the Provisioning cert Private Key
         JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider("BC");
-        ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) keyStore.getKey("provisioning", "password".toCharArray()));
+        PrivateKey provisioning = (PrivateKey) keyStore.getKey("provisioning", "password".toCharArray());
+        if (provisioning == null)
+        {
+            throw new IOException("Missing 'provisioning' private key in keystore");
+        }
+        ContentSigner csrContentSigner = csrBuilder.build(provisioning);
         PKCS10CertificationRequest csr = p10Builder.build(csrContentSigner);
 
         // Convert to PEM format
