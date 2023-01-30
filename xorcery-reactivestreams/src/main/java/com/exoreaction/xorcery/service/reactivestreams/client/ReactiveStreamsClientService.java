@@ -25,7 +25,7 @@ import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@Service(name="reactivestreams.client")
+@Service(name = "reactivestreams.client")
 @ContractsProvided({ReactiveStreamsClient.class})
 @RunLevel(8)
 public class ReactiveStreamsClientService
@@ -74,11 +74,11 @@ public class ReactiveStreamsClientService
         activePublishProcesses.add(result);
 
         if (authority == null) {
-            Function<Configuration, Flow.Subscriber<?>> subscriberFactory = reactiveStreamsServerServiceProvider.get().getSubscriberFactory(streamName);
+            Function<Configuration, Flow.Subscriber<Object>> subscriberFactory = reactiveStreamsServerServiceProvider.get().getSubscriberFactory(streamName);
 
             if (subscriberFactory != null) {
                 // Local
-                publisher.subscribe((Flow.Subscriber<Object>) subscriberFactory.apply(subscriberConfiguration.get()));
+                publisher.subscribe(subscriberFactory.apply(subscriberConfiguration.get()));
                 return result;
             } else {
                 result.completeExceptionally(new IllegalArgumentException("No such subscriber:" + streamName));
@@ -97,8 +97,7 @@ public class ReactiveStreamsClientService
         publisher = new PublisherTracker((Flow.Publisher<Object>) publisher);
 
         // Start publishing process
-        if (resultReader != null)
-        {
+        if (resultReader != null) {
             new PublishWithResultReactiveStream(
                     scheme, authority, streamName,
                     publisherConfiguration,
@@ -111,8 +110,7 @@ public class ReactiveStreamsClientService
                     timer,
                     byteBufferPool,
                     result);
-        } else
-        {
+        } else {
             new PublishReactiveStream(
                     scheme, authority, streamName,
                     publisherConfiguration,
@@ -169,8 +167,7 @@ public class ReactiveStreamsClientService
         subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber);
 
         // Start subscription process
-        if (resultWriter != null)
-        {
+        if (resultWriter != null) {
             new SubscribeWithResultReactiveStream(
                     scheme, authority, streamName,
                     subscriberConfiguration,

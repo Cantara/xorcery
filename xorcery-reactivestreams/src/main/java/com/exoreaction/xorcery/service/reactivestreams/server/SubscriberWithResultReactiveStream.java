@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.server;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
@@ -71,7 +72,7 @@ public class SubscriberWithResultReactiveStream
         // TODO do something more clever than synchronized
 
         CompletableFuture<Object> future;
-        while ((future = resultQueue.peek()).isDone())
+        while ((future = resultQueue.peek()) != null && future.isDone())
         {
             resultQueue.remove();
 
@@ -81,7 +82,7 @@ public class SubscriberWithResultReactiveStream
                 try {
                     if (t != null) {
                         resultOutputStream.write(ReactiveStreamsAbstractService.XOR);
-                        ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
+                        ObjectOutputStream out = new ExceptionObjectOutputStream(resultOutputStream);
                         out.writeObject(throwable);
                     } else {
                         resultWriter.writeTo(r, resultOutputStream);

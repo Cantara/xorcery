@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.service.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
@@ -70,7 +71,7 @@ public class SubscribeWithResultReactiveStream
         try {
             if (throwable != null) {
                 resultOutputStream.write(ReactiveStreamsAbstractService.XOR);
-                ObjectOutputStream out = new ObjectOutputStream(resultOutputStream);
+                ObjectOutputStream out = new ExceptionObjectOutputStream(resultOutputStream);
                 out.writeObject(throwable);
             } else {
                 resultWriter.writeTo(result, resultOutputStream);

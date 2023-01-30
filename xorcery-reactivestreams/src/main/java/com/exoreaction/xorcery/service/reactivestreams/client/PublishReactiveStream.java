@@ -271,7 +271,8 @@ public class PublishReactiveStream
             }
         } else {
             logger.error(marker, "Publisher websocket error", cause);
-            subscription.cancel();
+            if (subscription != null)
+                subscription.cancel();
             result.completeExceptionally(cause); // Now considered done
         }
     }

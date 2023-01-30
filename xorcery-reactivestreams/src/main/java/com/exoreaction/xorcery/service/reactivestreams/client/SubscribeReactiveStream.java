@@ -247,7 +247,8 @@ public class SubscribeReactiveStream
     public void onWebSocketError(Throwable cause) {
         if (cause instanceof ClosedChannelException) {
             // Ignore
-            retry();
+            subscriber.onComplete();
+            result.cancel(false);
         } else {
             logger.error(marker, "Subscriber websocket error", cause);
             retry();

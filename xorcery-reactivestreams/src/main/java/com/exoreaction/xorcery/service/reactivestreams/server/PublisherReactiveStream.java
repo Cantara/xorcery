@@ -2,14 +2,10 @@ package com.exoreaction.xorcery.service.reactivestreams.server;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.service.reactivestreams.ReactiveStreamsAbstractService;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
-import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
+import com.exoreaction.xorcery.service.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -25,9 +21,7 @@ import org.eclipse.jetty.websocket.api.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -125,13 +119,13 @@ public class PublisherReactiveStream
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        if (statusCode != 1006 && (reason == null || !reason.equals("complete")))
+        if (statusCode != 1006 && (reason == null || !reason.equals("complete")) && subscription != null)
             subscription.cancel();
     }
 
     @Override
     public void onWebSocketError(Throwable cause) {
-        if (cause instanceof ClosedChannelException) {
+        if (cause instanceof ClosedChannelException && subscription != null) {
             // Ignore
             subscription.cancel();
         } else {
@@ -183,7 +177,7 @@ public class PublisherReactiveStream
         logger.error(marker, "Reactive publisher error", throwable);
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            ObjectOutputStream out = new ObjectOutputStream(bout);
+            ObjectOutputStream out = new ExceptionObjectOutputStream(bout);
             out.writeObject(throwable);
             out.close();
             String base64Throwable = Base64.getEncoder().encodeToString(bout.toByteArray());

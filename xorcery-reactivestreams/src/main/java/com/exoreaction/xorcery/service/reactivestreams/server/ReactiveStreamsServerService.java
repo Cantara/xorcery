@@ -23,13 +23,15 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Service(name = "reactivestreams.server")
-@ContractsProvided({ReactiveStreamsServer.class})
+@ContractsProvided({ReactiveStreamsServer.class, ReactiveStreamsServerService.class})
 @RunLevel(6)
 public class ReactiveStreamsServerService
         extends ReactiveStreamsAbstractService
         implements ReactiveStreamsServer {
     private final Map<String, Supplier<Object>> publisherEndpointFactories = new ConcurrentHashMap<>();
+    private final Map<String, Function<Configuration, Flow.Publisher<Object>>> publisherLocalFactories = new ConcurrentHashMap<>();
     private final Map<String, Supplier<Object>> subscriberEndpointFactories = new ConcurrentHashMap<>();
+    private final Map<String, Function<Configuration, Flow.Subscriber<Object>>> subscriberLocalFactories = new ConcurrentHashMap<>();
 
     @Inject
     public ReactiveStreamsServerService(Configuration configuration,
@@ -60,6 +62,7 @@ public class ReactiveStreamsServerService
         result.whenComplete((r, t) ->
         {
             publisherEndpointFactories.remove(streamName);
+            publisherLocalFactories.remove(streamName);
         });
 
         Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
@@ -75,6 +78,7 @@ public class ReactiveStreamsServerService
             return resultReader == null ? new PublisherReactiveStream(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool) :
                     new PublisherWithResultReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
         });
+        publisherLocalFactories.put(streamName, wrappedPublisherFactory);
 
         return result;
     }
@@ -87,7 +91,8 @@ public class ReactiveStreamsServerService
         // TODO Track the subscriptions to this publisher. Need to ensure they are cancelled on shutdown and cancel of the future
         result.whenComplete((r, t) ->
         {
-            publisherEndpointFactories.remove(streamName);
+            subscriberEndpointFactories.remove(streamName);
+            subscriberLocalFactories.remove(streamName);
         });
 
         Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
@@ -101,15 +106,16 @@ public class ReactiveStreamsServerService
         subscriberEndpointFactories.put(streamName, () ->
                 resultWriter == null ? new SubscriberReactiveStream(streamName, wrappedSubscriberFactory, eventReader, objectMapper, byteBufferPool, timer) :
                         new SubscriberWithResultReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, timer));
+        subscriberLocalFactories.put(streamName, wrappedSubscriberFactory);
         return result;
     }
 
 
-    public Function<Configuration, Flow.Subscriber<?>> getSubscriberFactory(String streamName) {
-        return null;
+    public Function<Configuration, Flow.Subscriber<Object>> getSubscriberFactory(String streamName) {
+        return subscriberLocalFactories.get(streamName);
     }
 
     public Function<Configuration, ? extends Flow.Publisher<?>> getPublisherFactory(String streamName) {
-        return null;
+        return publisherLocalFactories.get(streamName);
     }
 }
