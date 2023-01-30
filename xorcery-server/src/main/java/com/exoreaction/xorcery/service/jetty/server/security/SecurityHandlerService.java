@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.jetty.server.security;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.eclipse.jetty.security.*;
@@ -11,16 +12,16 @@ import org.jvnet.hk2.annotations.Service;
 import java.util.Optional;
 
 @Service(name = "server.security")
-public class SecurityConstraintsService
+public class SecurityHandlerService
         implements Factory<SecurityHandler> {
 
     private final ConstraintSecurityHandler securityHandler;
 
     @Inject
-    public SecurityConstraintsService(Configuration configuration,
-                                      Provider<Authenticator.Factory> authenticatorFactoryProvider,
-                                      Provider<LoginService> loginServiceProvider,
-                                      Provider<IdentityService> identityServiceProvider
+    public SecurityHandlerService(Configuration configuration,
+                                  Provider<Authenticator.Factory> authenticatorFactoryProvider,
+                                  Provider<LoginService> loginServiceProvider,
+                                  Provider<IdentityService> identityServiceProvider
                                       ) {
 
         securityHandler = new ConstraintSecurityHandler();
@@ -35,6 +36,7 @@ public class SecurityConstraintsService
 
     @Override
     @Singleton
+    @Named("server.security")
     public SecurityHandler provide() {
         return securityHandler;
     }

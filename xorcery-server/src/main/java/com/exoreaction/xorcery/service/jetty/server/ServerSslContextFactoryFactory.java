@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.jetty.server;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,6 +52,13 @@ public class ServerSslContextFactoryFactory
                     .map(X509CRL::getIssuerX500Principal)
                     .map(X500Principal::getName)
                     .collect(Collectors.joining("\n")));
+
+            Date now = new Date();
+            crls.stream().map(X509CRL.class::cast).forEach(crl ->
+            {
+                if (crl.getNextUpdate().before(now))
+                    logger.warn("CRL has expired:"+crl.getIssuerX500Principal().getName());
+            });
         }
 
         factory = new CustomSslContextFactoryServer(crls);
@@ -74,6 +83,7 @@ public class ServerSslContextFactoryFactory
     }
 
     @Singleton
+    @Named("server.ssl")
     @Override
     public SslContextFactory.Server provide() {
         return factory;

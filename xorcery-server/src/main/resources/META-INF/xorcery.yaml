@@ -26,8 +26,11 @@ server:
     enabled: "{{ defaults.enabled }}"
     method: "CLIENT_CERT"
     certificate:
-      enabled: true
-
+      enabled: "{{ server.security.enabled }}"
+    jwt:
+      enabled: "{{ server.security.enabled }}"
+      issuers: {}
+    #    someissuer: somekey
 
 jersey:
   enabled: "{{ server.enabled }}"
@@ -35,7 +38,3 @@ jersey:
     register: []
     packages: []
 
-jwt:
-  enabled: false
-  issuers: {}
-#    someissuer: somekey

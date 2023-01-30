@@ -21,6 +21,7 @@ import org.eclipse.jetty.util.Jetty;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -48,8 +49,8 @@ public class JettyServerService
                               ServiceResourceObjects sro,
                               ServiceLocator serviceLocator,
                               Provider<SslContextFactory.Server> sslContextFactoryProvider,
-                              Provider<SecurityHandler> securityHandlerProvider,
-                              Provider<MetricRegistry> metricRegistry) throws Exception {
+                              IterableProvider<SecurityHandler> securityHandlerProvider,
+                              IterableProvider<MetricRegistry> metricRegistry) throws Exception {
 
         Configuration jettyConfig = configuration.getConfiguration("server");
 
@@ -143,17 +144,17 @@ public class JettyServerService
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
 
         Handler handler = servletContextHandler;
-        if (configuration.getBoolean("metrics.enabled").orElse(false).equals(true)) {
-            InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry.get(), "jetty");
-            instrumentedHandler.setHandler(servletContextHandler);
-            handler = instrumentedHandler;
-        }
-
-        SecurityHandler securityHandler = securityHandlerProvider.get();
-        if (securityHandler != null)
+        if (securityHandlerProvider.getHandle() != null)
         {
+            SecurityHandler securityHandler = securityHandlerProvider.get();
             securityHandler.setHandler(handler);
             handler = securityHandler;
+        }
+
+        if (metricRegistry.getHandle() != null) {
+            InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry.get(), "jetty");
+            instrumentedHandler.setHandler(handler);
+            handler = instrumentedHandler;
         }
 
         server.setHandler(handler);

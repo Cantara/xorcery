@@ -4,6 +4,7 @@ open module xorcery.server {
     exports com.exoreaction.xorcery.service.jersey.server.resources;
     exports com.exoreaction.xorcery.service.jetty.server.security;
     exports com.exoreaction.xorcery.service.jetty.server.security.jwt;
+    exports com.exoreaction.xorcery.service.jetty.server.security.clientcert;
 
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.metricregistry;

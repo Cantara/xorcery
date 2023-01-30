@@ -17,7 +17,7 @@ import org.jvnet.hk2.annotations.Service;
 
 import javax.security.auth.Subject;
 
-@Service(name = "jwt")
+@Service(name = "server.security.jwt")
 @ContractsProvided(Authenticator.class)
 public class JwtAuthenticator
         implements Authenticator {
