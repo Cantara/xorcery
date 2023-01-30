@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.dns.server.registration;
+package com.exoreaction.xorcery.service.dns.registration;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
@@ -20,7 +20,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-@Service(name = "dns.server.registration")
+@Service(name = "dns.registration")
 @RunLevel(20)
 public class DnsRegistrationService
         implements PreDestroy {
@@ -42,7 +42,13 @@ public class DnsRegistrationService
         Message msg = new Message();
         msg.getHeader().setOpcode(Opcode.UPDATE);
         StandardConfiguration standardConfiguration = () -> configuration;
-        target = Name.fromConstantString(standardConfiguration.getHost() + ".");
+
+        if (standardConfiguration.getHost().contains(".")) {
+            target = Name.fromConstantString(standardConfiguration.getHost() + ".");
+        } else {
+            String domain = configuration.getString("dns.domain").orElse("xorcery.test");
+            target = Name.fromConstantString(standardConfiguration.getHost() + "." + domain + ".");
+        }
         zone = new Name(target, 1);
 
         Record soa = Record.newRecord(zone, Type.SOA, DClass.IN);
@@ -97,11 +103,11 @@ public class DnsRegistrationService
                     return new SimpleResolver(servers.get(0));
                 });
 
-        configuration.getString("dns.server.registration.key.name").ifPresent(keyname ->
+        configuration.getString("dns.registration.key.name").ifPresent(keyname ->
         {
-            configuration.getString("dns.server.registration.key.secret").ifPresent(keydata ->
+            configuration.getString("dns.registration.key.secret").ifPresent(keydata ->
             {
-                Name algo = configuration.getString("dns.server.registration.key.algorithm")
+                Name algo = configuration.getString("dns.registration.key.algorithm")
                         .map(Name::fromConstantString)
                         .orElse(TSIG.HMAC_MD5);
                 resolver.setTSIGKey(new TSIG(algo, keyname, keydata));

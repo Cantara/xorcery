@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.dns.server.discovery;
+package com.exoreaction.xorcery.service.dns.discovery;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import jakarta.inject.Inject;
@@ -13,7 +13,7 @@ import javax.jmdns.ServiceListener;
 import javax.jmdns.ServiceTypeListener;
 import java.io.IOException;
 
-@Service(name = "dns.server.discovery")
+@Service(name = "dns.discovery")
 @RunLevel(2)
 public class DnsDiscoveryService
         implements ServiceListener, ServiceTypeListener {

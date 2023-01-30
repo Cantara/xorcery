@@ -1,6 +1,7 @@
 open module xorcery.dns.server {
     exports com.exoreaction.xorcery.service.dns.server;
-    exports com.exoreaction.xorcery.service.dns.server.discovery;
+    exports com.exoreaction.xorcery.service.dns.discovery;
+    exports com.exoreaction.xorcery.service.dns.registration;
 
     requires org.dnsjava;
     requires javax.jmdns;

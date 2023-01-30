@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.dns.server.discovery;
+package com.exoreaction.xorcery.service.dns.discovery;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import jakarta.inject.Inject;

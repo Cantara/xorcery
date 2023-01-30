@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.dns.server.discovery;
+package com.exoreaction.xorcery.service.dns.discovery;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
@@ -19,7 +19,7 @@ import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service(name = "dns.server.multicast")
+@Service(name = "dns.multicast")
 @RunLevel(20)
 public class DnsMulticastService
         implements PreDestroy {
