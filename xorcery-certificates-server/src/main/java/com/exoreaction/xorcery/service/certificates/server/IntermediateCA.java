@@ -184,7 +184,7 @@ public class IntermediateCA {
         }
 
         // See if we have the rootstore as well, and append it
-        {
+        try {
             KeyStore rootStore = keyStores.getKeyStore("keystores.rootstore");
 
             X509Certificate signingCert = (X509Certificate) rootStore.getCertificate("root");
@@ -193,6 +193,9 @@ public class IntermediateCA {
             PemWriter pWrt = new PemWriter(stringWriter);
             pWrt.writeObject(new PemObject(PEMParser.TYPE_X509_CRL, crl.getEncoded()));
             pWrt.close();
+        } catch (RuntimeException exception)
+        {
+            // Ignore
         }
 
         return stringWriter.toString();
