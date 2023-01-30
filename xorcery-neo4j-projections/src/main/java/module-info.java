@@ -18,6 +18,7 @@ open module xorcery.neo4j.projections {
     requires jakarta.inject;
     requires com.codahale.metrics;
     requires org.apache.logging.log4j;
+    requires org.glassfish.hk2.runlevel;
 
     provides Neo4jEventProjection with CypherEventProjection;
 }
