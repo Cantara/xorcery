@@ -13,6 +13,9 @@ keystores:
   truststore:
     path: "META-INF/intermediatecatruststore.p12"
     password: "password"
+  rootstore:
+    path: "rootcakeystore.p12"
+    password: "password"
 
 jersey.jaxrs.register:
   - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificateRequestResource

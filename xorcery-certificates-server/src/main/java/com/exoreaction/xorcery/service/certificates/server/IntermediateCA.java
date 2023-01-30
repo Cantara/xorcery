@@ -49,6 +49,7 @@ public class IntermediateCA {
     private final Configuration configuration;
     private final KeyStore intermediateCaKeyStore;
     private final KeyStore intermediateCaTrustStore;
+    private KeyStores keyStores;
 
     private final JcaX509ExtensionUtils issuedCertExtUtils;
     private final String keyStoreAlias;
@@ -62,6 +63,7 @@ public class IntermediateCA {
 
         intermediateCaKeyStore = keyStores.getKeyStore("keystores.keystore");
         intermediateCaTrustStore = keyStores.getKeyStore("keystores.truststore");
+        this.keyStores = keyStores;
 
         issuedCertExtUtils = new JcaX509ExtensionUtils();
 
@@ -73,7 +75,7 @@ public class IntermediateCA {
                     b.api("request", "api/certificates/request");
                     b.api("renewal", "api/certificates/renewal");
                     b.api("certificate", "api/certificates/rootca.cer");
-                    b.api("crl", "api/certificates/crl");
+                    b.api("crl", "api/certificates/intermediateca.crl");
                 })
                 .build());
     }
@@ -169,14 +171,30 @@ public class IntermediateCA {
     }
 
     public String getCRL() throws GeneralSecurityException, IOException, OperatorCreationException {
-        X509Certificate signingCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
-        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
-        X509CRL crl = createEmptyCRL((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password), signingCert);
-
         StringWriter stringWriter = new StringWriter();
-        PemWriter pWrt = new PemWriter(stringWriter);
-        pWrt.writeObject(new PemObject(PEMParser.TYPE_X509_CRL, crl.getEncoded()));
-        pWrt.close();
+
+        {
+            X509Certificate signingCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
+            char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+            X509CRL crl = createEmptyCRL((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password), signingCert);
+
+            PemWriter pWrt = new PemWriter(stringWriter);
+            pWrt.writeObject(new PemObject(PEMParser.TYPE_X509_CRL, crl.getEncoded()));
+            pWrt.close();
+        }
+
+        // See if we have the rootstore as well, and append it
+        {
+            KeyStore rootStore = keyStores.getKeyStore("keystores.rootstore");
+
+            X509Certificate signingCert = (X509Certificate) rootStore.getCertificate("root");
+            char[] password = configuration.getString("keystores.rootstore.password").map(String::toCharArray).orElse(null);
+            X509CRL crl = createEmptyCRL((PrivateKey) rootStore.getKey("root", password), signingCert);
+            PemWriter pWrt = new PemWriter(stringWriter);
+            pWrt.writeObject(new PemObject(PEMParser.TYPE_X509_CRL, crl.getEncoded()));
+            pWrt.close();
+        }
+
         return stringWriter.toString();
     }
 
@@ -198,8 +216,8 @@ public class IntermediateCA {
         Date nowDate = new Date(now.toInstant(ZoneOffset.UTC).toEpochMilli());
         X509v2CRLBuilder crlGen = new JcaX509v2CRLBuilder(caCert.getSubjectX500Principal(), nowDate);
 
-        Date nextWeekDate = new Date(now.plus(7, ChronoField.DAY_OF_YEAR.getBaseUnit()).toInstant(ZoneOffset.UTC).toEpochMilli());
-        crlGen.setNextUpdate(nextWeekDate);
+        Date nextMilleniumDate = new Date(now.plus(1000, ChronoField.YEAR.getBaseUnit()).toInstant(ZoneOffset.UTC).toEpochMilli());
+        crlGen.setNextUpdate(nextMilleniumDate);
 
         // add extensions to CRL
         JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();

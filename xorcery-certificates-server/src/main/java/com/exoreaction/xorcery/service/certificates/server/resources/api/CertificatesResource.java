@@ -32,8 +32,8 @@ public class CertificatesResource {
     }
 
     @GET
-    @Path("crl")
-    @Produces("application/x-x509-ca-cert")
+    @Path("intermediateca.crl")
+    @Produces("application/pkix-crl")
     public String getCrl() throws GeneralSecurityException, IOException, OperatorCreationException {
         return intermediateCA.getCRL();
     }
