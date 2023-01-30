@@ -12,4 +12,6 @@ open module xorcery.jsonapi.server {
     requires org.glassfish.hk2.api;
     requires org.apache.commons.lang3;
     requires jakarta.inject;
+    requires jetty.servlet.api;
+    requires org.eclipse.jetty.security;
 }
