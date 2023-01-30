@@ -70,7 +70,7 @@ public class JettyClientService
         client.setExecutor(executor);
         client.setScheduler(new ScheduledExecutorScheduler(configuration.getString("name").orElseThrow() + "-scheduler", false));
 
-        if (configuration.getBoolean("dns.client.enabled").orElse(false) && dnsLookup.get() != null) {
+        if (dnsLookup.get() != null) {
             client.setSocketAddressResolver(new DnsLookupSocketAddressResolver(dnsLookup.get()));
         } else {
             client.setSocketAddressResolver(new SocketAddressResolver.Async(client.getExecutor(), client.getScheduler(), client.getAddressResolutionTimeout()));

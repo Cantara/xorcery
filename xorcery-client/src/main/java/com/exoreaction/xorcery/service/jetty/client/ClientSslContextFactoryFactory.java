@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.jetty.client;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -46,6 +47,7 @@ public class ClientSslContextFactoryFactory
     }
 
     @Singleton
+    @Named("client.ssl")
     @Override
     public SslContextFactory.Client provide() {
         return factory;
