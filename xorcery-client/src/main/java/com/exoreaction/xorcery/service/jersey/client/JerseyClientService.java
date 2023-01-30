@@ -1,12 +1,14 @@
 package com.exoreaction.xorcery.service.jersey.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InstantiationService;
+import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
@@ -23,12 +25,15 @@ public class JerseyClientService
     private HttpClient client;
     private Configuration configuration;
     private InstantiationService instantiationService;
+    private IterableProvider<DnsLookup> dnsLookups;
 
     @Inject
-    public JerseyClientService(HttpClient client, Configuration configuration, InstantiationService instantiationService) {
+    public JerseyClientService(HttpClient client, Configuration configuration, InstantiationService instantiationService,
+                               IterableProvider<DnsLookup> dnsLookups) {
         this.client = client;
         this.configuration = configuration;
         this.instantiationService = instantiationService;
+        this.dnsLookups = dnsLookups;
     }
 
     @Override
@@ -57,10 +62,14 @@ public class JerseyClientService
             }
         });
 
+        DnsLookup dnsLookup = dnsLookups.get();
+
+        JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
+        String scheme = configuration.getBoolean("client.ssl.enabled").map(enabled -> enabled ? "https" : "http").orElse("http");
         return clientConfig
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
                 .register(new JettyHttpClientSupplier(client))
-                .connectorProvider(new JettyConnectorProvider());
+                .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, scheme, jettyConnectorProvider) : jettyConnectorProvider);
     }
 
     @Override
