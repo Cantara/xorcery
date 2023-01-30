@@ -40,6 +40,12 @@ Configuration:
       - name: javax
         level: debug
 
+      - name: org.eclipse.jetty.security.authentication
+        level: debug
+
+      - name: org.eclipse.jetty.util.security
+        level: debug
+
     Root:
       level: info
       AppenderRef:

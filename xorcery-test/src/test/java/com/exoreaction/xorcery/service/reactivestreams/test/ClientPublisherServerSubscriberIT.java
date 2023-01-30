@@ -27,6 +27,7 @@ public class ClientPublisherServerSubscriberIT {
             server.ssl.enabled: true
             server.http2.enabled: true
             client.ssl.enabled: true
+            server.security.enabled: true
             """;
 
     @Test

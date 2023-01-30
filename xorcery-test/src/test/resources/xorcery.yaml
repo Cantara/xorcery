@@ -12,4 +12,4 @@ server.enabled: true
 jersey:
   jaxrs:
     register:
-      - com.exoreaction.xorcery.service.resources.api.UserPrincipalResource
+      - com.exoreaction.xorcery.service.resources.api.SubjectResource
