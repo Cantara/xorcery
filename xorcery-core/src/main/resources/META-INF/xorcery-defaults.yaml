@@ -1,7 +1,8 @@
 ---
 id: "{{ ENV.SERVER_ID | SYSTEM.server_id | host}}"
 name: genericserver
-host: "{{ ENV.HOSTNAME | \"localhost\" }}"
+host: "{{ ENV.HOSTNAME | \"server\" }}"
+domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
 environment: development
 tag: default
 
@@ -21,3 +22,5 @@ DefaultRunLevelContext:
   enabled: true
 default:
   enabled: true
+
+server.uri: http://localhost
