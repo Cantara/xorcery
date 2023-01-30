@@ -6,14 +6,5 @@ neo4jdatabase:
     dbms:
       allow_upgrade: true
 
-neo4jprojections:
-  enabled: "{{ defaults.enabled }}"
-  commitpublisher.enabled: "{{ neo4jprojections.enabled }}"
-  eventsubscriber.enabled: "{{ neo4jprojections.enabled }}"
-  subscribers: []
-#  - authority: "somehost:someport"
-#    stream: somestream
-#    projection: someprojection
-#    configuration: {}
 jersey.jaxrs.register:
   - com.exoreaction.xorcery.service.neo4j.resources.api.Neo4jResource
