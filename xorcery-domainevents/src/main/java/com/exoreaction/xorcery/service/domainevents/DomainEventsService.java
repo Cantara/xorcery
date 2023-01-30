@@ -34,7 +34,7 @@ public class DomainEventsService
         this.deploymentMetadata = new DomainEventMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
                 .build();
-        reactiveStreams.publish(configuration.getString("domainevents.subscriber.authority").orElseThrow(), configuration.getString("domainevents.subscriber.stream").orElseThrow(),
+        reactiveStreams.publish(configuration.getString("domainevents.subscriber.authority").orElse(null), configuration.getString("domainevents.subscriber.stream").orElseThrow(),
                         () -> configuration.getConfiguration("domainevents.subscriber.configuration"),
                         this, DomainEventsService.class,configuration.getConfiguration("domainevents.publisher.configuration"))
                 .exceptionally(t ->
