@@ -29,9 +29,9 @@ public class ReactiveStreamsServerService
         extends ReactiveStreamsAbstractService
         implements ReactiveStreamsServer {
     private final Map<String, Supplier<Object>> publisherEndpointFactories = new ConcurrentHashMap<>();
-    private final Map<String, Function<Configuration, Flow.Publisher<Object>>> publisherLocalFactories = new ConcurrentHashMap<>();
+    private final Map<String, WrappedPublisherFactory> publisherLocalFactories = new ConcurrentHashMap<>();
     private final Map<String, Supplier<Object>> subscriberEndpointFactories = new ConcurrentHashMap<>();
-    private final Map<String, Function<Configuration, Flow.Subscriber<Object>>> subscriberLocalFactories = new ConcurrentHashMap<>();
+    private final Map<String, WrappedSubscriberFactory> subscriberLocalFactories = new ConcurrentHashMap<>();
 
     @Inject
     public ReactiveStreamsServerService(Configuration configuration,
@@ -78,7 +78,7 @@ public class ReactiveStreamsServerService
             return resultReader == null ? new PublisherReactiveStream(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool) :
                     new PublisherWithResultReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
         });
-        publisherLocalFactories.put(streamName, wrappedPublisherFactory);
+        publisherLocalFactories.put(streamName, new WrappedPublisherFactory(wrappedPublisherFactory, publisherType));
 
         return result;
     }
@@ -106,16 +106,24 @@ public class ReactiveStreamsServerService
         subscriberEndpointFactories.put(streamName, () ->
                 resultWriter == null ? new SubscriberReactiveStream(streamName, wrappedSubscriberFactory, eventReader, objectMapper, byteBufferPool, timer) :
                         new SubscriberWithResultReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, timer));
-        subscriberLocalFactories.put(streamName, wrappedSubscriberFactory);
+        subscriberLocalFactories.put(streamName, new WrappedSubscriberFactory(wrappedSubscriberFactory, subscriberType));
         return result;
     }
 
 
-    public Function<Configuration, Flow.Subscriber<Object>> getSubscriberFactory(String streamName) {
+    public WrappedSubscriberFactory getSubscriberFactory(String streamName) {
         return subscriberLocalFactories.get(streamName);
     }
 
-    public Function<Configuration, ? extends Flow.Publisher<?>> getPublisherFactory(String streamName) {
+    public WrappedPublisherFactory getPublisherFactory(String streamName) {
         return publisherLocalFactories.get(streamName);
+    }
+
+    public record WrappedPublisherFactory(Function<Configuration, ? extends Flow.Publisher<Object>> factory, Class<? extends Flow.Publisher<?>> publisherType )
+    {
+    }
+
+    public record WrappedSubscriberFactory(Function<Configuration, Flow.Subscriber<Object>> factory, Class<? extends Flow.Subscriber<?>> subscriberType )
+    {
     }
 }

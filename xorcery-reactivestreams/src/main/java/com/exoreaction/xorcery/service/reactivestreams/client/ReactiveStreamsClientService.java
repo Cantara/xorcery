@@ -22,7 +22,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Service(name = "reactivestreams.client")
@@ -74,11 +73,24 @@ public class ReactiveStreamsClientService
         activePublishProcesses.add(result);
 
         if (authority == null) {
-            Function<Configuration, Flow.Subscriber<Object>> subscriberFactory = reactiveStreamsServerServiceProvider.get().getSubscriberFactory(streamName);
+            ReactiveStreamsServerService.WrappedSubscriberFactory subscriberFactory = reactiveStreamsServerServiceProvider.get().getSubscriberFactory(streamName);
 
             if (subscriberFactory != null) {
                 // Local
-                publisher.subscribe(subscriberFactory.apply(subscriberConfiguration.get()));
+                Flow.Subscriber<Object> subscriber = subscriberFactory.factory().apply(subscriberConfiguration.get());
+                Type subscriberEventType = getEventType(resolveActualTypeArgs(subscriberFactory.subscriberType(), Flow.Subscriber.class)[0]);
+                Type publisherEventType = getEventType(resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0]);
+
+                if (!subscriberEventType.equals(publisherEventType)) {
+                    // Do type conversion
+                    MessageWriter<Object> writer = getWriter(publisherEventType);
+                    MessageReader<Object> reader = getReader(subscriberEventType);
+                    subscriber = new SubscriberConverter(subscriber, writer, reader);
+                }
+
+                subscriber = new SubscribeResultHandler(subscriber, result);
+
+                publisher.subscribe(subscriber);
                 return result;
             } else {
                 result.completeExceptionally(new IllegalArgumentException("No such subscriber:" + streamName));
@@ -143,12 +155,24 @@ public class ReactiveStreamsClientService
         activeSubscribeProcesses.add(result);
 
         if (authority == null) {
-            Function<Configuration, ? extends Flow.Publisher<?>> publisher = reactiveStreamsServerServiceProvider.get().getPublisherFactory(streamName);
+            ReactiveStreamsServerService.WrappedPublisherFactory publisherFactory = reactiveStreamsServerServiceProvider.get().getPublisherFactory(streamName);
 
-            if (publisher != null) {
+            if (publisherFactory != null) {
                 // Local
-                publisher.apply(publisherConfiguration.get())
-                        .subscribe((Flow.Subscriber<Object>) subscriber);
+                Flow.Publisher<Object> publisher = publisherFactory.factory().apply(publisherConfiguration.get());
+                Type subscriberEventType = getEventType(resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0]);
+                Type publisherEventType = getEventType(resolveActualTypeArgs(publisherFactory.publisherType(), Flow.Publisher.class)[0]);
+
+                if (!subscriberEventType.equals(publisherEventType)) {
+                    // Do type conversion
+                    MessageWriter<Object> writer = getWriter(publisherEventType);
+                    MessageReader<Object> reader = getReader(subscriberEventType);
+                    subscriber = new SubscriberConverter((Flow.Subscriber<Object>) subscriber, writer, reader);
+                }
+
+                subscriber = new SubscribeResultHandler((Flow.Subscriber<Object>) subscriber, result);
+
+                publisher.subscribe((Flow.Subscriber<Object>) subscriber);
                 return result;
             } else {
                 result.completeExceptionally(new IllegalArgumentException("No such publisher:" + streamName));
@@ -238,4 +262,6 @@ public class ReactiveStreamsClientService
             logger.warn("Could not stop websocket client", e);
         }
     }
+
+
 }
