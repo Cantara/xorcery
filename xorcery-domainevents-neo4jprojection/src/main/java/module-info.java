@@ -14,6 +14,8 @@ open module xorcery.domainevents.neo4jprojection {
     requires org.apache.logging.log4j;
     requires xorcery.neo4j.shaded;
     requires xorcery.neo4j.projections;
+    requires jakarta.ws.rs;
+    requires xorcery.domainevents.publisher;
 
     provides Neo4jProvider with ApplyJsonDomainEvent;
     provides Neo4jEventProjection with JsonDomainEventNeo4jEventProjection;

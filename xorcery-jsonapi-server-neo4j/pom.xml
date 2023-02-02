@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-domainevents</artifactId>
+            <artifactId>xorcery-domainevents-jsonapi</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!--        <dependency>

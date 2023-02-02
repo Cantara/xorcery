@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.domainevents.neo4jprojections;
 
 import com.exoreaction.xorcery.json.model.JsonElement;
-import com.exoreaction.xorcery.service.domainevents.api.event.JsonDomainEvent;
+import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

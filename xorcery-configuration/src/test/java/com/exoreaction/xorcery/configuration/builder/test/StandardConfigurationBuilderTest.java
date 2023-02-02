@@ -11,7 +11,6 @@ public class StandardConfigurationBuilderTest {
     {
         Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addDefaults).build();
 
-        System.out.println(configuration.json().toPrettyString());
+        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
     }
-
 }

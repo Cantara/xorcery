@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.domainevents.snapshot;
 
-import com.exoreaction.xorcery.service.domainevents.api.DomainEventMetadata;
-import com.exoreaction.xorcery.service.domainevents.api.entity.Entity;
-import com.exoreaction.xorcery.service.domainevents.api.entity.EntitySnapshot;
+import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
+import com.exoreaction.xorcery.domainevents.helpers.entity.Entity;
+import com.exoreaction.xorcery.domainevents.helpers.entity.EntitySnapshot;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.RowModel;
