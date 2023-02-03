@@ -51,7 +51,8 @@
         <module>xorcery-server</module>
 
         <module>xorcery-reactivestreams-api</module>
-        <module>xorcery-reactivestreams</module>
+        <module>xorcery-reactivestreams-client</module>
+        <module>xorcery-reactivestreams-server</module>
 
         <module>xorcery-certificates-server</module>
         <module>xorcery-certificates-client</module>

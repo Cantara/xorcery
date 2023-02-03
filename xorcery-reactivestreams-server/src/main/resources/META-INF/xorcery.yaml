@@ -1,0 +1,4 @@
+reactivestreams:
+  enabled: "{{ defaults.enabled }}"
+  server:
+    enabled: "{{ reactivestreams.enabled }}"

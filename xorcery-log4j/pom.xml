@@ -80,7 +80,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams</artifactId>
+            <artifactId>xorcery-reactivestreams-server</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

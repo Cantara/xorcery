@@ -17,9 +17,9 @@ import org.eclipse.jetty.server.Response;
 public class JsonRequestLog
         implements RequestLog {
     private LoggingMetadata loggingMetadata;
-    private RequestLogService.RequestLogPublisher requestLogPublisher;
+    private RequestLogPublisherService.RequestLogPublisher requestLogPublisher;
 
-    public JsonRequestLog(LoggingMetadata loggingMetadata, RequestLogService.RequestLogPublisher requestLogPublisher) {
+    public JsonRequestLog(LoggingMetadata loggingMetadata, RequestLogPublisherService.RequestLogPublisher requestLogPublisher) {
         this.loggingMetadata = loggingMetadata;
         this.requestLogPublisher = requestLogPublisher;
     }

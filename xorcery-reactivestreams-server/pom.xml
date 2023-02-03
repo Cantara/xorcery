@@ -9,7 +9,7 @@
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>xorcery-test</artifactId>
+    <artifactId>xorcery-reactivestreams-server</artifactId>
     <version>0.15.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -21,17 +21,12 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
+            <artifactId>xorcery-reactivestreams-client</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-dns-server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-client</artifactId>
+            <artifactId>xorcery-service-api</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -39,61 +34,59 @@
             <artifactId>xorcery-server</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-handlebars</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams-server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-keystores</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-certificates-server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-certificates-client</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-neo4j</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
-            <version>${project.version}</version>
-            <type>test-jar</type>
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-core</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-core</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-client</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>
