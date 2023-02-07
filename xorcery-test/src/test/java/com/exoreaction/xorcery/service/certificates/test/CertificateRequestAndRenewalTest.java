@@ -29,12 +29,12 @@ public class CertificateRequestAndRenewalTest {
             dns.server.registration.key:
                                 name: xorcery.test
                                 secret: BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg==
-            client:
+            jetty.client:
                 enabled: true
                 ssl:
                     enabled: true
-            server.enabled: true
-            server.ssl.enabled: true    
+            jetty.server.enabled: true
+            jetty.server.ssl.enabled: true    
             keystores.enabled: true
             """;
 
@@ -50,8 +50,8 @@ public class CertificateRequestAndRenewalTest {
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery1")
                 .add("host", "server1.xorcery.test")
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", managerPort)
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", managerPort)
                 .add("keystores.keystore.path", "META-INF/intermediatecakeystore.p12")
                 .add("keystores.truststore.path", "META-INF/intermediatecatruststore.p12")
                 .add("certificates.server.enabled", true)
@@ -62,8 +62,8 @@ public class CertificateRequestAndRenewalTest {
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery2")
                 .add("host", "server2.xorcery.test")
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .add("keystores.keystore.path", "META-INF/keystore.p12")
                 .add("keystores.truststore.path", "META-INF/truststore.p12")
                 .add("certificates.client.enabled", true)
@@ -91,8 +91,8 @@ public class CertificateRequestAndRenewalTest {
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery1")
                 .add("host", "server.xorcery.test")
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", managerPort)
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", managerPort)
 //                .add("server.ssl.enabled", false)
                 .add("keystores.keystore.path", "META-INF/intermediatecakeystore.p12")
 //                .add("keystores.keystore.path", "../xorcery-certificates-server/rootcakeystore.p12")

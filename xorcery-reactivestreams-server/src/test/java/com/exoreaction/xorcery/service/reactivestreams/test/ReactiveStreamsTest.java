@@ -38,8 +38,8 @@ public class ReactiveStreamsTest {
     private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -82,8 +82,8 @@ public class ReactiveStreamsTest {
     public void thatServerSubscriberGetsAllExpectedClientPublishedFibonacciNumbers() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -130,8 +130,8 @@ public class ReactiveStreamsTest {
     private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -175,8 +175,8 @@ public class ReactiveStreamsTest {
     public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryFibonacciNumbers() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -224,8 +224,8 @@ public class ReactiveStreamsTest {
     private void thatClientSubscribersGetsAllExpectedServerPublishedBinaryNioFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
@@ -269,8 +269,8 @@ public class ReactiveStreamsTest {
     public void thatServerSubscriberGetsAllExpectedClientPublishedBinaryNioFibonacciNumbers() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {

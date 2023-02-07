@@ -1,0 +1,4 @@
+jersey:
+  client:
+    enabled: "{{ jetty.client.enabled }}"
+    properties: {}

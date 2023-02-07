@@ -51,7 +51,7 @@ public class DnsMulticastService
             jmdns.registerService(serviceInfo);
             logger.debug("Registered DNS service:" + serviceInfo.getNiceTextString());
         }
-        configuration.getInteger("server.http.port").ifPresent(port ->
+        configuration.getInteger("jetty.server.http.port").ifPresent(port ->
         {
 
             ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", selfName, port, "");
@@ -62,7 +62,7 @@ public class DnsMulticastService
                 throw new UncheckedIOException(e);
             }
         });
-        if (configuration.getBoolean("server.ssl.enabled").orElse(false)) {
+        if (configuration.getBoolean("jetty.server.ssl.enabled").orElse(false)) {
             ServiceInfo serviceInfo = ServiceInfo.create("_https._tcp.local.", selfName, standardConfiguration.getServerUri().getPort(), "");
             jmdns.registerService(serviceInfo);
         }

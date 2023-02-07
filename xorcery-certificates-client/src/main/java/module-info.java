@@ -3,7 +3,7 @@ open module xorcery.certificates.client {
 
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
-    requires xorcery.client;
+    requires xorcery.jersey.client;
     requires xorcery.keystores;
     requires xorcery.service.api;
 

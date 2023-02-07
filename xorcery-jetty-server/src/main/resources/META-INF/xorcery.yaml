@@ -1,0 +1,34 @@
+jetty:
+  server:
+    enabled: "{{ defaults.enabled }}"
+    scheme: "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}"
+    port: "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}"
+    uri: "{{jetty.server.scheme}}://{{host}}:{{jetty.server.port}}/"
+
+    idle_timeout: "{{ defaults.idle_timeout }}"
+
+    http:
+      port: "{{ SYSTEM.http_port | 80}}"
+
+    http2:
+      enabled: "{{ defaults.enabled }}"
+
+    ssl:
+      enabled: "{{ defaults.enabled }}"
+      port: "{{ SYSTEM.ssl_port | 443 }}"
+      trustall: true
+      needclientauth: false
+      wantclientauth: true
+      snirequired: false
+      snihostcheck: false
+      alias: "self"
+
+    security:
+      enabled: "{{ defaults.enabled }}"
+      method: "CLIENT_CERT"
+      certificate:
+        enabled: "{{ jetty.server.security.enabled }}"
+      jwt:
+        enabled: "{{ jetty.server.security.enabled }}"
+        issuers: {}
+      #    someissuer: somekey

@@ -21,7 +21,7 @@ object.value3.foo: newvalue3foo
 
 newobject.enabled: true
 
-jersey.jaxrs.register:
+jersey.server.register:
   - blah
 
 .foo.some.bar: xyzzy

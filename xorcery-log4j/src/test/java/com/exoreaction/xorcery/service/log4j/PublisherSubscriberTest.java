@@ -20,8 +20,8 @@ public class PublisherSubscriberTest {
     public void testLog4jPublisherSubscriber() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .add("log4jpublisher.subscriber.authority", "server.xorcery.test:{{ server.port }}")
                 .build();
 

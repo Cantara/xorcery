@@ -17,7 +17,7 @@ keystores:
     path: "rootcakeystore.p12"
     password: "password"
 
-jersey.jaxrs.register:
+jersey.server.register:
   - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificateRequestResource
   - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificateRenewalResource
   - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificatesResource

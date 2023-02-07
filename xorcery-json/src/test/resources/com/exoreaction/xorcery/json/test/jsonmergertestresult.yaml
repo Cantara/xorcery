@@ -28,7 +28,7 @@
     "enabled" : true
   },
   "jersey" : {
-    "jaxrs" : {
+    "server" : {
       "register" : [ "foobar", "blah" ]
     }
   },

@@ -7,9 +7,9 @@ dns:
     registration.key:
       name: xorcery.test
       secret: "BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg=="
-client.enabled: true
-server.enabled: true
+jetty.client.enabled: true
+jetty.server.enabled: true
 jersey:
-  jaxrs:
+  server:
     register:
       - com.exoreaction.xorcery.service.resources.api.SubjectResource

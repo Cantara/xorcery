@@ -24,7 +24,7 @@ public class SRVResolverTest {
         Configuration configuration1 = new Configuration.Builder()
                 .with(standardConfigurationBuilder.addTestDefaultsWithYaml("""
                         name: xorcery1
-                        server.http.port: 8888
+                        jetty.server.http.port: 8888
                         dns:
                             hosts:
                                 analytics:
@@ -36,7 +36,7 @@ public class SRVResolverTest {
         Configuration configuration2 = new Configuration.Builder()
                 .with(standardConfigurationBuilder.addTestDefaultsWithYaml("""
                         name: xorcery2
-                        server.http.port: 8888
+                        jetty.server.http.port: 8888
                         """)).build();
         logger.info("Resolved configuration1:\n" + StandardConfigurationBuilder.toYaml(configuration1));
         logger.info("Resolved configuration2:\n" + StandardConfigurationBuilder.toYaml(configuration2));
@@ -65,7 +65,7 @@ public class SRVResolverTest {
         Configuration configuration2 = new Configuration.Builder()
                 .with(standardConfigurationBuilder.addTestDefaultsWithYaml("""
                         name: xorcery1
-                        server.http.port: 8888
+                        jetty.server.http.port: 8888
                         dns:
                             enabled: true
                             hosts:

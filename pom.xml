@@ -47,8 +47,10 @@
         <module>xorcery-keystores</module>
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
-        <module>xorcery-client</module>
-        <module>xorcery-server</module>
+        <module>xorcery-jetty-client</module>
+        <module>xorcery-jersey-client</module>
+        <module>xorcery-jetty-server</module>
+        <module>xorcery-jersey-server</module>
 
         <module>xorcery-reactivestreams-api</module>
         <module>xorcery-reactivestreams-client</module>

@@ -1,4 +1,4 @@
-jersey.jaxrs.register:
+jersey.server.register:
     - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter
     - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader
     - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyWriter

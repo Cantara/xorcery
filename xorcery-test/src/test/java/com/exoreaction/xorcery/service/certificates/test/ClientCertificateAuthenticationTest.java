@@ -32,13 +32,13 @@ public class ClientCertificateAuthenticationTest {
             dns.server.registration.key:
                                 name: xorcery.test
                                 secret: BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg==
-            client:
+            jetty.client:
                 enabled: true
                 ssl:
                     enabled: true
-            server.enabled: true
-            server.ssl.enabled: true
-            server.security.enabled: true    
+            jetty.server.enabled: true
+            jetty.server.ssl.enabled: true
+            jetty.server.security.enabled: true    
             keystores.enabled: true
             """;
 
@@ -54,10 +54,10 @@ public class ClientCertificateAuthenticationTest {
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery1")
                 .add("host", "server.xorcery.test")
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", managerPort)
-                .add("server.ssl.snirequired", true)
-                .add("server.security.enabled", true)
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", managerPort)
+                .add("jetty.server.ssl.snirequired", true)
+                .add("jetty.server.security.enabled", true)
                 .build();
 //        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
         Configuration clientConfiguration = new Configuration.Builder()
@@ -65,8 +65,7 @@ public class ClientCertificateAuthenticationTest {
                 .add("id", "xorcery2")
                 .add("host", "server2.xorcery.test")
                 .add("clienttester.enabled", "true")
-                .add("server.enabled", false)
-                .add("server.enabled", false)
+                .add("jetty.server.enabled", false)
                 .build();
         System.out.println(StandardConfigurationBuilder.toYaml(clientConfiguration));
         try (Xorcery server = new Xorcery(serverConfiguration)) {

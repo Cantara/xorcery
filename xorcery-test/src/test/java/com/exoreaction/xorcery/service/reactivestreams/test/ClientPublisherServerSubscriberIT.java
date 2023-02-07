@@ -24,10 +24,10 @@ public class ClientPublisherServerSubscriberIT {
     private static final String config = """
             keystores.enabled: true
             reactivestreams.enabled: true
-            server.ssl.enabled: true
-            server.http2.enabled: true
-            client.ssl.enabled: true
-            server.security.enabled: true
+            jetty.server.ssl.enabled: true
+            jetty.server.http2.enabled: true
+            jetty.server.security.enabled: true
+            jetty.client.ssl.enabled: true
             """;
 
     @Test
@@ -35,8 +35,8 @@ public class ClientPublisherServerSubscriberIT {
         //System.setProperty("javax.net.debug", "ssl,handshake");
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
 
         System.out.println(StandardConfigurationBuilder.toYaml(configuration));
@@ -71,8 +71,8 @@ public class ClientPublisherServerSubscriberIT {
     public void givenSubscriberWhenPublishEventsWithResultsThenSubscriberCalculatesResults() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
@@ -117,8 +117,8 @@ public class ClientPublisherServerSubscriberIT {
     public void givenSubscriberWhenPublishEventsWithResultsAndMetadataThenSubscriberCalculatesResults() throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);

@@ -41,6 +41,6 @@ public interface StandardConfiguration
     }
 
     default URI getServerUri() {
-        return context().getURI("server.uri").orElseThrow();
+        return context().getURI("jetty.server.uri").orElseThrow();
     }
 }

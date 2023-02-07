@@ -24,21 +24,9 @@
             <artifactId>xorcery-jsonapi-jaxrs</artifactId>
             <version>${project.version}</version>
         </dependency>
-<!--
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-domainevents</artifactId>
-            <version>${project.version}</version>
-        </dependency>
--->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-service-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-metadata</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -56,20 +44,6 @@
             <artifactId>xorcery-util</artifactId>
             <version>${project.version}</version>
         </dependency>
-<!--
-        <dependency>
-            <groupId>org.glassfish.jersey.connectors</groupId>
-            <artifactId>jersey-jetty-connector</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-        </dependency>
--->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>

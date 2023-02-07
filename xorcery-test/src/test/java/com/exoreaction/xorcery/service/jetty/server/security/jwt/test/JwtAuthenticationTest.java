@@ -41,10 +41,10 @@ public class JwtAuthenticationTest {
         managerPort = 8443;
         Configuration serverConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.enabled", false)
-                .add("server.security.enabled", true)
-                .add("server.security.method", "jwt")
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.enabled", false)
+                .add("jetty.server.security.enabled", true)
+                .add("jetty.server.security.method", "jwt")
                 .add("jwt.enabled", true)
                 .add("jwt.issuers", JsonNodeFactory.instance.objectNode().set("authentication.xorcery.test", JsonNodeFactory.instance.textNode(publicKey)))
                 .build();

@@ -45,7 +45,7 @@ public class DnsRegistrationTest {
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery1")
                 .add("host", "server1.xorcery.test")
-                .add("server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
                 .build();
         System.out.println(configuration1.toJsonString());
         try (Xorcery xorcery1 = new Xorcery(configuration1)) {
@@ -53,7 +53,7 @@ public class DnsRegistrationTest {
                     .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                     .add("id", "xorcery2")
                     .add("host", "server2.xorcery.test")
-                    .add("server.http.port", Sockets.nextFreePort())
+                    .add("jetty.server.http.port", Sockets.nextFreePort())
                     .build())) {
                 logger.info("After startup");
                 {

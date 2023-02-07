@@ -6,5 +6,5 @@ neo4jdatabase:
     dbms:
       allow_upgrade: true
 
-jersey.jaxrs.register:
+jersey.server.register:
   - com.exoreaction.xorcery.service.neo4j.resources.api.Neo4jResource

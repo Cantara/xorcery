@@ -32,12 +32,13 @@ class JsonMergerTest {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
         ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
-                jaxrs:
-                    register:
-                        - foo
+                jersey:
+                    server:
+                        register:
+                            - foo
                 """);
         ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
-                jaxrs.register:
+                jersey.server.register:
                     - bar
                 """);
         ObjectNode merged = new JsonMerger().apply(test1, test2);
@@ -46,10 +47,11 @@ class JsonMergerTest {
 
         String expectedResult = """
                 ---
-                jaxrs:
-                  register:
-                  - "foo"
-                  - "bar"
+                jersey:
+                  server:
+                    register:
+                    - "foo"
+                    - "bar"
                 """;
 
         assertThat(result, equalTo(expectedResult));

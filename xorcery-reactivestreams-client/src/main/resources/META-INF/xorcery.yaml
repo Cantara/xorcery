@@ -2,4 +2,4 @@ reactivestreams:
   enabled: "{{ defaults.enabled }}"
   client:
     enabled: "{{ reactivestreams.enabled }}"
-    scheme: "{{ client.ssl.enabled ? \"wss\" | \"ws\" }}"
+    scheme: "{{ jetty.client.ssl.enabled ? \"wss\" | \"ws\" }}"

@@ -34,8 +34,8 @@ public class ReactiveStreamsWithResultTest {
         // Given
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         System.out.println(StandardConfigurationBuilder.toYaml(configuration));
 
@@ -69,8 +69,8 @@ public class ReactiveStreamsWithResultTest {
         // Given
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         System.out.println(StandardConfigurationBuilder.toYaml(configuration));
 
@@ -104,8 +104,8 @@ public class ReactiveStreamsWithResultTest {
         // Given
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         System.out.println(StandardConfigurationBuilder.toYaml(configuration));
 
@@ -146,8 +146,8 @@ public class ReactiveStreamsWithResultTest {
         // Given
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("server.http.port", Sockets.nextFreePort())
-                .add("server.ssl.port", Sockets.nextFreePort())
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         System.out.println(StandardConfigurationBuilder.toYaml(configuration));
 

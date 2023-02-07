@@ -48,7 +48,7 @@ public class SelfCertificateService {
         this.keyStores = keyStores;
         this.configuration = configuration;
         this.intermediateCA = intermediateCA;
-        certificateAlias = configuration.getString("server.ssl.alias").orElse("self");
+        certificateAlias = configuration.getString("jetty.server.ssl.alias").orElse("self");
 
         if (keyStore.containsAlias(certificateAlias)) {
             // Renewal?

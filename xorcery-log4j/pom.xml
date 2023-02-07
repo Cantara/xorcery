@@ -39,11 +39,6 @@
             <artifactId>xorcery-disruptor</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-metadata</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -68,13 +63,13 @@
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-client</artifactId>
+            <artifactId>xorcery-jersey-client</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-server</artifactId>
+            <artifactId>xorcery-jersey-server</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

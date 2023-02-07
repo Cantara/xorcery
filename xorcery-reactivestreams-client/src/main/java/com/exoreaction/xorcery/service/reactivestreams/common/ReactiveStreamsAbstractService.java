@@ -6,7 +6,6 @@ import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.util.Classes;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
@@ -24,8 +23,7 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
 
 public abstract class ReactiveStreamsAbstractService
-    implements PreDestroy
-{
+        implements PreDestroy {
     // Magic bytes for sending exceptions
     public static final byte[] XOR = "XOR".getBytes(StandardCharsets.UTF_8);
 
@@ -70,12 +68,12 @@ public abstract class ReactiveStreamsAbstractService
     }
 
     protected MessageWriter<Object> getWriter(Type type) {
-        return Optional.ofNullable(messageWorkers.newWriter(Classes.getClass(type), type, MediaType.WILDCARD_TYPE.toString()))
+        return Optional.ofNullable(messageWorkers.newWriter(Classes.getClass(type), type, "*/*"))
                 .orElseThrow(() -> new IllegalStateException("Could not find MessageWriter for " + type));
     }
 
     protected MessageReader<Object> getReader(Type type) {
-        return Optional.ofNullable(messageWorkers.newReader(Classes.getClass(type), type, MediaType.WILDCARD_TYPE.toString()))
+        return Optional.ofNullable(messageWorkers.newReader(Classes.getClass(type), type, "*/*"))
                 .orElseThrow(() -> new IllegalStateException("Could not find MessageReader for " + type));
     }
 

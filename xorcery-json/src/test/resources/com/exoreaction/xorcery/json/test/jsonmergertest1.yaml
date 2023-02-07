@@ -20,6 +20,6 @@ newobject:
 
 
 jersey:
-  jaxrs:
+  server:
     register:
       - "foobar"

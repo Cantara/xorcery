@@ -39,13 +39,6 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
         </dependency>
-
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-core</artifactId>
@@ -61,49 +54,14 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!--        <dependency>
-                    <groupId>com.exoreaction.xorcery</groupId>
-                    <artifactId>xorcery-jsonapi-jaxrs</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.exoreaction.xorcery</groupId>
-                    <artifactId>xorcery-jsonapi-client</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.exoreaction.xorcery</groupId>
-                    <artifactId>xorcery-jsonapi-server</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-
-                <dependency>
-                    <groupId>com.exoreaction.xorcery</groupId>
-                    <artifactId>xorcery-server</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.exoreaction.xorcery</groupId>
-                    <artifactId>xorcery-client</artifactId>
-                    <version>${project.version}</version>
-                </dependency>
-
-                <dependency>
-                    <groupId>org.bouncycastle</groupId>
-                    <artifactId>bcpkix-jdk18on</artifactId>
-                    <version>1.72</version>
-                </dependency>
-
-                <dependency>
-                    <groupId>com.exoreaction.xorcery</groupId>
-                    <artifactId>xorcery-certificates-server</artifactId>
-                    <version>${project.version}</version>
-                    <scope>test</scope>
-                </dependency>-->
     </dependencies>
 </project>

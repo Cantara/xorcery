@@ -1,6 +1,6 @@
 ---
-server.ssl.enabled: true
-server.ssl.crls: "META-INF/crls.pem"
+jetty.server.ssl.enabled: true
+jetty.server.ssl.crls: "META-INF/crls.pem"
 keystores:
   keystore:
     path: "META-INF/test-keystore.p12"

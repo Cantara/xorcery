@@ -12,18 +12,18 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.release>17</maven.compiler.release>
 
-        <slf4j.version>2.0.5</slf4j.version>
+        <slf4j.version>2.0.6</slf4j.version>
         <log4j.version>2.19.0</log4j.version>
-        <jetty.version>11.0.12</jetty.version>
-        <jersey.version>3.0.8</jersey.version>
+        <jetty.version>11.0.13</jetty.version>
+        <jersey.version>3.1.1</jersey.version>
         <hk2.version>3.0.3</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
-        <jackson.version>2.14.1</jackson.version>
-        <metrics.version>4.2.13</metrics.version>
+        <jackson.version>2.14.2</jackson.version>
+        <metrics.version>4.2.15</metrics.version>
         <asm.version>9.4</asm.version>
 
-        <junit.version>5.9.1</junit.version>
+        <junit.version>5.9.2</junit.version>
         <junit.platform.version>1.9.0</junit.platform.version>
     </properties>
 
@@ -90,7 +90,7 @@
             <dependency>
                 <groupId>info.picocli</groupId>
                 <artifactId>picocli</artifactId>
-                <version>4.6.3</version>
+                <version>4.7.1</version>
             </dependency>
 
             <!-- Logging -->
@@ -131,6 +131,7 @@
                 <version>${slf4j.version}</version>
             </dependency>
 
+            <!-- APIs -->
             <dependency>
                 <groupId>jakarta.validation</groupId>
                 <artifactId>jakarta.validation-api</artifactId>
@@ -140,7 +141,7 @@
             <dependency>
                 <groupId>jakarta.inject</groupId>
                 <artifactId>jakarta.inject-api</artifactId>
-                <version>2.0.1.MR</version>
+                <version>2.0.1</version>
             </dependency>
             <dependency>
                 <groupId>jakarta.ws.rs</groupId>
@@ -150,12 +151,17 @@
             <dependency>
                 <groupId>jakarta.activation</groupId>
                 <artifactId>jakarta.activation-api</artifactId>
-                <version>2.1.0</version>
+                <version>2.1.1</version>
             </dependency>
             <dependency>
                 <groupId>jakarta.annotation</groupId>
                 <artifactId>jakarta.annotation-api</artifactId>
                 <version>2.1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.toolchain</groupId>
+                <artifactId>jetty-jakarta-servlet-api</artifactId>
+                <version>5.0.2</version>
             </dependency>
 
             <!-- Disruptor -->
@@ -169,7 +175,7 @@
             <dependency>
                 <groupId>com.eventstore</groupId>
                 <artifactId>db-client-java</artifactId>
-                <version>3.0.2</version>
+                <version>4.0.0</version>
             </dependency>
 
             <!-- DNS -->
@@ -221,12 +227,6 @@
             <!-- Tests -->
             <dependency>
                 <groupId>org.hamcrest</groupId>
-                <artifactId>hamcrest-core</artifactId>
-                <version>2.2</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest</artifactId>
                 <version>2.2</version>
                 <scope>test</scope>
@@ -273,12 +273,12 @@
             <dependency>
                 <groupId>org.reactivestreams</groupId>
                 <artifactId>reactive-streams</artifactId>
-                <version>1.0.3</version>
+                <version>1.0.4</version>
             </dependency>
             <dependency>
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
-                <version>3.28.0-GA</version>
+                <version>3.29.2-GA</version>
             </dependency>
 
             <dependency>
@@ -289,13 +289,13 @@
             <dependency>
                 <groupId>com.google.errorprone</groupId>
                 <artifactId>error_prone_annotations</artifactId>
-                <version>2.16</version>
+                <version>2.18.0</version>
             </dependency>
 
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
-                <version>2.10</version>
+                <version>2.10.1</version>
             </dependency>
 
             <dependency>
@@ -342,7 +342,7 @@
                         <dependency>
                             <groupId>org.ow2.asm</groupId>
                             <artifactId>asm</artifactId>
-                            <version>9.1</version>
+                            <version>${asm.version}</version>
                         </dependency>
                     </dependencies>
                     <configuration>
