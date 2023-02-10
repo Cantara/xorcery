@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.log4jpublisher;
+package com.exoreaction.xorcery.service.log4jpublisher.providers;
 
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import org.apache.logging.log4j.LogManager;

@@ -26,17 +26,14 @@ import java.util.List;
 public class EventStoreProjectionsService {
 
     private final Logger logger = LogManager.getLogger(getClass());
-
-    private EventStoreService eventStoreService;
+    private final EventStoreDBProjectionManagementClient client;
 
     @Inject
     public EventStoreProjectionsService(Configuration configuration,
                                         EventStoreService eventStoreService) {
-        this.eventStoreService = eventStoreService;
-
         // Create/update projections
-        EventStoreDBProjectionManagementClient client = eventStoreService.getProjectionManagementClient();
-        List<ProjectionDetails> projectionsList = client.list().join().getProjections();
+        client = EventStoreDBProjectionManagementClient.create(eventStoreService.getSettings());
+        List<ProjectionDetails> projectionsList = client.list().join();
 
 
         ProjectionsConfiguration cfg = new ProjectionsConfiguration(configuration.getConfiguration("eventstore.projections"));
@@ -75,7 +72,7 @@ public class EventStoreProjectionsService {
                                 .emitEnabled(projection.isEmitEnabled())).join();
                         updatedProjections.add(projectionDetails);
                     } catch (Exception e) {
-                        logger.error("Could not update projection "+projectionName, e);
+                        logger.error("Could not update projection " + projectionName, e);
                     }
                 }
             }
@@ -85,7 +82,7 @@ public class EventStoreProjectionsService {
                     client.create(projectionName, projectionQuery, CreateProjectionOptions.get()
                             .emitEnabled(projection.isEmitEnabled())).join();
                 } catch (Exception e) {
-                    logger.error("Could not create projection "+projectionName, e);
+                    logger.error("Could not create projection " + projectionName, e);
                 }
             }
         }
@@ -93,18 +90,22 @@ public class EventStoreProjectionsService {
 
         // Delete remaining
         for (ProjectionDetails projectionDetails : projectionsList) {
-            if (projectionDetails.getName().startsWith("$"))
-            {
+            if (projectionDetails.getName().startsWith("$")) {
                 // System projection, ignore
                 continue;
             }
             try {
                 client.delete(projectionDetails.getName()).join();
             } catch (Exception e) {
-                logger.error("Could not delete projection "+projectionDetails.getName(), e);
+                logger.error("Could not delete projection " + projectionDetails.getName(), e);
             }
         }
     }
+
+    public EventStoreDBProjectionManagementClient getProjectionManagementClient() {
+        return client;
+    }
+
 
     public record ProjectionsConfiguration(Configuration context)
             implements ServiceConfiguration {

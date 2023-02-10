@@ -4,6 +4,8 @@ open module xorcery.domainevents.jsonapi {
     requires transitive xorcery.jsonapi.server;
     requires transitive xorcery.metadata;
 
+    requires xorcery.domainevents;
+    requires xorcery.domainevents.publisher;
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;
 
@@ -12,6 +14,4 @@ open module xorcery.domainevents.jsonapi {
     requires jakarta.inject;
     requires jakarta.validation;
     requires org.glassfish.hk2.api;
-    requires xorcery.domainevents;
-    requires xorcery.domainevents.publisher;
 }

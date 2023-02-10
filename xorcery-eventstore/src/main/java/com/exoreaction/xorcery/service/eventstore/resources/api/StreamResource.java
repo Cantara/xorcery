@@ -5,9 +5,12 @@ import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.service.eventstore.EventStoreService;
+import com.exoreaction.xorcery.service.eventstore.streams.EventStoreStreamsService;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.ws.rs.*;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -16,11 +19,11 @@ import static jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 @Path("api/eventstore/streams/{id}")
 public class StreamResource {
 
-    private EventStoreService eventStoreService;
+    private EventStoreStreamsService eventStoreService;
 
     @Inject
-    public StreamResource(EventStoreService eventStoreService) {
-        this.eventStoreService = eventStoreService;
+    public StreamResource(Provider<EventStoreStreamsService> eventStoreService) {
+        this.eventStoreService = Optional.ofNullable(eventStoreService.get()).orElseThrow(NotFoundException::new);
     }
 
     @GET

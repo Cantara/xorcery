@@ -3,6 +3,7 @@ open module xorcery.log4j {
     exports com.exoreaction.xorcery.service.log4jpublisher;
     exports com.exoreaction.xorcery.service.log4jsubscriber;
     exports com.exoreaction.xorcery.service.requestlogpublisher;
+    exports com.exoreaction.xorcery.service.log4jpublisher.providers;
 
     requires xorcery.util;
     requires xorcery.configuration.api;

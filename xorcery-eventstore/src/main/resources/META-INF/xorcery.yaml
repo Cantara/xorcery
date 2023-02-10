@@ -1,11 +1,16 @@
 eventstore:
   enabled: "{{ defaults.enabled }}"
   url: "esdb://{{ ENV.EVENTSTORE_HOST | \"localhost\" }}:2113?tls=false"
-  publisher.enabled: "{{ eventstore.enabled }}"
-  subscriber.enabled: "{{ eventstore.enabled }}"
   projections:
     enabled: "{{ eventstore.enabled }}"
     projections: []
+  streams:
+    enabled: "{{ eventstore.enabled }}"
+    publisher:
+      enabled: "{{ eventstore.streams.enabled }}"
+    subscriber:
+      enabled: "{{ eventstore.streams.enabled }}"
+
 jersey.server.register:
   - com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreResource
   - com.exoreaction.xorcery.service.eventstore.resources.api.StreamResource

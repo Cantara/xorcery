@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class DnsRegistrationTest {
 
     String config = """
-            hk2.threadpolicy: USE_NO_THREADS
             dns.server.enabled: false
             dns.server.discovery.enabled: true
             dns.server.multicast.enabled: true

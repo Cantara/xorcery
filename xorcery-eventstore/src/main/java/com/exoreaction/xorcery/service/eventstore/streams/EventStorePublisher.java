@@ -88,7 +88,7 @@ public class EventStorePublisher
                 // Put in ES metadata
                 new EventStoreMetadata.Builder(metadata)
                         .streamId(resolvedEvent.getEvent().getStreamId())
-                        .revision(resolvedEvent.getEvent().getStreamRevision().getValueUnsigned())
+                        .revision(resolvedEvent.getEvent().getRevision())
                         .contentType(resolvedEvent.getEvent().getContentType());
 
                 subscriber.onNext(new WithMetadata<>(metadata.build(), ByteBuffer.wrap(resolvedEvent.getEvent().getEventData())));

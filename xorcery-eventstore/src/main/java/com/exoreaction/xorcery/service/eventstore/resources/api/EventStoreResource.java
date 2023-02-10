@@ -10,10 +10,15 @@ import com.exoreaction.xorcery.jsonapischema.model.ResourceObjectSchema;
 import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
 import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaMixin;
 import com.exoreaction.xorcery.service.eventstore.model.EventStoreModel;
+import com.exoreaction.xorcery.service.eventstore.streams.EventStoreStreamsService;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+
+import java.util.Optional;
 
 import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.describedby;
 import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.self;
@@ -24,7 +29,8 @@ public class EventStoreResource
         implements JsonSchemaMixin {
 
     @Inject
-    public EventStoreResource() {
+    public EventStoreResource(Provider<EventStoreStreamsService> eventStoreService) {
+        Optional.ofNullable(eventStoreService.get()).orElseThrow(NotFoundException::new);
     }
 
     @GET

@@ -21,7 +21,6 @@ import java.util.List;
 public class ClientCertificateAuthenticationTest {
 
     String config = """
-            hk2.threadpolicy: USE_NO_THREADS
             dns.client.hosts:
                 .server1.xorcery.test: 127.0.0.1
                 .wrongserver.xorcery.test: 127.0.0.1

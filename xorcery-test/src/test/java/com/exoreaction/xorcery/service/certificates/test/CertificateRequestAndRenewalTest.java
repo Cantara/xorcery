@@ -19,7 +19,6 @@ import java.net.URI;
 public class CertificateRequestAndRenewalTest {
 
     String config = """
-            hk2.threadpolicy: USE_NO_THREADS
             dns.client.hosts:
                 .server1.xorcery.test: 127.0.0.1
             dns.server.enabled: false

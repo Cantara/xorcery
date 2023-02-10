@@ -22,6 +22,9 @@ Configuration:
       - name: com.exoreaction.xorcery.core.Xorcery
         level: debug
 
+      - name: com.eventstore
+        level: debug
+
     Root:
       level: info
       AppenderRef:

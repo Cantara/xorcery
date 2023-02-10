@@ -1,14 +1,18 @@
 package com.exoreaction.xorcery.service.eventstore.test;
 
-import com.eventstore.dbclient.*;
+import com.eventstore.dbclient.EventData;
+import com.eventstore.dbclient.ReadResult;
+import com.eventstore.dbclient.ReadStreamOptions;
+import com.eventstore.dbclient.WriteResult;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.eventstore.EventStoreService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.exoreaction.xorcery.util.Sockets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -20,15 +24,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 @Testcontainers
 @Disabled
 public class EventStoreIT {
 
-    private final Logger logger = LogManager.getLogger(getClass());
+    private static Xorcery xorcery;
+    private static final Logger logger = LogManager.getLogger(EventStoreIT.class);
 
     @Container
     public static DockerComposeContainer environment =
@@ -36,63 +39,52 @@ public class EventStoreIT {
                     .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreIT.class)))
                     .withExposedService("eventstore", 2113);
 
-    @Disabled
-    @Test
-    public void testReadBackwards() throws IOException, ParseError, ExecutionException, InterruptedException, TimeoutException {
-        Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
-
-        String connectionString = configuration.getString("eventstore.url").orElseThrow();
-
-        EventStoreDBClientSettings settings = EventStoreDBConnectionString.parse(connectionString);
-        EventStoreDBClient client = EventStoreDBClient.create(settings);
-
-        List<ResolvedEvent> lastEvent = client.readStream("development-default-forum", 1, ReadStreamOptions.get().backwards().fromEnd())
-                .get(10, TimeUnit.SECONDS).getEvents();
-
-        for (ResolvedEvent resolvedEvent : lastEvent) {
-            System.out.println(resolvedEvent.getEvent().getStreamRevision().getValueUnsigned());
-        }
-    }
-
-    @Test
-    public void createProjection() throws Exception {
-        String config = """
-                eventstore:
-                    publisher.enabled: false
-                    subscriber.enabled: false
-                    projections:
-                        projections:
-                            - name: testprojection
-                              query: META-INF/testprojection.js
-                """;
-
-        StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
+    @BeforeAll
+    public static void setup() throws Exception {
         Configuration configuration = new Configuration.Builder()
-                .with(standardConfigurationBuilder.addTestDefaultsWithYaml(config))
+                .with(new StandardConfigurationBuilder()::addTestDefaults)
+                .add("jetty.server.http.port", Sockets.nextFreePort())
+                .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         logger.info(StandardConfigurationBuilder.toYaml(configuration));
-        StandardConfiguration standardConfiguration = () -> configuration;
-        try (Xorcery xorcery = new Xorcery(configuration)) {
-            EventStoreService eventStoreService = xorcery.getServiceLocator().getService(EventStoreService.class);
-
-            List<ProjectionDetails> projectionDetails = eventStoreService.getProjectionManagementClient().list().join().getProjections();
-            ObjectMapper mapper = new ObjectMapper();
-            for (ProjectionDetails projectionDetail : projectionDetails) {
-                System.out.println(mapper.writeValueAsString(projectionDetail));
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                logger.error("Uncaught exception "+t.getName(), e);
             }
-
-            // Write event
-            eventStoreService.getClient().appendToStream("teststream", EventDataBuilder.json("testtype", "{}").build()).join();
-
-            // Check projection state
-            CountState state = eventStoreService.getProjectionManagementClient().getState("testprojection", CountState.class).join();
-
-            System.out.println("Count:"+state.count());
-        }
-
+        });
+        xorcery = new Xorcery(configuration);
     }
 
-    public record CountState(int count)
-    {
+    @AfterAll
+    public static void shutdown() {
+        xorcery.close();
+    }
+
+
+    @Test
+    public void testWriteAndReadEvents() throws IOException {
+        EventStoreService eventStoreService = xorcery.getServiceLocator().getService(EventStoreService.class);
+        WriteResult result = eventStoreService.getClient().appendToStream("stream1",
+                EventData.builderAsJson("someEventType", new EventRecord(1, "foobar")).build(),
+                EventData.builderAsJson("someEventType", new EventRecord(2, "foobar")).build(),
+                EventData.builderAsJson("someEventType", new EventRecord(3, "foobar")).build()
+        ).join();
+
+        logger.info("Write complete");
+
+        ReadResult readResult = eventStoreService.getClient().readStream("stream1", ReadStreamOptions.get().fromStart().forwards()).join();
+
+        List<EventRecord> events = readResult.getEvents().stream().map(re -> {
+            try {
+                return re.getEvent().getEventDataAs(EventRecord.class);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.toList());
+        logger.info(events);
+    }
+
+    record EventRecord(int val1, String val2) {
     }
 }
