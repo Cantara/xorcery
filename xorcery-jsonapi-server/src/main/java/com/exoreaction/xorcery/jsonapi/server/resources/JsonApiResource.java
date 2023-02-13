@@ -38,16 +38,17 @@ public abstract class JsonApiResource
         return containerRequestContext.getSecurityContext();
     }
 
-    public Subject getSubject() {
-        return Optional.ofNullable(((Request) httpServletRequest).getUserIdentity()).map(UserIdentity::getSubject).orElse(null);
-    }
-
     public UriInfo getUriInfo() {
         return containerRequestContext.getUriInfo();
     }
 
     public ContainerRequestContext getContainerRequestContext() {
         return containerRequestContext;
+    }
+
+    public HttpServletRequest getHttpServletRequest()
+    {
+        return httpServletRequest;
     }
 
     @OPTIONS

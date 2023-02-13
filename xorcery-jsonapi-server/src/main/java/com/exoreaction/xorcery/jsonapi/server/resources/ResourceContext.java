@@ -1,97 +1,93 @@
 package com.exoreaction.xorcery.jsonapi.server.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.UserIdentity;
 import org.glassfish.hk2.api.ServiceLocator;
 
+import javax.security.auth.Subject;
 import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.util.Optional;
 
 /**
  * @author rickardoberg
  */
-public interface ResourceContext
-{
+public interface ResourceContext {
     ContainerRequestContext getContainerRequestContext();
+
+    HttpServletRequest getHttpServletRequest();
 
     ServiceLocator getServiceLocator();
 
-    default <T> T service( Class<T> serviceType, Annotation... annotations )
-    {
-        T service = getServiceLocator().getService( serviceType, annotations );
+    default <T> T service(Class<T> serviceType, Annotation... annotations) {
+        T service = getServiceLocator().getService(serviceType, annotations);
         if (service == null)
-            throw new IllegalArgumentException("No service of type found:"+serviceType);
+            throw new IllegalArgumentException("No service of type found:" + serviceType);
         return service;
     }
 
-    default SecurityContext getSecurityContext()
-    {
+    default SecurityContext getSecurityContext() {
         return getContainerRequestContext().getSecurityContext();
     }
 
-    default UriInfo getUriInfo()
-    {
+    default Subject getSubject() {
+        return Optional.ofNullable(((Request) getHttpServletRequest()).getUserIdentity()).map(UserIdentity::getSubject).orElse(null);
+    }
+
+    default UriInfo getUriInfo() {
         return getContainerRequestContext().getUriInfo();
     }
 
-    default String getFirstPathParameter( String parameterName )
-    {
-        return getUriInfo().getPathParameters().getFirst( parameterName );
+    default String getFirstPathParameter(String parameterName) {
+        return getUriInfo().getPathParameters().getFirst(parameterName);
     }
 
-    default String getFirstQueryParameter( String parameterName )
-    {
-        return getUriInfo().getQueryParameters().getFirst( parameterName );
+    default String getFirstQueryParameter(String parameterName) {
+        return getUriInfo().getQueryParameters().getFirst(parameterName);
     }
 
-    default UriBuilder getAbsolutePathBuilder()
-    {
+    default UriBuilder getAbsolutePathBuilder() {
         return getUriInfo().getAbsolutePathBuilder();
     }
 
-    default URI getBaseUri()
-    {
+    default URI getBaseUri() {
         return getUriInfo().getBaseUri();
     }
 
-    default UriBuilder getBaseUriBuilder()
-    {
+    default UriBuilder getBaseUriBuilder() {
         return getUriInfo().getBaseUriBuilder();
     }
 
-    default UriBuilder getRequestUriBuilder()
-    {
+    default UriBuilder getRequestUriBuilder() {
         return getUriInfo().getRequestUriBuilder();
     }
 
-    default URI getAbsolutePath()
-    {
+    default URI getAbsolutePath() {
         return getUriInfo().getAbsolutePath();
     }
 
-    default URI getParentPath()
-    {
+    default URI getParentPath() {
         String path = getAbsolutePath().getPath();
-        path = path.substring( 0, path.lastIndexOf( '/' ) );
-        return getAbsolutePathBuilder().replacePath( path ).build();
+        path = path.substring(0, path.lastIndexOf('/'));
+        return getAbsolutePathBuilder().replacePath(path).build();
     }
 
-    default UriBuilder getUriBuilderFor(Class<?> resourceClass )
-    {
-        return getUriInfo().getBaseUriBuilder().path( resourceClass );
+    default UriBuilder getUriBuilderFor(Class<?> resourceClass) {
+        return getUriInfo().getBaseUriBuilder().path(resourceClass);
     }
 
-    default Cookie getUserCookie()
-    {
-        return getContainerRequestContext().getCookies().get( "token" );
+    default Cookie getUserCookie() {
+        return getContainerRequestContext().getCookies().get("token");
     }
 
-    default ObjectMapper objectMapper()
-    {
+    default ObjectMapper objectMapper() {
         return service(ObjectMapper.class);
     }
 }
