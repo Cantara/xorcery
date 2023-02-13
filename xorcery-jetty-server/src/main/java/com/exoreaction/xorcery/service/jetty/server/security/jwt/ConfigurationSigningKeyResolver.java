@@ -18,19 +18,21 @@ import java.util.Base64;
 public class ConfigurationSigningKeyResolver
         extends SigningKeyResolverAdapter {
 
-    private Configuration configuration;
+    private Configuration issuersConfiguration;
 
     @Inject
     public ConfigurationSigningKeyResolver(Configuration configuration) {
-        this.configuration = configuration;
+        this.issuersConfiguration = configuration.getConfiguration("jetty.server.security.jwt.issuers");
     }
 
     @Override
     public byte[] resolveSigningKeyBytes(JwsHeader header, Claims claims) {
 
-        byte[] key = configuration.getConfiguration("jwt.issuers")
-                .getConfiguration(claims.getIssuer())
-                .getString("key").orElseThrow().getBytes(StandardCharsets.UTF_8);
+        String issuer = claims.getIssuer();
+        byte[] key = issuersConfiguration
+                .getString("."+issuer)
+                .orElseThrow()
+                .getBytes(StandardCharsets.UTF_8);
         return key;
     }
 
@@ -52,7 +54,7 @@ public class ConfigurationSigningKeyResolver
                 throw new IllegalStateException("Invalid signature algorithm when public key is provided");
             }
 
-            byte[] publicKeyBase64 = configuration.getConfiguration("jwt.issuers")
+            byte[] publicKeyBase64 = issuersConfiguration
                     .getString("."+issuer)
                     .orElseThrow()
                     .getBytes(StandardCharsets.UTF_8);

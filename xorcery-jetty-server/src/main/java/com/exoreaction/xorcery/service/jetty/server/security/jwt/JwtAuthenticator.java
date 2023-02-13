@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.jetty.server.security.jwt;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
 import io.jsonwebtoken.*;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +16,9 @@ import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import javax.security.auth.Subject;
+import java.time.Clock;
+import java.util.Date;
+import java.util.Optional;
 
 @Service(name = "jetty.server.security.jwt")
 @ContractsProvided(Authenticator.class)
@@ -24,21 +27,21 @@ public class JwtAuthenticator
 
     private final Logger logger = LogManager.getLogger(JwtAuthenticator.class);
 
-    private Configuration configuration;
     private SigningKeyResolver signingKeyResolver;
+    private java.time.Clock clock;
     private JwtParser jwtParser;
 
     @Inject
-    public JwtAuthenticator(Configuration configuration, SigningKeyResolver signingKeyResolver) {
-
-        this.configuration = configuration;
+    public JwtAuthenticator(SigningKeyResolver signingKeyResolver, Provider<Clock> clock) {
         this.signingKeyResolver = signingKeyResolver;
+        this.clock = Optional.ofNullable(clock.get()).orElse(Clock.systemUTC());
     }
 
     @Override
     public void setConfiguration(AuthConfiguration authConfiguration) {
 
         jwtParser = Jwts.parserBuilder()
+                .setClock(() -> new Date(clock.millis()))
                 .setSigningKeyResolver(signingKeyResolver)
                 .build();
     }

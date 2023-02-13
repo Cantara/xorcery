@@ -33,6 +33,9 @@ public class ProviderAuthenticatorFactory
         Authenticator authenticator = authenticators.named(authMethod).get();
         if (authenticator != null)
             return authenticator;
+        authenticator = authenticators.named("jetty.server.security."+authMethod).get();
+        if (authenticator != null)
+            return authenticator;
 
         return super.getAuthenticator(server, context, configuration, identityService, loginService);
     }
