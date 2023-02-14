@@ -19,10 +19,10 @@ import static jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 @Path("api/eventstore/streams/{id}")
 public class StreamResource {
 
-    private EventStoreStreamsService eventStoreService;
+    private final EventStoreStreams eventStoreService;
 
     @Inject
-    public StreamResource(Provider<EventStoreStreamsService> eventStoreService) {
+    public StreamResource(Provider<EventStoreStreams> eventStoreService) {
         this.eventStoreService = Optional.ofNullable(eventStoreService.get()).orElseThrow(NotFoundException::new);
     }
 

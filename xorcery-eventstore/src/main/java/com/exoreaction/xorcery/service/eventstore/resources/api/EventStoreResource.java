@@ -29,7 +29,7 @@ public class EventStoreResource
         implements JsonSchemaMixin {
 
     @Inject
-    public EventStoreResource(Provider<EventStoreStreamsService> eventStoreService) {
+    public EventStoreResource(Provider<EventStoreStreams> eventStoreService) {
         Optional.ofNullable(eventStoreService.get()).orElseThrow(NotFoundException::new);
     }
 

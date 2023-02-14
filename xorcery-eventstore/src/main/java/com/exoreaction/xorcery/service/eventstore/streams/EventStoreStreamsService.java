@@ -9,12 +9,14 @@ import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.eventstore.EventStoreRels;
 import com.exoreaction.xorcery.service.eventstore.EventStoreService;
 import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
+import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.glassfish.hk2.runlevel.RunLevel;
+import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.CompletionStage;
@@ -23,16 +25,11 @@ import java.util.concurrent.CompletionStage;
 @RunLevel(6)
 public class EventStoreStreamsService {
 
-    private final EventStoreDBClient client;
-    private EventStoreService eventStoreService;
-
     @Inject
     public EventStoreStreamsService(EventStoreService eventStoreService,
                                     ServiceResourceObjects serviceResourceObjects,
                                     Configuration configuration,
                                     ReactiveStreamsServer reactiveStreams) {
-        this.eventStoreService = eventStoreService;
-
         ObjectMapper objectMapper = new ObjectMapper()
                 .findAndRegisterModules()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
@@ -40,7 +37,7 @@ public class EventStoreStreamsService {
         ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(() -> configuration, "eventstore")
                 .api(EventStoreRels.eventstore.name(), "api/eventstore");
 
-        client = eventStoreService.getClient();
+        EventStoreDBClient client = eventStoreService.getClient();
 
         // Read
         if (configuration.getBoolean("eventstore.streams.publisher.enabled").orElse(true)) {
@@ -56,14 +53,5 @@ public class EventStoreStreamsService {
 
         ServiceResourceObject sro = builder.build();
         serviceResourceObjects.add(sro);
-    }
-
-    public CompletionStage<StreamModel> getStream(String id) {
-        return client.getStreamMetadata(id).thenCombine(client.readStream(id, ReadStreamOptions.get().maxCount(1).backwards().fromEnd()),
-                (streamMetaData, readResult) ->
-                {
-
-                    return new StreamModel(id, readResult.getEvents().stream().findFirst().map(event -> event.getEvent().getRevision()).orElse(-1L));
-                });
     }
 }
