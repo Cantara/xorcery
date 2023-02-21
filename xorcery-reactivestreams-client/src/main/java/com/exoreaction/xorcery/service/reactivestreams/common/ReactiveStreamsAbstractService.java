@@ -10,7 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.glassfish.hk2.api.PreDestroy;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -22,8 +21,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
 
-public abstract class ReactiveStreamsAbstractService
-        implements PreDestroy {
+public abstract class ReactiveStreamsAbstractService {
     // Magic bytes for sending exceptions
     public static final byte[] XOR = "XOR".getBytes(StandardCharsets.UTF_8);
 
@@ -43,7 +41,6 @@ public abstract class ReactiveStreamsAbstractService
         timer = Executors.newSingleThreadScheduledExecutor();
     }
 
-    @Override
     public void preDestroy() {
         logger.info("Stop reactive streams");
 

@@ -3,48 +3,42 @@ package com.exoreaction.xorcery.service.reactivestreams.client;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
-import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.common.LocalStreamFactories;
+import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.glassfish.hk2.api.PreDestroy;
-import org.glassfish.hk2.runlevel.RunLevel;
-import org.jvnet.hk2.annotations.ContractsProvided;
-import org.jvnet.hk2.annotations.Service;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Flow;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-@Service(name = "reactivestreams.client")
-@ContractsProvided({ReactiveStreamsClient.class})
-@RunLevel(8)
 public class ReactiveStreamsClientService
         extends ReactiveStreamsAbstractService
-        implements ReactiveStreamsClient, PreDestroy {
+        implements ReactiveStreamsClient {
 
     private DnsLookup dnsLookup;
-    private final Provider<LocalStreamFactories> reactiveStreamsServerServiceProvider;
+    private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
     private final String scheme;
     private final WebSocketClient webSocketClient;
 
     private final List<CompletableFuture<Void>> activeSubscribeProcesses = new CopyOnWriteArrayList<>();
     private final List<CompletableFuture<Void>> activePublishProcesses = new CopyOnWriteArrayList<>();
 
-    @Inject
     public ReactiveStreamsClientService(Configuration configuration,
                                         MessageWorkers messageWorkers,
                                         HttpClient httpClient,
                                         DnsLookup dnsLookup,
-                                        Provider<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
+                                        Supplier<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
         super(messageWorkers);
         this.dnsLookup = dnsLookup;
         this.reactiveStreamsServerServiceProvider = localStreamFactoriesProvider;
@@ -221,7 +215,6 @@ public class ReactiveStreamsClientService
         return result;
     }
 
-    @Override
     public void preDestroy() {
         logger.info("Cancel active subscribe processes:" + activeSubscribeProcesses.size());
         for (CompletableFuture<Void> activeSubscriptionProcess : activeSubscribeProcesses) {

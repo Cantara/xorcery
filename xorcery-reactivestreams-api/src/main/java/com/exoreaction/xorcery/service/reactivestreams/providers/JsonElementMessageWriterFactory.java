@@ -5,13 +5,11 @@ import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 
-@Service
 public class JsonElementMessageWriterFactory
         implements MessageWriter.Factory {
     private ObjectMapper objectMapper;

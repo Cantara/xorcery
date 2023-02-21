@@ -54,7 +54,9 @@
         <module>xorcery-jersey-server</module>
 
         <module>xorcery-reactivestreams-api</module>
+        <module>xorcery-reactivestreams-api-hk2</module>
         <module>xorcery-reactivestreams-client</module>
+        <module>xorcery-reactivestreams-client-hk2</module>
         <module>xorcery-reactivestreams-server</module>
 
         <module>xorcery-certificates-server</module>

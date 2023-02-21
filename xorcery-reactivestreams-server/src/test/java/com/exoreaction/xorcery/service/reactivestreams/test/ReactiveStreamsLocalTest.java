@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.exoreaction.xorcery.service.reactivestreams.util.ReactiveStreams.cancelStream;
 

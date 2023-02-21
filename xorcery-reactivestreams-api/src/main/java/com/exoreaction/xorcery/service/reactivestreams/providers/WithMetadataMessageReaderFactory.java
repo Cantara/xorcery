@@ -9,24 +9,20 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.function.Supplier;
 
-@Service
 public class WithMetadataMessageReaderFactory
         implements MessageReader.Factory {
 
     private final ObjectMapper objectMapper;
-    private Provider<MessageWorkers> messageWorkers;
+    private Supplier<MessageWorkers> messageWorkers;
 
-    @Inject
-    public WithMetadataMessageReaderFactory(Provider<MessageWorkers> messageWorkers) {
+    public WithMetadataMessageReaderFactory(Supplier<MessageWorkers> messageWorkers) {
         objectMapper = new ObjectMapper();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
