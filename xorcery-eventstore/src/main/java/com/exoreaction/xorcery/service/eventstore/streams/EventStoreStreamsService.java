@@ -2,24 +2,17 @@ package com.exoreaction.xorcery.service.eventstore.streams;
 
 
 import com.eventstore.dbclient.EventStoreDBClient;
-import com.eventstore.dbclient.ReadStreamOptions;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.eventstore.EventStoreRels;
 import com.exoreaction.xorcery.service.eventstore.EventStoreService;
-import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
-import com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreStreams;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 import org.glassfish.hk2.runlevel.RunLevel;
-import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
-
-import java.util.concurrent.CompletionStage;
 
 @Service
 @RunLevel(6)
