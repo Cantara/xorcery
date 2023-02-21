@@ -9,7 +9,7 @@
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>xorcery-keystores</artifactId>
+    <artifactId>xorcery-keystores-hk2</artifactId>
     <version>0.16.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -25,7 +25,16 @@
             <artifactId>xorcery-configuration-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-keystores</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
+        <dependency>
+            <groupId>org.glassfish.hk2</groupId>
+            <artifactId>hk2-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk18on</artifactId>

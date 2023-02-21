@@ -45,6 +45,7 @@
         <module>xorcery-jmxmetrics</module>
 
         <module>xorcery-keystores</module>
+        <module>xorcery-keystores-hk2</module>
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
         <module>xorcery-dns-client-hk2</module>

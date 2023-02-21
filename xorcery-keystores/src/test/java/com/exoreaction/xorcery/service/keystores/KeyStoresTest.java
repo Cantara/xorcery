@@ -26,7 +26,7 @@ class KeyStoresTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .build();
-        KeyStores keyStores = new KeyStores(configuration, null);
+        KeyStores keyStores = new KeyStores(configuration);
 
         // When
         KeyStore keyStore = keyStores.getKeyStore("keystores.teststore");

@@ -1,10 +1,7 @@
 package com.exoreaction.xorcery.service.keystores;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
-import org.glassfish.hk2.api.messaging.Topic;
-import org.jvnet.hk2.annotations.Service;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -14,27 +11,37 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URL;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service(name = "keystores")
 public class KeyStores {
     private final Configuration configuration;
-    private final Topic<KeyStore> keyStoreTopic;
     private final Map<String, KeyStore> keyStores = new ConcurrentHashMap<>();
 
-    @Inject
-    public KeyStores(Configuration configuration, Topic<KeyStore> keyStoreTopic) {
+    public KeyStores(Configuration configuration) {
         this.configuration = configuration;
-        this.keyStoreTopic = keyStoreTopic;
 
         Provider p = new org.bouncycastle.jce.provider.BouncyCastleProvider();
         if (null == Security.getProvider(p.getName())) {
             Security.addProvider(p);
         }
+    }
+
+    /**
+     * Called when keyStore is changed through save. Subclasses may override this method in order to act when
+     * a keystore is changed.
+     *
+     * @param keyStore the key-store that has changed.
+     */
+    protected void publish(KeyStore keyStore) {
     }
 
     public KeyStore getKeyStore(String configurationPrefix) {
@@ -60,7 +67,7 @@ public class KeyStores {
                     keyStore.store(outputStream, keyStoreConfiguration.getString("password").map(String::toCharArray).orElse(null));
                 }
                 LogManager.getLogger(getClass()).info("Saved keystore " + name);
-                keyStoreTopic.publish(keyStore);
+                publish(keyStore);
                 return;
             }
         }
