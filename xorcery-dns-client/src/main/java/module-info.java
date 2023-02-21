@@ -5,8 +5,6 @@ open module xorcery.dns.client {
     requires xorcery.configuration.api;
 
     requires org.dnsjava;
-    requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
-    requires jakarta.inject;
     requires com.fasterxml.jackson.databind;
 }

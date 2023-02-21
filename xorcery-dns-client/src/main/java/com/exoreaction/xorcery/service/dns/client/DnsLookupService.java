@@ -4,9 +4,6 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.inject.Inject;
-import org.jvnet.hk2.annotations.ContractsProvided;
-import org.jvnet.hk2.annotations.Service;
 import org.xbill.DNS.*;
 import org.xbill.DNS.hosts.HostsFileParser;
 import org.xbill.DNS.lookup.LookupSession;
@@ -20,15 +17,12 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.exoreaction.xorcery.util.Exceptions.unwrap;
 
-@Service(name = "dns.client")
-@ContractsProvided({DnsLookup.class})
 public class DnsLookupService
         implements DnsLookup {
     private final Configuration configuration;
 
     private final List<DnsLookup> lookups = new ArrayList<>();
 
-    @Inject
     public DnsLookupService(Configuration configuration) {
         this.configuration = configuration;
         Resolver resolver = configuration.getListAs("dns.client.nameservers", JsonNode::textValue)
