@@ -2,22 +2,11 @@ package com.exoreaction.xorcery.service.eventstore;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
-import com.exoreaction.xorcery.server.model.ServiceResourceObject;
-import com.exoreaction.xorcery.service.eventstore.model.StreamModel;
-import com.exoreaction.xorcery.service.eventstore.streams.EventStorePublisher;
-import com.exoreaction.xorcery.service.eventstore.streams.EventStoreSubscriber;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jvnet.hk2.annotations.Service;
-
-import java.util.concurrent.CompletionStage;
 
 @Service
 @Named("eventstore")
