@@ -5,6 +5,7 @@ open module xorcery.reactivestreams.server {
 
     requires xorcery.reactivestreams.api.hk2;
     requires xorcery.reactivestreams.client.hk2;
+    requires xorcery.dns.client.hk2;
 
     requires xorcery.service.api;
     requires xorcery.util;
