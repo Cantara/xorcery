@@ -6,24 +6,20 @@ import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.function.Supplier;
 
-@Service
 public class WithMetadataMessageWriterFactory
         implements MessageWriter.Factory {
 
     private final ObjectMapper objectMapper;
-    private Provider<MessageWorkers> messageWorkers;
+    private Supplier<MessageWorkers> messageWorkers;
 
-    @Inject
-    public WithMetadataMessageWriterFactory(Provider<MessageWorkers> messageWorkers) {
+    public WithMetadataMessageWriterFactory(Supplier<MessageWorkers> messageWorkers) {
         objectMapper = new ObjectMapper();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

@@ -1,14 +1,12 @@
 package com.exoreaction.xorcery.service.reactivestreams.providers;
 
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
-import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 
-@Service
 public class ByteBufferMessageReaderFactory
         implements MessageReader.Factory {
 

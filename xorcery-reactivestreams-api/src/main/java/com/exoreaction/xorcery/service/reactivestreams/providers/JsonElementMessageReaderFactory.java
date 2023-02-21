@@ -4,13 +4,11 @@ import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 
-@Service
 public class JsonElementMessageReaderFactory
         implements MessageReader.Factory {
     private ObjectMapper objectMapper = new ObjectMapper();

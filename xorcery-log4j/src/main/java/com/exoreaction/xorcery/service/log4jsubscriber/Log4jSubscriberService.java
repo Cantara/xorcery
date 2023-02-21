@@ -46,7 +46,7 @@ public class Log4jSubscriberService {
 
             String type = configuration.getString("type").orElse("java.lang.String");
             if (type.startsWith(WithMetadata.class.getName())) {
-                messageReader = new WithMetadataMessageReaderFactory(messageWorkers).newReader(WithMetadata.class, new ParameterizedTypeImpl(WithMetadata.class, String.class), "text/plain");
+                messageReader = new WithMetadataMessageReaderFactory(messageWorkers::get).newReader(WithMetadata.class, new ParameterizedTypeImpl(WithMetadata.class, String.class), "text/plain");
             } else {
                 messageReader = messageWorkers.get().newReader(String.class, String.class, "text/plain");
             }

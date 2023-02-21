@@ -9,7 +9,6 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.util.Sockets;
 import jakarta.ws.rs.NotAuthorizedException;
-import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
