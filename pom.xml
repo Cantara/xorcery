@@ -51,6 +51,7 @@
         <module>xorcery-dns-client-hk2</module>
 
         <module>xorcery-jetty-client</module>
+        <module>xorcery-jetty-client-hk2</module>
         <module>xorcery-jersey-client</module>
         <module>xorcery-jetty-server</module>
         <module>xorcery-jersey-server</module>

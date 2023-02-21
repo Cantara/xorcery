@@ -3,6 +3,7 @@ open module xorcery.certificates.server {
     exports com.exoreaction.xorcery.service.certificates.server.resources.api;
 
     requires xorcery.keystores;
+    requires xorcery.keystores.hk2;
     requires xorcery.jsonapi.server;
     requires xorcery.jsonapi.jaxrs;
     requires xorcery.service.api;

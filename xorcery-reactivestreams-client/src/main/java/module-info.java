@@ -8,7 +8,6 @@ open module xorcery.reactivestreams.client {
     requires xorcery.dns.client;
 
     requires com.lmax.disruptor;
-    requires jakarta.inject;
     requires org.apache.logging.log4j;
     requires org.eclipse.jetty.io;
     requires org.eclipse.jetty.websocket.jetty.api;
