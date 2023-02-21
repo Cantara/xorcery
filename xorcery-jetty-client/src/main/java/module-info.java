@@ -6,8 +6,6 @@ open module xorcery.jetty.client {
     requires xorcery.dns.client;
 
     requires org.eclipse.jetty.client;
-    requires jakarta.inject;
-    requires org.glassfish.hk2.api;
 
     requires org.apache.logging.log4j;
     requires org.eclipse.jetty.http2.http.client.transport;

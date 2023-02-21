@@ -13,6 +13,7 @@ open module xorcery.reactivestreams.server {
     requires xorcery.dns.client;
     requires xorcery.reactivestreams.client;
     requires xorcery.jetty.server;
+    requires xorcery.jetty.client.hk2;
 
     requires org.eclipse.jetty.websocket.jetty.server;
     requires com.lmax.disruptor;
