@@ -28,13 +28,11 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-api-hk2</artifactId>
             <version>${project.version}</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-client-hk2</artifactId>
             <version>${project.version}</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>

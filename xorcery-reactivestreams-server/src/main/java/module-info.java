@@ -2,6 +2,10 @@ open module xorcery.reactivestreams.server {
     exports com.exoreaction.xorcery.service.reactivestreams.server;
 
     requires transitive xorcery.reactivestreams.api;
+
+    requires xorcery.reactivestreams.api.hk2;
+    requires xorcery.reactivestreams.client.hk2;
+
     requires xorcery.service.api;
     requires xorcery.util;
     requires xorcery.metadata;
