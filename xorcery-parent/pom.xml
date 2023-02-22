@@ -86,6 +86,13 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- Xorcery other -->
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>neo4j-apoc-jpms-shaded</artifactId>
+                <version>5.2.0.2</version>
+            </dependency>
+
             <!-- CLI -->
             <dependency>
                 <groupId>info.picocli</groupId>
@@ -163,6 +170,19 @@
                 <artifactId>jetty-jakarta-servlet-api</artifactId>
                 <version>5.0.2</version>
             </dependency>
+
+            <!-- Bouncy Castle Cryptography APIs -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>1.72</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>1.72</version>
+            </dependency>
+
 
             <!-- Disruptor -->
             <dependency>

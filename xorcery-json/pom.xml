@@ -19,6 +19,10 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
         <!-- Dataformats -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

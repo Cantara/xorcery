@@ -30,7 +30,10 @@
             <artifactId>xorcery-keystores</artifactId>
             <version>${project.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.hk2</groupId>
             <artifactId>hk2-api</artifactId>
