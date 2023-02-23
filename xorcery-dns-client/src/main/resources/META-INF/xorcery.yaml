@@ -1,0 +1,5 @@
+dns:
+  client:
+    enabled: "{{ defaults.enabled }}"
+    nameservers: []
+    hosts: {}

@@ -1,0 +1,25 @@
+some: value
+foo: bar
+array:
+  - 1
+  - 2
+  - 3
+
+objectarray:
+  - id: blah
+    type: xyzzy
+  - id: asd
+    type: xyzzy
+
+object:
+  value1: value1
+  value2: value2
+
+newobject:
+  enabled: true
+
+
+jersey:
+  server:
+    register:
+      - "foobar"

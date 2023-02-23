@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.exoreaction.xorcery</groupId>
+    <artifactId>xorcery-jdk11-project</artifactId>
+    <version>0.16.3-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <scm>
+        <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
+        <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
+        <url>https://github.com/Cantara/xorcery</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <modules>
+        <module>xorcery-parent</module>
+
+        <module>xorcery-util</module>
+
+        <module>xorcery-json</module>
+        <module>xorcery-configuration-api</module>
+        <module>xorcery-configuration</module>
+        <module>xorcery-metadata</module>
+
+        <module>xorcery-keystores</module>
+        <module>xorcery-dns-client</module>
+
+        <module>xorcery-jetty-client</module>
+
+        <module>xorcery-reactivestreams-api</module>
+        <module>xorcery-reactivestreams-client</module>
+
+        <module>xorcery-certificates-client</module>
+
+        <module>xorcery-domainevents</module>
+    </modules>
+
+    <repositories>
+        <repository>
+            <id>cantara-releases</id>
+            <name>Cantara Release Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/releases/</url>
+        </repository>
+        <repository>
+            <id>cantara-snapshots</id>
+            <name>Cantara Snapshot Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>cantara</id>
+            <name>Cantara Release Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>cantara</id>
+            <name>Cantara Snapshot Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+</project>

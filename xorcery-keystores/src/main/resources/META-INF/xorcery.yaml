@@ -1,0 +1,2 @@
+keystores:
+  enabled: "{{ defaults.enabled }}"

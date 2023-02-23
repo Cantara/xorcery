@@ -1,0 +1,27 @@
+some: newvalue
+array:
+  - 4
+  - 5
+  - 6
+
+objectarray:
+  - id: blah2
+    type: xyzzy2
+  - id: asd2
+    type: xyzzy2
+
+object:
+  value2: newvalue2
+  value3:
+    bar: foo
+
+object.value1: newvalue1
+object.value4: newvalue4
+object.value3.foo: newvalue3foo
+
+newobject.enabled: true
+
+jersey.server.register:
+  - blah
+
+.foo.some.bar: xyzzy
