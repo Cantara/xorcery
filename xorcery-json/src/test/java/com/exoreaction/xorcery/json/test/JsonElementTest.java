@@ -13,17 +13,15 @@ class JsonElementTest {
 
     @Test
     void toMap() throws JsonProcessingException {
-        String json = """
-                {
-                    "foo":"bar",
-                    "first":{
-                        "second":"2",
-                        "third":{
-                        "key":"value"
-                        }
-                    }
-                }
-                """;
+        String json = "{\n" +
+                      "    \"foo\":\"bar\",\n" +
+                      "    \"first\":{\n" +
+                      "        \"second\":\"2\",\n" +
+                      "        \"third\":{\n" +
+                      "        \"key\":\"value\"\n" +
+                      "        }\n" +
+                      "    }\n" +
+                      "}\n";
 
         ObjectNode jsonNode = (ObjectNode)new ObjectMapper().readTree(json);
 

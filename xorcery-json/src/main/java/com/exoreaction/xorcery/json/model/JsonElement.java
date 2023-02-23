@@ -18,16 +18,16 @@ public interface JsonElement {
 
     default ObjectNode object() {
         ContainerNode<?> json = json();
-        if (json instanceof ObjectNode object)
-            return object;
+        if (json instanceof ObjectNode)
+            return (ObjectNode) json;
         else
             return null;
     }
 
     default ArrayNode array() {
         ContainerNode<?> json = json();
-        if (json instanceof ArrayNode array)
-            return array;
+        if (json instanceof ArrayNode)
+            return (ArrayNode) json;
         else
             return null;
     }
@@ -52,8 +52,8 @@ public interface JsonElement {
     default Optional<Integer> getInteger(String name) {
         return getJson(name).flatMap(value ->
         {
-            if (value instanceof NumericNode number) {
-                return Optional.of(number.intValue());
+            if (value instanceof NumericNode) {
+                return Optional.of(value.intValue());
             }
             try {
                 return Optional.of(Integer.valueOf(value.asText()));
@@ -66,8 +66,8 @@ public interface JsonElement {
     default Optional<Long> getLong(String name) {
         return getJson(name).flatMap(value ->
         {
-            if (value instanceof NumericNode number) {
-                return Optional.of(number.longValue());
+            if (value instanceof NumericNode) {
+                return Optional.of(value.longValue());
             }
             try {
                 return Optional.of(Long.valueOf(value.asText()));

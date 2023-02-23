@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,8 +47,9 @@ public class SRVLookup
                 String scheme = uri.getScheme();
                 String path = uri.getPath();
                 for (Record record : txtResult.getRecords()) {
-                    if (record instanceof TXTRecord txtRecord)
+                    if (record instanceof TXTRecord)
                     {
+                        TXTRecord txtRecord = (TXTRecord) record;
                         for (String txtRecordString : txtRecord.getStrings()) {
                             if (txtRecordString.startsWith("api_scheme="))
                             {
@@ -62,12 +64,14 @@ public class SRVLookup
                 }
 
                 for (Record record : lookupResult.getRecords()) {
-                    if (record instanceof SRVRecord srvRecord)
+                    if (record instanceof SRVRecord)
                     {
+                        SRVRecord srvRecord = (SRVRecord) record;
                         LookupResult serverResult = lookupSession.lookupAsync(srvRecord.getTarget(), Type.A).toCompletableFuture().join();
                         for (Record serverResultRecord : serverResult.getRecords()) {
-                            if (serverResultRecord instanceof ARecord aRecord)
+                            if (serverResultRecord instanceof ARecord)
                             {
+                                ARecord aRecord = (ARecord) serverResultRecord;
                                 servers.add(new URI(scheme, uri.getUserInfo(), ((ARecord) serverResultRecord).getAddress().getHostAddress(), srvRecord.getPort(), path, uri.getQuery(), uri.getFragment()));
                             }
                         }
@@ -91,17 +95,71 @@ public class SRVLookup
         }
     }
 
-    record ServerEntry(URI uri, int priority, int requests, int weight)
-            implements Comparable<ServerEntry> {
-        @Override
-        public int compareTo(ServerEntry entry) {
+    static final class ServerEntry
+                implements Comparable<ServerEntry> {
+        private final URI uri;
+        private final int priority;
+        private final int requests;
+        private final int weight;
 
-            if (entry.priority == priority) {
-                // Same priority, use weight and the nr of requests so far
-                return entry.weight / entry.requests - weight / requests;
+        ServerEntry(URI uri, int priority, int requests, int weight) {
+            this.uri = uri;
+            this.priority = priority;
+            this.requests = requests;
+            this.weight = weight;
+        }
+
+        @Override
+            public int compareTo(ServerEntry entry) {
+
+                if (entry.priority == priority) {
+                    // Same priority, use weight and the nr of requests so far
+                    return entry.weight / entry.requests - weight / requests;
+                }
+
+                return entry.priority - priority;
             }
 
-            return entry.priority - priority;
+        public URI uri() {
+            return uri;
         }
-    }
+
+        public int priority() {
+            return priority;
+        }
+
+        public int requests() {
+            return requests;
+        }
+
+        public int weight() {
+            return weight;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (ServerEntry) obj;
+            return Objects.equals(this.uri, that.uri) &&
+                   this.priority == that.priority &&
+                   this.requests == that.requests &&
+                   this.weight == that.weight;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(uri, priority, requests, weight);
+        }
+
+        @Override
+        public String toString() {
+            return "ServerEntry[" +
+                   "uri=" + uri + ", " +
+                   "priority=" + priority + ", " +
+                   "requests=" + requests + ", " +
+                   "weight=" + weight + ']';
+        }
+
+        }
 }

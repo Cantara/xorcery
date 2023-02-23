@@ -7,6 +7,6 @@ public final class Classes {
 
     public static Class<Object> getClass(Type type)
     {
-        return (Class<Object>)(type instanceof ParameterizedType pt ? pt.getRawType() : type);
+        return (Class<Object>)(type instanceof ParameterizedType ? ((ParameterizedType) type).getRawType() : type);
     }
 }

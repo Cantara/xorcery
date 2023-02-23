@@ -19,8 +19,9 @@ public class JavaLookup
             List<URI> results = new ArrayList<>(addresses.length);
             for (InetAddress address : addresses) {
                 // Skip IPv6 for now, it's a headache to use
-                if (address instanceof Inet4Address inet4Address)
+                if (address instanceof Inet4Address)
                 {
+                    Inet4Address inet4Address = (Inet4Address) address;
                     URI newUri = new URI(uri.getScheme(), uri.getUserInfo(), inet4Address.getHostAddress(), uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
                     results.add(newUri);
                 }

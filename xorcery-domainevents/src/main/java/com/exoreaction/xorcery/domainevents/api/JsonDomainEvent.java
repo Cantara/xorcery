@@ -12,18 +12,26 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
 
-public record JsonDomainEvent(ObjectNode json)
+public final class JsonDomainEvent
         implements JsonElement, DomainEvent {
+    private final ObjectNode json;
+
 
     public static Builder event(String eventName) {
-        return new JsonDomainEvent.Builder(eventName);
+        return new Builder(eventName);
     }
 
-    public record Builder(ObjectNode builder) {
+    public static final class Builder {
+        private final ObjectNode builder;
+
+        public Builder(ObjectNode builder) {
+            this.builder = builder;
+        }
 
         public Builder(String eventName) {
             this(JsonNodeFactory.instance.objectNode());
@@ -65,14 +73,43 @@ public record JsonDomainEvent(ObjectNode json)
         public JsonDomainEvent deleted(Enum<?> type, String id) {
             return deleted(type.name(), id);
         }
+
+        public ObjectNode builder() {
+            return builder;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (Builder) obj;
+            return Objects.equals(this.builder, that.builder);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(builder);
+        }
+
+        @Override
+        public String toString() {
+            return "Builder[" +
+                   "builder=" + builder + ']';
+        }
+
     }
 
-    public record StateBuilder(ObjectNode builder) {
+    public static final class StateBuilder {
         private static final Map<Class<?>, Function<Object, JsonNode>> TO_JSON =
                 Map.of(
                         String.class, v -> JsonNodeFactory.instance.textNode(v.toString()),
                         Integer.class, v -> JsonNodeFactory.instance.numberNode((Integer) v)
                 );
+        private final ObjectNode builder;
+
+        public StateBuilder(ObjectNode builder) {
+            this.builder = builder;
+        }
 
         public StateBuilder attribute(String name, JsonNode value) {
             JsonNode attributes = builder.get("attributes");
@@ -157,10 +194,35 @@ public record JsonDomainEvent(ObjectNode json)
         public JsonDomainEvent build() {
             return new JsonDomainEvent(builder);
         }
+
+        public ObjectNode builder() {
+            return builder;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (StateBuilder) obj;
+            return Objects.equals(this.builder, that.builder);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(builder);
+        }
+
+        @Override
+        public String toString() {
+            return "StateBuilder[" +
+                   "builder=" + builder + ']';
+        }
+
     }
 
     @JsonCreator(mode = DELEGATING)
-    public JsonDomainEvent {
+    public JsonDomainEvent(ObjectNode json) {
+        this.json = json;
     }
 
     @JsonValue
@@ -205,8 +267,39 @@ public record JsonDomainEvent(ObjectNode json)
                 .orElse(Collections.emptyList());
     }
 
-    public record JsonEntity(ObjectNode json)
+    @Override
+    public ObjectNode json() {
+        return json;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (JsonDomainEvent) obj;
+        return Objects.equals(this.json, that.json);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(json);
+    }
+
+    @Override
+    public String toString() {
+        return "JsonDomainEvent[" +
+               "json=" + json + ']';
+    }
+
+
+    public static final class JsonEntity
             implements JsonElement {
+        private final ObjectNode json;
+
+        public JsonEntity(ObjectNode json) {
+            this.json = json;
+        }
+
         public String getType() {
             return getString("type").orElse(null);
         }
@@ -214,10 +307,41 @@ public record JsonDomainEvent(ObjectNode json)
         public String getId() {
             return getString("id").orElse(null);
         }
+
+        @Override
+        public ObjectNode json() {
+            return json;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (JsonEntity) obj;
+            return Objects.equals(this.json, that.json);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(json);
+        }
+
+        @Override
+        public String toString() {
+            return "JsonEntity[" +
+                   "json=" + json + ']';
+        }
+
     }
 
-    public record JsonRelationship(ObjectNode json)
+    public static final class JsonRelationship
             implements JsonElement {
+        private final ObjectNode json;
+
+        public JsonRelationship(ObjectNode json) {
+            this.json = json;
+        }
+
         public JsonEntity getEntity() {
             return new JsonEntity(json);
         }
@@ -225,5 +349,30 @@ public record JsonDomainEvent(ObjectNode json)
         public String getRelationship() {
             return getString("relationship").orElseThrow();
         }
+
+        @Override
+        public ObjectNode json() {
+            return json;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (JsonRelationship) obj;
+            return Objects.equals(this.json, that.json);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(json);
+        }
+
+        @Override
+        public String toString() {
+            return "JsonRelationship[" +
+                   "json=" + json + ']';
+        }
+
     }
 }

@@ -31,28 +31,22 @@ class JsonMergerTest {
     public void testMergeDotNameArrays() throws Throwable {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
-        ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
-                jersey:
-                    server:
-                        register:
-                            - foo
-                """);
-        ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
-                jersey.server.register:
-                    - bar
-                """);
+        ObjectNode test1 = (ObjectNode)objectMapper.readTree("jersey:\n" +
+                                                             "    server:\n" +
+                                                             "        register:\n" +
+                                                             "            - foo\n");
+        ObjectNode test2 = (ObjectNode)objectMapper.readTree("jersey.server.register:\n" +
+                                                             "    - bar\n");
         ObjectNode merged = new JsonMerger().apply(test1, test2);
 
         String result = objectMapper.writeValueAsString(merged);
 
-        String expectedResult = """
-                ---
-                jersey:
-                  server:
-                    register:
-                    - "foo"
-                    - "bar"
-                """;
+        String expectedResult = "---\n" +
+                                "jersey:\n" +
+                                "  server:\n" +
+                                "    register:\n" +
+                                "    - \"foo\"\n" +
+                                "    - \"bar\"\n";
 
         assertThat(result, equalTo(expectedResult));
 //        System.out.println(result);

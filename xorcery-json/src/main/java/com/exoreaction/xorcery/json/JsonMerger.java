@@ -59,19 +59,19 @@ public class JsonMerger
 
     private void setValue(ObjectNode currentObject, String key, JsonNode value)
     {
-        if (value instanceof ObjectNode addingObject) {
+        if (value instanceof ObjectNode) {
             JsonNode currentValue = currentObject.path(key);
             if (currentValue instanceof MissingNode) {
                 currentObject.set(key, value);
-            } else if (currentValue instanceof ObjectNode currentValueObject) {
-                currentObject.set(key, apply(currentValueObject, addingObject));
+            } else if (currentValue instanceof ObjectNode) {
+                currentObject.set(key, apply((ObjectNode) currentValue, (ObjectNode) value));
             }
-        } else if (value instanceof ArrayNode addingarray) {
+        } else if (value instanceof ArrayNode) {
             JsonNode currentValue = currentObject.path(key);
             if (currentValue instanceof MissingNode) {
-                currentObject.set(key, addingarray);
-            } else if (currentValue instanceof ArrayNode currentArray) {
-                currentArray.addAll(addingarray);
+                currentObject.set(key, value);
+            } else if (currentValue instanceof ArrayNode) {
+                ((ArrayNode) currentValue).addAll((ArrayNode) value);
             }
         } else {
             currentObject.set(key, value);

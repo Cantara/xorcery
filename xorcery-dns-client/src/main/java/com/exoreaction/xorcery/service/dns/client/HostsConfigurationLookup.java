@@ -41,7 +41,8 @@ public class HostsConfigurationLookup
                     InetSocketAddress inetSocketAddress = Sockets.getInetSocketAddress(lookup.textValue(), uri.getPort());
                     URI newUri = new URI(uri.getScheme(), uri.getUserInfo(), inetSocketAddress.getAddress().getHostAddress(), inetSocketAddress.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
                     return CompletableFuture.completedFuture(List.of(newUri));
-                } else if (lookup instanceof ArrayNode an) {
+                } else if (lookup instanceof ArrayNode) {
+                    ArrayNode an = (ArrayNode) lookup;
                     List<URI> addresses = new ArrayList<>();
                     for (JsonNode jsonNode : an) {
                         InetSocketAddress inetSocketAddress = Sockets.getInetSocketAddress(lookup.textValue(), uri.getPort());

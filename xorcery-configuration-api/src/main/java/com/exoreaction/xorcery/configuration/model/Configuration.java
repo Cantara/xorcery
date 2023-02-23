@@ -14,23 +14,37 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
  * @author rickardoberg
  * @since 20/04/2022
  */
-public record Configuration(ObjectNode json)
+public final class Configuration
         implements JsonElement {
 
     private static final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectNode json;
+
+    /**
+     *
+     */
+    public Configuration(ObjectNode json) {
+        this.json = json;
+    }
 
     public static Configuration empty() {
         return new Configuration(JsonNodeFactory.instance.objectNode());
     }
 
-    public record Builder(ObjectNode builder)
+    public static final class Builder
             implements With<Builder> {
+        private final ObjectNode builder;
+
+        public Builder(ObjectNode builder) {
+            this.builder = builder;
+        }
 
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
@@ -98,6 +112,30 @@ public record Configuration(ObjectNode json)
             // Resolve any references
             return new Configuration(new VariableResolver().apply(builder, builder));
         }
+
+        public ObjectNode builder() {
+            return builder;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (Builder) obj;
+            return Objects.equals(this.builder, that.builder);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(builder);
+        }
+
+        @Override
+        public String toString() {
+            return "Builder[" +
+                   "builder=" + builder + ']';
+        }
+
     }
 
     public Configuration getConfiguration(String name) {
@@ -128,5 +166,30 @@ public record Configuration(ObjectNode json)
     public Builder asBuilder() {
         return new Builder(json);
     }
+
+    @Override
+    public ObjectNode json() {
+        return json;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (Configuration) obj;
+        return Objects.equals(this.json, that.json);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(json);
+    }
+
+    @Override
+    public String toString() {
+        return "Configuration[" +
+               "json=" + json + ']';
+    }
+
 }
 

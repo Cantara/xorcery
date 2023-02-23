@@ -43,13 +43,17 @@ public class ALookup
                                 throw new CompletionException(e);
                             }
                         }
-                    }).exceptionallyCompose(throwable ->
-                    {
-                        if (throwable.getCause() instanceof NoSuchDomainException)
-                            return CompletableFuture.completedFuture(Collections.emptyList());
-                        else
-                            return CompletableFuture.failedFuture(throwable);
-                    }).toCompletableFuture();
+                    }).handle((uris, throwable) -> {
+                        if (throwable != null) {
+                            if (throwable.getCause() instanceof NoSuchDomainException)
+                                return Collections.<URI>emptyList();
+                            else
+                                throw new CompletionException(throwable);
+                        } else {
+                            return uris;
+                        }
+                    })
+                    .toCompletableFuture();
         } catch (TextParseException e) {
             return CompletableFuture.failedFuture(e);
         }

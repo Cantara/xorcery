@@ -14,40 +14,38 @@ import java.io.IOException;
 class VariableResolverTest {
     private static ObjectNode result;
 
-    private static final String testYaml = """
-            resolverecursive: "{{resolve}}"
-            resolverecursive2: "{{resolve}}/test/{{ partial3 }}"
-            foo: bar
-            number: 5
-            resolve: "{{ foo }}"
-            partial1: "{{ foo }}-abc"
-            partial2: "abc-{{ foo }}-abc"
-            partial3: "abc-{{ foo }}"
-            resolvenumber: "{{number}}"
-
-            level1:
-              level2:
-                level3: abc
-
-            lvl1:
-              lvl2: "{{level1.level2}}"
-
-            hierarchy: some {{ level1.level2.level3 }} value
-            importedhierarchy: "{{ lvl1.lvl2.level3 }}"
-            missing: some {{ level1.level3.missing| "defaultvalue" }} value
-            defaultnumber: "{{ somenumber | 5 }}"
-            resolvemissing: some {{level1.level3.missing | foo}} value            
-            resolvemissingwithdefault: some {{level1.level3.missing | level1.level3.missing | "test"}} value
-            
-            trueflag: true
-            falseflag: false
-            sometrueconditional: "{{ trueflag ? foo | \\"abc\\"}}"
-            somefalseconditional: "{{ falseflag ? 3 | number}}"
-            somedefaultsconditional: "{{ falseflag ? 3 | falseflag ? 7 | number}}"
-            somedefaultsconditional2: "{{ falseflag ? 3 | trueflag ? 7 | number}}"
-            
-            somedefaultsconditionaltree: "{{ falseflag ? level1 | trueflag ? lvl1 | importedhierarchy}}"
-                        """;
+    private static final String testYaml = "resolverecursive: \"{{resolve}}\"\n" +
+                                           "resolverecursive2: \"{{resolve}}/test/{{ partial3 }}\"\n" +
+                                           "foo: bar\n" +
+                                           "number: 5\n" +
+                                           "resolve: \"{{ foo }}\"\n" +
+                                           "partial1: \"{{ foo }}-abc\"\n" +
+                                           "partial2: \"abc-{{ foo }}-abc\"\n" +
+                                           "partial3: \"abc-{{ foo }}\"\n" +
+                                           "resolvenumber: \"{{number}}\"\n" +
+                                           "\n" +
+                                           "level1:\n" +
+                                           "  level2:\n" +
+                                           "    level3: abc\n" +
+                                           "\n" +
+                                           "lvl1:\n" +
+                                           "  lvl2: \"{{level1.level2}}\"\n" +
+                                           "\n" +
+                                           "hierarchy: some {{ level1.level2.level3 }} value\n" +
+                                           "importedhierarchy: \"{{ lvl1.lvl2.level3 }}\"\n" +
+                                           "missing: some {{ level1.level3.missing| \"defaultvalue\" }} value\n" +
+                                           "defaultnumber: \"{{ somenumber | 5 }}\"\n" +
+                                           "resolvemissing: some {{level1.level3.missing | foo}} value\n" +
+                                           "resolvemissingwithdefault: some {{level1.level3.missing | level1.level3.missing | \"test\"}} value\n" +
+                                           "\n" +
+                                           "trueflag: true\n" +
+                                           "falseflag: false\n" +
+                                           "sometrueconditional: \"{{ trueflag ? foo | \\\"abc\\\"}}\"\n" +
+                                           "somefalseconditional: \"{{ falseflag ? 3 | number}}\"\n" +
+                                           "somedefaultsconditional: \"{{ falseflag ? 3 | falseflag ? 7 | number}}\"\n" +
+                                           "somedefaultsconditional2: \"{{ falseflag ? 3 | trueflag ? 7 | number}}\"\n" +
+                                           "\n" +
+                                           "somedefaultsconditionaltree: \"{{ falseflag ? level1 | trueflag ? lvl1 | importedhierarchy}}\"\n";
 
     @BeforeAll
     public static void setup() throws IOException {

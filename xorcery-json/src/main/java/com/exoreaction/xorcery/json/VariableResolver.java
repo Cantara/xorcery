@@ -53,16 +53,19 @@ public class VariableResolver
         while (names.hasNext()) {
             String next = names.next();
             JsonNode value = node.get(next);
-            if (value instanceof TextNode textNode) {
+            if (value instanceof TextNode) {
+                TextNode textNode = (TextNode) value;
                 try {
                     JsonNode newValue = resolveValue(source, textNode);
                     result.set(next, newValue);
                 } catch (Throwable e) {
                     throw new IllegalArgumentException("Could not resolve variables for " + next + ":" + textNode.textValue(), e);
                 }
-            } else if (value instanceof ObjectNode object) {
+            } else if (value instanceof ObjectNode) {
+                ObjectNode object = (ObjectNode) value;
                 result.set(next, resolveObject(source, object));
-            } else if (value instanceof ArrayNode array) {
+            } else if (value instanceof ArrayNode) {
+                ArrayNode array = (ArrayNode) value;
                 result.set(next, resolveArray(source, array));
             } else {
                 result.set(next, value);
@@ -74,16 +77,19 @@ public class VariableResolver
     private ArrayNode resolveArray(ObjectNode source, ArrayNode node) {
         ArrayNode result = node.arrayNode();
         for (JsonNode value : node) {
-            if (value instanceof TextNode textNode) {
+            if (value instanceof TextNode) {
+                TextNode textNode = (TextNode) value;
                 try {
                     JsonNode newValue = resolveValue(source, textNode);
                     result.add(newValue);
                 } catch (Throwable e) {
                     throw new IllegalArgumentException("Could not resolve variables: " + textNode.textValue(), e);
                 }
-            } else if (value instanceof ObjectNode object) {
+            } else if (value instanceof ObjectNode) {
+                ObjectNode object = (ObjectNode) value;
                 result.add(resolveObject(source, object));
-            } else if (value instanceof ArrayNode array) {
+            } else if (value instanceof ArrayNode) {
+                ArrayNode array = (ArrayNode) value;
                 result.add(resolveArray(source, array));
             } else {
                 result.add(value);
@@ -121,7 +127,7 @@ public class VariableResolver
                 String[] withConditional = expr.split("\\?");
                 JsonNode resolvedConditional = lookupAndResolve(source, withConditional[0].trim())
                         .orElse(MissingNode.getInstance());
-                if ((resolvedConditional instanceof BooleanNode conditionalValue) && conditionalValue.booleanValue()) {
+                if ((resolvedConditional instanceof BooleanNode) && resolvedConditional.booleanValue()) {
                     expr = withConditional[1];
                 } else {
                     continue;
@@ -132,7 +138,8 @@ public class VariableResolver
 
             try {
                 JsonNode value = objectMapper.readTree(new StringReader(expr));
-                if (value instanceof TextNode textNode) {
+                if (value instanceof TextNode) {
+                    TextNode textNode = (TextNode) value;
                     JsonNode resolvedValue = lookupAndResolve(source, textNode.textValue()).orElse(textNode);
                     if (!resolvedValue.isMissingNode())
                         return resolvedValue;
@@ -155,11 +162,14 @@ public class VariableResolver
         return lookup(source, name)
                 .map(result ->
                 {
-                    if (result instanceof TextNode textResult) {
+                    if (result instanceof TextNode) {
+                        TextNode textResult = (TextNode) result;
                         return resolveValue(source, textResult);
-                    } else if (result instanceof ObjectNode objectResult) {
+                    } else if (result instanceof ObjectNode) {
+                        ObjectNode objectResult = (ObjectNode) result;
                         return resolveObject(source, objectResult);
-                    } else if (result instanceof ArrayNode arrayResult) {
+                    } else if (result instanceof ArrayNode) {
+                        ArrayNode arrayResult = (ArrayNode) result;
                         return resolveArray(source, arrayResult);
                     } else {
                         return result;
@@ -174,13 +184,14 @@ public class VariableResolver
             JsonNode node = context.get(names[i]);
 
             // Might be an intermediary lookup
-            if (node instanceof TextNode textNode)
+            if (node instanceof TextNode)
             {
+                TextNode textNode = (TextNode) node;
                 node = resolveValue(source, textNode);
             }
 
-            if (node instanceof ObjectNode object)
-                context = object;
+            if (node instanceof ObjectNode)
+                context = (ObjectNode) node;
             else
                 return Optional.empty();
         }
