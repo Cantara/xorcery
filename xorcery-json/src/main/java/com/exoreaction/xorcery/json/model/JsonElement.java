@@ -81,6 +81,21 @@ public interface JsonElement {
         return getJson(name).map(JsonNode::asBoolean);
     }
 
+    default Optional<Boolean> getFalsy(String name) {
+        return getJson(name).map(value ->
+                switch (value.getNodeType()) {
+                    case ARRAY -> !value.isEmpty();
+                    case BINARY -> true;
+                    case BOOLEAN -> value.booleanValue();
+                    case MISSING -> false;
+                    case NULL -> false;
+                    case NUMBER -> value.numberValue().longValue() != 0;
+                    case OBJECT -> true;
+                    case POJO -> true;
+                    case STRING -> !value.textValue().equals("");
+                });
+    }
+
     default <T> Optional<T> getObjectAs(String name, Function<ObjectNode, T> mapper) {
         return getJson(name).map(ObjectNode.class::cast).map(mapper);
     }
@@ -211,8 +226,7 @@ public interface JsonElement {
             JsonNode value = c.get(names[names.length - 1]);
             return value instanceof NullNode ? Optional.empty() : Optional.ofNullable(value);
         } else {
-            if (name.startsWith("."))
-            {
+            if (name.startsWith(".")) {
                 name = name.substring(1);
             }
             JsonNode value = c.get(name);
