@@ -7,9 +7,9 @@ import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.Links;
 import com.exoreaction.xorcery.jsonapi.model.Meta;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
-import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 public record ServiceResourceObject(ResourceObject resourceObject) {
@@ -38,29 +38,79 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
         }
 
         public Builder api(String rel, String path) {
-            links.link(rel, UriBuilder.fromUri(baseServerUri).path(path));
+            URI resolvedUri;
+            try {
+                resolvedUri = new URI(
+                        baseServerUri.getScheme(),
+                        baseServerUri.getUserInfo(),
+                        baseServerUri.getHost(),
+                        baseServerUri.getPort(),
+                        path.startsWith("/") ? path : "/" + path,
+                        baseServerUri.getQuery(),
+                        baseServerUri.getFragment()
+                );
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+            links.link(rel, resolvedUri);
 
             return this;
         }
 
         public Builder websocket(String rel, String path) {
-            links.link(rel, UriBuilder.fromUri(baseServerUri)
-                    .scheme(baseServerUri.getScheme().equals("https") ? "wss" : "ws")
-                    .path(path));
+            URI resolvedUri;
+            try {
+                resolvedUri = new URI(
+                        baseServerUri.getScheme().equals("https") ? "wss" : "ws",
+                        baseServerUri.getUserInfo(),
+                        baseServerUri.getHost(),
+                        baseServerUri.getPort(),
+                        path.startsWith("/") ? path : "/" + path,
+                        baseServerUri.getQuery(),
+                        baseServerUri.getFragment()
+                );
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+            links.link(rel, resolvedUri);
             return this;
         }
 
         public Builder publisher(String streamName) {
-            links.link(streamName+" publisher", UriBuilder.fromUri(baseServerUri)
-                    .scheme(baseServerUri.getScheme().equals("https") ? "wss" : "ws")
-                    .path("streams/publishers/"+streamName));
+            URI resolvedUri;
+            try {
+                resolvedUri = new URI(
+                        baseServerUri.getScheme().equals("https") ? "wss" : "ws",
+                        baseServerUri.getUserInfo(),
+                        baseServerUri.getHost(),
+                        baseServerUri.getPort(),
+                        "/streams/publishers/"+streamName,
+                        baseServerUri.getQuery(),
+                        baseServerUri.getFragment()
+                );
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+            links.link(streamName+" publisher", resolvedUri);
             return this;
         }
 
         public Builder subscriber(String streamName) {
-            links.link(streamName+" subscriber", UriBuilder.fromUri(baseServerUri)
-                    .scheme(baseServerUri.getScheme().equals("https") ? "wss" : "ws")
-                    .path("streams/subscribers/"+streamName));
+            URI resolvedUri;
+            try {
+                resolvedUri = new URI(
+                        baseServerUri.getScheme().equals("https") ? "wss" : "ws",
+                        baseServerUri.getUserInfo(),
+                        baseServerUri.getHost(),
+                        baseServerUri.getPort(),
+                        "/streams/subscribers/"+streamName,
+                        baseServerUri.getQuery(),
+                        baseServerUri.getFragment()
+                );
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+            links.link(streamName+" subscriber", resolvedUri);
             return this;
         }
 

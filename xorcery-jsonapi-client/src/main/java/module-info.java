@@ -3,4 +3,5 @@ open module xorcery.jsonapi.client {
     exports com.exoreaction.xorcery.hyperschema.client;
 
     requires transitive xorcery.jsonapi;
+    requires jakarta.ws.rs;
 }

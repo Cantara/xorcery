@@ -17,4 +17,5 @@ open module xorcery.domainevents.publisher {
     requires jakarta.validation;
     requires org.glassfish.hk2.api;
     requires xorcery.domainevents;
+    requires jakarta.ws.rs;
 }

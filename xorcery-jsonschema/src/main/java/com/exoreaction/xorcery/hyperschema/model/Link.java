@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.ws.rs.HttpMethod;
 
 import java.util.List;
 import java.util.Map;
@@ -216,7 +215,7 @@ public record Link(ObjectNode json)
                 {
                     for (int i = 0; i < allowed.size(); i++) {
                         JsonNode v = allowed.get(i);
-                        if (v.textValue().equals(HttpMethod.DELETE))
+                        if (v.textValue().equals("DELETE"))
                             return true;
                     }
                     return false;

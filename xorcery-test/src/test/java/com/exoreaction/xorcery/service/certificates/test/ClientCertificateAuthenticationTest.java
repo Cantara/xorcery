@@ -48,7 +48,7 @@ public class ClientCertificateAuthenticationTest {
         //System.setProperty("javax.net.debug", "ssl,handshake");
 
         int managerPort = Sockets.nextFreePort();
-        managerPort = 8443;
+        managerPort = Sockets.nextFreePort();
         Configuration serverConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery1")

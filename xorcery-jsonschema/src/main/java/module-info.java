@@ -5,5 +5,4 @@ open module xorcery.jsonschema {
 
     requires transitive xorcery.json;
     requires transitive xorcery.util;
-    requires transitive jakarta.ws.rs;
 }

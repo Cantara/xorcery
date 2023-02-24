@@ -5,7 +5,6 @@ import com.exoreaction.xorcery.json.model.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;
 import java.util.*;
@@ -42,10 +41,6 @@ public record Links(ObjectNode json)
             return link(rel.name(), href);
         }
 
-        public Builder link(String rel, UriBuilder href) {
-            return link(rel, href.build());
-        }
-
         public Builder link(String rel, String href, Meta meta) {
             builder.set(rel, builder.objectNode()
                     .<ObjectNode>set("href", builder.textNode(href))
@@ -55,10 +50,6 @@ public record Links(ObjectNode json)
 
         public Builder link(String rel, URI href, Meta meta) {
             return link(rel, href.toASCIIString(), meta);
-        }
-
-        public Builder link(String rel, UriBuilder href, Meta meta) {
-            return link(rel, href.build().toASCIIString(), meta);
         }
 
         public Links build() {

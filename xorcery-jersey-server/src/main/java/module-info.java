@@ -7,6 +7,7 @@ open module xorcery.jersey.server {
     requires xorcery.jsonapi;
     requires xorcery.service.api;
 
+    requires jersey.common;
     requires jersey.server;
     requires jersey.container.servlet.core;
     requires org.eclipse.jetty.servlet;

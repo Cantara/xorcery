@@ -56,11 +56,12 @@ public class EventStoreResource
         return new ResourceDocument.Builder()
                 .links(new Links.Builder()
                         .link(self, getUriInfo().getRequestUri().toASCIIString())
-                        .link(describedby, getAbsolutePathBuilder().path(".schema"))
+                        .link(describedby, getAbsolutePathBuilder().path(".schema").toTemplate())
                         .link("stream", getUriBuilderFor(StreamResource.class).toTemplate())
                         .link("events", getBaseUriBuilder()
                                 .scheme(getBaseUri().getScheme().equals("https") ? "wss" : "ws")
-                                .path("ws/events"))
+                                .path("ws/events")
+                                .toTemplate())
                         .build())
                 .build();
     }

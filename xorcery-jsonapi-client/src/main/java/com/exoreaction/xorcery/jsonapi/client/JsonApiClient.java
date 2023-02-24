@@ -8,17 +8,22 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.InvocationCallback;
+import jakarta.ws.rs.core.MediaType;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public record JsonApiClient(Client client) {
 
+    private static final MediaType APPLICATION_JSON_API_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_JSON_API);
+    private static final MediaType APPLICATION_JSON_SCHEMA_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_JSON_SCHEMA);
+    private static final MediaType APPLICATION_YAML_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_YAML);
+
     public CompletionStage<ResourceDocument> get(Link link)
     {
         CompletableFuture<ResourceDocument> future = new CompletableFuture<>();
         client.target(link.getHrefAsUri())
-                .request(MediaTypes.APPLICATION_JSON_API_TYPE)
+                .request(APPLICATION_JSON_API_TYPE)
                 .buildGet()
                 .submit(new ResourceDocumentCallback(future, link));
         return future;
@@ -28,8 +33,8 @@ public record JsonApiClient(Client client) {
     public CompletionStage<ResourceObject> submit(Link link, ResourceObject resourceObject) {
         CompletableFuture<ResourceObject> future = new CompletableFuture<>();
         client.target(link.getHrefAsUri())
-                .request(MediaTypes.APPLICATION_JSON_API_TYPE)
-                .buildPost(Entity.entity(resourceObject, MediaTypes.APPLICATION_JSON_API_TYPE))
+                .request(APPLICATION_JSON_API_TYPE)
+                .buildPost(Entity.entity(resourceObject, APPLICATION_JSON_API_TYPE))
                 .submit(new ResourceObjectCallback(future, link));
         return future;
     }
@@ -44,8 +49,8 @@ public record JsonApiClient(Client client) {
     public CompletionStage<ResourceObject> submit(Link link, ResourceDocument resourceDocument) {
         CompletableFuture<ResourceObject> future = new CompletableFuture<>();
         client.target(link.getHrefAsUri())
-                .request(MediaTypes.APPLICATION_JSON_API_TYPE)
-                .buildPost(Entity.entity(resourceDocument, MediaTypes.APPLICATION_JSON_API_TYPE))
+                .request(APPLICATION_JSON_API_TYPE)
+                .buildPost(Entity.entity(resourceDocument, APPLICATION_JSON_API_TYPE))
                 .submit(new ResourceObjectCallback(future, link));
         return future;
     }

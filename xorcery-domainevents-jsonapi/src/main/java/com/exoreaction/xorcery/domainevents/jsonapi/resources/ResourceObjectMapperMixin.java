@@ -105,7 +105,7 @@ public interface ResourceObjectMapperMixin
             for (Command command : context.commands()) {
                 if (!Command.isDelete(command.getClass())) {
                     String commandName = Command.getName(command);
-                    links.link(commandName, uriBuilder.replaceQueryParam("rel", commandName));
+                    links.link(commandName, uriBuilder.replaceQueryParam("rel", commandName).toTemplate());
                 }
             }
         };

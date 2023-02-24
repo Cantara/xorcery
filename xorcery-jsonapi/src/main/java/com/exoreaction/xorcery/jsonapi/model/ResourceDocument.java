@@ -7,9 +7,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -196,19 +196,39 @@ public record ResourceDocument(ObjectNode json)
             Map.Entry<String, JsonNode> next = fields.next();
             if (next.getValue() instanceof TextNode textNode)
             {
-                String resolvedUri = UriBuilder.fromUri(textNode.textValue())
-                        .scheme(baseUri.getScheme())
-                        .host(baseUri.getHost())
-                        .port(baseUri.getPort())
-                        .toTemplate();
+                URI uri = URI.create(textNode.textValue());
+                String resolvedUri;
+                try {
+                    resolvedUri = new URI(
+                            baseUri.getScheme(),
+                            uri.getUserInfo(),
+                            baseUri.getHost(),
+                            baseUri.getPort(),
+                            uri.getPath(),
+                            uri.getQuery(),
+                            uri.getFragment()
+                    ).toString();
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
                 linksJson.set(next.getKey(), linksJson.textNode(resolvedUri));
             } else if (next.getValue() instanceof ObjectNode objectNode)
             {
-                String resolvedUri = UriBuilder.fromUri(objectNode.get("href").textValue())
-                        .scheme(baseUri.getScheme())
-                        .host(baseUri.getHost())
-                        .port(baseUri.getPort())
-                        .toTemplate();
+                URI uri = URI.create(objectNode.get("href").textValue());
+                String resolvedUri;
+                try {
+                    resolvedUri = new URI(
+                            baseUri.getScheme(),
+                            uri.getUserInfo(),
+                            baseUri.getHost(),
+                            baseUri.getPort(),
+                            uri.getPath(),
+                            uri.getQuery(),
+                            uri.getFragment()
+                    ).toString();
+                } catch (URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
                 objectNode.set(next.getKey(), linksJson.textNode(resolvedUri));
             }
         }

@@ -4,4 +4,5 @@ open module xorcery.jsonapi.jaxrs {
     requires transitive xorcery.jsonapi;
     requires transitive jakarta.inject;
     requires com.fasterxml.jackson.dataformat.yaml;
+    requires jakarta.ws.rs;
 }

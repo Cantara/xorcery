@@ -8,5 +8,4 @@ open module xorcery.jsonapi {
     requires xorcery.configuration.api;
 
     requires com.fasterxml.jackson.core;
-    requires jersey.common;
 }

@@ -14,4 +14,5 @@ open module xorcery.domainevents.jsonapi {
     requires jakarta.inject;
     requires jakarta.validation;
     requires org.glassfish.hk2.api;
+    requires jakarta.ws.rs;
 }

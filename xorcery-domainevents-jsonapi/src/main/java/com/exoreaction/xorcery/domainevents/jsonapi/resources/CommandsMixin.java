@@ -87,7 +87,7 @@ public interface CommandsMixin
             for (Command command : context.commands()) {
                 if (!Command.isDelete(command.getClass())) {
                     String commandName = Command.getName(command);
-                    links.link(commandName, baseUriBuilder.replaceQueryParam("rel", commandName));
+                    links.link(commandName, baseUriBuilder.replaceQueryParam("rel", commandName).toTemplate());
                 }
             }
         };
