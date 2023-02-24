@@ -3,9 +3,3 @@ dns:
   server:
     enabled: "{{ dns.enabled }}"
     port: 53
-  discovery:
-    enabled: "{{ dns.enabled }}"
-  multicast:
-    enabled: "{{ dns.enabled }}"
-  registration:
-    enabled: "{{ dns.enabled }}"
