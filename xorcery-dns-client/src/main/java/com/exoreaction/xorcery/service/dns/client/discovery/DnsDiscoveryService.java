@@ -1,48 +1,51 @@
-package com.exoreaction.xorcery.service.dns.discovery;
+package com.exoreaction.xorcery.service.dns.client.discovery;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.hk2.runlevel.RunLevel;
-import org.jvnet.hk2.annotations.Service;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
 import javax.jmdns.ServiceTypeListener;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
-@Service(name = "dns.discovery")
-@RunLevel(2)
 public class DnsDiscoveryService
         implements ServiceListener, ServiceTypeListener {
 
     private final Logger logger = LogManager.getLogger(getClass());
     private final JmDNS jmdns;
-    private Configuration configuration;
 
-    @Inject
-    public DnsDiscoveryService(Configuration configuration,
-                               JmDNS jmDNS) throws IOException {
-        this.configuration = configuration;
+    private final Map<String, List<ServiceEvent>> services = new ConcurrentHashMap<>();
 
+    public DnsDiscoveryService(JmDNS jmDNS) throws IOException {
         jmdns = jmDNS;
         jmdns.addServiceTypeListener(this);
-/*
-            jmdns.addServiceListener("_https._tcp.local.", this);
-            jmdns.addServiceListener("_http._tcp.local.", this);
-*/
     }
 
     @Override
     public void serviceAdded(ServiceEvent serviceEvent) {
         logger.info("Added service:" + serviceEvent.getName() + ":" + serviceEvent.getType() + ":" + serviceEvent.getInfo());
+        services.computeIfAbsent(serviceEvent.getType(), type -> new ArrayList<>()).add(serviceEvent);
     }
 
     @Override
     public void serviceRemoved(ServiceEvent serviceEvent) {
         logger.info("Removed service:" + serviceEvent.getName() + ":" + serviceEvent.getType() + ":" + serviceEvent.getInfo());
+        Optional.ofNullable(services.get(serviceEvent.getType())).ifPresent(list ->
+        {
+            for (int i = 0; i < list.size(); i++) {
+                ServiceEvent event = list.get(i);
+                if (event.getName().equals(serviceEvent.getName())) {
+                    list.remove(i);
+                    return;
+                }
+            }
+        });
     }
 
     @Override
@@ -60,5 +63,9 @@ public class DnsDiscoveryService
     public void subTypeForServiceTypeAdded(ServiceEvent event) {
         logger.info("Service sub type added:" + event.getType());
         jmdns.addServiceListener(event.getType(), this);
+    }
+
+    public Map<String, List<ServiceEvent>> getServices() {
+        return services;
     }
 }

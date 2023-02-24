@@ -15,7 +15,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class HostsConfigurationLookup
@@ -30,8 +29,7 @@ public class HostsConfigurationLookup
     public CompletableFuture<List<URI>> resolve(URI uri) {
 
         String host = uri.getHost();
-        if (host == null)
-        {
+        if (host == null) {
             host = uri.getAuthority();
         }
         if (host != null) {
@@ -44,7 +42,7 @@ public class HostsConfigurationLookup
                 } else if (lookup instanceof ArrayNode an) {
                     List<URI> addresses = new ArrayList<>();
                     for (JsonNode jsonNode : an) {
-                        InetSocketAddress inetSocketAddress = Sockets.getInetSocketAddress(lookup.textValue(), uri.getPort());
+                        InetSocketAddress inetSocketAddress = Sockets.getInetSocketAddress(jsonNode.textValue(), uri.getPort());
                         URI newUri = new URI(uri.getScheme(), uri.getUserInfo(), inetSocketAddress.getAddress().getHostAddress(), inetSocketAddress.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
                         addresses.add(newUri);
                     }

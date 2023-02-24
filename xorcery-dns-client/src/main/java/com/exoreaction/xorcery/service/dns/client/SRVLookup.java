@@ -5,6 +5,7 @@ import org.xbill.DNS.Record;
 import org.xbill.DNS.*;
 import org.xbill.DNS.lookup.LookupResult;
 import org.xbill.DNS.lookup.LookupSession;
+import org.xbill.DNS.lookup.NoSuchDomainException;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -28,13 +29,13 @@ public class SRVLookup
     @Override
     public CompletableFuture<List<URI>> resolve(URI uri) {
 
-        if (!uri.getAuthority().startsWith("_"))
-        {
+        String authority = uri.getAuthority();
+        if (!authority.startsWith("_")) {
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
 
         try {
-            LookupResult lookupResult = lookupSession.lookupAsync(Name.fromString(uri.getAuthority()), Type.SRV).toCompletableFuture().join();
+            LookupResult lookupResult = lookupSession.lookupAsync(Name.fromString(authority), Type.SRV).toCompletableFuture().join();
 
             if (lookupResult.getRecords().isEmpty()) {
                 return CompletableFuture.completedFuture(Collections.emptyList());
@@ -42,33 +43,31 @@ public class SRVLookup
                 List<URI> servers = new ArrayList<>();
 
                 // Get TXT record
-                LookupResult txtResult = lookupSession.lookupAsync(Name.fromString(uri.getAuthority()), Type.TXT).toCompletableFuture().join();
-                String scheme = uri.getScheme();
+                LookupResult txtResult = lookupSession.lookupAsync(Name.fromString(authority), Type.TXT).toCompletableFuture().join();
                 String path = uri.getPath();
                 for (Record record : txtResult.getRecords()) {
-                    if (record instanceof TXTRecord txtRecord)
-                    {
+                    if (record instanceof TXTRecord txtRecord) {
                         for (String txtRecordString : txtRecord.getStrings()) {
-                            if (txtRecordString.startsWith("api_scheme="))
-                            {
-                                scheme = txtRecordString.substring("api_scheme=".length());
-                            }
-                            else if (txtRecordString.startsWith("api_path="))
-                            {
-                                path = txtRecordString.substring("api_path=".length());
+                            if (txtRecordString.startsWith("self=")) {
+                                path = txtRecordString.substring("self=".length());
                             }
                         }
                     }
                 }
 
                 for (Record record : lookupResult.getRecords()) {
-                    if (record instanceof SRVRecord srvRecord)
-                    {
+                    if (record instanceof SRVRecord srvRecord) {
+                        String scheme = uri.getScheme();
+                        String name = srvRecord.getName().toString(false);
+                        if (name.contains("_http.")) {
+                            scheme = "http";
+                        } else if (name.contains("_https.")) {
+                            scheme = "https";
+                        }
                         LookupResult serverResult = lookupSession.lookupAsync(srvRecord.getTarget(), Type.A).toCompletableFuture().join();
                         for (Record serverResultRecord : serverResult.getRecords()) {
-                            if (serverResultRecord instanceof ARecord aRecord)
-                            {
-                                servers.add(new URI(scheme, uri.getUserInfo(), ((ARecord) serverResultRecord).getAddress().getHostAddress(), srvRecord.getPort(), path, uri.getQuery(), uri.getFragment()));
+                            if (serverResultRecord instanceof ARecord aRecord) {
+                                servers.add(new URI(scheme, uri.getUserInfo(), aRecord.getAddress().getHostAddress(), srvRecord.getPort(), path, uri.getQuery(), uri.getFragment()));
                             }
                         }
                     }
@@ -84,10 +83,15 @@ public class SRVLookup
 */
 
                 return CompletableFuture.completedFuture(servers);
-//                return CompletableFuture.completedFuture(servers.stream().map(ServerEntry::address).collect(Collectors.toList()));
             }
         } catch (Throwable e) {
-            return CompletableFuture.failedFuture(e);
+            if (e.getCause() instanceof NoSuchDomainException)
+            {
+                return CompletableFuture.completedFuture(Collections.emptyList());
+            } else
+            {
+                return CompletableFuture.failedFuture(e);
+            }
         }
     }
 
