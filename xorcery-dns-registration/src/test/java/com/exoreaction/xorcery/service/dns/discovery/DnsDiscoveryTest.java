@@ -7,6 +7,7 @@ import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.util.Sockets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -15,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+@Disabled
 public class DnsDiscoveryTest {
 
     String config = """

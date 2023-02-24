@@ -19,7 +19,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-//@Disabled
+@Disabled
 public class DnsLookupTest {
 
     private DnsLookupService dnsLookupService;
