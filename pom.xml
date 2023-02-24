@@ -49,6 +49,7 @@
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
         <module>xorcery-dns-client-hk2</module>
+        <module>xorcery-dns-registration</module>
 
         <module>xorcery-jetty-client</module>
         <module>xorcery-jetty-client-hk2</module>
@@ -64,6 +65,7 @@
 
         <module>xorcery-certificates-server</module>
         <module>xorcery-certificates-client</module>
+        <module>xorcery-certificates-client-hk2</module>
 
         <module>xorcery-domainevents</module>
         <module>xorcery-domainevents-publisher</module>
