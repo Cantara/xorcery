@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.dns.client;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.glassfish.hk2.api.Factory;
 import org.xbill.DNS.*;
 import org.xbill.DNS.hosts.HostsFileParser;
 import org.xbill.DNS.lookup.LookupSession;
