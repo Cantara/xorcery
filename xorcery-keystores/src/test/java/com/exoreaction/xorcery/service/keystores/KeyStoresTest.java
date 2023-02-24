@@ -14,7 +14,7 @@ class KeyStoresTest {
     String config = "keystores:\n" +
                     "  enabled: \"{{ defaults.enabled }}\"\n" +
                     "  teststore:\n" +
-                    "    path: \"{{ home }}/target/test-classes/teststore.p12\"\n" +
+                    "    path: \"{{ home }}/target/test-classes/META-INF/teststore.p12\"\n" +
                     "    template: \"META-INF/teststore.p12\"\n" +
                     "    password: \"password\"\n";
 
