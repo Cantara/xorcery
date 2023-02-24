@@ -7,7 +7,7 @@ import org.jvnet.hk2.annotations.Service;
 import javax.jmdns.JmDNS;
 import java.io.IOException;
 
-@Service(name = "dns.discovery")
+@Service(name = "dns.client.discovery")
 @RunLevel(2)
 public class DnsDiscoveryService
     extends com.exoreaction.xorcery.service.dns.client.discovery.DnsDiscoveryService

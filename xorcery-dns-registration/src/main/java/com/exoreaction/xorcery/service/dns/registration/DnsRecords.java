@@ -30,7 +30,7 @@ public class DnsRecords {
         if (standardConfiguration.getHost().contains(".")) {
             target = Name.fromConstantString(standardConfiguration.getHost() + ".");
         } else {
-            String domain = configuration.getString("dns.domain").orElse("xorcery.test");
+            String domain = configuration.getString("dns.registration.domain").orElse("xorcery.test");
             target = Name.fromConstantString(standardConfiguration.getHost() + "." + domain + ".");
         }
         zone = new Name(target, 1);

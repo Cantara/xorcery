@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.jetty.client.CompletableFutureResponseListener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,49 +26,58 @@ public class JsonApiClient {
     private ObjectMapper objectMapper = new JsonMapper();
 
     private HttpClient httpClient;
+    private DnsLookup dnsLookup;
 
-    public JsonApiClient(HttpClient httpClient) {
+    public JsonApiClient(HttpClient httpClient, DnsLookup dnsLookup) {
         this.httpClient = httpClient;
+        this.dnsLookup = dnsLookup;
     }
 
     public CompletionStage<ResourceDocument> get(Link link) {
-        CompletableFuture<ContentResponse> future = new CompletableFuture<>();
-        httpClient.newRequest(link.getHrefAsUri())
-                .accept(MediaTypes.APPLICATION_JSON_API)
-                .method(HttpMethod.GET)
-                .send(new CompletableFutureResponseListener(future));
-        return future.thenApply(cr ->
-        {
-            try {
-                JsonNode json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
-                return new ResourceDocument((ObjectNode) json);
-            } catch (Throwable e) {
-                throw new CompletionException(e);
-            }
-        });
+        return dnsLookup.resolve(link.getHrefAsUri())
+                .thenCompose(uris ->
+                {
+                    CompletableFuture<ContentResponse> future = new CompletableFuture<>();
+                    httpClient.newRequest(uris.get(0))
+                            .accept(MediaTypes.APPLICATION_JSON_API)
+                            .method(HttpMethod.GET)
+                            .send(new CompletableFutureResponseListener(future));
+                    return future.thenApply(cr ->
+                    {
+                        try {
+                            JsonNode json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
+                            return new ResourceDocument((ObjectNode) json);
+                        } catch (Throwable e) {
+                            throw new CompletionException(e);
+                        }
+                    });
+                });
     }
 
     public CompletionStage<ResourceObject> submit(Link link, ResourceObject resourceObject) {
-
-        CompletableFuture<ContentResponse> future = new CompletableFuture<>();
-        try {
-            byte[] requestBytes = objectMapper.writeValueAsBytes(resourceObject.json());
-            httpClient.newRequest(link.getHrefAsUri())
-                    .accept(MediaTypes.APPLICATION_JSON_API)
-                    .method(HttpMethod.POST)
-                    .body(new BytesRequestContent(MediaTypes.APPLICATION_JSON_API, requestBytes))
-                    .send(new CompletableFutureResponseListener(future));
-            return future.thenApply(cr ->
-            {
-                try {
-                    JsonNode json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
-                    return new ResourceObject((ObjectNode) json);
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            });
-        } catch (JsonProcessingException e) {
-            return CompletableFuture.failedFuture(e);
-        }
+        return dnsLookup.resolve(link.getHrefAsUri())
+                .thenCompose(uris ->
+                {
+                    CompletableFuture<ContentResponse> future = new CompletableFuture<>();
+                    try {
+                        byte[] requestBytes = objectMapper.writeValueAsBytes(resourceObject.json());
+                        httpClient.newRequest(uris.get(0))
+                                .accept(MediaTypes.APPLICATION_JSON_API)
+                                .method(HttpMethod.POST)
+                                .body(new BytesRequestContent(MediaTypes.APPLICATION_JSON_API, requestBytes))
+                                .send(new CompletableFutureResponseListener(future));
+                        return future.thenApply(cr ->
+                        {
+                            try {
+                                JsonNode json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
+                                return new ResourceObject((ObjectNode) json);
+                            } catch (Throwable e) {
+                                throw new CompletionException(e);
+                            }
+                        });
+                    } catch (JsonProcessingException e) {
+                        return CompletableFuture.failedFuture(e);
+                    }
+                });
     }
 }

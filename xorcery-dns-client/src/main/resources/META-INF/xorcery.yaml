@@ -2,4 +2,7 @@ dns:
   client:
     enabled: "{{ defaults.enabled }}"
     nameservers: []
+    search: []
     hosts: {}
+    discovery:
+      enabled: "{{ dns.client.enabled }}"

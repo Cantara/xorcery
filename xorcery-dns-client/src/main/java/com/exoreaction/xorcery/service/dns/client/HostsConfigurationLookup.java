@@ -36,14 +36,12 @@ public class HostsConfigurationLookup
             try {
                 JsonNode lookup = hosts.get(host);
                 if (lookup instanceof TextNode) {
-                    InetSocketAddress inetSocketAddress = Sockets.getInetSocketAddress(lookup.textValue(), uri.getPort());
-                    URI newUri = new URI(uri.getScheme(), uri.getUserInfo(), inetSocketAddress.getAddress().getHostAddress(), inetSocketAddress.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
+                    URI newUri = toURI(lookup.textValue(), uri);
                     return CompletableFuture.completedFuture(List.of(newUri));
                 } else if (lookup instanceof ArrayNode an) {
                     List<URI> addresses = new ArrayList<>();
                     for (JsonNode jsonNode : an) {
-                        InetSocketAddress inetSocketAddress = Sockets.getInetSocketAddress(jsonNode.textValue(), uri.getPort());
-                        URI newUri = new URI(uri.getScheme(), uri.getUserInfo(), inetSocketAddress.getAddress().getHostAddress(), inetSocketAddress.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
+                        URI newUri = toURI(jsonNode.textValue(), uri);
                         addresses.add(newUri);
                     }
                     return CompletableFuture.completedFuture(addresses);
@@ -53,5 +51,16 @@ public class HostsConfigurationLookup
             }
         }
         return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    private URI toURI(String jsonText, URI uri) throws URISyntaxException {
+        if (jsonText.contains("://"))
+        {
+            return URI.create(jsonText);
+        } else
+        {
+            InetSocketAddress inetSocketAddress = Sockets.getInetSocketAddress(jsonText, uri.getPort());
+            return new URI(uri.getScheme(), uri.getUserInfo(), inetSocketAddress.getAddress().getHostAddress(), inetSocketAddress.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
+        }
     }
 }

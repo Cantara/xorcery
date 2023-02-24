@@ -3,6 +3,7 @@ dns:
   client.enabled: true
   client.nameservers:
     - 127.0.0.1:53
+  registration.announce.enabled: false
   server:
     registration.key:
       name: xorcery.test

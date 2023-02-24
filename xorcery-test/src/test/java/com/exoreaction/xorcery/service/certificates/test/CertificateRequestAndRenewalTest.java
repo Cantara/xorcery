@@ -18,16 +18,15 @@ import java.net.URI;
 @Disabled
 public class CertificateRequestAndRenewalTest {
 
+    int managerPort = Sockets.nextFreePort();
     String config = """
             dns.client.hosts:
                 .server1.xorcery.test: 127.0.0.1
+                _certificates: https://127.0.0.1:""" + managerPort +"""
+            
             dns.server.enabled: false
-            dns.server.discovery.enabled: false
-            dns.server.multicast.enabled: false
-            dns.server.registration.enabled: false
-            dns.server.registration.key:
-                                name: xorcery.test
-                                secret: BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg==
+            dns.client.discovery.enabled: false
+            dns.registration.announce.enabled: false
             jetty.client:
                 enabled: true
                 ssl:
@@ -43,10 +42,9 @@ public class CertificateRequestAndRenewalTest {
 
         //System.setProperty("javax.net.debug", "ssl,handshake");
 
-        int managerPort = Sockets.nextFreePort();
-        managerPort = 8443;
+        StandardConfigurationBuilder configurationBuilder = new StandardConfigurationBuilder();
         Configuration configuration1 = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .with(configurationBuilder.addTestDefaultsWithYaml(config))
                 .add("id", "xorcery1")
                 .add("host", "server1.xorcery.test")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
@@ -58,7 +56,7 @@ public class CertificateRequestAndRenewalTest {
                 .build();
         System.out.println(StandardConfigurationBuilder.toYaml(configuration1));
         Configuration configuration2 = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .with(configurationBuilder.addTestDefaultsWithYaml(config))
                 .add("id", "xorcery2")
                 .add("host", "server2.xorcery.test")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
@@ -67,7 +65,7 @@ public class CertificateRequestAndRenewalTest {
                 .add("keystores.truststore.path", "META-INF/truststore.p12")
                 .add("certificates.client.enabled", true)
                 .add("certificates.client.renewonstartup", true)
-                .add("certificates.client.host", "https://127.0.0.1:" + managerPort)
+                .add("certificates.client.uri", "srv://_certificates")
                 .build();
 //        System.out.println(StandardConfigurationBuilder.toYaml(configuration2));
         try (Xorcery xorcery1 = new Xorcery(configuration1)) {

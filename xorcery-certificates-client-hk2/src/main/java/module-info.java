@@ -9,4 +9,5 @@ open module xorcery.certificates.client.hk2 {
     requires org.glassfish.hk2.api;
     requires xorcery.keystores;
     requires xorcery.configuration.api;
+    requires xorcery.dns.client;
 }

@@ -7,6 +7,7 @@ import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,30 +52,31 @@ public class CertificatesClientService {
 
     public CertificatesClientService(KeyStores keyStores,
                                      HttpClient httpClient,
+                                     DnsLookupService dnsLookupService,
                                      Configuration configuration) throws KeyStoreException {
         this.keyStore = keyStores.getKeyStore("keystores.keystore");
         this.keyStores = keyStores;
         this.configuration = configuration;
         this.alias = configuration.getString("client.ssl.alias").orElse("self");
 
-        this.client = new JsonApiClient(httpClient);
+        this.client = new JsonApiClient(httpClient, dnsLookupService);
 
         if (keyStore.containsAlias(alias)) {
             // Renewal?
-            configuration.getString("certificates.client.host")
+            configuration.getString("certificates.client.uri")
                     .map(this::renewCertificate)
                     .ifPresent(CompletableFuture::join);
 
         } else {
             // Request
-            configuration.getString("certificates.client.host")
+            configuration.getString("certificates.client.uri")
                     .map(this::requestCertificate)
                     .ifPresent(CompletableFuture::join);
         }
     }
 
-    public CompletableFuture<Void> requestCertificate(String certificatesHost) {
-        return client.get(new Link("self", certificatesHost))
+    public CompletableFuture<Void> requestCertificate(String certificatesUri) {
+        return client.get(new Link("self", certificatesUri))
                 .thenApply(ServerResourceDocument::new)
                 .thenApply(this::getCertificatesRequest)
                 .thenCompose(this::sendCertificateRequest)

@@ -12,4 +12,5 @@ open module xorcery.certificates.client {
     requires xorcery.jetty.client;
     requires xorcery.keystores;
     requires xorcery.jsonapi;
+    requires xorcery.dns.client;
 }
