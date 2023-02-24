@@ -13,7 +13,7 @@ public class SRVConnectorProvider
     private String scheme;
     private ConnectorProvider delegateProvider;
 
-    public SRVConnectorProvider(DnsLookup dnsLookup, String scheme, ConnectorProvider delegateProvider) {
+    public SRVConnectorProvider(DnsLookupService dnsLookup, String scheme, ConnectorProvider delegateProvider) {
         this.dnsLookup = dnsLookup;
         this.scheme = scheme;
         this.delegateProvider = delegateProvider;

@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.jersey.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.UriBuilder;

@@ -1,10 +1,12 @@
 package com.exoreaction.xorcery.service.jersey.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.Factory;
@@ -26,13 +28,13 @@ public class ClientBuilderFactory
     private HttpClient client;
     private Configuration configuration;
     private InstantiationService instantiationService;
-    private IterableProvider<DnsLookup> dnsLookups;
+    private Provider<DnsLookupService> dnsLookups;
 
     @Inject
     public ClientBuilderFactory(HttpClient client,
                                 Configuration configuration,
                                 InstantiationService instantiationService,
-                                IterableProvider<DnsLookup> dnsLookups) {
+                                Provider<DnsLookupService> dnsLookups) {
         this.client = client;
         this.configuration = configuration;
         this.instantiationService = instantiationService;
@@ -65,7 +67,7 @@ public class ClientBuilderFactory
             }
         });
 
-        DnsLookup dnsLookup = dnsLookups.get();
+        DnsLookupService dnsLookup = dnsLookups.get();
 
         JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
         String scheme = configuration.getBoolean("client.ssl.enabled").map(enabled -> enabled ? "https" : "http").orElse("http");
