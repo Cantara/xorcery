@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.client.hk2;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.common.LocalStreamFactories;
@@ -23,7 +24,7 @@ public class ReactiveStreamsClientService extends com.exoreaction.xorcery.servic
     public ReactiveStreamsClientService(Configuration configuration,
                                         MessageWorkers messageWorkers,
                                         HttpClient httpClient,
-                                        DnsLookup dnsLookup,
+                                        DnsLookupService dnsLookup,
                                         Provider<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
         super(configuration, messageWorkers, httpClient, dnsLookup, localStreamFactoriesProvider::get);
     }
