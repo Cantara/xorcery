@@ -4,7 +4,10 @@ import com.exoreaction.xorcery.builders.WithContext;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 
 /**
  * @author rickardoberg
@@ -42,5 +45,24 @@ public interface StandardConfiguration
 
     default URI getServerUri() {
         return context().getURI("jetty.server.uri").orElseThrow();
+    }
+
+    default InetAddress getIp()
+    {
+        return context().getString("ip").map(ip ->
+        {
+            try {
+                return InetAddress.getByName(ip);
+            } catch (UnknownHostException e) {
+                throw new UncheckedIOException(e);
+            }
+        }).orElseGet(()->
+        {
+            try {
+                return InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 }
