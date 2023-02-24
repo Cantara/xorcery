@@ -25,7 +25,12 @@ public class ALookup
     @Override
     public CompletableFuture<List<URI>> resolve(URI uri) {
         try {
-            return lookupSession.lookupAsync(Name.fromString(uri.getHost()), Type.A)
+            String host = uri.getHost();
+            if (host == null)
+            {
+                return CompletableFuture.completedFuture(Collections.emptyList());
+            }
+            return lookupSession.lookupAsync(Name.fromString(host), Type.A)
                     .<List<URI>>thenApply(lookupResult ->
                     {
                         if (lookupResult.getRecords().isEmpty()) {
