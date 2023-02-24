@@ -2,9 +2,6 @@ package com.exoreaction.xorcery.service.dns.registration;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.jsonapi.model.Link;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
-import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
@@ -16,7 +13,6 @@ import org.xbill.DNS.Record;
 import org.xbill.DNS.*;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 
@@ -27,15 +23,12 @@ public class DnsRegistrationService
 
     private final Resolver resolver;
     private final Name zone;
-    private final Name target;
-    private Configuration configuration;
-    private List<Record> registeredRecords = new ArrayList<>();
+    private final DnsRecords dnsRecords;
 
     @Inject
-    public DnsRegistrationService(
-            Configuration configuration,
-            ServiceResourceObjects serviceResourceObjects) throws IOException {
-        this.configuration = configuration;
+    public DnsRegistrationService(DnsRecords dnsRecords,
+                                  Configuration configuration) throws IOException {
+        this.dnsRecords = dnsRecords;
 
         resolver = getResolver(configuration);
 
@@ -43,38 +36,14 @@ public class DnsRegistrationService
         msg.getHeader().setOpcode(Opcode.UPDATE);
         StandardConfiguration standardConfiguration = () -> configuration;
 
-        if (standardConfiguration.getHost().contains(".")) {
-            target = Name.fromConstantString(standardConfiguration.getHost() + ".");
-        } else {
-            String domain = configuration.getString("dns.domain").orElse("xorcery.test");
-            target = Name.fromConstantString(standardConfiguration.getHost() + "." + domain + ".");
-        }
-        zone = new Name(target, 1);
+        String domain = configuration.getString("dns.domain").orElse("xorcery.test");
+        zone = Name.fromConstantString(domain + ".");
 
         Record soa = Record.newRecord(zone, Type.SOA, DClass.IN);
         msg.addRecord(soa, Section.ZONE);
 
-        // A Record
-        msg.addRecord(new ARecord(target, DClass.IN, 60, InetAddress.getLocalHost()), Section.UPDATE);
-
-        // SRV Records
-        for (ServiceResourceObject serviceResource : serviceResourceObjects.getServiceResources()) {
-
-            String type = serviceResource.getServiceIdentifier().resourceObjectIdentifier().getType();
-            int weight = configuration.getInteger(type + ".srv.weight").orElse(1);
-            int priority = configuration.getInteger(type + ".srv.priority").orElse(1);
-
-            Map<String, Object> properties = new HashMap<>(serviceResource.getAttributes().attributes().toMap());
-            for (Link link : serviceResource.resourceObject().getLinks().getLinks()) {
-                properties.put(link.rel(), link.getHref());
-            }
-
-            String serviceType = "_" + type + "._tcp." + zone.toString(false);
-
-            Name serviceName = Name.fromString(serviceType);
-            SRVRecord srvRecord = new SRVRecord(serviceName, DClass.IN, 60, priority, weight, standardConfiguration.getServerUri().getPort(), target);
-            msg.addRecord(srvRecord, Section.UPDATE);
-            registeredRecords.add(srvRecord);
+        for (Record record : dnsRecords.getRecords()) {
+            msg.addRecord(record, Section.UPDATE);
         }
 
         LogManager.getLogger(getClass()).debug("Update:" + msg);
@@ -125,13 +94,14 @@ public class DnsRegistrationService
             Record soa = Record.newRecord(zone, Type.SOA, DClass.IN);
             msg.addRecord(soa, Section.ZONE);
 
+/*
             // Remove A record for this server
             msg.addRecord(Record.newRecord(target, Type.A, DClass.ANY, 0), Section.UPDATE);
+*/
 
             // Remove SRV records for this server
-            for (Record registeredRecord : registeredRecords) {
-                msg.addRecord(Record.newRecord(registeredRecord.getName(), Type.SRV, DClass.NONE, 0, registeredRecord.rdataToWireCanonical()), Section.UPDATE);
-// Delete all records for this service                msg.addRecord(Record.newRecord(registeredRecord.getName(), Type.SRV, DClass.ANY, 0), Section.UPDATE);
+            for (Record registeredRecord : dnsRecords.getRecords()) {
+                msg.addRecord(Record.newRecord(registeredRecord.getName(), registeredRecord.getType(), DClass.NONE, 0, registeredRecord.rdataToWireCanonical()), Section.UPDATE);
             }
 
             LogManager.getLogger(getClass()).debug("Delete:" + msg);

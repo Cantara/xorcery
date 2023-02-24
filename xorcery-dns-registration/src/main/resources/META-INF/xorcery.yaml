@@ -1,0 +1,6 @@
+dns:
+  enabled: "{{ defaults.enabled }}"
+  registration:
+    enabled: "{{ dns.enabled }}"
+    announce:
+      enabled: "{{ dns.registration.enabled }}"
