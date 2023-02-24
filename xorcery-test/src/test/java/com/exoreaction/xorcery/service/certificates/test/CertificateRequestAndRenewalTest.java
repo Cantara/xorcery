@@ -67,7 +67,7 @@ public class CertificateRequestAndRenewalTest {
                 .add("keystores.truststore.path", "META-INF/truststore.p12")
                 .add("certificates.client.enabled", true)
                 .add("certificates.client.renewonstartup", true)
-                .add("certificates.client.host", "https://192.168.1.107:" + managerPort)
+                .add("certificates.client.host", "https://127.0.0.1:" + managerPort)
                 .build();
 //        System.out.println(StandardConfigurationBuilder.toYaml(configuration2));
         try (Xorcery xorcery1 = new Xorcery(configuration1)) {

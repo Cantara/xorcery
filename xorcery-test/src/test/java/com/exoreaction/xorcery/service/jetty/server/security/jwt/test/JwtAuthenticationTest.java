@@ -26,6 +26,10 @@ import java.util.Date;
 public class JwtAuthenticationTest {
     String config = """
             keystores.enabled: true
+            jetty.server.ssl.enabled: false
+            jetty.server.security.enabled: true
+            jetty.server.security.method: "jwt"
+            jetty.server.security.jwt.enabled: true                        
             """;
 
     @Inject
@@ -42,11 +46,7 @@ public class JwtAuthenticationTest {
         Configuration serverConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.enabled", false)
-                .add("jetty.server.security.enabled", true)
-                .add("jetty.server.security.method", "jwt")
-                .add("jwt.enabled", true)
-                .add("jwt.issuers", JsonNodeFactory.instance.objectNode().set("authentication.xorcery.test", JsonNodeFactory.instance.textNode(publicKey)))
+                .add("jetty.server.security.jwt.issuers", JsonNodeFactory.instance.objectNode().set("authentication.xorcery.test", JsonNodeFactory.instance.textNode(publicKey)))
                 .build();
         System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
         try (Xorcery server = new Xorcery(serverConfiguration)) {

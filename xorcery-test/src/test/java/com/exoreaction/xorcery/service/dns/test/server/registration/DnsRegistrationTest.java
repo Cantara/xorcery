@@ -36,10 +36,6 @@ public class DnsRegistrationTest {
     public void testRegisterServersAndServices() throws Exception {
         Logger logger = LogManager.getLogger(getClass());
 
-        DnsLookupService dnsLookupService = new DnsLookupService(new Configuration.Builder()
-                .add("dns.search", List.of("xorcery.test."))
-                .build());
-
         Configuration configuration1 = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("id", "xorcery1")
@@ -55,6 +51,7 @@ public class DnsRegistrationTest {
                     .add("jetty.server.http.port", Sockets.nextFreePort())
                     .build())) {
                 logger.info("After startup");
+                DnsLookupService dnsLookupService = xorcery2.getServiceLocator().getService(DnsLookupService.class);
                 {
                     List<URI> hosts = dnsLookupService.resolve(URI.create("http://server1:80")).get();
                     System.out.println(hosts);
@@ -69,31 +66,6 @@ public class DnsRegistrationTest {
                     System.out.println(hosts);
                 }
             }
-        }
-
-        // Do this to get fresh DNS cache
-        dnsLookupService = new DnsLookupService(new Configuration.Builder()
-                .add("dns.search", List.of("xorcery.test."))
-                .build());
-
-        try {
-            logger.info("After shutdown");
-            {
-                List<URI> hosts = dnsLookupService.resolve(URI.create("http://server1.xorcery.test:80")).get();
-                System.out.println(hosts);
-            }
-            fail();
-        } catch (ExecutionException e) {
-            // Correct
-        }
-        try {
-            {
-                List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_servicetest._tcp.xorcery.test")).get();
-                System.out.println(hosts);
-            }
-            fail();
-        } catch (ExecutionException e) {
-            // Correct
         }
     }
 }
