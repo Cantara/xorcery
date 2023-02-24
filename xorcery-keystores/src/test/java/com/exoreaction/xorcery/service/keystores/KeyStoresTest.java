@@ -15,7 +15,7 @@ class KeyStoresTest {
             keystores:
               enabled: "{{ defaults.enabled }}"
               teststore:
-                path: "{{ home }}/target/test-classes/teststore.p12"
+                path: "{{ home }}/target/test-classes/META-INF/teststore.p12"
                 template: "META-INF/teststore.p12"
                 password: "password"
                         """;
