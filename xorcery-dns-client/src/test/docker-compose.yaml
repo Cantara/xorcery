@@ -4,8 +4,9 @@ services:
   xorcery-bind9:
     image: docker.io/internetsystemsconsortium/bind9:9.19
     ports:
-      - "53:53/udp"
-      - "53:53/tcp"
+      - target: 53
+        published: 8853
+        protocol: udp
     volumes:
       - "./bind:/etc/bind"
       - bind9_cache:/var/cache/bind

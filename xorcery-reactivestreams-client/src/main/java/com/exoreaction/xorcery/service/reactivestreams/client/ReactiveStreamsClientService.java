@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.common.LocalStreamFactories;
@@ -37,7 +38,7 @@ public class ReactiveStreamsClientService
     public ReactiveStreamsClientService(Configuration configuration,
                                         MessageWorkers messageWorkers,
                                         HttpClient httpClient,
-                                        DnsLookup dnsLookup,
+                                        DnsLookupService dnsLookup,
                                         Supplier<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
         super(messageWorkers);
         this.dnsLookup = dnsLookup;

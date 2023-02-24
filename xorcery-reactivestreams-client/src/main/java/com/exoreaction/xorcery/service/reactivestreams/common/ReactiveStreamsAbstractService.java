@@ -57,11 +57,11 @@ public abstract class ReactiveStreamsAbstractService {
     }
 
     protected Type getEventType(Type type) {
-        return type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class) ? pt.getActualTypeArguments()[0] : type;
+        return type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(WithResult.class) ? ((ParameterizedType) type).getActualTypeArguments()[0] : type;
     }
 
     protected Optional<Type> getResultType(Type type) {
-        return Optional.ofNullable(type instanceof ParameterizedType pt && pt.getRawType().equals(WithResult.class) ? pt.getActualTypeArguments()[1] : null);
+        return Optional.ofNullable(type instanceof ParameterizedType && ((ParameterizedType) type).getRawType().equals(WithResult.class) ? ((ParameterizedType) type).getActualTypeArguments()[1] : null);
     }
 
     protected MessageWriter<Object> getWriter(Type type) {

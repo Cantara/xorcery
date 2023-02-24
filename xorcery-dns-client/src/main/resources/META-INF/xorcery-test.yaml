@@ -1,3 +1,4 @@
 dns:
-  server:
-     port: 8853
+  client:
+    search:
+      - "xorcery.test"

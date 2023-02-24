@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.jetty.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -25,7 +25,7 @@ public class HttpClientFactory {
     private final Logger logger = LogManager.getLogger(getClass());
     private HttpClient client;
 
-    public HttpClientFactory(Configuration configuration, Supplier<DnsLookup> dnsLookup, Supplier<SslContextFactory.Client> clientSslContextFactoryProvider) throws Exception {
+    public HttpClientFactory(Configuration configuration, Supplier<DnsLookupService> dnsLookup, Supplier<SslContextFactory.Client> clientSslContextFactoryProvider) throws Exception {
 
         Configuration clientConfig = configuration.getConfiguration("jetty.client");
 

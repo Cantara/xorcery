@@ -1,7 +1,7 @@
 certificates:
   client:
     enabled: "{{ defaults.enabled }}"
-    host: "srv://_certificates"
+    uri: "srv://_certificates"
     renewonstartup: false
 keystores:
   keystore:

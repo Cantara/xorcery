@@ -11,14 +11,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 class KeyStoresTest {
 
-    String config = """
-            keystores:
-              enabled: "{{ defaults.enabled }}"
-              teststore:
-                path: "{{ home }}/target/test-classes/teststore.p12"
-                template: "META-INF/teststore.p12"
-                password: "password"
-                        """;
+    String config = "keystores:\n" +
+                    "  enabled: \"{{ defaults.enabled }}\"\n" +
+                    "  teststore:\n" +
+                    "    path: \"{{ home }}/target/test-classes/teststore.p12\"\n" +
+                    "    template: \"META-INF/teststore.p12\"\n" +
+                    "    password: \"password\"\n";
 
     @Test
     public void testKeyStoreTemplate() {

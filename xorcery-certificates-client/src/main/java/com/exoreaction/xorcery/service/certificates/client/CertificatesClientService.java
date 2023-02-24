@@ -1,19 +1,14 @@
 package com.exoreaction.xorcery.service.certificates.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import com.exoreaction.xorcery.server.model.ServerResourceDocument;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
-import jakarta.inject.Inject;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -28,13 +23,18 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
-import org.glassfish.hk2.runlevel.RunLevel;
-import org.jvnet.hk2.annotations.Service;
+import org.eclipse.jetty.client.HttpClient;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.PrivateKey;
+import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +46,6 @@ import java.util.function.Consumer;
 
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
-@Service(name = "certificates.client")
-@RunLevel(value = 2)
 public class CertificatesClientService {
 
     private final Logger logger = LogManager.getLogger(getClass());
@@ -58,37 +56,33 @@ public class CertificatesClientService {
     private final JsonApiClient client;
     private final KeyStore keyStore;
 
-    @Inject
     public CertificatesClientService(KeyStores keyStores,
-                                     ClientBuilder clientBuilder,
+                                     HttpClient httpClient,
+                                     DnsLookupService dnsLookupService,
                                      Configuration configuration) throws KeyStoreException {
         this.keyStore = keyStores.getKeyStore("keystores.keystore");
         this.keyStores = keyStores;
         this.configuration = configuration;
         this.alias = configuration.getString("client.ssl.alias").orElse("self");
 
-        Client client = clientBuilder
-                .register(JsonElementMessageBodyReader.class)
-                .register(JsonElementMessageBodyWriter.class)
-                .build();
-        this.client = new JsonApiClient(client);
+        this.client = new JsonApiClient(httpClient, dnsLookupService);
 
         if (keyStore.containsAlias(alias)) {
             // Renewal?
-            configuration.getString("certificates.client.host")
+            configuration.getString("certificates.client.uri")
                     .map(this::renewCertificate)
                     .ifPresent(CompletableFuture::join);
 
         } else {
             // Request
-            configuration.getString("certificates.client.host")
+            configuration.getString("certificates.client.uri")
                     .map(this::requestCertificate)
                     .ifPresent(CompletableFuture::join);
         }
     }
 
-    public CompletableFuture<Void> requestCertificate(String certificatesHost) {
-        return client.get(new Link("self", certificatesHost))
+    public CompletableFuture<Void> requestCertificate(String certificatesUri) {
+        return client.get(new Link("self", certificatesUri))
                 .thenApply(ServerResourceDocument::new)
                 .thenApply(this::getCertificatesRequest)
                 .thenCompose(this::sendCertificateRequest)

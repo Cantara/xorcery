@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.jetty.client;
 
+import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import org.eclipse.jetty.util.Promise;
 import org.eclipse.jetty.util.SocketAddressResolver;
@@ -14,7 +15,7 @@ public class DnsLookupSocketAddressResolver
         implements SocketAddressResolver {
     private final DnsLookup dnsLookup;
 
-    public DnsLookupSocketAddressResolver(DnsLookup dnsLookup) {
+    public DnsLookupSocketAddressResolver(DnsLookupService dnsLookup) {
         this.dnsLookup = dnsLookup;
     }
 

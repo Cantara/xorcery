@@ -17,6 +17,8 @@ xorcery2			A	192.168.1.107
 analytics			A	192.168.1.107
 analytics			A	127.0.0.1
 
-_analytics._tcp.xorcery.test. SRV 10 30 8080 xorcery1.xorcery.test.
-_analytics._tcp.xorcery.test. SRV 10 70 8888 xorcery2.xorcery.test.
-_analytics._tcp.xorcery.test. TXT "api_ver=v1.0,v1.1,v1.2,v1.3" "api_scheme=http" "api_path=/api/foo" "pri=0" "api_auth=false"
+_analytics._sub._http._tcp.xorcery.test. SRV 10 30 8080 xorcery1.xorcery.test.
+_analytics._sub._http._tcp.xorcery.test. SRV 10 70 8888 xorcery2.xorcery.test.
+_analytics._sub._https._tcp.xorcery.test. SRV 10 30 8443 xorcery1.xorcery.test.
+_analytics._sub._https._tcp.xorcery.test. SRV 10 70 8843 xorcery2.xorcery.test.
+_analytics._sub._http._tcp.xorcery.test. TXT "version=1.0" "self=/api/foo" "auth=jwt"
