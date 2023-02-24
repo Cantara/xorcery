@@ -4,7 +4,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-jdk11-parent</artifactId>
-    <version>0.16.3-SNAPSHOT</version>
+    <version>0.17.3</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -31,7 +31,7 @@
         <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
         <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
         <url>https://github.com/Cantara/xorcery</url>
-        <tag>HEAD</tag>
+        <tag>xorcery-jdk11-project-0.17.3</tag>
     </scm>
 
     <dependencyManagement>
