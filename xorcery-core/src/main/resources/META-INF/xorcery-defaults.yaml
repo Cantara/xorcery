@@ -2,6 +2,7 @@
 id: "{{ ENV.SERVER_ID | SYSTEM.server_id | host}}"
 name: genericserver
 host: "{{ ENV.HOSTNAME | \"server\" }}"
+ip: "{{ ENV.IP | null }}"
 domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
 environment: development
 tag: default

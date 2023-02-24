@@ -9,10 +9,7 @@ import org.glassfish.hk2.api.PopulatorPostProcessor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.DescriptorImpl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -27,9 +24,15 @@ public record ConfigurationPostPopulatorProcessor(Configuration configuration)
     @Override
     public DescriptorImpl process(ServiceLocator serviceLocator, DescriptorImpl descriptorImpl) {
 
-        if (((Object) descriptorImpl.getName()) instanceof String name) {
-            if (configuration.getBoolean(name + ".enabled")
-                    .orElseGet(() -> configuration.getBoolean("defaults.enabled").orElse(false))) {
+        String name = descriptorImpl.getName();
+        if (name != null)
+        {
+            String enabledFlag = Optional.ofNullable(descriptorImpl.getMetadata().get("enabled"))
+                    .flatMap(l -> l.stream().findFirst())
+                    .orElseGet(() -> name + ".enabled");
+
+            if (configuration.getFalsy(enabledFlag)
+                    .orElseGet(() -> configuration.getFalsy("defaults.enabled").orElse(false))) {
                 configuration.getConfiguration(name).getObjectAs("metadata", object ->
                 {
                     Map<String, List<String>> metadatas = new HashMap<>();
@@ -48,12 +51,14 @@ public record ConfigurationPostPopulatorProcessor(Configuration configuration)
                     JsonElement.toFlatMap(metadatas, "", object, mapper);
                     return metadatas;
                 }).ifPresent(descriptorImpl::addMetadata);
+                LogManager.getLogger(getClass()).debug("Enabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=false)");
                 return descriptorImpl;
             } else {
-                LogManager.getLogger(getClass()).debug("Disabled "+descriptorImpl.getImplementation()+"("+name+".enabled=false)");
+                LogManager.getLogger(getClass()).debug("Disabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=true)");
                 return null;
             }
-        } else {
+        } else
+        {
             return descriptorImpl;
         }
     }
