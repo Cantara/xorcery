@@ -2,7 +2,11 @@ package com.exoreaction.xorcery.server.model;
 
 import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.jsonapi.model.*;
+import com.exoreaction.xorcery.jsonapi.model.Attributes;
+import com.exoreaction.xorcery.jsonapi.model.Link;
+import com.exoreaction.xorcery.jsonapi.model.Links;
+import com.exoreaction.xorcery.jsonapi.model.Meta;
+import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;

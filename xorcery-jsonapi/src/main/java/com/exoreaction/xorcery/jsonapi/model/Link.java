@@ -3,8 +3,6 @@ package com.exoreaction.xorcery.jsonapi.model;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.ws.rs.core.UriBuilder;
-import org.glassfish.jersey.uri.UriTemplate;
 
 import java.net.URI;
 import java.util.Optional;
@@ -23,22 +21,6 @@ public record Link(String rel, JsonNode value) {
 
     public URI getHrefAsUri() {
         return URI.create(getHref());
-    }
-
-    public UriBuilder getHrefAsUriBuilder() {
-        return UriBuilder.fromUri(getHref());
-    }
-
-    public UriTemplate getHrefAsUriTemplate() {
-        return new UriTemplate(getHref());
-    }
-
-    public Link createURI(String... values) {
-        return new Link(rel, new UriTemplate(getHref()).createURI(values));
-    }
-
-    public boolean isTemplate() {
-        return !new UriTemplate(getHref()).getTemplateVariables().isEmpty();
     }
 
     public boolean isWebsocket() {

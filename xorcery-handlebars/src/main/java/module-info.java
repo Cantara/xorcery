@@ -17,4 +17,5 @@ open module xorcery.handlebars {
     requires com.fasterxml.jackson.databind;
     requires jakarta.inject;
     requires jakarta.ws.rs;
+    requires jersey.common;
 }

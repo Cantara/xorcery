@@ -4,4 +4,5 @@ open module xorcery.jsonapi.server.neo4j {
     requires xorcery.neo4j;
     requires org.apache.commons.lang3;
     requires xorcery.domainevents.jsonapi;
+    requires jersey.common;
 }

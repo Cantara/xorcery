@@ -1,5 +1,4 @@
 open module xorcery.service.api {
-    exports com.exoreaction.xorcery.server.model;
     exports com.exoreaction.xorcery.server.api;
 
     requires transitive xorcery.configuration.api;
