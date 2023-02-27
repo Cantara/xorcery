@@ -31,8 +31,8 @@ public class SubscribeWithResultReactiveStream
 
     private final MessageWriter<Object> resultWriter;
 
-    public SubscribeWithResultReactiveStream(String scheme,
-                                             String authority,
+    public SubscribeWithResultReactiveStream(String defaultScheme,
+                                             String authorityOrBaseUri,
                                              String streamName,
                                              Configuration subscriberConfiguration,
                                              DnsLookup dnsLookup,
@@ -44,7 +44,7 @@ public class SubscribeWithResultReactiveStream
                                              ScheduledExecutorService timer,
                                              ByteBufferPool pool,
                                              CompletableFuture<Void> result) {
-        super(scheme, authority, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, timer, pool, result);
+        super(defaultScheme, authorityOrBaseUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, timer, pool, result);
         this.resultWriter = resultWriter;
     }
 

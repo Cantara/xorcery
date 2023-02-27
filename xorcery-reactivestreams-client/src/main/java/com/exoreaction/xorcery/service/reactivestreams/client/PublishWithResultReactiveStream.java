@@ -29,8 +29,8 @@ public class PublishWithResultReactiveStream
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
 
-    public PublishWithResultReactiveStream(String scheme,
-                                           String authority,
+    public PublishWithResultReactiveStream(String defaultScheme,
+                                           String authorityOrBaseUri,
                                            String streamName,
                                            Configuration publisherConfiguration,
                                            DnsLookup dnsLookup,
@@ -42,7 +42,7 @@ public class PublishWithResultReactiveStream
                                            ScheduledExecutorService timer,
                                            ByteBufferPool pool,
                                            CompletableFuture<Void> result) {
-        super(scheme, authority, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, timer, pool, result);
+        super(defaultScheme, authorityOrBaseUri, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, timer, pool, result);
         this.resultReader = resultReader;
     }
 

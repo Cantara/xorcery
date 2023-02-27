@@ -20,12 +20,14 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import javax.net.ssl.SSLHandshakeException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.Iterator;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
  * @author rickardoberg
@@ -36,6 +38,8 @@ public class PublishReactiveStream
         EventHandler<AtomicReference<Object>> {
 
     private final static Logger logger = LogManager.getLogger(PublishReactiveStream.class);
+
+    private final static Pattern uriStartsWithSchemeAndAuthorityPattern = Pattern.compile(".+://.+");
 
     protected Session session;
 
@@ -57,13 +61,13 @@ public class PublishReactiveStream
     private boolean redundancyNotificationIssued = false;
 
     protected Disruptor<AtomicReference<Object>> disruptor;
-    private String scheme;
-    private String authority;
-    private String streamName;
+    private final String scheme;
+    private final String authority;
+    private final String streamName;
     private Iterator<URI> uriIterator;
 
-    public PublishReactiveStream(String scheme,
-                                 String authority,
+    public PublishReactiveStream(String defaultScheme,
+                                 String authorityOrBaseUri,
                                  String streamName,
                                  Configuration publisherConfiguration,
                                  DnsLookup dnsLookup,
@@ -74,7 +78,6 @@ public class PublishReactiveStream
                                  ScheduledExecutorService timer,
                                  ByteBufferPool pool,
                                  CompletableFuture<Void> result) {
-        this.authority = authority;
         this.streamName = streamName;
         this.publisherConfiguration = publisherConfiguration;
         this.dnsLookup = dnsLookup;
@@ -85,8 +88,20 @@ public class PublishReactiveStream
         this.timer = timer;
         this.pool = pool;
         this.result = result;
-        this.marker = MarkerManager.getMarker(authority + "/" + streamName);
-        this.scheme = publisherConfiguration.getString("reactivestreams.client.scheme").orElse(scheme);
+        this.marker = MarkerManager.getMarker(authorityOrBaseUri + "/" + streamName);
+
+        if (uriStartsWithSchemeAndAuthorityPattern.matcher(authorityOrBaseUri).matches()) {
+            URI uri = URI.create(authorityOrBaseUri);
+            this.scheme = uri.getScheme();
+            if (uri.getPath() != null) {
+                this.authority = uri.getAuthority() + uri.getPath();
+            } else {
+                this.authority = uri.getAuthority();
+            }
+        } else {
+            this.authority = authorityOrBaseUri;
+            this.scheme = publisherConfiguration.getString("reactivestreams.client.scheme").orElse(defaultScheme);
+        }
 
         this.disruptor = new Disruptor<>(AtomicReference::new, publisherConfiguration.getInteger("disruptor.size").orElse(512), new NamedThreadFactory("PublishWebSocketDisruptor-" + marker.getName() + "-"));
         disruptor.handleEventsWith(this);
@@ -151,6 +166,35 @@ public class PublishReactiveStream
 
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
+
+            if (subscriberWebsocketUri.getScheme() != null) {
+                if (subscriberWebsocketUri.getScheme().equals("https")) {
+                    try {
+                        subscriberWebsocketUri = new URI(
+                                "wss",
+                                subscriberWebsocketUri.getAuthority(),
+                                subscriberWebsocketUri.getPath(),
+                                subscriberWebsocketUri.getQuery(),
+                                subscriberWebsocketUri.getFragment()
+                        );
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if (subscriberWebsocketUri.getScheme().equals("http")) {
+                    try {
+                        subscriberWebsocketUri = new URI(
+                                "ws",
+                                subscriberWebsocketUri.getAuthority(),
+                                subscriberWebsocketUri.getPath(),
+                                subscriberWebsocketUri.getQuery(),
+                                subscriberWebsocketUri.getFragment()
+                        );
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
             logger.info(marker, "Trying " + subscriberWebsocketUri);
             try {
                 webSocketClient.connect(this, subscriberWebsocketUri)

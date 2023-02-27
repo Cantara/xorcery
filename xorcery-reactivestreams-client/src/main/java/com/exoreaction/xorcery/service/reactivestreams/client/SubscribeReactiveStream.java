@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.Base64;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 public class SubscribeReactiveStream
         implements WebSocketPartialListener,
@@ -35,6 +37,8 @@ public class SubscribeReactiveStream
         Flow.Subscription {
 
     private static final Logger logger = LogManager.getLogger(SubscribeReactiveStream.class);
+
+    private final static Pattern uriStartsWithSchemeAndAuthorityPattern = Pattern.compile(".+://.+");
 
     private final String scheme;
     private final String authority;
@@ -58,8 +62,8 @@ public class SubscribeReactiveStream
     private Iterator<URI> uriIterator;
     protected Session session;
 
-    public SubscribeReactiveStream(String scheme,
-                                   String authority,
+    public SubscribeReactiveStream(String defaultScheme,
+                                   String authorityOrBaseUri,
                                    String streamName,
                                    Configuration subscriberConfiguration,
                                    DnsLookup dnsLookup,
@@ -70,7 +74,6 @@ public class SubscribeReactiveStream
                                    ScheduledExecutorService timer,
                                    ByteBufferPool pool,
                                    CompletableFuture<Void> result) {
-        this.authority = authority;
         this.streamName = streamName;
         this.subscriberConfiguration = subscriberConfiguration;
         this.dnsLookup = dnsLookup;
@@ -82,8 +85,21 @@ public class SubscribeReactiveStream
         this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
         this.byteBufferPool = pool;
         this.result = result;
-        this.marker = MarkerManager.getMarker(authority + "/" + streamName);
-        this.scheme = subscriberConfiguration.getString("reactivestreams.client.scheme").orElse(scheme);
+
+        if (uriStartsWithSchemeAndAuthorityPattern.matcher(authorityOrBaseUri).matches()) {
+            URI uri = URI.create(authorityOrBaseUri);
+            this.scheme = uri.getScheme();
+            if (uri.getPath() != null) {
+                this.authority = uri.getAuthority() + uri.getPath();
+            } else {
+                this.authority = uri.getAuthority();
+            }
+        } else {
+            this.authority = authorityOrBaseUri;
+            this.scheme = subscriberConfiguration.getString("reactivestreams.client.scheme").orElse(defaultScheme);
+        }
+
+        this.marker = MarkerManager.getMarker(this.authority + "/" + streamName);
 
         this.result.exceptionally(throwable ->
         {
@@ -141,17 +157,44 @@ public class SubscribeReactiveStream
         }).thenAccept(this::connect).exceptionally(this::exceptionally);
     }
 
-    private void connect(Iterator<URI> subscriberURIs) {
+    private void connect(Iterator<URI> publisherURIs) {
 
-        if (subscriberURIs.hasNext()) {
-            URI subscriberWebsocketUri = subscriberURIs.next();
-            logger.info(marker, "Trying " + subscriberWebsocketUri);
+        if (publisherURIs.hasNext()) {
+            URI publisherWebsocketUri = publisherURIs.next();
+            if (publisherWebsocketUri.getScheme() != null) {
+                if (publisherWebsocketUri.getScheme().equals("https")) {
+                    try {
+                        publisherWebsocketUri = new URI(
+                                "wss",
+                                publisherWebsocketUri.getAuthority(),
+                                publisherWebsocketUri.getPath(),
+                                publisherWebsocketUri.getQuery(),
+                                publisherWebsocketUri.getFragment()
+                        );
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if (publisherWebsocketUri.getScheme().equals("http")) {
+                    try {
+                        publisherWebsocketUri = new URI(
+                                "ws",
+                                publisherWebsocketUri.getAuthority(),
+                                publisherWebsocketUri.getPath(),
+                                publisherWebsocketUri.getQuery(),
+                                publisherWebsocketUri.getFragment()
+                        );
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+            logger.info(marker, "Trying " + publisherWebsocketUri);
             try {
-                webSocketClient.connect(this, subscriberWebsocketUri)
+                webSocketClient.connect(this, publisherWebsocketUri)
                         .thenAccept(this::connected)
                         .exceptionally(this::exceptionally);
             } catch (Throwable e) {
-                logger.error(marker, "Could not subscribe to " + subscriberWebsocketUri.toASCIIString(), e);
+                logger.error(marker, "Could not subscribe to " + publisherWebsocketUri.toASCIIString(), e);
                 retry();
             }
         } else {

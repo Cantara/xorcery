@@ -29,7 +29,7 @@ public class ReactiveStreamsClientService
 
     private DnsLookup dnsLookup;
     private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
-    private final String scheme;
+    private final String defaultScheme;
     private final WebSocketClient webSocketClient;
 
     private final List<CompletableFuture<Void>> activeSubscribeProcesses = new CopyOnWriteArrayList<>();
@@ -43,7 +43,7 @@ public class ReactiveStreamsClientService
         super(messageWorkers);
         this.dnsLookup = dnsLookup;
         this.reactiveStreamsServerServiceProvider = localStreamFactoriesProvider;
-        this.scheme = configuration.getString("reactivestreams.client.scheme").orElseThrow();
+        this.defaultScheme = configuration.getString("reactivestreams.client.scheme").orElseThrow();
 
         WebSocketClient webSocketClient = new WebSocketClient(httpClient);
         webSocketClient.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idle_timeout").orElse(-1L)));
@@ -106,7 +106,7 @@ public class ReactiveStreamsClientService
         // Start publishing process
         if (resultReader != null) {
             new PublishWithResultReactiveStream(
-                    scheme, authority, streamName,
+                    defaultScheme, authority, streamName,
                     publisherConfiguration,
                     dnsLookup,
                     webSocketClient,
@@ -119,7 +119,7 @@ public class ReactiveStreamsClientService
                     result);
         } else {
             new PublishReactiveStream(
-                    scheme, authority, streamName,
+                    defaultScheme, authority, streamName,
                     publisherConfiguration,
                     dnsLookup,
                     webSocketClient,
@@ -188,7 +188,7 @@ public class ReactiveStreamsClientService
         // Start subscription process
         if (resultWriter != null) {
             new SubscribeWithResultReactiveStream(
-                    scheme, authority, streamName,
+                    defaultScheme, authority, streamName,
                     subscriberConfiguration,
                     dnsLookup,
                     webSocketClient,
@@ -202,7 +202,7 @@ public class ReactiveStreamsClientService
 
         } else {
             new SubscribeReactiveStream(
-                    scheme, authority, streamName,
+                    defaultScheme, authority, streamName,
                     subscriberConfiguration,
                     dnsLookup,
                     webSocketClient,
