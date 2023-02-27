@@ -149,7 +149,7 @@ public class SubscribeReactiveStream
         }
 
         URI uri = URI.create(scheme + "://" + authority);
-        logger.info(marker, "Connecting to " + uri);
+        logger.info(marker, "Resolving " + uri);
         dnsLookup.resolve(uri).thenApply(list ->
         {
             this.uriIterator = list.iterator();

@@ -153,8 +153,8 @@ public class PublishReactiveStream
             retry();
         }
 
-        URI uri = URI.create(scheme + "://" + authority + "/streams/subscribers/" + streamName);
-        logger.info(marker, "Connecting to " + uri);
+        URI uri = URI.create(scheme + "://" + authority);
+        logger.info(marker, "Resolving " + uri);
         dnsLookup.resolve(uri).thenApply(list ->
         {
             this.uriIterator = list.iterator();
