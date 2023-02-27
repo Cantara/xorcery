@@ -166,11 +166,11 @@ public class PublishReactiveStream
 
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
-
+            URI schemaAdjustedSubscriberWebsocketUri = subscriberWebsocketUri;
             if (subscriberWebsocketUri.getScheme() != null) {
                 if (subscriberWebsocketUri.getScheme().equals("https")) {
                     try {
-                        subscriberWebsocketUri = new URI(
+                        schemaAdjustedSubscriberWebsocketUri = new URI(
                                 "wss",
                                 subscriberWebsocketUri.getAuthority(),
                                 subscriberWebsocketUri.getPath(),
@@ -182,7 +182,7 @@ public class PublishReactiveStream
                     }
                 } else if (subscriberWebsocketUri.getScheme().equals("http")) {
                     try {
-                        subscriberWebsocketUri = new URI(
+                        schemaAdjustedSubscriberWebsocketUri = new URI(
                                 "ws",
                                 subscriberWebsocketUri.getAuthority(),
                                 subscriberWebsocketUri.getPath(),
@@ -195,12 +195,13 @@ public class PublishReactiveStream
                 }
             }
 
-            logger.info(marker, "Trying " + subscriberWebsocketUri);
+            URI effectiveSubscriberWebsocketUri = URI.create(schemaAdjustedSubscriberWebsocketUri.getScheme() + "://" + schemaAdjustedSubscriberWebsocketUri.getAuthority() + "/streams/subscribers/" + streamName);
+            logger.info(marker, "Trying " + effectiveSubscriberWebsocketUri);
             try {
-                webSocketClient.connect(this, subscriberWebsocketUri)
+                webSocketClient.connect(this, effectiveSubscriberWebsocketUri)
                         .whenComplete(this::exceptionally);
             } catch (Throwable e) {
-                logger.error(marker, "Could not subscribe to " + subscriberWebsocketUri.toASCIIString(), e);
+                logger.error(marker, "Could not subscribe to " + effectiveSubscriberWebsocketUri.toASCIIString(), e);
                 retry();
             }
         } else {

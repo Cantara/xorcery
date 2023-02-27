@@ -148,7 +148,7 @@ public class SubscribeReactiveStream
             retry();
         }
 
-        URI uri = URI.create(scheme + "://" + authority + "/streams/publishers/" + streamName);
+        URI uri = URI.create(scheme + "://" + authority);
         logger.info(marker, "Connecting to " + uri);
         dnsLookup.resolve(uri).thenApply(list ->
         {
@@ -161,10 +161,11 @@ public class SubscribeReactiveStream
 
         if (publisherURIs.hasNext()) {
             URI publisherWebsocketUri = publisherURIs.next();
+            URI schemaAdjustedPublishedWebsocketUri = publisherWebsocketUri;
             if (publisherWebsocketUri.getScheme() != null) {
                 if (publisherWebsocketUri.getScheme().equals("https")) {
                     try {
-                        publisherWebsocketUri = new URI(
+                        schemaAdjustedPublishedWebsocketUri = new URI(
                                 "wss",
                                 publisherWebsocketUri.getAuthority(),
                                 publisherWebsocketUri.getPath(),
@@ -176,7 +177,7 @@ public class SubscribeReactiveStream
                     }
                 } else if (publisherWebsocketUri.getScheme().equals("http")) {
                     try {
-                        publisherWebsocketUri = new URI(
+                        schemaAdjustedPublishedWebsocketUri = new URI(
                                 "ws",
                                 publisherWebsocketUri.getAuthority(),
                                 publisherWebsocketUri.getPath(),
@@ -188,13 +189,14 @@ public class SubscribeReactiveStream
                     }
                 }
             }
-            logger.info(marker, "Trying " + publisherWebsocketUri);
+            URI effectivePublisherWebsocketUri = URI.create(schemaAdjustedPublishedWebsocketUri.getScheme() + "://" + schemaAdjustedPublishedWebsocketUri.getAuthority() + "/streams/publishers/" + streamName);
+            logger.info(marker, "Trying " + effectivePublisherWebsocketUri);
             try {
-                webSocketClient.connect(this, publisherWebsocketUri)
+                webSocketClient.connect(this, effectivePublisherWebsocketUri)
                         .thenAccept(this::connected)
                         .exceptionally(this::exceptionally);
             } catch (Throwable e) {
-                logger.error(marker, "Could not subscribe to " + publisherWebsocketUri.toASCIIString(), e);
+                logger.error(marker, "Could not subscribe to " + effectivePublisherWebsocketUri.toASCIIString(), e);
                 retry();
             }
         } else {
