@@ -33,11 +33,15 @@ import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 import org.neo4j.logging.log4j.Log4jLogProvider;
 import org.neo4j.logging.log4j.Neo4jLoggerContext;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -67,11 +71,20 @@ public class Neo4jService
 
         Path home = neo4jConfiguration.databasePath();
         logger.info("Neo4j home:" + home);
-        Map<String, String> settings = neo4jConfiguration.settings();
+        String tmpSettingsFileName = configuration.getConfiguration("neo4jdatabase").getString("temporary_settings_file").orElseThrow();
+        Path tmpConfigFile = Path.of(tmpSettingsFileName);
+        try (FileOutputStream out = new FileOutputStream(tmpConfigFile.toFile())) {
+            Map<String, String> settings = neo4jConfiguration.settings();
+            Properties properties = new Properties();
+            properties.putAll(settings);
+            properties.store(out, null);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         managementService = new DatabaseManagementServiceBuilder(home)
                 .setUserLogProvider(new Log4jLogProvider(new Neo4jLoggerContext(LogManager.getContext(), () -> {
                 })))
-//                .loadPropertiesFromFile()setConfigRaw(settings)
+                .loadPropertiesFromFile(tmpConfigFile)
                 .build();
 
         List<DatabaseConfiguration> databases = configuration.getListAs("neo4jdatabase.databases", json -> new DatabaseConfiguration((ObjectNode) json))
