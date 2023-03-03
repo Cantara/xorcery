@@ -89,7 +89,6 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>neo4j-apoc-jpms-shaded</artifactId>
-            <version>5.2.0.2</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.eclipse.jetty</groupId>
