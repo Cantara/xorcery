@@ -1,0 +1,11 @@
+dns:
+  enabled: "{{ defaults.enabled }}"
+  registration:
+    azure:
+      enabled: "{{ dns.enabled }}"
+      tenantId: "{{ ENV.AZURE_TENANT_ID }}"
+      clientId: "{{ ENV.AZURE_CLIENT_ID }}"
+      clientSecret: "{{ ENV.AZURE_CLIENT_SECRET }}"
+      subscription: "{{ ENV.AZURE_SUBSCRIPTION }}"
+      resourceGroup: "{{ ENV.AZURE_RESOURCE_GROUP }}"
+      zone: "{{ ENV.AZURE_DNS_ZONE }}"

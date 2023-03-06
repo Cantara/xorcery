@@ -50,6 +50,7 @@
         <module>xorcery-dns-client</module>
         <module>xorcery-dns-client-hk2</module>
         <module>xorcery-dns-registration</module>
+        <module>xorcery-dns-registration-azure</module>
 
         <module>xorcery-jetty-client</module>
         <module>xorcery-jetty-client-hk2</module>

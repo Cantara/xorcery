@@ -1,0 +1,5 @@
+dns:
+  enabled: true
+  azure:
+    registration:
+      enabled: true
