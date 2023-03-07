@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
-public class JsonApiClient {
+public class AzureDnsClient {
     private static final String APPLICATION_JSON = "application/json";
     private static final String AZURE_OAUTH2_URL_PATTERN = "https://login.microsoftonline.com/%s/oauth2/v2.0/token";
     private static final String AZURE_PRIVATE_DNS_URL_PATTERN = "https://management.azure.com/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/privateDnsZones/%s/%s/%s";
@@ -28,7 +28,7 @@ public class JsonApiClient {
     private final ObjectMapper objectMapper = new JsonMapper();
     private final HttpClient httpClient;
 
-    public JsonApiClient(HttpClient httpClient) {
+    public AzureDnsClient(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
