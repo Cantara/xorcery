@@ -80,6 +80,8 @@
         <module>xorcery-jsonapi-server-neo4j</module>
         <module>xorcery-opensearch</module>
 
+        <module>xorcery-coordinator</module>
+
         <module>xorcery-test</module>
     </modules>
 
