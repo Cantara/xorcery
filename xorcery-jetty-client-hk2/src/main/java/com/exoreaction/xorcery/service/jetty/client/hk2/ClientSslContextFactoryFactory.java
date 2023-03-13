@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.hk2.api.Factory;
@@ -13,6 +14,7 @@ import org.glassfish.hk2.api.messaging.SubscribeTo;
 import org.jvnet.hk2.annotations.Service;
 
 import java.security.KeyStore;
+import java.util.Optional;
 
 @Service(name = "jetty.client.ssl")
 @MessageReceiver(KeyStore.class)
@@ -20,8 +22,8 @@ public class ClientSslContextFactoryFactory extends com.exoreaction.xorcery.serv
         implements Factory<SslContextFactory.Client>, PreDestroy {
 
     @Inject
-    public ClientSslContextFactoryFactory(Configuration configuration, KeyStores keyStores) throws Exception {
-        super(configuration, keyStores);
+    public ClientSslContextFactoryFactory(Configuration configuration, Provider<KeyStores> keyStores) throws Exception {
+        super(configuration, Optional.ofNullable(keyStores.get()));
     }
 
     @Override

@@ -1,198 +1,112 @@
 package com.exoreaction.xorcery.service.dns.registration.azure;
 
-import com.exoreaction.xorcery.service.dns.registration.azure.model.AzureDnsRecordRequest;
-import com.exoreaction.xorcery.service.dns.registration.azure.model.AzureTokenResponse;
+import com.exoreaction.xorcery.service.dns.registration.azure.model.AzureDnsRecord;
+import com.exoreaction.xorcery.service.dns.registration.azure.model.AzureDnsResponse;
+import com.exoreaction.xorcery.service.dns.registration.azure.model.RecordType;
 import com.exoreaction.xorcery.service.jetty.client.CompletableFutureResponseListener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.util.BytesRequestContent;
-import org.eclipse.jetty.client.util.FormRequestContent;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.util.Fields;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
-public class AzureDnsClient {
-    private static final String APPLICATION_JSON = "application/json";
-    private static final String AZURE_OAUTH2_URL_PATTERN = "https://login.microsoftonline.com/%s/oauth2/v2.0/token";
-    private static final String AZURE_PRIVATE_DNS_URL_PATTERN = "https://management.azure.com/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/privateDnsZones/%s/%s/%s";
+import static org.eclipse.jetty.http.MimeTypes.Type.APPLICATION_JSON;
+
+public record AzureDnsClient(
+        HttpClient httpClient,
+        String token,
+        String subscription,
+        String resourceGroup,
+        String dnsZone
+    ) {
+    private static final String AZURE_PRIVATE_DNS_URL_PATTERN = "https://management.azure.com/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/privateDnsZones/%s/%s";
     private static final String API_VERSION = "2018-09-01";
-    private final ObjectMapper objectMapper = new JsonMapper();
-    private final HttpClient httpClient;
 
-    public AzureDnsClient(HttpClient httpClient) {
-        this.httpClient = httpClient;
-    }
+    private static final ObjectMapper objectMapper = new JsonMapper();
 
-    public CompletionStage<AzureTokenResponse> token(String azureTenantId, String clientId, String clientSecret) {
+    public CompletionStage<AzureDnsResponse> listRecords(String nextLink) {
         var future = new CompletableFuture<ContentResponse>();
-        var fields = new Fields();
-        fields.put("client_id", clientId);
-        fields.put("client_secret", clientSecret);
-        fields.put("scope", "https://management.azure.com/.default");
-        fields.put("grant_type", "client_credentials");
-        httpClient.newRequest(AZURE_OAUTH2_URL_PATTERN.formatted(azureTenantId))
-            .accept(APPLICATION_JSON)
-            .method(HttpMethod.POST)
-            .body(new FormRequestContent(fields))
+        httpClient.newRequest("".equals(nextLink) ? AZURE_PRIVATE_DNS_URL_PATTERN.formatted(subscription, resourceGroup, dnsZone, "ALL") : nextLink)
+            .accept(APPLICATION_JSON.asString())
+            .param("api-version", API_VERSION)
+            .method(HttpMethod.GET)
+            .headers(headers -> headers.put(HttpHeader.AUTHORIZATION, "Bearer " + token))
             .send(new CompletableFutureResponseListener(future));
-        return future.thenApply(cr -> {
-           try {
-               var json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
-               return new AzureTokenResponse((ObjectNode) json);
-           } catch (Throwable e) {
-               throw new CompletionException(e);
-           }
-        });
+        return future.thenApply(this::handleResponse);
     }
 
-    public CompletionStage<Void> putARecord(
-        String azureSubscription, String azureResourceGroup, String azureDnsZone,
-        AzureDnsRecordRequest recordObject, String name, String token) {
+    public CompletionStage<AzureDnsResponse> putRecord(AzureDnsRecord recordObject, String name, RecordType recordType) {
         var future = new CompletableFuture<ContentResponse>();
         try {
             var requestBytes = objectMapper.writeValueAsBytes(recordObject);
-            httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(azureSubscription, azureResourceGroup, azureDnsZone, "A", name))
-                .accept(APPLICATION_JSON)
+            httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(subscription, resourceGroup, dnsZone, recordType.name()) + "/" + name)
+                .accept(APPLICATION_JSON.asString())
                 .param("api-version", API_VERSION)
                 .method(HttpMethod.PUT)
                 .headers(headers -> headers.put(HttpHeader.AUTHORIZATION, "Bearer " + token))
-                .body(new BytesRequestContent(APPLICATION_JSON, requestBytes))
+                .body(new BytesRequestContent(APPLICATION_JSON.asString(), requestBytes))
                 .send(new CompletableFutureResponseListener(future));
-            return future.thenApply(cr ->
-            {
-                try {
-                    var json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
-                    return null;
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            });
+            return future.thenApply(this::handleResponse);
         } catch (JsonProcessingException e) {
             return CompletableFuture.failedFuture(e);
         }
     }
 
-    public CompletionStage<Void> deleteARecord(
-            String azureSubscription, String azureResourceGroup, String azureDnsZone,
-            String name, String token) {
-        var future = new CompletableFuture<ContentResponse>();
-        httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(azureSubscription, azureResourceGroup, azureDnsZone, "A", name))
-            .accept(APPLICATION_JSON)
-            .param("api-version", API_VERSION)
-            .method(HttpMethod.DELETE)
-            .headers(headers -> headers.put(HttpHeader.AUTHORIZATION, "Bearer " + token))
-            .send(new CompletableFutureResponseListener(future));
-        return future.thenApply(cr ->
-        {
-            try {
-                return null;
-            } catch (Throwable e) {
-                throw new CompletionException(e);
-            }
-        });
-    }
-
-    public CompletionStage<Void> putTXTRecord(
-            String azureSubscription, String azureResourceGroup, String azureDnsZone,
-            AzureDnsRecordRequest recordObject, String name, String token) {
+    public CompletionStage<AzureDnsResponse> patchRecord(AzureDnsRecord recordObject, String name, RecordType recordType) {
         var future = new CompletableFuture<ContentResponse>();
         try {
             var requestBytes = objectMapper.writeValueAsBytes(recordObject);
-            httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(azureSubscription, azureResourceGroup, azureDnsZone, "TXT", name))
-                .accept(APPLICATION_JSON)
+            httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(subscription, resourceGroup, dnsZone, recordType.name()) + "/" + name)
+                .accept(APPLICATION_JSON.asString())
                 .param("api-version", API_VERSION)
-                .method(HttpMethod.PUT)
+                .method(HttpMethod.PATCH)
                 .headers(headers -> headers.put(HttpHeader.AUTHORIZATION, "Bearer " + token))
-                .body(new BytesRequestContent(APPLICATION_JSON, requestBytes))
+                .body(new BytesRequestContent(APPLICATION_JSON.asString(), requestBytes))
                 .send(new CompletableFutureResponseListener(future));
-            return future.thenApply(cr ->
-            {
-                try {
-                    var json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
-                    return null;
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            });
+            return future.thenApply(this::handleResponse);
         } catch (JsonProcessingException e) {
             return CompletableFuture.failedFuture(e);
         }
     }
 
-    public CompletionStage<Void> deleteTXTRecord(
-            String azureSubscription, String azureResourceGroup, String azureDnsZone,
-            String name, String token) {
+    public CompletionStage<Void> deleteRecord(String name, RecordType recordType) {
         var future = new CompletableFuture<ContentResponse>();
-        httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(azureSubscription, azureResourceGroup, azureDnsZone, "TXT", name))
-            .accept(APPLICATION_JSON)
+        httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(subscription, resourceGroup, dnsZone, recordType.name()) + "/" + name)
+            .accept(APPLICATION_JSON.asString())
             .param("api-version", API_VERSION)
             .method(HttpMethod.DELETE)
             .headers(headers -> headers.put(HttpHeader.AUTHORIZATION, "Bearer " + token))
             .send(new CompletableFutureResponseListener(future));
-        return future.thenApply(cr ->
-        {
-            try {
-                return null;
-            } catch (Throwable e) {
-                throw new CompletionException(e);
-            }
-        });
+        return future.thenApply(this::handleResponse)
+                .thenApply(cr -> null);
     }
 
-    public CompletionStage<Void> putSRVRecord(
-        String azureSubscription, String azureResourceGroup, String azureDnsZone,
-        AzureDnsRecordRequest recordObject, String name, String token) {
-        final var future = new CompletableFuture<ContentResponse>();
-        try {
-            var requestBytes = objectMapper.writeValueAsBytes(recordObject);
-            httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(azureSubscription, azureResourceGroup, azureDnsZone, "SRV", name))
-                .accept(APPLICATION_JSON)
-                .param("api-version", API_VERSION)
-                .method(HttpMethod.PUT)
-                .headers(headers -> headers.put(HttpHeader.AUTHORIZATION, "Bearer " + token))
-                .body(new BytesRequestContent(APPLICATION_JSON, requestBytes))
-                .send(new CompletableFutureResponseListener(future));
-            return future.thenApply(cr ->
-            {
-                try {
-                    var json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
-                    return null;
-                } catch (Throwable e) {
-                    throw new CompletionException(e);
-                }
-            });
-        } catch (JsonProcessingException e) {
-            return CompletableFuture.failedFuture(e);
+    private AzureDnsResponse handleResponse(ContentResponse cr) {
+        switch (cr.getStatus()) {
+            case 200:
+            case 201:
+                break;
+            case 204:
+                return null;
+            default: throw new WebApplicationException(cr.getReason(), cr.getStatus());
         }
-    }
 
-
-    public CompletionStage<Void> deleteSRVRecord(
-            String azureSubscription, String azureResourceGroup, String azureDnsZone,
-            String name, String token) {
-        var future = new CompletableFuture<ContentResponse>();
-        httpClient.newRequest(AZURE_PRIVATE_DNS_URL_PATTERN.formatted(azureSubscription, azureResourceGroup, azureDnsZone, "SRV", name))
-            .accept(APPLICATION_JSON)
-            .param("api-version", API_VERSION)
-            .method(HttpMethod.DELETE)
-            .headers(headers -> headers.put(HttpHeader.AUTHORIZATION, "Bearer " + token))
-            .send(new CompletableFutureResponseListener(future));
-        return future.thenApply(cr ->
-        {
-            try {
-                return null;
-            } catch (Throwable e) {
-                throw new CompletionException(e);
-            }
-        });
+        try {
+            var json = objectMapper.readTree(new ByteArrayInputStream(cr.getContent()));
+            return new AzureDnsResponse((ObjectNode) json);
+        } catch (IOException e) {
+            throw new CompletionException(e);
+        }
     }
 }

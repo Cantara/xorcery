@@ -6,18 +6,21 @@ import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.security.KeyStore;
+import java.util.Optional;
 
 import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
 
 public class ClientSslContextFactoryFactory {
     private final SslContextFactory.Client factory;
 
-    public ClientSslContextFactoryFactory(Configuration configuration, KeyStores keyStores) throws Exception {
+    public ClientSslContextFactoryFactory(Configuration configuration, Optional<KeyStores> keyStores) throws Exception {
         factory = new SslContextFactory.Client();
-        factory.setKeyStore(keyStores.getKeyStore("keystores.keystore"));
-        factory.setTrustStore(keyStores.getKeyStore("keystores.truststore"));
-        factory.setKeyManagerPassword(configuration.getString("keystores.keystore.password").orElse(null));
-        factory.setCertAlias(configuration.getString("jetty.client.ssl.alias").orElse("self"));
+        keyStores.ifPresent(ks -> {
+            factory.setKeyStore(ks.getKeyStore("keystores.keystore"));
+            factory.setTrustStore(ks.getKeyStore("keystores.truststore"));
+            factory.setKeyManagerPassword(configuration.getString("keystores.keystore.password").orElse(null));
+            factory.setCertAlias(configuration.getString("jetty.client.ssl.alias").orElse("self"));
+        });
         factory.setEndpointIdentificationAlgorithm("HTTPS");
         factory.setHostnameVerifier((hostName, session) -> true);
         factory.setTrustAll(configuration.getBoolean("jetty.client.ssl.trustall").orElse(false));

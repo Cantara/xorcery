@@ -8,10 +8,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Map;
 
-public record AzureDnsRequestMetadata(ObjectNode json)
+public record AzureDnsMetadata(ObjectNode json)
         implements JsonElement {
     public record Builder(ObjectNode builder)
-            implements With<AzureDnsRequestMetadata.Builder> {
+            implements With<AzureDnsMetadata.Builder> {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
@@ -21,8 +21,8 @@ public record AzureDnsRequestMetadata(ObjectNode json)
             return this;
         }
 
-        public AzureDnsRequestMetadata build() {
-            return new AzureDnsRequestMetadata(builder);
+        public AzureDnsMetadata build() {
+            return new AzureDnsMetadata(builder);
         }
     }
 

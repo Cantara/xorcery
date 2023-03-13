@@ -5,10 +5,10 @@ import com.exoreaction.xorcery.json.model.JsonElement;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public record AzureDnsSRVRecordRequest(ObjectNode json)
+public record AzureDnsSRVRecord(ObjectNode json)
         implements JsonElement {
     public record Builder(ObjectNode builder)
-            implements With<AzureDnsSRVRecordRequest.Builder> {
+            implements With<AzureDnsSRVRecord.Builder> {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
@@ -33,8 +33,8 @@ public record AzureDnsSRVRecordRequest(ObjectNode json)
             return this;
         }
 
-        public AzureDnsSRVRecordRequest build() {
-            return new AzureDnsSRVRecordRequest(builder);
+        public AzureDnsSRVRecord build() {
+            return new AzureDnsSRVRecord(builder);
         }
     }
 }

@@ -5,21 +5,21 @@ import com.exoreaction.xorcery.json.model.JsonElement;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public record AzureDnsRecordRequest(ObjectNode json)
+public record AzureDnsARecord(ObjectNode json)
         implements JsonElement {
     public record Builder(ObjectNode builder)
-            implements With<AzureDnsRecordRequest.Builder> {
+            implements With<AzureDnsARecord.Builder> {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        public Builder properties(AzureDnsRecordRequestProperties properties) {
-            builder.set("properties", properties.json());
+        public Builder setIP(String ipv4) {
+            builder.put("ipv4Address", ipv4);
             return this;
         }
 
-        public AzureDnsRecordRequest build() {
-            return new AzureDnsRecordRequest(builder);
+        public AzureDnsARecord build() {
+            return new AzureDnsARecord(builder);
         }
     }
 }
