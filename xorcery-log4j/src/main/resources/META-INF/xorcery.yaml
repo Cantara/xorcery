@@ -8,13 +8,13 @@ log4jpublisher:
     configuration: {}
 
 requestlog:
-  enabled: "{{ log4jappender.enabled }}"
+  enabled: "{{ log4jpublisher.enabled }}"
   subscriber:
-    authority: "{{ log4jappender.subscriber.authority }}"
-    stream: "{{ log4jappender.subscriber.stream }}"
-    configuration: "{{ log4jappender.subscriber.configuration }}"
+    authority: "{{ log4jpublisher.subscriber.authority }}"
+    stream: "{{ log4jpublisher.subscriber.stream }}"
+    configuration: "{{ log4jpublisher.subscriber.configuration }}"
   publisher:
-    configuration: "{{ log4jappender.publisher.configuration }}"
+    configuration: "{{ log4jpublisher.publisher.configuration }}"
 
 log4jsubscriber:
   enabled: "{{ defaults.enabled }}"

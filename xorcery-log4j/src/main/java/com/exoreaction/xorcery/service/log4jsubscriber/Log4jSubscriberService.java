@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Flow;
 
 @Service(name = "log4jsubscriber")
-@RunLevel(8)
+@RunLevel(6)
 public class Log4jSubscriberService {
 
     private Provider<MessageWorkers> messageWorkers;

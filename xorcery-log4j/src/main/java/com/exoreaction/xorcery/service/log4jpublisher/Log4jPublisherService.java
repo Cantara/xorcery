@@ -25,10 +25,16 @@ public class Log4jPublisherService {
 
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
         appender = lc.getConfiguration().getAppender("Log4jPublisher");
-        appender.setConfiguration(configuration);
+        if (appender != null)
+        {
+            appender.setConfiguration(configuration);
 
-        reactiveStreams.publish(configuration.getString("log4jpublisher.subscriber.authority").orElseThrow(), configuration.getString("log4jpublisher.subscriber.stream").orElseThrow(),
-                () -> configuration.getConfiguration("log4jpublisher.subscriber.configuration"), new LogPublisher(), LogPublisher.class, configuration.getConfiguration("log4jpublisher.publisher.configuration"));
+            reactiveStreams.publish(configuration.getString("log4jpublisher.subscriber.authority").orElse(null), configuration.getString("log4jpublisher.subscriber.stream").orElseThrow(),
+                    () -> configuration.getConfiguration("log4jpublisher.subscriber.configuration"), new LogPublisher(), LogPublisher.class, configuration.getConfiguration("log4jpublisher.publisher.configuration"));
+        } else
+        {
+            LogManager.getLogger(getClass()).warn("No Log4jPublisher appender added to Log4j2 configuration");
+        }
     }
 
     public class LogPublisher

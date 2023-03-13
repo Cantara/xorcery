@@ -1,7 +1,6 @@
 Configuration:
   name: Xorcery tests
   status: warn
-  packages: com.exoreaction.xorcery.service.log4jpublisher.log4j
   properties:
   thresholdFilter:
     level: debug
