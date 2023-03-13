@@ -6,5 +6,8 @@ jetty:
       enabled: "{{ defaults.enabled }}"
     ssl:
       enabled: "{{ defaults.enabled }}"
-      trustall: true
+      # Client
       alias: "self"
+      #Server
+      endpointIdentificationAlgorithm: "HTTPS"
+      trustAll: true
