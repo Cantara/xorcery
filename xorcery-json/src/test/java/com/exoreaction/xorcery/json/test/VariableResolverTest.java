@@ -4,12 +4,13 @@ import com.exoreaction.xorcery.json.VariableResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 
 class VariableResolverTest {
     private static ObjectNode result;
@@ -43,6 +44,7 @@ class VariableResolverTest {
             falseflag: false
             sometrueconditional: "{{ trueflag ? foo | \\"abc\\"}}"
             somefalseconditional: "{{ falseflag ? 3 | number}}"
+            somefalseconditionalwithliteraldefault: "{{ falseflag ? 3 | \\"foo\\"}}"
             somedefaultsconditional: "{{ falseflag ? 3 | falseflag ? 7 | number}}"
             somedefaultsconditional2: "{{ falseflag ? 3 | trueflag ? 7 | number}}"
             
@@ -58,59 +60,60 @@ class VariableResolverTest {
 
     @Test
     public void testResolveTextValue() {
-        MatcherAssert.assertThat(result.get("resolve").asText(), Matchers.equalTo("bar"));
+        assertThat(result.get("resolve").asText(), Matchers.equalTo("bar"));
     }
 
     @Test
     public void testResolvePartialTextValue() {
-        MatcherAssert.assertThat(result.get("partial1").asText(), Matchers.equalTo("bar-abc"));
-        MatcherAssert.assertThat(result.get("partial2").asText(), Matchers.equalTo("abc-bar-abc"));
-        MatcherAssert.assertThat(result.get("partial3").asText(), Matchers.equalTo("abc-bar"));
+        assertThat(result.get("partial1").asText(), Matchers.equalTo("bar-abc"));
+        assertThat(result.get("partial2").asText(), Matchers.equalTo("abc-bar-abc"));
+        assertThat(result.get("partial3").asText(), Matchers.equalTo("abc-bar"));
     }
 
     @Test
     public void testResolveNumber() {
-        MatcherAssert.assertThat(result.get("resolvenumber").asInt(), Matchers.equalTo(5));
+        assertThat(result.get("resolvenumber").asInt(), Matchers.equalTo(5));
     }
 
     @Test
     public void testResolveHierarchicalName() throws
             IOException {
-        MatcherAssert.assertThat(result.get("hierarchy").asText(), Matchers.equalTo("some abc value"));
+        assertThat(result.get("hierarchy").asText(), Matchers.equalTo("some abc value"));
     }
 
     @Test
     public void testResolveHierarchicalNameWithDefault() throws IOException {
-        MatcherAssert.assertThat(result.get("missing").asText(), Matchers.equalTo("some defaultvalue value"));
-        MatcherAssert.assertThat(result.get("resolvemissing").asText(), Matchers.equalTo("some bar value"));
-        MatcherAssert.assertThat(result.get("resolvemissingwithdefault").asText(), Matchers.equalTo("some test value"));
+        assertThat(result.get("missing").asText(), Matchers.equalTo("some defaultvalue value"));
+        assertThat(result.get("resolvemissing").asText(), Matchers.equalTo("some bar value"));
+        assertThat(result.get("resolvemissingwithdefault").asText(), Matchers.equalTo("some test value"));
     }
 
     @Test
     public void testResolveImportedHierarchicalName() throws IOException {
-        MatcherAssert.assertThat(result.get("importedhierarchy").asText(), Matchers.equalTo("abc"));
+        assertThat(result.get("importedhierarchy").asText(), Matchers.equalTo("abc"));
     }
 
     @Test
     public void testResolveRecursive() throws IOException {
         String resolverecursive = result.get("resolverecursive").asText();
-        MatcherAssert.assertThat(resolverecursive, Matchers.equalTo("bar"));
+        assertThat(resolverecursive, Matchers.equalTo("bar"));
 
         String resolverecursive2 = result.get("resolverecursive2").asText();
-        MatcherAssert.assertThat(resolverecursive2, Matchers.equalTo("bar/test/abc-bar"));
+        assertThat(resolverecursive2, Matchers.equalTo("bar/test/abc-bar"));
     }
 
     @Test
     public void testResolveNumberWithDefault() throws IOException {
-        MatcherAssert.assertThat(result.get("defaultnumber").asInt(), Matchers.equalTo(5));
+        assertThat(result.get("defaultnumber").asInt(), Matchers.equalTo(5));
     }
 
     @Test
     public void testResolveConditionalWithDefault() throws IOException {
-        MatcherAssert.assertThat(result.get("sometrueconditional").asText(), Matchers.equalTo("bar"));
-        MatcherAssert.assertThat(result.get("somefalseconditional").asInt(), Matchers.equalTo(5));
-        MatcherAssert.assertThat(result.get("somedefaultsconditional").asInt(), Matchers.equalTo(5));
-        MatcherAssert.assertThat(result.get("somedefaultsconditional2").asInt(), Matchers.equalTo(7));
-        MatcherAssert.assertThat(result.get("somedefaultsconditionaltree").toString(), Matchers.equalTo("{\"lvl2\":{\"level3\":\"abc\"}}"));
+        assertThat(result.get("sometrueconditional").asText(), Matchers.equalTo("bar"));
+        assertThat(result.get("somefalseconditional").asInt(), Matchers.equalTo(5));
+        assertThat(result.get("somefalseconditionalwithliteraldefault").asText(), Matchers.equalTo("foo"));
+        assertThat(result.get("somedefaultsconditional").asInt(), Matchers.equalTo(5));
+        assertThat(result.get("somedefaultsconditional2").asInt(), Matchers.equalTo(7));
+        assertThat(result.get("somedefaultsconditionaltree").toString(), Matchers.equalTo("{\"lvl2\":{\"level3\":\"abc\"}}"));
     }
 }

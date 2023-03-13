@@ -121,7 +121,7 @@ public class VariableResolver
                 String[] withConditional = expr.split("\\?");
                 JsonNode resolvedConditional = lookupAndResolve(source, withConditional[0].trim())
                         .orElse(MissingNode.getInstance());
-                if ((resolvedConditional instanceof BooleanNode conditionalValue) && conditionalValue.booleanValue()) {
+                if (getFalsy(resolvedConditional)) {
                     expr = withConditional[1];
                 } else {
                     continue;
@@ -132,7 +132,7 @@ public class VariableResolver
 
             try {
                 JsonNode value = objectMapper.readTree(new StringReader(expr));
-                if (value instanceof TextNode textNode) {
+                if (value instanceof TextNode textNode && !expr.startsWith("\"")) {
                     JsonNode resolvedValue = lookupAndResolve(source, textNode.textValue()).orElse(textNode);
                     if (!resolvedValue.isMissingNode())
                         return resolvedValue;
@@ -174,8 +174,7 @@ public class VariableResolver
             JsonNode node = context.get(names[i]);
 
             // Might be an intermediary lookup
-            if (node instanceof TextNode textNode)
-            {
+            if (node instanceof TextNode textNode) {
                 node = resolveValue(source, textNode);
             }
 
@@ -185,5 +184,20 @@ public class VariableResolver
                 return Optional.empty();
         }
         return Optional.ofNullable(context.get(names[names.length - 1]));
+    }
+
+    private boolean getFalsy(JsonNode value) {
+        return
+                switch (value.getNodeType()) {
+                    case ARRAY -> !value.isEmpty();
+                    case BINARY -> true;
+                    case BOOLEAN -> value.booleanValue();
+                    case MISSING -> false;
+                    case NULL -> false;
+                    case NUMBER -> value.numberValue().longValue() != 0;
+                    case OBJECT -> true;
+                    case POJO -> true;
+                    case STRING -> !value.textValue().equals("");
+                };
     }
 }
