@@ -42,7 +42,7 @@ public class Neo4jProjectionsSubscriberService {
                                              MetricRegistry metricRegistry) {
         graphDatabase = graphDatabases.apply("neo4j");
 
-        Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = new Neo4jProjectionCommitPublisher();
+        Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = neo4jProjectionsService.getNeo4jProjectionCommitPublisher();
 
         List<Neo4jEventProjection> projectionList = new ArrayList<>();
         neo4jEventProjectionList.forEach(projectionList::add);
@@ -58,7 +58,7 @@ public class Neo4jProjectionsSubscriberService {
 
         if (configuration.getBoolean("neo4jprojections.commitpublisher.enabled").orElse(true))
         {
-            reactiveStreamsServer.publisher("neo4jprojectioncommits", cfg -> neo4jProjectionsService.getNeo4jProjectionCommitPublisher(), Neo4jProjectionCommitPublisher.class);
+            reactiveStreamsServer.publisher("neo4jprojectioncommits", cfg -> neo4jProjectionCommitPublisher, Neo4jProjectionCommitPublisher.class);
         }
     }
 

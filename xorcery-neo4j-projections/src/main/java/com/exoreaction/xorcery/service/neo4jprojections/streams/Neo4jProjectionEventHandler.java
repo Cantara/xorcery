@@ -73,6 +73,8 @@ public class Neo4jProjectionEventHandler
         fromVersion.ifPresent(from -> version = from);
 
         updateParameters.put(Enums.toField(Projection.id), projectionId);
+
+        logger.info("Started Neo4j projection "+projectionId);
     }
 
     @Override
