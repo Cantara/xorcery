@@ -130,27 +130,27 @@ public class Pagination
                     {
                         if (key.equals(skipParam)) {
                             // Replace with page[skip]
-                            uriBuilder.replaceQueryParam(this.skipParam, null);
+                            uriBuilder.replaceQueryParam(this.skipParam, (Object[]) null);
 
                         } else if (key.startsWith(skipParam.substring(0, skipParam.length() - 3))) {
                             // Sub-include, so remove prefix
-                            uriBuilder.replaceQueryParam(key, null);
+                            uriBuilder.replaceQueryParam(key, (Object[]) null);
                             String newKey = encode("page[skip][") + key.substring(skipParam.length() - 2);
                             uriBuilder.replaceQueryParam(newKey, value.get(0));
                         } else if (key.equals(limitParam)) {
                             // Replace with page[limit]
-                            uriBuilder.replaceQueryParam(this.limitParam, null);
+                            uriBuilder.replaceQueryParam(this.limitParam, (Object[]) null);
                             uriBuilder.replaceQueryParam(encode("page[limit]"), value.get(0));
 
                         } else if (key.startsWith(limitParam.substring(0, limitParam.length() - 3))) {
                             // Sub-include, so remove prefix
-                            uriBuilder.replaceQueryParam(key, null);
+                            uriBuilder.replaceQueryParam(key, (Object[]) null);
                             String newKey = encode("page[limit][") + key.substring(limitParam.length() - 2);
                             uriBuilder.replaceQueryParam(newKey, value.get(0));
                         } else if (key.startsWith(encode("page[skip][")) ||
                                 key.startsWith(encode("page[limit]["))) {
                             // Wrong relationship prefix, remove
-                            uriBuilder.replaceQueryParam(key, null);
+                            uriBuilder.replaceQueryParam(key, (Object[]) null);
                         }
                     });
 
