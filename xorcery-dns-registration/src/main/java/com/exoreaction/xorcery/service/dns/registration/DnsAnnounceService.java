@@ -43,7 +43,7 @@ public class DnsAnnounceService
             {
                 Map<String, String> serviceProps = new HashMap<>();
                 for (String string : txtRecord.getStrings()) {
-                    String[] keyValue = string.split("=", 1);
+                    String[] keyValue = string.split("=", 2);
                     serviceProps.put(keyValue[0], keyValue[1]);
                 }
                 props.put(txtRecord.getName().toString(), serviceProps);

@@ -2,7 +2,8 @@ dns:
   enabled: "{{ defaults.enabled }}"
   registration:
     enabled: "{{ dns.enabled }}"
-    domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
+    timeout: 30s
+    ttl: 60s
 # TSIG key for DDNS updates
 #    key:
 #      name: "xorcery.test"
