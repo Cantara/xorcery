@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.dns.registration;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
@@ -13,9 +13,7 @@ import org.xbill.DNS.Record;
 import org.xbill.DNS.*;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.InetSocketAddress;
-import java.text.ParseException;
 import java.time.Duration;
 import java.util.*;
 
@@ -35,7 +33,7 @@ public class DnsRegistrationService
 
         resolver = getResolver(configuration);
 
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
 
         String domain = configuration.getString("domain").orElse("xorcery.test");
         zone = Name.fromConstantString(domain + ".");

@@ -15,7 +15,7 @@ class KeyStoresTest {
             keystores:
               enabled: "{{ defaults.enabled }}"
               teststore:
-                path: "{{ home }}/target/test-classes/META-INF/teststore.p12"
+                path: "{{ home }}/target/teststore.p12"
                 template: "META-INF/teststore.p12"
                 password: "password"
                         """;
@@ -29,7 +29,7 @@ class KeyStoresTest {
         KeyStores keyStores = new KeyStores(configuration);
 
         // When
-        KeyStore keyStore = keyStores.getKeyStore("keystores.teststore");
+        KeyStore keyStore = keyStores.getKeyStore("teststore");
 
         // Then
         assertThat(keyStore, notNullValue());

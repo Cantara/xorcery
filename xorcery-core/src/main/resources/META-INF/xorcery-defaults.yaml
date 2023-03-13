@@ -1,24 +1,26 @@
 ---
-id: "{{ ENV.SERVER_ID | SYSTEM.server_id | host}}"
-name: genericserver
-host: "{{ ENV.HOSTNAME | \"server\" }}"
-ip: "{{ ENV.IP | null }}"
-domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
-environment: development
-tag: default
-
-home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
-build_resources: "{{ home }}/target/classes"
-resources: "{{ ENV.RESOURCES | build_resources }}"
+instance:
+  id: "{{ ENV.SERVER_ID | SYSTEM.server_id | instance.host}}"
+  name: genericserver
+  host: "{{ ENV.HOSTNAME | \"server\" }}"
+  fqdn: "{{ instance.host }}.{{ instance.domain }}"
+  ip: "{{ ENV.IP | null }}"
+  domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
+  environment: development
+  tag: default
+  home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
+  buildResources: "{{ instance.home }}/target/classes"
+  resources: "{{ ENV.RESOURCES | instance.buildResources }}"
+  uri: "{{ jetty.server.uri | \"http://localhost\"}}"
 
 defaults:
   enabled: true
-  idle_timeout: -1
+  idleTimeout: -1s
 
 hk2:
-  threadpolicy: "FULLY_THREADED"
-  threadcount: 5
-  runlevel: 20
+  threadPolicy: "FULLY_THREADED"
+  threadCount: 5
+  runLevel: 20
 
 HK2TopicDistributionService:
   enabled: true

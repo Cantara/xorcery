@@ -3,9 +3,9 @@ jetty:
     enabled: "{{ defaults.enabled }}"
     scheme: "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}"
     port: "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}"
-    uri: "{{jetty.server.scheme}}://{{host}}:{{jetty.server.port}}/"
+    uri: "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/"
 
-    idle_timeout: "{{ defaults.idle_timeout }}"
+    idleTimeout: "{{ defaults.idleTimeout }}"
 
     http:
       port: "{{ SYSTEM.http_port | 80}}"
@@ -16,11 +16,11 @@ jetty:
     ssl:
       enabled: "{{ defaults.enabled }}"
       port: "{{ SYSTEM.ssl_port | 443 }}"
-      trustall: true
-      needclientauth: false
-      wantclientauth: true
-      snirequired: false
-      snihostcheck: false
+      trustAll: true
+      needClientAuth: false
+      wantClientAuth: true
+      sniRequired: false
+      sniHostCheck: false
       alias: "self"
 
     security:

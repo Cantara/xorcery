@@ -2,7 +2,7 @@ jersey:
   server:
     enabled: "{{ jetty.server.enabled }}"
     register: [ ]
-    mediatypes:
+    mediaTypes:
       html: "text/html"
       txt: "text/plain"
       json: "application/json"

@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import org.junit.jupiter.api.Test;
 
-public class StandardConfigurationBuilderTest {
+public class InstanceConfigurationBuilderTest {
 
     @Test
     public void testDefaults()

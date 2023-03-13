@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.jsonapi.server.resources.api;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.jsonapi.model.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
@@ -27,7 +27,7 @@ public class ServerResource
     @GET
     public ResourceDocument get()
     {
-        StandardConfiguration standardConfiguration = ()->configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
 
         ResourceObjects.Builder builder = new ResourceObjects.Builder();
         for (ServiceResourceObject serviceResource : serviceResourceObjects.getServiceResources()) {

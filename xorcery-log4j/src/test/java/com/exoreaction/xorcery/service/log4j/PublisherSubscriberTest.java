@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.log4j;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.util.Sockets;
 import org.apache.logging.log4j.LogManager;
@@ -25,7 +25,6 @@ public class PublisherSubscriberTest {
 
 //        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
 
-        StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             LogManager.getLogger(getClass()).info("Test");
             Thread.sleep(1000);

@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.dns.server;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.json.model.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -15,7 +15,6 @@ import org.jvnet.hk2.annotations.Service;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.*;
 
-import javax.jmdns.impl.constants.DNSRecordType;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.DatagramPacket;
@@ -57,7 +56,7 @@ public class DnsServerService
     @Inject
     public DnsServerService(Configuration configuration) throws IOException {
         this.configuration = configuration;
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         port = configuration.getInteger("dns.server.port").orElse(53);
 
         // Create keys

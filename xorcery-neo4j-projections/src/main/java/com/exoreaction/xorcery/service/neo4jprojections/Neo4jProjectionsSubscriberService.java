@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
@@ -54,7 +55,7 @@ public class Neo4jProjectionsSubscriberService {
                 cfg.getString("projection").orElseThrow(),
                 neo4jProjectionCommitPublisher,
                 projectionList,
-                metricRegistry)), ProjectionSubscriber.class);
+                metricRegistry), new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))), ProjectionSubscriber.class);
 
         if (configuration.getBoolean("neo4jprojections.commitpublisher.enabled").orElse(true))
         {

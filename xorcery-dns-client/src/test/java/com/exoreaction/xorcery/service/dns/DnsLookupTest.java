@@ -19,7 +19,8 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-@Disabled
+import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
+
 public class DnsLookupTest {
 
     private DnsLookupService dnsLookupService;
@@ -27,9 +28,14 @@ public class DnsLookupTest {
     @BeforeEach
     public void setup() {
         dnsLookupService = new DnsLookupService(new Configuration.Builder()
-                .add("dns.client.nameservers", JsonNodeFactory.instance.arrayNode().add("localhost:8853"))
-                .add("dns.client.search", List.of("xorcery.test.","_sub._https._tcp.xorcery.test.","_sub._http._tcp.xorcery.test."))
-                .add("dns.client.hosts", JsonNodeFactory.instance.objectNode().put("_certificates", "https://127.0.0.1:8080/api/path"))
+                .add("dns.client.nameservers", instance.arrayNode().add("localhost:8853"))
+                .add("dns.client.search", List.of("xorcery.test"))
+                .add("dns.client.hosts", instance.objectNode()
+                        .put("_certificates._sub._https._tcp.xorcery.test", "https://127.0.0.1:8080/api/path")
+                        .put("xorcery1.xorcery.test", "127.0.0.1")
+                        .set("certificates.xorcery.test", instance.arrayNode()
+                                .add(instance.textNode("127.0.0.1"))
+                                .add(instance.textNode("127.0.1.1"))))
                 .build(), () -> null);
     }
 
@@ -48,34 +54,28 @@ public class DnsLookupTest {
     }
 
     @Test
-    public void testDnsSRV() throws UnknownHostException, TextParseException, ExecutionException, InterruptedException {
-        List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_analytics._sub._http._tcp.xorcery.test")).get();
-        System.out.println(hosts);
-    }
-
-    @Test
     public void testDnsSRVHosts() throws UnknownHostException, TextParseException, ExecutionException, InterruptedException {
-        List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_certificates")).get();
+        List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_certificates._sub._https._tcp.xorcery.test")).get();
         System.out.println(hosts);
     }
 
     @Test
     public void testDnsNoDomainSRV() throws UnknownHostException, TextParseException, ExecutionException, InterruptedException {
-        List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_analytics")).get();
+        List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_certificates._sub._https._tcp")).get();
         System.out.println(hosts);
     }
 
     @Test
     public void testDnsAList() throws UnknownHostException, TextParseException, ExecutionException, InterruptedException {
 
-        List<URI> hosts = dnsLookupService.resolve(URI.create("http://analytics.xorcery.test")).get();
+        List<URI> hosts = dnsLookupService.resolve(URI.create("http://certificates.xorcery.test:80")).get();
         System.out.println(hosts);
     }
 
     @Test
     public void testDnsANoDomainList() throws UnknownHostException, TextParseException, ExecutionException, InterruptedException {
 
-        List<URI> hosts = dnsLookupService.resolve(URI.create("http://analytics")).get();
+        List<URI> hosts = dnsLookupService.resolve(URI.create("http://certificates:80")).get();
         System.out.println(hosts);
     }
 }

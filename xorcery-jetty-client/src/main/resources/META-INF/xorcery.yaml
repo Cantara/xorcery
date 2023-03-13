@@ -1,9 +1,10 @@
 jetty:
   client:
     enabled: "{{ defaults.enabled }}"
-    idle_timeout: "{{ defaults.idle_timeout }}"
+    idleTimeout: "{{ defaults.idleTimeout }}"
     http2:
       enabled: "{{ defaults.enabled }}"
+      idleTimeout: "{{ jetty.client.idleTimeout }}"
     ssl:
       enabled: "{{ defaults.enabled }}"
       # Client

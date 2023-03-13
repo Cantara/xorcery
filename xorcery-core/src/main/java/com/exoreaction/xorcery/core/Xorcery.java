@@ -40,6 +40,7 @@ public class Xorcery
     public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         logger = LogManager.getLogger(Xorcery.class);
+        Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
 
         this.serviceLocator = serviceLocator;
         populateServiceLocator(serviceLocator, configuration);
@@ -50,10 +51,10 @@ public class Xorcery
         Filter configurationFilter = getEnabledServicesFilter(configuration);
 
         RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
-        runLevelController.setThreadingPolicy(RunLevelController.ThreadingPolicy.valueOf(configuration.getString("hk2.threadpolicy").orElse("FULLY_THREADED")));
-        runLevelController.setMaximumUseableThreads(configuration.getInteger("hk2.threadcount").orElse(5));
+        runLevelController.setThreadingPolicy(hk2Configuration.getThreadingPolicy());
+        runLevelController.setMaximumUseableThreads(hk2Configuration.getMaximumUseableThreads());
 
-        runLevelController.proceedTo(configuration.getInteger("hk2.runlevel").orElse(20));
+        runLevelController.proceedTo(hk2Configuration.getRunLevel());
 
         List<ServiceHandle<?>> services = serviceLocator.getAllServiceHandles(configurationFilter);
 

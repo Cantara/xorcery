@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.jetty.server.security.jwt.test;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.codec.Base64;
 import org.junit.jupiter.api.Test;
+import org.neo4j.cypher.internal.expressions.In;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -53,7 +54,7 @@ public class JwtAuthenticationTest {
 
             server.getServiceLocator().inject(this);
 
-            StandardConfiguration cfg = () -> serverConfiguration;
+            InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
             String jwt = createJwt(keyPair.getPrivate());
             try (Client client = clientBuilder.build()) {
                 String response = client.target(cfg.getServerUri().resolve("api/principal"))

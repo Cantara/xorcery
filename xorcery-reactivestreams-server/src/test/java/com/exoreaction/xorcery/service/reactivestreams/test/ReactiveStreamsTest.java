@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.reactivestreams.test;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
@@ -41,7 +41,8 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        StandardConfiguration standardConfiguration = () -> configuration;
+        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -85,7 +86,7 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -133,7 +134,7 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -178,7 +179,7 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -227,7 +228,7 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -272,7 +273,7 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);

@@ -1,21 +1,18 @@
 ---
-id: "{{ ENV.SERVER_ID | SYSTEM.server_id | host}}"
-name: genericserver
-host: "{{ ENV.HOSTNAME | \"server\" }}"
-ip: "{{ ENV.IP | null }}"
-domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
-environment: development
-tag: default
-
-home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
-build_resources: "{{ home }}/target/classes"
-resources: "{{ ENV.RESOURCES | build_resources }}"
+instance:
+  id: "{{ ENV.SERVER_ID | SYSTEM.server_id | host}}"
+  name: genericserver
+  host: "{{ ENV.HOSTNAME | \"server\" }}"
+  ip: "{{ ENV.IP | null }}"
+  domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
+  environment: development
+  tag: default
+  home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
+  buildResources: "{{ home }}/target/classes"
+  resources: "{{ ENV.RESOURCES | buildResources }}"
 
 defaults:
   enabled: true
-  idle_timeout: -1
-
-default:
-  enabled: true
+  idleTimeout: -1
 
 jetty.server.uri: http://localhost

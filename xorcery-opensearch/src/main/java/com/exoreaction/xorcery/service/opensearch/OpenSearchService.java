@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.opensearch;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -46,7 +47,7 @@ public class OpenSearchService
     public static final String SERVICE_TYPE = "opensearch";
     private final OpenSearchClient client;
     private final ObjectMapper objectMapper;
-    private final Configuration configuration;
+    private final OpenSearchConfiguration openSearchConfiguration;
 
     @Inject
     public OpenSearchService(ServiceResourceObjects serviceResourceObjects,
@@ -55,12 +56,12 @@ public class OpenSearchService
                              Configuration configuration,
                              ClientBuilder clientBuilder) {
 
-        ServiceResourceObject sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+        ServiceResourceObject sro = new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
                 .subscriber("opensearch")
                 .publisher("opensearchcommits")
                 .build();
 
-        this.configuration = configuration;
+        this.openSearchConfiguration = new OpenSearchConfiguration(configuration.getConfiguration("opensearch"));
         this.objectMapper = new ObjectMapper(new YAMLFactory());
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
@@ -97,8 +98,7 @@ public class OpenSearchService
 
     private void loadComponentTemplates() {
         // Upsert component templates
-        JsonNode jsonNode = configuration.getJson("opensearch.component_templates").orElseThrow(() ->
-                new IllegalStateException("Missing opensearch.component_templates configuration"));
+        JsonNode jsonNode = openSearchConfiguration.getComponentTemplates();
         Iterator<String> fieldNames = jsonNode.fieldNames();
 
         while (fieldNames.hasNext()) {
@@ -138,8 +138,7 @@ public class OpenSearchService
 
     private void loadIndexTemplates() {
         // Upsert index templates
-        JsonNode jsonNode = configuration.getJson("opensearch.index_templates").orElseThrow(() ->
-                new IllegalStateException("Missing opensearch.index_templates configuration"));
+        JsonNode jsonNode = openSearchConfiguration.getIndexTemplates();
         Iterator<String> fieldNames = jsonNode.fieldNames();
 
         while (fieldNames.hasNext()) {
@@ -179,7 +178,7 @@ public class OpenSearchService
 
     @Override
     public void preDestroy() {
-        if (configuration.getBoolean("opensearch.deleteonexit").orElse(false)) {
+        if (openSearchConfiguration.isDeleteOnExit()) {
             // Delete standard indexes (useful for testing)
             try {
 

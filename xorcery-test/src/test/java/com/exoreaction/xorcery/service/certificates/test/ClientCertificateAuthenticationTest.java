@@ -2,17 +2,15 @@ package com.exoreaction.xorcery.service.certificates.test;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
 import com.exoreaction.xorcery.service.ClientTester;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.ws.rs.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -51,8 +49,8 @@ public class ClientCertificateAuthenticationTest {
         managerPort = Sockets.nextFreePort();
         Configuration serverConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("id", "xorcery1")
-                .add("host", "server.xorcery.test")
+                .add("instance.id", "xorcery1")
+                .add("instance.host", "server")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", managerPort)
                 .add("jetty.server.ssl.snirequired", true)
@@ -61,8 +59,8 @@ public class ClientCertificateAuthenticationTest {
 //        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
         Configuration clientConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("id", "xorcery2")
-                .add("host", "server2.xorcery.test")
+                .add("instance.id", "xorcery2")
+                .add("instance.host", "server2")
                 .add("clienttester.enabled", "true")
                 .add("jetty.server.enabled", false)
                 .build();
@@ -72,7 +70,7 @@ public class ClientCertificateAuthenticationTest {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 System.out.println("DONE");
 
-                StandardConfiguration cfg = () -> serverConfiguration;
+                InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
                 ResourceDocument doc = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getServerUri().resolve("api/subject")).toCompletableFuture().join();
                 Assertions.assertEquals(List.of("CN=Test Service"), doc.getResource().get().getAttributes().getListAs("principals", JsonNode::textValue).orElse(Collections.emptyList()));
             }

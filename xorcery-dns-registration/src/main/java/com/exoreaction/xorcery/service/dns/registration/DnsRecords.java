@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.dns.registration;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
@@ -24,7 +24,7 @@ public class DnsRecords {
     @Inject
     public DnsRecords(Configuration configuration, ServiceResourceObjects serviceResourceObjects) throws TextParseException {
 
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         InetAddress targetIp = standardConfiguration.getIp();
 
         Name target;

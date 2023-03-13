@@ -1,10 +1,11 @@
 ---
-name: xorcery-test
-
-host: server.xorcery.test
+instance:
+  name: "xorcery-test"
+  host: "server"
+  domain: "xorcery.test"
 
 hk2:
-  threadpolicy: "USE_NO_THREADS"
+  threadPolicy: "USE_NO_THREADS"
 
 build_test_resources: "{{ home }}/target/test-classes"
 test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"

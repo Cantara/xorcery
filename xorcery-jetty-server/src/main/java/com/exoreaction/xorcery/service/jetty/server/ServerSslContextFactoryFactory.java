@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.jetty.server;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
+import com.exoreaction.xorcery.service.keystores.KeyStoresConfiguration;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -17,10 +18,7 @@ import java.io.InputStream;
 import java.security.cert.CRL;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509CRL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service(name = "jetty.server.ssl")
@@ -35,8 +33,10 @@ public class ServerSslContextFactoryFactory
     public ServerSslContextFactoryFactory(Configuration configuration, KeyStores keyStores) throws Exception {
 
         Configuration jettyConfig = configuration.getConfiguration("jetty.server");
+        JettyServerSslConfiguration jettyServerSslConfiguration = new JettyServerSslConfiguration(configuration.getConfiguration("jetty.server.ssl"));
+        KeyStoresConfiguration keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
 
-        Collection<? extends CRL> crls = jettyConfig.getResourceURL("ssl.crls")
+        Collection<? extends CRL> crls = jettyServerSslConfiguration.getCRLs()
                 .<Collection<? extends CRL>>map(url ->
                 {
                     try (InputStream in = url.openStream()) {
@@ -47,8 +47,7 @@ public class ServerSslContextFactoryFactory
                     }
                 }).orElse(Collections.emptyList());
 
-        if (!crls.isEmpty())
-        {
+        if (!crls.isEmpty()) {
             logger.info("CRLs loaded:\n" + crls.stream()
                     .map(X509CRL.class::cast)
                     .map(X509CRL::getIssuerX500Principal)
@@ -59,19 +58,19 @@ public class ServerSslContextFactoryFactory
             crls.stream().map(X509CRL.class::cast).forEach(crl ->
             {
                 if (crl.getNextUpdate().before(now))
-                    logger.warn("CRL has expired:"+crl.getIssuerX500Principal().getName());
+                    logger.warn("CRL has expired:" + crl.getIssuerX500Principal().getName());
             });
         }
 
         factory = new CustomSslContextFactoryServer(crls);
-        factory.setKeyStore(keyStores.getKeyStore("keystores.keystore"));
-        factory.setTrustStore(keyStores.getKeyStore("keystores.truststore"));
-        factory.setKeyManagerPassword(configuration.getString("keystores.keystore.password").orElse(null));
-        factory.setCertAlias(jettyConfig.getString("ssl.alias").orElse("self"));
+        factory.setKeyStore(keyStores.getKeyStore("keystore"));
+        factory.setTrustStore(keyStores.getKeyStore("truststore"));
+        factory.setKeyManagerPassword(Optional.ofNullable(keyStoresConfiguration.getKeyStoreConfiguration("keystore").getPassword()).map(String::new).orElse(null));
+        factory.setCertAlias(jettyServerSslConfiguration.getAlias());
         factory.setHostnameVerifier((hostName, session) -> true);
-        factory.setTrustAll(jettyConfig.getBoolean("ssl.trustall").orElse(false));
-        factory.setNeedClientAuth(jettyConfig.getBoolean("ssl.needclientauth").orElse(false));
-        factory.setWantClientAuth(jettyConfig.getBoolean("ssl.wantclientauth").orElse(false));
+        factory.setTrustAll(jettyServerSslConfiguration.isTrustAll());
+        factory.setNeedClientAuth(jettyServerSslConfiguration.isNeedClientAuth());
+        factory.setWantClientAuth(jettyServerSslConfiguration.isWantClientAuth());
         factory.start();
     }
 

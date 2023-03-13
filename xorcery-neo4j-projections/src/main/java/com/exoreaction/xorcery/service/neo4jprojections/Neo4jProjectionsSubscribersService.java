@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
@@ -56,7 +57,7 @@ public class Neo4jProjectionsSubscribersService {
                 getCurrentRevision(publisher.getProjection()).ifPresent(revision -> publisherConfiguration.json().set("from", publisherConfiguration.json().numberNode(revision)));
 
                 reactiveStreamsClient.subscribe(publisher.getAuthority(), publisher.getStream(),
-                        ()->
+                        () ->
                         {
                             // Update to current revision, if available
                             getCurrentRevision(publisher.getProjection()).ifPresent(revision -> publisherConfiguration.json().set("from", publisherConfiguration.json().numberNode(revision)));
@@ -70,7 +71,9 @@ public class Neo4jProjectionsSubscribersService {
                                         publisher.getProjection(),
                                         neo4jProjectionsService.getNeo4jProjectionCommitPublisher(),
                                         projectionList,
-                                        metricRegistry)), ProjectionSubscriber.class, Configuration.empty());
+                                        metricRegistry),
+                                new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))),
+                        ProjectionSubscriber.class, Configuration.empty());
             }
         });
     }

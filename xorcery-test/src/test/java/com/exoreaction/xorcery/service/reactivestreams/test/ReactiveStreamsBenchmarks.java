@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.reactivestreams.test;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
@@ -87,7 +87,7 @@ public class ReactiveStreamsBenchmarks {
         };
 
         ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
-        StandardConfiguration standardConfiguration = () -> xorcery.getServiceLocator().getService(Configuration.class);
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(xorcery.getServiceLocator().getService(Configuration.class).getConfiguration("instance"));
         URI serverUri = standardConfiguration.getServerUri();
         reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber",
                 Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), Configuration.empty());

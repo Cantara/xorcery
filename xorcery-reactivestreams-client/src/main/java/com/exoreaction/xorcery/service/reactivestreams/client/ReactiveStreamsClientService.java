@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.DefaultsConfiguration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
@@ -46,7 +47,7 @@ public class ReactiveStreamsClientService
         this.defaultScheme = configuration.getString("reactivestreams.client.scheme").orElseThrow();
 
         WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-        webSocketClient.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idle_timeout").orElse(-1L)));
+        webSocketClient.setIdleTimeout(new DefaultsConfiguration(configuration.getConfiguration("defaults")).getIdleTimeout());
         webSocketClient.start();
         this.webSocketClient = webSocketClient;
     }

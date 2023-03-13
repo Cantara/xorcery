@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.TextParseException;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -20,9 +22,11 @@ import java.util.concurrent.CompletableFuture;
 public class HostsConfigurationLookup
         implements DnsLookup {
     private final ObjectNode hosts;
+    private final DnsClientConfiguration dnsClientConfiguration;
 
     public HostsConfigurationLookup(Configuration configuration) {
-        hosts = (ObjectNode) configuration.getJson("dns.client.hosts").orElseGet(JsonNodeFactory.instance::objectNode);
+        dnsClientConfiguration = new DnsClientConfiguration(configuration.getConfiguration("dns.client"));
+        hosts = dnsClientConfiguration.getHosts();
     }
 
     @Override
@@ -34,23 +38,45 @@ public class HostsConfigurationLookup
         }
         if (host != null) {
             try {
-                JsonNode lookup = hosts.get(host);
-                if (lookup instanceof TextNode) {
-                    URI newUri = toURI(lookup.textValue(), uri);
-                    return CompletableFuture.completedFuture(List.of(newUri));
-                } else if (lookup instanceof ArrayNode an) {
-                    List<URI> addresses = new ArrayList<>();
-                    for (JsonNode jsonNode : an) {
-                        URI newUri = toURI(jsonNode.textValue(), uri);
-                        addresses.add(newUri);
+                Iterable<String> hostNames = getHostNames(host, uri.getScheme());
+                for (String hostName : hostNames) {
+                    JsonNode lookup = hosts.get(hostName);
+                    if (lookup instanceof TextNode) {
+                        URI newUri = toURI(lookup.textValue(), uri);
+                        return CompletableFuture.completedFuture(List.of(newUri));
+                    } else if (lookup instanceof ArrayNode an) {
+                        List<URI> addresses = new ArrayList<>();
+                        for (JsonNode jsonNode : an) {
+                            URI newUri = toURI(jsonNode.textValue(), uri);
+                            addresses.add(newUri);
+                        }
+                        return CompletableFuture.completedFuture(addresses);
                     }
-                    return CompletableFuture.completedFuture(addresses);
                 }
             } catch (URISyntaxException e) {
                 return CompletableFuture.failedFuture(e);
             }
         }
         return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    private Iterable<String> getHostNames(String host, String scheme) {
+        if (host.contains(".") && !scheme.equals("srv"))
+        {
+            return List.of(host);
+        } else
+        {
+            List<String> hostNames = new ArrayList<>();
+            hostNames.add(host);
+            for (Name domainName : dnsClientConfiguration.getSearchDomains()) {
+                try {
+                    hostNames.add(Name.fromString(host, domainName).toString(true));
+                } catch (TextParseException e) {
+                    // Ignore
+                }
+            }
+            return hostNames;
+        }
     }
 
     private URI toURI(String jsonText, URI uri) throws URISyntaxException {

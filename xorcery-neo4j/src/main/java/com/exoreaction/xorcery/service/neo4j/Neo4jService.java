@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.neo4j;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
@@ -23,6 +24,7 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
+import org.neo4j.cypher.internal.expressions.In;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
@@ -151,7 +153,7 @@ public class Neo4jService
 
         logger.info("Neo4j initialized");
 
-        serviceResourceObjects.add(new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+        serviceResourceObjects.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
                 .api("neo4j", "api/neo4j")
                 .build());
     }

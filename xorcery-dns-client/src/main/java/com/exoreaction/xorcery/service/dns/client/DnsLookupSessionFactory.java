@@ -19,7 +19,9 @@ public class DnsLookupSessionFactory {
 
     public DnsLookupSessionFactory(Configuration configuration) {
 
-        Resolver resolver = configuration.getListAs("dns.client.nameservers", JsonNode::textValue)
+        DnsClientConfiguration dnsClientConfiguration = new DnsClientConfiguration(configuration.getConfiguration("dns.client"));
+
+        Resolver resolver = dnsClientConfiguration.getNameServers()
                 .map(hosts ->
                 {
                     if (hosts.isEmpty()) {
@@ -38,19 +40,10 @@ public class DnsLookupSessionFactory {
                 })
                 .orElseGet(ExtendedResolver::new);
 
-        configuration.getString("dns.client.timeout")
-                .map(s -> "PT" + s)
-                .map(Duration::parse)
-                .ifPresent(resolver::setTimeout);
+        resolver.setTimeout(dnsClientConfiguration.getTimeout());
 
         lookupSession = LookupSession.builder()
-                .searchPath(configuration.getListAs("dns.client.search", json -> {
-                    try {
-                        return Name.fromString(json.textValue());
-                    } catch (TextParseException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                }).orElseGet(Collections::emptyList))
+                .searchPath(dnsClientConfiguration.getSearchDomains())
                 .cache(new Cache())
                 .resolver(resolver)
                 .hostsFileParser(new HostsFileParser())
