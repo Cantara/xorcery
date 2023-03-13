@@ -8,12 +8,13 @@ import org.xbill.DNS.hosts.HostsFileParser;
 import org.xbill.DNS.lookup.LookupSession;
 
 import java.io.UncheckedIOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
-public class DnsLookupSessionFactory
-{
+public class DnsLookupSessionFactory {
     private final LookupSession lookupSession;
 
     public DnsLookupSessionFactory(Configuration configuration) {
@@ -28,10 +29,19 @@ public class DnsLookupSessionFactory
                         for (String nameserver : hosts) {
                             resolvers.add(new SimpleResolver(Sockets.getInetSocketAddress(nameserver, 53)));
                         }
-                        return new ExtendedResolver(resolvers);
+                        if (resolvers.size() == 1) {
+                            return resolvers.get(0);
+                        } else {
+                            return new ExtendedResolver(resolvers);
+                        }
                     }
                 })
                 .orElseGet(ExtendedResolver::new);
+
+        configuration.getString("dns.client.timeout")
+                .map(s -> "PT" + s)
+                .map(Duration::parse)
+                .ifPresent(resolver::setTimeout);
 
         lookupSession = LookupSession.builder()
                 .searchPath(configuration.getListAs("dns.client.search", json -> {

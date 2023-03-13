@@ -4,5 +4,6 @@ dns:
     nameservers: []
     search: []
     hosts: {}
+    timeout: 10s
     discovery:
       enabled: "{{ dns.client.enabled }}"
