@@ -3,3 +3,5 @@ dns:
   server:
     enabled: "{{ dns.enabled }}"
     port: 53
+    zones: []
+    keys: []

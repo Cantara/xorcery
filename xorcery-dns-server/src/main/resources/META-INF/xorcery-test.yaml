@@ -1,3 +1,13 @@
 dns:
+  enabled: "{{ defaults.enabled }}"
   server:
-     port: 8853
+    enabled: "{{ dns.enabled }}"
+    port: 8853
+    zones:
+      - name: xorcery.test
+        allow-update:
+          - key: updatekey
+    keys:
+      - name: updatekey
+        secret: "secrets:dnsupdatekey"
+        algorithm: "hmac-md5"
