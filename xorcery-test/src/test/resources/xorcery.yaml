@@ -1,8 +1,9 @@
 defaults.enabled: false
 dns:
   client.enabled: true
+  client.discovery.enabled: false
   client.nameservers:
-    - 127.0.0.1:53
+    - 127.0.0.1:8853
   registration.announce.enabled: false
   server:
     registration.key:
