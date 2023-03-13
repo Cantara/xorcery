@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-parent</artifactId>
-    <version>0.18.2-SNAPSHOT</version>
+    <version>0.18.2</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -32,7 +31,7 @@
         <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
         <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
         <url>https://github.com/Cantara/xorcery</url>
-        <tag>HEAD</tag>
+        <tag>xorcery-project-0.18.2</tag>
     </scm>
 
     <dependencyManagement>
@@ -375,8 +374,7 @@
                         <consoleOutputReporter>
                             <disable>true</disable>
                         </consoleOutputReporter>
-                        <statelessTestsetInfoReporter
-                                implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter"/>
+                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter" />
                     </configuration>
                 </plugin>
             </plugins>
