@@ -13,6 +13,7 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Flow;
 
 @Service(name = "domainevents")
@@ -38,7 +39,8 @@ public class DomainEventsService
                         this, DomainEventsService.class,configuration.getConfiguration("domainevents.publisher.configuration"))
                 .exceptionally(t ->
                 {
-                    LogManager.getLogger(getClass()).error("Domain event publisher failed", t);
+                    if (t instanceof CompletionException)
+                        LogManager.getLogger(getClass()).error("Domain event publisher failed", t);
                     return null;
                 });
     }
