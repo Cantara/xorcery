@@ -83,7 +83,7 @@ public class PublishWithResultReactiveStream
 
                 Object result = resultReader.readFrom(bin);
 
-                logger.info("Deserialized result:" + result);
+                logger.trace(marker, "Deserialized result: {}", result);
                 resultQueue.remove().complete(result);
             }
         } catch (Throwable e) {

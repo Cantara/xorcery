@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
@@ -42,7 +43,7 @@ public class Neo4jProjectionsSubscriberService {
                                              MetricRegistry metricRegistry) {
         graphDatabase = graphDatabases.apply("neo4j");
 
-        Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = new Neo4jProjectionCommitPublisher();
+        Neo4jProjectionCommitPublisher neo4jProjectionCommitPublisher = neo4jProjectionsService.getNeo4jProjectionCommitPublisher();
 
         List<Neo4jEventProjection> projectionList = new ArrayList<>();
         neo4jEventProjectionList.forEach(projectionList::add);
@@ -54,11 +55,11 @@ public class Neo4jProjectionsSubscriberService {
                 cfg.getString("projection").orElseThrow(),
                 neo4jProjectionCommitPublisher,
                 projectionList,
-                metricRegistry)), ProjectionSubscriber.class);
+                metricRegistry), new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))), ProjectionSubscriber.class);
 
         if (configuration.getBoolean("neo4jprojections.commitpublisher.enabled").orElse(true))
         {
-            reactiveStreamsServer.publisher("neo4jprojectioncommits", cfg -> neo4jProjectionsService.getNeo4jProjectionCommitPublisher(), Neo4jProjectionCommitPublisher.class);
+            reactiveStreamsServer.publisher("neo4jprojectioncommits", cfg -> neo4jProjectionCommitPublisher, Neo4jProjectionCommitPublisher.class);
         }
     }
 

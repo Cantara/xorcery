@@ -13,7 +13,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.DockerComposeContainer;
@@ -26,17 +25,16 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Testcontainers
-@Disabled
-public class EventStoreIT {
+@Testcontainers(disabledWithoutDocker = true)
+public class EventStoreTest {
 
     private static Xorcery xorcery;
-    private static final Logger logger = LogManager.getLogger(EventStoreIT.class);
+    private static final Logger logger = LogManager.getLogger(EventStoreTest.class);
 
     @Container
     public static DockerComposeContainer environment =
             new DockerComposeContainer(new File("src/test/resources/compose-test.yaml"))
-                    .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreIT.class)))
+                    .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreTest.class)))
                     .withExposedService("eventstore", 2113);
 
     @BeforeAll

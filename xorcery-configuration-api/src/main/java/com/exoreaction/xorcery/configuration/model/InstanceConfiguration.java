@@ -10,30 +10,30 @@ import java.net.URI;
 import java.net.UnknownHostException;
 
 /**
+ * Configuration wrapper for server instance configuration
+ *
  * @author rickardoberg
  * @since 20/04/2022
  */
-
-public interface StandardConfiguration
-        extends WithContext<Configuration> {
-    default String getId() {
-        return context().getString("id").orElse(null);
+public record InstanceConfiguration(Configuration configuration) {
+    public String getId() {
+        return configuration.getString("id").orElse(null);
     }
 
-    default String getHost() {
-        return context().getString("host").orElse(null);
+    public String getHost() {
+        return configuration.getString("host").orElse(null);
     }
 
-    default String getEnvironment() {
-        return context().getString("environment").orElse(null);
+    public String getEnvironment() {
+        return configuration.getString("environment").orElse(null);
     }
 
-    default String getTag() {
-        return context().getString("tag").orElse(null);
+    public String getTag() {
+        return configuration.getString("tag").orElse(null);
     }
 
-    default String getHome() {
-        return context().getString("home").orElseGet(() ->
+    public String getHome() {
+        return configuration.getString("home").orElseGet(() ->
         {
             try {
                 return new File(".").getCanonicalPath();
@@ -43,20 +43,19 @@ public interface StandardConfiguration
         });
     }
 
-    default URI getServerUri() {
-        return context().getURI("jetty.server.uri").orElseThrow();
+    public URI getServerUri() {
+        return configuration.getURI("uri").orElseThrow();
     }
 
-    default InetAddress getIp()
-    {
-        return context().getString("ip").map(ip ->
+    public InetAddress getIp() {
+        return configuration.getString("ip").map(ip ->
         {
             try {
                 return InetAddress.getByName(ip);
             } catch (UnknownHostException e) {
                 throw new UncheckedIOException(e);
             }
-        }).orElseGet(()->
+        }).orElseGet(() ->
         {
             try {
                 return InetAddress.getLocalHost();

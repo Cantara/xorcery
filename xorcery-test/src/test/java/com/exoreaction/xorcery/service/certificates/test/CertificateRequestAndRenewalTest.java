@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.certificates.test;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.ClientTester;
 import com.exoreaction.xorcery.util.Sockets;
@@ -22,7 +22,7 @@ public class CertificateRequestAndRenewalTest {
     String config = """
             dns.client.hosts:
                 .server1.xorcery.test: 127.0.0.1
-                _certificates: https://127.0.0.1:""" + managerPort +"""
+                _certificates._sub._https._tcp: https://127.0.0.1:""" + managerPort +"""
             
             dns.server.enabled: false
             dns.client.discovery.enabled: false
@@ -86,8 +86,8 @@ public class CertificateRequestAndRenewalTest {
         managerPort = 8443;
         Configuration serverConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("id", "xorcery1")
-                .add("host", "server.xorcery.test")
+                .add("instance.id", "xorcery1")
+                .add("instance.host", "server.xorcery.test")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", managerPort)
 //                .add("server.ssl.enabled", false)
@@ -101,8 +101,8 @@ public class CertificateRequestAndRenewalTest {
         System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
         Configuration clientConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("id", "xorcery2")
-                .add("host", "server2.xorcery.test")
+                .add("instance.id", "xorcery2")
+                .add("instance.host", "server2.xorcery.test")
                 .add("clienttester.enabled", "true")
                 .add("server.enabled", false)
                 .add("server.enabled", false)
@@ -113,7 +113,7 @@ public class CertificateRequestAndRenewalTest {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 System.out.println("DONE");
 
-                StandardConfiguration cfg = () -> serverConfiguration;
+                InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
                 URI crlUri = cfg.getServerUri().resolve("api/certificates/crl");
                 InputStream input = (InputStream) client.getServiceLocator().getService(ClientTester.class).get(UriBuilder.fromUri(crlUri).build()).get().getEntity();
                 System.out.println(new String(input.readAllBytes()));

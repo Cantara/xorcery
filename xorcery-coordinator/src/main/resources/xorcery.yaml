@@ -1,0 +1,8 @@
+name: "xorcery-coordinator"
+host: "{{ ENV.HOSTNAME | \"coordinator\" }}"
+
+dns.server.port: 8853
+dns.client.nameServers:
+  - localhost:8853
+
+log4jpublisher.enabled: false

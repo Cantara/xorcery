@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.jetty.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
+import com.exoreaction.xorcery.service.keystores.KeyStoresConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
@@ -15,16 +16,25 @@ public class ClientSslContextFactoryFactory {
 
     public ClientSslContextFactoryFactory(Configuration configuration, Optional<KeyStores> keyStores) throws Exception {
         factory = new SslContextFactory.Client();
-        keyStores.ifPresent(ks -> {
-            factory.setKeyStore(ks.getKeyStore("keystores.keystore"));
-            factory.setTrustStore(ks.getKeyStore("keystores.truststore"));
-            factory.setKeyManagerPassword(configuration.getString("keystores.keystore.password").orElse(null));
-            factory.setCertAlias(configuration.getString("jetty.client.ssl.alias").orElse("self"));
+
+        JettyClientSslConfiguration jettyClientSslConfiguration = new JettyClientSslConfiguration(configuration.getConfiguration("jetty.client.ssl"));
+        KeyStoresConfiguration keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
+
+        // Client settings
+        keyStores.ifPresent(ks ->
+        {
+            factory.setKeyStore(ks.getKeyStore("keystore"));
+            factory.setTrustStore(ks.getKeyStore("truststore"));
+            factory.setKeyManagerPassword(Optional.ofNullable(keyStoresConfiguration.getKeyStoreConfiguration("keystore").getPassword()).map(String::new).orElse(null));
+            factory.setCertAlias(jettyClientSslConfiguration.getAlias());
         });
-        factory.setEndpointIdentificationAlgorithm("HTTPS");
+
+        // Server settings
+        factory.setEndpointIdentificationAlgorithm(jettyClientSslConfiguration.getEndpointIdentificationAlgorithm());
         factory.setHostnameVerifier((hostName, session) -> true);
-        factory.setTrustAll(configuration.getBoolean("jetty.client.ssl.trustall").orElse(false));
+        factory.setTrustAll(jettyClientSslConfiguration.isTrustAll());
         factory.setSNIProvider(NON_DOMAIN_SNI_PROVIDER);
+
         factory.start();
     }
 
@@ -39,7 +49,6 @@ public class ClientSslContextFactoryFactory {
     public SslContextFactory.Client provide() {
         return factory;
     }
-
 
     public void keyStoreUpdated(KeyStore updatedKeyStore) {
         try {

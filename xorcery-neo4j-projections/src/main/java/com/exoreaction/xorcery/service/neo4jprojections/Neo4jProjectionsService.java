@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.neo4jprojections;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4jprojections.api.Neo4jProjectionStreams;
@@ -29,7 +30,7 @@ public class Neo4jProjectionsService {
     @Inject
     public Neo4jProjectionsService(ServiceResourceObjects serviceResourceObjects,
                                    Configuration configuration) {
-        this.sro = new ServiceResourceObject.Builder(() -> configuration, SERVICE_TYPE)
+        this.sro = new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
                 .with(b -> {
                     if (configuration.getBoolean("neo4jprojections.eventsubscriber").orElse(true))
                         b.subscriber(Neo4jProjectionStreams.EVENT_SUBSCRIBER);

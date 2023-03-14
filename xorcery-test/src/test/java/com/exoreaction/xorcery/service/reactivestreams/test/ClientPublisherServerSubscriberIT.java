@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.reactivestreams.test;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
@@ -11,6 +11,7 @@ import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.util.Sockets;
 import org.junit.jupiter.api.Test;
+import org.neo4j.cypher.internal.expressions.In;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ public class ClientPublisherServerSubscriberIT {
             int clients = 1;
             for (int i = 0; i < clients; i++) {
                 final StringClientPublisher clientPublisher = new StringClientPublisher((int) total);
-                StandardConfiguration standardConfiguration = () -> xorcery.getServiceLocator().getService(Configuration.class);
+                InstanceConfiguration standardConfiguration = new InstanceConfiguration(xorcery.getServiceLocator().getService(Configuration.class).getConfiguration("instance"));
                 URI serverUri = standardConfiguration.getServerUri();
                 futures.add(reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber",
                         Configuration::empty, clientPublisher, clientPublisher.getClass(), Configuration.empty()));
@@ -104,7 +105,7 @@ public class ClientPublisherServerSubscriberIT {
                 }
             };
 
-            StandardConfiguration standardConfiguration = () -> xorcery.getServiceLocator().getService(Configuration.class);
+            InstanceConfiguration standardConfiguration = new InstanceConfiguration(xorcery.getServiceLocator().getService(Configuration.class).getConfiguration("instance"));
             URI serverUri = standardConfiguration.getServerUri();
             reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), Configuration.empty())
                     .toCompletableFuture().get();
@@ -155,7 +156,7 @@ public class ClientPublisherServerSubscriberIT {
             };
 
             long start = System.currentTimeMillis();
-            StandardConfiguration standardConfiguration = () -> xorcery.getServiceLocator().getService(Configuration.class);
+            InstanceConfiguration standardConfiguration = new InstanceConfiguration(xorcery.getServiceLocator().getService(Configuration.class).getConfiguration("instance"));
             URI serverUri = standardConfiguration.getServerUri();
             reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), Configuration.empty())
                     .whenComplete((r, t) ->

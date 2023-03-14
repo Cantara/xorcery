@@ -17,7 +17,7 @@ public class ServerApplication
         property(ServerProperties.UNWRAP_COMPLETION_STAGE_IN_WRITER_ENABLE, Boolean.TRUE);
 
         List<String> mediaTypesList = new ArrayList<>();
-        configuration.getObjectAs("jersey.server.mediatypes", JsonElement::asMap).ifPresent(mappings ->
+        configuration.getObjectAs("jersey.server.mediaTypes", JsonElement::asMap).ifPresent(mappings ->
         {
             mappings.forEach((suffix, mediaType)-> mediaTypesList.add(suffix+":"+mediaType.textValue()));
         });

@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.jersey.server;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.jersey.server.resources.ServerApplication;
@@ -48,7 +49,7 @@ public class JerseyServerService
         servletHolder.setInitOrder(1);
         ctx.addServlet(servletHolder, "/*");
 
-        sro.add(new ServiceResourceObject.Builder(() -> configuration, "server")
+        sro.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "server")
                 .attribute("jetty.version", Jetty.VERSION)
                 .build());
 

@@ -1,8 +1,9 @@
 dns:
   client:
     enabled: "{{ defaults.enabled }}"
-    nameservers: []
+    nameServers: []
     search: []
     hosts: {}
+    timeout: 10s
     discovery:
       enabled: "{{ dns.client.enabled }}"

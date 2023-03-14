@@ -49,30 +49,34 @@ public class CertificatesClientService {
     private final Configuration configuration;
     private final JsonApiClient client;
     private final KeyStore keyStore;
+    private final CertificatesClientConfiguration certificatesClientConfiguration;
 
     public CertificatesClientService(KeyStores keyStores,
                                      HttpClient httpClient,
                                      DnsLookupService dnsLookupService,
                                      Configuration configuration) throws KeyStoreException {
-        this.keyStore = keyStores.getKeyStore("keystores.keystore");
+        this.keyStore = keyStores.getKeyStore("keystore");
         this.keyStores = keyStores;
         this.configuration = configuration;
+        this.certificatesClientConfiguration= ()->configuration.getConfiguration("certificates.client");
         this.alias = configuration.getString("client.ssl.alias").orElse("self");
 
         this.client = new JsonApiClient(httpClient, dnsLookupService);
 
-        if (keyStore.containsAlias(alias)) {
+        if (keyStore.containsAlias(alias) && certificatesClientConfiguration.isRenewOnStartup()) {
             // Renewal?
-            configuration.getString("certificates.client.uri")
+            certificatesClientConfiguration.getURI()
                     .map(this::renewCertificate)
                     .ifPresent(CompletableFuture::join);
 
         } else {
             // Request
-            configuration.getString("certificates.client.uri")
+            certificatesClientConfiguration.getURI()
                     .map(this::requestCertificate)
                     .ifPresent(CompletableFuture::join);
         }
+
+        // TODO Setup timer to do renewal here
     }
 
     public CompletableFuture<Void> requestCertificate(String certificatesUri) {

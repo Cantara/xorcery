@@ -73,6 +73,8 @@ public class Neo4jProjectionEventHandler
         fromVersion.ifPresent(from -> version = from);
 
         updateParameters.put(Enums.toField(Projection.id), projectionId);
+
+        logger.info("Started Neo4j projection "+projectionId);
     }
 
     @Override
@@ -133,7 +135,7 @@ public class Neo4jProjectionEventHandler
                         logger.error("Could not commit Neo4j updates", e);
                     }
 
-                    logger.info("Applied " + currentBatchSize);
+                    logger.trace("Applied {}", currentBatchSize);
 
                     appliedEvents = 0;
                 } else {

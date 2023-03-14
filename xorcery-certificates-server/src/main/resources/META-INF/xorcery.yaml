@@ -2,7 +2,7 @@ certificates:
   server:
     enabled: "{{ defaults.enabled }}"
     alias: "intermediate"
-    validity: 90
+    validity: 90d
     self:
       enabled: "{{ certificates.server.enabled }}"
 

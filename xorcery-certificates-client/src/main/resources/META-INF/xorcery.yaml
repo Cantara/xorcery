@@ -1,8 +1,8 @@
 certificates:
   client:
     enabled: "{{ defaults.enabled }}"
-    uri: "srv://_certificates"
-    renewonstartup: false
+    uri: "srv://_certificates._sub._https._tcp"
+    renewOnStartup: false
 keystores:
   keystore:
     path: "META-INF/keystore.p12"
@@ -10,4 +10,4 @@ keystores:
   truststore:
     path: "META-INF/truststore.p12"
     password: "password"
-    addrootca: true
+    addRootCa: true

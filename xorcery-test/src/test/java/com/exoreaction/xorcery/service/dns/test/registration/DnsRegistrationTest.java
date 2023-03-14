@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.dns.test.server.registration;
+package com.exoreaction.xorcery.service.dns.test.registration;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
@@ -12,9 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Disabled
 public class DnsRegistrationTest {

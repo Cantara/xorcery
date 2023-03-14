@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-parent</artifactId>
-        <version>0.18.1-SNAPSHOT</version>
+        <version>0.18.3-SNAPSHOT</version>
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>xorcery-disruptor</artifactId>
-    <version>0.18.1-SNAPSHOT</version>
+    <version>0.18.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -19,6 +19,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-configuration-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>

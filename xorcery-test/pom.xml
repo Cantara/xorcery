@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-parent</artifactId>
-        <version>0.18.1-SNAPSHOT</version>
+        <version>0.18.3-SNAPSHOT</version>
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>xorcery-test</artifactId>
-    <version>0.18.1-SNAPSHOT</version>
+    <version>0.18.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -24,11 +24,23 @@
             <artifactId>xorcery-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-dns-server</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-dns-registration</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-dns-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jersey-client</artifactId>
@@ -42,11 +54,6 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metadata</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-dns-client</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -127,7 +134,7 @@
             <artifactId>hk2-runlevel</artifactId>
         </dependency>
         <dependency>
-            <groupId> io.jsonwebtoken</groupId>
+            <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
         </dependency>
         <dependency>
@@ -199,6 +206,48 @@
             <artifactId>hamcrest</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Benchmarking -->
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.36</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>1.36</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.glassfish.hk2</groupId>
+                            <artifactId>hk2-metadata-generator</artifactId>
+                            <version>${hk2.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.openjdk.jmh</groupId>
+                            <artifactId>jmh-generator-annprocess</artifactId>
+                            <version>1.36</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 
 </project>

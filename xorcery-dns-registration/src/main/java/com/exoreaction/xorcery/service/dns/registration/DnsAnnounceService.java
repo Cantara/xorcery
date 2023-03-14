@@ -1,8 +1,7 @@
 package com.exoreaction.xorcery.service.dns.registration;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
-import com.exoreaction.xorcery.service.dns.registration.DnsRecords;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +34,7 @@ public class DnsAnnounceService
             JmDNS jmDNS) throws IOException {
         jmdns = jmDNS;
         selfName = configuration.getString("id").orElse("xorcery");
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
 
         Map<String, Map<String, String>> props = new HashMap<>();
         for (Record record : dnsRecords.getRecords()) {
@@ -43,7 +42,7 @@ public class DnsAnnounceService
             {
                 Map<String, String> serviceProps = new HashMap<>();
                 for (String string : txtRecord.getStrings()) {
-                    String[] keyValue = string.split("=", 1);
+                    String[] keyValue = string.split("=", 2);
                     serviceProps.put(keyValue[0], keyValue[1]);
                 }
                 props.put(txtRecord.getName().toString(), serviceProps);

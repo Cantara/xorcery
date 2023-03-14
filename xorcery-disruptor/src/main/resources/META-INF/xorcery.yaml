@@ -1,0 +1,4 @@
+disruptor:
+  standard:
+    size: 512
+    shutdownTimeout: 60

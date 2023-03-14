@@ -28,27 +28,30 @@ public class HttpClientFactory {
 
     public HttpClientFactory(Configuration configuration, Supplier<DnsLookupService> dnsLookup, Supplier<SslContextFactory.Client> clientSslContextFactoryProvider) throws Exception {
 
-        Configuration clientConfig = configuration.getConfiguration("jetty.client");
+//        Configuration clientConfig = configuration.getConfiguration("jetty.client");
+        JettyClientConfiguration jettyClientConfiguration = new JettyClientConfiguration(configuration.getConfiguration("jetty.client"));
 
         // Client setup
         ClientConnector connector = new ClientConnector();
-        connector.setIdleTimeout(Duration.ofSeconds(clientConfig.getLong("idle_timeout").orElse(-1L)));
+        connector.setIdleTimeout(jettyClientConfiguration.getIdleTimeout());
 
         // HTTP 1.1
         ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
 
         ClientConnectionFactoryOverHTTP2.HTTP2 http2 = null;
 
-        if (clientConfig.getBoolean("http2.enabled").orElse(false)) {
+        JettyHttp2Configuration http2Configuration = new JettyHttp2Configuration(configuration.getConfiguration("jetty.client.http2"));
+        if (http2Configuration.isEnabled()) {
             // HTTP/2
             HTTP2Client http2Client = new HTTP2Client(connector);
-            http2Client.setIdleTimeout(clientConfig.getLong("idle_timeout").orElse(-1L));
+            http2Client.setIdleTimeout(http2Configuration.getIdleTimeout());
 
             http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
         }
 
         HttpClientTransportDynamic transport = null;
-        if (clientConfig.getBoolean("ssl.enabled").orElse(false)) {
+        JettyClientSslConfiguration jettyClientSslConfiguration = new JettyClientSslConfiguration(configuration.getConfiguration("jetty.client.ssl"));
+        if (jettyClientSslConfiguration.isEnabled()) {
             SslContextFactory.Client sslClientContextFactory = clientSslContextFactoryProvider.get();
             connector.setSslContextFactory(sslClientContextFactory);
         }
@@ -62,9 +65,9 @@ public class HttpClientFactory {
 
         client = new HttpClient(transport);
         QueuedThreadPool executor = new QueuedThreadPool();
-        executor.setName(configuration.getString("name").orElseThrow());
+        executor.setName(configuration.getString("instance.name").orElseThrow());
         client.setExecutor(executor);
-        client.setScheduler(new ScheduledExecutorScheduler(configuration.getString("name").orElseThrow() + "-scheduler", false));
+        client.setScheduler(new ScheduledExecutorScheduler(configuration.getString("instance.name").orElseThrow() + "-scheduler", false));
 
         if (dnsLookup.get() != null) {
             client.setSocketAddressResolver(new DnsLookupSocketAddressResolver(dnsLookup.get()));
@@ -75,7 +78,7 @@ public class HttpClientFactory {
         transport.setConnectionPoolFactory(destination ->
         {
             RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, destination);
-            pool.preCreateConnections(10);
+//            pool.preCreateConnections(10);
             return pool;
         });
 

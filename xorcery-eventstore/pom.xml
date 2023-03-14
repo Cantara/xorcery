@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-parent</artifactId>
-        <version>0.18.1-SNAPSHOT</version>
+        <version>0.18.3-SNAPSHOT</version>
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>xorcery-eventstore</artifactId>
-    <version>0.18.1-SNAPSHOT</version>
+    <version>0.18.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -72,11 +72,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>
@@ -91,11 +86,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <!-- TODO find dependency and replace with log4j-api if possible -->
@@ -154,6 +144,7 @@
             <artifactId>disruptor</artifactId>
         </dependency>
 
+        <!-- Tests -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>

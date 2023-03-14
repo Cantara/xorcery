@@ -99,7 +99,7 @@ public class SubscriberWithResultReactiveStream
                         @Override
                         public void writeSuccess() {
                             byteBufferPool.release(data);
-                            logger.info("Sent result:" + r);
+                            logger.trace("Sent result: {}", r);
                         }
                     });
                     session.getRemote().flush();

@@ -1,6 +1,6 @@
 neo4jdatabase:
   enabled: "{{ defaults.enabled }}"
-  path: "{{ home }}/neo4j"
+  path: "{{ instance.home }}/neo4j"
   startup: []
   temporary_settings_file: "tmp_neo4j.conf"
   settings:

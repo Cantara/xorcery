@@ -8,17 +8,20 @@ import org.xbill.DNS.hosts.HostsFileParser;
 import org.xbill.DNS.lookup.LookupSession;
 
 import java.io.UncheckedIOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
-public class DnsLookupSessionFactory
-{
+public class DnsLookupSessionFactory {
     private final LookupSession lookupSession;
 
     public DnsLookupSessionFactory(Configuration configuration) {
 
-        Resolver resolver = configuration.getListAs("dns.client.nameservers", JsonNode::textValue)
+        DnsClientConfiguration dnsClientConfiguration = new DnsClientConfiguration(configuration.getConfiguration("dns.client"));
+
+        Resolver resolver = dnsClientConfiguration.getNameServers()
                 .map(hosts ->
                 {
                     if (hosts.isEmpty()) {
@@ -28,19 +31,19 @@ public class DnsLookupSessionFactory
                         for (String nameserver : hosts) {
                             resolvers.add(new SimpleResolver(Sockets.getInetSocketAddress(nameserver, 53)));
                         }
-                        return new ExtendedResolver(resolvers);
+                        if (resolvers.size() == 1) {
+                            return resolvers.get(0);
+                        } else {
+                            return new ExtendedResolver(resolvers);
+                        }
                     }
                 })
                 .orElseGet(ExtendedResolver::new);
 
+        resolver.setTimeout(dnsClientConfiguration.getTimeout());
+
         lookupSession = LookupSession.builder()
-                .searchPath(configuration.getListAs("dns.client.search", json -> {
-                    try {
-                        return Name.fromString(json.textValue());
-                    } catch (TextParseException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                }).orElseGet(Collections::emptyList))
+                .searchPath(dnsClientConfiguration.getSearchDomains())
                 .cache(new Cache())
                 .resolver(resolver)
                 .hostsFileParser(new HostsFileParser())

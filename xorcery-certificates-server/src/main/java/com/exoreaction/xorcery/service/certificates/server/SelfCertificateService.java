@@ -1,8 +1,9 @@
 package com.exoreaction.xorcery.service.certificates.server;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
+import com.exoreaction.xorcery.service.keystores.KeyStoresConfiguration;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +45,7 @@ public class SelfCertificateService {
     public SelfCertificateService(KeyStores keyStores,
                                   Configuration configuration,
                                   IntermediateCA intermediateCA) throws GeneralSecurityException, IOException, OperatorCreationException, PKCSException {
-        this.keyStore = keyStores.getKeyStore("keystores.keystore");
+        this.keyStore = keyStores.getKeyStore("keystore");
         this.keyStores = keyStores;
         this.configuration = configuration;
         this.intermediateCA = intermediateCA;
@@ -76,7 +77,7 @@ public class SelfCertificateService {
                 }));
         // TODO Add DNS names here
         System.out.println(inetAddresses);
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         X500Name issuedCertSubject = new X500Name("CN=" + standardConfiguration.getId());
         String certificatePem = intermediateCA.createCertificate(issuedCertSubject, SubjectPublicKeyInfo.getInstance(issuedCertKeyPair.getPublic().getEncoded()), inetAddresses);
         insertSelfCertificate(certificatePem, issuedCertKeyPair);
@@ -90,7 +91,7 @@ public class SelfCertificateService {
         {
             chain.add(new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificate));
         }
-        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+        char[] password = new KeyStoresConfiguration(configuration.getConfiguration("keystores")).getKeyStoreConfiguration("keystore").getPassword();
         keyStore.setKeyEntry(certificateAlias, issuedCertKeyPair.getPrivate(), password, chain.toArray(new java.security.cert.Certificate[0]));
         keyStores.save(keyStore);
 

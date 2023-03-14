@@ -1,9 +1,11 @@
 package com.exoreaction.xorcery.service.certificates.server;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
+import com.exoreaction.xorcery.service.keystores.KeyStoresConfiguration;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,13 +44,15 @@ import java.util.*;
 
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
-@Service
+@Service(name = "certificates.server")
 public class IntermediateCA {
 
     private final Logger logger = LogManager.getLogger(getClass());
     private final Configuration configuration;
     private final KeyStore intermediateCaKeyStore;
     private final KeyStore intermediateCaTrustStore;
+    private final CertificatesServerConfiguration certificatesServerConfiguration;
+    private final KeyStoresConfiguration keystoresConfiguration;
     private KeyStores keyStores;
 
     private final JcaX509ExtensionUtils issuedCertExtUtils;
@@ -60,16 +64,18 @@ public class IntermediateCA {
                           KeyStores keyStores
     ) throws NoSuchAlgorithmException {
         this.configuration = configuration;
+        this.certificatesServerConfiguration = new CertificatesServerConfiguration(configuration.getConfiguration("certificates.server"));
+        this.keystoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
 
-        intermediateCaKeyStore = keyStores.getKeyStore("keystores.keystore");
-        intermediateCaTrustStore = keyStores.getKeyStore("keystores.truststore");
+        intermediateCaKeyStore = keyStores.getKeyStore("keystore");
+        intermediateCaTrustStore = keyStores.getKeyStore("truststore");
         this.keyStores = keyStores;
 
         issuedCertExtUtils = new JcaX509ExtensionUtils();
 
-        keyStoreAlias = configuration.getString("certificates.server.alias").orElse("intermediate");
+        keyStoreAlias = certificatesServerConfiguration.getAlias();
 
-        serviceResourceObjects.add(new ServiceResourceObject.Builder(() -> configuration, "certificates")
+        serviceResourceObjects.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "certificates")
                 .with(b ->
                 {
                     b.api("request", "api/certificates/request");
@@ -93,12 +99,12 @@ public class IntermediateCA {
     }
 
     public String createCertificate(X500Name subject, SubjectPublicKeyInfo publicKeyInfo, List<String> ipAddresses) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, OperatorCreationException {
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.DATE, configuration.getInteger("certificates.server.validity").orElse(90));
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryDate = now.plus(certificatesServerConfiguration.getValidity());
         X509Certificate serviceCaCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
         BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
         X500Name issuerName = X500Name.getInstance(serviceCaCert.getSubjectX500Principal().getEncoded());
-        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(issuerName, issuedCertSerialNum, new Date(), now.getTime(), subject, publicKeyInfo);
+        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(issuerName, issuedCertSerialNum, Date.from(now.toInstant(ZoneOffset.UTC)), Date.from(expiryDate.toInstant(ZoneOffset.UTC)), subject, publicKeyInfo);
 
         // Add Extensions
         // Use BasicConstraints to say that this Cert is not a CA
@@ -123,7 +129,7 @@ public class IntermediateCA {
         issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(names.toArray(new ASN1Encodable[1])));
 
         JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider(PROVIDER_NAME);
-        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+        char[] password = keystoresConfiguration.getKeyStoreConfiguration("keystore").getPassword();
         ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password));
         X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
 
@@ -138,13 +144,13 @@ public class IntermediateCA {
 
         X509CertificateHolder currentBcClientCertificate = new X509CertificateHolder(currentClientCertificate.getEncoded());
 
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.DATE, configuration.getInteger("certificates.server.validity").orElse(90));
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryDate = now.plus(certificatesServerConfiguration.getValidity());
         X509Certificate signingCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
         BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
         X500Name signerName = X500Name.getInstance(signingCert.getIssuerX500Principal().getEncoded());
         X500Name subjectName = X500Name.getInstance(currentClientCertificate.getIssuerX500Principal().getEncoded());
-        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(signerName, issuedCertSerialNum, new Date(), now.getTime(), subjectName, currentBcClientCertificate.getSubjectPublicKeyInfo());
+        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(signerName, issuedCertSerialNum, Date.from(now.toInstant(ZoneOffset.UTC)), Date.from(expiryDate.toInstant(ZoneOffset.UTC)), subjectName, currentBcClientCertificate.getSubjectPublicKeyInfo());
 
         // Add Extensions
         Extensions exts = new X509CertificateHolder(currentClientCertificate.getEncoded()).getExtensions();
@@ -155,7 +161,7 @@ public class IntermediateCA {
         }
 
         JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider(PROVIDER_NAME);
-        char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+        char[] password = keystoresConfiguration.getKeyStoreConfiguration("keystore").getPassword();
         ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password));
         X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
 
@@ -175,7 +181,7 @@ public class IntermediateCA {
 
         {
             X509Certificate signingCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
-            char[] password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+            char[] password = keystoresConfiguration.getKeyStoreConfiguration("keystore").getPassword();
             X509CRL crl = createEmptyCRL((PrivateKey) intermediateCaKeyStore.getKey(keyStoreAlias, password), signingCert);
 
             PemWriter pWrt = new PemWriter(stringWriter);
@@ -185,16 +191,15 @@ public class IntermediateCA {
 
         // See if we have the rootstore as well, and append it
         try {
-            KeyStore rootStore = keyStores.getKeyStore("keystores.rootstore");
+            KeyStore rootStore = keyStores.getKeyStore("rootstore");
 
             X509Certificate signingCert = (X509Certificate) rootStore.getCertificate("root");
-            char[] password = configuration.getString("keystores.rootstore.password").map(String::toCharArray).orElse(null);
+            char[] password = keystoresConfiguration.getKeyStoreConfiguration("rootstore").getPassword();
             X509CRL crl = createEmptyCRL((PrivateKey) rootStore.getKey("root", password), signingCert);
             PemWriter pWrt = new PemWriter(stringWriter);
             pWrt.writeObject(new PemObject(PEMParser.TYPE_X509_CRL, crl.getEncoded()));
             pWrt.close();
-        } catch (RuntimeException exception)
-        {
+        } catch (RuntimeException exception) {
             // Ignore
         }
 

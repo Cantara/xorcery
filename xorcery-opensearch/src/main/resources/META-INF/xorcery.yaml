@@ -1,9 +1,9 @@
 opensearch:
   enabled: "{{ defaults.enabled }}"
   url: "http://{{ ENV.OPENSEARCH_HOST | \"localhost\" }}:9200"
-  component_templates: {}
-  index_templates: {}
-  deleteonexit: false
+  componentTemplates: {}
+  indexTemplates: {}
+  deleteOnExit: false
   publishers:
     - server:
         authority: "somehost:someport"
@@ -13,4 +13,4 @@ opensearch:
         alias: "somealias"
         index: "anindexname"
         configuration:
-          buffersize: 64
+          bufferSize: 64

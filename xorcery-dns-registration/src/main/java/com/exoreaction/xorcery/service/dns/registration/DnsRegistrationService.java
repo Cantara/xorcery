@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.dns.registration;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
@@ -14,6 +14,7 @@ import org.xbill.DNS.*;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.*;
 
 @Service(name = "dns.registration")
@@ -32,15 +33,16 @@ public class DnsRegistrationService
 
         resolver = getResolver(configuration);
 
-        Message msg = new Message();
-        msg.getHeader().setOpcode(Opcode.UPDATE);
-        StandardConfiguration standardConfiguration = () -> configuration;
+        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
 
-        String domain = configuration.getString("dns.domain").orElse("xorcery.test");
+        String domain = configuration.getString("domain").orElse("xorcery.test");
         zone = Name.fromConstantString(domain + ".");
 
-        Record soa = Record.newRecord(zone, Type.SOA, DClass.IN);
-        msg.addRecord(soa, Section.ZONE);
+        Message msg = Message.newUpdate(zone);
+//        msg.getHeader().setOpcode(Opcode.UPDATE);
+
+//        Record soa = Record.newRecord(zone, Type.SOA, DClass.IN);
+//        msg.addRecord(soa, Section.ZONE);
 
         for (Record record : dnsRecords.getRecords()) {
             msg.addRecord(record, Section.UPDATE);
@@ -53,7 +55,7 @@ public class DnsRegistrationService
 
     private static Resolver getResolver(Configuration configuration) {
 
-        Resolver resolver = configuration.getListAs("dns.nameservers", JsonNode::textValue)
+        Resolver resolver = configuration.getListAs("dns.client.nameservers", JsonNode::textValue)
                 .flatMap(hosts ->
                 {
                     if (hosts.isEmpty()) {
@@ -61,9 +63,16 @@ public class DnsRegistrationService
                     } else {
                         List<Resolver> resolvers = new ArrayList<>();
                         for (String nameserver : hosts) {
-                            return Optional.of(new SimpleResolver(Sockets.getInetSocketAddress(nameserver, 53)));
+                            SimpleResolver simpleResolver = new SimpleResolver(Sockets.getInetSocketAddress(nameserver, 53));
+                            resolvers.add(simpleResolver);
                         }
-                        return Optional.empty();
+                        if (resolvers.size()==1)
+                        {
+                            return Optional.of(resolvers.get(0));
+                        } else
+                        {
+                            return Optional.<Resolver>of(new ExtendedResolver(resolvers));
+                        }
                     }
                 })
                 .orElseGet(() ->
@@ -82,6 +91,11 @@ public class DnsRegistrationService
                 resolver.setTSIGKey(new TSIG(algo, keyname, keydata));
             });
         });
+
+        configuration.getString("dns.registration.timeout")
+                .map(s -> "PT"+s)
+                .map(Duration::parse)
+                .ifPresent(resolver::setTimeout);
 
         return resolver;
     }

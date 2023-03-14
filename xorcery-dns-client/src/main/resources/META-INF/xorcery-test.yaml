@@ -1,4 +1,5 @@
 dns:
   client:
+    timeout: 60s
     search:
       - "xorcery.test"

@@ -3,14 +3,12 @@ package com.exoreaction.xorcery.service.eventstore.test;
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.eventstore.EventStoreProjectionsService;
 import com.exoreaction.xorcery.service.eventstore.EventStoreService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.DockerComposeContainer;
@@ -19,22 +17,17 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-@Testcontainers
-@Disabled
-public class EventStoreProjectionsIT {
+@Testcontainers(disabledWithoutDocker = true)
+public class EventStoreProjectionsTest {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
     @Container
     public static DockerComposeContainer environment =
             new DockerComposeContainer(new File("src/test/resources/compose-test.yaml"))
-                    .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreProjectionsIT.class)))
+                    .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreProjectionsTest.class)))
                     .withExposedService("eventstore", 2113);
 
     @Test

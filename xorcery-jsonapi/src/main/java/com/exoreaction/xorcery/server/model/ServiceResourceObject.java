@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.server.model;
 
 import com.exoreaction.xorcery.builders.With;
-import com.exoreaction.xorcery.configuration.model.StandardConfiguration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.jsonapi.model.Attributes;
 import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.exoreaction.xorcery.jsonapi.model.Links;
@@ -18,7 +18,7 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
                           Attributes.Builder attributes, URI baseServerUri)
             implements With<Builder> {
 
-        public Builder(StandardConfiguration configuration, String serviceType) {
+        public Builder(InstanceConfiguration configuration, String serviceType) {
             this(new ResourceObject.Builder(serviceType, configuration.getId()), new Links.Builder(), new Attributes.Builder(), configuration.getServerUri());
             attributes.attribute("environment", configuration.getEnvironment());
             attributes.attribute("tag", configuration.getTag());

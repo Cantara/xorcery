@@ -4,7 +4,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.18.1-SNAPSHOT</version>
+    <version>0.18.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -80,6 +80,8 @@
         <module>xorcery-domainevents-neo4jprojection</module>
         <module>xorcery-jsonapi-server-neo4j</module>
         <module>xorcery-opensearch</module>
+
+        <module>xorcery-coordinator</module>
 
         <module>xorcery-test</module>
     </modules>

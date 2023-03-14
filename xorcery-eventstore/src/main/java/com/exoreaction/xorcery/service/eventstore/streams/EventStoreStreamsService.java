@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.eventstore.streams;
 
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.eventstore.EventStoreRels;
@@ -27,7 +28,7 @@ public class EventStoreStreamsService {
                 .findAndRegisterModules()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
-        ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(() -> configuration, "eventstore")
+        ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "eventstore")
                 .api(EventStoreRels.eventstore.name(), "api/eventstore");
 
         EventStoreDBClient client = eventStoreService.getClient();
