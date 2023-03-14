@@ -91,7 +91,7 @@ public class KeyStores {
             KeyStore keyStore = KeyStore.getInstance(keyStoreConfiguration.getType());
 
             if (keyStoreConfiguration.configuration().has("template")) {
-                File keyStoreOutput = new File(".", keyStoreConfiguration.getPath()).getAbsoluteFile();
+                File keyStoreOutput = new File(keyStoreConfiguration.getPath()).getAbsoluteFile();
                 if (!keyStoreOutput.exists()) {
                     // Copy template to file
                     URL templateStoreUrl = keyStoreConfiguration.configuration().getResourceURL("template").orElseThrow(() -> new IllegalArgumentException("Template file does not exist for keystore " + keyStoreName));
