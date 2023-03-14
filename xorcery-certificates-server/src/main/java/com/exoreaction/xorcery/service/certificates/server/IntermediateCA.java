@@ -39,6 +39,7 @@ import java.security.cert.*;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.util.*;
 
@@ -99,12 +100,13 @@ public class IntermediateCA {
     }
 
     public String createCertificate(X500Name subject, SubjectPublicKeyInfo publicKeyInfo, List<String> ipAddresses) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, OperatorCreationException {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiryDate = now.plus(certificatesServerConfiguration.getValidity());
+        ZonedDateTime now = ZonedDateTime.now();
+        ZonedDateTime validFrom = now.minusDays(1); // protect against "minor" misconfigurations
+        ZonedDateTime expiryDate = now.plus(certificatesServerConfiguration.getValidity());
         X509Certificate serviceCaCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
         BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
         X500Name issuerName = X500Name.getInstance(serviceCaCert.getSubjectX500Principal().getEncoded());
-        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(issuerName, issuedCertSerialNum, Date.from(now.toInstant(ZoneOffset.UTC)), Date.from(expiryDate.toInstant(ZoneOffset.UTC)), subject, publicKeyInfo);
+        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(issuerName, issuedCertSerialNum, Date.from(validFrom.toInstant()), Date.from(expiryDate.toInstant()), subject, publicKeyInfo);
 
         // Add Extensions
         // Use BasicConstraints to say that this Cert is not a CA
