@@ -1,2 +1,2 @@
 neo4jdatabase:
-  path: "{{ home }}/target/neo4j"
+  path: "{{ instance.home }}/target/neo4j"

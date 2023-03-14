@@ -1,4 +1,4 @@
-build_test_resources: "{{ home }}/target/test-classes"
+build_test_resources: "{{ instance.home }}/target/test-classes"
 test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"
 
 jetty.server.http.port: "{{ SYSTEM.server_http_port | 8080 }}"

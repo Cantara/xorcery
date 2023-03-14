@@ -1,6 +1,6 @@
 ---
 instance:
-  id: "{{ ENV.SERVER_ID | SYSTEM.server_id | host}}"
+  id: "{{ ENV.SERVER_ID | SYSTEM.server_id | instance.host }}"
   name: genericserver
   host: "{{ ENV.HOSTNAME | \"server\" }}"
   ip: "{{ ENV.IP | null }}"
@@ -8,8 +8,8 @@ instance:
   environment: development
   tag: default
   home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
-  buildResources: "{{ home }}/target/classes"
-  resources: "{{ ENV.RESOURCES | buildResources }}"
+  buildResources: "{{ instance.home }}/target/classes"
+  resources: "{{ ENV.RESOURCES | instance.buildResources }}"
 
 defaults:
   enabled: true

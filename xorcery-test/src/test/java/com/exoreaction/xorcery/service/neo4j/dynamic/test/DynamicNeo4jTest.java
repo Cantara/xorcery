@@ -18,7 +18,7 @@ public class DynamicNeo4jTest {
     private static final String config = """
             neo4jdatabase:
                 enabled: true
-                path: "{{ home }}/neo4j"
+                path: "{{ instance.home }}/neo4j"
             """;
 
     private static final String neo4jSetup = """

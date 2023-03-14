@@ -7,7 +7,7 @@ instance:
 hk2:
   threadPolicy: "USE_NO_THREADS"
 
-build_test_resources: "{{ home }}/target/test-classes"
+build_test_resources: "{{ instance.home }}/target/test-classes"
 test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"
 
 dns.client.hosts:
