@@ -5,6 +5,11 @@ jetty:
     port: "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}"
     uri: "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/"
 
+    minThreads: 10
+    maxThreads: 150
+    outputBufferSize: 32768
+    requestHeaderSize : 16384
+
     idleTimeout: "{{ defaults.idleTimeout }}"
 
     http:

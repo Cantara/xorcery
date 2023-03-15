@@ -40,24 +40,26 @@ public class JettyServerService
                               IterableProvider<SecurityHandler> securityHandlerProvider,
                               IterableProvider<MetricRegistry> metricRegistry) throws Exception {
 
-        Configuration jettyConfig = configuration.getConfiguration("jetty.server");
+        JettyServerConfiguration jettyConfig = new JettyServerConfiguration(configuration.getConfiguration("jetty.server"));
+        JettyServerHttp2Configuration jettyHttp2Config = new JettyServerHttp2Configuration(configuration.getConfiguration("jetty.server.http2"));
+        JettyServerSslConfiguration jettyServerSslConfiguration = new JettyServerSslConfiguration(configuration.getConfiguration("jetty.server.ssl"));
 
-        int httpPort = jettyConfig.getInteger("http.port").orElse(8889);
-        int httpsPort = jettyConfig.getInteger("ssl.port").orElse(8443);
+        int httpPort = jettyConfig.getHttpPort();
+        int httpsPort = jettyServerSslConfiguration.getPort();
 
         // Setup thread pool
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
         jettyConnectorThreadPool.setName("jetty-http-server-");
-        jettyConnectorThreadPool.setMinThreads(10);
-        jettyConnectorThreadPool.setMaxThreads(150);
+        jettyConnectorThreadPool.setMinThreads(jettyConfig.getMinThreads());
+        jettyConnectorThreadPool.setMaxThreads(jettyConfig.getMaxThreads());
 
         // Create server
         server = new Server(jettyConnectorThreadPool);
 
         // Setup connector
         final HttpConfiguration httpConfig = new HttpConfiguration();
-        httpConfig.setOutputBufferSize(32768);
-        httpConfig.setRequestHeaderSize(1024 * 16);
+        httpConfig.setOutputBufferSize(jettyConfig.getOutputBufferSize());
+        httpConfig.setRequestHeaderSize(jettyConfig.getRequestHeaderSize());
 
         // Added for X-Forwarded-For support, from ALB
         httpConfig.addCustomizer(new ForwardedRequestCustomizer());
@@ -67,7 +69,7 @@ public class JettyServerService
         // Clear-text protocols
         HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
         ServerConnector httpConnector;
-        if (jettyConfig.getBoolean("http2.enabled").orElse(false)) {
+        if (jettyHttp2Config.isEnabled()) {
             // The ConnectionFactory for clear-text HTTP/2.
             HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
 
@@ -77,22 +79,22 @@ public class JettyServerService
             // Create and configure the HTTP 1.1 connector
             httpConnector = new ServerConnector(server, http11);
         }
-        httpConnector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
+        httpConnector.setIdleTimeout(jettyConfig.getIdleTimeout().toSeconds());
         httpConnector.setPort(httpPort);
         server.addConnector(httpConnector);
 
-        if (jettyConfig.getBoolean("ssl.enabled").orElse(false)) {
+        if (jettyServerSslConfiguration.isEnabled()) {
 
             SslContextFactory.Server sslContextFactory = sslContextFactoryProvider.get();
             server.addBean(sslContextFactory);
 
             final HttpConfiguration sslHttpConfig = new HttpConfiguration();
-            sslHttpConfig.setOutputBufferSize(32768);
-            sslHttpConfig.setRequestHeaderSize(1024 * 16);
+            sslHttpConfig.setOutputBufferSize(jettyConfig.getOutputBufferSize());
+            sslHttpConfig.setRequestHeaderSize(jettyConfig.getRequestHeaderSize());
 
             SecureRequestCustomizer customizer = new SecureRequestCustomizer();
-            customizer.setSniRequired(jettyConfig.getBoolean("ssl.snirequired").orElse(true));
-            customizer.setSniHostCheck(jettyConfig.getBoolean("ssl.snihostcheck").orElse(true));
+            customizer.setSniRequired(jettyServerSslConfiguration.isSniRequired());
+            customizer.setSniHostCheck(jettyServerSslConfiguration.isSniHostCheck());
             sslHttpConfig.addCustomizer(customizer);
 
             // Added for X-Forwarded-For support, from ALB
@@ -109,13 +111,13 @@ public class JettyServerService
 
             // Create and configure the secure HTTP 1.1/2 connector, with ALPN negotiation
             ServerConnector httpsConnector;
-            if (jettyConfig.getBoolean("http2.enabled").orElse(false)) {
+            if (jettyHttp2Config.isEnabled()) {
                 HTTP2ServerConnectionFactory h2 = new HTTP2ServerConnectionFactory(sslHttpConfig);
                 httpsConnector = new ServerConnector(server, tls, alpn, h2, sslHttp11);
             } else {
                 httpsConnector = new ServerConnector(server, tls, alpn, sslHttp11);
             }
-            httpsConnector.setIdleTimeout(jettyConfig.getLong("idle_timeout").orElse(-1L));
+            httpsConnector.setIdleTimeout(jettyConfig.getIdleTimeout().toSeconds());
             httpsConnector.setPort(httpsPort);
             server.addConnector(httpsConnector);
         }
