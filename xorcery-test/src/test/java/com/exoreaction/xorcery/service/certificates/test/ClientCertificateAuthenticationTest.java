@@ -53,7 +53,7 @@ public class ClientCertificateAuthenticationTest {
                 .add("instance.host", "server")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", managerPort)
-                .add("jetty.server.ssl.snirequired", true)
+                .add("jetty.server.ssl.sniRequired", true)
                 .add("jetty.server.security.enabled", true)
                 .build();
 //        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
