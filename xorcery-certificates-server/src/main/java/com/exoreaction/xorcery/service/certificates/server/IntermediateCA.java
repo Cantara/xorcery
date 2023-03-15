@@ -101,7 +101,7 @@ public class IntermediateCA {
 
     public String createCertificate(X500Name subject, SubjectPublicKeyInfo publicKeyInfo, List<String> ipAddresses) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, OperatorCreationException {
         ZonedDateTime now = ZonedDateTime.now();
-        ZonedDateTime validFrom = now.minusDays(1); // protect against "minor" misconfigurations
+        ZonedDateTime validFrom = now.minusDays(1); // backdated to protect against clock skew and misconfigurations
         ZonedDateTime expiryDate = now.plus(certificatesServerConfiguration.getValidity());
         X509Certificate serviceCaCert = (X509Certificate) intermediateCaKeyStore.getCertificate(keyStoreAlias);
         BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
@@ -152,7 +152,8 @@ public class IntermediateCA {
         BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
         X500Name signerName = X500Name.getInstance(signingCert.getIssuerX500Principal().getEncoded());
         X500Name subjectName = X500Name.getInstance(currentClientCertificate.getIssuerX500Principal().getEncoded());
-        Date notBefore = Date.from(now.toInstant(ZoneOffset.systemDefault().getRules().getOffset(now)));
+        LocalDateTime oneDayBeforeNow = now.minusDays(1); // backdated to protect against clock skew and misconfigurations
+        Date notBefore = Date.from(oneDayBeforeNow.toInstant(ZoneOffset.systemDefault().getRules().getOffset(oneDayBeforeNow)));
         Date notAfter = Date.from(expiryDate.toInstant(ZoneOffset.systemDefault().getRules().getOffset(expiryDate)));
         X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(signerName, issuedCertSerialNum, notBefore, notAfter, subjectName, currentBcClientCertificate.getSubjectPublicKeyInfo());
 
