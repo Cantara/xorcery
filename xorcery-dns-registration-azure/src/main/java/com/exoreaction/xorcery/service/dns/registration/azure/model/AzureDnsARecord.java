@@ -22,4 +22,8 @@ public record AzureDnsARecord(ObjectNode json)
             return new AzureDnsARecord(builder);
         }
     }
+
+    public String getIP() {
+        return object().get("ipv4Address").asText();
+    }
 }

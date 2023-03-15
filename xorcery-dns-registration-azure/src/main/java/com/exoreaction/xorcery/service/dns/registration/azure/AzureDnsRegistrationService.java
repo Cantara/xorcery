@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.dns.registration.azure;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.service.dns.registration.DnsRecords;
 import com.exoreaction.xorcery.service.dns.registration.azure.model.*;
 import jakarta.inject.Inject;
@@ -11,28 +12,35 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 import org.xbill.DNS.ARecord;
+import org.xbill.DNS.Name;
 import org.xbill.DNS.SRVRecord;
 import org.xbill.DNS.TXTRecord;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 @Service(name = "dns.registration.azure")
 @RunLevel(20)
 public class AzureDnsRegistrationService implements PreDestroy {
     private final Logger logger = LogManager.getLogger(getClass());
-    private final AzureConfiguration configuration;
+    private final AzureConfiguration azureConfiguration;
+    private final InstanceConfiguration instanceConfiguration;
     private final DnsRecords dnsRecords;
     private final AzureAuthenticationClient loginClient;
+    private final String zoneString;
 
     @Inject
     public AzureDnsRegistrationService(HttpClient httpClient, Configuration configuration, DnsRecords dnsRecords) {
-        this.configuration = () -> configuration.getConfiguration("dns.registration.azure");
+        this.azureConfiguration = () -> configuration.getConfiguration("dns.registration.azure");
+        this.instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
+        this.zoneString = Name.fromConstantString(instanceConfiguration.configuration().getString("domain") + ".").toString();
         this.dnsRecords = dnsRecords;
         // get required configuration properties
-        this.loginClient = new AzureAuthenticationClient(httpClient, this.configuration);
+        this.loginClient = new AzureAuthenticationClient(httpClient, this.azureConfiguration);
         var azureDnsClient = loginClient.loginDns()
                 .toCompletableFuture()
                 .join();
@@ -43,6 +51,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
                     if (azureDnsResponse.hasNext()) {
                         // do "pagination" in case there's more than 100 records.
                         // azureDnsClient.listRecords(azureDnsResponse.getNextLink())
+                        // should this logic be placed in the client itself?
                     }
                     return azureDnsResponse;
                 })
@@ -53,11 +62,11 @@ public class AzureDnsRegistrationService implements PreDestroy {
 
         dnsRecords.getRecords()
                 .forEach(record -> {
-                    // I think we need to manually get record name and substring the zone away...
+                    var name = getNameWithoutZone(record.getName().toString());
                     var existingRecord = existingRecords.list()
                             .stream()
                             .filter(adr ->
-                                adr.getName().equals(record.getName().toString(true)) &&
+                                adr.getName().equals(name) &&
                                     compareType(adr.getType(), record.getType()))
                             .findFirst();
                     var requestBuilder = new AzureDnsRecord.Builder();
@@ -73,7 +82,8 @@ public class AzureDnsRegistrationService implements PreDestroy {
                             var rec = (ARecord) record;
                             var aRecords = new AzureDnsARecords.Builder();
                             var aRecord = new AzureDnsARecord.Builder();
-                            aRecord.setIP(rec.getAddress().getHostAddress());
+                            var ip = rec.getAddress() instanceof Inet4Address address ? address : (Inet6Address) rec.getAddress();
+                            aRecord.setIP(ip.getHostAddress());
                             aRecords.aRecord(aRecord.build());
                             propertiesBuilder.aRecords(aRecords.build());
                         }
@@ -96,7 +106,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
                             srvRecords.srvRecord(srvRecord.build());
                             propertiesBuilder.srvRecords(srvRecords.build());
                         }
-                        default -> throw new IllegalStateException("This is bad?");
+                        default -> throw new IllegalStateException("Unknown record type.");
                     }
 
 
@@ -141,22 +151,22 @@ public class AzureDnsRegistrationService implements PreDestroy {
                                 merged.forEach(records::srvRecord);
                                 propertiesBuilder.srvRecords(records.build());
                             }
-                            default -> throw new IllegalStateException("This is bad?");
+                            default -> throw new IllegalStateException("Unknown record type.");
                         }
                         requestBuilder.properties(propertiesBuilder.build());
                         azureDnsClient.patchRecord(requestBuilder.build(), azureRecord.getName(), type);
                     } else {
                         // put
                         requestBuilder.properties(propertiesBuilder.build());
-                        azureDnsClient.putRecord(requestBuilder.build(), record.getName().toString(true), type);
+                        azureDnsClient.putRecord(requestBuilder.build(), name, type);
                     }
                 });
     }
 
     @Override
     public void preDestroy() {
+        var ip = instanceConfiguration.getIp() instanceof Inet4Address address ? address : (Inet6Address) instanceConfiguration.getIp();
         // unregister
-        // get required configuration properties
         var azureDnsClient = loginClient.loginDns()
             .toCompletableFuture()
             .join();
@@ -168,11 +178,61 @@ public class AzureDnsRegistrationService implements PreDestroy {
 
         System.out.println(existingRecords.json().toPrettyString());
 
-        // Don't touch A (type 1) records
+        // Don't touch TXT (type 16) records
         dnsRecords.getRecords().stream()
-                .filter(r -> r.getType() != 1)
+                .filter(r -> r.getType() != 16)
                 .forEach(record -> {
-                    // TODO: add removal / patch logic
+                    var name = getNameWithoutZone(record.getName().toString());
+                    var existingRecord = existingRecords.list()
+                        .stream()
+                        .filter(adr ->
+                            adr.getName().equals(name) &&
+                                compareType(adr.getType(), record.getType()))
+                        .findFirst();
+                    var type = toType(record.getType());
+                    switch (type) {
+                        case A -> {
+                            if (existingRecord.isPresent()) {
+                                var existingRec = existingRecord.get();
+                                var elements = existingRec.getProperties().getARecords();
+                                if (elements.getRecords().size() == 1 && elements.stream()
+                                        .anyMatch(azureDnsARecord -> azureDnsARecord.getIP().equals(ip.getHostAddress()))) {
+                                    azureDnsClient.deleteRecord(name, RecordType.A);
+                                } else {
+                                    var requestBuilder = new AzureDnsRecord.Builder();
+                                    var propertiesBuilder = new AzureDnsRecordProperties.Builder();
+                                    var aRecords = new AzureDnsARecords.Builder();
+                                    elements.stream().filter(azureDnsARecord -> !azureDnsARecord.getIP().equals(ip.getHostAddress()))
+                                        .forEach(aRecords::aRecord);
+                                    propertiesBuilder.aRecords(aRecords.build());
+                                    requestBuilder.properties(propertiesBuilder.build());
+                                    azureDnsClient.patchRecord(requestBuilder.build(), name, RecordType.A);
+                                }
+                            }
+                        }
+                        case SRV -> {
+                            var rec = (SRVRecord) record;
+                            if (existingRecord.isPresent()) {
+                                var existingRec = existingRecord.get();
+                                var elements = existingRec.getProperties().getSRVRecords();
+                                if (elements.getRecords().size() == 1 && elements.stream()
+                                        .anyMatch(azureDnsSRVRecord -> azureDnsSRVRecord.getTarget().equals(rec.getTarget().toString(true)) && azureDnsSRVRecord.getPort() == rec.getPort())) {
+                                    azureDnsClient.deleteRecord(name, RecordType.SRV);
+                                } else {
+                                    var requestBuilder = new AzureDnsRecord.Builder();
+                                    var propertiesBuilder = new AzureDnsRecordProperties.Builder();
+                                    var srvRecords = new AzureDnsSRVRecords.Builder();
+                                    elements.stream()
+                                        .filter(azureDnsSRVRecord -> !azureDnsSRVRecord.getTarget().equals(rec.getTarget().toString(true)) && azureDnsSRVRecord.getPort() != rec.getPort())
+                                        .forEach(srvRecords::srvRecord);
+                                    propertiesBuilder.srvRecords(srvRecords.build());
+                                    requestBuilder.properties(propertiesBuilder.build());
+                                    azureDnsClient.patchRecord(requestBuilder.build(), name, RecordType.SRV);
+                                }
+                            }
+                        }
+                        default -> throw new IllegalStateException("Unknown record type.");
+                    }
                 });
     }
 
@@ -195,5 +255,12 @@ public class AzureDnsRegistrationService implements PreDestroy {
             case 33 -> RecordType.SRV;
             default -> throw new IllegalStateException("Unexpected value: " + type);
         };
+    }
+
+    private String getNameWithoutZone(String nameWithDomain) {
+        if (nameWithDomain != null && nameWithDomain.endsWith(zoneString)) {
+            return nameWithDomain.substring(0, nameWithDomain.length() - zoneString.length());
+        }
+        return nameWithDomain;
     }
 }

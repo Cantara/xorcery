@@ -37,4 +37,12 @@ public record AzureDnsSRVRecord(ObjectNode json)
             return new AzureDnsSRVRecord(builder);
         }
     }
+
+    public String getTarget() {
+        return object().get("target").asText();
+    }
+
+    public int getPort() {
+        return object().get("port").asInt();
+    }
 }

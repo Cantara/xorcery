@@ -4,12 +4,12 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-parent</artifactId>
-        <version>0.18.1-SNAPSHOT</version>
+        <version>0.18.3-SNAPSHOT</version>
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>xorcery-dns-registration-azure</artifactId>
-    <version>0.18.1-SNAPSHOT</version>
+    <version>0.18.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -64,7 +64,7 @@
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
+            <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
