@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.List;
-
 public record AzureDnsRecordProperties(ObjectNode json)
         implements JsonElement {
     public record Builder(ObjectNode builder)

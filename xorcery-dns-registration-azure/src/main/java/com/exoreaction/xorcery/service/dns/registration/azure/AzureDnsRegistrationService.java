@@ -18,10 +18,12 @@ import org.xbill.DNS.TXTRecord;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
-import java.net.InetAddress;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
+
+import static java.util.Collections.emptyList;
 
 @Service(name = "dns.registration.azure")
 @RunLevel(20)
@@ -49,8 +51,9 @@ public class AzureDnsRegistrationService implements PreDestroy {
         final var existingRecords = azureDnsClient.listRecords(null)
                 .thenApply(azureDnsResponse -> {
                     if (azureDnsResponse.hasNext()) {
+                        // TODO: pagination
+                        // var next = azureDnsClient.listRecords(azureDnsResponse.getNextLink());
                         // do "pagination" in case there's more than 100 records.
-                        // azureDnsClient.listRecords(azureDnsResponse.getNextLink())
                         // should this logic be placed in the client itself?
                     }
                     return azureDnsResponse;
@@ -58,7 +61,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
                 .toCompletableFuture()
                 .join();
 
-        System.out.println(existingRecords.json().toPrettyString());
+        var futureList = new ArrayList<CompletableFuture<AzureDnsResponse>>();
 
         dnsRecords.getRecords()
                 .forEach(record -> {
@@ -106,7 +109,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
                             srvRecords.srvRecord(srvRecord.build());
                             propertiesBuilder.srvRecords(srvRecords.build());
                         }
-                        default -> throw new IllegalStateException("Unknown record type.");
+                        default -> throw new IllegalStateException("Unknown record type: " + record);
                     }
 
 
@@ -154,19 +157,29 @@ public class AzureDnsRegistrationService implements PreDestroy {
                             default -> throw new IllegalStateException("Unknown record type.");
                         }
                         requestBuilder.properties(propertiesBuilder.build());
-                        azureDnsClient.patchRecord(requestBuilder.build(), azureRecord.getName(), type);
+                        futureList.add(azureDnsClient.patchRecord(requestBuilder.build(), azureRecord.getName(), type).toCompletableFuture());
                     } else {
                         // put
                         requestBuilder.properties(propertiesBuilder.build());
-                        azureDnsClient.putRecord(requestBuilder.build(), name, type);
+                        futureList.add(azureDnsClient.putRecord(requestBuilder.build(), name, type).toCompletableFuture());
                     }
                 });
+        var completeFn = CompletableFuture.allOf(futureList.toArray(new CompletableFuture<?>[futureList.size()]));
+        completeFn.thenApply(v -> futureList.stream()
+            .map(CompletableFuture::join)
+            .toList())
+            // not sure about use of exceptionally?
+            .exceptionally(throwable -> {
+                logger.error("Exception registering DNS entries", throwable);
+                return emptyList();
+            })
+            .join();
+        logger.debug("Successfully registered DNS entries");
     }
 
     @Override
     public void preDestroy() {
         var ip = instanceConfiguration.getIp() instanceof Inet4Address address ? address : (Inet6Address) instanceConfiguration.getIp();
-        // unregister
         var azureDnsClient = loginClient.loginDns()
             .toCompletableFuture()
             .join();
@@ -175,8 +188,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
             .toCompletableFuture()
             .join();
 
-
-        System.out.println(existingRecords.json().toPrettyString());
+        var futureList = new ArrayList<CompletableFuture<?>>();
 
         // Don't touch TXT (type 16) records
         dnsRecords.getRecords().stream()
@@ -197,7 +209,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
                                 var elements = existingRec.getProperties().getARecords();
                                 if (elements.getRecords().size() == 1 && elements.stream()
                                         .anyMatch(azureDnsARecord -> azureDnsARecord.getIP().equals(ip.getHostAddress()))) {
-                                    azureDnsClient.deleteRecord(name, RecordType.A);
+                                    futureList.add(azureDnsClient.deleteRecord(name, RecordType.A).toCompletableFuture());
                                 } else {
                                     var requestBuilder = new AzureDnsRecord.Builder();
                                     var propertiesBuilder = new AzureDnsRecordProperties.Builder();
@@ -206,7 +218,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
                                         .forEach(aRecords::aRecord);
                                     propertiesBuilder.aRecords(aRecords.build());
                                     requestBuilder.properties(propertiesBuilder.build());
-                                    azureDnsClient.patchRecord(requestBuilder.build(), name, RecordType.A);
+                                    futureList.add(azureDnsClient.patchRecord(requestBuilder.build(), name, RecordType.A).toCompletableFuture());
                                 }
                             }
                         }
@@ -217,7 +229,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
                                 var elements = existingRec.getProperties().getSRVRecords();
                                 if (elements.getRecords().size() == 1 && elements.stream()
                                         .anyMatch(azureDnsSRVRecord -> azureDnsSRVRecord.getTarget().equals(rec.getTarget().toString(true)) && azureDnsSRVRecord.getPort() == rec.getPort())) {
-                                    azureDnsClient.deleteRecord(name, RecordType.SRV);
+                                    futureList.add(azureDnsClient.deleteRecord(name, RecordType.SRV).toCompletableFuture());
                                 } else {
                                     var requestBuilder = new AzureDnsRecord.Builder();
                                     var propertiesBuilder = new AzureDnsRecordProperties.Builder();
@@ -227,13 +239,23 @@ public class AzureDnsRegistrationService implements PreDestroy {
                                         .forEach(srvRecords::srvRecord);
                                     propertiesBuilder.srvRecords(srvRecords.build());
                                     requestBuilder.properties(propertiesBuilder.build());
-                                    azureDnsClient.patchRecord(requestBuilder.build(), name, RecordType.SRV);
+                                    futureList.add(azureDnsClient.patchRecord(requestBuilder.build(), name, RecordType.SRV).toCompletableFuture());
                                 }
                             }
                         }
-                        default -> throw new IllegalStateException("Unknown record type.");
+                        default -> throw new IllegalStateException("Unknown record type: " + record);
                     }
                 });
+        var completeFn = CompletableFuture.allOf(futureList.toArray(new CompletableFuture<?>[futureList.size()]));
+        completeFn.thenApply(v -> futureList.stream()
+                .map(CompletableFuture::join)
+                .toList())
+            .exceptionally(throwable -> {
+                logger.error("Exception unregistering DNS entries", throwable);
+                return emptyList();
+            })
+            .join();
+        logger.debug("Successfully unregistered DNS entries");
     }
 
     /**
@@ -253,7 +275,7 @@ public class AzureDnsRegistrationService implements PreDestroy {
             case  1 -> RecordType.A;
             case 16 -> RecordType.TXT;
             case 33 -> RecordType.SRV;
-            default -> throw new IllegalStateException("Unexpected value: " + type);
+            default -> RecordType.UNKNOWN;
         };
     }
 

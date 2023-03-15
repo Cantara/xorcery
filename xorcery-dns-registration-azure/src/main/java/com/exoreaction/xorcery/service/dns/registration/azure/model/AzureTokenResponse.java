@@ -5,15 +5,6 @@ import com.exoreaction.xorcery.json.model.JsonElement;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-/*
-Successful response
-{
-    "token_type": "Bearer",
-    "expires_in": 3599,
-    "ext_expires_in": 3599,
-    "access_token": "..."
-}
- */
 public record AzureTokenResponse(ObjectNode json)
         implements JsonElement {
     public record Builder(ObjectNode builder)
