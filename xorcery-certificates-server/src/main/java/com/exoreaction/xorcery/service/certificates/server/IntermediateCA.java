@@ -152,7 +152,9 @@ public class IntermediateCA {
         BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
         X500Name signerName = X500Name.getInstance(signingCert.getIssuerX500Principal().getEncoded());
         X500Name subjectName = X500Name.getInstance(currentClientCertificate.getIssuerX500Principal().getEncoded());
-        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(signerName, issuedCertSerialNum, Date.from(now.toInstant(ZoneOffset.UTC)), Date.from(expiryDate.toInstant(ZoneOffset.UTC)), subjectName, currentBcClientCertificate.getSubjectPublicKeyInfo());
+        Date notBefore = Date.from(now.toInstant(ZoneOffset.systemDefault().getRules().getOffset(now)));
+        Date notAfter = Date.from(expiryDate.toInstant(ZoneOffset.systemDefault().getRules().getOffset(expiryDate)));
+        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(signerName, issuedCertSerialNum, notBefore, notAfter, subjectName, currentBcClientCertificate.getSubjectPublicKeyInfo());
 
         // Add Extensions
         Extensions exts = new X509CertificateHolder(currentClientCertificate.getEncoded()).getExtensions();

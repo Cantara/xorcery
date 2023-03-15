@@ -22,6 +22,7 @@ import java.io.StringReader;
 import java.net.Inet4Address;
 import java.net.NetworkInterface;
 import java.security.*;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -61,6 +62,12 @@ public class SelfCertificateService {
     }
 
     private void renewCertificate() {
+        try {
+            X509Certificate certificate = (X509Certificate) keyStore.getCertificate(certificateAlias);
+            logger.info("Current self certificate:"+certificate);
+            } catch (KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void requestCertificate() throws GeneralSecurityException, IOException, OperatorCreationException, PKCSException {
@@ -76,7 +83,6 @@ public class SelfCertificateService {
                         inetAddresses.add(ia.getHostAddress());
                 }));
         // TODO Add DNS names here
-        System.out.println(inetAddresses);
         InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         X500Name issuedCertSubject = new X500Name("CN=" + standardConfiguration.getId());
         String certificatePem = intermediateCA.createCertificate(issuedCertSubject, SubjectPublicKeyInfo.getInstance(issuedCertKeyPair.getPublic().getEncoded()), inetAddresses);
