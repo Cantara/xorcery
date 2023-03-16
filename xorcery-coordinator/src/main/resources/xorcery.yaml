@@ -6,3 +6,5 @@ dns.client.nameServers:
   - localhost:8853
 
 log4jpublisher.enabled: false
+
+metrics.enabled: false
