@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.dns.registration;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.exoreaction.xorcery.service.dns.client.DnsClientConfiguration;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
@@ -25,17 +26,21 @@ public class DnsRegistrationService
     private final Resolver resolver;
     private final Name zone;
     private final DnsRecords dnsRecords;
+    private final DnsRegistrationConfiguration dnsRegistrationConfiguration;
+    private final DnsClientConfiguration dnsClientConfiguration;
 
     @Inject
     public DnsRegistrationService(DnsRecords dnsRecords,
                                   Configuration configuration) throws IOException {
         this.dnsRecords = dnsRecords;
 
-        resolver = getResolver(configuration);
+        resolver = getResolver();
 
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
+        InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
+        dnsRegistrationConfiguration = new DnsRegistrationConfiguration(configuration.getConfiguration("dns.registration"));
+        dnsClientConfiguration = new DnsClientConfiguration(configuration.getConfiguration("dns.client"));
 
-        String domain = configuration.getString("domain").orElse("xorcery.test");
+        String domain = instanceConfiguration.getDomain();
         zone = Name.fromConstantString(domain + ".");
 
         Message msg = Message.newUpdate(zone);
@@ -53,9 +58,8 @@ public class DnsRegistrationService
         LogManager.getLogger(getClass()).debug("Response:" + response);
     }
 
-    private static Resolver getResolver(Configuration configuration) {
-
-        Resolver resolver = configuration.getListAs("dns.client.nameservers", JsonNode::textValue)
+    private Resolver getResolver() {
+        Resolver resolver = dnsClientConfiguration.getNameServers()
                 .flatMap(hosts ->
                 {
                     if (hosts.isEmpty()) {
@@ -81,21 +85,13 @@ public class DnsRegistrationService
                     return new SimpleResolver(servers.get(0));
                 });
 
-        configuration.getString("dns.registration.key.name").ifPresent(keyname ->
+        dnsRegistrationConfiguration.getKey().ifPresent(key ->
         {
-            configuration.getString("dns.registration.key.secret").ifPresent(keydata ->
-            {
-                Name algo = configuration.getString("dns.registration.key.algorithm")
-                        .map(Name::fromConstantString)
-                        .orElse(TSIG.HMAC_MD5);
-                resolver.setTSIGKey(new TSIG(algo, keyname, keydata));
-            });
+            Name algo = Name.fromConstantString(key.getAlgorithm());
+            resolver.setTSIGKey(new TSIG(algo, key.getName(), key.getSecret()));
         });
 
-        configuration.getString("dns.registration.timeout")
-                .map(s -> "PT"+s)
-                .map(Duration::parse)
-                .ifPresent(resolver::setTimeout);
+        resolver.setTimeout(dnsRegistrationConfiguration.getTtl());
 
         return resolver;
     }

@@ -52,7 +52,7 @@ public class DnsAnnounceService
         for (Record record : dnsRecords.getRecords()) {
             if (record instanceof SRVRecord srvRecord)
             {
-                ServiceInfo serviceInfo = ServiceInfo.create(srvRecord.getName().toString(), selfName, standardConfiguration.getServerUri().getPort(), srvRecord.getWeight(), srvRecord.getPriority(), props.get(srvRecord.getName().toString()));
+                ServiceInfo serviceInfo = ServiceInfo.create(srvRecord.getName().toString(), selfName, standardConfiguration.getURI().getPort(), srvRecord.getWeight(), srvRecord.getPriority(), props.get(srvRecord.getName().toString()));
                 jmdns.registerService(serviceInfo);
                 logger.debug("Announced mDNS service:" + serviceInfo.getNiceTextString());
             }
