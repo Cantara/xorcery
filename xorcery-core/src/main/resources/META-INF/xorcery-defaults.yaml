@@ -30,5 +30,3 @@ DefaultRunLevelContext:
   enabled: true
 default:
   enabled: true
-
-jetty.server.uri: http://localhost
