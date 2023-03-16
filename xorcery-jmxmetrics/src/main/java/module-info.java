@@ -15,4 +15,5 @@ open module xorcery.jmxmetrics {
     requires java.management;
     requires java.logging;
     requires org.glassfish.hk2.api;
+    requires org.glassfish.hk2.runlevel;
 }
