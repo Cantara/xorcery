@@ -19,7 +19,7 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
             implements With<Builder> {
 
         public Builder(InstanceConfiguration configuration, String serviceType) {
-            this(new ResourceObject.Builder(serviceType, configuration.getId()), new Links.Builder(), new Attributes.Builder(), configuration.getServerUri());
+            this(new ResourceObject.Builder(serviceType, configuration.getId()), new Links.Builder(), new Attributes.Builder(), configuration.getURI());
             attributes.attribute("environment", configuration.getEnvironment());
             attributes.attribute("tag", configuration.getTag());
             builder.meta(new Meta.Builder()
