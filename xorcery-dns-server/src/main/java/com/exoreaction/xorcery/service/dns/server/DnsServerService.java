@@ -24,7 +24,6 @@ import java.nio.channels.AsynchronousCloseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,16 +56,17 @@ public class DnsServerService
     public DnsServerService(Configuration configuration) throws IOException {
         this.configuration = configuration;
         InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
-        port = configuration.getInteger("dns.server.port").orElse(53);
+        DnsServerConfiguration dnsServerConfiguration = new DnsServerConfiguration(configuration.getConfiguration("dns.server"));
+        port = dnsServerConfiguration.getPort();
 
         // Create keys
-        configuration.getObjectListAs("dns.server.keys", KeyConfiguration::new).ifPresent(list -> list.forEach(kc ->
+        dnsServerConfiguration.getKeys().ifPresent(list -> list.forEach(kc ->
         {
             TSIGs.put(kc.getName(), new TSIG(kc.getAlgorithm(), kc.getName(), kc.getSecret()));
         }));
 
         // Create Zones
-        configuration.getObjectListAs("dns.server.zones", ZoneConfiguration::new).ifPresent(list -> list.forEach(zc ->
+        dnsServerConfiguration.getZones().ifPresent(list -> list.forEach(zc ->
         {
             try {
                 Name origin = Name.fromString(zc.getName(), Name.root);
@@ -89,6 +89,8 @@ public class DnsServerService
         executorService = Executors.newSingleThreadExecutor();
         socket = new DatagramSocket(port);
         executorService.submit(this::process);
+
+        logger.info("Started DNS server");
     }
 
     @Override
@@ -107,11 +109,11 @@ public class DnsServerService
             Message response = new Message(request.getHeader().getID());
             response.addRecord(request.getQuestion(), Section.QUESTION);
 
-            logger.info("Request:"+request.toString());
+            logger.info("Request:" + request.toString());
 
             handle(request, response);
 
-            logger.info("Response:"+response.toString());
+            logger.info("Response:" + response.toString());
 
             byte[] resp = response.toWire();
             DatagramPacket outdp = new DatagramPacket(resp, resp.length, indp.getAddress(), indp.getPort());
@@ -210,7 +212,7 @@ public class DnsServerService
     }
 
     private int addAnswer(Message response, Name name, int type, int dClass, int iterations, int flags) {
-        logger.info("Answer for:"+name);
+        logger.info("Answer for:" + name);
 
         SetResponse sr;
         int rcode = Rcode.NOERROR;
@@ -465,7 +467,7 @@ public class DnsServerService
             response.removeAllRecords(i);
         }
 //        if (rcode == Rcode.SERVFAIL) {
-            response.addRecord(question, Section.QUESTION);
+        response.addRecord(question, Section.QUESTION);
 //        }
         header.setRcode(rcode);
     }
@@ -477,36 +479,4 @@ public class DnsServerService
         return new SRVRecord(name, Type.SRV, ttl, priority, weight, port, Name.fromString(host));
     }
 
-    record ZoneConfiguration(ObjectNode json)
-            implements JsonElement {
-        public String getName() {
-            return getString("name").orElseThrow(() -> new IllegalArgumentException("No zone name set"));
-        }
-
-        public Optional<List<AllowUpdate>> getAllowUpdate() {
-            return getObjectListAs("allow-update", AllowUpdate::new);
-        }
-    }
-
-    record KeyConfiguration(ObjectNode json)
-            implements JsonElement {
-        public String getName() {
-            return getString("name").orElseThrow(() -> new IllegalArgumentException("No key name set"));
-        }
-
-        public String getSecret() {
-            return getString("secret").orElseThrow(() -> new IllegalArgumentException("No key secret set"));
-        }
-
-        public String getAlgorithm() {
-            return getString("algorithm").orElse("hmac-md5");
-        }
-    }
-
-    record AllowUpdate(ObjectNode json)
-            implements JsonElement {
-        public String getKey() {
-            return getString("key").orElseThrow(() -> new IllegalArgumentException("No key name set"));
-        }
-    }
 }
