@@ -34,7 +34,7 @@ public class ServerResource
             builder.resource(serviceResource.resourceObject());
         }
         ResourceDocument serverDocument = new ResourceDocument.Builder()
-                .links(new Links.Builder().link(JsonApiRels.self, standardConfiguration.getServerUri()).build())
+                .links(new Links.Builder().link(JsonApiRels.self, standardConfiguration.getURI()).build())
                 .meta(new Meta.Builder()
                         .meta("timestamp", System.currentTimeMillis())
                         .build())
