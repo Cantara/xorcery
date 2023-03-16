@@ -107,7 +107,7 @@ public class PublishSubscriberWithResultBenchmarks {
 
         ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
         InstanceConfiguration standardConfiguration = new InstanceConfiguration(xorcery.getServiceLocator().getService(Configuration.class).getConfiguration("instance"));
-        URI serverUri = standardConfiguration.getServerUri();
+        URI serverUri = standardConfiguration.getURI();
         stream = reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber",
                 Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), Configuration.empty());
 
