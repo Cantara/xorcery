@@ -34,11 +34,11 @@ public class DnsRegistrationService
                                   Configuration configuration) throws IOException {
         this.dnsRecords = dnsRecords;
 
-        resolver = getResolver();
-
         InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         dnsRegistrationConfiguration = new DnsRegistrationConfiguration(configuration.getConfiguration("dns.registration"));
         dnsClientConfiguration = new DnsClientConfiguration(configuration.getConfiguration("dns.client"));
+
+        resolver = getResolver();
 
         String domain = instanceConfiguration.getDomain();
         zone = Name.fromConstantString(domain + ".");
