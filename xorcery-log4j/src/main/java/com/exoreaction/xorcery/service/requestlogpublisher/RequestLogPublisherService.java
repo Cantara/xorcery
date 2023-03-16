@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.requestlogpublisher;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.log4jpublisher.LoggingMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
@@ -27,7 +28,7 @@ public class RequestLogPublisherService
                 () -> configuration.getConfiguration("requestlogpublisher.subscriber.configuration"), requestLogPublisher, RequestLogPublisher.class, configuration.getConfiguration("requestlogpublisher.publisher.configuration"));
 
         JsonRequestLog requestLog = new JsonRequestLog(new LoggingMetadata.Builder(new Metadata.Builder())
-                .configuration(configuration)
+                .configuration(new InstanceConfiguration(configuration.getConfiguration("instance")))
                 .build(), requestLogPublisher);
         server.setRequestLog(requestLog);
     }

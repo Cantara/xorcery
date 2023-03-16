@@ -1,5 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.server;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.common.ExceptionObjectOutputStream;
@@ -35,21 +37,27 @@ public class SubscriberWithResultReactiveStream
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final MessageWriter<Object> resultWriter;
 
+    private final Meter received;
+    private final Meter resultsSent;
+
     public SubscriberWithResultReactiveStream(String streamName,
                                               Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
                                               MessageReader<Object> eventReader,
                                               MessageWriter<Object> resultWriter,
                                               ObjectMapper objectMapper,
                                               ByteBufferPool byteBufferPool,
-                                              Executor executor) {
+                                              Executor executor, MetricRegistry metricRegistry) {
         super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, executor);
 
         this.resultWriter = resultWriter;
+        this.received = metricRegistry.meter("subscriber.received."+streamName);
+        this.resultsSent = metricRegistry.meter("subscriber.results."+streamName);
     }
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
-            logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+//            logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+            received.mark();
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
@@ -99,6 +107,7 @@ public class SubscriberWithResultReactiveStream
                         @Override
                         public void writeSuccess() {
                             byteBufferPool.release(data);
+                            resultsSent.mark();
                             logger.trace("Sent result: {}", r);
                         }
                     });

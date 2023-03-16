@@ -46,7 +46,7 @@ public class ReactiveStreamsLifecycleTest {
             // When
             CompletableFuture<Integer> result = new CompletableFuture<>();
             ClientIntegerSubscriber subscriber = new ClientIntegerSubscriber(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getServerUri().getAuthority(), "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "numbers",
                     Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
 
             // Then
@@ -78,7 +78,7 @@ public class ReactiveStreamsLifecycleTest {
             // When
             CompletableFuture<Integer> result = new CompletableFuture<>();
             ClientIntegerSubscriber subscriber = new ClientIntegerSubscriber(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getServerUri().getAuthority(), "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "numbers",
                     Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
 
             // Then
@@ -116,7 +116,7 @@ public class ReactiveStreamsLifecycleTest {
             // When
             CompletableFuture<Integer> result = new CompletableFuture<>();
             ClientIntegerSubscriber subscriber = new ClientIntegerSubscriber(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getServerUri().getAuthority(), "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "numbers",
                     Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
 
             // Then
@@ -156,7 +156,7 @@ public class ReactiveStreamsLifecycleTest {
             // When
             CompletableFuture<Configuration> result = new CompletableFuture<>();
             ClientConfigurationSubscriber subscriber = new ClientConfigurationSubscriber(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getServerUri().getAuthority(), "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "numbers",
                     () -> new Configuration.Builder().add(HttpHeaders.AUTHORIZATION, "Bearer:abc").build(), subscriber, ClientConfigurationSubscriber.class, Configuration.empty());
 
             // Then

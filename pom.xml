@@ -83,6 +83,7 @@
         <module>xorcery-coordinator</module>
 
         <module>xorcery-test</module>
+        <module>xorcery-benchmarks</module>
     </modules>
 
     <repositories>

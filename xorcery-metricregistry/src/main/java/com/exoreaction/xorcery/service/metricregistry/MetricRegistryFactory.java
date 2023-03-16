@@ -19,6 +19,7 @@ public class MetricRegistryFactory
         reporter = JmxReporter.forRegistry(metricRegistry)
                 .inDomain("xorcery")
                 .build();
+        reporter.start();
     }
 
     @Override

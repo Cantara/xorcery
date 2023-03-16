@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.client.hk2;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
@@ -25,7 +26,8 @@ public class ReactiveStreamsClientService extends com.exoreaction.xorcery.servic
                                         MessageWorkers messageWorkers,
                                         HttpClient httpClient,
                                         DnsLookupService dnsLookup,
+                                        MetricRegistry metricRegistry,
                                         Provider<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
-        super(configuration, messageWorkers, httpClient, dnsLookup, localStreamFactoriesProvider::get);
+        super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistry, localStreamFactoriesProvider::get);
     }
 }

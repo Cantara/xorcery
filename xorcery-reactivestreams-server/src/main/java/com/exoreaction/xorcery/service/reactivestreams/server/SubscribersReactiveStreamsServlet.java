@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.server;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;

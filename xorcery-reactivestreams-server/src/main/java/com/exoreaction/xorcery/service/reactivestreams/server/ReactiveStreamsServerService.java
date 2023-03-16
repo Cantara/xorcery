@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.server;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
@@ -33,12 +34,15 @@ public class ReactiveStreamsServerService
     private final Map<String, WrappedPublisherFactory> publisherLocalFactories = new ConcurrentHashMap<>();
     private final Map<String, Supplier<Object>> subscriberEndpointFactories = new ConcurrentHashMap<>();
     private final Map<String, WrappedSubscriberFactory> subscriberLocalFactories = new ConcurrentHashMap<>();
+    private final MetricRegistry metricRegistry;
 
     @Inject
     public ReactiveStreamsServerService(Configuration configuration,
+                                        MetricRegistry metricRegistry,
                                         MessageWorkers messageWorkers,
                                         ServletContextHandler servletContextHandler) {
         super(messageWorkers);
+        this.metricRegistry = metricRegistry;
 
         PublishersReactiveStreamsServlet publishersServlet = new PublishersReactiveStreamsServlet(configuration, streamName ->
         {
@@ -106,7 +110,7 @@ public class ReactiveStreamsServerService
 
         subscriberEndpointFactories.put(streamName, () ->
                 resultWriter == null ? new SubscriberReactiveStream(streamName, wrappedSubscriberFactory, eventReader, objectMapper, byteBufferPool, timer) :
-                        new SubscriberWithResultReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, timer));
+                        new SubscriberWithResultReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, timer, metricRegistry));
         subscriberLocalFactories.put(streamName, new WrappedSubscriberFactory(wrappedSubscriberFactory, subscriberType));
         return result;
     }

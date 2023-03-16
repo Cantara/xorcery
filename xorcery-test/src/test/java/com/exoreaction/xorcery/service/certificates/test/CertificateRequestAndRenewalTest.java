@@ -114,7 +114,7 @@ public class CertificateRequestAndRenewalTest {
                 System.out.println("DONE");
 
                 InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
-                URI crlUri = cfg.getServerUri().resolve("api/certificates/crl");
+                URI crlUri = cfg.getURI().resolve("api/certificates/crl");
                 InputStream input = (InputStream) client.getServiceLocator().getService(ClientTester.class).get(UriBuilder.fromUri(crlUri).build()).get().getEntity();
                 System.out.println(new String(input.readAllBytes()));
 //                CRL crl = CertificateFactory.getInstance("X.509").generateCRL(input);

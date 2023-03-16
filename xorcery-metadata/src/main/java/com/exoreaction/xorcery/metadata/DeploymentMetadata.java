@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.metadata;
 
 import com.exoreaction.xorcery.builders.WithContext;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 
 public interface DeploymentMetadata
         extends WithContext<Metadata> {
@@ -9,13 +10,17 @@ public interface DeploymentMetadata
     interface Builder<T> {
         Metadata.Builder builder();
 
-        default T configuration(Configuration configuration) {
-            builder().add("environment", configuration.getString("environment").orElse("default"))
-                    .add("tag", configuration.getString("tag").orElse("default"))
-                    .add("version", configuration.getString("version").orElse("0.1.0"))
-                    .add("name", configuration.getString("name").orElse("noname"))
-                    .add("host", configuration.getString("host").orElse("localhost"))
-                    .build();
+        default T configuration(InstanceConfiguration configuration) {
+            builder().add("environment", configuration.getEnvironment())
+                    .add("tag", configuration.getTag())
+                    .add("name", configuration.getName())
+                    .add("host", configuration.getHost());
+            return (T) this;
+        }
+
+        default T version(String value)
+        {
+            builder().add("version", value);
             return (T) this;
         }
     }

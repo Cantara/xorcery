@@ -17,7 +17,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.shiro.codec.Base64;
 import org.junit.jupiter.api.Test;
-import org.neo4j.cypher.internal.expressions.In;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -57,7 +56,7 @@ public class JwtAuthenticationTest {
             InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
             String jwt = createJwt(keyPair.getPrivate());
             try (Client client = clientBuilder.build()) {
-                String response = client.target(cfg.getServerUri().resolve("api/principal"))
+                String response = client.target(cfg.getURI().resolve("api/principal"))
                         .request()
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwt)
                         .get()

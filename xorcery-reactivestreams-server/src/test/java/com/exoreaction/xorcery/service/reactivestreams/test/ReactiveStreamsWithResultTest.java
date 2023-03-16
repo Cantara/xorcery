@@ -47,7 +47,7 @@ public class ReactiveStreamsWithResultTest {
             // When
             AtomicInteger result = new AtomicInteger(0);
             ClientIntegerPublisher subscriber = new ClientIntegerPublisher(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.publish(standardConfiguration.getServerUri().getAuthority(), "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "numbers",
                     Configuration::empty, subscriber, ClientIntegerPublisher.class, Configuration.empty());
 
             // Then

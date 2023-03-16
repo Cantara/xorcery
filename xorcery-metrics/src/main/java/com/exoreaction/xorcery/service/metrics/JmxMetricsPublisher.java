@@ -7,26 +7,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import javax.management.MBeanServer;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Flow;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class JmxMetricsPublisher
         implements Flow.Publisher<WithMetadata<ObjectNode>> {
     private final Configuration configuration;
-    private ScheduledExecutorService scheduledExecutorService;
     private DeploymentMetadata deploymentMetadata;
     private MBeanServer managementServer;
 
     public JmxMetricsPublisher(Configuration publisherConfiguration,
-                               ScheduledExecutorService scheduledExecutorService,
                                DeploymentMetadata deploymentMetadata,
                                MBeanServer managementServer) {
         this.configuration = publisherConfiguration;
-        this.scheduledExecutorService = scheduledExecutorService;
         this.deploymentMetadata = deploymentMetadata;
         this.managementServer = managementServer;
     }
@@ -42,6 +37,6 @@ public class JmxMetricsPublisher
             }
             return f;
         });
-        new JmxMetricSubscription(configuration.getString("delay").map(Duration::parse).orElse(Duration.ofSeconds(30)), scheduledExecutorService, deploymentMetadata, subscriber, filters, managementServer);
+        new JmxMetricSubscription(deploymentMetadata, subscriber, filters, managementServer);
     }
 }

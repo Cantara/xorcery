@@ -41,6 +41,11 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-metricregistry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-configuration-api</artifactId>
             <version>${project.version}</version>
         </dependency>

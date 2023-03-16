@@ -1,10 +1,11 @@
 metrics:
   enabled: "{{ defaults.enabled }}"
-  delay: 5S
   filter: []
   subscriber:
     authority: null
     stream: "metrics"
-    configuration: {}
+    configuration:
+      instance:
+        id: "{{ instance.id }}"
   publisher:
     configuration: {}

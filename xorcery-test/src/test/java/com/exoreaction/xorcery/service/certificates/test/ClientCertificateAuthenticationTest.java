@@ -71,7 +71,7 @@ public class ClientCertificateAuthenticationTest {
                 System.out.println("DONE");
 
                 InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
-                ResourceDocument doc = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getServerUri().resolve("api/subject")).toCompletableFuture().join();
+                ResourceDocument doc = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getURI().resolve("api/subject")).toCompletableFuture().join();
                 Assertions.assertEquals(List.of("CN=Test Service"), doc.getResource().get().getAttributes().getListAs("principals", JsonNode::textValue).orElse(Collections.emptyList()));
             }
 

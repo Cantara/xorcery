@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.service.reactivestreams.test;
+package com.exoreaction.xorcery.benchmarks.reactivestreams;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
@@ -9,6 +9,8 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
@@ -19,36 +21,50 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @State(Scope.Benchmark)
-@Fork(value = 1, warmups = 1)
+@Fork(value = 1, warmups = 1, jvmArgs="-Dcom.sun.management.jmxremote=true" )
 @Warmup(iterations = 1)
 @Measurement(iterations = 10)
-public class ReactiveStreamsBenchmarks {
+public class PublishSubscriberWithResultBenchmarks {
+
+    private final Logger logger = LogManager.getLogger(getClass());
 
     private static final String config = """
             reactivestreams.enabled: true
             keystores.enabled: true
-            dns.client.discovery.enabled: false
+            jetty.client.enabled: true
             jetty.client.ssl.enabled: true
+            jetty.server.enabled: true
+            jetty.server.ssl.enabled: true
+            jetty.server.ssl.port: 8443
+            dns.client.enabled: true
+            
+            metrics.enabled: true
+            metrics.filter:
+                - xorcery:*
+            metrics.subscriber.authority: localhost:443    
             """;
     private ClientPublisher<WithResult<WithMetadata<String>, Integer>> clientPublisher;
+    private CompletableFuture<Void> stream;
 
     public static void main(String[] args) throws Exception {
 
         new Runner(new OptionsBuilder()
 //                .include(ReactiveStreamsBenchmarks.class.getSimpleName() + ".writes")
-                .forks(1)
+                .forks(0)
                 .build()).run();
     }
 
     private Xorcery xorcery;
 
-    ArrayBlockingQueue<String> queue = new ArrayBlockingQueue<>(512);
+    ArrayBlockingQueue<String> queue = new ArrayBlockingQueue<>(10000);
     AtomicInteger total = new AtomicInteger();
+    AtomicInteger writeCount = new AtomicInteger();
 
     @Setup()
     public void setup() throws Exception {
 
         Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
+        logger.info(StandardConfigurationBuilder.toYaml(configuration));
         xorcery = new Xorcery(configuration);
         ReactiveStreamsServer reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
 
@@ -67,9 +83,10 @@ public class ReactiveStreamsBenchmarks {
         clientPublisher = new ClientPublisher<>() {
             @Override
             protected void publish(Flow.Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber) {
+                logger.info("Publish");
 
                 try {
-                    for (int i = 0; i < 100; i++) {
+                    while (writeCount.decrementAndGet() > 0) {
                         CompletableFuture<Integer> future = new CompletableFuture<>();
                         future.whenComplete((r, t) ->
                         {
@@ -78,10 +95,12 @@ public class ReactiveStreamsBenchmarks {
                         subscriber.onNext(new WithResult<>(new WithMetadata<>(new Metadata.Builder()
                                 .add("foo", "bar")
                                 .build(), queue.take()), future));
+//                        System.out.println("onNext");
                     }
                 } catch (InterruptedException e) {
                     // Ignore
                 }
+                logger.info("onComplete");
                 subscriber.onComplete();
             }
         };
@@ -89,24 +108,26 @@ public class ReactiveStreamsBenchmarks {
         ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
         InstanceConfiguration standardConfiguration = new InstanceConfiguration(xorcery.getServiceLocator().getService(Configuration.class).getConfiguration("instance"));
         URI serverUri = standardConfiguration.getServerUri();
-        reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber",
+        stream = reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber",
                 Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), Configuration.empty());
 
-        System.out.println("Setup done");
+        logger.info("Setup done");
     }
 
     @TearDown
     public void teardown() throws Exception {
         clientPublisher.getDone().get();
-
+        stream.complete(null);
         xorcery.close();
-        System.out.println("Teardown done");
+        logger.info("Teardown done");
+        logger.info("Total:"+total.get());
     }
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public void writes() throws ExecutionException, InterruptedException, TimeoutException {
-        queue.add(System.currentTimeMillis() + "");
+        queue.put(System.currentTimeMillis() + "");
+        writeCount.incrementAndGet();
     }
 
     public static abstract class ServerSubscriber<T>
@@ -117,7 +138,7 @@ public class ReactiveStreamsBenchmarks {
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
             this.subscription = subscription;
-            subscription.request(1);
+            subscription.request(4096);
         }
 
         @Override

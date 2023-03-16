@@ -23,4 +23,5 @@ open module xorcery.reactivestreams.server {
     requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.runlevel;
+    requires com.codahale.metrics;
 }

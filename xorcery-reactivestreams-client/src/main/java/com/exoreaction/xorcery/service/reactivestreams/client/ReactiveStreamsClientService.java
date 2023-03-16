@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.client;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.DefaultsConfiguration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
@@ -29,6 +30,7 @@ public class ReactiveStreamsClientService
         implements ReactiveStreamsClient {
 
     private DnsLookup dnsLookup;
+    private MetricRegistry metricRegistry;
     private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
     private final String defaultScheme;
     private final WebSocketClient webSocketClient;
@@ -40,9 +42,11 @@ public class ReactiveStreamsClientService
                                         MessageWorkers messageWorkers,
                                         HttpClient httpClient,
                                         DnsLookupService dnsLookup,
+                                        MetricRegistry metricRegistry,
                                         Supplier<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
         super(messageWorkers);
         this.dnsLookup = dnsLookup;
+        this.metricRegistry = metricRegistry;
         this.reactiveStreamsServerServiceProvider = localStreamFactoriesProvider;
         this.defaultScheme = configuration.getString("reactivestreams.client.scheme").orElseThrow();
 
@@ -117,6 +121,7 @@ public class ReactiveStreamsClientService
                     subscriberConfiguration,
                     timer,
                     byteBufferPool,
+                    metricRegistry,
                     result);
         } else {
             new PublishReactiveStream(
@@ -129,6 +134,7 @@ public class ReactiveStreamsClientService
                     subscriberConfiguration,
                     timer,
                     byteBufferPool,
+                    metricRegistry,
                     result);
 
         }

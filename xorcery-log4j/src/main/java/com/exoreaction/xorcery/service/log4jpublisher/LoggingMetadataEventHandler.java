@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.service.log4jpublisher;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.core.LogEvent;
@@ -19,6 +20,6 @@ public class LoggingMetadataEventHandler
                 .timestamp(System.currentTimeMillis());
         Configuration conf = configuration.get();
         if (conf != null)
-            builder.configuration(conf);
+            builder.configuration(new InstanceConfiguration(conf.getConfiguration("instance")));
     }
 }

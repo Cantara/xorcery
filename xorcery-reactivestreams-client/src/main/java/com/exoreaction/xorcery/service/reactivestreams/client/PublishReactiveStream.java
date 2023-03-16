@@ -1,5 +1,8 @@
 package com.exoreaction.xorcery.service.reactivestreams.client;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
@@ -58,6 +61,10 @@ public class PublishReactiveStream
     protected CompletableFuture<Void> result;
     protected final Marker marker;
 
+    protected Meter sent;
+    protected Histogram sentBatchSize;
+    protected long batchSize;
+
     private boolean redundancyNotificationIssued = false;
 
     protected Disruptor<AtomicReference<Object>> disruptor;
@@ -77,6 +84,7 @@ public class PublishReactiveStream
                                  Supplier<Configuration> subscriberConfiguration,
                                  ScheduledExecutorService timer,
                                  ByteBufferPool pool,
+                                 MetricRegistry metricRegistry,
                                  CompletableFuture<Void> result) {
         this.streamName = streamName;
         this.publisherConfiguration = publisherConfiguration;
@@ -89,6 +97,8 @@ public class PublishReactiveStream
         this.pool = pool;
         this.result = result;
         this.marker = MarkerManager.getMarker(authorityOrBaseUri + "/" + streamName);
+        this.sent = metricRegistry.meter("publish.sent." + streamName);
+        this.sentBatchSize = metricRegistry.histogram("publish.sent.batchsize." + streamName);
 
         if (uriStartsWithSchemeAndAuthorityPattern.matcher(authorityOrBaseUri).matches()) {
             URI uri = URI.create(authorityOrBaseUri);
@@ -358,11 +368,19 @@ public class PublishReactiveStream
                 }
             });
 
-            if (endOfBatch)
+            sent.mark();
+            if (endOfBatch) {
                 session.getRemote().flush();
+                sentBatchSize.update(batchSize);
+            }
         } catch (Throwable e) {
             if (session != null)
                 throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void onBatchStart(long batchSize) {
+        this.batchSize = batchSize;
     }
 }

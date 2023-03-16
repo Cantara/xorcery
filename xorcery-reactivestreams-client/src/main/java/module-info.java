@@ -12,4 +12,5 @@ open module xorcery.reactivestreams.client {
     requires org.eclipse.jetty.io;
     requires org.eclipse.jetty.websocket.jetty.api;
     requires org.eclipse.jetty.websocket.jetty.client;
+    requires com.codahale.metrics;
 }

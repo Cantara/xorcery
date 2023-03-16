@@ -1,5 +1,7 @@
 package com.exoreaction.xorcery.service.reactivestreams.client;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
@@ -28,6 +30,7 @@ public class PublishWithResultReactiveStream
     private final MessageReader<Object> resultReader;
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
+    private final Meter received;
 
     public PublishWithResultReactiveStream(String defaultScheme,
                                            String authorityOrBaseUri,
@@ -41,9 +44,12 @@ public class PublishWithResultReactiveStream
                                            Supplier<Configuration> subscriberConfiguration,
                                            ScheduledExecutorService timer,
                                            ByteBufferPool pool,
+                                           MetricRegistry metricRegistry,
                                            CompletableFuture<Void> result) {
-        super(defaultScheme, authorityOrBaseUri, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, timer, pool, result);
+        super(defaultScheme, authorityOrBaseUri, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, timer, pool, metricRegistry, result);
         this.resultReader = resultReader;
+        this.received = metricRegistry.meter("publish.received."+streamName);
+
     }
 
     public void onComplete() {
@@ -84,6 +90,7 @@ public class PublishWithResultReactiveStream
                 Object result = resultReader.readFrom(bin);
 
                 logger.trace(marker, "Deserialized result: {}", result);
+                received.mark();
                 resultQueue.remove().complete(result);
             }
         } catch (Throwable e) {
@@ -131,8 +138,12 @@ public class PublishWithResultReactiveStream
                 }
             });
 
+            sent.mark();
             if (endOfBatch)
+            {
                 session.getRemote().flush();
+                sentBatchSize.update(batchSize);
+            }
         } catch (Throwable e) {
             if (session != null)
                 throw new RuntimeException(e);
