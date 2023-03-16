@@ -7,13 +7,12 @@ import java.time.Duration;
 /**
  * Configuration wrapper for standard defaults.
  */
-public record DefaultsConfiguration(Configuration configuration)
-         {
+public record DefaultsConfiguration(Configuration configuration) {
     public boolean isEnabled() {
         return configuration.getBoolean("enabled").orElse(false);
     }
 
-             public Duration getIdleTimeout() {
+    public Duration getIdleTimeout() {
         return Duration.parse("PT" + configuration.getString("idleTimeout").orElse("-1s"));
     }
 }

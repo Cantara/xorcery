@@ -1,7 +1,5 @@
 package com.exoreaction.xorcery.configuration.model;
 
-import com.exoreaction.xorcery.builders.WithContext;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -10,7 +8,7 @@ import java.net.URI;
 import java.net.UnknownHostException;
 
 /**
- * Configuration wrapper for server instance configuration
+ * Configuration wrapper for instance configuration
  *
  * @author rickardoberg
  * @since 20/04/2022
@@ -20,8 +18,38 @@ public record InstanceConfiguration(Configuration configuration) {
         return configuration.getString("id").orElse(null);
     }
 
+    public String getName() {
+        return configuration.getString("name").orElse(null);
+    }
+
     public String getHost() {
         return configuration.getString("host").orElse(null);
+    }
+
+    public String getFQDN() {
+        return configuration.getString("fqdn").orElse(null);
+    }
+
+    public InetAddress getIp() {
+        return configuration.getString("ip").map(ip ->
+        {
+            try {
+                return InetAddress.getByName(ip);
+            } catch (UnknownHostException e) {
+                throw new UncheckedIOException(e);
+            }
+        }).orElseGet(() ->
+        {
+            try {
+                return InetAddress.getLocalHost();
+            } catch (UnknownHostException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
+    public String getDomain() {
+        return configuration.getString("domain").orElse(null);
     }
 
     public String getEnvironment() {
@@ -43,25 +71,11 @@ public record InstanceConfiguration(Configuration configuration) {
         });
     }
 
-    public URI getServerUri() {
-        return configuration.getURI("uri").orElseThrow();
+    public String getResources() {
+        return configuration.getString("resources").orElse(null);
     }
 
-    public InetAddress getIp() {
-        return configuration.getString("ip").map(ip ->
-        {
-            try {
-                return InetAddress.getByName(ip);
-            } catch (UnknownHostException e) {
-                throw new UncheckedIOException(e);
-            }
-        }).orElseGet(() ->
-        {
-            try {
-                return InetAddress.getLocalHost();
-            } catch (UnknownHostException e) {
-                throw new UncheckedIOException(e);
-            }
-        });
+    public URI getURI() {
+        return configuration.getURI("uri").orElseThrow();
     }
 }
