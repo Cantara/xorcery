@@ -1,12 +1,14 @@
 package com.exoreaction.xorcery.domainevents.publisher;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.service.reactivestreams.util.SubscriberConfiguration;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.PreDestroy;
@@ -32,11 +34,13 @@ public class DomainEventsService
                                Configuration configuration) {
 
         this.deploymentMetadata = new DomainEventMetadata.Builder(new Metadata.Builder())
-                .configuration(configuration)
+                .configuration(new InstanceConfiguration(configuration.getConfiguration("instance")))
                 .build();
-        reactiveStreams.publish(configuration.getString("domainevents.subscriber.authority").orElse(null), configuration.getString("domainevents.subscriber.stream").orElseThrow(),
-                        () -> configuration.getConfiguration("domainevents.subscriber.configuration"),
-                        this, DomainEventsService.class,configuration.getConfiguration("domainevents.publisher.configuration"))
+        DomainEventsConfiguration domainEventsConfiguration = new DomainEventsConfiguration(configuration.getConfiguration("domainevents"));
+        SubscriberConfiguration subscriberConfiguration = domainEventsConfiguration.getSubscriberConfiguration();
+        reactiveStreams.publish(subscriberConfiguration.getAuthority(), subscriberConfiguration.getStream(),
+                        subscriberConfiguration::getConfiguration,
+                        this, DomainEventsService.class, domainEventsConfiguration.getPublisherConfiguration())
                 .exceptionally(t ->
                 {
                     if (t instanceof CompletionException)

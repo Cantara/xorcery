@@ -5,3 +5,4 @@ domainevents:
     stream: "neo4jprojections"
     configuration:
       projection: "domainprojection"
+  publisher: {}
