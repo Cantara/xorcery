@@ -51,6 +51,7 @@ public class PublishSubscriberWithResultBenchmarks {
         new Runner(new OptionsBuilder()
 //                .include(ReactiveStreamsBenchmarks.class.getSimpleName() + ".writes")
                 .forks(0)
+                .jvmArgs("-Dcom.sun.management.jmxremote=true")
                 .build()).run();
     }
 
@@ -138,7 +139,7 @@ public class PublishSubscriberWithResultBenchmarks {
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
             this.subscription = subscription;
-            subscription.request(4096);
+            subscription.request(8192);
         }
 
         @Override

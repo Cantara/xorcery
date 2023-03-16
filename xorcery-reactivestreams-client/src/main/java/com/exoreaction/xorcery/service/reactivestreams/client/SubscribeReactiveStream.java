@@ -1,5 +1,8 @@
 package com.exoreaction.xorcery.service.reactivestreams.client;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
@@ -20,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
@@ -62,6 +66,10 @@ public class SubscribeReactiveStream
     private Iterator<URI> uriIterator;
     protected Session session;
 
+    protected final Meter received;
+    protected final Meter receivedBytes;
+    protected final Histogram requestsHistogram;
+
     public SubscribeReactiveStream(String defaultScheme,
                                    String authorityOrBaseUri,
                                    String streamName,
@@ -73,6 +81,7 @@ public class SubscribeReactiveStream
                                    Supplier<Configuration> publisherConfiguration,
                                    ScheduledExecutorService timer,
                                    ByteBufferPool pool,
+                                   MetricRegistry metricRegistry,
                                    CompletableFuture<Void> result) {
         this.streamName = streamName;
         this.subscriberConfiguration = subscriberConfiguration;
@@ -84,6 +93,11 @@ public class SubscribeReactiveStream
         this.timer = timer;
         this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
         this.byteBufferPool = pool;
+
+        this.received = metricRegistry.meter("subscribe." + streamName + ".received");
+        this.receivedBytes = metricRegistry.meter("subscribe." + streamName + ".received.bytes");
+        this.requestsHistogram = metricRegistry.histogram("subscribe."+streamName+".requests");
+
         this.result = result;
 
         if (uriStartsWithSchemeAndAuthorityPattern.matcher(authorityOrBaseUri).matches()) {
@@ -270,9 +284,15 @@ public class SubscribeReactiveStream
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
-//                logger.info(marker, "Received:"+ Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+            if (logger.isDebugEnabled())
+            {
+                logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+            }
+
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
+            received.mark();
+            receivedBytes.mark(byteBuffer.position());
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
             subscriber.onNext(event);
         } catch (IOException e) {
@@ -331,6 +351,7 @@ public class SubscribeReactiveStream
             }
 
             logger.trace(marker, "Sending request: {}", rn);
+            requestsHistogram.update(rn);
             session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable x) {

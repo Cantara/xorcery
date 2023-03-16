@@ -48,7 +48,7 @@ public class PublishWithResultReactiveStream
                                            CompletableFuture<Void> result) {
         super(defaultScheme, authorityOrBaseUri, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, timer, pool, metricRegistry, result);
         this.resultReader = resultReader;
-        this.received = metricRegistry.meter("publish.received."+streamName);
+        this.received = metricRegistry.meter("publish."+streamName+".received");
 
     }
 

@@ -61,8 +61,10 @@ public class PublishReactiveStream
     protected CompletableFuture<Void> result;
     protected final Marker marker;
 
-    protected Meter sent;
-    protected Histogram sentBatchSize;
+    protected final Meter sent;
+    protected final Meter sentBytes;
+    protected final Histogram sentBatchSize;
+    protected final Histogram requestsHistogram;
     protected long batchSize;
 
     private boolean redundancyNotificationIssued = false;
@@ -97,8 +99,10 @@ public class PublishReactiveStream
         this.pool = pool;
         this.result = result;
         this.marker = MarkerManager.getMarker(authorityOrBaseUri + "/" + streamName);
-        this.sent = metricRegistry.meter("publish.sent." + streamName);
-        this.sentBatchSize = metricRegistry.histogram("publish.sent.batchsize." + streamName);
+        this.sent = metricRegistry.meter("publish." + streamName + ".sent");
+        this.sentBytes = metricRegistry.meter("publish." + streamName + ".sent.bytes");
+        this.sentBatchSize = metricRegistry.histogram("publish." + streamName + ".sent.batchsize");
+        this.requestsHistogram = metricRegistry.histogram("publish." + streamName + ".requests");
 
         if (uriStartsWithSchemeAndAuthorityPattern.matcher(authorityOrBaseUri).matches()) {
             URI uri = URI.create(authorityOrBaseUri);
@@ -282,6 +286,7 @@ public class PublishReactiveStream
                 publisher.subscribe(this);
             }
 
+            requestsHistogram.update(requestAmount);
             semaphore.release((int) requestAmount);
             subscription.request(requestAmount);
         }
@@ -364,6 +369,7 @@ public class PublishReactiveStream
 
                 @Override
                 public void writeSuccess() {
+                    sentBytes.mark(eventBuffer.position());
                     pool.release(eventBuffer);
                 }
             });
@@ -371,6 +377,7 @@ public class PublishReactiveStream
             sent.mark();
             if (endOfBatch) {
                 session.getRemote().flush();
+                sent.mark(batchSize);
                 sentBatchSize.update(batchSize);
             }
         } catch (Throwable e) {

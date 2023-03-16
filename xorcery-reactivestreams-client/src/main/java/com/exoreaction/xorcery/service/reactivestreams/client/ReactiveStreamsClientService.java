@@ -205,6 +205,7 @@ public class ReactiveStreamsClientService
                     publisherConfiguration,
                     timer,
                     byteBufferPool,
+                    metricRegistry,
                     result);
 
         } else {
@@ -218,6 +219,7 @@ public class ReactiveStreamsClientService
                     publisherConfiguration,
                     timer,
                     byteBufferPool,
+                    metricRegistry,
                     result);
         }
         return result;

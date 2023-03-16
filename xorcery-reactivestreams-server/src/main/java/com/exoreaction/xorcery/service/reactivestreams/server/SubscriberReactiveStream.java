@@ -1,5 +1,8 @@
 package com.exoreaction.xorcery.service.reactivestreams.server;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
@@ -54,6 +57,10 @@ public class SubscriberReactiveStream
 
     protected Session session;
 
+    protected final Meter received;
+    protected final Meter receivedBytes;
+    protected final Histogram requestsHistogram;
+
     // Subscription
     private final AtomicLong requests = new AtomicLong();
     private final AtomicBoolean cancelled = new AtomicBoolean();
@@ -63,7 +70,7 @@ public class SubscriberReactiveStream
                                     MessageReader<Object> eventReader,
                                     ObjectMapper objectMapper,
                                     ByteBufferPool byteBufferPool,
-                                    Executor executor) {
+                                    Executor executor, MetricRegistry metricRegistry) {
         this.subscriberFactory = subscriberFactory;
         this.eventReader = eventReader;
         this.objectMapper = objectMapper;
@@ -71,6 +78,10 @@ public class SubscriberReactiveStream
         this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, false);
         this.marker = MarkerManager.getMarker(streamName);
         this.executor = executor;
+
+        this.received = metricRegistry.meter("subscriber." + streamName + ".received");
+        this.receivedBytes = metricRegistry.meter("subscriber." + streamName + ".received.bytes");
+        this.requestsHistogram = metricRegistry.histogram("subscriber." + streamName + ".requests");
     }
 
     // Subscription
@@ -111,6 +122,7 @@ public class SubscriberReactiveStream
             }
 
             logger.trace(marker, "Sending request: {}", rn);
+            requestsHistogram.update(rn);
             session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable x) {
@@ -183,9 +195,14 @@ public class SubscriberReactiveStream
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
-            logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+            if (logger.isDebugEnabled())
+            {
+                logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+            }
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
+            received.mark();
+            receivedBytes.mark(byteBuffer.position());
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
             subscriber.onNext(event);
         } catch (Throwable e) {

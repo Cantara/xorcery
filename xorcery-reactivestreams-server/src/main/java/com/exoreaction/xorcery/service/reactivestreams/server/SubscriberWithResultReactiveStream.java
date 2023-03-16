@@ -29,16 +29,14 @@ import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 public class SubscriberWithResultReactiveStream
-    extends SubscriberReactiveStream
-{
+        extends SubscriberReactiveStream {
     private final static Logger logger = LogManager.getLogger(SubscriberReactiveStream.class);
 
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final MessageWriter<Object> resultWriter;
 
-    private final Meter received;
-    private final Meter resultsSent;
+    protected final Meter resultsSent;
 
     public SubscriberWithResultReactiveStream(String streamName,
                                               Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
@@ -47,19 +45,20 @@ public class SubscriberWithResultReactiveStream
                                               ObjectMapper objectMapper,
                                               ByteBufferPool byteBufferPool,
                                               Executor executor, MetricRegistry metricRegistry) {
-        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, executor);
+        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, executor, metricRegistry);
+
+        this.resultsSent = metricRegistry.meter("subscriber." + streamName + ".results");
 
         this.resultWriter = resultWriter;
-        this.received = metricRegistry.meter("subscriber.received."+streamName);
-        this.resultsSent = metricRegistry.meter("subscriber.results."+streamName);
     }
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
 //            logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
-            received.mark();
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
+            received.mark();
+            receivedBytes.mark(byteBuffer.position());
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
             CompletableFuture<Object> resultFuture = new CompletableFuture<>();
@@ -80,11 +79,10 @@ public class SubscriberWithResultReactiveStream
         // TODO do something more clever than synchronized
 
         CompletableFuture<Object> future;
-        while ((future = resultQueue.peek()) != null && future.isDone())
-        {
+        while ((future = resultQueue.peek()) != null && future.isDone()) {
             resultQueue.remove();
 
-            future.handle((r,t)->
+            future.handle((r, t) ->
             {
                 ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
                 try {

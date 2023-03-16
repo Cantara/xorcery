@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.client;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
@@ -43,8 +44,9 @@ public class SubscribeWithResultReactiveStream
                                              Supplier<Configuration> publisherConfiguration,
                                              ScheduledExecutorService timer,
                                              ByteBufferPool pool,
+                                             MetricRegistry metricRegistry,
                                              CompletableFuture<Void> result) {
-        super(defaultScheme, authorityOrBaseUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, timer, pool, result);
+        super(defaultScheme, authorityOrBaseUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, timer, pool, metricRegistry, result);
         this.resultWriter = resultWriter;
     }
 
