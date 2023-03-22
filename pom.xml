@@ -75,6 +75,7 @@
         <module>xorcery-handlebars</module>
 
         <module>xorcery-neo4j</module>
+        <module>xorcery-neo4j-binarytree</module>
         <module>xorcery-neo4j-projections</module>
         <module>xorcery-domainevents-neo4jprojection</module>
         <module>xorcery-jsonapi-server-neo4j</module>
