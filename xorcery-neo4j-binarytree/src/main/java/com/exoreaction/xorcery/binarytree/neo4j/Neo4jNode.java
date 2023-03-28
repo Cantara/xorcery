@@ -4,8 +4,11 @@ import no.cantara.binarytree.Node;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.ResourceIterable;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class Neo4jNode implements Node {
 
@@ -15,6 +18,9 @@ public class Neo4jNode implements Node {
     public static final String DATA_PROPERTY_KEY = "_key";
     public static final String PROPERTY_KEY_COLOR = "_color";
     public static final String PROPERTY_KEY_HEIGHT = "_height";
+
+    public static final Set<String> NAVIGABLE_RELATIONS_SET = Set.of(RELATION_LEFT, RELATION_RIGHT, RELATION_PARENT);
+    public static final Set<String> NAVIGABLE_PROPERTIES_SET = Set.of(DATA_PROPERTY_KEY, PROPERTY_KEY_COLOR, PROPERTY_KEY_HEIGHT);
 
     private static final RelationshipType RELATIONSHIP_TYPE_LEFT = RelationshipType.withName(RELATION_LEFT);
     private static final RelationshipType RELATIONSHIP_TYPE_RIGHT = RelationshipType.withName(RELATION_RIGHT);
@@ -136,6 +142,44 @@ public class Neo4jNode implements Node {
     @Override
     public boolean isNil() {
         return false;
+    }
+
+    @Override
+    public void delete() {
+        try (ResourceIterable<Relationship> relationships = neo4jNode.getRelationships()) {
+            for (Relationship relationship : relationships) {
+                relationship.delete();
+            }
+        }
+        neo4jNode.delete();
+    }
+
+    @Override
+    public void copyNonNavigableStateFrom(Node _source) {
+        Neo4jNode source = (Neo4jNode) _source;
+        org.neo4j.graphdb.Node sourceNode = source.neo4jNode;
+        // copy all outgoing relationships (except tree-navigation)
+        try (ResourceIterable<Relationship> relationships = sourceNode.getRelationships(Direction.OUTGOING)) {
+            for (Relationship relationship : relationships) {
+                if (!NAVIGABLE_RELATIONS_SET.contains(relationship.getType().name())) {
+                    neo4jNode.createRelationshipTo(relationship.getEndNode(), relationship.getType());
+                }
+            }
+        }
+        // copy all incoming relationships (except tree-navigation)
+        try (ResourceIterable<Relationship> relationships = sourceNode.getRelationships(Direction.INCOMING)) {
+            for (Relationship relationship : relationships) {
+                if (!NAVIGABLE_RELATIONS_SET.contains(relationship.getType().name())) {
+                    relationship.getStartNode().createRelationshipTo(neo4jNode, relationship.getType());
+                }
+            }
+        }
+        // copy all properties (except tree-navigation)
+        for (Map.Entry<String, Object> entry : sourceNode.getAllProperties().entrySet()) {
+            if (!NAVIGABLE_PROPERTIES_SET.contains(entry.getKey())) {
+                neo4jNode.setProperty(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     @Override
