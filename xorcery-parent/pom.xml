@@ -16,7 +16,7 @@
         <log4j.version>2.20.0</log4j.version>
         <jetty.version>11.0.13</jetty.version>
         <jersey.version>3.1.1</jersey.version>
-        <hk2.version>3.0.3</hk2.version>
+        <hk2.version>3.0.4</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <jackson.version>2.14.2</jackson.version>
