@@ -4,7 +4,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.18.7</version>
+    <version>0.18.8-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -16,7 +16,7 @@
         <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
         <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
         <url>https://github.com/Cantara/xorcery</url>
-        <tag>xorcery-project-0.18.7</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <modules>
