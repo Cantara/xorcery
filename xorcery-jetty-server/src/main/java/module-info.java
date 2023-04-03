@@ -5,7 +5,7 @@ open module xorcery.jetty.server {
     exports com.exoreaction.xorcery.service.jetty.server.security.clientcert;
 
     requires transitive xorcery.configuration.api;
-    requires transitive xorcery.metricregistry;
+    requires transitive xorcery.metricregistry.hk2;
     requires xorcery.keystores;
     requires xorcery.keystores.hk2;
 

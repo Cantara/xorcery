@@ -40,7 +40,7 @@
         <module>xorcery-core</module>
 
         <module>xorcery-log4j</module>
-        <module>xorcery-metricregistry</module>
+        <module>xorcery-metricregistry-hk2</module>
         <module>xorcery-metrics</module>
         <module>xorcery-jmxmetrics</module>
 

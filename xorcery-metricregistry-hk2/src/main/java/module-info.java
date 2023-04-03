@@ -1,4 +1,4 @@
-open module xorcery.metricregistry {
+open module xorcery.metricregistry.hk2 {
 
     exports com.exoreaction.xorcery.service.metricregistry;
 

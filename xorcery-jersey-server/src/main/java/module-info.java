@@ -3,7 +3,7 @@ open module xorcery.jersey.server {
     exports com.exoreaction.xorcery.service.jersey.server.resources;
 
     requires transitive xorcery.configuration.api;
-    requires transitive xorcery.metricregistry;
+    requires transitive xorcery.metricregistry.hk2;
     requires xorcery.jsonapi;
     requires xorcery.service.api;
 

@@ -9,7 +9,7 @@
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>xorcery-metricregistry</artifactId>
+    <artifactId>xorcery-metricregistry-hk2</artifactId>
     <version>0.18.9-SNAPSHOT</version>
     <packaging>jar</packaging>
 
