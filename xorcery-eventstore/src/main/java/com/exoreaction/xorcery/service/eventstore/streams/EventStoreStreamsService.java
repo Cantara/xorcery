@@ -33,14 +33,16 @@ public class EventStoreStreamsService {
 
         EventStoreDBClient client = eventStoreService.getClient();
 
+        StreamsConfiguration streamsConfiguration = new StreamsConfiguration(configuration.getConfiguration("eventstore.streams"));
+
         // Read
-        if (configuration.getBoolean("eventstore.streams.publisher.enabled").orElse(true)) {
+        if (streamsConfiguration.isPublisherEnabled()) {
             builder.publisher("eventstore");
             reactiveStreams.publisher("eventstore", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
         }
 
         // Write
-        if (configuration.getBoolean("eventstore.streams.subscriber.enabled").orElse(true)) {
+        if (streamsConfiguration.isSubscriberEnabled()) {
             builder.subscriber("eventstore");
             reactiveStreams.subscriber("eventstore", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
         }

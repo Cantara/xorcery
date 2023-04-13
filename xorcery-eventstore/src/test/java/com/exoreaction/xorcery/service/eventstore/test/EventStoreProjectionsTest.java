@@ -4,7 +4,7 @@ import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.service.eventstore.EventStoreProjectionsService;
+import com.exoreaction.xorcery.service.eventstore.projections.EventStoreProjectionsService;
 import com.exoreaction.xorcery.service.eventstore.EventStoreService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
@@ -14,8 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
 import java.util.List;

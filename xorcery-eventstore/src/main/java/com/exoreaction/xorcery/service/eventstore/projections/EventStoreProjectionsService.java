@@ -1,13 +1,11 @@
-package com.exoreaction.xorcery.service.eventstore;
+package com.exoreaction.xorcery.service.eventstore.projections;
 
 import com.eventstore.dbclient.CreateProjectionOptions;
 import com.eventstore.dbclient.EventStoreDBProjectionManagementClient;
 import com.eventstore.dbclient.ProjectionDetails;
 import com.eventstore.dbclient.UpdateProjectionOptions;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.ServiceConfiguration;
-import com.exoreaction.xorcery.json.model.JsonElement;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.exoreaction.xorcery.service.eventstore.EventStoreService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.logging.log4j.LogManager;
@@ -107,27 +105,5 @@ public class EventStoreProjectionsService {
     }
 
 
-    public record ProjectionsConfiguration(Configuration context)
-            implements ServiceConfiguration {
-        public Iterable<Projection> getProjections() {
-            return context.getObjectListAs("projections", Projection::new).orElseThrow(() ->
-                    new IllegalStateException("Missing eventstore.projections.projections configuration"));
-        }
-    }
-
-    public record Projection(ObjectNode json)
-            implements JsonElement {
-        String getName() {
-            return getString("name").orElseThrow();
-        }
-
-        String getQuery() {
-            return getString("query").orElseThrow();
-        }
-
-        public boolean isEmitEnabled() {
-            return getBoolean("emitenabled").orElse(false);
-        }
-    }
 }
 

@@ -4,6 +4,7 @@ open module xorcery.eventstore {
     exports com.exoreaction.xorcery.service.eventstore.model;
     exports com.exoreaction.xorcery.service.eventstore.resources.api;
     exports com.exoreaction.xorcery.service.eventstore.streams;
+    exports com.exoreaction.xorcery.service.eventstore.projections;
 
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;
