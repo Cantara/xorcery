@@ -21,6 +21,7 @@ import java.util.Optional;
  * 4: Servers
  * 6: Server publishers/subscribers
  * 8: Client publishers/subscribers
+ * 18: Server start/stop
  * 20: DNS registration
  *
  * @author rickardoberg

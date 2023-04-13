@@ -1,44 +1,25 @@
 package com.exoreaction.xorcery.service.jetty.server;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.alpn.server.ALPNServerConnectionFactory;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.http2.server.HTTP2ServerConnectionFactory;
-import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.IterableProvider;
-import org.glassfish.hk2.api.PreDestroy;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.runlevel.RunLevel;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "jetty.server")
-@RunLevel(4)
-public class JettyServerService
-        implements Factory<ServletContextHandler>, PreDestroy {
+public class JettyServerFactory
+        implements Factory<Server> {
     private final Server server;
-    private final ServletContextHandler servletContextHandler;
-    private final Logger logger = LogManager.getLogger(getClass());
 
     @Inject
-    public JettyServerService(Configuration configuration,
-                              ServiceLocator serviceLocator,
-                              Provider<SslContextFactory.Server> sslContextFactoryProvider,
-                              IterableProvider<SecurityHandler> securityHandlerProvider,
-                              IterableProvider<MetricRegistry> metricRegistry) throws Exception {
+    public JettyServerFactory(Configuration configuration, Provider<SslContextFactory.Server> sslContextFactoryProvider) {
 
         JettyServerConfiguration jettyConfig = new JettyServerConfiguration(configuration.getConfiguration("jetty.server"));
         JettyServerHttp2Configuration jettyHttp2Config = new JettyServerHttp2Configuration(configuration.getConfiguration("jetty.server.http2"));
@@ -126,54 +107,16 @@ public class JettyServerService
         requestLog.setLoggerName("jetty");
         server.setRequestLog(
                 new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
-
-        servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-        servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
-        servletContextHandler.setContextPath("/");
-
-        JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
-
-        Handler handler = servletContextHandler;
-        if (securityHandlerProvider.getHandle() != null)
-        {
-            SecurityHandler securityHandler = securityHandlerProvider.get();
-            securityHandler.setHandler(handler);
-            handler = securityHandler;
-        }
-
-        if (metricRegistry.getHandle() != null) {
-            InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry.get(), "jetty");
-            instrumentedHandler.setHandler(handler);
-            handler = instrumentedHandler;
-        }
-
-        server.setHandler(handler);
-        server.start();
-
-        ServiceLocatorUtilities.addOneConstant(serviceLocator, server);
-
-
-        logger.info("Started Jetty server");
-    }
-
-    @Override
-    public void preDestroy() {
-        logger.info("Stopping Jetty server");
-        try {
-            server.stop();
-        } catch (Throwable e) {
-            logger.error(e);
-        }
     }
 
     @Override
     @Singleton
     @Named("jetty.server")
-    public ServletContextHandler provide() {
-        return servletContextHandler;
+    public Server provide() {
+        return server;
     }
 
     @Override
-    public void dispose(ServletContextHandler instance) {
+    public void dispose(Server instance) {
     }
 }
