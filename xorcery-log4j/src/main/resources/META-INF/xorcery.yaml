@@ -1,5 +1,6 @@
 log4jpublisher:
   enabled: "{{ defaults.enabled }}"
+  appender: "Log4jPublisher"
   subscriber:
     authority:
     stream: "logs"

@@ -23,17 +23,20 @@ public class Log4jPublisherService {
     public Log4jPublisherService(ReactiveStreamsClient reactiveStreams,
                                  Configuration configuration) {
 
+        Log4jPublisherConfiguration log4jPublisherConfiguration = new Log4jPublisherConfiguration(configuration.getConfiguration("log4jpublisher"));
+
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
-        appender = lc.getConfiguration().getAppender("Log4jPublisher");
+        String appenderName = log4jPublisherConfiguration.getAppenderName();
+        appender = lc.getConfiguration().getAppender(appenderName);
         if (appender != null)
         {
             appender.setConfiguration(configuration);
 
-            reactiveStreams.publish(configuration.getString("log4jpublisher.subscriber.authority").orElse(null), configuration.getString("log4jpublisher.subscriber.stream").orElseThrow(),
-                    () -> configuration.getConfiguration("log4jpublisher.subscriber.configuration"), new LogPublisher(), LogPublisher.class, configuration.getConfiguration("log4jpublisher.publisher.configuration"));
+            reactiveStreams.publish(log4jPublisherConfiguration.getSubscriberAuthority(), log4jPublisherConfiguration.getSubscriberStream(),
+                    log4jPublisherConfiguration::getSubscriberConfiguration, new LogPublisher(), LogPublisher.class, log4jPublisherConfiguration.getPublisherConfiguration());
         } else
         {
-            LogManager.getLogger(getClass()).warn("No Log4jPublisher appender added to Log4j2 configuration");
+            LogManager.getLogger(getClass()).warn("No appender {} added to Log4j2 configuration", appenderName);
         }
     }
 

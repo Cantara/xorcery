@@ -23,9 +23,10 @@ public class RequestLogPublisherService
                                       Server server,
                                       Configuration configuration) {
 
+        RequestLogConfiguration requestLogConfiguration = new RequestLogConfiguration(configuration.getConfiguration("requestlog"));
         RequestLogPublisher requestLogPublisher = new RequestLogPublisher();
-        reactiveStreams.publish(configuration.getString("requestlogpublisher.subscriber.host").orElseThrow(), configuration.getString("requestlog.subscriber.stream").orElseThrow(),
-                () -> configuration.getConfiguration("requestlogpublisher.subscriber.configuration"), requestLogPublisher, RequestLogPublisher.class, configuration.getConfiguration("requestlogpublisher.publisher.configuration"));
+        reactiveStreams.publish(requestLogConfiguration.getSubscriberAuthority(), requestLogConfiguration.getSubscriberStream(),
+                requestLogConfiguration::getSubscriberConfiguration, requestLogPublisher, RequestLogPublisher.class, requestLogConfiguration.getPublisherConfiguration());
 
         JsonRequestLog requestLog = new JsonRequestLog(new LoggingMetadata.Builder(new Metadata.Builder())
                 .configuration(new InstanceConfiguration(configuration.getConfiguration("instance")))

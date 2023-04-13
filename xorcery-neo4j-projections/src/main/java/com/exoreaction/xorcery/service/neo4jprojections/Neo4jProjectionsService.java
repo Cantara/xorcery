@@ -30,11 +30,14 @@ public class Neo4jProjectionsService {
     @Inject
     public Neo4jProjectionsService(ServiceResourceObjects serviceResourceObjects,
                                    Configuration configuration) {
+
+        Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
+
         this.sro = new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
                 .with(b -> {
-                    if (configuration.getBoolean("neo4jprojections.eventsubscriber").orElse(true))
+                    if (neo4jProjectionsConfiguration.isEventSubscriberEnabled())
                         b.subscriber(Neo4jProjectionStreams.EVENT_SUBSCRIBER);
-                    if (configuration.getBoolean("neo4jprojections.commitpublisher").orElse(true))
+                    if (neo4jProjectionsConfiguration.isCommitPublisherEnabled())
                         b.publisher(Neo4jProjectionStreams.COMMIT_PUBLISHER);
                 }).build();
 

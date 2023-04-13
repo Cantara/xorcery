@@ -2,7 +2,6 @@ package com.exoreaction.xorcery.service.neo4j;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
-import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
@@ -10,9 +9,7 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4j.spi.Neo4jProvider;
 import com.exoreaction.xorcery.util.Resources;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -24,7 +21,6 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
-import org.neo4j.cypher.internal.expressions.In;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
@@ -40,7 +36,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -59,21 +54,16 @@ public class Neo4jService
     private final DatabaseManagementService managementService;
 
     private final Map<String, GraphDatabase> databases = new ConcurrentHashMap<>();
-    private final InstantiationService instantiationService;
-
     @Inject
     public Neo4jService(ServiceResourceObjects serviceResourceObjects,
                         ServiceLocator serviceLocator,
-                        Configuration configuration,
-                        InstantiationService instantiationService
+                        Configuration configuration
     ) {
-        this.instantiationService = instantiationService;
-
         Neo4jConfiguration neo4jConfiguration = new Neo4jConfiguration(configuration.getConfiguration("neo4jdatabase"));
 
-        Path home = neo4jConfiguration.databasePath();
+        Path home = neo4jConfiguration.getDatabasePath();
         logger.info("Neo4j home:" + home);
-        String tmpSettingsFileName = configuration.getConfiguration("neo4jdatabase").getString("temporary_settings_file").orElseThrow();
+        String tmpSettingsFileName = neo4jConfiguration.getTemporarySettingsFile();
         Path tmpConfigFile = Path.of(tmpSettingsFileName);
         try (FileOutputStream out = new FileOutputStream(tmpConfigFile.toFile())) {
             Map<String, String> settings = neo4jConfiguration.settings();
@@ -89,7 +79,7 @@ public class Neo4jService
                 .loadPropertiesFromFile(tmpConfigFile)
                 .build();
 
-        List<DatabaseConfiguration> databases = configuration.getListAs("neo4jdatabase.databases", json -> new DatabaseConfiguration((ObjectNode) json))
+        List<DatabaseConfiguration> databases = neo4jConfiguration.getDatabases()
                 .orElseGet(() ->
                         List.of(new DatabaseConfiguration(JsonNodeFactory.instance.objectNode().put("name", "neo4j"))
                         ));
@@ -134,7 +124,7 @@ public class Neo4jService
             }
 
             // Run startup Cypher
-            for (String cypherResource : databaseConfiguration.getStartup()) {
+            for (String cypherResource : databaseConfiguration.getStartupCypherStatements()) {
                 try {
                     logger.info("Running Neo4j startup script:" + cypherResource);
                     List<String> statements = Cypher.getCypherStatements(cypherResource);
@@ -178,16 +168,5 @@ public class Neo4jService
     @Override
     public void dispose(GraphDatabase instance) {
         // Do nothing
-    }
-
-    public record DatabaseConfiguration(ObjectNode json)
-            implements JsonElement {
-        String getName() {
-            return getString("name").orElseThrow();
-        }
-
-        List<String> getStartup() {
-            return getListAs("startup", JsonNode::textValue).orElse(Collections.emptyList());
-        }
     }
 }

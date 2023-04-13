@@ -64,7 +64,7 @@ public class OpenSearchService
         this.openSearchConfiguration = new OpenSearchConfiguration(configuration.getConfiguration("opensearch"));
         this.objectMapper = new ObjectMapper(new YAMLFactory());
 
-        URI host = configuration.getURI("opensearch.url").orElseThrow();
+        URI host = openSearchConfiguration.getURL();
         client = new OpenSearchClient(clientBuilder, host);
 
         loadComponentTemplates();
@@ -82,7 +82,7 @@ public class OpenSearchService
             reactiveStreamsServer.publisher("opensearchcommits", cfg -> openSearchCommitPublisher, OpenSearchCommitPublisher.class);
 
             OpenSearchSubscriberConnector connector = new OpenSearchSubscriberConnector(client, reactiveStreamsClient, openSearchCommitPublisher);
-            configuration.getObjectListAs("opensearch.publishers", Publisher::new).ifPresent(publishers ->
+            openSearchConfiguration.getPublishers().ifPresent(publishers ->
             {
                 for (Publisher publisher : publishers) {
                     connector.connect(publisher.getAuthority(), publisher.getStream(), publisher.getServerConfiguration().orElseGet(Configuration::empty), publisher.getClientConfiguration().orElseGet(Configuration::empty));

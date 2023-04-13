@@ -14,14 +14,14 @@ import java.util.concurrent.Flow;
 
 public class JmxMetricsPublisher
         implements Flow.Publisher<WithMetadata<ObjectNode>> {
-    private final Configuration configuration;
+    private final MetricsConfiguration configuration;
     private DeploymentMetadata deploymentMetadata;
     private MBeanServer managementServer;
 
-    public JmxMetricsPublisher(Configuration publisherConfiguration,
+    public JmxMetricsPublisher(MetricsConfiguration metricsConfiguration,
                                DeploymentMetadata deploymentMetadata,
                                MBeanServer managementServer) {
-        this.configuration = publisherConfiguration;
+        this.configuration = metricsConfiguration;
         this.deploymentMetadata = deploymentMetadata;
         this.managementServer = managementServer;
     }
@@ -29,7 +29,7 @@ public class JmxMetricsPublisher
 
     @Override
     public void subscribe(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
-        Optional<List<String>> filters = configuration.getList("filter").map(list ->
+        Optional<List<String>> filters = configuration.getFilters().map(list ->
         {
             List<String> f = new ArrayList<>();
             for (JsonNode jsonNode : list) {

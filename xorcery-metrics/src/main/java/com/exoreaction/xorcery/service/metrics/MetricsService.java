@@ -33,9 +33,11 @@ public class MetricsService
                 .configuration(new InstanceConfiguration(configuration.getConfiguration("instance")))
                 .build();
 
-        result = reactiveStreamsClient.publish(configuration.getString("metrics.subscriber.authority").orElse(null), configuration.getString("metrics.subscriber.stream").orElseThrow(),
-                () -> configuration.getConfiguration("metrics.subscriber.configuration"),
-                new JmxMetricsPublisher(configuration.getConfiguration("metrics"), deploymentMetadata, managementServer), JmxMetricsPublisher.class, configuration.getConfiguration("metrics.publisher.configuration"));
+        MetricsConfiguration metricsConfiguration = new MetricsConfiguration(configuration.getConfiguration("metrics"));
+
+        result = reactiveStreamsClient.publish(metricsConfiguration.getSubscriberAuthority(), metricsConfiguration.getSubscriberStream(),
+                metricsConfiguration::getSubscriberConfiguration,
+                new JmxMetricsPublisher(metricsConfiguration, deploymentMetadata, managementServer), JmxMetricsPublisher.class, metricsConfiguration.getPublisherConfiguration());
     }
 
     @Override

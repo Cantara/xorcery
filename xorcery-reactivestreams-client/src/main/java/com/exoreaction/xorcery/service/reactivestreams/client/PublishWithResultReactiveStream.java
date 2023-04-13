@@ -48,7 +48,7 @@ public class PublishWithResultReactiveStream
                                            CompletableFuture<Void> result) {
         super(defaultScheme, authorityOrBaseUri, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, timer, pool, metricRegistry, result);
         this.resultReader = resultReader;
-        this.received = metricRegistry.meter("publish."+streamName+".received");
+        this.received = metricRegistry.meter("publish." + streamName + ".received");
 
     }
 
@@ -102,11 +102,6 @@ public class PublishWithResultReactiveStream
     @Override
     public void onEvent(AtomicReference<Object> event, long sequence, boolean endOfBatch) throws Exception {
         try {
-            while (!semaphore.tryAcquire(1, TimeUnit.SECONDS) && !result.isDone()) {
-                if (session == null || !session.isOpen())
-                    return;
-            }
-
             ByteBufferOutputStream2 outputStream = new ByteBufferOutputStream2(pool, true);
 
             // Write event data
@@ -139,8 +134,12 @@ public class PublishWithResultReactiveStream
             });
 
             sent.mark();
-            if (endOfBatch)
-            {
+            if (endOfBatch) {
+                while (!semaphore.tryAcquire((int) batchSize, 1, TimeUnit.SECONDS) && !result.isDone()) {
+                    if (session == null || !session.isOpen())
+                        return;
+                }
+
                 session.getRemote().flush();
                 sentBatchSize.update(batchSize);
             }

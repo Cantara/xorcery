@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.jersey.client;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.jetty.client.JettyClientSslConfiguration;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -67,7 +68,8 @@ public class JerseyClientConfigFactory
         DnsLookupService dnsLookup = dnsLookups.get();
 
         JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
-        String scheme = configuration.getBoolean("client.ssl.enabled").map(enabled -> enabled ? "https" : "http").orElse("http");
+        JettyClientSslConfiguration sslConfiguration = new JettyClientSslConfiguration(configuration.getConfiguration("jetty.client.ssl"));
+        String scheme = sslConfiguration.isEnabled() ? "https" : "http";
         return clientConfig
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
                 .register(new JettyHttpClientSupplier(client))

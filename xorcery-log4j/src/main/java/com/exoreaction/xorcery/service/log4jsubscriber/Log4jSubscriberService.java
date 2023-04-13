@@ -24,7 +24,8 @@ import java.util.concurrent.Flow;
 @RunLevel(6)
 public class Log4jSubscriberService {
 
-    private Provider<MessageWorkers> messageWorkers;
+    private final Log4jSubscriberConfiguration log4jSubscriberConfiguration;
+    private final Provider<MessageWorkers> messageWorkers;
 
     @Inject
     public Log4jSubscriberService(ReactiveStreamsServer reactiveStreams,
@@ -32,7 +33,9 @@ public class Log4jSubscriberService {
                                   Provider<MessageWorkers> messageWorkers) {
         this.messageWorkers = messageWorkers;
 
-        reactiveStreams.subscriber(configuration.getString("log4jsubscriber.subscriber.stream").orElse("logs"), LogSubscriber::new, LogSubscriber.class);
+        log4jSubscriberConfiguration = new Log4jSubscriberConfiguration(configuration.getConfiguration("log4jsubscriber"));
+
+        reactiveStreams.subscriber(log4jSubscriberConfiguration.getSubscriberStream(), LogSubscriber::new, LogSubscriber.class);
     }
 
     public class LogSubscriber
@@ -42,6 +45,7 @@ public class Log4jSubscriberService {
         private MessageReader<Object> messageReader;
 
         public LogSubscriber(Configuration configuration) {
+
             logger = LogManager.getLogger(configuration.getString("category").orElse(Log4jSubscriberService.class.getName()));
 
             String type = configuration.getString("type").orElse("java.lang.String");

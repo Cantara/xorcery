@@ -4,6 +4,7 @@ open module xorcery.jersey.client {
     requires xorcery.configuration.api;
     requires xorcery.keystores;
     requires xorcery.dns.client;
+    requires xorcery.jetty.client;
 
     requires org.apache.logging.log4j;
 

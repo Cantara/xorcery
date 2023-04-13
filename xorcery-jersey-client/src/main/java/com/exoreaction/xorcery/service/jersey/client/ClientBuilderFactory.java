@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.service.jersey.client;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
-import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.jetty.client.JettyClientSslConfiguration;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -11,7 +11,6 @@ import jakarta.ws.rs.client.ClientBuilder;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InstantiationService;
-import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
@@ -55,8 +54,10 @@ public class ClientBuilderFactory
             }
         }
 
+        JerseyClientConfiguration jerseyClientConfiguration = new JerseyClientConfiguration(configuration.getConfiguration("jersey.client"));
+
         ClientConfig clientConfig = new ClientConfig();
-        configuration.getJson("client.properties").ifPresent(json ->
+        jerseyClientConfiguration.getProperties().ifPresent(json ->
         {
             if (json instanceof ObjectNode on) {
                 Iterator<String> fieldNames = on.fieldNames();
@@ -70,7 +71,8 @@ public class ClientBuilderFactory
         DnsLookupService dnsLookup = dnsLookups.get();
 
         JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
-        String scheme = configuration.getBoolean("client.ssl.enabled").map(enabled -> enabled ? "https" : "http").orElse("http");
+        JettyClientSslConfiguration sslConfiguration = new JettyClientSslConfiguration(configuration.getConfiguration("jetty.client.ssl"));
+        String scheme = sslConfiguration.isEnabled() ? "https" : "http";
 
         return ClientBuilder.newBuilder()
                 .withConfig(clientConfig

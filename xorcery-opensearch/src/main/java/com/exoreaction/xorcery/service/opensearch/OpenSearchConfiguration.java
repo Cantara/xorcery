@@ -1,20 +1,35 @@
 package com.exoreaction.xorcery.service.opensearch;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.ServiceConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 
-public record OpenSearchConfiguration(Configuration configuration) {
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+public record OpenSearchConfiguration(Configuration context)
+    implements ServiceConfiguration
+{
     public JsonNode getComponentTemplates() {
-        return configuration.getJson("componentTemplates").orElseThrow(() ->
-                new IllegalStateException("Missing opensearch.componentTemplates configuration"));
+        return context.getJson("componentTemplates").orElseThrow(() ->
+                new IllegalArgumentException("Missing opensearch.componentTemplates configuration"));
     }
 
     public JsonNode getIndexTemplates() {
-        return configuration.getJson("indexTemplates").orElseThrow(() ->
-                new IllegalStateException("Missing opensearch.indexTemplates configuration"));
+        return context.getJson("indexTemplates").orElseThrow(() ->
+                new IllegalArgumentException("Missing opensearch.indexTemplates configuration"));
     }
 
     public boolean isDeleteOnExit() {
-        return configuration.getBoolean("opensearch.deleteOnExit").orElse(false);
+        return context.getBoolean("deleteOnExit").orElse(false);
+    }
+
+    public URI getURL() {
+        return context.getURI("url").orElseThrow(()->new IllegalArgumentException("Missing opensearch.url configuration"));
+    }
+
+    public Optional<List<OpenSearchService.Publisher>> getPublishers() {
+        return context.getObjectListAs("publishers", OpenSearchService.Publisher::new);
     }
 }

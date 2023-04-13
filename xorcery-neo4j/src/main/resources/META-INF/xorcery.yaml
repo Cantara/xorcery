@@ -2,7 +2,7 @@ neo4jdatabase:
   enabled: "{{ defaults.enabled }}"
   path: "{{ instance.home }}/neo4j"
   startup: []
-  temporary_settings_file: "tmp_neo4j.conf"
+  temporarySettingsFile: "tmp_neo4j.conf"
   settings:
     dbms:
       allow_upgrade: true
