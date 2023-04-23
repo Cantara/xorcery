@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.reactivestreams.server;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.common.LocalStreamFactories;
@@ -9,6 +10,7 @@ import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -38,11 +40,11 @@ public class ReactiveStreamsServerService
 
     @Inject
     public ReactiveStreamsServerService(Configuration configuration,
-                                        MetricRegistry metricRegistry,
+                                        @Named("xorcery") MetricRegistryWrapper metricRegistryWrapper,
                                         MessageWorkers messageWorkers,
                                         ServletContextHandler servletContextHandler) {
         super(messageWorkers);
-        this.metricRegistry = metricRegistry;
+        this.metricRegistry = metricRegistryWrapper.metricRegistry();
 
         PublishersReactiveStreamsServlet publishersServlet = new PublishersReactiveStreamsServlet(configuration, streamName ->
         {

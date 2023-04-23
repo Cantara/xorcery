@@ -29,6 +29,9 @@
         <module>xorcery-configuration-api</module>
         <module>xorcery-configuration</module>
         <module>xorcery-metadata</module>
+        <module>xorcery-health-api</module>
+        <module>xorcery-health-registry</module>
+        <module>xorcery-health-registry-hk2</module>
 
         <module>xorcery-jsonapi</module>
         <module>xorcery-jsonapi-jaxrs</module>
@@ -56,6 +59,7 @@
         <module>xorcery-jersey-client</module>
         <module>xorcery-jetty-server</module>
         <module>xorcery-jersey-server</module>
+        <module>xorcery-admin-servlet</module>
 
         <module>xorcery-reactivestreams-api</module>
         <module>xorcery-reactivestreams-api-hk2</module>

@@ -31,6 +31,11 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-api-hk2</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-dns-client-hk2</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -42,6 +47,11 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metricregistry-hk2</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jetty-client-hk2</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.jetty.server;
 
 
-import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -14,9 +14,11 @@ import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerI
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "jetty.server")
+@RunLevel(4)
 public class ServletContextHandlerFactory
     implements Factory<ServletContextHandler>
 {
@@ -26,7 +28,7 @@ public class ServletContextHandlerFactory
     public ServletContextHandlerFactory(Server server,
                                         ServiceLocator serviceLocator,
                                         IterableProvider<SecurityHandler> securityHandlerProvider,
-                                        IterableProvider<MetricRegistry> metricRegistry) {
+                                        @Named("jetty") MetricRegistryWrapper jettyMetricRegistryWrapper) {
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
         servletContextHandler.setContextPath("/");
@@ -41,8 +43,8 @@ public class ServletContextHandlerFactory
             handler = securityHandler;
         }
 
-        if (metricRegistry.getHandle() != null) {
-            InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry.get(), "jetty");
+        if (jettyMetricRegistryWrapper != null) {
+            InstrumentedHandler instrumentedHandler = new InstrumentedHandler(jettyMetricRegistryWrapper.metricRegistry(), "");
             instrumentedHandler.setHandler(handler);
             handler = instrumentedHandler;
         }

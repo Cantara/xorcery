@@ -1,0 +1,97 @@
+package com.exoreaction.xorcery.admin.servlet;
+
+import com.exoreaction.xorcery.health.registry.DefaultXorceryHealthCheckService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.inject.Inject;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jvnet.hk2.annotations.Service;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.time.Instant;
+
+@Service
+public class XorceryVisualeCompatibleHealthServlet extends HttpServlet {
+
+    private static final long serialVersionUID = -7432916484889147321L;
+    private static final Logger log = LogManager.getLogger(DefaultXorceryHealthCheckService.class);
+    public static final String HEALTH_CHECK_REGISTRY = XorceryVisualeCompatibleHealthServlet.class.getCanonicalName() + ".registry";
+    private transient DefaultXorceryHealthCheckService healthService;
+    private transient ObjectMapper mapper;
+
+    @Inject
+    public XorceryVisualeCompatibleHealthServlet(DefaultXorceryHealthCheckService healthService) {
+        this.healthService = healthService;
+    }
+
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        ServletContext context = config.getServletContext();
+        Object executorAttr;
+        if (null == this.healthService) {
+            executorAttr = context.getAttribute(HEALTH_CHECK_REGISTRY);
+            if (!(executorAttr instanceof DefaultXorceryHealthCheckService)) {
+                throw new ServletException("Couldn't find a DefaultXorceryHealthCheckService instance.");
+            }
+
+            this.healthService = (DefaultXorceryHealthCheckService) executorAttr;
+        }
+        this.mapper = new ObjectMapper();
+    }
+
+    public void destroy() {
+        super.destroy();
+        this.healthService.shutdown();
+    }
+
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ObjectNode health;
+        try {
+            health = healthService.getCurrentHealthJackson();
+            long healthComputeTimeMs = healthService.getHealthComputeTimeMs();
+            health.put("now", Instant.now().toString());
+            health.put("health-compute-time-ms", String.valueOf(healthComputeTimeMs));
+        } catch (Throwable t) {
+            log.error("While getting health", t);
+            health = mapper.createObjectNode();
+            health.put("Status", "FAIL");
+            health.put("errorMessage", "While getting health");
+            StringWriter strWriter = new StringWriter();
+            t.printStackTrace(new PrintWriter(strWriter));
+            health.put("errorCause", strWriter.toString());
+        }
+        resp.setContentType("application/json");
+        resp.setHeader("Cache-Control", "must-revalidate,no-cache,no-store");
+        resp.setStatus(200);
+        try (OutputStream output = resp.getOutputStream()) {
+            try {
+                this.getWriter(req).writeValue(output, health);
+            } catch (Throwable t) {
+                if (output != null) {
+                    try {
+                        output.close();
+                    } catch (Throwable t2) {
+                        t.addSuppressed(t2);
+                    }
+                }
+                throw t;
+            }
+        }
+    }
+
+    private ObjectWriter getWriter(HttpServletRequest request) {
+        boolean prettyPrint = !Boolean.parseBoolean(request.getParameter("compact"));
+        return prettyPrint ? this.mapper.writerWithDefaultPrettyPrinter() : this.mapper.writer();
+    }
+}

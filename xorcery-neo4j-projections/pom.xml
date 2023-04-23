@@ -56,6 +56,11 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-metricregistry-hk2</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>neo4j-apoc-jpms-shaded</artifactId>
         </dependency>
         <dependency>

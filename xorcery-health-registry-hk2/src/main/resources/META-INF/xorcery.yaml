@@ -1,0 +1,3 @@
+health:
+  updater:
+    intervalMs: 1000

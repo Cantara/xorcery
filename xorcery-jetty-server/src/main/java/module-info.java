@@ -8,6 +8,7 @@ open module xorcery.jetty.server {
     requires transitive xorcery.metricregistry.hk2;
     requires xorcery.keystores;
     requires xorcery.keystores.hk2;
+    requires xorcery.health.api;
 
     requires jakarta.inject;
     requires jakarta.validation;

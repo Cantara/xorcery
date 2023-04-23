@@ -9,4 +9,5 @@ open module xorcery.reactivestreams.client.hk2 {
     requires jakarta.inject;
     requires org.eclipse.jetty.client;
     requires com.codahale.metrics;
+    requires xorcery.metricregistry.hk2;
 }

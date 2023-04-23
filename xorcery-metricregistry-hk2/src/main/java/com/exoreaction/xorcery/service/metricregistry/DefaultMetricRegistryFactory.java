@@ -1,25 +1,20 @@
 package com.exoreaction.xorcery.service.metricregistry;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.jmx.JmxReporter;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
 @Service
-public class MetricRegistryFactory
+public class DefaultMetricRegistryFactory
         implements Factory<MetricRegistry> {
-    private MetricRegistry metricRegistry = new MetricRegistry();
-    private JmxReporter reporter;
+    private final MetricRegistry metricRegistry;
 
     @Inject
-    public MetricRegistryFactory() {
-
-        reporter = JmxReporter.forRegistry(metricRegistry)
-                .inDomain("xorcery")
-                .build();
-        reporter.start();
+    public DefaultMetricRegistryFactory(@Named("app") MetricRegistryWrapper wrapper) {
+        this.metricRegistry = wrapper.metricRegistry();
     }
 
     @Override
@@ -30,6 +25,5 @@ public class MetricRegistryFactory
 
     @Override
     public void dispose(MetricRegistry instance) {
-        reporter.stop();
     }
 }

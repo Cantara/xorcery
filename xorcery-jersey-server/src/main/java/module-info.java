@@ -17,4 +17,6 @@ open module xorcery.jersey.server {
     requires org.glassfish.hk2.runlevel;
 
     requires org.apache.logging.log4j;
+    requires com.codahale.metrics.jersey3;
+    requires com.codahale.metrics;
 }

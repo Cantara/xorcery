@@ -1,12 +1,16 @@
 package com.exoreaction.xorcery.service.jersey.server;
 
+import com.codahale.metrics.jersey3.MetricsFeature;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import com.exoreaction.xorcery.service.jersey.server.resources.ServerApplication;
+import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -27,7 +31,8 @@ public class JerseyServerService
     @Inject
     public JerseyServerService(Configuration configuration,
                                ServiceResourceObjects sro,
-                               ServletContextHandler ctx) throws Exception {
+                               Provider<ServletContextHandler> ctxProvider,
+                               @Named("jersey") MetricRegistryWrapper jerseyMetricsWrapper) throws Exception {
 
         ServerApplication app = new ServerApplication(configuration);
 
@@ -44,13 +49,18 @@ public class JerseyServerService
             }
         });
 
+        if (jerseyMetricsWrapper != null) {
+            app.register(new MetricsFeature(jerseyMetricsWrapper.metricRegistry()));
+        }
+
         servletContainer = new JerseyServletContainer(app);
         ServletHolder servletHolder = new ServletHolder(servletContainer);
         servletHolder.setInitOrder(1);
-        ctx.addServlet(servletHolder, "/*");
+        ServletContextHandler servletContextHandler = ctxProvider.get();
+        servletContextHandler.addServlet(servletHolder, "/*");
 
         sro.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "server")
-                .attribute("jetty.version", Jetty.VERSION)
+                .attribute("jetty.version", Jetty.VERSION) // TODO is this supposed to be jetty version here?
                 .build());
 
         logger.info("Jersey started");

@@ -1,13 +1,13 @@
 package com.exoreaction.xorcery.service.reactivestreams.client.hk2;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
-import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWorkers;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.PreDestroy;
@@ -26,8 +26,8 @@ public class ReactiveStreamsClientService extends com.exoreaction.xorcery.servic
                                         MessageWorkers messageWorkers,
                                         HttpClient httpClient,
                                         DnsLookupService dnsLookup,
-                                        MetricRegistry metricRegistry,
+                                        @Named("xorcery") MetricRegistryWrapper metricRegistryWrapper,
                                         Provider<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
-        super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistry, localStreamFactoriesProvider::get);
+        super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistryWrapper.metricRegistry(), localStreamFactoriesProvider::get);
     }
 }
