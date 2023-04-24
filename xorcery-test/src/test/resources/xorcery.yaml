@@ -12,6 +12,10 @@ dns:
 jetty.client.enabled: true
 jetty.server.enabled: true
 jersey:
+  enabled: true
   server:
     register:
       - com.exoreaction.xorcery.service.resources.api.SubjectResource
+root.enabled: true
+jetty.enabled: true
+xorcery.enabled: true
