@@ -16,6 +16,7 @@ open module xorcery.domainevents.neo4jprojection {
     requires xorcery.neo4j.projections;
     requires jakarta.ws.rs;
     requires xorcery.domainevents.publisher;
+    requires xorcery.reactivestreams.api;
 
     provides Neo4jProvider with ApplyJsonDomainEvent;
     provides Neo4jEventProjection with JsonDomainEventNeo4jEventProjection;

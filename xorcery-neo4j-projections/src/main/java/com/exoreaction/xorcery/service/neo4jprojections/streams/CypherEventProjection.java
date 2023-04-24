@@ -2,6 +2,8 @@ package com.exoreaction.xorcery.service.neo4jprojections.streams;
 
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,7 +33,7 @@ public class CypherEventProjection
     }
 
     @Override
-    public void write(Map<String, Object> metadataMap, ObjectNode eventJson, Transaction transaction)
+    public void write(WithMetadata<ArrayNode> events, Map<String, Object> metadataMap, ObjectNode eventJson, Transaction transaction)
             throws IOException {
 
         String type = eventJson.path("@class").textValue();

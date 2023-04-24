@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.domainevents.neo4jprojections;
 
 import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
+import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 import org.apache.logging.log4j.LogManager;
@@ -27,7 +28,7 @@ public class JsonDomainEventNeo4jEventProjection
     }
 
     @Override
-    public void write(Map<String, Object> metadataMap, ObjectNode eventJson, Transaction transaction) throws IOException {
+    public void write(WithMetadata<ArrayNode> events, Map<String, Object> metadataMap, ObjectNode eventJson, Transaction transaction) throws IOException {
 
         Neo4jJsonDomainEvent neo4jJsonDomainEvent = new Neo4jJsonDomainEvent(new JsonDomainEvent(eventJson));
         Object timestamp = metadataMap.get("timestamp");

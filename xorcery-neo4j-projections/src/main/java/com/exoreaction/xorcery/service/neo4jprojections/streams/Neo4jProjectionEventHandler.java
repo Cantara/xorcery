@@ -111,7 +111,7 @@ public class Neo4jProjectionEventHandler
                         throw new IllegalStateException("No projection can handle event with type:"+t);
                     });
 
-                    projection.write(metadataMap, objectNode, tx);
+                    projection.write(event, metadataMap, objectNode, tx);
                 } catch (Throwable e) {
                     logger.error("Could not apply Neo4j event update", e);
 
