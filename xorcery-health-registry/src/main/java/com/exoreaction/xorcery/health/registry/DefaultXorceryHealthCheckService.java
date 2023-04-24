@@ -308,7 +308,7 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
 
     public static String readMetaInfMavenPomVersion(String groupId, String artifactId) {
         String resourcePath = String.format("/META-INF/maven/%s/%s/pom.properties", groupId, artifactId);
-        URL mavenVersionResource = ClassLoader.getSystemResource(resourcePath);
+        URL mavenVersionResource = DefaultXorceryHealthCheckService.class.getResource(resourcePath);
         if (mavenVersionResource != null) {
             try {
                 Properties mavenProperties = new Properties();
