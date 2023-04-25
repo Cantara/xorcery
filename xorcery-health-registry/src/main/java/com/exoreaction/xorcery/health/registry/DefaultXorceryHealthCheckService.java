@@ -99,6 +99,12 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
         return this;
     }
 
+    public void setVersion(String version) {
+        synchronized (lock) {
+            currentHealth.put("version", version);
+        }
+    }
+
     @Override
     public XorceryHealthCheckRegistry registerHealthProbe(String key, Supplier<Object> probe) {
         return null;
@@ -306,9 +312,9 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
         return parts[0];
     }
 
-    public static String readMetaInfMavenPomVersion(String groupId, String artifactId) {
+    public static String readMetaInfMavenPomVersion(Class<?> anchor, String groupId, String artifactId) {
         String resourcePath = String.format("/META-INF/maven/%s/%s/pom.properties", groupId, artifactId);
-        URL mavenVersionResource = DefaultXorceryHealthCheckService.class.getResource(resourcePath);
+        URL mavenVersionResource = anchor.getResource(resourcePath);
         if (mavenVersionResource != null) {
             try {
                 Properties mavenProperties = new Properties();

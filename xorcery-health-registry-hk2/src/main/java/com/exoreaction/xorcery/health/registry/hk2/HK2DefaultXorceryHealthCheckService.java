@@ -17,6 +17,6 @@ public class HK2DefaultXorceryHealthCheckService extends DefaultXorceryHealthChe
 
     @Inject
     public HK2DefaultXorceryHealthCheckService(Configuration configuration) {
-        super(readMetaInfMavenPomVersion(configuration.getString("maven.groupId").orElseThrow(), configuration.getString("maven.artifactId").orElseThrow()), getMyIPAddresssString(), getMyIPAddresssesString(), new HealthCheckRegistry(), configuration.getLong("health.updater.intervalMs").orElse(1_000L), ChronoUnit.MILLIS);
+        super("not-found-yet", getMyIPAddresssString(), getMyIPAddresssesString(), new HealthCheckRegistry(), configuration.getLong("health.updater.intervalMs").orElse(1_000L), ChronoUnit.MILLIS);
     }
 }
