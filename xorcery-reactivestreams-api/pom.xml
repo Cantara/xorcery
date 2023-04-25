@@ -5,12 +5,12 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-parent</artifactId>
-        <version>0.19.2-SNAPSHOT</version>
+        <version>0.19.2</version>
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>xorcery-reactivestreams-api</artifactId>
-    <version>0.19.2-SNAPSHOT</version>
+    <version>0.19.2</version>
     <packaging>jar</packaging>
 
     <properties>
