@@ -1,10 +1,17 @@
 package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.hk2.api.*;
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.DynamicConfigurationService;
+import org.glassfish.hk2.api.Filter;
+import org.glassfish.hk2.api.MultiException;
+import org.glassfish.hk2.api.Populator;
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
 import org.glassfish.hk2.runlevel.RunLevelController;
 import org.glassfish.hk2.utilities.BuilderHelper;
@@ -47,12 +54,16 @@ public class Xorcery
         this(configuration, serviceLocator, "not-set");
     }
 
-    public Xorcery(Configuration configuration, ServiceLocator serviceLocator, String applicationVersion) throws Exception {
+    public Xorcery(Configuration configuration, ServiceLocator serviceLocator, final String applicationVersion) throws Exception {
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         logger = LogManager.getLogger(Xorcery.class);
         Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
 
         this.serviceLocator = serviceLocator;
+
+        InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
+        final String instanceName = instanceConfiguration.getName();
+
         populateServiceLocator(serviceLocator, configuration);
 
         // Instantiate all enabled services
@@ -63,6 +74,12 @@ public class Xorcery
         RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
         runLevelController.setThreadingPolicy(hk2Configuration.getThreadingPolicy());
         runLevelController.setMaximumUseableThreads(hk2Configuration.getMaximumUseableThreads());
+
+        runLevelController.proceedTo(0);
+
+        DefaultHealthCheckAppInfo appInfo = serviceLocator.getService(DefaultHealthCheckAppInfo.class);
+        appInfo.name(instanceName);
+        appInfo.version(applicationVersion);
 
         runLevelController.proceedTo(hk2Configuration.getRunLevel());
 
@@ -75,13 +92,6 @@ public class Xorcery
                 msg.append('\n').append(service.getActiveDescriptor().getImplementation());
             }
             logger.debug(msg);
-        }
-
-        HealthCheckRegistry healthCheckService = serviceLocator.getService(HealthCheckRegistry.class);
-        if (healthCheckService != null) {
-            healthCheckService.setVersion(applicationVersion);
-        } else {
-            logger.warn("Unable to set application version, service for '{}.class' not found", HealthCheckRegistry.class.getSimpleName());
         }
 
         logger.info("Started");

@@ -7,6 +7,4 @@ public interface HealthCheckRegistry {
     HealthCheckRegistry register(String componentName, HealthCheck healthCheck);
 
     HealthCheckRegistry registerHealthProbe(String key, Supplier<Object> probe);
-
-    void setVersion(String version);
 }

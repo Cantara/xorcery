@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.health.registry;
 
 import com.exoreaction.xorcery.health.api.HealthCheck;
+import com.exoreaction.xorcery.health.api.HealthCheckAppInfo;
 import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
 import com.exoreaction.xorcery.health.api.HealthCheckResult;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -60,7 +61,7 @@ public class DefaultHealthCheckService implements HealthCheckService {
     private long lastUpdatedEpoch = 0;
     ObjectNode currentHealth;
 
-    public DefaultHealthCheckService(String version, String ip, String ipAll, com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry, long minUpdateInterval, TemporalUnit updateIntervalUnit) {
+    public DefaultHealthCheckService(HealthCheckAppInfo appInfo, String ip, String ipAll, com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry, long minUpdateInterval, TemporalUnit updateIntervalUnit) {
         this.minUpdateInterval = minUpdateInterval;
         this.updateIntervalUnit = updateIntervalUnit;
         this.healthCheckRegistry = healthCheckRegistry;
@@ -68,7 +69,8 @@ public class DefaultHealthCheckService implements HealthCheckService {
             synchronized (lock) {
                 currentHealth = mapper.createObjectNode();
                 currentHealth.put("Status", "false");
-                currentHealth.put("version", version);
+                currentHealth.put("version", appInfo.version());
+                currentHealth.put("name", appInfo.name());
                 currentHealth.put("ip", ip);
                 currentHealth.put("ip-all", ipAll);
                 currentHealth.put("running since", timeAtStart);
@@ -95,13 +97,6 @@ public class DefaultHealthCheckService implements HealthCheckService {
         healthCheckByComponentName.put(componentName, healthCheck);
         healthCheckRegistry.register(componentName, new HealthCheckAdapter(healthCheck));
         return this;
-    }
-
-    @Override
-    public void setVersion(String version) {
-        synchronized (lock) {
-            currentHealth.put("version", version);
-        }
     }
 
     @Override
