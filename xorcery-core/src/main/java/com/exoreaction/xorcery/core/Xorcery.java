@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.health.api.XorceryHealthCheckRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.*;
@@ -35,10 +36,18 @@ public class Xorcery
     private final ServiceLocator serviceLocator;
 
     public Xorcery(Configuration configuration) throws Exception {
-        this(configuration, ServiceLocatorFactory.getInstance().create(null));
+        this(configuration, ServiceLocatorFactory.getInstance().create(null), "not-set");
+    }
+
+    public Xorcery(Configuration configuration, String applicationVersion) throws Exception {
+        this(configuration, ServiceLocatorFactory.getInstance().create(null), applicationVersion);
     }
 
     public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
+        this(configuration, serviceLocator, "not-set");
+    }
+
+    public Xorcery(Configuration configuration, ServiceLocator serviceLocator, String applicationVersion) throws Exception {
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         logger = LogManager.getLogger(Xorcery.class);
         Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
@@ -66,6 +75,13 @@ public class Xorcery
                 msg.append('\n').append(service.getActiveDescriptor().getImplementation());
             }
             logger.debug(msg);
+        }
+
+        XorceryHealthCheckRegistry healthCheckService = serviceLocator.getService(XorceryHealthCheckRegistry.class);
+        if (healthCheckService != null) {
+            healthCheckService.setVersion(applicationVersion);
+        } else {
+            logger.warn("Unable to set application version, service for '{}.class' not found", XorceryHealthCheckRegistry.class.getSimpleName());
         }
 
         logger.info("Started");

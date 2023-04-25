@@ -13,10 +13,6 @@ instance:
   resources: "{{ ENV.RESOURCES | instance.buildResources }}"
   uri: "{{ jetty.server.uri | \"http://localhost\"}}"
 
-maven:
-  groupId: "com.exoreaction.xorcery"
-  artifactId: "xorcery-core"
-
 defaults:
   enabled: true
   idleTimeout: -1s

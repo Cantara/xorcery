@@ -7,4 +7,6 @@ public interface XorceryHealthCheckRegistry {
     XorceryHealthCheckRegistry register(String componentName, XorceryHealthCheck healthCheck);
 
     XorceryHealthCheckRegistry registerHealthProbe(String key, Supplier<Object> probe);
+
+    void setVersion(String version);
 }

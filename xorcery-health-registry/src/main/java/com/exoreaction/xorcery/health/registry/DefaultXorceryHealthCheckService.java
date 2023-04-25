@@ -99,6 +99,7 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
         return this;
     }
 
+    @Override
     public void setVersion(String version) {
         synchronized (lock) {
             currentHealth.put("version", version);
