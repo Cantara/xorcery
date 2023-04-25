@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.admin.servlet;
 
 import com.codahale.metrics.health.HealthCheckRegistry;
-import com.exoreaction.xorcery.health.registry.XorceryHealthCheckService;
+import com.exoreaction.xorcery.health.registry.HealthCheckService;
 import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import io.dropwizard.metrics.servlets.AdminServlet;
 import io.dropwizard.metrics.servlets.HealthCheckServlet;
@@ -29,7 +29,7 @@ public class XorceryAdminServletConfigurator {
             @Named("jvm") MetricRegistryWrapper jvmMetricRegistryWrapper,
             @Named("jersey") MetricRegistryWrapper jerseyMetricRegistryWrapper,
             @Named("jetty") MetricRegistryWrapper jettyMetricRegistryWrapper,
-            XorceryHealthCheckService healthCheckService,
+            HealthCheckService healthCheckService,
             XorceryVisualeCompatibleHealthServlet visualeCompatibleHealthServlet,
             ServletContextHandler servletContextHandler) {
         if (visualeCompatibleHealthServlet != null) {

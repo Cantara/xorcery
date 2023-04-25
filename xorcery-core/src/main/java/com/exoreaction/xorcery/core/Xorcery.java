@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheckRegistry;
+import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.*;
@@ -77,11 +77,11 @@ public class Xorcery
             logger.debug(msg);
         }
 
-        XorceryHealthCheckRegistry healthCheckService = serviceLocator.getService(XorceryHealthCheckRegistry.class);
+        HealthCheckRegistry healthCheckService = serviceLocator.getService(HealthCheckRegistry.class);
         if (healthCheckService != null) {
             healthCheckService.setVersion(applicationVersion);
         } else {
-            logger.warn("Unable to set application version, service for '{}.class' not found", XorceryHealthCheckRegistry.class.getSimpleName());
+            logger.warn("Unable to set application version, service for '{}.class' not found", HealthCheckRegistry.class.getSimpleName());
         }
 
         logger.info("Started");

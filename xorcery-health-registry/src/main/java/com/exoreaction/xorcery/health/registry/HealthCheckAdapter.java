@@ -1,19 +1,18 @@
 package com.exoreaction.xorcery.health.registry;
 
-import com.codahale.metrics.health.HealthCheck;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheck;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheckResult;
+import com.exoreaction.xorcery.health.api.HealthCheck;
+import com.exoreaction.xorcery.health.api.HealthCheckResult;
 
-class HealthCheckAdapter extends HealthCheck {
-    private final XorceryHealthCheck healthCheck;
+class HealthCheckAdapter extends com.codahale.metrics.health.HealthCheck {
+    private final HealthCheck healthCheck;
 
-    public HealthCheckAdapter(XorceryHealthCheck healthCheck) {
+    public HealthCheckAdapter(HealthCheck healthCheck) {
         this.healthCheck = healthCheck;
     }
 
     @Override
     protected Result check() {
-        XorceryHealthCheckResult result = healthCheck.check();
+        HealthCheckResult result = healthCheck.check();
         ResultBuilder builder = Result.builder();
         if (result.status().healthy()) {
             builder.healthy();

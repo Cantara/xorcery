@@ -1,9 +1,9 @@
 package com.exoreaction.xorcery.service.jetty.server;
 
 
-import com.exoreaction.xorcery.health.api.XorceryHealthCheckRegistry;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheckResult;
-import com.exoreaction.xorcery.health.api.XorceryHealthStatus;
+import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
+import com.exoreaction.xorcery.health.api.HealthCheckResult;
+import com.exoreaction.xorcery.health.api.HealthStatus;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -28,7 +28,7 @@ public class JettyLifecycleService
     private final Server server;
 
     @Inject
-    public JettyLifecycleService(Server server, XorceryHealthCheckRegistry healthCheckRegistry) throws Exception {
+    public JettyLifecycleService(Server server, HealthCheckRegistry healthCheckRegistry) throws Exception {
         this.server = server;
         healthCheckRegistry.register("jetty.server", this::check);
         server.start();
@@ -45,7 +45,7 @@ public class JettyLifecycleService
         }
     }
 
-    XorceryHealthCheckResult check() {
+    HealthCheckResult check() {
         ObjectNode info = JsonNodeFactory.instance.objectNode();
         String lifeCycleState = toLifeCycleState(server);
         info.put("lifecycle", lifeCycleState);
@@ -67,8 +67,8 @@ public class JettyLifecycleService
         ThreadPool threadPool = server.getThreadPool();
         threadpoolNode.put("threads", threadPool.getThreads());
         threadpoolNode.put("idleThreads", threadPool.getIdleThreads());
-        XorceryHealthStatus healthStatus = toHealthStatus(server);
-        return new XorceryHealthCheckResult(healthStatus, healthStatus.healthy() ? null : lifeCycleState, null, info);
+        HealthStatus healthStatus = toHealthStatus(server);
+        return new HealthCheckResult(healthStatus, healthStatus.healthy() ? null : lifeCycleState, null, info);
     }
 
     private static String toLifeCycleState(LifeCycle lifeCycle) {
@@ -93,13 +93,13 @@ public class JettyLifecycleService
         return "unknown";
     }
 
-    private static XorceryHealthStatus toHealthStatus(LifeCycle lifeCycle) {
+    private static HealthStatus toHealthStatus(LifeCycle lifeCycle) {
         if (lifeCycle.isRunning()) {
-            return XorceryHealthStatus.HEALTHY;
+            return HealthStatus.HEALTHY;
         }
         if (lifeCycle.isStarting() || lifeCycle.isStarted()) {
-            return XorceryHealthStatus.INITIALIZING;
+            return HealthStatus.INITIALIZING;
         }
-        return XorceryHealthStatus.UNHEALTHY;
+        return HealthStatus.UNHEALTHY;
     }
 }

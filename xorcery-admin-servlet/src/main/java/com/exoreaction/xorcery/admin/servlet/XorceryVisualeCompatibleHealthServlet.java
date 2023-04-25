@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.admin.servlet;
 
-import com.exoreaction.xorcery.health.registry.DefaultXorceryHealthCheckService;
+import com.exoreaction.xorcery.health.registry.DefaultHealthCheckService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -25,13 +25,13 @@ import java.time.Instant;
 public class XorceryVisualeCompatibleHealthServlet extends HttpServlet {
 
     private static final long serialVersionUID = -7432916484889147321L;
-    private static final Logger log = LogManager.getLogger(DefaultXorceryHealthCheckService.class);
+    private static final Logger log = LogManager.getLogger(DefaultHealthCheckService.class);
     public static final String HEALTH_CHECK_REGISTRY = XorceryVisualeCompatibleHealthServlet.class.getCanonicalName() + ".registry";
-    private transient DefaultXorceryHealthCheckService healthService;
+    private transient DefaultHealthCheckService healthService;
     private transient ObjectMapper mapper;
 
     @Inject
-    public XorceryVisualeCompatibleHealthServlet(DefaultXorceryHealthCheckService healthService) {
+    public XorceryVisualeCompatibleHealthServlet(DefaultHealthCheckService healthService) {
         this.healthService = healthService;
     }
 
@@ -41,11 +41,11 @@ public class XorceryVisualeCompatibleHealthServlet extends HttpServlet {
         Object executorAttr;
         if (null == this.healthService) {
             executorAttr = context.getAttribute(HEALTH_CHECK_REGISTRY);
-            if (!(executorAttr instanceof DefaultXorceryHealthCheckService)) {
+            if (!(executorAttr instanceof DefaultHealthCheckService)) {
                 throw new ServletException("Couldn't find a DefaultXorceryHealthCheckService instance.");
             }
 
-            this.healthService = (DefaultXorceryHealthCheckService) executorAttr;
+            this.healthService = (DefaultHealthCheckService) executorAttr;
         }
         this.mapper = new ObjectMapper();
     }

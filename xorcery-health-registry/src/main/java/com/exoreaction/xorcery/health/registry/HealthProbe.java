@@ -2,11 +2,11 @@ package com.exoreaction.xorcery.health.registry;
 
 import java.util.function.Supplier;
 
-public class XorceryHealthProbe {
+public class HealthProbe {
     final String key;
     final Supplier<Object> probe;
 
-    public XorceryHealthProbe(String key, Supplier<Object> probe) {
+    public HealthProbe(String key, Supplier<Object> probe) {
         this.key = key;
         this.probe = probe;
     }

@@ -1,10 +1,8 @@
 package com.exoreaction.xorcery.health.registry;
 
-import com.codahale.metrics.health.HealthCheck;
-import com.codahale.metrics.health.HealthCheckRegistry;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheck;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheckRegistry;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheckResult;
+import com.exoreaction.xorcery.health.api.HealthCheck;
+import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
+import com.exoreaction.xorcery.health.api.HealthCheckResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,11 +35,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class DefaultXorceryHealthCheckService implements XorceryHealthCheckService {
+public class DefaultHealthCheckService implements HealthCheckService {
 
-    private static final Logger log = LogManager.getLogger(DefaultXorceryHealthCheckService.class);
+    private static final Logger log = LogManager.getLogger(DefaultHealthCheckService.class);
 
-    private final Map<String, XorceryHealthCheck> healthCheckByComponentName = new ConcurrentHashMap<>();
+    private final Map<String, HealthCheck> healthCheckByComponentName = new ConcurrentHashMap<>();
 
     /*
      * Thread-safe state
@@ -52,8 +50,8 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
     private final long minUpdateInterval;
     private final TemporalUnit updateIntervalUnit;
     private final AtomicLong healthComputeTimeMs = new AtomicLong(-1);
-    private final HealthCheckRegistry healthCheckRegistry;
-    private final List<XorceryHealthProbe> healthProbes = new CopyOnWriteArrayList<>();
+    private final com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry;
+    private final List<HealthProbe> healthProbes = new CopyOnWriteArrayList<>();
 
     /*
      * State only that is only read and written by the healthUpdateThread, so no need for synchronization
@@ -62,7 +60,7 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
     private long lastUpdatedEpoch = 0;
     ObjectNode currentHealth;
 
-    public DefaultXorceryHealthCheckService(String version, String ip, String ipAll, HealthCheckRegistry healthCheckRegistry, long minUpdateInterval, TemporalUnit updateIntervalUnit) {
+    public DefaultHealthCheckService(String version, String ip, String ipAll, com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry, long minUpdateInterval, TemporalUnit updateIntervalUnit) {
         this.minUpdateInterval = minUpdateInterval;
         this.updateIntervalUnit = updateIntervalUnit;
         this.healthCheckRegistry = healthCheckRegistry;
@@ -82,18 +80,18 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
     }
 
     @Override
-    public HealthCheckRegistry codahaleRegistry() {
+    public com.codahale.metrics.health.HealthCheckRegistry codahaleRegistry() {
         return healthCheckRegistry;
     }
 
-    public DefaultXorceryHealthCheckService registerHealthCheck(String key, HealthCheck healthCheck) {
+    public DefaultHealthCheckService registerHealthCheck(String key, com.codahale.metrics.health.HealthCheck healthCheck) {
         healthCheckRegistry.register(key, healthCheck);
         healthCheckByComponentName.put(key, new WrappedHealthCheck(mapper, healthCheck));
         return this;
     }
 
     @Override
-    public DefaultXorceryHealthCheckService register(String componentName, XorceryHealthCheck healthCheck) {
+    public DefaultHealthCheckService register(String componentName, HealthCheck healthCheck) {
         healthCheckByComponentName.put(componentName, healthCheck);
         healthCheckRegistry.register(componentName, new HealthCheckAdapter(healthCheck));
         return this;
@@ -107,17 +105,17 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
     }
 
     @Override
-    public XorceryHealthCheckRegistry registerHealthProbe(String key, Supplier<Object> probe) {
+    public HealthCheckRegistry registerHealthProbe(String key, Supplier<Object> probe) {
         return null;
     }
 
     @Override
-    public SortedMap<String, XorceryHealthCheckResult> runHealthChecks() {
-        SortedMap<String, XorceryHealthCheckResult> result = new TreeMap<>();
-        for (Map.Entry<String, XorceryHealthCheck> entry : healthCheckByComponentName.entrySet()) {
+    public SortedMap<String, HealthCheckResult> runHealthChecks() {
+        SortedMap<String, HealthCheckResult> result = new TreeMap<>();
+        for (Map.Entry<String, HealthCheck> entry : healthCheckByComponentName.entrySet()) {
             String componentName = entry.getKey();
-            XorceryHealthCheck healthCheck = entry.getValue();
-            XorceryHealthCheckResult healthCheckResult = healthCheck.check();
+            HealthCheck healthCheck = entry.getValue();
+            HealthCheckResult healthCheckResult = healthCheck.check();
             result.put(componentName, healthCheckResult);
         }
         return result;
@@ -176,10 +174,10 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
         long start = System.currentTimeMillis();
         boolean changed = false;
         boolean status = true; // healthy
-        SortedMap<String, XorceryHealthCheckResult> healthCheckResultByKey = runHealthChecks();
-        for (Map.Entry<String, XorceryHealthCheckResult> entry : healthCheckResultByKey.entrySet()) {
+        SortedMap<String, HealthCheckResult> healthCheckResultByKey = runHealthChecks();
+        for (Map.Entry<String, HealthCheckResult> entry : healthCheckResultByKey.entrySet()) {
             String key = entry.getKey();
-            XorceryHealthCheckResult result = entry.getValue();
+            HealthCheckResult result = entry.getValue();
             boolean healthy = result.status().healthy();
             status &= healthy; // all health-checks must be healthy in order for status to be true
             ObjectNode field = (ObjectNode) health.get(key);
@@ -203,7 +201,7 @@ public class DefaultXorceryHealthCheckService implements XorceryHealthCheckServi
         }
         boolean effectiveStatus = status;
         changed |= updateField(health, "Status", () -> effectiveStatus ? "UP" : "DOWN");
-        for (XorceryHealthProbe healthProbe : healthProbes) {
+        for (HealthProbe healthProbe : healthProbes) {
             changed |= updateField(health, healthProbe.key, healthProbe.probe);
         }
         long end = System.currentTimeMillis();

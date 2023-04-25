@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.health.api;
 
-public enum XorceryHealthStatus {
+public enum HealthStatus {
     HEALTHY(true),
     INITIALIZING(false),
     UNHEALTHY(false),
@@ -8,7 +8,7 @@ public enum XorceryHealthStatus {
 
     private final boolean healthy;
 
-    XorceryHealthStatus(boolean healthy) {
+    HealthStatus(boolean healthy) {
         this.healthy = healthy;
     }
 

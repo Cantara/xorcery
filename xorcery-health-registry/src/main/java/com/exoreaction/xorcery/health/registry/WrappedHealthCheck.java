@@ -1,27 +1,26 @@
 package com.exoreaction.xorcery.health.registry;
 
-import com.codahale.metrics.health.HealthCheck;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheck;
-import com.exoreaction.xorcery.health.api.XorceryHealthCheckResult;
+import com.exoreaction.xorcery.health.api.HealthCheck;
+import com.exoreaction.xorcery.health.api.HealthCheckResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class WrappedHealthCheck implements XorceryHealthCheck {
+class WrappedHealthCheck implements HealthCheck {
     private static final Logger log = LogManager.getLogger(WrappedHealthCheck.class);
 
     private final ObjectMapper mapper;
-    private final HealthCheck healthCheck;
+    private final com.codahale.metrics.health.HealthCheck healthCheck;
 
-    public WrappedHealthCheck(ObjectMapper mapper, HealthCheck healthCheck) {
+    public WrappedHealthCheck(ObjectMapper mapper, com.codahale.metrics.health.HealthCheck healthCheck) {
         this.mapper = mapper;
         this.healthCheck = healthCheck;
     }
 
     @Override
-    public XorceryHealthCheckResult check() {
-        HealthCheck.Result result = healthCheck.execute();
+    public HealthCheckResult check() {
+        com.codahale.metrics.health.HealthCheck.Result result = healthCheck.execute();
         JsonNode details = null;
         try {
             details = mapper.convertValue(result.getDetails(), JsonNode.class);
@@ -29,7 +28,7 @@ class WrappedHealthCheck implements XorceryHealthCheck {
             log.warn("while converting health-check details: " + result.getDetails(), t);
         }
         if (result.isHealthy()) {
-            return new XorceryHealthCheckResult(details);
+            return new HealthCheckResult(details);
         }
         String msg = null;
         Throwable error = null;
@@ -39,6 +38,6 @@ class WrappedHealthCheck implements XorceryHealthCheck {
         if (result.getMessage() != null) {
             msg = result.getMessage();
         }
-        return new XorceryHealthCheckResult(msg, error, details);
+        return new HealthCheckResult(msg, error, details);
     }
 }
