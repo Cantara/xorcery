@@ -9,6 +9,8 @@ import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
 import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 
 @Service(name = "certificates.client")
 @RunLevel(value = 2)
@@ -19,7 +21,7 @@ public class CertificatesClientService
     public CertificatesClientService(KeyStores keyStores,
                                      HttpClient httpClient,
                                      DnsLookupService dnsLookupService,
-                                     Configuration configuration) throws KeyStoreException {
+                                     Configuration configuration) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
         super(keyStores, httpClient, dnsLookupService, configuration);
     }
 }

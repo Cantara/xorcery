@@ -54,7 +54,7 @@ public class CertificatesClientService {
     public CertificatesClientService(KeyStores keyStores,
                                      HttpClient httpClient,
                                      DnsLookupService dnsLookupService,
-                                     Configuration configuration) throws KeyStoreException {
+                                     Configuration configuration) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
         this.keyStore = keyStores.getKeyStore("keystore");
         this.keyStores = keyStores;
         this.configuration = configuration;
@@ -63,14 +63,24 @@ public class CertificatesClientService {
 
         this.client = new JsonApiClient(httpClient, dnsLookupService);
 
-        if (keyStore.containsAlias(alias) && certificatesClientConfiguration.isRenewOnStartup()) {
-            // Renewal?
-            certificatesClientConfiguration.getURI()
-                    .map(this::renewCertificate)
-                    .ifPresent(CompletableFuture::join);
-
+        if (keyStore.containsAlias(alias)) {
+            if (certificatesClientConfiguration.isRenewOnStartup())
+            {
+                // Renewal?
+                certificatesClientConfiguration.getURI()
+                        .map(this::renewCertificate)
+                        .ifPresent(CompletableFuture::join);
+            }
         } else {
-            // Request
+            // Check first that we have a provisioning key
+            PrivateKey provisioning = (PrivateKey) keyStore.getKey("provisioning", "password".toCharArray());
+            if (provisioning == null)
+            {
+                logger.warn("Cannot provision certificate, missing 'provisioning' private key in keystore");
+                return;
+            }
+
+            // Request certificate
             certificatesClientConfiguration.getURI()
                     .map(this::requestCertificate)
                     .ifPresent(CompletableFuture::join);
