@@ -76,7 +76,7 @@ public class CertificatesClientService {
             PrivateKey provisioning = (PrivateKey) keyStore.getKey("provisioning", "password".toCharArray());
             if (provisioning == null)
             {
-                logger.warn("Cannot provision certificate, missing 'provisioning' private key in keystore");
+                logger.error("Cannot provision certificate, missing 'provisioning' private key in keystore");
                 return;
             }
 
