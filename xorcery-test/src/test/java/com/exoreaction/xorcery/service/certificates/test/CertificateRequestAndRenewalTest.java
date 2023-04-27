@@ -21,7 +21,7 @@ public class CertificateRequestAndRenewalTest {
     int managerPort = Sockets.nextFreePort();
     String config = """
             dns.client.hosts:
-                .server1.xorcery.test: 127.0.0.1
+                server1.xorcery.test: 127.0.0.1
                 _certificates._sub._https._tcp: https://127.0.0.1:""" + managerPort +"""
             
             dns.server.enabled: false

@@ -19,12 +19,12 @@ import java.util.List;
 public class ClientCertificateAuthenticationTest {
 
     String config = """
+            dns.client.enabled: true
+            dns.client.discovery.enabled: false
             dns.client.hosts:
-                .server1.xorcery.test: 127.0.0.1
-                .wrongserver.xorcery.test: 127.0.0.1
+                server1.xorcery.test: 127.0.0.1
+                wrongserver.xorcery.test: 127.0.0.1
             dns.server.enabled: false
-            dns.discovery.enabled: false
-            dns.multicast.enabled: false
             dns.registration.enabled: false
             dns.server.registration.key:
                                 name: xorcery.test
@@ -50,7 +50,7 @@ public class ClientCertificateAuthenticationTest {
         Configuration serverConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("instance.id", "xorcery1")
-                .add("instance.host", "server")
+                .add("instance.host", "server1")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", managerPort)
                 .add("jetty.server.ssl.sniRequired", true)

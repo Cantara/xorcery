@@ -25,6 +25,8 @@ import java.util.Date;
 
 public class JwtAuthenticationTest {
     String config = """
+            dns.client.enabled: true
+            dns.client.discovery.enabled: false
             keystores.enabled: true
             jetty.server.ssl.enabled: false
             jetty.server.security.enabled: true

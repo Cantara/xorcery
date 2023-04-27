@@ -30,8 +30,14 @@ public class DnsServerRegistrationTest {
     String clientConfig = """
             jetty.client.enabled: false
             jetty.server.enabled: false
+            dns.client.enabled: true
+            dns.client.discovery.enabled: false
+            dns.client.nameServers:
+                - 127.0.0.1:8853
             dns.registration:
                 enabled: true
+                announce:
+                    enabled: false
                 key:
                     name: updatekey
                     secret: BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg==             
