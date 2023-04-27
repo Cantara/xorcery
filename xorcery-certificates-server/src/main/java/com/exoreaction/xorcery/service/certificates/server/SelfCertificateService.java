@@ -14,6 +14,7 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCSException;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
@@ -22,17 +23,24 @@ import java.io.StringReader;
 import java.net.Inet4Address;
 import java.net.NetworkInterface;
 import java.security.*;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
 @Service(name = "certificates.server.self")
 @RunLevel(value = 2)
-public class SelfCertificateService {
+public class SelfCertificateService
+    implements PreDestroy
+{
 
     private final Logger logger = LogManager.getLogger(getClass());
     private final String certificateAlias;
@@ -41,6 +49,7 @@ public class SelfCertificateService {
     private final KeyStores keyStores;
     private final Configuration configuration;
     private final IntermediateCA intermediateCA;
+    private final ScheduledExecutorService scheduler;
 
     @Inject
     public SelfCertificateService(KeyStores keyStores,
@@ -52,25 +61,49 @@ public class SelfCertificateService {
         this.intermediateCA = intermediateCA;
         certificateAlias = configuration.getString("jetty.server.ssl.alias").orElse("self");
 
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+
         if (keyStore.containsAlias(certificateAlias)) {
-            // Renewal?
-            renewCertificate();
+            scheduleRenewal();
         } else {
             // Request
             requestCertificate();
+            scheduleRenewal();
         }
     }
 
-    private void renewCertificate() {
+    @Override
+    public void preDestroy() {
+        scheduler.shutdown();
+    }
+
+    private void scheduleRenewal() {
+        // Renewal?
+        X509Certificate certificate = renewCertificate();
+
+        // Setup renewal timer
+        scheduler.schedule(this::scheduleRenewal, certificate.getNotAfter().toInstant().minus(1, ChronoUnit.DAYS).toEpochMilli()-System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    private X509Certificate renewCertificate() {
         try {
             X509Certificate certificate = (X509Certificate) keyStore.getCertificate(certificateAlias);
-            logger.info("Current self certificate:"+certificate);
-            } catch (KeyStoreException e) {
+            logger.info("Current self certificate:" + certificate);
+            Instant tomorrow = new Date().toInstant().plus(1, ChronoUnit.DAYS);
+            if (certificate.getNotAfter().toInstant().isBefore(tomorrow)) {
+                X509Certificate renewedCertificate = requestCertificate();
+                logger.info("Renewed self certificate:" + certificate);
+                return renewedCertificate;
+            } else
+            {
+                return certificate;
+            }
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void requestCertificate() throws GeneralSecurityException, IOException, OperatorCreationException, PKCSException {
+    private X509Certificate requestCertificate() throws GeneralSecurityException, IOException, OperatorCreationException, PKCSException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", PROVIDER_NAME);
         keyGen.initialize(256, new SecureRandom());
         KeyPair issuedCertKeyPair = keyGen.generateKeyPair();
@@ -87,14 +120,15 @@ public class SelfCertificateService {
         X500Name issuedCertSubject = new X500Name("CN=" + standardConfiguration.getId());
         String certificatePem = intermediateCA.createCertificate(issuedCertSubject, SubjectPublicKeyInfo.getInstance(issuedCertKeyPair.getPublic().getEncoded()), inetAddresses);
         insertSelfCertificate(certificatePem, issuedCertKeyPair);
+        X509Certificate certificate = (X509Certificate) keyStore.getCertificate(certificateAlias);
+        return certificate;
     }
 
     private void insertSelfCertificate(String certificatePem, KeyPair issuedCertKeyPair) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
         List<X509Certificate> chain = new ArrayList<>();
         PEMParser pemParser = new PEMParser(new StringReader(certificatePem));
         X509CertificateHolder certificate;
-        while ((certificate = (X509CertificateHolder)pemParser.readObject()) != null)
-        {
+        while ((certificate = (X509CertificateHolder) pemParser.readObject()) != null) {
             chain.add(new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificate));
         }
         char[] password = new KeyStoresConfiguration(configuration.getConfiguration("keystores")).getKeyStoreConfiguration("keystore").getPassword();
