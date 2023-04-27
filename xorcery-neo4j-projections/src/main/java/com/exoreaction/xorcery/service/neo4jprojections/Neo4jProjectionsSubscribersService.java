@@ -38,8 +38,7 @@ public class Neo4jProjectionsSubscribersService {
     private final GraphDatabase graphDatabase;
 
     @Inject
-    public Neo4jProjectionsSubscribersService(ServiceResourceObjects serviceResourceObjects,
-                                              Neo4jProjectionsService neo4jProjectionsService,
+    public Neo4jProjectionsSubscribersService(Neo4jProjectionsService neo4jProjectionsService,
                                               ReactiveStreamsClient reactiveStreamsClient,
                                               Configuration configuration,
                                               GraphDatabases graphDatabases,
@@ -55,20 +54,21 @@ public class Neo4jProjectionsSubscribersService {
             for (Publisher publisher : publishers) {
 
                 final Configuration publisherConfiguration = publisher.getPublisherConfiguration().orElse(Configuration.empty());
-                getCurrentRevision(publisher.getProjection()).ifPresent(revision -> publisherConfiguration.json().set("from", publisherConfiguration.json().numberNode(revision)));
+                Optional<ProjectionModel> currentProjection = neo4jProjectionsService.getCurrentProjection(publisher.getProjection());
+                currentProjection.ifPresent(projectionModel -> publisherConfiguration.json().set("revision", publisherConfiguration.json().numberNode(projectionModel.getRevision().orElse(0L))));
 
                 reactiveStreamsClient.subscribe(publisher.getAuthority(), publisher.getStream(),
                         () ->
                         {
                             // Update to current revision, if available
-                            getCurrentRevision(publisher.getProjection()).ifPresent(revision -> publisherConfiguration.json().set("from", publisherConfiguration.json().numberNode(revision)));
+                            neo4jProjectionsService.getCurrentProjection(publisher.getProjection()).ifPresent(projectionModel -> publisherConfiguration.json().set("revision", publisherConfiguration.json().numberNode(projectionModel.getRevision().orElse(0L))));
                             return publisherConfiguration;
                         },
                         new ProjectionSubscriber(
                                 subscription -> new Neo4jProjectionEventHandler(
                                         graphDatabase.getGraphDatabaseService(),
                                         subscription,
-                                        publisherConfiguration.getLong("from"),
+                                        currentProjection,
                                         publisher.getProjection(),
                                         neo4jProjectionsService.getNeo4jProjectionCommitPublisher(),
                                         projectionList,
@@ -77,20 +77,6 @@ public class Neo4jProjectionsSubscribersService {
                         ProjectionSubscriber.class, Configuration.empty());
             }
         });
-    }
-
-    private Optional<Long> getCurrentRevision(String projectionId) {
-        return graphDatabase.query("MATCH (Projection:Projection {id:$projection_id})")
-                .parameter(Projection.id, projectionId)
-                .results(Projection.revision)
-                .first(row -> row.row().getNumber("projection_revision").longValue()).handle((position, exception) ->
-                {
-                    if (exception != null && !(exception.getCause() instanceof NotFoundException)) {
-                        LogManager.getLogger(getClass()).error("Error looking up existing projection stream revision", exception);
-                    }
-
-                    return Optional.ofNullable(position);
-                }).toCompletableFuture().join();
     }
 
     record Publisher(ContainerNode<?> json)

@@ -6,6 +6,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.neo4j.client.Cypher;
 import com.exoreaction.xorcery.service.neo4jprojections.Projection;
+import com.exoreaction.xorcery.service.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.service.neo4jprojections.api.ProjectionCommit;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
@@ -51,13 +52,14 @@ public class Neo4jProjectionEventHandler
 
     private Transaction tx;
     private long version;
+    private Long revision;
     private long lastTimestamp;
     private int appliedEvents;
     private long currentBatchSize;
 
     public Neo4jProjectionEventHandler(GraphDatabaseService graphDatabaseService,
                                        Flow.Subscription subscription,
-                                       Optional<Long> fromVersion,
+                                       Optional<ProjectionModel> projectionModel,
                                        String projectionId,
                                        Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,
                                        List<Neo4jEventProjection> projections,
@@ -68,14 +70,19 @@ public class Neo4jProjectionEventHandler
         this.graphDatabaseService = graphDatabaseService;
         this.subscription = subscription;
         this.projections = projections;
-        metrics.gauge("neo4j.projections." + projectionId + ".revision", (MetricRegistry.MetricSupplier<Gauge<Long>>) () -> () -> version);
+        metrics.gauge("neo4j.projections." + projectionId + ".version", (MetricRegistry.MetricSupplier<Gauge<Long>>) () -> () -> version);
+        metrics.gauge("neo4j.projections." + projectionId + ".revision", (MetricRegistry.MetricSupplier<Gauge<Long>>) () -> () -> revision);
         batchSize = metrics.histogram("neo4j.projections." + projectionId + ".batchsize");
 
-        fromVersion.ifPresent(from -> version = from);
+        projectionModel.ifPresent(pm ->
+        {
+            pm.getVersion().ifPresent(from -> version = from);
+            pm.getRevision().ifPresent(from -> revision = from);
+        });
 
         updateParameters.put(Enums.toField(Projection.id), projectionId);
 
-        logger.info("Started Neo4j projection "+projectionId);
+        logger.info("Started Neo4j projection " + projectionId);
     }
 
     @Override
@@ -103,12 +110,11 @@ public class Neo4jProjectionEventHandler
                     Neo4jEventProjection projection = eventProjections.computeIfAbsent(type, t ->
                     {
                         for (Neo4jEventProjection eventProjection : projections) {
-                            if (eventProjection.isWritable(t))
-                            {
+                            if (eventProjection.isWritable(t)) {
                                 return eventProjection;
                             }
                         }
-                        throw new IllegalStateException("No projection can handle event with type:"+t);
+                        throw new IllegalStateException("No projection can handle event with type:" + t);
                     });
 
                     projection.write(event, metadataMap, objectNode, tx);
@@ -126,8 +132,12 @@ public class Neo4jProjectionEventHandler
                 if (appliedEvents > 0) {
                     try {
                         // Update Projection node with current revision
-                        updateParameters.put("projection_revision", version);
-                        tx.execute("MERGE (projection:Projection {id:$projection_id}) SET projection.revision=$projection_revision",
+                        updateParameters.put("projection_version", version);
+                        revision = ((Number) Optional.ofNullable(metadataMap.get("revision")).orElse(0L)).longValue();
+                        updateParameters.put("projection_revision", revision);
+                        tx.execute("MERGE (projection:Projection {id:$projection_id}) SET " +
+                                        "projection.version=$projection_version, " +
+                                        "projection.revision=$projection_revision",
                                 updateParameters);
 
                         tx.commit();

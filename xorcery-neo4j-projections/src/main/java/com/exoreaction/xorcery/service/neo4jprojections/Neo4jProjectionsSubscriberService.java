@@ -34,7 +34,6 @@ import java.util.Optional;
 public class Neo4jProjectionsSubscriberService {
 
     private final Logger logger = LogManager.getLogger(getClass());
-    private final GraphDatabase graphDatabase;
 
     @Inject
     public Neo4jProjectionsSubscriberService(ReactiveStreamsServer reactiveStreamsServer,
@@ -43,7 +42,7 @@ public class Neo4jProjectionsSubscriberService {
                                              GraphDatabases graphDatabases,
                                              IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
                                              @Named("xorcery") MetricRegistryWrapper metricRegistryWrapper) {
-        graphDatabase = graphDatabases.apply("neo4j");
+        GraphDatabase graphDatabase = graphDatabases.apply("neo4j");
 
         Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
 
@@ -55,7 +54,7 @@ public class Neo4jProjectionsSubscriberService {
         reactiveStreamsServer.subscriber("neo4jprojections", cfg -> new ProjectionSubscriber(subscription -> new Neo4jProjectionEventHandler(
                 graphDatabases.apply(cfg.getString("database").orElse("neo4j")).getGraphDatabaseService(),
                 subscription,
-                getCurrentRevision(cfg.getString("projection").orElseThrow()),
+                neo4jProjectionsService.getCurrentProjection(cfg.getString("projection").orElseThrow()),
                 cfg.getString("projection").orElseThrow(),
                 neo4jProjectionCommitPublisher,
                 projectionList,
@@ -64,19 +63,5 @@ public class Neo4jProjectionsSubscriberService {
         if (neo4jProjectionsConfiguration.isCommitPublisherEnabled()) {
             reactiveStreamsServer.publisher("neo4jprojectioncommits", cfg -> neo4jProjectionCommitPublisher, Neo4jProjectionCommitPublisher.class);
         }
-    }
-
-    private Optional<Long> getCurrentRevision(String projectionId) {
-        return graphDatabase.query("MATCH (Projection:Projection {id:$projection_id})")
-                .parameter(Projection.id, projectionId)
-                .results(Projection.revision)
-                .first(row -> row.row().getNumber("projection_revision").longValue()).handle((position, exception) ->
-                {
-                    if (exception != null && !(exception.getCause() instanceof NotFoundException)) {
-                        LogManager.getLogger(getClass()).error("Error looking up existing projection stream revision", exception);
-                    }
-
-                    return Optional.ofNullable(position);
-                }).toCompletableFuture().join();
     }
 }
