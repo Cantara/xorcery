@@ -14,6 +14,7 @@ object:
   value2: newvalue2
   value3:
     bar: foo
+  value5.value5: "test"
 
 object.value1: newvalue1
 object.value4: newvalue4
