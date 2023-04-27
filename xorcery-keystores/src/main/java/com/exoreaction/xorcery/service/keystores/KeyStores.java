@@ -142,7 +142,7 @@ public class KeyStores {
                 }
             }
         } catch (Throwable e) {
-            throw new RuntimeException("Could not load keystore " + keyStoreName + " from " + keyStoreUrl, e);
+            throw new RuntimeException("Could not load keystore '" + keyStoreName + "' from " + keyStoreUrl, e);
         }
     }
 }
