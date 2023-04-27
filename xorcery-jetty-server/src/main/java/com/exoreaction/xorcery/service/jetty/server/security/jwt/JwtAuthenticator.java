@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,6 +64,9 @@ public class JwtAuthenticator
 
         String jwt = getBearerToken(request);
 
+        if (jwt == null)
+            jwt = getCookieToken(request);
+
         if (jwt != null) {
             try {
                 final Jws<Claims> jws = jwtParser.parseClaimsJws(jwt);
@@ -98,6 +102,15 @@ public class JwtAuthenticator
         String authorizationHeader = request.getHeader(HttpHeader.AUTHORIZATION.lowerCaseName());
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             return authorizationHeader.substring("Bearer ".length());
+        }
+        return null;
+    }
+
+    private String getCookieToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals("token"))
+                return cookie.getValue();
         }
         return null;
     }
