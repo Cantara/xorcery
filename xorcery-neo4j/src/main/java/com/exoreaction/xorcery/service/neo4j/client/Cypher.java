@@ -20,6 +20,8 @@ import java.util.stream.Stream;
 public final class Cypher {
 
     private static Map<Enum<?>, String> defaultMappings = new ConcurrentHashMap<>();
+    private static Map<Enum<?>, String> fieldNameMappings = new ConcurrentHashMap<>();
+
 
     public static Map<String, Object> toMap(ObjectNode json) {
         Iterator<Map.Entry<String, JsonNode>> fields = json.fields();
@@ -61,6 +63,11 @@ public final class Cypher {
             });
         }
         return list;
+    }
+
+    public static String toField(Enum<?> anEnum) {
+        return fieldNameMappings.computeIfAbsent(anEnum, e ->
+                e.getDeclaringClass().getSimpleName().toLowerCase() + "_" + e.name());
     }
 
     /**
@@ -113,7 +120,7 @@ public final class Cypher {
             return arrayNode;
         } else if (value instanceof Map map) {
             ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-            map.forEach((k, v)-> objectNode.set(k.toString(), toJsonNode(v)));
+            map.forEach((k, v) -> objectNode.set(k.toString(), toJsonNode(v)));
             return objectNode;
         } else if (value instanceof Node node) {
             ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
