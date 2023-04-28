@@ -1,10 +1,9 @@
 package com.exoreaction.xorcery.service.neo4jprojections;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.json.model.JsonElement;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
-import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
@@ -14,7 +13,6 @@ import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient
 import com.fasterxml.jackson.databind.node.ContainerNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.IterableProvider;
@@ -43,7 +41,7 @@ public class Neo4jProjectionsSubscribersService {
                                               Configuration configuration,
                                               GraphDatabases graphDatabases,
                                               IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
-                                              @Named("xorcery") MetricRegistryWrapper metricRegistryWrapper) {
+                                              MetricRegistry metricRegistry) {
         graphDatabase = graphDatabases.apply("neo4j");
 
         // This service can subscribe to external publishers
@@ -72,7 +70,7 @@ public class Neo4jProjectionsSubscribersService {
                                         publisher.getProjection(),
                                         neo4jProjectionsService.getNeo4jProjectionCommitPublisher(),
                                         projectionList,
-                                        metricRegistryWrapper.metricRegistry()),
+                                        metricRegistry),
                                 new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))),
                         ProjectionSubscriber.class, Configuration.empty());
             }

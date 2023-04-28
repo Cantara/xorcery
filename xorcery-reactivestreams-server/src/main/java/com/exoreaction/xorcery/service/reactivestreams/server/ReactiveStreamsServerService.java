@@ -2,7 +2,6 @@ package com.exoreaction.xorcery.service.reactivestreams.server;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.common.LocalStreamFactories;
@@ -13,7 +12,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.hk2.runlevel.RunLevel;
+import org.glassfish.hk2.runlevel.*;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
@@ -27,11 +26,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Service(name = "reactivestreams.server")
-@ContractsProvided({ReactiveStreamsServer.class, ReactiveStreamsServerService.class, LocalStreamFactories.class})
+@ContractsProvided({ReactiveStreamsServer.class, ReactiveStreamsServerService.class, ProgressStartedListener.class, LocalStreamFactories.class})
 @RunLevel(6)
 public class ReactiveStreamsServerService
         extends ReactiveStreamsAbstractService
-        implements ReactiveStreamsServer, LocalStreamFactories {
+        implements ReactiveStreamsServer,
+        ProgressStartedListener,
+        LocalStreamFactories {
     private final Map<String, Supplier<Object>> publisherEndpointFactories = new ConcurrentHashMap<>();
     private final Map<String, WrappedPublisherFactory> publisherLocalFactories = new ConcurrentHashMap<>();
     private final Map<String, Supplier<Object>> subscriberEndpointFactories = new ConcurrentHashMap<>();
@@ -40,11 +41,11 @@ public class ReactiveStreamsServerService
 
     @Inject
     public ReactiveStreamsServerService(Configuration configuration,
-                                        @Named("xorcery") MetricRegistryWrapper metricRegistryWrapper,
+                                        MetricRegistry metricRegistry,
                                         MessageWorkers messageWorkers,
                                         ServletContextHandler servletContextHandler) {
         super(messageWorkers);
-        this.metricRegistry = metricRegistryWrapper.metricRegistry();
+        this.metricRegistry = metricRegistry;
 
         PublishersReactiveStreamsServlet publishersServlet = new PublishersReactiveStreamsServlet(configuration, streamName ->
         {
@@ -124,5 +125,14 @@ public class ReactiveStreamsServerService
 
     public WrappedPublisherFactory getPublisherFactory(String streamName) {
         return publisherLocalFactories.get(streamName);
+    }
+
+    @Override
+    public void onProgressStarting(ChangeableRunLevelFuture currentJob, int currentLevel) {
+        if (currentLevel == 20 && currentJob.getProposedLevel() < currentLevel) {
+            // Close existing streams
+            logger.info("Cancel subscriptions on shutdown");
+            cancelActiveSubscriptions();
+        }
     }
 }

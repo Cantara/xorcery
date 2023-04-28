@@ -18,14 +18,4 @@ public record OpenSearchRestProcess(Supplier<WebTarget> requests,
     public void start() {
         call.accept(requests.get(), new ObjectNodeCallback(result));
     }
-
-    @Override
-    public void retry() {
-        try {
-            Thread.sleep(10000);
-            start();
-        } catch (InterruptedException e) {
-            result.cancel(true);
-        }
-    }
 }

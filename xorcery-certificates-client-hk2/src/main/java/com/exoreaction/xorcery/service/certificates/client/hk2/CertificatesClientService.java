@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.keystores.KeyStores;
 import jakarta.inject.Inject;
 import org.eclipse.jetty.client.HttpClient;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
@@ -16,6 +17,7 @@ import java.security.UnrecoverableKeyException;
 @RunLevel(value = 2)
 public class CertificatesClientService
     extends com.exoreaction.xorcery.service.certificates.client.CertificatesClientService
+    implements PreDestroy
 {
     @Inject
     public CertificatesClientService(KeyStores keyStores,
@@ -23,5 +25,10 @@ public class CertificatesClientService
                                      DnsLookupService dnsLookupService,
                                      Configuration configuration) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException {
         super(keyStores, httpClient, dnsLookupService, configuration);
+    }
+
+    @Override
+    public void preDestroy() {
+        close();
     }
 }

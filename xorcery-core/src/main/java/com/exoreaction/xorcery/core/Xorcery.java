@@ -25,12 +25,12 @@ import java.util.Optional;
 /**
  * Xorcery run level values:
  * 0: Configuration refresh
- * 2: Certificate refresh
- * 4: Servers
+ * 2: Certificate request/refresh
+ * 4: Server
  * 6: Server publishers/subscribers
  * 8: Client publishers/subscribers
  * 18: Server start/stop
- * 20: DNS registration
+ * 20: DNS registration/deregistration
  *
  * @author rickardoberg
  * @since 12/04/2022

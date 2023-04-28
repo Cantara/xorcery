@@ -22,16 +22,16 @@ import java.io.StringWriter;
 import java.time.Instant;
 
 @Service
-public class XorceryVisualeCompatibleHealthServlet extends HttpServlet {
+public class VisualeCompatibleHealthServlet extends HttpServlet {
 
     private static final long serialVersionUID = -7432916484889147321L;
     private static final Logger log = LogManager.getLogger(DefaultHealthCheckService.class);
-    public static final String HEALTH_CHECK_REGISTRY = XorceryVisualeCompatibleHealthServlet.class.getCanonicalName() + ".registry";
+    public static final String HEALTH_CHECK_REGISTRY = VisualeCompatibleHealthServlet.class.getCanonicalName() + ".registry";
     private transient DefaultHealthCheckService healthService;
     private transient ObjectMapper mapper;
 
     @Inject
-    public XorceryVisualeCompatibleHealthServlet(DefaultHealthCheckService healthService) {
+    public VisualeCompatibleHealthServlet(DefaultHealthCheckService healthService) {
         this.healthService = healthService;
     }
 

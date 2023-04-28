@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.service.reactivestreams.client.hk2;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
-import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWorkers;
@@ -11,23 +11,33 @@ import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
+import org.glassfish.hk2.runlevel.ProgressStartedListener;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "reactivestreams.client")
-@ContractsProvided({ReactiveStreamsClient.class})
+@ContractsProvided({ReactiveStreamsClient.class, PreDestroy.class, ProgressStartedListener.class})
 @RunLevel(8)
 public class ReactiveStreamsClientService extends com.exoreaction.xorcery.service.reactivestreams.client.ReactiveStreamsClientService
-        implements PreDestroy {
+        implements PreDestroy, ProgressStartedListener {
 
     @Inject
     public ReactiveStreamsClientService(Configuration configuration,
                                         MessageWorkers messageWorkers,
                                         HttpClient httpClient,
                                         DnsLookupService dnsLookup,
-                                        @Named("xorcery") MetricRegistryWrapper metricRegistryWrapper,
+                                        MetricRegistry metricRegistry,
                                         Provider<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
-        super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistryWrapper.metricRegistry(), localStreamFactoriesProvider::get);
+        super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistry, localStreamFactoriesProvider::get);
+    }
+
+    @Override
+    public void onProgressStarting(ChangeableRunLevelFuture currentJob, int currentLevel) {
+        if (currentLevel == 20 && currentJob.getProposedLevel() < currentLevel) {
+            // Close existing streams
+            cancelActiveSubscriptions();
+        }
     }
 }

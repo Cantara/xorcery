@@ -5,7 +5,6 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.jersey.server.JerseyServerService;
-import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import com.exoreaction.xorcery.util.Sockets;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -36,20 +35,12 @@ public class AdminServletWiringTest {
 
         assertNotNull(serviceLocator.getService(Server.class));
         assertNotNull(serviceLocator.getService(ServletContextHandler.class));
-        assertNotNull(serviceLocator.getService(XorceryAdminServletConfigurator.class));
+        assertNotNull(serviceLocator.getService(AdminServletConfigurator.class));
         assertNotNull(serviceLocator.getService(JerseyServerService.class));
         assertTrue(serviceLocator.getService(Server.class).isStarted());
         MetricRegistry defaultMetricRegistry = serviceLocator.getService(MetricRegistry.class);
-        MetricRegistryWrapper appMetricRegistry = serviceLocator.getService(MetricRegistryWrapper.class, "app");
-        MetricRegistryWrapper rootMetricRegistry = serviceLocator.getService(MetricRegistryWrapper.class, "root");
-        MetricRegistryWrapper xorceryMetricRegistry = serviceLocator.getService(MetricRegistryWrapper.class, "xorcery");
-        MetricRegistryWrapper jvmMetricRegistry = serviceLocator.getService(MetricRegistryWrapper.class, "jvm");
-        MetricRegistryWrapper jettyMetricRegistry = serviceLocator.getService(MetricRegistryWrapper.class, "jetty");
-        MetricRegistryWrapper jerseyMetricRegistry = serviceLocator.getService(MetricRegistryWrapper.class, "jersey");
         ServiceHandle<MetricRegistry> defaultMetricRegistryHandle = serviceLocator.getServiceHandle(MetricRegistry.class);
         MetricRegistry another = defaultMetricRegistryHandle.getService();
-        assertNotNull(appMetricRegistry);
         assertNotNull(defaultMetricRegistry);
-        assertTrue(appMetricRegistry.metricRegistry() == defaultMetricRegistry);
     }
 }

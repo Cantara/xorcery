@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.service.jetty.server;
 
 
-import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
+import com.codahale.metrics.MetricRegistry;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -20,15 +20,14 @@ import org.jvnet.hk2.annotations.Service;
 @Service(name = "jetty.server")
 @RunLevel(4)
 public class ServletContextHandlerFactory
-    implements Factory<ServletContextHandler>
-{
+        implements Factory<ServletContextHandler> {
     private final ServletContextHandler servletContextHandler;
 
     @Inject
     public ServletContextHandlerFactory(Server server,
                                         ServiceLocator serviceLocator,
                                         IterableProvider<SecurityHandler> securityHandlerProvider,
-                                        @Named("jetty") MetricRegistryWrapper jettyMetricRegistryWrapper) {
+                                        MetricRegistry metricRegistry) {
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
         servletContextHandler.setContextPath("/");
@@ -36,18 +35,15 @@ public class ServletContextHandlerFactory
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
 
         Handler handler = servletContextHandler;
-        if (securityHandlerProvider.getHandle() != null)
-        {
+        if (securityHandlerProvider.getHandle() != null) {
             SecurityHandler securityHandler = securityHandlerProvider.get();
             securityHandler.setHandler(handler);
             handler = securityHandler;
         }
 
-        if (jettyMetricRegistryWrapper != null) {
-            InstrumentedHandler instrumentedHandler = new InstrumentedHandler(jettyMetricRegistryWrapper.metricRegistry(), "");
-            instrumentedHandler.setHandler(handler);
-            handler = instrumentedHandler;
-        }
+        InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry, "");
+        instrumentedHandler.setHandler(handler);
+        handler = instrumentedHandler;
 
         server.setHandler(handler);
     }

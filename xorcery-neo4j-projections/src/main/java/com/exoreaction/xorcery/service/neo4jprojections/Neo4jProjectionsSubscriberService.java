@@ -3,7 +3,6 @@ package com.exoreaction.xorcery.service.neo4jprojections;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
-import com.exoreaction.xorcery.service.metricregistry.MetricRegistryWrapper;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
@@ -13,7 +12,6 @@ import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscr
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.IterableProvider;
@@ -22,7 +20,6 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * @author rickardoberg
@@ -41,7 +38,7 @@ public class Neo4jProjectionsSubscriberService {
                                              Configuration configuration,
                                              GraphDatabases graphDatabases,
                                              IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
-                                             @Named("xorcery") MetricRegistryWrapper metricRegistryWrapper) {
+                                             MetricRegistry metricRegistry) {
         GraphDatabase graphDatabase = graphDatabases.apply("neo4j");
 
         Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
@@ -58,7 +55,7 @@ public class Neo4jProjectionsSubscriberService {
                 cfg.getString("projection").orElseThrow(),
                 neo4jProjectionCommitPublisher,
                 projectionList,
-                metricRegistryWrapper.metricRegistry()), new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))), ProjectionSubscriber.class);
+                metricRegistry), new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))), ProjectionSubscriber.class);
 
         if (neo4jProjectionsConfiguration.isCommitPublisherEnabled()) {
             reactiveStreamsServer.publisher("neo4jprojectioncommits", cfg -> neo4jProjectionCommitPublisher, Neo4jProjectionCommitPublisher.class);

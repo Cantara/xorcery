@@ -14,7 +14,6 @@ import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCSException;
-import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
@@ -30,8 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
@@ -39,7 +37,6 @@ import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 @Service(name = "certificates.server.self")
 @RunLevel(value = 2)
 public class SelfCertificateService
-    implements PreDestroy
 {
 
     private final Logger logger = LogManager.getLogger(getClass());
@@ -49,7 +46,6 @@ public class SelfCertificateService
     private final KeyStores keyStores;
     private final Configuration configuration;
     private final IntermediateCA intermediateCA;
-    private final ScheduledExecutorService scheduler;
 
     @Inject
     public SelfCertificateService(KeyStores keyStores,
@@ -61,36 +57,30 @@ public class SelfCertificateService
         this.intermediateCA = intermediateCA;
         certificateAlias = configuration.getString("jetty.server.ssl.alias").orElse("self");
 
-        scheduler = Executors.newSingleThreadScheduledExecutor();
-
         if (keyStore.containsAlias(certificateAlias)) {
-            scheduleRenewal();
+            renewAndSchedule();
         } else {
             // Request
             requestCertificate();
-            scheduleRenewal();
+            renewAndSchedule();
         }
     }
 
-    @Override
-    public void preDestroy() {
-        scheduler.shutdown();
-    }
-
-    private void scheduleRenewal() {
+    private void renewAndSchedule() {
         // Renewal?
         X509Certificate certificate = renewCertificate();
 
         // Setup renewal timer
-        scheduler.schedule(this::scheduleRenewal, certificate.getNotAfter().toInstant().minus(1, ChronoUnit.DAYS).toEpochMilli()-System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        CompletableFuture.delayedExecutor(certificate.getNotAfter().toInstant().minus(1, ChronoUnit.DAYS).toEpochMilli()-System.currentTimeMillis(), TimeUnit.MILLISECONDS)
+                        .execute(this::renewAndSchedule);
     }
 
     private X509Certificate renewCertificate() {
         try {
             X509Certificate certificate = (X509Certificate) keyStore.getCertificate(certificateAlias);
             logger.info("Current self certificate:" + certificate);
-            Instant tomorrow = new Date().toInstant().plus(1, ChronoUnit.DAYS);
-            if (certificate.getNotAfter().toInstant().isBefore(tomorrow)) {
+            Instant oneWeekBeforeExpiry = certificate.getNotAfter().toInstant().minus(7, ChronoUnit.DAYS); ;
+            if (new Date().toInstant().isAfter(oneWeekBeforeExpiry)) {
                 X509Certificate renewedCertificate = requestCertificate();
                 logger.info("Renewed self certificate:" + certificate);
                 return renewedCertificate;

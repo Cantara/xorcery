@@ -42,6 +42,10 @@
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-jmx</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.dropwizard.metrics</groupId>
+            <artifactId>metrics-jakarta-servlets</artifactId>
+        </dependency>
 
     </dependencies>
 

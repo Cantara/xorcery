@@ -2,16 +2,61 @@ package com.exoreaction.xorcery.process;
 
 import com.exoreaction.xorcery.util.Exceptions;
 
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Long-running process that normally involves I/O to other systems.
+ * Can perform optional retries with backoff if possible, and can be cancelled through the provided future.
+ * If the process generates a result this can be returned using the provided future as well.
+ *
+ * @param <T> type of the result, may be Void
+ */
 public interface Process<T> {
+
+    Map<Process<?>, AtomicLong> failures = new ConcurrentHashMap<>();
+
     void start();
 
     default void stop() {
         result().toCompletableFuture().cancel(true);
     }
 
-    CompletionStage<T> result();
+    default void succeeded() {
+        failures.remove(this);
+    }
+
+    default void retry() {
+
+        if (result().toCompletableFuture().isCancelled())
+            return;
+
+        AtomicLong nrOfFailures = failures.getOrDefault(this, new AtomicLong(0L));
+        long delay = getFailureDelay(nrOfFailures.getAndIncrement());
+
+
+        CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS).execute(()->
+        {
+            if (result().toCompletableFuture().isCancelled())
+                return;
+
+            start();
+        });
+    }
+
+    default long getFailureDelay(long failureCount)
+    {
+        return Math.min(failureCount * 10L, 60L);
+    }
+
+    default boolean isRetryable(Throwable t) {
+        return false;
+    }
 
     default void complete(T value, Throwable t) {
 
@@ -30,11 +75,5 @@ public interface Process<T> {
         }
     }
 
-    default void retry() {
-        start();
-    }
-
-    default boolean isRetryable(Throwable t) {
-        return false;
-    }
+    CompletionStage<T> result();
 }

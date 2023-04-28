@@ -46,14 +46,20 @@ public abstract class ReactiveStreamsAbstractService {
 
         timer.shutdown();
 
+        cancelActiveSubscriptions();
+    }
+
+    protected void cancelActiveSubscriptions() {
         logger.info("Cancel active subscriptions:" + activeSubscriptions.size());
 
-        // Cancel active subscriptions
-        for (Flow.Subscription activeSubscription : activeSubscriptions) {
-            activeSubscription.cancel();
-            // TODO Populate corresponding CompletableFuture
+        if (!activeSubscriptions.isEmpty())
+        {
+            // Cancel active subscriptions
+            for (Flow.Subscription activeSubscription : activeSubscriptions) {
+                activeSubscription.cancel();
+                // TODO Populate corresponding CompletableFuture
+            }
         }
-
     }
 
     protected Type getEventType(Type type) {
@@ -168,6 +174,7 @@ public abstract class ReactiveStreamsAbstractService {
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
             this.subscription = subscription;
+            activeSubscriptions.add(subscription);
             subscriber.onSubscribe(subscription);
         }
 

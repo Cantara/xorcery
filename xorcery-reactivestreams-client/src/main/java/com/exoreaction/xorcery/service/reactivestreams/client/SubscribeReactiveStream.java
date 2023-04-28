@@ -35,6 +35,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
+import static com.exoreaction.xorcery.util.Exceptions.unwrap;
+
 public class SubscribeReactiveStream
         implements WebSocketPartialListener,
         WebSocketConnectionListener,
@@ -304,6 +306,8 @@ public class SubscribeReactiveStream
 
     @Override
     public void onWebSocketError(Throwable cause) {
+        cause = unwrap(cause);
+
         if (cause instanceof ClosedChannelException) {
             // Ignore
             subscriber.onComplete();
