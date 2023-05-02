@@ -27,6 +27,16 @@ public record Neo4jConfiguration(Configuration context)
         return context.getString("temporarySettingsFile").orElseThrow();
     }
 
+    public boolean isWipeOnBreakingChanges() {
+        return context.getBoolean("domain.wipe_on_breaking_change").orElseThrow();
+    }
+
+    public SemanticVersion getVersion() {
+        return context.getString("domain.version")
+                .map(SemanticVersion::from)
+                .orElseThrow();
+    }
+
     public Optional<List<DatabaseConfiguration>> getDatabases() {
         return context.getListAs("databases", json -> new DatabaseConfiguration((ObjectNode) json));
     }

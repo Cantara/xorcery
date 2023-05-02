@@ -3,6 +3,9 @@ neo4jdatabase:
   path: "{{ instance.home }}/neo4j"
   startup: []
   temporarySettingsFile: "tmp_neo4j.conf"
+  domain:
+    version: "1.0.0"
+    wipe_on_breaking_change: true
   settings:
     dbms:
       allow_upgrade: true

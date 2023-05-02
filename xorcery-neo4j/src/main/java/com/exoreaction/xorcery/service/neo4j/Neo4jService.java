@@ -16,7 +16,6 @@ import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.InstantiationService;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -54,6 +53,7 @@ public class Neo4jService
     private final DatabaseManagementService managementService;
 
     private final Map<String, GraphDatabase> databases = new ConcurrentHashMap<>();
+
     @Inject
     public Neo4jService(ServiceResourceObjects serviceResourceObjects,
                         ServiceLocator serviceLocator,
@@ -85,12 +85,37 @@ public class Neo4jService
                         ));
         for (DatabaseConfiguration databaseConfiguration : databases) {
             logger.info("Starting Neo4j database:" + databaseConfiguration.getName());
-            GraphDatabaseService graphDb = null;
+            GraphDatabaseService graphDb;
             try {
                 graphDb = managementService.database(databaseConfiguration.getName());
             } catch (DatabaseNotFoundException e) {
                 managementService.createDatabase(databaseConfiguration.getName());
                 graphDb = managementService.database(databaseConfiguration.getName());
+            }
+
+            boolean wipeOnBreakingChanges = neo4jConfiguration.isWipeOnBreakingChanges();
+            SemanticVersion targetVersion = neo4jConfiguration.getVersion();
+            SemanticVersion currentDatabaseVersion = getExistingDomainVersion(graphDb);
+            if (currentDatabaseVersion == null) {
+                logger.info("Domain schema version of database does not exist.");
+                currentDatabaseVersion = new SemanticVersion(-1, 0, 0); // force a breaking change
+            }
+            if (targetVersion.isBreakingChange(currentDatabaseVersion)) {
+                logger.info("Attempting to update domain schema version of database from {} to {}, this is a breaking change.", currentDatabaseVersion, targetVersion);
+                if (wipeOnBreakingChanges) {
+                    logger.warn("WIPING all data in neo4j projection.");
+                    wipeDatabase(graphDb);
+                    updateDomainVersionInDatabase(graphDb, targetVersion);
+                } else {
+                    String msg = String.format("Incompatible database domain schema version, and wipe not allowed. Current version of schema is '%s' and target version is '%s'. Migrate database or set 'neo4jdatabase.domain.wipe_on_breaking_change' to true to allow wipe.", currentDatabaseVersion, targetVersion);
+                    logger.error(msg);
+                    throw new IllegalStateException(msg);
+                }
+            } else if (!currentDatabaseVersion.equals(targetVersion)) {
+                logger.info("Automatically updating domain version of database from {} to {}, no wipe needed.", currentDatabaseVersion, targetVersion);
+                updateDomainVersionInDatabase(graphDb, targetVersion);
+            } else {
+                logger.info("Target domain schema version matches current database schema version {}, no update action needed", targetVersion);
             }
 
             // Register procedures
@@ -146,6 +171,36 @@ public class Neo4jService
         serviceResourceObjects.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
                 .api("neo4j", "api/neo4j")
                 .build());
+    }
+
+    private static SemanticVersion getExistingDomainVersion(GraphDatabaseService graphDb) {
+        return graphDb.executeTransactionally("MATCH (n:XorceryProjectionDomainSchema) RETURN n.version AS ver", Map.of(), result -> {
+            if (result.hasNext()) {
+                Map<String, Object> row = result.next();
+                String version = (String) row.get("ver");
+                return SemanticVersion.from(version);
+            }
+            return null;
+        });
+    }
+
+    /**
+     * This method will wipe ALL data in the database, do not use unless you know what you are doing!
+     *
+     * @param graphDb the database to wipe.
+     */
+    private static void wipeDatabase(GraphDatabaseService graphDb) {
+        graphDb.executeTransactionally("""
+                MATCH (n)
+                CALL {
+                  WITH n
+                  DETACH DELETE n
+                } IN TRANSACTIONS
+                """);
+    }
+
+    private static void updateDomainVersionInDatabase(GraphDatabaseService graphDb, SemanticVersion currentVersion) {
+        graphDb.executeTransactionally("MERGE (n:XorceryProjectionDomainSchema) SET n.version = $ver RETURN n", Map.of("ver", currentVersion.toString()));
     }
 
     @Override
