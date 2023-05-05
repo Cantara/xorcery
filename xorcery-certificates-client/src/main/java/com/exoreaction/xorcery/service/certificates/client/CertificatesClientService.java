@@ -89,9 +89,22 @@ public class CertificatesClientService
         {
             // Renewal?
             if (certificatesClientConfiguration.isRenewOnStartup()) {
-                RenewCertificateProcess renewCertificateProcess = new RenewCertificateProcess(result = new CompletableFuture<>(), keyStore, keyStores, alias, certificatesClientConfiguration, configuration, client, logger);
-                renewCertificateProcess.start();
-                renewCertificateProcess.result().join();
+                try {
+                    RenewCertificateProcess renewCertificateProcess = new RenewCertificateProcess(result = new CompletableFuture<>(), keyStore, keyStores, alias, certificatesClientConfiguration, configuration, client, logger);
+                    renewCertificateProcess.start();
+                    renewCertificateProcess.result().join();
+                } catch (Exception e) {
+                    X509Certificate certificate = (X509Certificate) keyStore.getCertificate(alias);
+                    Instant oneDayBeforeExpiry = certificate.getNotAfter().toInstant().minus(1, ChronoUnit.DAYS);
+                    if (new Date().toInstant().isAfter(oneDayBeforeExpiry)) {
+                        // Quit
+                        throw e;
+                    } else
+                    {
+                        // Warn
+                        logger.warn("Could not renew certificate on startup", e);
+                    }
+                }
             }
         }
 
