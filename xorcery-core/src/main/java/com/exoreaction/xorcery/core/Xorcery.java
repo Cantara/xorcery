@@ -103,11 +103,14 @@ public class Xorcery
 
     public void close() {
 
-        logger.info("Stopping");
-        RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
-        runLevelController.proceedTo(0);
-        serviceLocator.shutdown();
-        logger.info("Stopped");
+        if (!serviceLocator.isShutdown())
+        {
+            logger.info("Stopping");
+            RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
+            runLevelController.proceedTo(0);
+            serviceLocator.shutdown();
+            logger.info("Stopped");
+        }
     }
 
     protected Filter getEnabledServicesFilter(Configuration configuration) {
