@@ -1,8 +1,7 @@
 <tbody class="links">
 <tr><th colspan="2">Links</th></tr>
 {{#each this.links}}
-
-{{#if template}}
+{{#isTemplate .}}
  <tr><td>{{rel}}</td><td>
     <code>{{{href}}}</code><br/>
     <form action="/api/handlebars/uritemplate" method="get" name="{{rel}}">
@@ -60,6 +59,6 @@
 {{^}}
 <tr><td>{{rel}}</td><td> <a href="{{{href}}}">{{{href}}}</a> </td></tr>
 {{/if}}
-{{/if}}
+{{/isTemplate}}
 {{/each}}
 </tbody>

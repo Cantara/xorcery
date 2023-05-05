@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.jsonapi.model.Link;
 import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.TagType;
 import com.github.jknack.handlebars.helper.EachHelper;
+import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.uri.UriTemplate;
 
 import java.io.IOException;
@@ -49,5 +50,16 @@ public class UtilHelpers {
             return value.substring(1, value.length()-1);
         else
             return value;
+    }
+
+    public Object isTemplate(Link link, Options options ) throws IOException
+    {
+        if (!new UriTemplate(link.getHref()).getTemplateVariables().isEmpty())
+        {
+            return options.fn();
+        } else
+        {
+            return options.inverse();
+        }
     }
 }
