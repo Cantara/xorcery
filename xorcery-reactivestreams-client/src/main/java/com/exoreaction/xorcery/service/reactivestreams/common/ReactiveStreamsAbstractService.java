@@ -50,10 +50,10 @@ public abstract class ReactiveStreamsAbstractService {
     }
 
     protected void cancelActiveSubscriptions() {
-        logger.info("Cancel active subscriptions:" + activeSubscriptions.size());
-
         if (!activeSubscriptions.isEmpty())
         {
+            logger.info("Cancel active subscriptions:" + activeSubscriptions.size());
+
             // Cancel active subscriptions
             for (Flow.Subscription activeSubscription : activeSubscriptions) {
                 activeSubscription.cancel();
