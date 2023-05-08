@@ -31,7 +31,6 @@
         <module>xorcery-metadata</module>
         <module>xorcery-health-api</module>
         <module>xorcery-health-registry</module>
-        <module>xorcery-health-registry-hk2</module>
 
         <module>xorcery-jsonapi</module>
         <module>xorcery-jsonapi-jaxrs</module>
@@ -43,37 +42,33 @@
         <module>xorcery-core</module>
 
         <module>xorcery-log4j</module>
-        <module>xorcery-metricregistry-hk2</module>
+        <module>xorcery-metricregistry</module>
         <module>xorcery-metrics</module>
         <module>xorcery-jmxmetrics</module>
 
         <module>xorcery-keystores</module>
-        <module>xorcery-keystores-hk2</module>
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
-        <module>xorcery-dns-client-hk2</module>
         <module>xorcery-dns-registration</module>
 
         <module>xorcery-jetty-client</module>
-        <module>xorcery-jetty-client-hk2</module>
         <module>xorcery-jersey-client</module>
         <module>xorcery-jetty-server</module>
         <module>xorcery-jersey-server</module>
         <module>xorcery-admin-servlet</module>
 
         <module>xorcery-reactivestreams-api</module>
-        <module>xorcery-reactivestreams-api-hk2</module>
         <module>xorcery-reactivestreams-client</module>
-        <module>xorcery-reactivestreams-client-hk2</module>
         <module>xorcery-reactivestreams-server</module>
 
         <module>xorcery-certificates-server</module>
         <module>xorcery-certificates-client</module>
-        <module>xorcery-certificates-client-hk2</module>
 
         <module>xorcery-domainevents</module>
         <module>xorcery-domainevents-publisher</module>
         <module>xorcery-domainevents-jsonapi</module>
+
+        <module>xorcery-jwt-server</module>
 
         <module>xorcery-eventstore</module>
         <module>xorcery-handlebars</module>

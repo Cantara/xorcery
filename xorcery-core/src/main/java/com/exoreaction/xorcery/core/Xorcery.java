@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -19,6 +20,7 @@ import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,18 +45,10 @@ public class Xorcery
     private final ServiceLocator serviceLocator;
 
     public Xorcery(Configuration configuration) throws Exception {
-        this(configuration, ServiceLocatorFactory.getInstance().create(null), "not-set");
-    }
-
-    public Xorcery(Configuration configuration, String applicationVersion) throws Exception {
-        this(configuration, ServiceLocatorFactory.getInstance().create(null), applicationVersion);
+        this(configuration, ServiceLocatorFactory.getInstance().create(null));
     }
 
     public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
-        this(configuration, serviceLocator, "not-set");
-    }
-
-    public Xorcery(Configuration configuration, ServiceLocator serviceLocator, final String applicationVersion) throws Exception {
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         logger = LogManager.getLogger(Xorcery.class);
         Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
@@ -74,12 +68,6 @@ public class Xorcery
         RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
         runLevelController.setThreadingPolicy(hk2Configuration.getThreadingPolicy());
         runLevelController.setMaximumUseableThreads(hk2Configuration.getMaximumUseableThreads());
-
-        runLevelController.proceedTo(0);
-
-        DefaultHealthCheckAppInfo appInfo = serviceLocator.getService(DefaultHealthCheckAppInfo.class);
-        appInfo.name(instanceName);
-        appInfo.version(applicationVersion);
 
         runLevelController.proceedTo(hk2Configuration.getRunLevel());
 
@@ -103,8 +91,7 @@ public class Xorcery
 
     public void close() {
 
-        if (!serviceLocator.isShutdown())
-        {
+        if (!serviceLocator.isShutdown()) {
             logger.info("Stopping");
             RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
             runLevelController.proceedTo(0);
@@ -136,7 +123,8 @@ public class Xorcery
         Populator populator = dcs.getPopulator();
 
         try {
-            populator.populate(new ClasspathDescriptorFileFinder(), new ConfigurationPostPopulatorProcessor(configuration));
+            populator.populate(new ClasspathDescriptorFileFinder(ClasspathDescriptorFileFinder.class.getClassLoader(), configuration.getListAs("hk2.names", JsonNode::textValue).orElse(Collections.emptyList()).toArray(new String[0])),
+                    new ConfigurationPostPopulatorProcessor(configuration));
         } catch (IOException e) {
             throw new MultiException(e);
         }

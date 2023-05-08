@@ -37,6 +37,8 @@ public class CertificateLoginService
 
         // These are already validated
         X509Certificate[] certs = (X509Certificate[])request.getAttribute("jakarta.servlet.request.X509Certificate");
+        if (certs == null)
+            return null;
         X509Certificate userCertificate = certs[0];
         ClientCertUserPrincipal userPrincipal = new ClientCertUserPrincipal(userCertificate.getSubjectX500Principal(), new CertificateCredential(userCertificate));
         Subject subject = new Subject();

@@ -9,4 +9,6 @@ open module xorcery.jetty.client {
 
     requires org.apache.logging.log4j;
     requires org.eclipse.jetty.http2.http.client.transport;
+    requires org.glassfish.hk2.api;
+    requires jakarta.inject;
 }

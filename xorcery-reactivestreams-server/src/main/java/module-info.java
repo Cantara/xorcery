@@ -3,17 +3,14 @@ open module xorcery.reactivestreams.server {
 
     requires transitive xorcery.reactivestreams.api;
 
-    requires xorcery.reactivestreams.api.hk2;
-    requires xorcery.reactivestreams.client.hk2;
-    requires xorcery.dns.client.hk2;
+    requires xorcery.reactivestreams.client;
+    requires xorcery.dns.client;
 
     requires xorcery.service.api;
     requires xorcery.util;
     requires xorcery.metadata;
-    requires xorcery.dns.client;
-    requires xorcery.reactivestreams.client;
     requires xorcery.jetty.server;
-    requires xorcery.jetty.client.hk2;
+    requires xorcery.jetty.client;
 
     requires org.eclipse.jetty.websocket.jetty.server;
     requires com.lmax.disruptor;

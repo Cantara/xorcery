@@ -34,11 +34,6 @@
             <artifactId>xorcery-json</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-health-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <!-- CLI -->
         <dependency>

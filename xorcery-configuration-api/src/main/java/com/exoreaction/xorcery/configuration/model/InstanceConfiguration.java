@@ -22,6 +22,10 @@ public record InstanceConfiguration(Configuration configuration) {
         return configuration.getString("name").orElse(null);
     }
 
+    public String getVersion() {
+        return configuration.getString("version").orElse(null);
+    }
+
     public String getHost() {
         return configuration.getString("host").orElse(null);
     }

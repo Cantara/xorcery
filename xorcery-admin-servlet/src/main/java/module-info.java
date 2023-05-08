@@ -2,7 +2,7 @@ open module xorcery.admin.servlet {
 
     requires xorcery.core;
     requires xorcery.health.registry;
-    requires xorcery.metricregistry.hk2;
+    requires xorcery.metricregistry;
 
     requires jakarta.inject;
     requires java.management;

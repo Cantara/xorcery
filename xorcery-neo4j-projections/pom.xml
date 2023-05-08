@@ -56,7 +56,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-metricregistry-hk2</artifactId>
+            <artifactId>xorcery-metricregistry</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

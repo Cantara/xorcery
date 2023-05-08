@@ -5,12 +5,10 @@ open module xorcery.jetty.server {
     exports com.exoreaction.xorcery.service.jetty.server.security.clientcert;
 
     requires transitive xorcery.configuration.api;
-    requires transitive xorcery.metricregistry.hk2;
+    requires transitive xorcery.metricregistry;
     requires xorcery.keystores;
-    requires xorcery.keystores.hk2;
     requires xorcery.health.api;
     requires xorcery.health.registry;
-    requires xorcery.health.registry.hk2;
 
     requires jakarta.inject;
     requires jakarta.validation;

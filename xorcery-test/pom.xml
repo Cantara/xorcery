@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-dns-client-hk2</artifactId>
+            <artifactId>xorcery-dns-client</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -169,7 +169,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-certificates-client-hk2</artifactId>
+            <artifactId>xorcery-certificates-client</artifactId>
             <version>${project.version}</version>
         </dependency>
 

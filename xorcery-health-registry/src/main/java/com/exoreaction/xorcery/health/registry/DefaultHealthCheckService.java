@@ -1,7 +1,8 @@
 package com.exoreaction.xorcery.health.registry;
 
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.health.api.HealthCheck;
-import com.exoreaction.xorcery.health.api.HealthCheckAppInfo;
 import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
 import com.exoreaction.xorcery.health.api.HealthCheckResult;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,25 +11,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,7 +40,6 @@ public class DefaultHealthCheckService implements HealthCheckService {
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicBoolean shouldRun = new AtomicBoolean(true);
     private final long minUpdateInterval;
-    private final TemporalUnit updateIntervalUnit;
     private final AtomicLong healthComputeTimeMs = new AtomicLong(-1);
     private final com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry;
     private final List<HealthProbe> healthProbes = new CopyOnWriteArrayList<>();
@@ -61,18 +51,18 @@ public class DefaultHealthCheckService implements HealthCheckService {
     private long lastUpdatedEpoch = 0;
     ObjectNode currentHealth;
 
-    public DefaultHealthCheckService(HealthCheckAppInfo appInfo, String ip, String ipAll, com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry, long minUpdateInterval, TemporalUnit updateIntervalUnit) {
-        this.minUpdateInterval = minUpdateInterval;
-        this.updateIntervalUnit = updateIntervalUnit;
+    public DefaultHealthCheckService(Configuration configuration, com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry) {
+        this.minUpdateInterval = Duration.parse("PT"+configuration.getString("health.updater.interval").orElse("1S")).toMillis();
         this.healthCheckRegistry = healthCheckRegistry;
+        InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try {
             synchronized (lock) {
                 currentHealth = mapper.createObjectNode();
                 currentHealth.put("Status", "false");
-                currentHealth.put("version", appInfo.version());
-                currentHealth.put("name", appInfo.name());
-                currentHealth.put("ip", ip);
-                currentHealth.put("ip-all", ipAll);
+                currentHealth.put("version", instanceConfiguration.getVersion());
+                currentHealth.put("name", instanceConfiguration.getName());
+                currentHealth.put("ip", instanceConfiguration.getIp().getHostAddress());
+                currentHealth.put("ip-all", getMyIPAddressesString());
                 currentHealth.put("running since", timeAtStart);
                 // TODO add service-name / alias / context-path and some other basic info/config about app
             }
@@ -133,8 +123,7 @@ public class DefaultHealthCheckService implements HealthCheckService {
     private void updateIfNotSpammed() {
         long now = System.currentTimeMillis();
         long millisSinceLastUpdate = now - lastUpdatedEpoch;
-        long minimumUpdateWaitTimeMs = Duration.of(minUpdateInterval, updateIntervalUnit).toMillis();
-        if (minimumUpdateWaitTimeMs < millisSinceLastUpdate) {
+        if (minUpdateInterval < millisSinceLastUpdate) {
             performHealthUpdate();
             lastUpdatedEpoch = now;
         }
@@ -255,7 +244,7 @@ public class DefaultHealthCheckService implements HealthCheckService {
         return true;
     }
 
-    public static String getMyIPAddresssesString() {
+    public static String getMyIPAddressesString() {
         List<Inet4Address> ip4loopBackIpAddresses = new ArrayList<>();
         List<Inet6Address> ip6loopBackIpAddresses = new ArrayList<>();
         List<Inet4Address> ip4siteLocalAddresses = new ArrayList<>();
@@ -298,26 +287,11 @@ public class DefaultHealthCheckService implements HealthCheckService {
     }
 
     public static String getMyIPAddresssString() {
-        String fullString = getMyIPAddresssesString();
+        String fullString = getMyIPAddressesString();
         String[] parts = fullString.split("\\s");
         if (parts.length == 0) {
             return "";
         }
         return parts[0];
-    }
-
-    public static String readMetaInfMavenPomVersion(Class<?> anchor, String groupId, String artifactId) {
-        String resourcePath = String.format("/META-INF/maven/%s/%s/pom.properties", groupId, artifactId);
-        URL mavenVersionResource = anchor.getResource(resourcePath);
-        if (mavenVersionResource != null) {
-            try {
-                Properties mavenProperties = new Properties();
-                mavenProperties.load(mavenVersionResource.openStream());
-                return mavenProperties.getProperty("version", "missing version info in " + resourcePath);
-            } catch (IOException e) {
-                log.warn("Problem reading version resource from classpath: ", e);
-            }
-        }
-        return "unknown";
     }
 }

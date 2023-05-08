@@ -1,0 +1,10 @@
+jwt:
+  server:
+    enabled: "{{ defaults.enabled }}"
+    key: "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCBElMmpbIZRHmXmxpk/7iKV5jV45Xibvh3IuxmrrEzg6w=="
+    configuration:
+      users:
+        foobar:
+          password: "secret"
+          claims:
+            tenant: "tenant1"

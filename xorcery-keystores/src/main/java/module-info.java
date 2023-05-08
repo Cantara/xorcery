@@ -4,4 +4,6 @@ open module xorcery.keystores {
     requires xorcery.configuration.api;
     requires org.apache.logging.log4j;
     requires org.bouncycastle.provider;
+    requires org.glassfish.hk2.api;
+    requires jakarta.inject;
 }

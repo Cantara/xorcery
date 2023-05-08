@@ -126,7 +126,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams-client-hk2</artifactId>
+            <artifactId>xorcery-reactivestreams-client</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

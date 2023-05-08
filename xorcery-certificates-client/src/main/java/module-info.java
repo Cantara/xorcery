@@ -13,4 +13,7 @@ open module xorcery.certificates.client {
     requires xorcery.keystores;
     requires xorcery.jsonapi;
     requires xorcery.dns.client;
+    requires org.glassfish.hk2.api;
+    requires org.glassfish.hk2.runlevel;
+    requires jakarta.inject;
 }

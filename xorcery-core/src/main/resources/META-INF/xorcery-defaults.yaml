@@ -2,6 +2,7 @@
 instance:
   id: "{{ ENV.SERVER_ID | SYSTEM.server_id | instance.host}}"
   name: genericserver
+  version: "unknown"
   host: "{{ ENV.HOSTNAME | \"server\" }}"
   fqdn: "{{ instance.host }}.{{ instance.domain }}"
   ip: "{{ ENV.IP | null }}"
@@ -21,6 +22,9 @@ hk2:
   threadPolicy: "FULLY_THREADED"
   threadCount: 5
   runLevel: 20
+  names:
+    - default
+    - xorcery
 
 HK2TopicDistributionService:
   enabled: true

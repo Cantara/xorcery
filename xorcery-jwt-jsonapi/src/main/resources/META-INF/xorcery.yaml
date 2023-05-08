@@ -1,7 +1,0 @@
-jwt:
-  server:
-    enabled: "{{ defaults.enabled }}"
-    key: null
-
-jersey.server.register:
-  - com.exoreaction.xorcery.jwt.server.resources.api.JwtLoginResource

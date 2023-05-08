@@ -108,6 +108,8 @@ public class JwtAuthenticator
 
     private String getCookieToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
+        if (cookies == null)
+            return null;
         for (Cookie cookie : cookies) {
             if (cookie.getName().equals("token"))
                 return cookie.getValue();

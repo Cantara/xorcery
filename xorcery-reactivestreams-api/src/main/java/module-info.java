@@ -5,4 +5,6 @@ open module xorcery.reactivestreams.api {
     exports com.exoreaction.xorcery.service.reactivestreams.util;
 
     requires transitive xorcery.metadata;
+    requires org.glassfish.hk2.api;
+    requires jakarta.inject;
 }
