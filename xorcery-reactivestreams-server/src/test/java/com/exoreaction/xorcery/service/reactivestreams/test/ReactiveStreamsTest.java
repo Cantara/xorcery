@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.test.fibonacci.*;
@@ -59,7 +60,7 @@ public class ReactiveStreamsTest {
             for (int i = 0; i < numberOfSubscribers; i++) {
                 FibonacciSubscriber subscriber = new FibonacciSubscriber();
                 CompletableFuture<Void> future = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "fibonacci",
-                                Configuration::empty, subscriber, FibonacciSubscriber.class, Configuration.empty())
+                                Configuration::empty, subscriber, FibonacciSubscriber.class, ClientConfiguration.defaults())
                         .thenAccept(v -> {
                             ArrayList<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
                             if (!new ArrayList<>(FibonacciSequence.sequenceOf(numbersInFibonacciSequence)).equals(allReceivedNumbers)) {
@@ -103,7 +104,7 @@ public class ReactiveStreamsTest {
 
             // client publishes
             CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "fibonacci",
-                    Configuration::empty, new FibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), FibonacciPublisher.class, Configuration.empty());
+                    Configuration::empty, new FibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), FibonacciPublisher.class, ClientConfiguration.defaults());
             publisherComplete.join();
 
             System.out.printf("publisher completed!%n");
@@ -150,7 +151,7 @@ public class ReactiveStreamsTest {
             for (int i = 0; i < numberOfSubscribers; i++) {
                 BinaryFibonacciSubscriber subscriber = new BinaryFibonacciSubscriber();
                 CompletableFuture<Void> future = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "fibonacci",
-                                Configuration::empty, subscriber, BinaryFibonacciSubscriber.class, Configuration.empty())
+                                Configuration::empty, subscriber, BinaryFibonacciSubscriber.class, ClientConfiguration.defaults())
                         .thenAccept(v -> {
                             ArrayList<byte[]> allReceivedNumbers = subscriber.getAllReceivedNumbers();
                             byte[][] allReceivedNumbersArray = allReceivedNumbers.toArray(new byte[0][0]);
@@ -195,7 +196,7 @@ public class ReactiveStreamsTest {
 
             // client publishes
             CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "fibonacci",
-                    Configuration::empty, new BinaryFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryFibonacciPublisher.class, Configuration.empty());
+                    Configuration::empty, new BinaryFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryFibonacciPublisher.class, ClientConfiguration.defaults());
             publisherComplete.join();
 
             System.out.printf("publisher completed!%n");
@@ -244,7 +245,7 @@ public class ReactiveStreamsTest {
             for (int i = 0; i < numberOfSubscribers; i++) {
                 BinaryNioFibonacciSubscriber subscriber = new BinaryNioFibonacciSubscriber();
                 CompletableFuture<Void> future = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "fibonacci",
-                                Configuration::empty, subscriber, BinaryNioFibonacciSubscriber.class, Configuration.empty())
+                                Configuration::empty, subscriber, BinaryNioFibonacciSubscriber.class, ClientConfiguration.defaults())
                         .thenAccept(v -> {
                             ArrayList<byte[]> allReceivedNumbers = new ArrayList<>(subscriber.getAllReceivedNumbers().stream().map(ByteBuffer::array).toList());
                             byte[][] allReceivedNumbersArray = allReceivedNumbers.toArray(new byte[0][0]);
@@ -290,7 +291,7 @@ public class ReactiveStreamsTest {
 
             // client publishes
             CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "fibonacci",
-                    Configuration::empty, new BinaryNioFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryNioFibonacciPublisher.class, Configuration.empty());
+                    Configuration::empty, new BinaryNioFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryNioFibonacciPublisher.class, ClientConfiguration.defaults());
             publisherComplete.join();
 
             System.out.printf("publisher completed!%n");

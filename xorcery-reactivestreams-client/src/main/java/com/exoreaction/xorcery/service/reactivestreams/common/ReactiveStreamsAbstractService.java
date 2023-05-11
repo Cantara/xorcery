@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.service.reactivestreams.common;
 
+import com.exoreaction.xorcery.service.reactivestreams.api.ServerShutdownStreamException;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWorkers;
@@ -32,7 +33,8 @@ public abstract class ReactiveStreamsAbstractService {
     protected final ByteBufferPool byteBufferPool;
     protected final ScheduledExecutorService timer;
 
-    protected final List<Flow.Subscription> activeSubscriptions = new CopyOnWriteArrayList<>();
+    //    protected final List<Flow.Subscription> activeSubscriptions = new CopyOnWriteArrayList<>();
+    protected final List<SubscriberTracker> activeSubscribers = new CopyOnWriteArrayList<>();
 
     public ReactiveStreamsAbstractService(MessageWorkers messageWorkers) {
         this.messageWorkers = messageWorkers;
@@ -50,14 +52,13 @@ public abstract class ReactiveStreamsAbstractService {
     }
 
     protected void cancelActiveSubscriptions() {
-        if (!activeSubscriptions.isEmpty())
-        {
-            logger.info("Cancel active subscriptions:" + activeSubscriptions.size());
+        if (!activeSubscribers.isEmpty()) {
+            logger.info("Cancel active subscriptions:" + activeSubscribers.size());
 
             // Cancel active subscriptions
-            for (Flow.Subscription activeSubscription : activeSubscriptions) {
-                activeSubscription.cancel();
-                // TODO Populate corresponding CompletableFuture
+            for (SubscriberTracker activeSubscriber : activeSubscribers) {
+                activeSubscriber.getSubscription().cancel();
+                activeSubscriber.onError(new ServerShutdownStreamException("Server is shutting down"));
             }
         }
     }
@@ -167,14 +168,18 @@ public abstract class ReactiveStreamsAbstractService {
         private final Flow.Subscriber<Object> subscriber;
         private Flow.Subscription subscription;
 
+        public Flow.Subscription getSubscription() {
+            return subscription;
+        }
+
         public SubscriberTracker(Flow.Subscriber<Object> subscriber) {
             this.subscriber = subscriber;
+            activeSubscribers.add(this);
         }
 
         @Override
         public void onSubscribe(Flow.Subscription subscription) {
             this.subscription = subscription;
-            activeSubscriptions.add(subscription);
             subscriber.onSubscribe(subscription);
         }
 
@@ -185,14 +190,18 @@ public abstract class ReactiveStreamsAbstractService {
 
         @Override
         public void onError(Throwable throwable) {
-            activeSubscriptions.remove(subscription);
-            subscriber.onError(throwable);
+            if (activeSubscribers.remove(this))
+            {
+                subscriber.onError(throwable);
+            }
         }
 
         @Override
         public void onComplete() {
-            activeSubscriptions.remove(subscription);
-            subscriber.onComplete();
+            if (activeSubscribers.remove(this))
+            {
+                subscriber.onComplete();
+            }
         }
     }
 

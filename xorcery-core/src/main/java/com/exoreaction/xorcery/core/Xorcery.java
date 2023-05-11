@@ -5,6 +5,8 @@ import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.Filter;
@@ -41,6 +43,7 @@ public class Xorcery
         implements AutoCloseable {
 
     private final Logger logger;
+    private final Marker marker;
 
     private final ServiceLocator serviceLocator;
 
@@ -56,12 +59,12 @@ public class Xorcery
         this.serviceLocator = serviceLocator;
 
         InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
-        final String instanceName = instanceConfiguration.getName();
+        marker = MarkerManager.getMarker(instanceConfiguration.getId());
 
         populateServiceLocator(serviceLocator, configuration);
 
         // Instantiate all enabled services
-        logger.info("Starting");
+        logger.info(marker, "Starting");
 
         Filter configurationFilter = getEnabledServicesFilter(configuration);
 
@@ -79,10 +82,10 @@ public class Xorcery
             for (ServiceHandle<?> service : services) {
                 msg.append('\n').append(service.getActiveDescriptor().getImplementation());
             }
-            logger.debug(msg);
+            logger.debug(marker, msg);
         }
 
-        logger.info("Started");
+        logger.info(marker, "Started");
     }
 
     public ServiceLocator getServiceLocator() {
@@ -92,11 +95,11 @@ public class Xorcery
     public void close() {
 
         if (!serviceLocator.isShutdown()) {
-            logger.info("Stopping");
+            logger.info(marker, "Stopping");
             RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
             runLevelController.proceedTo(0);
             serviceLocator.shutdown();
-            logger.info("Stopped");
+            logger.info(marker, "Stopped");
         }
     }
 

@@ -2,12 +2,17 @@ package com.exoreaction.xorcery.service.jetty.server;
 
 
 import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.configuration.model.Configuration;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
@@ -17,6 +22,9 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
+import java.io.IOException;
+import java.util.EventListener;
+
 @Service(name = "jetty.server")
 @RunLevel(4)
 public class ServletContextHandlerFactory
@@ -25,6 +33,7 @@ public class ServletContextHandlerFactory
 
     @Inject
     public ServletContextHandlerFactory(Server server,
+                                        Configuration configuration,
                                         ServiceLocator serviceLocator,
                                         IterableProvider<SecurityHandler> securityHandlerProvider,
                                         MetricRegistry metricRegistry) {
@@ -41,9 +50,14 @@ public class ServletContextHandlerFactory
             handler = securityHandler;
         }
 
+        // Metrics
         InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry, "");
         instrumentedHandler.setHandler(handler);
         handler = instrumentedHandler;
+
+        // Log4j2 ThreadContext handler
+        Log4j2TheadContextHandler log4j2TheadContextHandler = new Log4j2TheadContextHandler(configuration);
+        log4j2TheadContextHandler.setHandler(handler);
 
         server.setHandler(handler);
     }

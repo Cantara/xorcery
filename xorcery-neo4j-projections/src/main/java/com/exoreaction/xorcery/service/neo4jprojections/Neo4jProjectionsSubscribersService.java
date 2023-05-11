@@ -9,6 +9,7 @@ import com.exoreaction.xorcery.service.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.Neo4jProjectionEventHandler;
 import com.exoreaction.xorcery.service.neo4jprojections.streams.ProjectionSubscriber;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.fasterxml.jackson.databind.node.ContainerNode;
 import jakarta.inject.Inject;
@@ -72,7 +73,7 @@ public class Neo4jProjectionsSubscribersService {
                                         projectionList,
                                         metricRegistry),
                                 new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))),
-                        ProjectionSubscriber.class, Configuration.empty());
+                        ProjectionSubscriber.class, ClientConfiguration.defaults());
             }
         });
     }

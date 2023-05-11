@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.service.reactivestreams.client;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.common.ExceptionObjectOutputStream;
@@ -20,6 +21,7 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
@@ -35,7 +37,7 @@ public class SubscribeWithResultReactiveStream
     public SubscribeWithResultReactiveStream(String defaultScheme,
                                              String authorityOrBaseUri,
                                              String streamName,
-                                             Configuration subscriberConfiguration,
+                                             ClientConfiguration subscriberConfiguration,
                                              DnsLookup dnsLookup,
                                              WebSocketClient webSocketClient,
                                              Flow.Subscriber<Object> subscriber,
@@ -51,8 +53,10 @@ public class SubscribeWithResultReactiveStream
     }
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()).toString());
+        }
         try {
-//                logger.info(marker, "Received:"+ Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);

@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsServer;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
@@ -48,7 +49,7 @@ public class ReactiveStreamsWithResultTest {
             AtomicInteger result = new AtomicInteger(0);
             ClientIntegerPublisher subscriber = new ClientIntegerPublisher(result);
             CompletableFuture<Void> stream = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "numbers",
-                    Configuration::empty, subscriber, ClientIntegerPublisher.class, Configuration.empty());
+                    Configuration::empty, subscriber, ClientIntegerPublisher.class, ClientConfiguration.defaults());
 
             // Then
             stream.orTimeout(1000, TimeUnit.SECONDS)

@@ -9,17 +9,17 @@ import java.util.function.Supplier;
 public interface ReactiveStreamsClient {
     CompletableFuture<Void> publish(String toAuthority,
                                     String subscriberStreamName,
-                                    Supplier<Configuration> subscriberConfiguration,
+                                    Supplier<Configuration> subscriberServerConfiguration,
 
                                     Flow.Publisher<?> publisher,
                                     Class<? extends Flow.Publisher<?>> publisherType,
-                                    Configuration publisherConfiguration);
+                                    ClientConfiguration publisherClientConfiguration);
 
     CompletableFuture<Void> subscribe(String toAuthority,
                                       String publisherStreamName,
-                                      Supplier<Configuration> publisherConfiguration,
+                                      Supplier<Configuration> publisherServerConfiguration,
 
                                       Flow.Subscriber<?> subscriber,
                                       Class<? extends Flow.Subscriber<?>> subscriberType,
-                                      Configuration subscriberConfiguration);
+                                      ClientConfiguration subscriberClientConfiguration);
 }

@@ -20,11 +20,16 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
+import org.neo4j.collection.Dependencies;
+import org.neo4j.common.DependencyResolver;
 import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
+import org.neo4j.dbms.api.DatabaseManagementServiceBuilderImplementation;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
 import org.neo4j.exceptions.KernelException;
+import org.neo4j.function.ThrowingFunction;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.kernel.api.procedure.Context;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 import org.neo4j.logging.log4j.Log4jLogProvider;
@@ -121,6 +126,8 @@ public class Neo4jService
             // Register procedures
             try {
                 GlobalProcedures globalProcedures = ((GraphDatabaseFacade) graphDb).getDependencyResolver().resolveDependency(GlobalProcedures.class);
+                globalProcedures.registerComponent(ServiceLocator.class, (ctx)->serviceLocator, false);
+
                 for (Neo4jProvider neo4jProvider : ServiceLoader.load(Neo4jProvider.class)) {
                     globalProcedures.registerProcedure(neo4jProvider.getClass());
                     globalProcedures.registerFunction(neo4jProvider.getClass());

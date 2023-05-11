@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.service.log4jpublisher.LoggingMetadata;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -14,7 +15,7 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.Flow;
 
-@Service(name="requestlogpublisher")
+@Service(name = "requestlogpublisher")
 public class RequestLogPublisherService
         implements PreDestroy {
 
@@ -26,7 +27,7 @@ public class RequestLogPublisherService
         RequestLogConfiguration requestLogConfiguration = new RequestLogConfiguration(configuration.getConfiguration("requestlog"));
         RequestLogPublisher requestLogPublisher = new RequestLogPublisher();
         reactiveStreams.publish(requestLogConfiguration.getSubscriberAuthority(), requestLogConfiguration.getSubscriberStream(),
-                requestLogConfiguration::getSubscriberConfiguration, requestLogPublisher, RequestLogPublisher.class, requestLogConfiguration.getPublisherConfiguration());
+                requestLogConfiguration::getSubscriberConfiguration, requestLogPublisher, RequestLogPublisher.class, new ClientConfiguration(requestLogConfiguration.getPublisherConfiguration()));
 
         JsonRequestLog requestLog = new JsonRequestLog(new LoggingMetadata.Builder(new Metadata.Builder())
                 .configuration(new InstanceConfiguration(configuration.getConfiguration("instance")))

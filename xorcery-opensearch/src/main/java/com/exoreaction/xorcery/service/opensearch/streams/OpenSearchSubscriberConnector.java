@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.service.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.service.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.service.opensearch.client.search.SearchQuery;
 import com.exoreaction.xorcery.service.opensearch.client.search.SearchRequest;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -55,10 +56,10 @@ public class OpenSearchSubscriberConnector {
         {
             if (throwable != null) {
                 reactiveStreams.subscribe(authority, streamName,
-                        () -> publisherConfiguration, new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration), OpenSearchSubscriber.class, Configuration.empty());
+                        () -> publisherConfiguration, new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration), OpenSearchSubscriber.class, ClientConfiguration.defaults());
             } else {
                 reactiveStreams.subscribe(authority, streamName,
-                        () -> updatedConfiguration, new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration), OpenSearchSubscriber.class, Configuration.empty());
+                        () -> updatedConfiguration, new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration), OpenSearchSubscriber.class, ClientConfiguration.defaults());
             }
         });
     }

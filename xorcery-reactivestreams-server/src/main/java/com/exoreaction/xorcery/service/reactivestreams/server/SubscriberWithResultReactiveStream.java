@@ -54,10 +54,10 @@ public class SubscriberWithResultReactiveStream
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
-            if (logger.isDebugEnabled())
-            {
-                logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()).toString());
             }
+
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
             received.mark();

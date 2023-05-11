@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.service.log4jpublisher;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.log4jpublisher.log4j.Log4jPublisherAppender;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import jakarta.inject.Inject;
@@ -13,7 +14,7 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.concurrent.Flow;
 
-@Service(name="log4jpublisher")
+@Service(name = "log4jpublisher")
 @RunLevel(8)
 public class Log4jPublisherService {
 
@@ -28,14 +29,12 @@ public class Log4jPublisherService {
         LoggerContext lc = (LoggerContext) LogManager.getContext(false);
         String appenderName = log4jPublisherConfiguration.getAppenderName();
         appender = lc.getConfiguration().getAppender(appenderName);
-        if (appender != null)
-        {
+        if (appender != null) {
             appender.setConfiguration(configuration);
 
             reactiveStreams.publish(log4jPublisherConfiguration.getSubscriberAuthority(), log4jPublisherConfiguration.getSubscriberStream(),
-                    log4jPublisherConfiguration::getSubscriberConfiguration, new LogPublisher(), LogPublisher.class, log4jPublisherConfiguration.getPublisherConfiguration());
-        } else
-        {
+                    log4jPublisherConfiguration::getSubscriberConfiguration, new LogPublisher(), LogPublisher.class, new ClientConfiguration(log4jPublisherConfiguration.getPublisherConfiguration()));
+        } else {
             LogManager.getLogger(getClass()).warn("No appender {} added to Log4j2 configuration", appenderName);
         }
     }

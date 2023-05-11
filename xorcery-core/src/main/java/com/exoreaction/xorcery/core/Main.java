@@ -42,6 +42,8 @@ public class Main
                     log4jProperty+","+log4jConfiguration.getAbsolutePath());
         }
 
+        System.setProperty("log4j2.isThreadContextMapInheritable", "true");
+
         if (id != null)
             System.setProperty("server_id", id);
 

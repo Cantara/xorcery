@@ -13,6 +13,7 @@ jetty:
     idleTimeout: "{{ defaults.idleTimeout }}"
 
     http:
+      enabled: "{{ defaults.enabled }}"
       port: "{{ SYSTEM.http_port | 80}}"
 
     http2:

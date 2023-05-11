@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.PreDestroy;
@@ -37,7 +38,7 @@ public class MetricsService
 
         result = reactiveStreamsClient.publish(metricsConfiguration.getSubscriberAuthority(), metricsConfiguration.getSubscriberStream(),
                 metricsConfiguration::getSubscriberConfiguration,
-                new JmxMetricsPublisher(metricsConfiguration, deploymentMetadata, managementServer), JmxMetricsPublisher.class, metricsConfiguration.getPublisherConfiguration());
+                new JmxMetricsPublisher(metricsConfiguration, deploymentMetadata, managementServer), JmxMetricsPublisher.class, new ClientConfiguration(metricsConfiguration.getPublisherConfiguration()));
     }
 
     @Override

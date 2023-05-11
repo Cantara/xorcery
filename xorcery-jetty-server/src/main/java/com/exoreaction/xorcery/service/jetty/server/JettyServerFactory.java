@@ -50,22 +50,25 @@ public class JettyServerFactory
         // Setup protocols
 
         // Clear-text protocols
-        HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
-        ServerConnector httpConnector;
-        if (jettyHttp2Config.isEnabled()) {
-            // The ConnectionFactory for clear-text HTTP/2.
-            HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
+        if (jettyConfig.isHttpEnabled()) {
+            HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
+            ServerConnector httpConnector;
+            if (jettyHttp2Config.isEnabled()) {
+                // The ConnectionFactory for clear-text HTTP/2.
+                HTTP2CServerConnectionFactory h2c = new HTTP2CServerConnectionFactory(httpConfig);
 
-            // Create and configure the HTTP 1.1/2 connector
-            httpConnector = new ServerConnector(server, http11, h2c);
-        } else {
-            // Create and configure the HTTP 1.1 connector
-            httpConnector = new ServerConnector(server, http11);
+                // Create and configure the HTTP 1.1/2 connector
+                httpConnector = new ServerConnector(server, http11, h2c);
+            } else {
+                // Create and configure the HTTP 1.1 connector
+                httpConnector = new ServerConnector(server, http11);
+            }
+            httpConnector.setIdleTimeout(jettyConfig.getIdleTimeout().toSeconds());
+            httpConnector.setPort(httpPort);
+            server.addConnector(httpConnector);
         }
-        httpConnector.setIdleTimeout(jettyConfig.getIdleTimeout().toSeconds());
-        httpConnector.setPort(httpPort);
-        server.addConnector(httpConnector);
 
+        // SSL
         if (jettyServerSslConfiguration.isEnabled()) {
 
             SslContextFactory.Server sslContextFactory = sslContextFactoryProvider.get();

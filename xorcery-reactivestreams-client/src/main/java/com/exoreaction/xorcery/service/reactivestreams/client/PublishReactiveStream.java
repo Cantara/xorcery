@@ -6,6 +6,9 @@ import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientStreamException;
+import com.exoreaction.xorcery.service.reactivestreams.api.ServerStreamException;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -26,6 +29,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.charset.Charset;
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -46,7 +51,9 @@ public class PublishReactiveStream
 
     protected Session session;
 
-    private Configuration publisherConfiguration;
+    private final ClientConfiguration publisherConfiguration;
+    private long retryDelay;
+
     private DnsLookup dnsLookup;
     private WebSocketClient webSocketClient;
     private final Flow.Publisher<Object> publisher;
@@ -78,7 +85,7 @@ public class PublishReactiveStream
     public PublishReactiveStream(String defaultScheme,
                                  String authorityOrBaseUri,
                                  String streamName,
-                                 Configuration publisherConfiguration,
+                                 ClientConfiguration publisherConfiguration,
                                  DnsLookup dnsLookup,
                                  WebSocketClient webSocketClient,
                                  Flow.Publisher<Object> publisher,
@@ -98,6 +105,7 @@ public class PublishReactiveStream
         this.timer = timer;
         this.pool = pool;
         this.result = result;
+        this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
         this.marker = MarkerManager.getMarker(authorityOrBaseUri + "/" + streamName);
         this.sent = metricRegistry.meter("publish." + streamName + ".sent");
         this.sentBytes = metricRegistry.meter("publish." + streamName + ".sent.bytes");
@@ -114,10 +122,10 @@ public class PublishReactiveStream
             }
         } else {
             this.authority = authorityOrBaseUri;
-            this.scheme = publisherConfiguration.getString("reactivestreams.client.scheme").orElse(defaultScheme);
+            this.scheme = publisherConfiguration.getScheme().orElse(defaultScheme);
         }
 
-        this.disruptor = new Disruptor<>(AtomicReference::new, publisherConfiguration.getInteger("disruptor.size").orElse(512), new NamedThreadFactory("PublishWebSocketDisruptor-" + marker.getName() + "-"));
+        this.disruptor = new Disruptor<>(AtomicReference::new, publisherConfiguration.getDisruptorSize(), new NamedThreadFactory("PublishWebSocketDisruptor-" + marker.getName() + "-"));
         disruptor.handleEventsWith(this);
         disruptor.start();
         start();
@@ -126,11 +134,19 @@ public class PublishReactiveStream
     // Subscriber
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onSubscribe");
+        }
+
         this.subscription = subscription;
     }
 
     @Override
     public void onNext(Object item) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onNext {}", item.toString());
+        }
+
         disruptor.publishEvent((e, s, event) ->
         {
             e.set(event);
@@ -139,32 +155,45 @@ public class PublishReactiveStream
 
     @Override
     public void onError(Throwable throwable) {
-        logger.info(marker, "Subscriber error for {}", session.getRemote().getRemoteAddress(), throwable);
-        disruptor.shutdown();
-        logger.info(marker, "Sending close for session {}", session.getRemote().getRemoteAddress());
-        session.close(StatusCode.SERVER_ERROR, throwable.getMessage());
-        result.completeExceptionally(throwable);
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onError", throwable);
+        }
+
+        if (!result.isDone()) {
+            disruptor.shutdown();
+            if (throwable instanceof ServerStreamException) {
+                // This should basically never happen
+                session.close(StatusCode.SERVER_ERROR, throwable.getMessage());
+            } else {
+                session.close(StatusCode.NORMAL, throwable.getMessage());
+            }
+            result.completeExceptionally(throwable);
+        }
     }
 
     public void onComplete() {
         CompletableFuture.runAsync(() ->
         {
-            logger.info(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
+            logger.debug(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
             disruptor.shutdown();
+            logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
+            session.close(StatusCode.NORMAL, "complete");
             result.complete(null);
-            logger.info(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
-            session.close(1000, "complete");
         });
     }
 
     // Connection process
     public void start() {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "start");
+        }
+
         if (result.isDone()) {
             return;
         }
 
         if (!webSocketClient.isStarted()) {
-            retry();
+            retry(null);
         }
 
         URI uri = URI.create(scheme + "://" + authority);
@@ -177,9 +206,13 @@ public class PublishReactiveStream
     }
 
     private void connect(Iterator<URI> subscriberURIs) {
-
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
+
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "connect {}", subscriberWebsocketUri);
+            }
+
             URI schemaAdjustedSubscriberWebsocketUri = subscriberWebsocketUri;
             if (subscriberWebsocketUri.getScheme() != null) {
                 if (subscriberWebsocketUri.getScheme().equals("https")) {
@@ -210,48 +243,72 @@ public class PublishReactiveStream
             }
 
             URI effectiveSubscriberWebsocketUri = URI.create(schemaAdjustedSubscriberWebsocketUri.getScheme() + "://" + schemaAdjustedSubscriberWebsocketUri.getAuthority() + "/streams/subscribers/" + streamName);
-            logger.info(marker, "Trying " + effectiveSubscriberWebsocketUri);
+            logger.debug(marker, "Trying " + effectiveSubscriberWebsocketUri);
             try {
                 webSocketClient.connect(this, effectiveSubscriberWebsocketUri)
                         .whenComplete(this::exceptionally);
             } catch (Throwable e) {
                 logger.error(marker, "Could not subscribe to " + effectiveSubscriberWebsocketUri.toASCIIString(), e);
-                retry();
+                retry(e);
             }
         } else {
-            retry();
+            retry(null);
         }
     }
 
     private <T> void exceptionally(T value, Throwable throwable) {
         if (throwable != null) {
-            logger.error(marker, "Publish reactive stream error", throwable);
+
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "exceptionally", throwable);
+            }
+
             if (throwable instanceof SSLHandshakeException) {
                 // Give up
                 result.completeExceptionally(throwable);
             } else {
                 // TODO Handle more exceptions
-                retry();
+                retry(throwable);
             }
         }
     }
 
-    public void retry() {
+    public void retry(Throwable cause) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "retry");
+        }
+
         if (result.isDone()) {
             return;
         }
 
-        // TODO Turn this into exponential backoff
-        if (!uriIterator.hasNext())
-            timer.schedule(this::start, 10000, TimeUnit.MILLISECONDS);
-        else
+        if (!uriIterator.hasNext()) {
+            if (publisherConfiguration.isRetryEnabled()) {
+
+                timer.schedule(this::start, retryDelay, TimeUnit.MILLISECONDS);
+                // Exponential backoff, gets reset on successful connect, max 60s delay
+                retryDelay = Math.min(retryDelay*2, 60000);
+            } else
+            {
+                if (cause == null)
+                    result.cancel(true);
+                else
+                    result.completeExceptionally(cause);
+            }
+
+        } else
             connect(uriIterator);
     }
 
     // WebSocket
     @Override
     public void onWebSocketConnect(Session session) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+        }
+
         this.session = session;
+        this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
 
         // First send parameters, if available
         String parameterString = subscriberConfiguration.get().json().toPrettyString();
@@ -270,14 +327,17 @@ public class PublishReactiveStream
 
     @Override
     public void onWebSocketText(String message) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onWebSocketText {}", message);
+        }
 
         long requestAmount = Long.parseLong(message);
 
         if (requestAmount == Long.MIN_VALUE) {
-            logger.info(marker, "Received cancel on websocket");
+            logger.debug(marker, "Received cancel on websocket");
             session.close();
             session = null;
-            retry();
+            retry(null);
         } else {
             if (logger.isDebugEnabled())
                 logger.debug(marker, "Received request:" + requestAmount);
@@ -302,25 +362,31 @@ public class PublishReactiveStream
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
+        }
 
         session = null;
         // TODO This has to be reviewed to see what codes should cause retry and what should cause cancellation of the process
         if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
-            logger.info(marker, "Session closed:{} {}", statusCode, reason);
+            logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             result.complete(null);
         } else {
-            logger.info(marker, "Close websocket:{} {}", statusCode, reason);
-            logger.info(marker, "Starting publishing process again");
-            retry();
+            logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
+            retry(null);
         }
     }
 
     @Override
     public void onWebSocketError(Throwable cause) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onWebSocketError", cause);
+        }
+
         if (cause instanceof ClosedChannelException) {
             // Ignore
             if (!result.isDone()) {
-                retry();
+                retry(cause);
             }
         } else {
             logger.error(marker, "Publisher websocket error", cause);
@@ -335,6 +401,10 @@ public class PublishReactiveStream
 
     @Override
     public void onShutdown() {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onShutdown");
+        }
+
         isShutdown.set(true);
     }
 
@@ -381,8 +451,7 @@ public class PublishReactiveStream
                 sentBatchSize.update(batchSize);
             }
         } catch (Throwable e) {
-            if (session != null)
-                throw new RuntimeException(e);
+            onError(new ClientStreamException("Failed to send", e));
         }
     }
 

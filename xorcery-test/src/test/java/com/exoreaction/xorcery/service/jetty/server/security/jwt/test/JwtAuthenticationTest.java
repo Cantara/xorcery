@@ -28,6 +28,7 @@ public class JwtAuthenticationTest {
             dns.client.enabled: true
             dns.client.discovery.enabled: false
             keystores.enabled: true
+            jetty.server.http.enabled: true
             jetty.server.ssl.enabled: false
             jetty.server.security.enabled: true
             jetty.server.security.method: "jwt"

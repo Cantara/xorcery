@@ -4,6 +4,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageReader;
@@ -35,7 +36,7 @@ public class PublishWithResultReactiveStream
     public PublishWithResultReactiveStream(String defaultScheme,
                                            String authorityOrBaseUri,
                                            String streamName,
-                                           Configuration publisherConfiguration,
+                                           ClientConfiguration publisherConfiguration,
                                            DnsLookup dnsLookup,
                                            WebSocketClient webSocketClient,
                                            Flow.Publisher<Object> publisher,
@@ -53,6 +54,10 @@ public class PublishWithResultReactiveStream
     }
 
     public void onComplete() {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onComplete");
+        }
+
         CompletableFuture.runAsync(() ->
         {
             logger.info(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
@@ -76,6 +81,10 @@ public class PublishWithResultReactiveStream
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onWebSocketBinary");
+        }
+
         try {
             // Check if we are getting an exception back
             if (len > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload, offset, offset + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {

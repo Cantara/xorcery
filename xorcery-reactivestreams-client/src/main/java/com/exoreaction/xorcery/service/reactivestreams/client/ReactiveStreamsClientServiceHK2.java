@@ -16,11 +16,14 @@ import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
+/**
+ * Note: this is set to run level 0 primarily so that client streams are the last to close when an application shuts down.
+ */
 @Service(name = "reactivestreams.client")
-@ContractsProvided({ReactiveStreamsClient.class, PreDestroy.class, ProgressStartedListener.class})
-@RunLevel(8)
+@ContractsProvided({ReactiveStreamsClient.class, PreDestroy.class})
+@RunLevel(0)
 public class ReactiveStreamsClientServiceHK2 extends com.exoreaction.xorcery.service.reactivestreams.client.ReactiveStreamsClientService
-        implements PreDestroy, ProgressStartedListener {
+        implements PreDestroy {
 
     @Inject
     public ReactiveStreamsClientServiceHK2(Configuration configuration,
@@ -30,13 +33,5 @@ public class ReactiveStreamsClientServiceHK2 extends com.exoreaction.xorcery.ser
                                            MetricRegistry metricRegistry,
                                            Provider<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
         super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistry, localStreamFactoriesProvider::get);
-    }
-
-    @Override
-    public void onProgressStarting(ChangeableRunLevelFuture currentJob, int currentLevel) {
-        if (currentLevel == 20 && currentJob.getProposedLevel() < currentLevel) {
-            // Close existing streams
-            cancelActiveSubscriptions();
-        }
     }
 }

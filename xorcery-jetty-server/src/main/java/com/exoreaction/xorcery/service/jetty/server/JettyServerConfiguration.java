@@ -12,24 +12,8 @@ public record JettyServerConfiguration(Configuration configuration) {
         return Duration.parse("PT" + configuration.getString("idleTimeout").orElse("-1s"));
     }
 
-    public Optional<URL> getCRLs() {
-        return configuration.getResourceURL("crls");
-    }
-
-    public String getAlias() {
-        return configuration.getString("alias").orElse("self");
-    }
-
-    public boolean isTrustAll() {
-        return configuration.getBoolean("trustAll").orElse(false);
-    }
-
-    public boolean isNeedClientAuth() {
-        return configuration.getBoolean("needClientAuth").orElse(false);
-    }
-
-    public boolean isWantClientAuth() {
-        return configuration.getBoolean("wantClientAuth").orElse(false);
+    public boolean isHttpEnabled() {
+        return configuration.getBoolean("http.enabled").orElse(true);
     }
 
     public int getHttpPort() {
@@ -43,9 +27,11 @@ public record JettyServerConfiguration(Configuration configuration) {
     public int getMaxThreads() {
         return configuration.getInteger("maxThreads").orElse(150);
     }
+
     public int getOutputBufferSize() {
         return configuration.getInteger("outputBufferSize").orElse(32768);
     }
+
     public int getRequestHeaderSize() {
         return configuration.getInteger("requestHeaderSize").orElse(16384);
     }

@@ -2,6 +2,8 @@ package com.exoreaction.xorcery.service.reactivestreams.server;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientStreamException;
+import com.exoreaction.xorcery.service.reactivestreams.api.ServerShutdownStreamException;
 import com.exoreaction.xorcery.service.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.service.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.apache.logging.log4j.message.ReusableMessageFactory;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
@@ -52,7 +55,7 @@ public class PublisherReactiveStream
 
     private boolean redundancyNotificationIssued = false;
 
-    private Disruptor<AtomicReference<Object>> disruptor;
+    private final Disruptor<AtomicReference<Object>> disruptor;
     private long outstandingRequestAmount;
 
     public PublisherReactiveStream(String streamName,
@@ -66,17 +69,26 @@ public class PublisherReactiveStream
         this.objectMapper = objectMapper;
         this.pool = pool;
         marker = MarkerManager.getMarker(streamName);
+
+        disruptor = new Disruptor<>(AtomicReference::new, 512, new NamedThreadFactory("PublisherWebSocketDisruptor-" + marker.getName() + "-"));
+        disruptor.handleEventsWith(createSender());
+        disruptor.start();
     }
 
     // WebSocket
     @Override
     public void onWebSocketConnect(Session session) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+
         this.session = session;
         session.getRemote().setBatchMode(BatchMode.ON);
     }
 
     @Override
     public void onWebSocketText(String message) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketText {}", message);
 
         if (publisherConfiguration == null) {
             // Read JSON parameters
@@ -97,6 +109,7 @@ public class PublisherReactiveStream
                 if (requestAmount == Long.MIN_VALUE) {
                     logger.info(marker, "Received cancel on websocket " + streamName);
                     subscription.cancel();
+                    subscription = null;
                 } else {
                     if (logger.isDebugEnabled())
                         logger.debug(marker, "Received request:" + requestAmount);
@@ -111,6 +124,9 @@ public class PublisherReactiveStream
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketBinary");
+
         if (!redundancyNotificationIssued) {
             logger.warn(marker, "Receiving redundant results from subscriber");
             redundancyNotificationIssued = true;
@@ -119,15 +135,24 @@ public class PublisherReactiveStream
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        if (statusCode != 1006 && (reason == null || !reason.equals("complete")) && subscription != null)
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
+
+        if (subscription != null) {
             subscription.cancel();
+            subscription = null;
+        }
     }
 
     @Override
     public void onWebSocketError(Throwable cause) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketError", cause);
+
         if (cause instanceof ClosedChannelException && subscription != null) {
             // Ignore
             subscription.cancel();
+            subscription = null;
         } else {
             logger.error(marker, "Publisher websocket error", cause);
         }
@@ -137,11 +162,10 @@ public class PublisherReactiveStream
 
     @Override
     public void onSubscribe(Flow.Subscription subscription) {
-        this.subscription = subscription;
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onSubscribe");
 
-        disruptor = new Disruptor<>(AtomicReference::new, 512, new NamedThreadFactory("PublisherWebSocketDisruptor-" + marker.getName() + "-"));
-        disruptor.handleEventsWith(createSender());
-        disruptor.start();
+        this.subscription = subscription;
 
         if (outstandingRequestAmount > 0) {
             subscription.request(outstandingRequestAmount);
@@ -155,11 +179,14 @@ public class PublisherReactiveStream
 
     @Override
     public void onNext(Object item) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onNext {}", item.toString());
+
         try {
             while (session.isOpen() && !requestSemaphore.tryAcquire(1, TimeUnit.SECONDS)) {
             }
 
-            if (!session.isOpen())
+            if (!session.isOpen() || subscription == null)
                 return;
 
             disruptor.publishEvent((ref, seq, e) -> {
@@ -172,35 +199,40 @@ public class PublisherReactiveStream
     }
 
     public void onError(Throwable throwable) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onError", throwable);
+
         subscription = null;
 
-        logger.error(marker, "Reactive publisher error", throwable);
-        try {
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            ObjectOutputStream out = new ExceptionObjectOutputStream(bout);
-            out.writeObject(throwable);
-            out.close();
-            String base64Throwable = Base64.getEncoder().encodeToString(bout.toByteArray());
-            session.getRemote().sendString(base64Throwable);
-        } catch (IOException e) {
-            logger.error(marker, "Could not send exception", e);
-        }
+        disruptor.shutdown();
 
-        if (throwable instanceof ClientErrorException) {
-            session.close(StatusCode.BAD_DATA, throwable.getMessage());
+        if (throwable instanceof ServerShutdownStreamException) {
+            session.close(StatusCode.SHUTDOWN, throwable.getMessage());
         } else {
-            session.close(StatusCode.SERVER_ERROR, throwable.getMessage());
+            // Send exception
+            // Client should receive exception and close session
+            try {
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ExceptionObjectOutputStream(bout);
+                out.writeObject(throwable);
+                out.close();
+                String base64Throwable = Base64.getEncoder().encodeToString(bout.toByteArray());
+                session.getRemote().sendString(base64Throwable);
+                session.getRemote().flush();
+            } catch (IOException e) {
+                logger.error(marker, "Could not send exception", e);
+            }
         }
     }
 
     public void onComplete() {
-        subscription = null;
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onComplete");
 
-        logger.info(marker, "Sending complete for session with {}", session.getRemote().getRemoteAddress());
+        subscription = null;
         disruptor.shutdown();
 
-        // TODO This should wait for results to come in
-        session.close(1000, "complete");
+        session.close(StatusCode.NORMAL, "complete");
     }
 
     // EventHandler
@@ -227,6 +259,7 @@ public class PublisherReactiveStream
             } catch (Throwable t) {
                 logger.error(marker, "Could not send event", t);
                 subscription.cancel();
+                subscription = null;
             }
 
             // Send it

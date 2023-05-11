@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.configuration.model.DefaultsConfiguration;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.service.reactivestreams.common.ReactiveStreamsAbstractService;
@@ -56,8 +57,8 @@ public class ReactiveStreamsClientService
     }
 
     @Override
-    public CompletableFuture<Void> publish(String authority, String streamName, Supplier<Configuration> subscriberConfiguration,
-                                           Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType, Configuration publisherConfiguration) {
+    public CompletableFuture<Void> publish(String authority, String streamName, Supplier<Configuration> subscriberServerConfiguration,
+                                           Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType, ClientConfiguration publisherClientConfiguration) {
 
         CompletableFuture<Void> result = new CompletableFuture<>();
 
@@ -76,7 +77,7 @@ public class ReactiveStreamsClientService
 
             if (subscriberFactory != null) {
                 // Local
-                Flow.Subscriber<Object> subscriber = subscriberFactory.factory().apply(subscriberConfiguration.get());
+                Flow.Subscriber<Object> subscriber = subscriberFactory.factory().apply(subscriberServerConfiguration.get());
                 Type subscriberEventType = getEventType(resolveActualTypeArgs(subscriberFactory.subscriberType(), Flow.Subscriber.class)[0]);
                 Type publisherEventType = getEventType(resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0]);
 
@@ -111,13 +112,13 @@ public class ReactiveStreamsClientService
         if (resultReader != null) {
             new PublishWithResultReactiveStream(
                     defaultScheme, authority, streamName,
-                    publisherConfiguration,
+                    publisherClientConfiguration,
                     dnsLookup,
                     webSocketClient,
                     (Flow.Publisher<Object>) publisher,
                     eventWriter,
                     resultReader,
-                    subscriberConfiguration,
+                    subscriberServerConfiguration,
                     timer,
                     byteBufferPool,
                     metricRegistry,
@@ -125,12 +126,12 @@ public class ReactiveStreamsClientService
         } else {
             new PublishReactiveStream(
                     defaultScheme, authority, streamName,
-                    publisherConfiguration,
+                    publisherClientConfiguration,
                     dnsLookup,
                     webSocketClient,
                     (Flow.Publisher<Object>) publisher,
                     eventWriter,
-                    subscriberConfiguration,
+                    subscriberServerConfiguration,
                     timer,
                     byteBufferPool,
                     metricRegistry,
@@ -142,7 +143,7 @@ public class ReactiveStreamsClientService
 
     @Override
     public CompletableFuture<Void> subscribe(String authority, String streamName, Supplier<Configuration> publisherConfiguration,
-                                             Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType, Configuration subscriberConfiguration) {
+                                             Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType, ClientConfiguration subscriberClientConfiguration) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
         if (subscriberType == null)
@@ -195,7 +196,7 @@ public class ReactiveStreamsClientService
         if (resultWriter != null) {
             new SubscribeWithResultReactiveStream(
                     defaultScheme, authority, streamName,
-                    subscriberConfiguration,
+                    subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
                     (Flow.Subscriber<Object>) subscriber,
@@ -210,7 +211,7 @@ public class ReactiveStreamsClientService
         } else {
             new SubscribeReactiveStream(
                     defaultScheme, authority, streamName,
-                    subscriberConfiguration,
+                    subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
                     (Flow.Subscriber<Object>) subscriber,
@@ -264,6 +265,4 @@ public class ReactiveStreamsClientService
             logger.warn("Could not stop websocket client", e);
         }
     }
-
-
 }

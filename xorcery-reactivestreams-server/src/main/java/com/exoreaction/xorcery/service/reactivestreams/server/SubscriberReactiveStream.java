@@ -87,7 +87,9 @@ public class SubscriberReactiveStream
     // Subscription
     @Override
     public void request(long n) {
-        logger.trace(marker, "request() called: {}", n);
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "request {}", n);
+
         if (cancelled.get()) {
             return;
         }
@@ -98,7 +100,9 @@ public class SubscriberReactiveStream
 
     @Override
     public void cancel() {
-        logger.trace(marker, "cancel() called");
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "cancel");
+
         cancelled.set(true);
         requests.set(Long.MIN_VALUE);
         if (session != null)
@@ -151,12 +155,18 @@ public class SubscriberReactiveStream
     // WebSocket
     @Override
     public void onWebSocketConnect(Session session) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker,"onWebSocketConnect {}", session.getRemoteAddress().toString());
+
         this.session = session;
         session.getRemote().setBatchMode(BatchMode.ON);
     }
 
     @Override
     public void onWebSocketPartialText(String message, boolean fin) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker,"onWebSocketPartialText {} {}", message, fin);
+
         if (subscriberConfiguration == null) {
             configurationMessage += message;
 
@@ -186,6 +196,9 @@ public class SubscriberReactiveStream
 
     @Override
     public void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker,"onWebSocketPartialBinary {}", fin);
+
         byteBufferAccumulator.copyBuffer(payload);
         if (fin) {
             onWebSocketBinary(byteBufferAccumulator.takeByteBuffer());
@@ -195,9 +208,8 @@ public class SubscriberReactiveStream
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
-            if (logger.isDebugEnabled())
-            {
-                logger.debug(marker, "Received:" + Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()));
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()).toString());
             }
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
@@ -214,6 +226,9 @@ public class SubscriberReactiveStream
 
     @Override
     public void onWebSocketError(Throwable cause) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker,"onWebSocketError", cause);
+
         if (cause instanceof ClosedChannelException) {
             // Ignore
         } else {
@@ -226,7 +241,9 @@ public class SubscriberReactiveStream
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        logger.info(marker, "Complete subscription:{} {}", statusCode, reason);
+        if (logger.isTraceEnabled())
+            logger.trace(marker,"onWebSocketClose {} {}", statusCode, reason);
+
         try {
             if (subscriber != null) subscriber.onComplete();
         } catch (Exception e) {

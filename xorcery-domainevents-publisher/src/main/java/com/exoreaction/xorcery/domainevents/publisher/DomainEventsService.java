@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
 import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
 import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.service.reactivestreams.util.SubscriberConfiguration;
@@ -40,7 +41,7 @@ public class DomainEventsService
         SubscriberConfiguration subscriberConfiguration = domainEventsConfiguration.getSubscriberConfiguration();
         reactiveStreams.publish(subscriberConfiguration.getAuthority(), subscriberConfiguration.getStream(),
                         subscriberConfiguration::getConfiguration,
-                        this, DomainEventsService.class, domainEventsConfiguration.getPublisherConfiguration())
+                        this, DomainEventsService.class, new ClientConfiguration(domainEventsConfiguration.getPublisherConfiguration()))
                 .exceptionally(t ->
                 {
                     if (t instanceof CompletionException)

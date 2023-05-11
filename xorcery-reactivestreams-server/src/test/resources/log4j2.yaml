@@ -1,9 +1,9 @@
 Configuration:
-  name: Xorcery tests
+  name: Xorcery reactive stream tests
   status: warn
   properties:
   thresholdFilter:
-    level: debug
+    level: trace
   appenders:
     Console:
       name: STDOUT
@@ -27,6 +27,9 @@ Configuration:
 
       - name: com.exoreaction.xorcery.service.reactivestreams.resources.websocket
         level: info
+
+      - name: com.exoreaction.xorcery.service.reactivestreams
+        level: trace
 
     Root:
       level: info

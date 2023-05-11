@@ -43,6 +43,9 @@ public class PublisherWithResultReactiveStream
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker,"onWebSocketBinary");
+
         try {
             // Check if we are getting an exception back
             if (len > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload, offset, offset + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {
