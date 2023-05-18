@@ -1,0 +1,18 @@
+intermediateca:
+  enabled: "{{ defaults.enabled }}"
+  alias: "intermediate"
+  validity: 90d
+
+keystores:
+  keystore:
+    path: "META-INF/intermediatecakeystore.p12"
+    password: "password"
+  truststore:
+    path: "META-INF/intermediatecatruststore.p12"
+    password: "password"
+  rootstore:
+    path: "rootcakeystore.p12"
+    password: "password"
+
+jersey.server.register:
+  - com.exoreaction.xorcery.service.certificates.ca.resources.CertificateAuthorityResource

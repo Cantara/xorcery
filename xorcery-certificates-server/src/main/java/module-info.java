@@ -1,7 +1,8 @@
 open module xorcery.certificates.server {
     exports com.exoreaction.xorcery.service.certificates.server;
-    exports com.exoreaction.xorcery.service.certificates.server.resources.api;
+    exports com.exoreaction.xorcery.service.certificates.server.resources;
 
+    requires xorcery.certificates;
     requires xorcery.keystores;
     requires xorcery.jsonapi.server;
     requires xorcery.jsonapi.jaxrs;

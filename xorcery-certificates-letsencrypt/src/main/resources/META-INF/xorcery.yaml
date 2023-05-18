@@ -1,0 +1,13 @@
+letsencrypt:
+  enabled: "{{ defaults.enabled }}"
+  url: "acme://letsencrypt.org"
+  keystore: "letsencrypt"
+
+keystores:
+  letsencrypt:
+    template: "META-INF/letsencrypt.p12"
+    path: "letsencrypt.p12"
+    password: "password"
+
+jersey.server.register:
+  - com.exoreaction.xorcery.service.certificates.letsencrypt.resources.HttpChallengeResource

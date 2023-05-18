@@ -15,7 +15,7 @@ import java.util.Optional;
  *
  * For single resources it also tries to find it as a file.
  */
-public class Resources {
+public final class Resources {
 
     public static Optional<URL> getResource(String path) {
         URL resource = ClassLoader.getSystemResource(path);

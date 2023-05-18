@@ -1,23 +1,7 @@
 certificates:
   server:
     enabled: "{{ defaults.enabled }}"
-    alias: "intermediate"
-    validity: 90d
-    self:
-      enabled: "{{ certificates.server.enabled }}"
-
-keystores:
-  keystore:
-    path: "META-INF/intermediatecakeystore.p12"
-    password: "password"
-  truststore:
-    path: "META-INF/intermediatecatruststore.p12"
-    password: "password"
-  rootstore:
-    path: "rootcakeystore.p12"
-    password: "password"
+    authorization: none
 
 jersey.server.register:
-  - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificateRequestResource
-  - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificateRenewalResource
-  - com.exoreaction.xorcery.service.certificates.server.resources.api.CertificatesResource
+  - com.exoreaction.xorcery.service.certificates.server.resources.CertificateRequestResource

@@ -77,7 +77,8 @@ public class VariableResolver
             if (value instanceof TextNode textNode) {
                 try {
                     JsonNode newValue = resolveValue(source, textNode);
-                    result.add(newValue);
+                    if (!newValue.isNull())
+                        result.add(newValue);
                 } catch (Throwable e) {
                     throw new IllegalArgumentException("Could not resolve variables: " + textNode.textValue(), e);
                 }

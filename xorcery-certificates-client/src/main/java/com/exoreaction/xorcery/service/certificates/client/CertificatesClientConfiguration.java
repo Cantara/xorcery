@@ -11,9 +11,4 @@ public interface CertificatesClientConfiguration
     {
         return context().getString("uri");
     }
-
-    default boolean isRenewOnStartup()
-    {
-        return context().getBoolean("renewOnStartup").orElse(false);
-    }
 }

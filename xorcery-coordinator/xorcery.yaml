@@ -1,0 +1,9 @@
+instance:
+  domain: "exoreaction.dev"
+
+certificates:
+  subject: "*.exoreaction.dev"
+  renewOnStartup: true
+
+intermediateca:
+  enabled: true

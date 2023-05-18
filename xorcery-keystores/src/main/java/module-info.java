@@ -6,4 +6,5 @@ open module xorcery.keystores {
     requires org.bouncycastle.provider;
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
+    requires org.bouncycastle.pkix;
 }

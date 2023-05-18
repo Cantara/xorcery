@@ -2,34 +2,48 @@ package com.exoreaction.xorcery.service.keystores;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
 import org.apache.logging.log4j.LogManager;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
+import javax.crypto.KeyGenerator;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import java.io.*;
+import java.math.BigInteger;
 import java.net.URL;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.Security;
+import java.security.*;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class KeyStores {
+
     private final KeyStoresConfiguration configuration;
     private final Map<String, KeyStore> keyStores = new ConcurrentHashMap<>();
+    private final KeyPairGenerator keyGen;
 
-    public KeyStores(Configuration configuration) {
+    public KeyStores(Configuration configuration) throws NoSuchAlgorithmException, NoSuchProviderException {
         this.configuration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
 
         Provider p = new org.bouncycastle.jce.provider.BouncyCastleProvider();
         if (null == Security.getProvider(p.getName())) {
             Security.addProvider(p);
         }
+
+        keyGen = KeyPairGenerator.getInstance("EC", "BC");
+        keyGen.initialize(256, new SecureRandom());
     }
 
     /**
@@ -107,7 +121,22 @@ public class KeyStores {
                 }
                 keyStoreUrl = keyStoreOutput.toURI().toURL();
             } else {
-                keyStoreUrl = keyStoreConfiguration.getURL();
+                try {
+                    keyStoreUrl = keyStoreConfiguration.getURL();
+                } catch (IllegalArgumentException e) {
+                    // Check if path set but missing keyStore
+                    if (keyStoreConfiguration.configuration().getString("path").isPresent()) {
+                        File file = new File(keyStoreConfiguration.getPath());
+                        // Create empty store
+                        keyStore.load(null, keyStoreConfiguration.getPassword());
+                        try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                            keyStore.store(outputStream, keyStoreConfiguration.getPassword());
+                        }
+                        LogManager.getLogger(getClass()).info("Created empty keystore " + keyStoreName);
+
+                        keyStoreUrl = keyStoreConfiguration.getURL();
+                    }
+                }
             }
 
             try (InputStream inStream = keyStoreUrl.openStream()) {
@@ -144,5 +173,50 @@ public class KeyStores {
         } catch (Throwable e) {
             throw new RuntimeException("Could not load keystore '" + keyStoreName + "' from " + keyStoreUrl, e);
         }
+    }
+
+    // Utility methods
+    public KeyPair getOrCreateKeyPair(String alias, String keyStoreName) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException, IOException, OperatorCreationException {
+        KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName);
+        KeyStore keyStore = getKeyStore(keyStoreName);
+
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyStoreConfiguration.getPassword());
+        if (privateKey == null) {
+            KeyPair keyPair = keyGen.generateKeyPair();
+            X509Certificate certificate = selfSign(keyPair, "cn=" + alias);
+            keyStore.setKeyEntry(alias, keyPair.getPrivate(), keyStoreConfiguration.getPassword(), new Certificate[]{certificate});
+            save(keyStore);
+            return keyPair;
+        } else {
+            PublicKey publicKey = keyStore.getCertificate(alias).getPublicKey();
+            return new KeyPair(publicKey, privateKey);
+        }
+    }
+
+    public X509Certificate selfSign(KeyPair keyPair, String subjectDN) throws OperatorCreationException, CertificateException, IOException {
+        Provider bcProvider = new BouncyCastleProvider();
+        Security.addProvider(bcProvider);
+
+        long now = System.currentTimeMillis();
+        Date startDate = new Date(now);
+
+        X500Name dnName = new X500Name(subjectDN);
+        BigInteger certSerialNumber = new BigInteger(Long.toString(now));
+
+        // Basically never expire
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(startDate);
+        calendar.add(Calendar.YEAR, 1000);
+
+        Date endDate = calendar.getTime();
+
+        ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withECDSA")
+                .setProvider("BC")
+                .build(keyPair.getPrivate());
+
+        JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(dnName, certSerialNumber, startDate, endDate, dnName, keyPair.getPublic());
+        BasicConstraints basicConstraints = new BasicConstraints(true);
+        certBuilder.addExtension(new ASN1ObjectIdentifier("2.5.29.19"), true, basicConstraints);
+        return new JcaX509CertificateConverter().setProvider(bcProvider).getCertificate(certBuilder.build(contentSigner));
     }
 }

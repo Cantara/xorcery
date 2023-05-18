@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * @author rickardoberg
@@ -27,6 +28,11 @@ public record Configuration(ObjectNode json)
 
     public static Configuration empty() {
         return new Configuration(JsonNodeFactory.instance.objectNode());
+    }
+
+    public static Supplier<RuntimeException> missing(String name)
+    {
+        return ()->new IllegalArgumentException("Missing configuration setting '"+name+"'");
     }
 
     public record Builder(ObjectNode builder)

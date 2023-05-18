@@ -1,5 +1,13 @@
 package com.exoreaction.xorcery.service.certificates.client;
 
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.service.certificates.CertificatesService;
+import com.exoreaction.xorcery.service.certificates.spi.CertificatesProvider;
+import com.exoreaction.xorcery.util.Sockets;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -28,154 +36,71 @@ import org.junit.jupiter.api.Test;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
+import static java.util.stream.Collectors.toList;
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
 @Disabled
 public class CertificateRequestTest {
 
-    private KeyStore serviceCaKeyStore;
-    private KeyStore keyStore;
-    private KeyStore trustStore;
+    Logger LOG = LogManager.getLogger(getClass());
+
+    int managerPort = Sockets.nextFreePort();
+    String config = """
+            instance.id: xorcery1
+            instance.host: server1
+            instance.domain: exoreaction.dev
+            jetty.server.enabled: true
+            jetty.server.ssl.enabled: true    
+            keystores.enabled: true
+            dns.client.discovery.enabled: false
+            certificates.client.enabled: true
+            certificates.client.uri: http://localhost:80
+            certificates.subject: \"*.exoreaction.dev\"
+            intermediateca.enabled: true 
+            """;
 
     @Test
-    public void testCertificateRequest() throws GeneralSecurityException, IOException, OperatorCreationException, PKCSException {
-        Security.addProvider(new BouncyCastleProvider());
+    public void testCertificateRequest() throws Exception {
+        Logger logger = LogManager.getLogger(getClass());
 
-        serviceCaKeyStore = KeyStore.getInstance(new File("../xorcery-certificates-server/src/main/resources/META-INF/intermediatecakeystore.p12").getCanonicalFile(), "password".toCharArray());
-        keyStore = KeyStore.getInstance(new File("target/classes/META-INF/keystore.p12"), "password".toCharArray());
-        trustStore = KeyStore.getInstance(new File("target/classes/META-INF/truststore.p12"), "password".toCharArray());
+        //System.setProperty("javax.net.debug", "ssl,handshake");
 
-        System.out.println("Manager truststore");
-        serviceCaKeyStore.aliases().asIterator().forEachRemaining(System.out::println);
-        System.out.println("Client keystore");
-        keyStore.aliases().asIterator().forEachRemaining(System.out::println);
-        System.out.println("Client truststore");
-        trustStore.aliases().asIterator().forEachRemaining(System.out::println);
+        StandardConfigurationBuilder configurationBuilder = new StandardConfigurationBuilder();
+        Configuration configuration1 = new Configuration.Builder()
+                .with(configurationBuilder.addTestDefaultsWithYaml(config))
+                .add("jetty.server.http.port", 80)
+                .add("jetty.server.ssl.port", managerPort)
+                .add("certificates.server.enabled", true)
+                .build();
+        System.out.println(StandardConfigurationBuilder.toYaml(configuration1));
+        try (Xorcery xorcery = new Xorcery(configuration1)) {
 
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", "BC");
-        keyGen.initialize(256, new SecureRandom());
-        KeyPair issuedCertKeyPair = keyGen.generateKeyPair();
+            try {
+                CertificatesService certificatesService = xorcery.getServiceLocator().getService(CertificatesService.class);
 
-        String csr = createRequest(issuedCertKeyPair);
-        System.out.println(csr);
-
-        String certificate = createCertificate(csr);
-        System.out.println(certificate);
-
-        verifyCertificate(certificate);
-
-        storeCertificate(issuedCertKeyPair, certificate);
-    }
-
-    private String createRequest(KeyPair issuedCertKeyPair) throws IOException, GeneralSecurityException, OperatorCreationException {
-        X500Name issuedCertSubject = new X500Name("CN=server");
-
-        PKCS10CertificationRequestBuilder p10Builder = new JcaPKCS10CertificationRequestBuilder(issuedCertSubject, issuedCertKeyPair.getPublic());
-
-        // Sign the new KeyPair with the Provisioning cert Private Key
-        JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider("BC");
-        ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) keyStore.getKey("provisioning", "password".toCharArray()));
-        PKCS10CertificationRequest csr = p10Builder.build(csrContentSigner);
-
-        StringWriter stringWriter = new StringWriter();
-        PemWriter pWrt = new PemWriter(stringWriter);
-        pWrt.writeObject(new PemObject(PEMParser.TYPE_CERTIFICATE_REQUEST, csr.getEncoded()));
-        pWrt.close();
-        return stringWriter.toString();
-    }
-
-    private String createCertificate(String csrEncoded) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException, OperatorCreationException, PKCSException {
-
-        PKCS10CertificationRequest csr = (PKCS10CertificationRequest) new PEMParser(new StringReader(csrEncoded)).readObject();
-
-        X509Certificate provisioningCert = (X509Certificate) keyStore.getCertificate("provisioning");
-        boolean isValid = csr.isSignatureValid(new JcaContentVerifierProviderBuilder().build(provisioningCert));
-        if (!isValid)
-            throw new IllegalArgumentException("CSR not signed by provisioning CA");
-
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.DATE, 9000);
-        X509Certificate signingCert = (X509Certificate) serviceCaKeyStore.getCertificate("intermediate");
-        BigInteger issuedCertSerialNum = new BigInteger(Long.toString(new SecureRandom().nextLong()));
-        X500Name signerName = X500Name.getInstance(signingCert.getIssuerX500Principal().getEncoded());
-        X509v3CertificateBuilder issuedCertBuilder = new X509v3CertificateBuilder(signerName, issuedCertSerialNum, new Date(), now.getTime(), csr.getSubject(), csr.getSubjectPublicKeyInfo());
-
-        JcaX509ExtensionUtils issuedCertExtUtils = new JcaX509ExtensionUtils();
-
-        // Add Extensions
-        // Use BasicConstraints to say that this Cert is not a CA
-        issuedCertBuilder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false));
-
-        // Add Issuer cert identifier as Extension
-        issuedCertBuilder.addExtension(Extension.authorityKeyIdentifier, false, issuedCertExtUtils.createAuthorityKeyIdentifier(signingCert));
-        issuedCertBuilder.addExtension(Extension.subjectKeyIdentifier, false, issuedCertExtUtils.createSubjectKeyIdentifier(csr.getSubjectPublicKeyInfo()));
-
-        // Add intended key usage extension if needed
-        issuedCertBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature));
-
-        // Add DNS name is cert is to used for SSL
-        issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(new ASN1Encodable[]{
-                new GeneralName(GeneralName.dNSName, "localhost"),
-                new GeneralName(GeneralName.iPAddress, "127.0.0.1")
-        }));
-
-        JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider("BC");
-        ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) serviceCaKeyStore.getKey("intermediate", "password".toCharArray()));
-        X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
-        X509Certificate issuedCert = new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(issuedCertHolder);
-
-        StringWriter stringWriter = new StringWriter();
-        PemWriter pWrt = new PemWriter(stringWriter);
-        pWrt.writeObject(new PemObject(PEMParser.TYPE_CERTIFICATE, issuedCert.getEncoded()));
-        pWrt.close();
-        return stringWriter.toString();
-    }
-
-    private void verifyCertificate(String certificate) throws IOException, NoSuchAlgorithmException, KeyStoreException {
-/*
-        X509CertificateHolder certificateHolder = (X509CertificateHolder) new PEMParser(new StringReader(certificate)).readObject();
-
-        X509Certificate provisioningCert = (X509Certificate) keyStore.getCertificate("provisioning");
-        provisioningCert.
-                trustStore.getCertificate().
-        boolean isValid = certificateHolder.isSignatureValid(new JcaContentVerifierProviderBuilder().build(provisioningCert));
-        if (!isValid)
-            throw new IllegalArgumentException("CSR not signed by provisioning CA");
-
-
-        certificateHolder.isSignatureValid()
-
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init(trustStore);
-        for (TrustManager trustManager : trustManagerFactory.getTrustManagers()) {
-            System.out.println(trustManager);
-            if (trustManager instanceof X509TrustManager x509TrustManager) {
-                java.security.cert.Certificate certificate1 = certificateHolder.toASN1Structure();
-
-                x509TrustManager.checkClientTrusted(certificateHolder.toASN1Structure());
+                CertificatesProvider service = xorcery.getServiceLocator().getService(CertificatesProvider.class);
+                List<X509Certificate> certificates = service
+                        .requestCertificates(certificatesService.createRequest())
+                        .toCompletableFuture().join();
+                System.out.println(certificates);
+            } catch (Exception e) {
+                logger.error(e);
             }
-        }
+
+/*
+            System.out.println("Sleeping");
+            Thread.sleep(60000);
 */
+        }
     }
-
-    private void storeCertificate(KeyPair issuedCertKeyPair, String certificate) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException {
-
-        X509CertificateHolder certificateHolder = (X509CertificateHolder) new PEMParser(new StringReader(certificate)).readObject();
-        X509Certificate issuedCert = new JcaX509CertificateConverter().setProvider(PROVIDER_NAME).getCertificate(certificateHolder);
-
-        keyStore.setKeyEntry("server", issuedCertKeyPair.getPrivate(), null, new Certificate[]{issuedCert});
-        keyStore.deleteEntry("provisioning");
-        FileOutputStream outputStream = new FileOutputStream(new File("target/classes/META-INF/keystore.p12"));
-        keyStore.store(outputStream, "password".toCharArray());
-        outputStream.close();
-    }
-
-
 }

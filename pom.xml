@@ -61,7 +61,10 @@
         <module>xorcery-reactivestreams-client</module>
         <module>xorcery-reactivestreams-server</module>
 
+        <module>xorcery-certificates</module>
         <module>xorcery-certificates-server</module>
+        <module>xorcery-certificates-ca</module>
+        <module>xorcery-certificates-letsencrypt</module>
         <module>xorcery-certificates-client</module>
 
         <module>xorcery-domainevents</module>

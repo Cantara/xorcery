@@ -1,0 +1,16 @@
+certificates:
+  enabled: "{{ defaults.enabled }}"
+  renewOnStartup: false
+  alias: "{{ server.ssl.alias | client.ssl.alias | \"self\"}}"
+  subject: "{{ instance.fqdn | \"server\"}}"
+  ipAddresses: []
+  dnsNames: []
+
+keystores:
+  keystore:
+    path: "META-INF/keystore.p12"
+    password: "password"
+  truststore:
+    path: "META-INF/truststore.p12"
+    password: "password"
+    addRootCa: true
