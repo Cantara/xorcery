@@ -12,6 +12,18 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
+    <developers>
+        <developer>
+            <organization>eXOReaction AS</organization>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>Apache License Version 2.0</name>
+            <url>LICENSE.txt</url>
+        </license>
+    </licenses>
     <scm>
         <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
         <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
@@ -88,6 +100,42 @@
         <module>xorcery-test</module>
         <module>xorcery-benchmarks</module>
     </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.shredzone.maven</groupId>
+                <artifactId>mkdocs-maven-plugin</artifactId>
+                <version>1.0</version>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/site</outputDirectory>
+                    <clean>true</clean>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <doclint>syntax,reference</doclint>
+                    <linksource>true</linksource>
+                    <locale>en</locale>
+                    <noqualifier>all</noqualifier>
+                    <useStandardDocletOptions>false</useStandardDocletOptions>
+                    <reportOutputDirectory>${project.build.directory}/site</reportOutputDirectory>
+                    <destDir>apidocs</destDir>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>aggregate</id>
+                        <goals>
+                            <goal>aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <repositories>
         <repository>
