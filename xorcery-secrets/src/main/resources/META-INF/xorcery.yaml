@@ -1,0 +1,16 @@
+secrets:
+  enabled: "{{defaults.enabled}}"
+  default: "env"
+
+  env:
+    enabled: "{{defaults.enabled}}"
+
+  keystore:
+    enabled: "{{defaults.enabled}}"
+    name: "secrets"
+    password: "secret:password"
+
+keystores:
+  secrets:
+    path: "META-INF/secrets.p12"
+    password: "password"
