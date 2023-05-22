@@ -16,7 +16,6 @@
 open module xorcery.dns.client {
     exports com.exoreaction.xorcery.service.dns.client;
     exports com.exoreaction.xorcery.service.dns.client.api;
-    exports com.exoreaction.xorcery.service.dns.client.discovery;
 
     requires xorcery.configuration.api;
 

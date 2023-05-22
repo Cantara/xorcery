@@ -13,29 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.service.dns.client.discovery;
+package com.exoreaction.xorcery.service.dns.update.providers;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-import org.glassfish.hk2.api.Factory;
-import org.jvnet.hk2.annotations.Service;
 
-import javax.jmdns.JmDNS;
-import java.io.IOException;
-
-@Service
-public class JmDNSFactoryHK2
-        extends com.exoreaction.xorcery.service.dns.client.discovery.JmDNSFactory
-        implements Factory<JmDNS> {
-    @Inject
-    public JmDNSFactoryHK2(Configuration configuration) throws IOException {
-        super(configuration);
+public record DnsKeyConfiguration(Configuration configuration) {
+    public String getName() {
+        return configuration.getString("name").orElseThrow(() -> new IllegalArgumentException("Name missing"));
     }
 
-    @Override
-    @Singleton
-    public JmDNS provide() {
-        return super.provide();
+    public String getSecretName() {
+        return configuration.getString("secret").orElseThrow(() -> new IllegalArgumentException("Secret missing"));
+    }
+
+    public String getAlgorithm() {
+        return configuration.getString("algorithm").orElse("HMAC-MD5.SIG-ALG.REG.INT.");
     }
 }

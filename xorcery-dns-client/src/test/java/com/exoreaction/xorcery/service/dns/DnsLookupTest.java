@@ -15,12 +15,12 @@
  */
 package com.exoreaction.xorcery.service.dns;
 
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.service.dns.client.DnsLookupService;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -38,20 +38,33 @@ import static com.fasterxml.jackson.databind.node.JsonNodeFactory.instance;
 
 public class DnsLookupTest {
 
-    private DnsLookupService dnsLookupService;
+    private static Xorcery xorcery;
+    private static DnsLookupService dnsLookupService;
 
-    @BeforeEach
-    public void setup() {
-        dnsLookupService = new DnsLookupService(new Configuration.Builder()
-                .add("dns.client.nameservers", instance.arrayNode().add("localhost:8853"))
-                .add("dns.client.search", List.of("xorcery.test"))
-                .add("dns.client.hosts", instance.objectNode()
-                        .put("_certificates._sub._https._tcp.xorcery.test", "https://127.0.0.1:8080/api/path")
-                        .put("xorcery1.xorcery.test", "127.0.0.1")
-                        .set("certificates.xorcery.test", instance.arrayNode()
-                                .add(instance.textNode("127.0.0.1"))
-                                .add(instance.textNode("127.0.1.1"))))
-                .build(), () -> null);
+    private final static String config = """
+            dns.client.nameservers:
+                - localhost:8853
+            dns.client.search:
+                - "xorcery.test"
+            dns.client.hosts:
+                "_certificates._sub._https._tcp.xorcery.test": "https://127.0.0.1:8080/api/path"
+                "xorcery1.xorcery.test": "127.0.0.1"
+                "certificates.xorcery.test":
+                    - "127.0.0.1"
+                    - "127.0.1.1"
+            """;
+
+    @BeforeAll
+    public static void setup() throws Exception {
+
+        xorcery = new Xorcery(new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build());
+
+        dnsLookupService = xorcery.getServiceLocator().getService(DnsLookupService.class);
+    }
+
+    @AfterAll
+    public static void shutdown() {
+        xorcery.close();
     }
 
     @Test

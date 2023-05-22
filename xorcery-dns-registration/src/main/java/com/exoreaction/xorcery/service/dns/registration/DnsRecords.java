@@ -27,40 +27,53 @@ import org.jvnet.hk2.annotations.Service;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.*;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class DnsRecords {
 
-    private final List<Record> records = new ArrayList<>();
+    private final Configuration configuration;
+    private final ServiceResourceObjects serviceResourceObjects;
 
     @Inject
     public DnsRecords(Configuration configuration, ServiceResourceObjects serviceResourceObjects) throws TextParseException {
+        this.configuration = configuration;
+        this.serviceResourceObjects = serviceResourceObjects;
+    }
 
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
-        InetAddress targetIp = standardConfiguration.getIp();
+    public List<Record> getRecords() throws IOException {
+
+        List<Record> records = new ArrayList<>();
+
+        InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
+        InetAddress targetIp = instanceConfiguration.getIp();
 
         Name target;
         Name zone;
 
         int ttl = configuration.getString("dns.registration.ttl")
-                .map(s -> "PT"+s)
+                .map(s -> "PT" + s)
                 .map(Duration::parse)
                 .map(Duration::getSeconds)
                 .orElse(60L)
                 .intValue();
 
-        if (standardConfiguration.getHost().contains(".")) {
-            target = Name.fromConstantString(standardConfiguration.getHost() + ".");
+        if (instanceConfiguration.getHost().contains(".")) {
+            target = Name.fromConstantString(instanceConfiguration.getHost() + ".");
         } else {
-            String domain = configuration.getString("domain").orElse("xorcery.test");
-            target = Name.fromConstantString(standardConfiguration.getHost() + "." + domain + ".");
+            String domain = Optional.ofNullable(instanceConfiguration.getDomain()).orElse("local");
+            target = Name.fromConstantString(instanceConfiguration.getHost() + "." + domain + ".");
         }
         zone = new Name(target, 1);
 
-        int httpPort = configuration.getInteger("jetty.server.http.port").orElse(80);
+        Optional<Integer> httpPort = configuration.getBoolean("jetty.server.http.enabled").flatMap(enabled ->
+                enabled ? configuration.getInteger("jetty.server.http.port") : Optional.empty());
         Optional<Integer> httpsPort = configuration.getBoolean("jetty.server.ssl.enabled").flatMap(enabled ->
                 enabled ? configuration.getInteger("jetty.server.ssl.port") : Optional.empty());
 
@@ -73,7 +86,10 @@ public class DnsRecords {
         Name serverName = Name.fromString(serverHttpType);
         int weight = configuration.getInteger("jetty.server.srv.weight").orElse(1);
         int priority = configuration.getInteger("jetty.server.srv.priority").orElse(1);
-        records.add(new SRVRecord(serverName, DClass.IN, ttl, priority, weight, httpPort, target));
+        if (httpPort.isPresent())
+        {
+            records.add(new SRVRecord(serverName, DClass.IN, ttl, priority, weight, httpPort.get(), target));
+        }
         if (httpsPort.isPresent()) {
             String serverHttpsType = "_https._tcp." + zone.toString(false);
             Name httpsServerName = Name.fromString(serverHttpsType);
@@ -106,11 +122,13 @@ public class DnsRecords {
                 }
 
                 if (hasHttpEndpoints) {
-                    TXTRecord txtRecord = new TXTRecord(serviceName, DClass.IN, srvTtl, props);
-                    records.add(txtRecord);
+                    if (httpPort.isPresent()) {
+                        SRVRecord srvRecord = new SRVRecord(serviceName, DClass.IN, srvTtl, priority, weight, httpPort.get(), target);
+                        records.add(srvRecord);
 
-                    SRVRecord srvRecord = new SRVRecord(serviceName, DClass.IN, srvTtl, priority, weight, httpPort, target);
-                    records.add(srvRecord);
+                        TXTRecord txtRecord = new TXTRecord(serviceName, DClass.IN, srvTtl, props);
+                        records.add(txtRecord);
+                    }
 
                     if (httpsPort.isPresent()) {
                         String serviceHttpsType = "_" + type + "._sub._https._tcp." + zone.toString(false);
@@ -141,11 +159,14 @@ public class DnsRecords {
                 }
 
                 if (hasWsEndpoints) {
-                    TXTRecord txtRecord = new TXTRecord(serviceName, DClass.IN, srvTtl, props);
-                    records.add(txtRecord);
 
-                    SRVRecord srvRecord = new SRVRecord(serviceName, DClass.IN, srvTtl, priority, weight, httpPort, target);
-                    records.add(srvRecord);
+                    if (httpPort.isPresent())
+                    {
+                        SRVRecord srvRecord = new SRVRecord(serviceName, DClass.IN, srvTtl, priority, weight, httpPort.get(), target);
+                        records.add(srvRecord);
+                        TXTRecord txtRecord = new TXTRecord(serviceName, DClass.IN, srvTtl, props);
+                        records.add(txtRecord);
+                    }
 
                     if (httpsPort.isPresent()) {
                         String serviceWssType = "_" + type + "._sub._wss._tcp." + zone.toString(false);
@@ -171,9 +192,7 @@ public class DnsRecords {
             ARecord aRecord = new ARecord(aName, DClass.IN, ttl, targetIp);
             records.add(aRecord);
         }
-    }
 
-    public List<Record> getRecords() {
         return records;
     }
 }

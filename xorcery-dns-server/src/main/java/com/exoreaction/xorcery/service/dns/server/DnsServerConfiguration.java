@@ -32,6 +32,6 @@ public record DnsServerConfiguration(Configuration context)
     }
 
     public Optional<List<ZoneConfiguration>> getZones() {
-        return context.getObjectListAs("dns.server.zones", ZoneConfiguration::new);
+        return context.getObjectListAs("zones", ZoneConfiguration::new);
     }
 }

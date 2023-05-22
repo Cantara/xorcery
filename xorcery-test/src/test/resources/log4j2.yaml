@@ -23,7 +23,7 @@ Configuration:
         level: debug
 
       - name: com.exoreaction.xorcery.service.dns.server
-        level: debug
+        level: info
 
       - name: client
         level: debug

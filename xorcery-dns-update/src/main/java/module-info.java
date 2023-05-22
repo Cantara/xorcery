@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.service.dns.registration;
+open module xorcery.dns.update {
+    exports com.exoreaction.xorcery.service.dns.update;
+    exports com.exoreaction.xorcery.service.dns.update.spi;
+    exports com.exoreaction.xorcery.service.dns.update.providers;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
+    requires xorcery.secrets;
+    requires xorcery.configuration.api;
+    requires xorcery.dns.client;
 
-public record DnsKeyConfiguration(Configuration configuration) {
-    public String getName() {
-        return configuration.getString("name").orElseThrow(() -> new IllegalArgumentException("Name missing"));
-    }
-
-    public String getSecret() {
-        return configuration.getString("secret").orElseThrow(() -> new IllegalArgumentException("Secret missing"));
-    }
-
-    public String getAlgorithm() {
-        return configuration.getString("algorithm").orElse("HMAC-MD5.SIG-ALG.REG.INT.");
-    }
+    requires org.dnsjava;
+    requires org.glassfish.hk2.api;
+    requires org.apache.logging.log4j;
+    requires jakarta.inject;
 }

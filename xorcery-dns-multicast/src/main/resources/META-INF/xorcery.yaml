@@ -1,0 +1,7 @@
+dns:
+  multicast:
+    enabled: "{{ defaults.enabled }}"
+    discovery:
+      enabled: "{{ dns.multicast.enabled }}"
+    announce:
+      enabled: "{{ dns.multicast.enabled }}"

@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.service.dns.client.discovery;
+open module xorcery.dns.multicast {
+    exports com.exoreaction.xorcery.service.dns.multicast;
 
-import jakarta.inject.Inject;
-import org.glassfish.hk2.runlevel.RunLevel;
-import org.jvnet.hk2.annotations.Service;
+    requires xorcery.configuration.api;
+    requires xorcery.dns.update;
 
-import javax.jmdns.JmDNS;
-import java.io.IOException;
-
-@Service(name = "dns.client.discovery")
-@RunLevel(2)
-public class DnsDiscoveryServiceHK2
-    extends com.exoreaction.xorcery.service.dns.client.discovery.DnsDiscoveryService
-{
-    @Inject
-    public DnsDiscoveryServiceHK2(JmDNS jmDNS) throws IOException {
-        super(jmDNS);
-    }
+    requires org.dnsjava;
+    requires javax.jmdns;
+    requires org.glassfish.hk2.api;
+    requires jakarta.inject;
+    requires org.apache.logging.log4j;
+    requires xorcery.dns.client;
 }

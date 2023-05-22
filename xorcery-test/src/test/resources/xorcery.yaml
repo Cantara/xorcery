@@ -1,16 +1,12 @@
 defaults.enabled: false
 dns:
-  client.enabled: true
-  client.discovery.enabled: false
-  client.nameServers:
-    - 127.0.0.1:8853
-  registration.announce.enabled: false
-  server:
-    registration.key:
-      name: xorcery.test
-      secret: "BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg=="
+  client:
+    enabled: true
+    nameServers:
+      - 127.0.0.1:8853
 jetty.client.enabled: true
 jetty.server.enabled: true
+keystores.enabled: true
 jersey:
   enabled: true
   server:

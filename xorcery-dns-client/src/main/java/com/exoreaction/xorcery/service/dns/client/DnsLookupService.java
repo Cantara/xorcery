@@ -15,23 +15,12 @@
  */
 package com.exoreaction.xorcery.service.dns.client;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.service.dns.client.discovery.DnsDiscoveryService;
-import com.exoreaction.xorcery.util.Sockets;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.xbill.DNS.*;
-import org.xbill.DNS.hosts.HostsFileParser;
-import org.xbill.DNS.lookup.LookupSession;
 
-import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 import static com.exoreaction.xorcery.util.Exceptions.unwrap;
 
@@ -42,15 +31,6 @@ public class DnsLookupService
 
     public DnsLookupService(Iterable<DnsLookup> dnsLookups) {
         dnsLookups.forEach(lookups::add);
-    }
-
-    public DnsLookupService(Configuration configuration, Supplier<DnsDiscoveryService> dnsDiscoveryServiceSupplier) {
-        LookupSession lookupSession = new DnsLookupSessionFactory(configuration).provide();
-        lookups.add(new HostsConfigurationLookup(configuration));
-        lookups.add(new SRVLookup(lookupSession));
-        lookups.add(new ALookup(lookupSession));
-        Optional.ofNullable(dnsDiscoveryServiceSupplier.get())
-                .ifPresent(srv -> lookups.add(new DiscoveryLookup(() -> srv)));
     }
 
     @Override

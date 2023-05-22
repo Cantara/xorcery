@@ -67,7 +67,9 @@
 
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
+        <module>xorcery-dns-update</module>
         <module>xorcery-dns-registration</module>
+        <module>xorcery-dns-multicast</module>
 
         <module>xorcery-jetty-client</module>
         <module>xorcery-jersey-client</module>

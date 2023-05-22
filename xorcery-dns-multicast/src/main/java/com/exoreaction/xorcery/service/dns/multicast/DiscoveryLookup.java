@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.service.dns.client;
+package com.exoreaction.xorcery.service.dns.multicast;
 
 import com.exoreaction.xorcery.service.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.service.dns.client.discovery.DnsDiscoveryService;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import org.glassfish.hk2.api.Rank;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 
 import javax.jmdns.ServiceEvent;
 import java.net.InetAddress;
@@ -27,12 +31,16 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+@Service
+@ContractsProvided({DnsLookup.class})
+@Rank(2)
 public class DiscoveryLookup
         implements DnsLookup {
-    private Supplier<DnsDiscoveryService> discoveryService;
+    private final Supplier<DnsDiscoveryService> discoveryService;
 
-    public DiscoveryLookup(Supplier<DnsDiscoveryService> discoveryService) {
-        this.discoveryService = discoveryService;
+    @Inject
+    public DiscoveryLookup(Provider<DnsDiscoveryService> discoveryService) {
+        this.discoveryService = discoveryService::get;
     }
 
     @Override

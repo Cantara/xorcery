@@ -9,5 +9,5 @@ dns:
           - key: updatekey
     keys:
       - name: updatekey
-        secret: "secrets:dnsupdatekey"
+        secret: "secrets:BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg=="
         algorithm: "hmac-md5"

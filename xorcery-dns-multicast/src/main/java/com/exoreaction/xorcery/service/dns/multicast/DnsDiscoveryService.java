@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.service.dns.client.discovery;
+package com.exoreaction.xorcery.service.dns.multicast;
 
+import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jvnet.hk2.annotations.Service;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
@@ -29,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Service(name = "dns.multicast.discovery")
 public class DnsDiscoveryService
         implements ServiceListener, ServiceTypeListener {
 
@@ -37,6 +40,7 @@ public class DnsDiscoveryService
 
     private final Map<String, List<ServiceEvent>> services = new ConcurrentHashMap<>();
 
+    @Inject
     public DnsDiscoveryService(JmDNS jmDNS) throws IOException {
         jmdns = jmDNS;
         jmdns.addServiceTypeListener(this);

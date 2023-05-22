@@ -13,22 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.service.dns.client.discovery;
+package com.exoreaction.xorcery.service.dns.multicast;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
+import org.glassfish.hk2.api.Factory;
+import org.jvnet.hk2.annotations.Service;
 
 import javax.jmdns.JmDNS;
 import java.io.IOException;
 
-public class JmDNSFactory {
+@Service
+public class JmDNSFactory
+        implements Factory<JmDNS> {
 
     private final JmDNS jmDNS;
 
+    @Inject
     public JmDNSFactory(Configuration configuration) throws IOException {
         jmDNS = JmDNS.create(null, configuration.getString("host").orElse(null));
     }
 
+    @Override
+    @Singleton
     public JmDNS provide() {
         return jmDNS;
     }

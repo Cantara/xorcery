@@ -1,13 +1,3 @@
 dns:
-  enabled: "{{ defaults.enabled }}"
   registration:
     enabled: "{{ dns.enabled }}"
-    timeout: 30s
-    ttl: 60s
-# TSIG key for DDNS updates
-#    key:
-#      name: "xorcery.test"
-#      secret: "keygoeshere"
-#      algorithm: "HMAC-MD5.SIG-ALG.REG.INT."
-    announce:
-      enabled: "{{ dns.registration.enabled }}"

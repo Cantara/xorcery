@@ -16,8 +16,10 @@
 open module xorcery.dns.registration {
     exports com.exoreaction.xorcery.service.dns.registration;
 
+    requires xorcery.service.api;
     requires xorcery.configuration.api;
     requires xorcery.dns.client;
+    requires xorcery.dns.update;
 
     requires org.dnsjava;
     requires org.glassfish.hk2.api;
@@ -26,5 +28,4 @@ open module xorcery.dns.registration {
     requires jakarta.inject;
     requires com.fasterxml.jackson.databind;
     requires javax.jmdns;
-    requires xorcery.service.api;
 }

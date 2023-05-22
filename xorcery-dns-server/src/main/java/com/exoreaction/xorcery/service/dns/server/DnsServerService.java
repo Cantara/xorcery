@@ -124,11 +124,11 @@ public class DnsServerService
             Message response = new Message(request.getHeader().getID());
             response.addRecord(request.getQuestion(), Section.QUESTION);
 
-            logger.info("Request:" + request.toString());
+            logger.debug("Request:" + request.toString());
 
             handle(request, response);
 
-            logger.info("Response:" + response.toString());
+            logger.debug("Response:" + response.toString());
 
             byte[] resp = response.toWire();
             DatagramPacket outdp = new DatagramPacket(resp, resp.length, indp.getAddress(), indp.getPort());
@@ -219,7 +219,8 @@ public class DnsServerService
 
         for (Record record : request.getSection(Section.UPDATE)) {
             if (record.getDClass() == DClass.NONE) {
-                zone.removeRecord(record);
+                Record originalRecord = Record.newRecord(record.getName(), record.getType(), DClass.IN, 0, record.rdataToWireCanonical());
+                zone.removeRecord(originalRecord);
             } else {
                 zone.addRecord(record);
             }
