@@ -51,7 +51,7 @@ public class ReactiveStreamsWithResultTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        System.out.println(configuration);
 
         InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {

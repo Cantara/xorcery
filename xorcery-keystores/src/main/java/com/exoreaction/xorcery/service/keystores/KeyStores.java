@@ -164,8 +164,8 @@ public class KeyStores {
                 LogManager.getLogger(getClass()).info("Loaded keystore " + keyStoreName + "(" + keyStoreUrl + ")");
                 {
                     StringBuilder builder = new StringBuilder();
-                    keyStore.aliases().asIterator().forEachRemaining(alias -> builder.append(alias).append("\n"));
-                    LogManager.getLogger(getClass()).debug(keyStoreName + " aliases:\n" + builder);
+                    keyStore.aliases().asIterator().forEachRemaining(alias -> builder.append("\n").append(alias));
+                    LogManager.getLogger(getClass()).debug(keyStoreName + " aliases:" + builder);
                 }
 
                 return keyStore;

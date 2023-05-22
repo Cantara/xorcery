@@ -97,7 +97,7 @@ public class CertificateRequestTest {
                 .add("jetty.server.ssl.port", managerPort)
                 .add("certificates.server.enabled", true)
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration1));
+        System.out.println(configuration1);
         try (Xorcery xorcery = new Xorcery(configuration1)) {
 
             try {

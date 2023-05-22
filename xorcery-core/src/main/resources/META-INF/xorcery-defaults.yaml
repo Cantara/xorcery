@@ -5,7 +5,7 @@ instance:
   version: "unknown"
   host: "{{ ENV.HOSTNAME | \"server\" }}"
   fqdn: "{{ instance.host }}.{{ instance.domain }}"
-  ip: "{{ ENV.IP | null }}"
+  ip: "{{ ENV.IP | CALCULATED.ip | null }}"
   domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
   environment: development
   tag: default
@@ -26,11 +26,5 @@ hk2:
     - default
     - xorcery
 
-HK2TopicDistributionService:
-  enabled: true
-SystemInjectResolver:
-  enabled: true
 DefaultRunLevelContext:
-  enabled: true
-default:
   enabled: true

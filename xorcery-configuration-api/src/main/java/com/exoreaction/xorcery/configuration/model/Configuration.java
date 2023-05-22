@@ -19,16 +19,19 @@ import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.VariableResolver;
 import com.exoreaction.xorcery.json.model.JsonElement;
 import com.exoreaction.xorcery.util.Resources;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -45,9 +48,8 @@ public record Configuration(ObjectNode json)
         return new Configuration(JsonNodeFactory.instance.objectNode());
     }
 
-    public static Supplier<RuntimeException> missing(String name)
-    {
-        return ()->new IllegalArgumentException("Missing configuration setting '"+name+"'");
+    public static Supplier<RuntimeException> missing(String name) {
+        return () -> new IllegalArgumentException("Missing configuration setting '" + name + "'");
     }
 
     public record Builder(ObjectNode builder)
@@ -99,25 +101,19 @@ public record Configuration(ObjectNode json)
             return add(name, mapper.valueToTree(value));
         }
 
-        public Builder addSystemProperties(String nodeName) {
-            ObjectNode system = builder.objectNode();
-            for (Map.Entry<Object, Object> systemProperty : System.getProperties().entrySet()) {
-                system.set(systemProperty.getKey().toString().replace('.', '_'), builder.textNode(systemProperty.getValue().toString()));
-            }
-            builder.set(nodeName, system);
-            return this;
-        }
-
-        public Builder addEnvironmentVariables(String nodeName) {
-            ObjectNode env = builder.objectNode();
-            System.getenv().forEach((key, value) -> env.set(key.replace('.', '_'), env.textNode(value)));
-            builder.set(nodeName, env);
-            return this;
-        }
-
         public Configuration build() {
             // Resolve any references
             return new Configuration(new VariableResolver().apply(builder, builder));
+        }
+
+        @Override
+        public String toString() {
+            ObjectWriter objectWriter = new YAMLMapper().writer().withDefaultPrettyPrinter();
+            try {
+                return objectWriter.writeValueAsString(builder);
+            } catch (JsonProcessingException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 
@@ -148,6 +144,16 @@ public record Configuration(ObjectNode json)
 
     public Builder asBuilder() {
         return new Builder(json);
+    }
+
+    @Override
+    public String toString() {
+        ObjectWriter objectWriter = new YAMLMapper().writer().withDefaultPrettyPrinter();
+        try {
+            return objectWriter.writeValueAsString(json);
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }
 

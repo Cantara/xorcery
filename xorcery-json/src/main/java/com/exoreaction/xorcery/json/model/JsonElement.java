@@ -228,13 +228,13 @@ public interface JsonElement {
         }
     }
 
-    static Optional<JsonNode> lookup(ObjectNode c, String name) {
+    static Optional<JsonNode> lookup(ContainerNode<?> c, String name) {
         if (!name.startsWith(".") && name.indexOf('.') != -1) {
             String[] names = name.split("\\.");
             for (int i = 0; i < names.length - 1; i++) {
                 JsonNode node = c.get(names[i]);
-                if (node instanceof ObjectNode)
-                    c = (ObjectNode) node;
+                if (node instanceof ContainerNode)
+                    c = (ContainerNode<?>) node;
                 else
                     return Optional.empty();
             }

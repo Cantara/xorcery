@@ -15,10 +15,19 @@
  */
 package com.exoreaction.xorcery.service.keystores;
 
+import com.exoreaction.xorcery.configuration.builder.ConfigurationProviderContainerNode;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider;
+import com.exoreaction.xorcery.json.VariableResolver;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.junit.jupiter.api.Test;
 
+import java.io.UncheckedIOException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -42,10 +51,14 @@ class KeyStoresTest {
 
     @Test
     public void testKeyStoreTemplate() throws NoSuchAlgorithmException, NoSuchProviderException {
+
         // Given
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .build();
+
+        System.out.println(configuration);
+
         KeyStores keyStores = new KeyStores(configuration);
 
         // When

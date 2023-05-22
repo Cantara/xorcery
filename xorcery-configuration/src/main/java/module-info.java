@@ -15,6 +15,8 @@
  */
 open module xorcery.configuration {
     exports com.exoreaction.xorcery.configuration.builder;
+    exports com.exoreaction.xorcery.configuration.providers;
+    exports com.exoreaction.xorcery.configuration.spi;
 
     requires transitive xorcery.configuration.api;
 

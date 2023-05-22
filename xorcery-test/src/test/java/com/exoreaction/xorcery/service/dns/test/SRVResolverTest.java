@@ -53,8 +53,8 @@ public class SRVResolverTest {
                         name: xorcery2
                         jetty.server.http.port: 8888
                         """)).build();
-        logger.info("Resolved configuration1:\n" + StandardConfigurationBuilder.toYaml(configuration1));
-        logger.info("Resolved configuration2:\n" + StandardConfigurationBuilder.toYaml(configuration2));
+        logger.info("Resolved configuration1:\n" + configuration1);
+        logger.info("Resolved configuration2:\n" + configuration2);
 
         try (Xorcery xorcery1 = new Xorcery(configuration1)) {
             try (Xorcery xorcery2 = new Xorcery(configuration2)) {

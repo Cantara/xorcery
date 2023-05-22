@@ -40,14 +40,18 @@ public record ConfigurationPostPopulatorProcessor(Configuration configuration)
     public DescriptorImpl process(ServiceLocator serviceLocator, DescriptorImpl descriptorImpl) {
 
         String name = descriptorImpl.getName();
-        if (name != null)
-        {
+        if (name != null) {
             String enabledFlag = Optional.ofNullable(descriptorImpl.getMetadata().get("enabled"))
                     .flatMap(l -> l.stream().findFirst())
                     .orElseGet(() -> name + ".enabled");
 
+            // Check if we should use defaults
+            if (!configuration.has(enabledFlag)) {
+                enabledFlag = "defaults.enabled";
+            }
+
             if (configuration.getFalsy(enabledFlag)
-                    .orElseGet(() -> configuration.getFalsy("defaults.enabled").orElse(false))) {
+                    .orElseGet(() -> false)) {
                 configuration.getConfiguration(name).getObjectAs("metadata", object ->
                 {
                     Map<String, List<String>> metadatas = new HashMap<>();
@@ -72,8 +76,7 @@ public record ConfigurationPostPopulatorProcessor(Configuration configuration)
                 LogManager.getLogger(getClass()).debug("Disabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=false)");
                 return null;
             }
-        } else
-        {
+        } else {
             return descriptorImpl;
         }
     }

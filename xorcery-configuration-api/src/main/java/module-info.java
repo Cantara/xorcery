@@ -18,4 +18,6 @@ open module xorcery.configuration.api {
 
     requires transitive xorcery.json;
     requires transitive xorcery.util;
+    requires transitive com.fasterxml.jackson.dataformat.yaml;
+    requires transitive org.yaml.snakeyaml;
 }

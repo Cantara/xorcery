@@ -77,7 +77,7 @@ public class PublishSubscriberWithResultBenchmarks {
     public void setup() throws Exception {
 
         Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
-        logger.info(StandardConfigurationBuilder.toYaml(configuration));
+        logger.info(configuration);
         xorcery = new Xorcery(configuration);
         ReactiveStreamsServer reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
 

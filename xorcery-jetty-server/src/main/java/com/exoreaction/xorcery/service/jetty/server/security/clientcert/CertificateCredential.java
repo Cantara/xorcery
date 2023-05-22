@@ -22,7 +22,7 @@ import java.security.cert.X509Certificate;
 
 public class CertificateCredential extends Credential {
 
-    private X509Certificate certificate;
+    private final X509Certificate certificate;
 
     public CertificateCredential(X509Certificate certificate) {
         this.certificate = certificate;

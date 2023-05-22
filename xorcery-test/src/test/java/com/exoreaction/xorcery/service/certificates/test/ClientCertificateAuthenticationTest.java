@@ -71,7 +71,7 @@ public class ClientCertificateAuthenticationTest {
                 .add("jetty.server.ssl.sniRequired", true)
                 .add("jetty.server.security.enabled", true)
                 .build();
-//        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
+//        System.out.println(serverConfiguration);
         Configuration clientConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("instance.id", "xorcery2")
@@ -79,7 +79,7 @@ public class ClientCertificateAuthenticationTest {
                 .add("clienttester.enabled", "true")
                 .add("jetty.server.enabled", false)
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(clientConfiguration));
+        System.out.println(clientConfiguration);
         try (Xorcery server = new Xorcery(serverConfiguration)) {
 
             try (Xorcery client = new Xorcery(clientConfiguration)) {

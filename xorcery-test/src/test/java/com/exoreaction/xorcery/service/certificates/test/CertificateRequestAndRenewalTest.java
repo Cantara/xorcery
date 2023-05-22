@@ -69,7 +69,7 @@ public class CertificateRequestAndRenewalTest {
                 .add("certificates.server.enabled", true)
                 .add("certificates.server.self.enabled", true)
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration1));
+        System.out.println(configuration1);
         Configuration configuration2 = new Configuration.Builder()
                 .with(configurationBuilder.addTestDefaultsWithYaml(config))
                 .add("id", "xorcery2")
@@ -113,7 +113,7 @@ public class CertificateRequestAndRenewalTest {
                 .add("certificates.server.enabled", true)
                 .add("certificates.server.self.enabled", true)
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
+        System.out.println(serverConfiguration);
         Configuration clientConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("instance.id", "xorcery2")
@@ -122,7 +122,7 @@ public class CertificateRequestAndRenewalTest {
                 .add("server.enabled", false)
                 .add("server.enabled", false)
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(clientConfiguration));
+        System.out.println(clientConfiguration);
         try (Xorcery server = new Xorcery(serverConfiguration)) {
 
             try (Xorcery client = new Xorcery(clientConfiguration)) {

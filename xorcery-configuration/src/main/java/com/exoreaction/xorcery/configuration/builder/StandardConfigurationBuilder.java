@@ -16,16 +16,16 @@
 package com.exoreaction.xorcery.configuration.builder;
 
 import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider;
+import com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider;
+import com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigurationProvider;
+import com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
 import com.exoreaction.xorcery.json.JsonMerger;
 import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.javaprop.JavaPropsFactory;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,6 +56,7 @@ public class StandardConfigurationBuilder {
 
         addSystemProperties(builder);
         addEnvironmentVariables(builder);
+        addCalculatedConfiguration(builder);
     }
 
 
@@ -77,6 +78,7 @@ public class StandardConfigurationBuilder {
 
         addSystemProperties(builder);
         addEnvironmentVariables(builder);
+        addCalculatedConfiguration(builder);
     }
 
     public Consumer<Configuration.Builder> addTestDefaultsWithYaml(String yamlString)
@@ -98,20 +100,29 @@ public class StandardConfigurationBuilder {
 
             addSystemProperties(builder);
             addEnvironmentVariables(builder);
+            addCalculatedConfiguration(builder);
 
             addYaml(yamlString).accept(builder);
         };
     }
 
+    public Consumer<Configuration.Builder> addConfigurationProvider(String name, ConfigurationProvider configurationProvider) {
+        return builder -> builder.add(name, new ConfigurationProviderContainerNode(configurationProvider));
+    }
 
     public void addSystemProperties(Configuration.Builder builder) {
-        builder.addSystemProperties("SYSTEM");
-        logger.info("Loaded system properties");
+        addConfigurationProvider("SYSTEM", new SystemPropertiesConfigurationProvider()).accept(builder);
+        logger.info("Added system properties");
     }
 
     public void addEnvironmentVariables(Configuration.Builder builder) {
-        builder.addEnvironmentVariables("ENV");
-        logger.info("Loaded environment variables");
+        addConfigurationProvider("ENV", new EnvironmentVariablesConfigurationProvider()).accept(builder);
+        logger.info("Added environment variables");
+    }
+
+    public void addCalculatedConfiguration(Configuration.Builder builder) {
+        addConfigurationProvider("CALCULATED", new CalculatedConfigurationProvider()).accept(builder);
+        logger.info("Added calculated variables");
     }
 
     public void addXorceryDefaults(Configuration.Builder builder) throws UncheckedIOException {
@@ -291,24 +302,5 @@ public class StandardConfigurationBuilder {
                 throw new UncheckedIOException(e);
             }
         };
-    }
-
-
-    public static String toYaml(Configuration.Builder builder) {
-        ObjectWriter objectWriter = yamlMapper.writer().withDefaultPrettyPrinter();
-        try {
-            return objectWriter.writeValueAsString(builder.builder());
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public static String toYaml(Configuration configuration) {
-        ObjectWriter objectWriter = yamlMapper.writer().withDefaultPrettyPrinter();
-        try {
-            return objectWriter.writeValueAsString(configuration.json());
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 }

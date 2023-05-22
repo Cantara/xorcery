@@ -60,7 +60,7 @@ public class EventStoreProjectionsTest {
         Configuration configuration = new Configuration.Builder()
                 .with(standardConfigurationBuilder.addTestDefaultsWithYaml(config))
                 .build();
-        logger.info(StandardConfigurationBuilder.toYaml(configuration));
+        logger.info(configuration);
         try (Xorcery xorcery = new Xorcery(configuration)) {
             EventStoreProjectionsService projectionsService = xorcery.getServiceLocator().getService(EventStoreProjectionsService.class);
 

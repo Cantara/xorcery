@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @State(Scope.Benchmark)
-@Fork(value = 1, warmups = 1, jvmArgs="-Dcom.sun.management.jmxremote=true" )
+@Fork(value = 1, warmups = 1, jvmArgs = "-Dcom.sun.management.jmxremote=true")
 @Warmup(iterations = 1)
 @Measurement(iterations = 10)
 public class PublishSubscriberBenchmarks {
@@ -49,7 +49,7 @@ public class PublishSubscriberBenchmarks {
             jetty.server.ssl.enabled: true
             jetty.server.ssl.port: 8443
             dns.client.enabled: true
-            
+                        
             metrics.enabled: true
             metrics.filter:
                 - xorcery:*
@@ -76,7 +76,7 @@ public class PublishSubscriberBenchmarks {
     public void setup() throws Exception {
 
         Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build();
-        logger.info(StandardConfigurationBuilder.toYaml(configuration));
+        logger.info(configuration);
         xorcery = new Xorcery(configuration);
         ReactiveStreamsServer reactiveStreams = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
 

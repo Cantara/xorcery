@@ -33,12 +33,14 @@ public class JettyServerWiringTest {
 
         Configuration.Builder builder = new Configuration.Builder();
         new StandardConfigurationBuilder().addTestDefaults(builder);
-        Configuration configuration = builder.add("id", "xorcery2")
-                .add("host", "Bd35HecvTTB.xorcery.test")
+        Configuration configuration = builder.add("instance.id", "xorcery2")
+                .add("instance.host", "Bd35HecvTTB.xorcery.test")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.enabled", false)
                 .add("hk2.runLevel", "4")
                 .build();
+
+        System.out.println(configuration);
 
         Xorcery xorcery = new Xorcery(configuration);
         ServiceLocator serviceLocator = xorcery.getServiceLocator();

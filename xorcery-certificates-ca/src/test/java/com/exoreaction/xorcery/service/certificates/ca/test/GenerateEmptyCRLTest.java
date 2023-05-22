@@ -37,7 +37,7 @@ public class GenerateEmptyCRLTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        System.out.println(configuration);
         try (Xorcery xorcery = new Xorcery(configuration))
         {
             String crls = xorcery.getServiceLocator().getService(IntermediateCACertificatesProvider.class).getCRL();

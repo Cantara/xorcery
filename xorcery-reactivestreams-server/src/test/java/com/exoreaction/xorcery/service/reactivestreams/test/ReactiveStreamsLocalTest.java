@@ -44,7 +44,7 @@ public class ReactiveStreamsLocalTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        System.out.println(configuration);
 
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
@@ -72,7 +72,7 @@ public class ReactiveStreamsLocalTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        System.out.println(configuration);
 
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);

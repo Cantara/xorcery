@@ -59,6 +59,12 @@
         <module>xorcery-jmxmetrics</module>
 
         <module>xorcery-keystores</module>
+
+        <module>xorcery-secrets</module>
+<!--
+        <module>xorcery-secrets-aws</module>
+-->
+
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
         <module>xorcery-dns-registration</module>

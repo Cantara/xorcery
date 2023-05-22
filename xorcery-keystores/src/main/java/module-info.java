@@ -22,4 +22,5 @@ open module xorcery.keystores {
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
     requires org.bouncycastle.pkix;
+    requires com.fasterxml.jackson.dataformat.yaml;
 }

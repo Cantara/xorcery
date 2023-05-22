@@ -62,7 +62,7 @@ public class VariableResolver
         return resolveObject(source, root);
     }
 
-    private ObjectNode resolveObject(ObjectNode source, ObjectNode node) {
+    private ObjectNode resolveObject(ObjectNode source, ContainerNode<?> node) {
         ObjectNode result = node.objectNode();
         Iterator<String> names = node.fieldNames();
         while (names.hasNext()) {
@@ -75,10 +75,10 @@ public class VariableResolver
                 } catch (Throwable e) {
                     throw new IllegalArgumentException("Could not resolve variables for " + next + ":" + textNode.textValue(), e);
                 }
-            } else if (value instanceof ObjectNode object) {
-                result.set(next, resolveObject(source, object));
             } else if (value instanceof ArrayNode array) {
                 result.set(next, resolveArray(source, array));
+            } else if (value instanceof ObjectNode object) {
+                result.set(next, resolveObject(source, object));
             } else {
                 result.set(next, value);
             }
@@ -184,7 +184,7 @@ public class VariableResolver
     }
 
     private Optional<JsonNode> lookup(ObjectNode source, String name) {
-        ObjectNode context = source;
+        ContainerNode context = source;
         String[] names = name.split("\\.");
         for (int i = 0; i < names.length - 1; i++) {
             JsonNode node = context.get(names[i]);
@@ -194,7 +194,7 @@ public class VariableResolver
                 node = resolveValue(source, textNode);
             }
 
-            if (node instanceof ObjectNode object)
+            if (node instanceof ContainerNode<?> object)
                 context = object;
             else
                 return Optional.empty();

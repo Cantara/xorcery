@@ -66,7 +66,7 @@ public class JwtAuthenticationTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.security.jwt.issuers", JsonNodeFactory.instance.objectNode().set("authentication.xorcery.test", JsonNodeFactory.instance.textNode(publicKey)))
                 .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(serverConfiguration));
+        System.out.println(serverConfiguration);
         try (Xorcery server = new Xorcery(serverConfiguration)) {
 
             server.getServiceLocator().inject(this);

@@ -26,6 +26,6 @@ public class InstanceConfigurationBuilderTest {
     {
         Configuration configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addDefaults).build();
 
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        System.out.println(configuration);
     }
 }

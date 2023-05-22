@@ -59,7 +59,7 @@ public class EventStoreTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        logger.info(StandardConfigurationBuilder.toYaml(configuration));
+        logger.info(configuration);
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
