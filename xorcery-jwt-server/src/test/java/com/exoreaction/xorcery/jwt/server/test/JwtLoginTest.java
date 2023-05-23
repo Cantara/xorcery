@@ -16,15 +16,15 @@
 package com.exoreaction.xorcery.jwt.server.test;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter;
-import com.exoreaction.xorcery.jsonapi.model.Attributes;
-import com.exoreaction.xorcery.jsonapi.model.Link;
-import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
+import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter;
+import com.exoreaction.xorcery.jsonapi.Attributes;
+import com.exoreaction.xorcery.jsonapi.Link;
+import com.exoreaction.xorcery.jsonapi.ResourceObject;
 import com.exoreaction.xorcery.util.Sockets;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import io.jsonwebtoken.Jwts;
@@ -33,10 +33,8 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;

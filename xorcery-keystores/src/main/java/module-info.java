@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 open module xorcery.keystores {
-    exports com.exoreaction.xorcery.service.keystores;
+    exports com.exoreaction.xorcery.keystores;
 
     requires xorcery.configuration.api;
     requires org.apache.logging.log4j;

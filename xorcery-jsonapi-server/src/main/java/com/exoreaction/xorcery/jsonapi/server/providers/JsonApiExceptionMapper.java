@@ -15,9 +15,9 @@
  */
 package com.exoreaction.xorcery.jsonapi.server.providers;
 
-import com.exoreaction.xorcery.jsonapi.model.Error;
-import com.exoreaction.xorcery.jsonapi.model.Errors;
-import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.Error;
+import com.exoreaction.xorcery.jsonapi.Errors;
+import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;

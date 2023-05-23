@@ -25,10 +25,7 @@ Configuration:
       - name: client
         level: debug
 
-      - name: com.exoreaction.xorcery.service.reactivestreams.resources.websocket
-        level: info
-
-      - name: com.exoreaction.xorcery.service.reactivestreams
+      - name: com.exoreaction.xorcery.reactivestreams
         level: trace
 
     Root:

@@ -15,8 +15,8 @@
  */
 package com.exoreaction.xorcery.health.registry;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.health.api.HealthCheck;
 import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
 import com.exoreaction.xorcery.health.api.HealthCheckResult;

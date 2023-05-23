@@ -4,4 +4,4 @@ certificates:
     authorization: none
 
 jersey.server.register:
-  - com.exoreaction.xorcery.service.certificates.server.resources.CertificateRequestResource
+  - com.exoreaction.xorcery.certificates.server.resources.CertificateRequestResource

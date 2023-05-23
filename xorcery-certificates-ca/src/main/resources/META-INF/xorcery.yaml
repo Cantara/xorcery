@@ -15,4 +15,4 @@ keystores:
     password: "password"
 
 jersey.server.register:
-  - com.exoreaction.xorcery.service.certificates.ca.resources.CertificateAuthorityResource
+  - com.exoreaction.xorcery.certificates.ca.resources.CertificateAuthorityResource

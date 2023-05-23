@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.metadata;
 
 import com.exoreaction.xorcery.builders.With;
-import com.exoreaction.xorcery.json.model.JsonElement;
+import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

@@ -15,9 +15,9 @@
  */
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
-import com.exoreaction.xorcery.jsonapi.model.JsonApiRels;
-import com.exoreaction.xorcery.jsonapi.model.Links;
-import com.exoreaction.xorcery.service.neo4j.client.GraphQuery;
+import com.exoreaction.xorcery.jsonapi.JsonApiRels;
+import com.exoreaction.xorcery.jsonapi.Links;
+import com.exoreaction.xorcery.neo4j.client.GraphQuery;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.UriBuilder;
 import org.apache.commons.lang3.StringUtils;

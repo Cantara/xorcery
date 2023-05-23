@@ -15,8 +15,8 @@
  */
 package com.exoreaction.xorcery.admin.jmx;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 
 public interface ServerMXBean {

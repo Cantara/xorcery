@@ -18,7 +18,8 @@ package com.exoreaction.xorcery.domainevents.jsonapi.resources;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainContext;
 import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
-import com.exoreaction.xorcery.jsonapi.model.*;
+import com.exoreaction.xorcery.jsonapi.*;
+import com.exoreaction.xorcery.jsonapi.Error;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.util.UUIDs;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,7 +39,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.self;
+import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
 public interface CommandsMixin
         extends CommandsJsonSchemaMixin {
@@ -197,11 +198,11 @@ public interface CommandsMixin
         Errors.Builder errors = new Errors.Builder();
         if (!e.getMessage().equals("")) {
             errors.error(
-                    new com.exoreaction.xorcery.jsonapi.model.Error.Builder().title(e.getMessage())
+                    new Error.Builder().title(e.getMessage())
                             .build());
         }
         for (ConstraintViolation<?> entry : e.getConstraintViolations()) {
-            errors.error(new com.exoreaction.xorcery.jsonapi.model.Error.Builder()
+            errors.error(new Error.Builder()
                     .title(entry.getMessage())
                     .source(new Source.Builder().pointer("/data/attributes/" + entry.getPropertyPath().toString()).build())
                     .build());

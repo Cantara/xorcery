@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 open module xorcery.handlebars {
-    exports com.exoreaction.xorcery.service.handlebars.jaxrs.providers;
-    exports com.exoreaction.xorcery.service.handlebars.helpers;
-    exports com.exoreaction.xorcery.service.handlebars;
-    exports com.exoreaction.xorcery.service.handlebars.resources.api;
+    exports com.exoreaction.xorcery.handlebars.providers;
+    exports com.exoreaction.xorcery.handlebars.helpers;
+    exports com.exoreaction.xorcery.handlebars;
+    exports com.exoreaction.xorcery.handlebars.resources;
 
     requires xorcery.configuration.api;
     requires xorcery.jsonschema;

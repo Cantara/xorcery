@@ -15,10 +15,10 @@
  */
 package com.exoreaction.xorcery.hyperschema.client;
 
-import com.exoreaction.xorcery.hyperschema.model.HyperSchema;
+import com.exoreaction.xorcery.hyperschema.HyperSchema;
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
-import com.exoreaction.xorcery.jsonapi.model.Link;
-import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
+import com.exoreaction.xorcery.jsonapi.Link;
+import com.exoreaction.xorcery.jsonschema.JsonSchema;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.InvocationCallback;

@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
-import com.exoreaction.xorcery.jsonapi.model.Links;
+import com.exoreaction.xorcery.jsonapi.Links;
 import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.uri.UriComponent;

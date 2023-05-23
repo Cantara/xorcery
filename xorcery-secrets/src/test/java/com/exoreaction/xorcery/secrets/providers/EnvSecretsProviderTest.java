@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.secrets.providers;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.secrets.Secrets;
 import org.junit.jupiter.api.Assertions;

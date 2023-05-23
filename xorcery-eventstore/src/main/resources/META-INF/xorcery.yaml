@@ -12,5 +12,5 @@ eventstore:
       enabled: "{{ eventstore.streams.enabled }}"
 
 jersey.server.register:
-  - com.exoreaction.xorcery.service.eventstore.resources.api.EventStoreResource
-  - com.exoreaction.xorcery.service.eventstore.resources.api.StreamResource
+  - com.exoreaction.xorcery.eventstore.resources.EventStoreResource
+  - com.exoreaction.xorcery.eventstore.resources.StreamResource

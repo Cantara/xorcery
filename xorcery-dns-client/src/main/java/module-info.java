@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.dns.client {
-    exports com.exoreaction.xorcery.service.dns.client;
-    exports com.exoreaction.xorcery.service.dns.client.api;
+    exports com.exoreaction.xorcery.dns.client.api;
+    exports com.exoreaction.xorcery.dns.client.providers;
 
     requires xorcery.configuration.api;
 

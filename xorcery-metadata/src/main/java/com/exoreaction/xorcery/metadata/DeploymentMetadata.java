@@ -16,8 +16,7 @@
 package com.exoreaction.xorcery.metadata;
 
 import com.exoreaction.xorcery.builders.WithContext;
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 
 public interface DeploymentMetadata
         extends WithContext<Metadata> {

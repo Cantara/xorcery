@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.certificates {
-    exports com.exoreaction.xorcery.service.certificates.spi;
-    exports com.exoreaction.xorcery.service.certificates;
+    exports com.exoreaction.xorcery.certificates.spi;
+    exports com.exoreaction.xorcery.certificates;
 
     requires org.apache.logging.log4j;
 

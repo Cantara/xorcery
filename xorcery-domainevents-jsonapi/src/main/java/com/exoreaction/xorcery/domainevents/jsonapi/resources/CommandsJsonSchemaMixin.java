@@ -17,11 +17,12 @@ package com.exoreaction.xorcery.domainevents.jsonapi.resources;
 
 import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
 import com.exoreaction.xorcery.domainevents.helpers.entity.annotation.Update;
-import com.exoreaction.xorcery.hyperschema.model.Links;
+import com.exoreaction.xorcery.hyperschema.Link;
+import com.exoreaction.xorcery.hyperschema.Links;
 import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
-import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
-import com.exoreaction.xorcery.jsonschema.model.Properties;
-import com.exoreaction.xorcery.jsonschema.model.Types;
+import com.exoreaction.xorcery.jsonschema.JsonSchema;
+import com.exoreaction.xorcery.jsonschema.Properties;
+import com.exoreaction.xorcery.jsonschema.Types;
 import com.exoreaction.xorcery.jsonschema.server.annotations.AttributeSchema;
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JavaType;
@@ -149,7 +150,7 @@ public interface CommandsJsonSchemaMixin
                                 .build())
                         .build();
 
-                com.exoreaction.xorcery.hyperschema.model.Link.Builder builder = new com.exoreaction.xorcery.hyperschema.model.Link.Builder()
+                Link.Builder builder = new Link.Builder()
                         .rel(commandName)
                         .href("{+command_href}")
                         .templateRequired("command_href")

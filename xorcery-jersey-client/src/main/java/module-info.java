@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.jersey.client {
-    exports com.exoreaction.xorcery.service.jersey.client;
+    exports com.exoreaction.xorcery.jersey.client;
+    exports com.exoreaction.xorcery.jersey.client.providers;
 
     requires xorcery.configuration.api;
     requires xorcery.keystores;

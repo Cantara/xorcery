@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.jsonschema.server.annotations;
 
-import com.exoreaction.xorcery.jsonschema.model.Types;
+import com.exoreaction.xorcery.jsonschema.Types;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

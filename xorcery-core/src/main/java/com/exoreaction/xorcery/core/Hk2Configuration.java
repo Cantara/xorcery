@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.core;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import org.glassfish.hk2.runlevel.RunLevelController;
 
 public record Hk2Configuration(Configuration configuration) {

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.reactivestreams.client {
-    exports com.exoreaction.xorcery.service.reactivestreams.client;
-    exports com.exoreaction.xorcery.service.reactivestreams.common;
+    exports com.exoreaction.xorcery.reactivestreams.client;
+    exports com.exoreaction.xorcery.reactivestreams.common;
 
     requires transitive xorcery.reactivestreams.api;
     requires xorcery.util;

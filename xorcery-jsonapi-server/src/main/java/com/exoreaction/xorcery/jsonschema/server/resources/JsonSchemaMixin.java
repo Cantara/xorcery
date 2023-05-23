@@ -15,13 +15,13 @@
  */
 package com.exoreaction.xorcery.jsonschema.server.resources;
 
-import com.exoreaction.xorcery.hyperschema.model.Link;
-import com.exoreaction.xorcery.hyperschema.model.Links;
+import com.exoreaction.xorcery.hyperschema.Link;
+import com.exoreaction.xorcery.hyperschema.Links;
 import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
-import com.exoreaction.xorcery.jsonapischema.model.ResourceDocumentSchema;
-import com.exoreaction.xorcery.jsonschema.model.JsonSchema;
-import com.exoreaction.xorcery.jsonschema.model.Properties;
-import com.exoreaction.xorcery.jsonschema.model.Types;
+import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
+import com.exoreaction.xorcery.jsonschema.JsonSchema;
+import com.exoreaction.xorcery.jsonschema.Properties;
+import com.exoreaction.xorcery.jsonschema.Types;
 import com.exoreaction.xorcery.jsonschema.server.annotations.AttributeSchema;
 import com.exoreaction.xorcery.jsonschema.server.annotations.Cardinality;
 import com.exoreaction.xorcery.jsonschema.server.annotations.RelationshipSchema;
@@ -41,8 +41,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static com.exoreaction.xorcery.jsonapi.MediaTypes.APPLICATION_JSON_API;
-import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.describedby;
-import static com.exoreaction.xorcery.jsonapi.model.JsonApiRels.self;
+import static com.exoreaction.xorcery.jsonapi.JsonApiRels.describedby;
+import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
 public interface JsonSchemaMixin
         extends ResourceContext {

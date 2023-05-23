@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.service.neo4jprojections.streams.CypherEventProjection;
+import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
+import com.exoreaction.xorcery.neo4jprojections.streams.CypherEventProjection;
 
 open module xorcery.neo4j.projections {
-    uses com.exoreaction.xorcery.service.neo4jprojections.spi.Neo4jEventProjection;
+    uses Neo4jEventProjection;
 
-    exports com.exoreaction.xorcery.service.neo4jprojections.api;
-    exports com.exoreaction.xorcery.service.neo4jprojections.spi;
+    exports com.exoreaction.xorcery.neo4jprojections.api;
+    exports com.exoreaction.xorcery.neo4jprojections.spi;
 
     requires xorcery.service.api;
     requires xorcery.neo4j;

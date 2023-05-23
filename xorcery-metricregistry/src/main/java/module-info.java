@@ -15,7 +15,7 @@
  */
 open module xorcery.metricregistry {
 
-    exports com.exoreaction.xorcery.service.metricregistry;
+    exports com.exoreaction.xorcery.metricregistry;
 
     requires com.codahale.metrics;
     requires com.codahale.metrics.jmx;

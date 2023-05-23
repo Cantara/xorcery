@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.disruptor;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 
 public record DisruptorConfiguration(Configuration configuration) {
     public int getSize() {

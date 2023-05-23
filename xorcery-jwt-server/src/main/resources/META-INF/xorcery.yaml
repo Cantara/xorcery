@@ -10,4 +10,4 @@ jwt:
             tenant: "tenant1"
 
 jersey.server.register:
-  - com.exoreaction.xorcery.jwt.server.resources.api.JwtLoginResource
+  - com.exoreaction.xorcery.jwt.server.resources.JwtLoginResource

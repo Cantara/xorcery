@@ -15,9 +15,9 @@
  */
 package com.exoreaction.xorcery.domainevents.publisher;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.ServiceConfiguration;
-import com.exoreaction.xorcery.service.reactivestreams.util.SubscriberConfiguration;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.ServiceConfiguration;
+import com.exoreaction.xorcery.reactivestreams.util.SubscriberConfiguration;
 
 public record DomainEventsConfiguration(Configuration context)
         implements ServiceConfiguration {

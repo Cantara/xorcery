@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.health.registry;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.PreDestroy;

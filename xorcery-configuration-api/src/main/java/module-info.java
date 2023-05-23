@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 open module xorcery.configuration.api {
-    exports com.exoreaction.xorcery.configuration.model;
+    exports com.exoreaction.xorcery.configuration;
 
     requires transitive xorcery.json;
     requires transitive xorcery.util;

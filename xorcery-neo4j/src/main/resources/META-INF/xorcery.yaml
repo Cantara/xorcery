@@ -11,4 +11,4 @@ neo4jdatabase:
       allow_upgrade: true
 
 jersey.server.register:
-  - com.exoreaction.xorcery.service.neo4j.resources.api.Neo4jResource
+  - com.exoreaction.xorcery.neo4j.resources.Neo4jConsoleResource

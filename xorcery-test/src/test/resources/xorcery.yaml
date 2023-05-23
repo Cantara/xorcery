@@ -11,7 +11,7 @@ jersey:
   enabled: true
   server:
     register:
-      - com.exoreaction.xorcery.service.resources.api.SubjectResource
+      - com.exoreaction.xorcery.test.resources.SubjectResource
 root.enabled: true
 jetty.enabled: true
 xorcery.enabled: true

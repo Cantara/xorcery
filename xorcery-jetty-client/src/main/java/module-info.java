@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.jetty.client {
-    exports com.exoreaction.xorcery.service.jetty.client;
+    exports com.exoreaction.xorcery.jetty.client;
+    exports com.exoreaction.xorcery.jetty.client.providers;
 
     requires xorcery.configuration.api;
     requires xorcery.keystores;

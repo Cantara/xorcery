@@ -16,8 +16,8 @@
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
 import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
-import com.exoreaction.xorcery.service.neo4j.client.GraphDatabase;
-import com.exoreaction.xorcery.service.neo4j.client.RowModel;
+import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
+import com.exoreaction.xorcery.neo4j.client.RowModel;
 import com.exoreaction.xorcery.util.Enums;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;

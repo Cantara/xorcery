@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.test {
-    exports com.exoreaction.xorcery.service.resources.api;
-    exports com.exoreaction.xorcery.service;
+    exports com.exoreaction.xorcery.test;
+    exports com.exoreaction.xorcery.test.resources;
 
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;

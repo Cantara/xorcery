@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.secrets;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.secrets.spi.SecretsProvider;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.IterableProvider;

@@ -16,9 +16,9 @@
 package com.exoreaction.xorcery.jsonapi.client;
 
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
-import com.exoreaction.xorcery.jsonapi.model.Link;
-import com.exoreaction.xorcery.jsonapi.model.ResourceDocument;
-import com.exoreaction.xorcery.jsonapi.model.ResourceObject;
+import com.exoreaction.xorcery.jsonapi.Link;
+import com.exoreaction.xorcery.jsonapi.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.ResourceObject;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;

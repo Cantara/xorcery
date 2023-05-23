@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
 import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
-import com.exoreaction.xorcery.service.neo4j.client.GraphQuery;
+import com.exoreaction.xorcery.neo4j.client.GraphQuery;
 import com.exoreaction.xorcery.util.Enums;
 import jakarta.ws.rs.core.MultivaluedMap;
 import org.apache.commons.lang3.StringUtils;

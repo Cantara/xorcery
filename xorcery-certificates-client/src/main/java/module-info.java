@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.certificates.client {
-    exports com.exoreaction.xorcery.service.certificates.client;
-    exports com.exoreaction.xorcery.service.certificates.client.resources;
+    exports com.exoreaction.xorcery.certificates.client;
+    exports com.exoreaction.xorcery.certificates.client.resources;
 
     requires xorcery.certificates;
     requires xorcery.jetty.client;
@@ -33,4 +33,5 @@ open module xorcery.certificates.client {
     requires jakarta.inject;
     requires jakarta.ws.rs;
     requires xorcery.keystores;
+    requires xorcery.service.api;
 }

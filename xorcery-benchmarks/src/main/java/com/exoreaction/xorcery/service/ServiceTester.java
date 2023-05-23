@@ -15,10 +15,10 @@
  */
 package com.exoreaction.xorcery.service;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
-import com.exoreaction.xorcery.server.model.ServiceResourceObject;
+import com.exoreaction.xorcery.server.api.ServiceResourceObject;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;

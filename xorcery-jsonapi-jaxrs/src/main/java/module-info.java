@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 open module xorcery.jsonapi.jaxrs {
-    exports com.exoreaction.xorcery.jsonapi.jaxrs.providers;
+    exports com.exoreaction.xorcery.jsonapi.providers;
 
     requires transitive xorcery.jsonapi;
     requires transitive jakarta.inject;

@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.configuration.builder.test;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import org.junit.jupiter.api.Test;
 
 public class InstanceConfigurationBuilderTest {

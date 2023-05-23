@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 open module xorcery.log4j {
-    exports com.exoreaction.xorcery.service.log4jpublisher.log4j;
-    exports com.exoreaction.xorcery.service.log4jpublisher;
-    exports com.exoreaction.xorcery.service.log4jsubscriber;
-    exports com.exoreaction.xorcery.service.requestlogpublisher;
-    exports com.exoreaction.xorcery.service.log4jpublisher.providers;
+    exports com.exoreaction.xorcery.log4jpublisher.log4j;
+    exports com.exoreaction.xorcery.log4jpublisher;
+    exports com.exoreaction.xorcery.log4jsubscriber;
+    exports com.exoreaction.xorcery.requestlogpublisher;
+    exports com.exoreaction.xorcery.log4jpublisher.providers;
 
     requires xorcery.util;
     requires xorcery.configuration.api;

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 open module xorcery.jetty.server {
-    exports com.exoreaction.xorcery.service.jetty.server;
-    exports com.exoreaction.xorcery.service.jetty.server.security;
-    exports com.exoreaction.xorcery.service.jetty.server.security.jwt;
-    exports com.exoreaction.xorcery.service.jetty.server.security.clientcert;
+    exports com.exoreaction.xorcery.jetty.server;
+    exports com.exoreaction.xorcery.jetty.server.security;
+    exports com.exoreaction.xorcery.jetty.server.security.jwt;
+    exports com.exoreaction.xorcery.jetty.server.security.clientcert;
 
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.metricregistry;

@@ -16,7 +16,6 @@
 open module xorcery.jsonapi.server {
     exports com.exoreaction.xorcery.jsonapi.server.providers;
     exports com.exoreaction.xorcery.jsonapi.server.resources;
-    exports com.exoreaction.xorcery.jsonapi.server.resources.api;
     exports com.exoreaction.xorcery.jsonschema.server.annotations;
     exports com.exoreaction.xorcery.jsonschema.server.resources;
 

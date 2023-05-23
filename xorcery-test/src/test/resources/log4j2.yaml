@@ -22,7 +22,7 @@ Configuration:
       - name: com.exoreaction.xorcery.core
         level: debug
 
-      - name: com.exoreaction.xorcery.service.dns.server
+      - name: com.exoreaction.xorcery.dns.server
         level: info
 
       - name: client
@@ -31,10 +31,10 @@ Configuration:
       - name: client.opensearch
         level: debug
 
-      - name: com.exoreaction.xorcery.service.conductor.GroupTemplates
+      - name: com.exoreaction.xorcery.conductor.GroupTemplates
         level: debug
 
-      - name: com.exoreaction.xorcery.service.reactivestreams.resources.websocket
+      - name: com.exoreaction.xorcery.reactivestreams.resources.websocket
         level: info
 
       - name: javax

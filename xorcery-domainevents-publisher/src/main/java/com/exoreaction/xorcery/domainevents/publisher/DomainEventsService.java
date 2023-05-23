@@ -15,16 +15,16 @@
  */
 package com.exoreaction.xorcery.domainevents.publisher;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.configuration.model.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.service.reactivestreams.api.ClientConfiguration;
-import com.exoreaction.xorcery.service.reactivestreams.api.ReactiveStreamsClient;
-import com.exoreaction.xorcery.service.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.service.reactivestreams.util.SubscriberConfiguration;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
+import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.util.SubscriberConfiguration;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.PreDestroy;

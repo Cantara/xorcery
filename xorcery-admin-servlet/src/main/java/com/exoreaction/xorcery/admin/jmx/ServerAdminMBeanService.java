@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.admin.jmx;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.runlevel.RunLevel;

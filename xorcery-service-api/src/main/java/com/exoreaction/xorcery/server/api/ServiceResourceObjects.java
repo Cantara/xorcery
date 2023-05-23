@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.server.api;
 
-import com.exoreaction.xorcery.server.model.ServiceResourceObject;
 import jakarta.inject.Inject;
 import org.jvnet.hk2.annotations.Service;
 

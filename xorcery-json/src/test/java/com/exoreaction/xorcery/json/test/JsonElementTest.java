@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.json.test;
 
-import com.exoreaction.xorcery.json.model.JsonElement;
+import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

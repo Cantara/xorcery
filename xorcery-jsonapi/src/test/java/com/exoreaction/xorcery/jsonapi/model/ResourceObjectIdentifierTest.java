@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jsonapi.model;
 
+import com.exoreaction.xorcery.jsonapi.ResourceObjectIdentifier;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;

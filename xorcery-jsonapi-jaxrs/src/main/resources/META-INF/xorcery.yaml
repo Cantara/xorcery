@@ -1,9 +1,9 @@
 jersey.server.register:
-    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyWriter
-    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonElementMessageBodyReader
-    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyWriter
-    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonNodeMessageBodyReader
-    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonMessageBodyWriter
-    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.JsonMessageBodyReader
-    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.ByteBufferMessageBodyWriter
-    - com.exoreaction.xorcery.jsonapi.jaxrs.providers.ByteBufferMessageBodyReader
+    - com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter
+    - com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader
+    - com.exoreaction.xorcery.jsonapi.providers.JsonNodeMessageBodyWriter
+    - com.exoreaction.xorcery.jsonapi.providers.JsonNodeMessageBodyReader
+    - com.exoreaction.xorcery.jsonapi.providers.JsonMessageBodyWriter
+    - com.exoreaction.xorcery.jsonapi.providers.JsonMessageBodyReader
+    - com.exoreaction.xorcery.jsonapi.providers.ByteBufferMessageBodyWriter
+    - com.exoreaction.xorcery.jsonapi.providers.ByteBufferMessageBodyReader

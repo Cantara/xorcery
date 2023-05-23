@@ -1,0 +1,112 @@
+/*
+ * Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.exoreaction.xorcery.log4jsubscriber;
+
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.providers.WithMetadataMessageReaderFactory;
+import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
+import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
+import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.runlevel.RunLevel;
+import org.glassfish.hk2.utilities.reflection.ParameterizedTypeImpl;
+import org.jvnet.hk2.annotations.Service;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.Flow;
+
+@Service(name = "log4jsubscriber")
+@RunLevel(6)
+public class Log4jSubscriberService {
+
+    private final Log4jSubscriberConfiguration log4jSubscriberConfiguration;
+    private final Provider<MessageWorkers> messageWorkers;
+
+    @Inject
+    public Log4jSubscriberService(ReactiveStreamsServer reactiveStreams,
+                                  Configuration configuration,
+                                  Provider<MessageWorkers> messageWorkers) {
+        this.messageWorkers = messageWorkers;
+
+        log4jSubscriberConfiguration = new Log4jSubscriberConfiguration(configuration.getConfiguration("log4jsubscriber"));
+
+        reactiveStreams.subscriber(log4jSubscriberConfiguration.getSubscriberStream(), LogSubscriber::new, LogSubscriber.class);
+    }
+
+    public class LogSubscriber
+            implements Flow.Subscriber<ByteBuffer> {
+
+        private final Logger logger;
+        private MessageReader<Object> messageReader;
+
+        public LogSubscriber(Configuration configuration) {
+
+            logger = LogManager.getLogger(configuration.getString("category").orElse(Log4jSubscriberService.class.getName()));
+
+            String type = configuration.getString("type").orElse("java.lang.String");
+            if (type.startsWith(WithMetadata.class.getName())) {
+                messageReader = new WithMetadataMessageReaderFactory(messageWorkers::get).newReader(WithMetadata.class, new ParameterizedTypeImpl(WithMetadata.class, String.class), "text/plain");
+            } else {
+                messageReader = messageWorkers.get().newReader(String.class, String.class, "text/plain");
+            }
+        }
+
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            subscription.request(512);
+        }
+
+        @Override
+        public void onNext(ByteBuffer item) {
+
+            try {
+                Object message = new String(new ByteBufferBackedInputStream(item).readAllBytes(), StandardCharsets.UTF_8);
+                logger.info(message.toString());
+            } catch (IOException e) {
+                logger.error("Could not deserialize message", e);
+            }
+/*
+            try {
+                Object message = messageReader.readFrom(new ByteBufferBackedInputStream(item));
+                if (message instanceof WithMetadata<?> withMetadata) {
+                    logger.info(withMetadata.metadata().json() + ":" + withMetadata.event().toString());
+                } else {
+                    logger.info(message.toString());
+                }
+            } catch (IOException e) {
+                logger.error("Could not deserialize message", e);
+            }
+*/
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            logger.error("Stream error", throwable);
+        }
+
+        @Override
+        public void onComplete() {
+            logger.info("Complete");
+        }
+    }
+}

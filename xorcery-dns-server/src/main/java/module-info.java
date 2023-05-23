@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 open module xorcery.dns.server {
-    exports com.exoreaction.xorcery.service.dns.server;
+    exports com.exoreaction.xorcery.dns.server;
+
+    requires xorcery.configuration.api;
+    requires xorcery.jsonapi;
+    requires xorcery.service.api;
 
     requires org.dnsjava;
     requires javax.jmdns;
@@ -23,7 +27,4 @@ open module xorcery.dns.server {
     requires org.apache.logging.log4j;
     requires jakarta.inject;
     requires com.fasterxml.jackson.databind;
-    requires xorcery.configuration.api;
-    requires xorcery.jsonapi;
-    requires xorcery.service.api;
 }

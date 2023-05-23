@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 open module xorcery.dns.registration {
-    exports com.exoreaction.xorcery.service.dns.registration;
+    exports com.exoreaction.xorcery.dns.registration;
 
     requires xorcery.service.api;
     requires xorcery.configuration.api;

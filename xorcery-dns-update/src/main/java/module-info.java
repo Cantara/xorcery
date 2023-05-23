@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 open module xorcery.dns.update {
-    exports com.exoreaction.xorcery.service.dns.update;
-    exports com.exoreaction.xorcery.service.dns.update.spi;
-    exports com.exoreaction.xorcery.service.dns.update.providers;
+    exports com.exoreaction.xorcery.dns.update;
+    exports com.exoreaction.xorcery.dns.update.spi;
+    exports com.exoreaction.xorcery.dns.update.providers;
 
     requires xorcery.secrets;
     requires xorcery.configuration.api;

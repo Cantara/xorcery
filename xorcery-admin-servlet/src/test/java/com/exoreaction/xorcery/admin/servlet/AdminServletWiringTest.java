@@ -17,9 +17,9 @@ package com.exoreaction.xorcery.admin.servlet;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.service.jersey.server.JerseyServerService;
+import com.exoreaction.xorcery.jersey.server.JerseyServerService;
 import com.exoreaction.xorcery.util.Sockets;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;

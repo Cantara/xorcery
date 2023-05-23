@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.jersey.server {
-    exports com.exoreaction.xorcery.service.jersey.server;
-    exports com.exoreaction.xorcery.service.jersey.server.resources;
+    exports com.exoreaction.xorcery.jersey.server;
+    exports com.exoreaction.xorcery.jersey.server.resources;
 
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.metricregistry;

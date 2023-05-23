@@ -15,15 +15,13 @@
  */
 package com.exoreaction.xorcery.configuration.builder;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider;
 import com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider;
 import com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigurationProvider;
 import com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
 import com.exoreaction.xorcery.json.JsonMerger;
 import com.exoreaction.xorcery.util.Resources;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;

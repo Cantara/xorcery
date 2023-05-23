@@ -19,7 +19,7 @@ Configuration:
         AppenderRef:
           ref: STDOUT
 
-      - name: com.exoreaction.xorcery.service.log4jsubscriber
+      - name: com.exoreaction.xorcery.log4jsubscriber
         level: debug
         additivity: false
         AppenderRef:
@@ -28,13 +28,13 @@ Configuration:
       - name: com.exoreaction.xorcery.core
         level: debug
 
-      - name: com.exoreaction.xorcery.service.dns.server
+      - name: com.exoreaction.xorcery.dns.server
         level: info
 
-      - name: com.exoreaction.xorcery.service.certificates.server
+      - name: com.exoreaction.xorcery.certificates.server
         level: info
 
-      - name: com.exoreaction.xorcery.service.reactivestreams.resources.websocket
+      - name: com.exoreaction.xorcery.reactivestreams.resources.websocket
         level: info
 
       - name: javax

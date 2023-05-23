@@ -10,4 +10,4 @@ keystores:
     password: "password"
 
 jersey.server.register:
-  - com.exoreaction.xorcery.service.certificates.letsencrypt.resources.HttpChallengeResource
+  - com.exoreaction.xorcery.certificates.letsencrypt.resources.HttpChallengeResource

@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 open module xorcery.eventstore {
-    exports com.exoreaction.xorcery.service.eventstore;
-    exports com.exoreaction.xorcery.service.eventstore.api;
-    exports com.exoreaction.xorcery.service.eventstore.model;
-    exports com.exoreaction.xorcery.service.eventstore.resources.api;
-    exports com.exoreaction.xorcery.service.eventstore.streams;
-    exports com.exoreaction.xorcery.service.eventstore.projections;
+    exports com.exoreaction.xorcery.eventstore;
+    exports com.exoreaction.xorcery.eventstore.api;
+    exports com.exoreaction.xorcery.eventstore.streams;
+    exports com.exoreaction.xorcery.eventstore.projections;
+    exports com.exoreaction.xorcery.eventstore.resources;
 
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;

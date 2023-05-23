@@ -15,8 +15,8 @@
  */
 package com.exoreaction.xorcery.core;
 
-import com.exoreaction.xorcery.configuration.model.Configuration;
-import com.exoreaction.xorcery.json.model.JsonElement;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.logging.log4j.LogManager;
