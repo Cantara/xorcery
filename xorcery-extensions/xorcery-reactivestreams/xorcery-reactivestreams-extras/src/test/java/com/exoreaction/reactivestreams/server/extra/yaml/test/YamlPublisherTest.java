@@ -18,17 +18,50 @@ package com.exoreaction.reactivestreams.server.extra.yaml.test;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
 import com.exoreaction.xorcery.util.Resources;
+import jakarta.ws.rs.core.MediaType;
+import org.apache.logging.log4j.LogManager;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
 import reactor.util.context.Context;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 public class YamlPublisherTest {
 
+    private Configuration clientConfiguration;
+
+    private Configuration serverConfiguration;
+    private WebSocketStreamsServerConfiguration websocketStreamsServerConfiguration;
+
+    private String clientConf = """
+                            instance.id: client
+                            jetty.server.enabled: false
+                            reactivestreams.server.enabled: false
+            """;
+
+    private String serverConf = """
+                            instance.id: server
+                            jetty.client.enabled: false
+                            reactivestreams.client.enabled: false
+                            jetty.server.http.enabled: false
+                            jetty.server.ssl.port: "{{ SYSTEM.port }}"
+            """;
+
+    @BeforeEach
+    public void setup() {
+        System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
+        clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
+        serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
+        websocketStreamsServerConfiguration = WebSocketStreamsServerConfiguration.get(serverConfiguration);
+    }
+
     @Test
-    public void testYamlPublisher() {
+    public void testYamlPublisher() throws Exception {
 
         YamlPublisher<Map<String, Object>> filePublisher = new YamlPublisher<>(Map.class);
 
@@ -37,6 +70,35 @@ public class YamlPublisherTest {
                 .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("testevents.yaml").orElseThrow()))
                 .toStream()
                 .toList();
+
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
+                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+
+                List<Integer> xorceryResult = new ArrayList<>();
+                websocketStreamsServer.subscriber(
+                        "numbers",
+                        MediaType.APPLICATION_JSON,
+                        Integer.class,
+                        upstream -> upstream.doOnNext(xorceryResult::add));
+
+                // When
+                List<Integer> source = IntStream.range(0, 100).boxed().toList();
+                websocketStreamsClient.publish(
+                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                MediaType.APPLICATION_JSON,
+                                Integer.class,
+                                WebSocketClientOptions.instance(),
+                                Flux.fromIterable(source))
+                        .blockLast();
+
+                // Then
+                Assertions.assertEquals(source, xorceryResult);
+            }
+        }
+
 
         System.out.println(result);
     }
