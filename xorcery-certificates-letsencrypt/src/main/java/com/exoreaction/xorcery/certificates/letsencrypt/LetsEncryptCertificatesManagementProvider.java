@@ -33,6 +33,7 @@ import org.shredzone.acme4j.*;
 import org.shredzone.acme4j.challenge.Challenge;
 import org.shredzone.acme4j.challenge.Http01Challenge;
 import org.shredzone.acme4j.exception.AcmeException;
+import org.shredzone.acme4j.util.CSRBuilder;
 
 import java.io.IOException;
 import java.security.*;
@@ -101,17 +102,15 @@ public class LetsEncryptCertificatesManagementProvider
                 authorize(auth);
             }
 
-/*
             // Generate a CSR for all of the domains,
             // and sign it with the domain key pair.
             CSRBuilder csrb = new CSRBuilder();
             csrb.addDomains(domains);
             csrb.sign(keyStores.getOrCreateKeyPair("domains", "letsencrypt"));
             PKCS10CertificationRequest csr2 = csrb.getCSR();
-*/
 
             // Order the certificate
-            order.execute(csr.getEncoded());
+            order.execute(csr2.getEncoded());
 
             // Wait for the order to complete
             try {
