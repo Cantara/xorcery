@@ -20,6 +20,7 @@ import com.eventstore.dbclient.EventDataBuilder;
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -40,6 +41,7 @@ public class EventStoreSubscriberEventHandler
     private final Optional<String> streamId;
     private final Logger logger = LogManager.getLogger(getClass());
     private final Flow.Subscription subscription;
+    private final JsonMapper jsonMapper = new JsonMapper();
 
     public EventStoreSubscriberEventHandler(EventStoreDBClient client, Flow.Subscription subscription, Optional<String> streamId) {
 
@@ -54,7 +56,7 @@ public class EventStoreSubscriberEventHandler
         UUID eventId = emd.getCorrelationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
         String eventType = emd.eventType();
         EventData eventData = EventDataBuilder.json(eventId, eventType, event.event().array())
-                .metadataAsJson(event.metadata().metadata())
+                .metadataAsBytes(jsonMapper.writeValueAsBytes(event.metadata().metadata()))
                 .build();
 
         event.event().clear();
@@ -65,12 +67,10 @@ public class EventStoreSubscriberEventHandler
         try {
             client.appendToStream(streamId, eventData).whenComplete((wr, t) ->
             {
-                if (t != null)
-                {
+                if (t != null) {
                     LogManager.getLogger(getClass()).error("Could not append event to stream", t);
                     subscription.cancel();
-                } else
-                {
+                } else {
                     subscription.request(1);
                 }
             });

@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 public class GenerateEmptyCRLTest {
 
     String config = """
-            certificates.server.self.enabled: false
+            certificates.enabled: false
             keystores:
               keystore:
                 path: "META-INF/intermediatecakeystore.p12"

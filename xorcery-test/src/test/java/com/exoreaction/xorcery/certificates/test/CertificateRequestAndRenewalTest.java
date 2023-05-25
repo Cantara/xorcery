@@ -67,7 +67,7 @@ public class CertificateRequestAndRenewalTest {
                 .add("keystores.keystore.path", "META-INF/intermediatecakeystore.p12")
                 .add("keystores.truststore.path", "META-INF/intermediatecatruststore.p12")
                 .add("certificates.server.enabled", true)
-                .add("certificates.server.self.enabled", true)
+                .add("certificates.enabled", true)
                 .build();
         System.out.println(configuration1);
         Configuration configuration2 = new Configuration.Builder()
@@ -111,7 +111,7 @@ public class CertificateRequestAndRenewalTest {
 //                .add("certificates.server.alias", "root")
                 .add("keystores.truststore.path", "META-INF/intermediatecatruststore.p12")
                 .add("certificates.server.enabled", true)
-                .add("certificates.server.self.enabled", true)
+                .add("certificates.enabled", true)
                 .build();
         System.out.println(serverConfiguration);
         Configuration clientConfiguration = new Configuration.Builder()
