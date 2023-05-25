@@ -15,17 +15,18 @@
  */
 package com.exoreaction.xorcery.certificates.client;
 
-import com.exoreaction.xorcery.jsonapi.MediaTypes;
-import com.exoreaction.xorcery.jsonapi.Link;
-import com.exoreaction.xorcery.jsonapi.ResourceDocument;
-import com.exoreaction.xorcery.jsonapi.ResourceObject;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.jetty.client.CompletableFutureResponseListener;
+import com.exoreaction.xorcery.jsonapi.Link;
+import com.exoreaction.xorcery.jsonapi.MediaTypes;
+import com.exoreaction.xorcery.jsonapi.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.ResourceObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.ws.rs.ProcessingException;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.util.BytesRequestContent;
@@ -66,7 +67,8 @@ public class JsonApiClient {
                             throw new CompletionException(e);
                         }
                     });
-                });
+                }).exceptionallyCompose(t ->
+                        CompletableFuture.failedStage(new ProcessingException("Could not connect to "+link.getHref(), t)));
     }
 
     public CompletionStage<ResourceObject> submit(Link link, ResourceObject resourceObject) {
