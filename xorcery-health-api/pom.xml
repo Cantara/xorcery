@@ -22,12 +22,12 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-parent</artifactId>
-        <version>0.22.1-SNAPSHOT</version>
+        <version>0.22.1</version>
         <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>xorcery-health-api</artifactId>
-    <version>0.22.1-SNAPSHOT</version>
+    <version>0.22.1</version>
     <packaging>jar</packaging>
 
     <properties>
