@@ -80,8 +80,8 @@ public class CertificatesService
             // Request certificate
             requestCertificateProcess = requestCertificatesProcessFactory.create(createRequest());
             requestCertificateProcess.start();
-            requestCertificateProcess.result().whenComplete(this::updateCertificates);
-            requestCertificateProcess.result().join();
+            requestCertificateProcess.result()
+                    .whenComplete(this::updateCertificates).join();
         }
 
         scheduleRenewal();
