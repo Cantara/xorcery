@@ -3,6 +3,7 @@ jetty.server.ssl.enabled: true
 jetty.server.ssl.crls: "META-INF/crls.pem"
 keystores:
   keystore:
+    template: null
     path: "META-INF/test-keystore.p12"
     password: "password"
   truststore:

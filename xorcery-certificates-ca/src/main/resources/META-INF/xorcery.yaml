@@ -4,7 +4,7 @@ intermediateca:
   validity: 90d
 
 keystores:
-  keystore:
+  cakeystore:
     path: "META-INF/intermediatecakeystore.p12"
     password: "password"
   truststore:

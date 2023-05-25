@@ -35,7 +35,6 @@ public class ClientCertificateAuthenticationTest {
 
     String config = """
             dns.client.enabled: true
-            dns.client.discovery.enabled: false
             dns.client.hosts:
                 server1.xorcery.test: 127.0.0.1
                 wrongserver.xorcery.test: 127.0.0.1

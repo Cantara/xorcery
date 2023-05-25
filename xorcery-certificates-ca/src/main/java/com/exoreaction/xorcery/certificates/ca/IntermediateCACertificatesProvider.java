@@ -84,7 +84,7 @@ public class IntermediateCACertificatesProvider
     @Inject
     public IntermediateCACertificatesProvider(Configuration configuration, KeyStores keyStores) throws NoSuchAlgorithmException {
         intermediateCaConfiguration = new IntermediateCaConfiguration(configuration.getConfiguration("intermediateca"));
-        intermediateCaKeyStore = keyStores.getKeyStore("keystore");
+        intermediateCaKeyStore = keyStores.getKeyStore("cakeystore");
         intermediateCaTrustStore = keyStores.getKeyStore("truststore");
         keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
         this.keyStores = keyStores;

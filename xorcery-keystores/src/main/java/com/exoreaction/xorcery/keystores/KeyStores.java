@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.keystores;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import org.apache.logging.log4j.LogManager;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -41,6 +42,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.exoreaction.xorcery.util.Exceptions.unwrap;
 
 public class KeyStores {
 
@@ -118,8 +121,9 @@ public class KeyStores {
             KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName);
             KeyStore keyStore = KeyStore.getInstance(keyStoreConfiguration.getType());
 
-            if (keyStoreConfiguration.configuration().has("template")) {
+            if (!keyStoreConfiguration.configuration().getJson("template").orElse(MissingNode.getInstance()).isMissingNode()) {
                 File keyStoreOutput = new File(keyStoreConfiguration.getPath()).getAbsoluteFile();
+                keyStoreUrl = keyStoreOutput.toURI().toURL();
                 if (!keyStoreOutput.exists()) {
                     // Copy template to file
                     URL templateStoreUrl = keyStoreConfiguration.configuration().getResourceURL("template").orElseThrow(() -> new IllegalArgumentException("Template file does not exist for keystore " + keyStoreName));
@@ -129,11 +133,19 @@ public class KeyStores {
                         try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreOutput)) {
                             fileOutputStream.write(inputStream.readAllBytes());
                         }
+                    } catch (FileNotFoundException e) {
+                        // Continue with empty keystore
+                        LogManager.getLogger(getClass()).warn("Could not find template keystore, continuing with empty keystore "+keyStoreName);
+                        // Create empty store
+                        keyStore.load(null, keyStoreConfiguration.getPassword());
+                        try (FileOutputStream outputStream = new FileOutputStream(keyStoreOutput)) {
+                            keyStore.store(outputStream, keyStoreConfiguration.getPassword());
+                        }
+
                     } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+                        throw new UncheckedIOException("Could not copy template store:"+templateStoreUrl, e);
                     }
                 }
-                keyStoreUrl = keyStoreOutput.toURI().toURL();
             } else {
                 try {
                     keyStoreUrl = keyStoreConfiguration.getURL();
@@ -185,7 +197,7 @@ public class KeyStores {
                 }
             }
         } catch (Throwable e) {
-            throw new RuntimeException("Could not load keystore '" + keyStoreName + "' from " + keyStoreUrl, e);
+            throw new RuntimeException("Could not load keystore '" + keyStoreName + "' from " + keyStoreUrl, unwrap(e));
         }
     }
 

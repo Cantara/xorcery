@@ -8,7 +8,8 @@ certificates:
 
 keystores:
   keystore:
-    path: "META-INF/keystore.p12"
+    template: "META-INF/keystore.p12"
+    path: "{{ home }}/keystore.p12"
     password: "password"
   truststore:
     path: "META-INF/truststore.p12"
