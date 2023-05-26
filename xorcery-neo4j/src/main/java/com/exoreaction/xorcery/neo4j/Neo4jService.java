@@ -45,11 +45,14 @@ import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 import org.neo4j.logging.log4j.Log4jLogProvider;
 import org.neo4j.logging.log4j.Neo4jLoggerContext;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -88,11 +91,9 @@ public class Neo4jService
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        managementService = new DatabaseManagementServiceBuilder(home)
-                .setUserLogProvider(new Log4jLogProvider(new Neo4jLoggerContext(LogManager.getContext(), () -> {
-                })))
-                .loadPropertiesFromFile(tmpConfigFile)
-                .build();
+        DatabaseManagementService managementService;
+
+        managementService = createDatabaseManagementService(home, tmpConfigFile);
 
         List<DatabaseConfiguration> databases = neo4jConfiguration.getDatabases()
                 .orElseGet(() ->
@@ -101,12 +102,7 @@ public class Neo4jService
         for (DatabaseConfiguration databaseConfiguration : databases) {
             logger.info("Starting Neo4j database:" + databaseConfiguration.getName());
             GraphDatabaseService graphDb;
-            try {
-                graphDb = managementService.database(databaseConfiguration.getName());
-            } catch (DatabaseNotFoundException e) {
-                managementService.createDatabase(databaseConfiguration.getName());
-                graphDb = managementService.database(databaseConfiguration.getName());
-            }
+            graphDb = createDatabase(managementService, databaseConfiguration);
 
             boolean wipeOnBreakingChanges = neo4jConfiguration.isWipeOnBreakingChanges();
             SemanticVersion targetVersion = neo4jConfiguration.getVersion();
@@ -119,7 +115,10 @@ public class Neo4jService
                 logger.info("Attempting to update domain schema version of database from {} to {}, this is a breaking change.", currentDatabaseVersion, targetVersion);
                 if (wipeOnBreakingChanges) {
                     logger.warn("WIPING all data in neo4j projection.");
-                    wipeDatabase(graphDb);
+                    managementService.shutdown();
+                    wipeDatabase(home);
+                    managementService = createDatabaseManagementService(home, tmpConfigFile);
+                    graphDb = createDatabase(managementService, databaseConfiguration);
                     updateDomainVersionInDatabase(graphDb, targetVersion);
                 } else {
                     String msg = String.format("Incompatible database domain schema version, and wipe not allowed. Current version of schema is '%s' and target version is '%s'. Migrate database or set 'neo4jdatabase.domain.wipe_on_breaking_change' to true to allow wipe.", currentDatabaseVersion, targetVersion);
@@ -183,11 +182,32 @@ public class Neo4jService
             ServiceLocatorUtilities.addOneConstant(serviceLocator, new GraphDatabase(graphDb, Cypher.defaultFieldMappings()), databaseConfiguration.getName(), GraphDatabase.class);
         }
 
+        this.managementService = managementService;
+
         logger.info("Neo4j initialized");
 
         serviceResourceObjects.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
                 .api("neo4j", "api/neo4j")
                 .build());
+    }
+
+    private static DatabaseManagementService createDatabaseManagementService(Path home, Path tmpConfigFile) {
+        return new DatabaseManagementServiceBuilder(home)
+                .setUserLogProvider(new Log4jLogProvider(new Neo4jLoggerContext(LogManager.getContext(), () -> {
+                })))
+                .loadPropertiesFromFile(tmpConfigFile)
+                .build();
+    }
+
+    private static GraphDatabaseService createDatabase(DatabaseManagementService managementService, DatabaseConfiguration databaseConfiguration) {
+        GraphDatabaseService graphDb;
+        try {
+            graphDb = managementService.database(databaseConfiguration.getName());
+        } catch (DatabaseNotFoundException e) {
+            managementService.createDatabase(databaseConfiguration.getName());
+            graphDb = managementService.database(databaseConfiguration.getName());
+        }
+        return graphDb;
     }
 
     private static SemanticVersion getExistingDomainVersion(GraphDatabaseService graphDb) {
@@ -204,16 +224,17 @@ public class Neo4jService
     /**
      * This method will wipe ALL data in the database, do not use unless you know what you are doing!
      *
-     * @param graphDb the database to wipe.
+     * @param neo4jHome the data folder of the neo4j server instance.
      */
-    private static void wipeDatabase(GraphDatabaseService graphDb) {
-        graphDb.executeTransactionally("""
-                MATCH (n)
-                CALL {
-                  WITH n
-                  DETACH DELETE n
-                } IN TRANSACTIONS
-                """);
+    private static void wipeDatabase(Path neo4jHome) {
+        try {
+            Files.walk(neo4jHome)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private static void updateDomainVersionInDatabase(GraphDatabaseService graphDb, SemanticVersion currentVersion) {
