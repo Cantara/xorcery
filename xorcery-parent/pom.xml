@@ -37,7 +37,7 @@
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <jackson.version>2.15.2</jackson.version>
-        <metrics.version>4.2.18</metrics.version>
+        <metrics.version>4.2.19</metrics.version>
         <asm.version>9.5</asm.version>
 
         <junit.version>5.9.3</junit.version>
