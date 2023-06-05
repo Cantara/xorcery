@@ -115,6 +115,7 @@ public class Neo4jProjectionEventHandler
             ArrayNode eventsJson = event.event();
             Map<String, Object> metadataMap = Cypher.toMap(event.metadata().metadata());
 
+            int i = 0;
             for (JsonNode jsonNode : eventsJson) {
                 ObjectNode objectNode = (ObjectNode) jsonNode;
                 String type = objectNode.path("@class").textValue();
@@ -131,7 +132,7 @@ public class Neo4jProjectionEventHandler
                         throw new IllegalStateException("No projection can handle event with type:" + t);
                     });
 
-                    projection.write(event, metadataMap, objectNode, tx);
+                    projection.write(event, metadataMap, objectNode, i, tx);
                 } catch (Throwable e) {
                     logger.error("Could not apply Neo4j event update", e);
 
@@ -140,6 +141,7 @@ public class Neo4jProjectionEventHandler
 
                 appliedEvents++;
                 version++;
+                i++;
             }
 
             if (endOfBatch) {

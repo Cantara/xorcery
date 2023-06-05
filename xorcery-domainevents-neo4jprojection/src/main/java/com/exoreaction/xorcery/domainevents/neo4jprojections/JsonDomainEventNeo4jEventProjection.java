@@ -43,7 +43,7 @@ public class JsonDomainEventNeo4jEventProjection
     }
 
     @Override
-    public void write(WithMetadata<ArrayNode> events, Map<String, Object> metadataMap, ObjectNode eventJson, Transaction transaction) throws IOException {
+    public void write(WithMetadata<ArrayNode> events, Map<String, Object> metadataMap, ObjectNode eventJson, int eventIndex, Transaction transaction) throws IOException {
 
         Neo4jJsonDomainEvent neo4jJsonDomainEvent = new Neo4jJsonDomainEvent(new JsonDomainEvent(eventJson));
         Object timestamp = metadataMap.get("timestamp");
