@@ -42,7 +42,7 @@ public class SubscribersReactiveStreamsServlet
     @Override
     protected void configure(JettyWebSocketServletFactory factory) {
         factory.setMaxTextMessageSize(1048576);
-        factory.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idle_timeout").orElse(-1L)));
+        factory.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idleTimeout").orElse(-1L)));
 
         factory.setCreator((jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
                 subscriberWebSocketEndpointFactory.apply(jettyServerUpgradeRequest.getRequestPath().substring( "/streams/subscribers/".length())));
