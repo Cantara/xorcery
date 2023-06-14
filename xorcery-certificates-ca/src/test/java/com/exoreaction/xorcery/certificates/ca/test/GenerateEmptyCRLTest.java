@@ -25,11 +25,6 @@ public class GenerateEmptyCRLTest {
 
     String config = """
             certificates.enabled: false
-            keystores:
-              keystore:
-                path: "META-INF/intermediatecakeystore.p12"
-              truststore:
-                path: "META-INF/intermediatecatruststore.p12"
             """;
 
     @Test

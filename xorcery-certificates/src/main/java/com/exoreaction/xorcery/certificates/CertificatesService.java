@@ -16,7 +16,9 @@
 package com.exoreaction.xorcery.certificates;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.keystores.KeyStoreConfiguration;
 import com.exoreaction.xorcery.keystores.KeyStores;
+import com.exoreaction.xorcery.secrets.Secrets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
@@ -61,14 +63,17 @@ public class CertificatesService
 
     public CertificatesService(RequestCertificateProcess.Factory requestCertificateProcessFactory,
                                KeyStores keyStores,
+                               Secrets secrets,
                                Configuration configuration) throws GeneralSecurityException, IOException, OperatorCreationException {
         this.requestCertificatesProcessFactory = requestCertificateProcessFactory;
-        this.keyStore = keyStores.getKeyStore("keystore");
-        this.keyStores = keyStores;
         certificatesConfiguration = () -> configuration.getConfiguration("certificates");
+        this.keyStore = keyStores.getKeyStore(certificatesConfiguration.getCertificateStoreName());
+        this.keyStores = keyStores;
 
         this.alias = certificatesConfiguration.getAlias();
-        password = configuration.getString("keystores.keystore.password").map(String::toCharArray).orElse(null);
+        password = new KeyStoreConfiguration(certificatesConfiguration.getCertificateStoreName(), configuration.getConfiguration("keystores").
+                getConfiguration(certificatesConfiguration.getCertificateStoreName()))
+                .getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
 
         // Create private key
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", PROVIDER_NAME);
@@ -116,7 +121,7 @@ public class CertificatesService
 
         // Sign the new KeyPair with the Provisioning cert Private Key
         JcaContentSignerBuilder contentSignerBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider("BC");
-        PrivateKey provisioning = (PrivateKey) keyStore.getKey("provisioning", "password".toCharArray());
+        PrivateKey provisioning = (PrivateKey) keyStore.getKey("provisioning", password);
         logger.warn("No provisioning key in keystore. Using self-signing key instead");
 
         PrivateKey signingKey = provisioning != null ? provisioning : issuedCertKeyPair.getPrivate();

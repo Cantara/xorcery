@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.jetty.server;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.keystores.KeyStores;
 import com.exoreaction.xorcery.keystores.KeyStoresConfiguration;
+import com.exoreaction.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -45,9 +46,8 @@ public class ServerSslContextFactoryFactory
     private final SslContextFactory.Server factory;
 
     @Inject
-    public ServerSslContextFactoryFactory(Configuration configuration, KeyStores keyStores) throws Exception {
+    public ServerSslContextFactoryFactory(Configuration configuration, KeyStores keyStores, Secrets secrets) throws Exception {
 
-        Configuration jettyConfig = configuration.getConfiguration("jetty.server");
         JettyServerSslConfiguration jettyServerSslConfiguration = new JettyServerSslConfiguration(configuration.getConfiguration("jetty.server.ssl"));
         KeyStoresConfiguration keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
 
@@ -78,10 +78,20 @@ public class ServerSslContextFactoryFactory
         }
 
         factory = new CustomSslContextFactoryServer(crls);
-        factory.setKeyStore(keyStores.getKeyStore("keystore"));
-        factory.setTrustStore(keyStores.getKeyStore("truststore"));
-        factory.setKeyManagerPassword(Optional.ofNullable(keyStoresConfiguration.getKeyStoreConfiguration("keystore").getPassword()).map(String::new).orElse(null));
-        factory.setCertAlias(jettyServerSslConfiguration.getAlias());
+        jettyServerSslConfiguration.getKeyStoreName().ifPresentOrElse(name ->
+        {
+            factory.setKeyStore(keyStores.getKeyStore(name));
+            factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration(name).getPassword().map(secrets::getSecretString).orElse(null));
+            factory.setCertAlias(jettyServerSslConfiguration.getAlias());
+        }, ()->
+        {
+            logger.warn("SSL enabled but no keystore specified");
+        });
+        jettyServerSslConfiguration.getTrustStoreName().ifPresent(name ->
+        {
+            factory.setTrustStore(keyStores.getKeyStore(name));
+        });
+
         factory.setHostnameVerifier((hostName, session) -> true);
         factory.setTrustAll(jettyServerSslConfiguration.isTrustAll());
         factory.setNeedClientAuth(jettyServerSslConfiguration.isNeedClientAuth());

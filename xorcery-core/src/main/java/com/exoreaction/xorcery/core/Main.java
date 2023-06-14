@@ -15,11 +15,13 @@
  */
 package com.exoreaction.xorcery.core;
 
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.MarkerManager;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -82,16 +84,15 @@ public class Main
         return 0;
     }
 
-    protected Configuration loadConfiguration() throws JsonProcessingException {
+    protected Configuration loadConfiguration() {
         StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
-        Configuration.Builder builder = new Configuration.Builder()
-                .with(standardConfigurationBuilder::addDefaults, standardConfigurationBuilder.addFile(configuration));
+        ConfigurationBuilder builder = new ConfigurationBuilder().addDefaults().with(standardConfigurationBuilder.addFile(configuration));
 
         // Log final configuration
-        logger.debug("Configuration:\n" + builder);
+        logger.debug("Configuration:\n" + builder.builder());
 
         Configuration configuration = builder.build();
-        logger.info("Resolved configuration:\n" + configuration);
+        logger.info(MarkerManager.getMarker("configuration"), configuration);
         return configuration;
     }
 

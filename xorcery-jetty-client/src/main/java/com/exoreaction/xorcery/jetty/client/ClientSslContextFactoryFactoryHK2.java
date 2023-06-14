@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.jetty.client;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.keystores.KeyStores;
+import com.exoreaction.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
@@ -37,8 +38,8 @@ public class ClientSslContextFactoryFactoryHK2 extends ClientSslContextFactoryFa
         implements Factory<SslContextFactory.Client>, PreDestroy {
 
     @Inject
-    public ClientSslContextFactoryFactoryHK2(Configuration configuration, Provider<KeyStores> keyStores) throws Exception {
-        super(configuration, Optional.ofNullable(keyStores.get()));
+    public ClientSslContextFactoryFactoryHK2(Configuration configuration, Provider<KeyStores> keyStores, Secrets secrets) throws Exception {
+        super(configuration, Optional.ofNullable(keyStores.get()), secrets);
     }
 
     @Override

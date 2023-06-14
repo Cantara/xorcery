@@ -19,19 +19,10 @@ Configuration:
         AppenderRef:
           ref: STDOUT
 
-      - name: com.exoreaction.xorcery.core
+      - name: com.exoreaction.xorcery
         level: debug
-
-      - name: client
-        level: debug
-
-      - name: client.opensearch
-        level: debug
-
-      - name: com.exoreaction.xorcery.reactivestreams
-        level: info
 
     Root:
-      level: info
+      level: debug
       AppenderRef:
         - ref: STDOUT

@@ -18,7 +18,9 @@ package com.exoreaction.xorcery.jetty.client;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.keystores.KeyStores;
 import com.exoreaction.xorcery.keystores.KeyStoresConfiguration;
+import com.exoreaction.xorcery.secrets.Secrets;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.security.KeyStore;
@@ -28,20 +30,24 @@ import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NO
 
 public class ClientSslContextFactoryFactory {
     private final SslContextFactory.Client factory;
+    private final Logger logger = LogManager.getLogger(getClass());
 
-    public ClientSslContextFactoryFactory(Configuration configuration, Optional<KeyStores> keyStores) throws Exception {
+    public ClientSslContextFactoryFactory(Configuration configuration, Optional<KeyStores> keyStores, Secrets secrets) throws Exception {
         factory = new SslContextFactory.Client();
 
         JettyClientSslConfiguration jettyClientSslConfiguration = new JettyClientSslConfiguration(configuration.getConfiguration("jetty.client.ssl"));
         KeyStoresConfiguration keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
 
         // Client settings
-        keyStores.ifPresent(ks ->
+        keyStores.ifPresentOrElse(ks ->
         {
-            factory.setKeyStore(ks.getKeyStore("keystore"));
+            factory.setKeyStore(ks.getKeyStore("ssl"));
             factory.setTrustStore(ks.getKeyStore("truststore"));
-            factory.setKeyManagerPassword(Optional.ofNullable(keyStoresConfiguration.getKeyStoreConfiguration("keystore").getPassword()).map(String::new).orElse(null));
+            factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration("ssl").getPassword().map(secrets::getSecretString).orElse(null));
             factory.setCertAlias(jettyClientSslConfiguration.getAlias());
+        },()->
+        {
+            logger.warn("SSL enabled but no keystore specified");
         });
 
         // Server settings

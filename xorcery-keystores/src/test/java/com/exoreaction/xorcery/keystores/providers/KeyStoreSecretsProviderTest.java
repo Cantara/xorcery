@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.secrets.providers;
+package com.exoreaction.xorcery.keystores.providers;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
@@ -14,6 +14,8 @@ public class KeyStoreSecretsProviderTest {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
                 .build();
+
+        System.out.println(configuration);
 
         try (Xorcery xorcery = new Xorcery(configuration)) {
 

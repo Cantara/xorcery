@@ -35,35 +35,27 @@
         <module>xorcery-parent</module>
 
         <module>xorcery-util</module>
-        <module>xorcery-disruptor</module>
-
         <module>xorcery-json</module>
         <module>xorcery-configuration-api</module>
+        <module>xorcery-disruptor</module>
         <module>xorcery-configuration</module>
         <module>xorcery-metadata</module>
         <module>xorcery-health-api</module>
         <module>xorcery-health-registry</module>
 
+        <module>xorcery-jsonschema</module>
         <module>xorcery-jsonapi</module>
         <module>xorcery-jsonapi-jaxrs</module>
         <module>xorcery-jsonapi-client</module>
-        <module>xorcery-jsonapi-server</module>
-        <module>xorcery-jsonschema</module>
         <module>xorcery-service-api</module>
+        <module>xorcery-jsonapi-server</module>
 
         <module>xorcery-core</module>
 
-        <module>xorcery-log4j</module>
         <module>xorcery-metricregistry</module>
-        <module>xorcery-metrics</module>
-        <module>xorcery-jmxmetrics</module>
-
-        <module>xorcery-keystores</module>
 
         <module>xorcery-secrets</module>
-<!--
-        <module>xorcery-secrets-aws</module>
--->
+        <module>xorcery-keystores</module>
 
         <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
@@ -71,6 +63,7 @@
         <module>xorcery-dns-registration</module>
         <module>xorcery-dns-multicast</module>
 
+        <module>xorcery-certificates</module>
         <module>xorcery-jetty-client</module>
         <module>xorcery-jersey-client</module>
         <module>xorcery-jetty-server</module>
@@ -81,7 +74,6 @@
         <module>xorcery-reactivestreams-client</module>
         <module>xorcery-reactivestreams-server</module>
 
-        <module>xorcery-certificates</module>
         <module>xorcery-certificates-server</module>
         <module>xorcery-certificates-ca</module>
         <module>xorcery-certificates-letsencrypt</module>
@@ -102,6 +94,10 @@
         <module>xorcery-domainevents-neo4jprojection</module>
         <module>xorcery-jsonapi-server-neo4j</module>
         <module>xorcery-opensearch</module>
+
+        <module>xorcery-log4j</module>
+        <module>xorcery-metrics</module>
+        <module>xorcery-jmxmetrics</module>
 
         <module>xorcery-coordinator</module>
 

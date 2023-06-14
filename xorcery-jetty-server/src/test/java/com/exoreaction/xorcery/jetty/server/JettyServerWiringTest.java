@@ -37,6 +37,7 @@ public class JettyServerWiringTest {
                 .add("instance.host", "Bd35HecvTTB.xorcery.test")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.enabled", false)
+                .add("certificates.enabled", false)
                 .add("hk2.runLevel", "4")
                 .build();
 

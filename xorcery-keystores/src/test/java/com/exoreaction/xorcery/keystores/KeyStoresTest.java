@@ -17,7 +17,9 @@ package com.exoreaction.xorcery.keystores;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.keystores.KeyStores;
+import com.exoreaction.xorcery.secrets.Secrets;
 import org.junit.jupiter.api.Test;
 
 import java.security.KeyStore;
@@ -35,14 +37,14 @@ class KeyStoresTest {
               teststore:
                 path: "{{ instance.home }}/target/teststore.p12"
                 template: "META-INF/teststore.p12"
-                password: "password"
+                password: "{{ keystores.defaultPassword }}"
               emptystore:
                 path: "{{ instance.home }}/target/emptystore.p12"
-                password: "password"
+                password: "{{ keystores.defaultPassword }}"
                         """;
 
     @Test
-    public void testKeyStoreTemplate() throws NoSuchAlgorithmException, NoSuchProviderException {
+    public void testKeyStoreTemplate() throws Exception {
 
         // Given
         Configuration configuration = new Configuration.Builder()
@@ -51,27 +53,32 @@ class KeyStoresTest {
 
         System.out.println(configuration);
 
-        KeyStores keyStores = new KeyStores(configuration);
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            KeyStores keyStores = xorcery.getServiceLocator().getService(KeyStores.class);
 
-        // When
-        KeyStore keyStore = keyStores.getKeyStore("teststore");
+            // When
+            KeyStore keyStore = keyStores.getKeyStore("teststore");
 
-        // Then
-        assertThat(keyStore, notNullValue());
+            // Then
+            assertThat(keyStore, notNullValue());
+        }
     }
 
     @Test
-    public void testCreateEmptyKeyStore() throws NoSuchAlgorithmException, NoSuchProviderException {
+    public void testCreateEmptyKeyStore() throws Exception {
         // Given
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .build();
-        KeyStores keyStores = new KeyStores(configuration);
 
-        // When
-        KeyStore keyStore = keyStores.getKeyStore("emptystore");
+        try (Xorcery xorcery = new Xorcery(configuration)) {
+            KeyStores keyStores = xorcery.getServiceLocator().getService(KeyStores.class);
 
-        // Then
-        assertThat(keyStore, notNullValue());
+            // When
+            KeyStore keyStore = keyStores.getKeyStore("emptystore");
+
+            // Then
+            assertThat(keyStore, notNullValue());
+        }
     }
 }

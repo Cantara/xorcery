@@ -30,6 +30,10 @@ public interface CertificatesConfiguration
         return context().getString("uri");
     }
 
+    default String getCertificateStoreName() {
+        return context().getString("keystore").orElse("ssl");
+    }
+
     default String getSubject() {
         return context().getString("subject").orElseThrow(missing("certificates.subject"));
     }

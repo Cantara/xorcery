@@ -1,5 +1,6 @@
 certificates:
   enabled: "{{ defaults.enabled }}"
+  keystore: "ssl"
   renewOnStartup: false
   alias: "{{ server.ssl.alias | client.ssl.alias | \"self\"}}"
   subject: "{{ instance.fqdn | \"server\"}}"
@@ -7,11 +8,15 @@ certificates:
   dnsNames: []
 
 keystores:
-  keystore:
-    template: "META-INF/keystore.p12"
-    path: "{{ home }}/keystore.p12"
-    password: "password"
+  ssl:
+    template: "META-INF/ssl.p12"
+    path: "{{ instance.home }}/ssl.p12"
+    password: "{{ keystores.defaultPassword }}"
   truststore:
-    path: "META-INF/truststore.p12"
-    password: "password"
+    template: "META-INF/truststore.p12"
+    path: "{{ instance.home }}/truststore.p12"
+    password: "{{ keystores.defaultPassword }}"
     addRootCa: true
+
+jetty.server.ssl.keystore: "ssl"
+jetty.server.ssl.truststore: "truststore"

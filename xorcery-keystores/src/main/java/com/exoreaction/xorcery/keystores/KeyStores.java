@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.keystores;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.secrets.Secrets;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import org.apache.logging.log4j.LogManager;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -48,11 +49,13 @@ import static com.exoreaction.xorcery.util.Exceptions.unwrap;
 public class KeyStores {
 
     private final KeyStoresConfiguration configuration;
+    private final Secrets secrets;
     private final Map<String, KeyStore> keyStores = new ConcurrentHashMap<>();
     private final KeyPairGenerator keyGen;
 
-    public KeyStores(Configuration configuration) throws NoSuchAlgorithmException, NoSuchProviderException {
+    public KeyStores(Configuration configuration, Secrets secrets) throws NoSuchAlgorithmException, NoSuchProviderException {
         this.configuration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
+        this.secrets = secrets;
 
         Provider p = new org.bouncycastle.jce.provider.BouncyCastleProvider();
         if (null == Security.getProvider(p.getName())) {
@@ -77,14 +80,6 @@ public class KeyStores {
         );
     }
 
-    public KeyStore getDefaultKeyStore() {
-        return getKeyStore("keystore");
-    }
-
-    public KeyStore getDefaultTrustStore() {
-        return getKeyStore("truststore");
-    }
-
     public void save(KeyStore keyStore) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
         for (Map.Entry<String, KeyStore> stringKeyStoreEntry : keyStores.entrySet()) {
             if (stringKeyStoreEntry.getValue() == keyStore) {
@@ -92,7 +87,7 @@ public class KeyStores {
                 KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(name);
                 URL keyStoreUrl = keyStoreConfiguration.getURL();
                 try (FileOutputStream outputStream = new FileOutputStream(keyStoreUrl.getFile())) {
-                    keyStore.store(outputStream, keyStoreConfiguration.getPassword());
+                    keyStore.store(outputStream, keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null));
                 }
                 LogManager.getLogger(getClass()).info("Saved keystore " + name);
                 publish(keyStore);
@@ -127,6 +122,7 @@ public class KeyStores {
                 if (!keyStoreOutput.exists()) {
                     // Copy template to file
                     URL templateStoreUrl = keyStoreConfiguration.configuration().getResourceURL("template").orElseThrow(() -> new IllegalArgumentException("Template file does not exist for keystore " + keyStoreName));
+                    char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
                     // Copy template to file
                     try (InputStream inputStream = templateStoreUrl.openStream()) {
                         LogManager.getLogger(getClass()).info("Copying template keystore " + templateStoreUrl + " to local keystore file " + keyStoreOutput);
@@ -135,15 +131,15 @@ public class KeyStores {
                         }
                     } catch (FileNotFoundException e) {
                         // Continue with empty keystore
-                        LogManager.getLogger(getClass()).warn("Could not find template keystore, continuing with empty keystore "+keyStoreName);
+                        LogManager.getLogger(getClass()).warn("Could not find template keystore, continuing with empty keystore " + keyStoreName);
                         // Create empty store
-                        keyStore.load(null, keyStoreConfiguration.getPassword());
+                        keyStore.load(null, password);
                         try (FileOutputStream outputStream = new FileOutputStream(keyStoreOutput)) {
-                            keyStore.store(outputStream, keyStoreConfiguration.getPassword());
+                            keyStore.store(outputStream, password);
                         }
 
                     } catch (IOException e) {
-                        throw new UncheckedIOException("Could not copy template store:"+templateStoreUrl, e);
+                        throw new UncheckedIOException("Could not copy template store:" + templateStoreUrl, e);
                     }
                 }
             } else {
@@ -154,9 +150,10 @@ public class KeyStores {
                     if (keyStoreConfiguration.configuration().getString("path").isPresent()) {
                         File file = new File(keyStoreConfiguration.getPath());
                         // Create empty store
-                        keyStore.load(null, keyStoreConfiguration.getPassword());
+                        char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
+                        keyStore.load(null, password);
                         try (FileOutputStream outputStream = new FileOutputStream(file)) {
-                            keyStore.store(outputStream, keyStoreConfiguration.getPassword());
+                            keyStore.store(outputStream, password);
                         }
                         LogManager.getLogger(getClass()).info("Created empty keystore " + keyStoreName);
 
@@ -166,7 +163,7 @@ public class KeyStores {
             }
 
             try (InputStream inStream = keyStoreUrl.openStream()) {
-                keyStore.load(inStream, keyStoreConfiguration.getPassword());
+                keyStore.load(inStream, keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null));
 
                 if (keyStoreConfiguration.isAddRootCa()) {
                     addDefaultRootCaCertificates(keyStore);
@@ -181,10 +178,9 @@ public class KeyStores {
 
                 return keyStore;
             } catch (Exception ex) {
-                String template = keyStoreConfiguration.getTemplate();
-                if (template != null && keyStoreUrl.getProtocol().equals("file")) {
+                URL templateStoreUrl = keyStoreConfiguration.getTemplate();
+                if (templateStoreUrl != null && keyStoreUrl.getProtocol().equals("file")) {
                     // Copy template to file
-                    URL templateStoreUrl = new URL(template);
                     try (InputStream inputStream = templateStoreUrl.openStream()) {
                         try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreUrl.getFile())) {
                             fileOutputStream.write(inputStream.readAllBytes());
@@ -205,12 +201,13 @@ public class KeyStores {
     public KeyPair getOrCreateKeyPair(String alias, String keyStoreName) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException, IOException, OperatorCreationException {
         KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName);
         KeyStore keyStore = getKeyStore(keyStoreName);
+        char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
 
-        PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyStoreConfiguration.getPassword());
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, password);
         if (privateKey == null) {
             KeyPair keyPair = keyGen.generateKeyPair();
             X509Certificate certificate = selfSign(keyPair, "cn=" + alias);
-            keyStore.setKeyEntry(alias, keyPair.getPrivate(), keyStoreConfiguration.getPassword(), new Certificate[]{certificate});
+            keyStore.setKeyEntry(alias, keyPair.getPrivate(), password, new Certificate[]{certificate});
             save(keyStore);
             return keyPair;
         } else {

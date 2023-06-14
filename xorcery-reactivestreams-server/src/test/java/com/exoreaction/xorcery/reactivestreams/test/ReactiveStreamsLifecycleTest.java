@@ -27,8 +27,10 @@ import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.*;
@@ -97,7 +99,7 @@ public class ReactiveStreamsLifecycleTest {
                 ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
                 ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
 
-                CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("numbers", config -> new ServerIntegerNoopPublisher(), ServerIntegerNoopPublisher.class);
+                CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("numbers", config -> new IntegerNoopPublisher(), IntegerNoopPublisher.class);
 
                 // When
                 CompletableFuture<Integer> result = new CompletableFuture<>();
@@ -201,8 +203,8 @@ public class ReactiveStreamsLifecycleTest {
 
                 CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("numbers", config ->
                 {
-                    return new ServerIntegerNoopPublisher();
-                }, ServerIntegerNoopPublisher.class);
+                    return new IntegerNoopPublisher();
+                }, IntegerNoopPublisher.class);
 
                 // When
                 ClientIntegerSubscriber subscriber = new ClientIntegerSubscriber(result);
@@ -217,6 +219,42 @@ public class ReactiveStreamsLifecycleTest {
         Assertions.assertThrows(CompletionException.class, result::join);
         Assertions.assertThrows(CompletionException.class, stream::join);
 
+    }
+
+    @Test
+    @Disabled
+    public void testInactivePublisherCausesReconnect() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration.asBuilder()
+                .add("reactivestreams.server.idleTimeout", "3s")
+                .build())) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
+                ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
+
+                CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("numbers", config -> new ServerIntegerSubscriber(), ServerIntegerSubscriber.class);
+
+                // When
+                CompletableFuture<Integer> result = new CompletableFuture<>();
+                IntegerNoopPublisher publisher  = new IntegerNoopPublisher();
+                CompletableFuture<Void> stream = reactiveStreamsClient.publish(serverInstanceConfiguration.getURI().getAuthority(), "numbers",
+                        Configuration::empty, publisher, IntegerNoopPublisher.class, ClientConfiguration.defaults());
+
+                // Wait
+                Thread.sleep(5000);
+
+                logger.info("Try send");
+                publisher.getSubscriber().join().onNext(1);
+                logger.info("Sent");
+
+                // Then
+                result.orTimeout(10, TimeUnit.SECONDS)
+                        .exceptionallyCompose(cancelStream(stream))
+                        .whenComplete(this::report)
+                        .toCompletableFuture().join();
+            }
+        }
     }
 
     private void report(Integer total, Throwable throwable) {
@@ -263,6 +301,38 @@ public class ReactiveStreamsLifecycleTest {
         }
     }
 
+    public static class ServerIntegerSubscriber
+            implements Flow.Subscriber<Integer> {
+
+        private int total = 0;
+        private Flow.Subscription subscription;
+
+        public ServerIntegerSubscriber() {
+        }
+
+        @Override
+        public void onSubscribe(Flow.Subscription subscription) {
+            this.subscription = subscription;
+            subscription.request(1);
+        }
+
+        @Override
+        public void onNext(Integer item) {
+            total += item;
+            subscription.request(1);
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            LogManager.getLogger(getClass()).error("Subscription failed", throwable);
+        }
+
+        @Override
+        public void onComplete() {
+            LogManager.getLogger(getClass()).info("Total:"+total);
+        }
+    }
+
     public static class ServerIntegerPublisher
             implements Flow.Publisher<Integer> {
 
@@ -291,13 +361,16 @@ public class ReactiveStreamsLifecycleTest {
         }
     }
 
-    public static class ServerIntegerNoopPublisher
+    public static class IntegerNoopPublisher
             implements Flow.Publisher<Integer> {
 
         Logger logger = LogManager.getLogger(getClass());
 
+        private CompletableFuture<Flow.Subscriber<? super Integer>> subscriber = new CompletableFuture<>();
+
         @Override
         public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
+            this.subscriber.complete(subscriber);
             subscriber.onSubscribe(new Flow.Subscription() {
                 @Override
                 public void request(long n) {
@@ -309,6 +382,10 @@ public class ReactiveStreamsLifecycleTest {
                     logger.info("Cancelled");
                 }
             });
+        }
+
+        public CompletableFuture<Flow.Subscriber<? super Integer>> getSubscriber() {
+            return subscriber;
         }
     }
 

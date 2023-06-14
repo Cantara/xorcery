@@ -52,7 +52,7 @@ public record RequestCertificateProcess(PKCS10CertificationRequest csr,
         public RequestCertificateProcess create(PKCS10CertificationRequest csr) {
             CertificatesConfiguration certificatesConfig = () -> configuration.getConfiguration("certificates");
             return new RequestCertificateProcess(csr, new CompletableFuture<>(),
-                    keyStores.getKeyStore("keystore"), keyStores,
+                    keyStores.getKeyStore(certificatesConfig.getCertificateStoreName()), keyStores,
                     certificatesConfig, providers, LogManager.getLogger(RequestCertificateProcess.class));
         }
     }
@@ -77,6 +77,7 @@ public record RequestCertificateProcess(PKCS10CertificationRequest csr,
                 certs.whenComplete(CompletableFutures.transfer(result));
             } else {
                 logger.warn("No certificate providers found");
+                result.completeExceptionally(new IllegalStateException("No certificate providers found"));
             }
         } catch (Throwable e) {
             logger.warn("Could not create CSR", e);

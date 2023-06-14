@@ -4,15 +4,12 @@ intermediateca:
   validity: 90d
 
 keystores:
-  cakeystore:
+  castore:
     path: "META-INF/intermediatecakeystore.p12"
-    password: "password"
-  truststore:
-    path: "META-INF/intermediatecatruststore.p12"
-    password: "password"
+    password: "{{ keystores.defaultPassword }}"
   rootstore:
-    path: "rootcakeystore.p12"
-    password: "password"
+    path: "{{ instance.home }}/rootcakeystore.p12"
+    password: "{{ keystores.defaultPassword }}"
 
 jersey.server.register:
   - com.exoreaction.xorcery.certificates.ca.resources.CertificateAuthorityResource

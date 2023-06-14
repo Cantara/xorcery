@@ -30,6 +30,14 @@ public record JettyServerSslConfiguration(Configuration configuration) {
         return configuration.getResourceURL("crls");
     }
 
+    public Optional<String> getKeyStoreName() {
+        return configuration.getString("keystore");
+    }
+
+    public Optional<String> getTrustStoreName() {
+        return configuration.getString("truststore");
+    }
+
     public String getAlias() {
         return configuration.getString("alias").orElse("self");
     }

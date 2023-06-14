@@ -1,12 +1,15 @@
 ---
 jetty.server.ssl.enabled: true
+jetty.server.ssl.keystore: "ssl"
+jetty.server.ssl.truststore: "truststore"
 jetty.server.ssl.crls: "META-INF/crls.pem"
+
 keystores:
-  keystore:
+  ssl:
     template: null
-    path: "META-INF/test-keystore.p12"
-    password: "password"
+    path: "META-INF/test-ssl.p12"
+    password: "{{ keystores.defaultPassword }}"
   truststore:
+    template: null
     path: "META-INF/test-truststore.p12"
-    password: "password"
-    crl: "META-INF/crl.pem"
+    password: "{{ keystores.defaultPassword }}"

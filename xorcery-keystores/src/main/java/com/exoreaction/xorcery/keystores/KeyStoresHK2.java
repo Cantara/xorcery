@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.keystores;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.messaging.Topic;
 import org.jvnet.hk2.annotations.ContractsProvided;
@@ -32,8 +33,8 @@ public class KeyStoresHK2 extends KeyStores {
     private final Topic<KeyStore> keyStoreTopic;
 
     @Inject
-    public KeyStoresHK2(Configuration configuration, Topic<KeyStore> keyStoreTopic) throws NoSuchAlgorithmException, NoSuchProviderException {
-        super(configuration);
+    public KeyStoresHK2(Configuration configuration, Secrets secrets,Topic<KeyStore> keyStoreTopic) throws NoSuchAlgorithmException, NoSuchProviderException {
+        super(configuration, secrets);
         this.keyStoreTopic = keyStoreTopic;
     }
 

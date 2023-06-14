@@ -21,6 +21,7 @@ open module xorcery.jetty.server {
 
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.metricregistry;
+    requires xorcery.secrets;
     requires xorcery.keystores;
     requires xorcery.health.api;
     requires xorcery.health.registry;

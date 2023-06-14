@@ -61,13 +61,15 @@ public class ReactiveStreamsServerService
         super(messageWorkers);
         this.metricRegistry = metricRegistry;
 
-        PublishersReactiveStreamsServlet publishersServlet = new PublishersReactiveStreamsServlet(configuration, streamName ->
+        ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
+
+        PublishersReactiveStreamsServlet publishersServlet = new PublishersReactiveStreamsServlet(reactiveStreamsServerConfiguration, streamName ->
         {
             return Optional.ofNullable(publisherEndpointFactories.get(streamName)).map(Supplier::get).orElse(null);
         });
         servletContextHandler.addServlet(new ServletHolder(publishersServlet), "/streams/publishers/*");
 
-        SubscribersReactiveStreamsServlet subscribersServlet = new SubscribersReactiveStreamsServlet(configuration, streamName ->
+        SubscribersReactiveStreamsServlet subscribersServlet = new SubscribersReactiveStreamsServlet(reactiveStreamsServerConfiguration, streamName ->
         {
             return Optional.ofNullable(subscriberEndpointFactories.get(streamName)).map(Supplier::get).orElse(null);
         });

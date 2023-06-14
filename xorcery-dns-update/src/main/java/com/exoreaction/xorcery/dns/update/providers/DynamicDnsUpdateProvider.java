@@ -40,12 +40,8 @@ public class DynamicDnsUpdateProvider
 
         dynamicDnsConfiguration.getKey().ifPresent(key ->
         {
-            try {
-                Name algo = Name.fromConstantString(key.getAlgorithm());
-                resolver.setTSIGKey(new TSIG(algo, key.getName(), secrets.getSecretString(key.getSecretName())));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            Name algo = Name.fromConstantString(key.getAlgorithm());
+            resolver.setTSIGKey(new TSIG(algo, key.getName(), secrets.getSecretString(key.getSecretName())));
         });
 
     }

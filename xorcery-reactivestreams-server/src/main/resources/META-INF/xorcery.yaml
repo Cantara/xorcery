@@ -2,3 +2,5 @@ reactivestreams:
   enabled: "{{ defaults.enabled }}"
   server:
     enabled: "{{ reactivestreams.enabled }}"
+    idleTimeout: "{{ defaults.idleTimeout }}"
+    maxTextMessageSize: 1048576

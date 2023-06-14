@@ -29,6 +29,6 @@ Configuration:
         level: trace
 
     Root:
-      level: info
+      level: trace
       AppenderRef:
         - ref: STDOUT

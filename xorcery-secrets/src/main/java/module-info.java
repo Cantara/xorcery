@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 open module xorcery.secrets {
-    exports com.exoreaction.xorcery.secrets.spi;
     exports com.exoreaction.xorcery.secrets;
-
-    requires org.apache.logging.log4j;
+    exports com.exoreaction.xorcery.secrets.providers;
+    exports com.exoreaction.xorcery.secrets.spi;
 
     requires xorcery.configuration.api;
-    requires xorcery.keystores;
+
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
 }

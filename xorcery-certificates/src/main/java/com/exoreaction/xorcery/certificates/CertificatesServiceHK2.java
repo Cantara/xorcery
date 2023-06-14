@@ -17,8 +17,11 @@ package com.exoreaction.xorcery.certificates;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.keystores.KeyStores;
+import com.exoreaction.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
 import org.bouncycastle.operator.OperatorCreationException;
+import org.glassfish.hk2.api.Immediate;
+import org.glassfish.hk2.api.PostConstruct;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -37,8 +40,9 @@ public class CertificatesServiceHK2
     @Inject
     public CertificatesServiceHK2(ServiceLocator serviceLocator,
                                   KeyStores keyStores,
+                                  Secrets secrets,
                                   Configuration configuration) throws GeneralSecurityException, IOException, OperatorCreationException {
-        super(serviceLocator.create(RequestCertificateProcess.Factory.class), keyStores, configuration);
+        super(serviceLocator.create(RequestCertificateProcess.Factory.class), keyStores, secrets, configuration);
     }
 
     @Override

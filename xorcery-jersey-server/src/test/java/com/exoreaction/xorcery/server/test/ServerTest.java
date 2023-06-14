@@ -19,6 +19,8 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.util.Sockets;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -29,6 +31,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServerTest {
+
+    Logger logger = LogManager.getLogger(getClass());
 
     String config = """
             jetty.client.enabled: true
@@ -45,10 +49,10 @@ public class ServerTest {
         try (Xorcery xorcery = new Xorcery(configuration)) {
             int httpPort = getHttpPort(xorcery.getServiceLocator().getService(Server.class));
             assertTrue(httpPort > 1024);
-            System.out.printf("Jetty http port: %d%n", httpPort);
+            logger.debug("Jetty http port: {}", httpPort);
             int httpsPort = getHttpsPort(xorcery.getServiceLocator().getService(Server.class));
             assertTrue(httpsPort < 0 || httpsPort > 1024);
-            System.out.printf("Jetty https port: %d%n", httpsPort);
+            logger.debug("Jetty https port: {}", httpsPort);
         }
     }
 

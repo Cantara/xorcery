@@ -29,10 +29,10 @@ import java.util.function.Function;
 
 public class PublishersReactiveStreamsServlet
         extends JettyWebSocketServlet {
-    private final Configuration configuration;
+    private final ReactiveStreamsServerConfiguration configuration;
     private final Function<String, Object> publisherWebSocketEndpointFactory;
 
-    public PublishersReactiveStreamsServlet(Configuration configuration,
+    public PublishersReactiveStreamsServlet(ReactiveStreamsServerConfiguration configuration,
                                             Function<String, Object> publisherWebSocketEndpointFactory) {
 
         this.publisherWebSocketEndpointFactory = publisherWebSocketEndpointFactory;
@@ -41,8 +41,8 @@ public class PublishersReactiveStreamsServlet
 
     @Override
     protected void configure(JettyWebSocketServletFactory factory) {
-        factory.setMaxTextMessageSize(1048576);
-        factory.setIdleTimeout(Duration.ofSeconds(configuration.getLong("idleTimeout").orElse(-1L)));
+        factory.setMaxTextMessageSize(configuration.getMaxTextMessageSize());
+        factory.setIdleTimeout(configuration.getIdleTimeout());
 
         factory.setCreator((jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
                 publisherWebSocketEndpointFactory.apply(jettyServerUpgradeRequest.getRequestPath().substring( "/streams/publishers/".length())));

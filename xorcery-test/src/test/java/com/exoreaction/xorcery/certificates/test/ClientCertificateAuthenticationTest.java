@@ -50,6 +50,7 @@ public class ClientCertificateAuthenticationTest {
             jetty.server.enabled: true
             jetty.server.ssl.enabled: true
             jetty.server.security.enabled: true    
+            secrets.enabled: true
             keystores.enabled: true
             """;
 

@@ -1,3 +1,2 @@
 certificates:
-  client:
-    enabled: false
+  enabled: false

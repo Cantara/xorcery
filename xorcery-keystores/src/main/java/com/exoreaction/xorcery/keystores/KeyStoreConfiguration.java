@@ -18,14 +18,15 @@ package com.exoreaction.xorcery.keystores;
 import com.exoreaction.xorcery.configuration.Configuration;
 
 import java.net.URL;
+import java.util.Optional;
 
 public record KeyStoreConfiguration(String name, Configuration configuration) {
     public URL getURL() {
         return configuration.getResourceURL("path").orElseThrow(() -> new IllegalArgumentException("Missing " + name + ".path"));
     }
 
-    public char[] getPassword() {
-        return configuration.getString("password").map(String::toCharArray).orElse(null);
+    public Optional<String> getPassword() {
+        return configuration.getString("password");
     }
 
     public String getType() {
@@ -40,7 +41,7 @@ public record KeyStoreConfiguration(String name, Configuration configuration) {
         return configuration.getBoolean("addRootCa").orElse(false);
     }
 
-    public String getTemplate() {
-        return configuration.getString("template").orElse(null);
+    public URL getTemplate() {
+        return configuration.getResourceURL("template").orElse(null);
     }
 }

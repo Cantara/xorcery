@@ -2,7 +2,7 @@
 
 A Java library for making webservices.
 
-All great journeys begin with a single step.
+Every great journey begin with a single step.
 
 The source code can be found at [GitHub](https://github.com/Cantara/xorcery) and is distributed under the terms of [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 

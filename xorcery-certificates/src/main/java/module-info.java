@@ -17,14 +17,16 @@ open module xorcery.certificates {
     exports com.exoreaction.xorcery.certificates.spi;
     exports com.exoreaction.xorcery.certificates;
 
+    requires xorcery.configuration.api;
+    requires xorcery.keystores;
+    requires xorcery.dns.client;
+    requires xorcery.secrets;
+
     requires org.apache.logging.log4j;
 
     requires org.bouncycastle.pkix;
     requires org.bouncycastle.provider;
     requires org.bouncycastle.util;
-    requires xorcery.configuration.api;
-    requires xorcery.keystores;
-    requires xorcery.dns.client;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;

@@ -16,7 +16,11 @@
 package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.glassfish.hk2.api.ImmediateController;
 import org.glassfish.hk2.runlevel.RunLevelController;
+
+import java.util.Collections;
 
 public record Hk2Configuration(Configuration configuration) {
 
@@ -30,5 +34,21 @@ public record Hk2Configuration(Configuration configuration) {
 
     public int getRunLevel() {
         return configuration.getInteger("runLevel").orElse(20);
+    }
+
+    public String[] getDescriptorNames() {
+        return configuration.getListAs("names", JsonNode::textValue).orElse(Collections.emptyList()).toArray(new String[0]);
+    }
+
+    public boolean isImmediateScopeEnabled() {
+        return configuration.getBoolean("immediateScope.enabled").orElse(true);
+    }
+
+    public ImmediateController.ImmediateServiceState getImmediateScopeState() {
+        return configuration.getEnum("immediateScope.state", ImmediateController.ImmediateServiceState.class).orElse(ImmediateController.ImmediateServiceState.RUNNING);
+    }
+
+    public boolean isThreadScopeEnabled() {
+        return configuration.getBoolean("threadScope.enabled").orElse(true);
     }
 }

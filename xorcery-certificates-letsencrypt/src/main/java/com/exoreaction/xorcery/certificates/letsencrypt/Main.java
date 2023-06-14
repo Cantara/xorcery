@@ -17,6 +17,10 @@ package com.exoreaction.xorcery.certificates.letsencrypt;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.keystores.KeyStores;
+import com.exoreaction.xorcery.secrets.Secrets;
+import com.exoreaction.xorcery.secrets.providers.EnvSecretsProvider;
+import com.exoreaction.xorcery.secrets.providers.SecretSecretsProvider;
+import com.exoreaction.xorcery.secrets.spi.SecretsProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.shredzone.acme4j.*;
@@ -29,6 +33,7 @@ import java.io.File;
 import java.security.KeyPair;
 import java.security.Provider;
 import java.security.Security;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
 
@@ -58,7 +63,8 @@ public class Main
                 .add("keystores.letsencrypt.password", keyStorePassword)
                 .build();
 
-        KeyStores keyStores = new KeyStores(config);
+        Map<String, SecretsProvider> providers = Map.of("env", new EnvSecretsProvider(), "secret", new SecretSecretsProvider());
+        KeyStores keyStores = new KeyStores(config, new Secrets(providers::get, "secret"));
 
         System.setProperty("log4j2.configurationFile", "META-INF/letsencryptlog4j2.yaml");
         logger = LogManager.getLogger("letsencrypt");

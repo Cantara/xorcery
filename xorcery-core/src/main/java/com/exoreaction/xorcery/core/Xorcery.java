@@ -17,19 +17,15 @@ package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.DynamicConfigurationService;
-import org.glassfish.hk2.api.Filter;
-import org.glassfish.hk2.api.MultiException;
-import org.glassfish.hk2.api.Populator;
-import org.glassfish.hk2.api.ServiceHandle;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.ServiceLocatorFactory;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
 import org.glassfish.hk2.runlevel.RunLevelController;
 import org.glassfish.hk2.utilities.BuilderHelper;
@@ -37,6 +33,8 @@ import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -68,7 +66,14 @@ public class Xorcery
 
     public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+        List<URI> configs = Resources.getResources("log4j2.yaml").stream().map(URL::toExternalForm).map(URI::create).toList();
+        Configurator.initialize("Xorcery Logging", ClassLoader.getSystemClassLoader(), configs, null);
+
         logger = LogManager.getLogger(Xorcery.class);
+
+        LoggerContext context = (LoggerContext) LogManager.getContext();
+
+        logger.info("Log configuration {}:{}", context.getConfiguration().getName(), context.getConfiguration().getConfigurationSource().getURI());
         Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
 
         this.serviceLocator = serviceLocator;
@@ -76,7 +81,8 @@ public class Xorcery
         InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         marker = MarkerManager.getMarker(instanceConfiguration.getId());
 
-        populateServiceLocator(serviceLocator, configuration);
+        populateServiceLocator(serviceLocator, configuration, hk2Configuration);
+//        setupServiceLocator(serviceLocator, hk2Configuration);
 
         // Instantiate all enabled services
         logger.info(marker, "Starting");
@@ -129,7 +135,7 @@ public class Xorcery
         };
     }
 
-    protected void populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration) throws MultiException {
+    protected void populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration, Hk2Configuration hk2Configuration) throws MultiException {
         DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
 
         DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
@@ -141,10 +147,20 @@ public class Xorcery
         Populator populator = dcs.getPopulator();
 
         try {
-            populator.populate(new ClasspathDescriptorFileFinder(ClasspathDescriptorFileFinder.class.getClassLoader(), configuration.getListAs("hk2.names", JsonNode::textValue).orElse(Collections.emptyList()).toArray(new String[0])),
+            populator.populate(new ClasspathDescriptorFileFinder(ClasspathDescriptorFileFinder.class.getClassLoader(), hk2Configuration.getDescriptorNames()),
                     new ConfigurationPostPopulatorProcessor(configuration));
         } catch (IOException e) {
             throw new MultiException(e);
+        }
+    }
+
+    private void setupServiceLocator(ServiceLocator serviceLocator, Hk2Configuration configuration) {
+        if (configuration.isImmediateScopeEnabled()) {
+            ImmediateController immediateController = ServiceLocatorUtilities.enableImmediateScopeSuspended(serviceLocator);
+            immediateController.setImmediateState(configuration.getImmediateScopeState());
+        }
+        if (configuration.isThreadScopeEnabled()) {
+            ServiceLocatorUtilities.enablePerThreadScope(serviceLocator);
         }
     }
 }

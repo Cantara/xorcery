@@ -22,6 +22,11 @@ hk2:
   threadPolicy: "FULLY_THREADED"
   threadCount: 5
   runLevel: 20
+  immediateScope:
+    enabled: false
+    state: "RUNNING"
+  threadScope:
+    enabled: true
   names:
     - default
     - xorcery

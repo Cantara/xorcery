@@ -33,4 +33,5 @@ open module xorcery.certificates.letsencrypt {
     requires info.picocli;
     requires org.bouncycastle.pkix;
     requires java.base;
+    requires xorcery.secrets;
 }

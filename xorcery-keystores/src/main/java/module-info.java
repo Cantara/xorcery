@@ -15,8 +15,11 @@
  */
 open module xorcery.keystores {
     exports com.exoreaction.xorcery.keystores;
+    exports com.exoreaction.xorcery.keystores.providers;
 
     requires xorcery.configuration.api;
+    requires xorcery.secrets;
+
     requires org.apache.logging.log4j;
     requires org.bouncycastle.provider;
     requires org.glassfish.hk2.api;

@@ -23,8 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
-@Named("eventstore")
+@Service(name="eventstore")
 public class EventStoreService {
 
     private static final Logger logger = LogManager.getLogger(EventStoreService.class);

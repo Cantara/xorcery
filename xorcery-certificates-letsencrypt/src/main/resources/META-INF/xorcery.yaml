@@ -6,8 +6,8 @@ letsencrypt:
 keystores:
   letsencrypt:
     template: "META-INF/letsencrypt.p12"
-    path: "letsencrypt.p12"
-    password: "password"
+    path: "{{ instance.home }}/letsencrypt.p12"
+    password: "{{ keystores.defaultPassword }}"
 
 jersey.server.register:
   - com.exoreaction.xorcery.certificates.letsencrypt.resources.HttpChallengeResource

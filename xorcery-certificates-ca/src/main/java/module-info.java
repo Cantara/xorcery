@@ -30,4 +30,5 @@ open module xorcery.certificates.ca {
     requires org.bouncycastle.pkix;
     requires jakarta.ws.rs;
     requires xorcery.service.api;
+    requires xorcery.secrets;
 }
