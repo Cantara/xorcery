@@ -14,6 +14,10 @@ instance:
   resources: "{{ ENV.RESOURCES | instance.buildResources }}"
   uri: "{{ jetty.server.uri | \"http://localhost\"}}"
 
+system:
+  "java.util.logging.manager": "org.apache.logging.log4j.jul.LogManager"
+  "log4j2.isThreadContextMapInheritable": true
+
 defaults:
   enabled: true
   idleTimeout: -1s
@@ -23,7 +27,7 @@ hk2:
   threadCount: 5
   runLevel: 20
   immediateScope:
-    enabled: false
+    enabled: true
     state: "RUNNING"
   threadScope:
     enabled: true
@@ -33,3 +37,21 @@ hk2:
 
 DefaultRunLevelContext:
   enabled: true
+
+log4j2:
+  Configuration:
+    name: Xorcery
+    status: warn
+    properties: {}
+    thresholdFilter:
+      level: debug
+    appenders: {}
+
+    Loggers:
+      logger:
+        - name: com.exoreaction.xorcery.core
+          level: info
+
+      Root:
+        level: info
+        AppenderRef: []

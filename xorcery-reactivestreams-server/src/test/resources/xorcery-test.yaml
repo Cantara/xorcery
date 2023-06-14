@@ -1,0 +1,15 @@
+log4j2:
+  Configuration:
+    Loggers:
+      logger:
+        - name: com.exoreaction.xorcery.core
+          level: info
+
+        - name: com.exoreaction.xorcery.reactivestreams
+          level: trace
+
+        - name: org.eclipse
+          level: info
+
+      Root:
+        level: info

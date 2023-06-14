@@ -17,8 +17,10 @@ package com.exoreaction.xorcery.jetty.server;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.core.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.util.Sockets;
+import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -38,10 +40,10 @@ public class JettyServerWiringTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.enabled", false)
                 .add("certificates.enabled", false)
-                .add("hk2.runLevel", "4")
+                .add("hk2.runLevel", "20")
                 .build();
 
-        System.out.println(configuration);
+//        LogManager.getLogger().info(configuration);
 
         Xorcery xorcery = new Xorcery(configuration);
         ServiceLocator serviceLocator = xorcery.getServiceLocator();

@@ -1,0 +1,15 @@
+log4j2:
+  Configuration:
+    Loggers:
+      logger:
+        - name: com.exoreaction.xorcery.core
+          level: debug
+
+        - name: org.eclipse.jetty
+          level: info
+
+        - name: org.jose4j
+          level: info
+
+        - name: javax
+          level: debug

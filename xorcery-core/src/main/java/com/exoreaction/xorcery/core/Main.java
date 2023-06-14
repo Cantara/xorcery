@@ -16,12 +16,14 @@
 package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationLogger;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.MarkerManager;
+import org.apache.logging.log4j.status.StatusLogger;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -35,7 +37,6 @@ import java.util.concurrent.Callable;
 @CommandLine.Command(name = "xorcery", version = "1.0")
 public class Main
         implements Callable<Integer> {
-    private Logger logger = LogManager.getLogger(Main.class);
 
     @CommandLine.Parameters(index = "0", arity = "0..1", description = "Configuration file")
     private File configuration;
@@ -43,38 +44,22 @@ public class Main
     @CommandLine.Option(names = "-id", description = "Server id")
     private String id;
 
-    @CommandLine.Option(names = "-log4j", description = "Log4j configuration")
-    private File log4jConfiguration;
-
     @Override
     public Integer call() throws Exception {
-
-        // Allow for additive log4j configuration file
-        if (log4jConfiguration != null && log4jConfiguration.exists()) {
-            String log4jProperty = System.getProperty("log4j2.configurationFile");
-            System.setProperty("log4j2.configurationFile", log4jProperty == null ?
-                    "log4j2.yaml," + log4jConfiguration.getAbsolutePath() :
-                    log4jProperty + "," + log4jConfiguration.getAbsolutePath());
-        }
-
-        System.setProperty("log4j2.isThreadContextMapInheritable", "true");
-
-        if (id != null)
-            System.setProperty("server_id", id);
-
         Configuration configuration = loadConfiguration();
 
         Xorcery xorcery = new Xorcery(configuration);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {
-            logger.info("Shutting down server");
+            Logger mainLogger = LogManager.getLogger(Main.class);
+            mainLogger.info("Shutting down server");
             try {
                 xorcery.close();
             } catch (Exception e) {
-                logger.warn("Error during shutdown", e);
+                mainLogger.warn("Error during shutdown", e);
             }
-            logger.info("Shutdown");
+            mainLogger.info("Shutdown");
 
             LogManager.shutdown();
         }));
@@ -88,17 +73,15 @@ public class Main
         StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
         ConfigurationBuilder builder = new ConfigurationBuilder().addDefaults().with(standardConfigurationBuilder.addFile(configuration));
 
-        // Log final configuration
-        logger.debug("Configuration:\n" + builder.builder());
-
+        // Log final and resolved configuration
+        ConfigurationLogger.getLogger().log(builder.builder().toString());
         Configuration configuration = builder.build();
-        logger.info(MarkerManager.getMarker("configuration"), configuration);
+        ConfigurationLogger.getLogger().log(configuration.toString());
+
         return configuration;
     }
 
-    public static void main(String[] args) throws Exception {
-        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
-
+    public static void main(String[] args) {
         System.exit(new CommandLine(new Main()).execute(args));
     }
 }

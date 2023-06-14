@@ -1,5 +1,0 @@
-Configuration:
-  Loggers:
-    logger:
-      - name: com.exoreaction.xorcery.core
-        level: info

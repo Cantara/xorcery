@@ -39,7 +39,6 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cance
 
 public class ReactiveStreamsLifecycleTest {
 
-    Logger logger = LogManager.getLogger(getClass());
     private InstanceConfiguration serverInstanceConfiguration;
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
@@ -67,9 +66,11 @@ public class ReactiveStreamsLifecycleTest {
     @Test
     public void testSubscriberProducesResult() throws Exception {
 
+
         // Given
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(serverConfiguration);
                 ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
                 ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
 
@@ -178,7 +179,7 @@ public class ReactiveStreamsLifecycleTest {
                             .exceptionallyCompose(cancelStream(stream))
                             .whenComplete((cfg, throwable) ->
                             {
-                                logger.info("Configuration/throwable:" + cfg, throwable);
+                                LogManager.getLogger().info("Configuration/throwable:" + cfg, throwable);
                                 Assertions.assertEquals("Bearer:abc", cfg.getString("Authorization").orElseThrow());
                             })
                             .toCompletableFuture().join();
@@ -237,16 +238,16 @@ public class ReactiveStreamsLifecycleTest {
 
                 // When
                 CompletableFuture<Integer> result = new CompletableFuture<>();
-                IntegerNoopPublisher publisher  = new IntegerNoopPublisher();
+                IntegerNoopPublisher publisher = new IntegerNoopPublisher();
                 CompletableFuture<Void> stream = reactiveStreamsClient.publish(serverInstanceConfiguration.getURI().getAuthority(), "numbers",
                         Configuration::empty, publisher, IntegerNoopPublisher.class, ClientConfiguration.defaults());
 
                 // Wait
                 Thread.sleep(5000);
 
-                logger.info("Try send");
+                LogManager.getLogger().info("Try send");
                 publisher.getSubscriber().join().onNext(1);
-                logger.info("Sent");
+                LogManager.getLogger().info("Sent");
 
                 // Then
                 result.orTimeout(10, TimeUnit.SECONDS)
@@ -259,9 +260,9 @@ public class ReactiveStreamsLifecycleTest {
 
     private void report(Integer total, Throwable throwable) {
         if (throwable != null)
-            logger.error("Error", throwable);
+            LogManager.getLogger().error("Error", throwable);
         else {
-            logger.info("Total:" + total);
+            LogManager.getLogger().info("Total:" + total);
             Assertions.assertEquals(4950, total);
         }
     }
@@ -329,7 +330,7 @@ public class ReactiveStreamsLifecycleTest {
 
         @Override
         public void onComplete() {
-            LogManager.getLogger(getClass()).info("Total:"+total);
+            LogManager.getLogger(getClass()).info("Total:" + total);
         }
     }
 

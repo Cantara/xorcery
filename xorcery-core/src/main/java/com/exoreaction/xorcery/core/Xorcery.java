@@ -17,14 +17,13 @@ package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.util.Resources;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.logging.log4j.LogManager;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationLogger;
+import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.spi.LoggerContext;
+import org.apache.logging.log4j.spi.ExtendedLogger;
 import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
 import org.glassfish.hk2.runlevel.RunLevelController;
@@ -33,9 +32,7 @@ import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,7 +52,10 @@ import java.util.Optional;
 public class Xorcery
         implements AutoCloseable {
 
-    private final Logger logger;
+    @Inject
+    private Logger logger;
+    @Inject
+    private LoggerContext loggerContext;
     private final Marker marker;
 
     private final ServiceLocator serviceLocator;
@@ -65,15 +65,15 @@ public class Xorcery
     }
 
     public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
-        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
-        List<URI> configs = Resources.getResources("log4j2.yaml").stream().map(URL::toExternalForm).map(URI::create).toList();
-        Configurator.initialize("Xorcery Logging", ClassLoader.getSystemClassLoader(), configs, null);
 
-        logger = LogManager.getLogger(Xorcery.class);
+        // Set configured system properties
+        Configuration system = configuration.getConfiguration("system");
+        system.json().fields().forEachRemaining(entry ->
+        {
+            if (!entry.getValue().isNull())
+                System.setProperty(entry.getKey(), entry.getValue().asText());
+        });
 
-        LoggerContext context = (LoggerContext) LogManager.getContext();
-
-        logger.info("Log configuration {}:{}", context.getConfiguration().getName(), context.getConfiguration().getConfigurationSource().getURI());
         Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
 
         this.serviceLocator = serviceLocator;
@@ -81,10 +81,22 @@ public class Xorcery
         InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         marker = MarkerManager.getMarker(instanceConfiguration.getId());
 
-        populateServiceLocator(serviceLocator, configuration, hk2Configuration);
-//        setupServiceLocator(serviceLocator, hk2Configuration);
+        List<String> configurationMonitor = new ArrayList<>();
+        PopulatorPostProcessor populatorPostProcessor = new ConfigurationPostPopulatorProcessor(configuration, configurationMonitor::add);
+        populateServiceLocator(serviceLocator, configuration, hk2Configuration, populatorPostProcessor);
+        setupServiceLocator(serviceLocator, hk2Configuration);
 
         // Instantiate all enabled services
+        serviceLocator.inject(this);
+        ExtendedLogger xorceryLogger = loggerContext.getLogger(Xorcery.class);
+        if (xorceryLogger.isDebugEnabled()) {
+            for (String msg : ConfigurationLogger.getLogger().drain()) {
+                xorceryLogger.debug(msg);
+            }
+            for (String msg : configurationMonitor) {
+                xorceryLogger.debug(msg);
+            }
+        }
         logger.info(marker, "Starting");
 
         Filter configurationFilter = getEnabledServicesFilter(configuration);
@@ -135,7 +147,7 @@ public class Xorcery
         };
     }
 
-    protected void populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration, Hk2Configuration hk2Configuration) throws MultiException {
+    protected void populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration, Hk2Configuration hk2Configuration, PopulatorPostProcessor populatorPostProcessor) throws MultiException {
         DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
 
         DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);
@@ -148,7 +160,7 @@ public class Xorcery
 
         try {
             populator.populate(new ClasspathDescriptorFileFinder(ClasspathDescriptorFileFinder.class.getClassLoader(), hk2Configuration.getDescriptorNames()),
-                    new ConfigurationPostPopulatorProcessor(configuration));
+                    populatorPostProcessor);
         } catch (IOException e) {
             throw new MultiException(e);
         }

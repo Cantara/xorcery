@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.json.test;
 
-import com.exoreaction.xorcery.json.VariableResolver;
+import com.exoreaction.xorcery.json.JsonResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -27,7 +27,7 @@ import java.io.IOException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-class VariableResolverTest {
+class JsonResolverTest {
     private static ObjectNode result;
 
     private static final String testYaml = """
@@ -70,7 +70,7 @@ class VariableResolverTest {
     public static void setup() throws IOException {
 
         ObjectNode objectNode = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(testYaml);
-        result = new VariableResolver().apply(objectNode, objectNode);
+        result = new JsonResolver().apply(objectNode, objectNode);
     }
 
     @Test

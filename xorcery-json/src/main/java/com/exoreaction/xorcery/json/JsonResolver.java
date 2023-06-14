@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
  * If the setting "myflag" resolves to true, then valuea is resolved, otherwise it continues to use valueb. Note that
  * each step in the default value resolution chain may use a conditional to decide whether it is valid
  */
-public class VariableResolver
+public class JsonResolver
         implements BiFunction<ObjectNode, ObjectNode, ObjectNode> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

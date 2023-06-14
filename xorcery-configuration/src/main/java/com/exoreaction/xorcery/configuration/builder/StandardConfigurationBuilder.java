@@ -27,6 +27,7 @@ import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.status.StatusLogger;
 
 import java.io.*;
 import java.net.URL;
@@ -34,7 +35,7 @@ import java.util.function.Consumer;
 
 public class StandardConfigurationBuilder {
 
-    private static final Logger logger = LogManager.getLogger(Configuration.class);
+    private static final ConfigurationLogger logger = ConfigurationLogger.getLogger();
 
     private static final YAMLMapper yamlMapper = new YAMLMapper();
     private static final JavaPropsMapper javaPropsMapper = new JavaPropsMapper();
@@ -110,17 +111,17 @@ public class StandardConfigurationBuilder {
 
     public void addSystemProperties(Configuration.Builder builder) {
         addConfigurationProvider("SYSTEM", new SystemPropertiesConfigurationProvider()).accept(builder);
-        logger.info("Added system properties");
+        logger.log("Added system properties");
     }
 
     public void addEnvironmentVariables(Configuration.Builder builder) {
         addConfigurationProvider("ENV", new EnvironmentVariablesConfigurationProvider()).accept(builder);
-        logger.info("Added environment variables");
+        logger.log("Added environment variables");
     }
 
     public void addCalculatedConfiguration(Configuration.Builder builder) {
         addConfigurationProvider("CALCULATED", new CalculatedConfigurationProvider()).accept(builder);
-        logger.info("Added calculated variables");
+        logger.log("Added calculated variables");
     }
 
     public void addXorceryDefaults(Configuration.Builder builder) throws UncheckedIOException {
@@ -129,7 +130,7 @@ public class StandardConfigurationBuilder {
                 .orElseThrow(() -> new UncheckedIOException(new IOException("Resource not found: META-INF/xorcery-defaults.yaml")));
         try (InputStream in = resource.openStream()) {
             addYaml(in).accept(builder);
-            logger.info("Loaded " + resource);
+            logger.log("Loaded " + resource);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -140,7 +141,7 @@ public class StandardConfigurationBuilder {
         for (URL resource : Resources.getResources("META-INF/xorcery.yaml")) {
             try (InputStream configurationStream = resource.openStream()) {
                 addYaml(configurationStream).accept(builder);
-                logger.info("Loaded " + resource);
+                logger.log("Loaded " + resource);
             } catch (IOException ex) {
                 throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex);
             } catch (UncheckedIOException ex) {
@@ -155,7 +156,7 @@ public class StandardConfigurationBuilder {
             for (URL resource : Resources.getResources("META-INF/xorcery-test.yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     addYaml(configurationStream).accept(builder);
-                    logger.info("Loaded " + resource);
+                    logger.log("Loaded " + resource);
                 }
             }
         } catch (IOException e) {
@@ -169,7 +170,7 @@ public class StandardConfigurationBuilder {
             for (URL resource : Resources.getResources("xorcery.yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     addYaml(configurationStream).accept(builder);
-                    logger.info("Loaded " + resource);
+                    logger.log("Loaded " + resource);
                 }
             }
         } catch (IOException e) {
@@ -183,7 +184,7 @@ public class StandardConfigurationBuilder {
             for (URL resource : Resources.getResources("xorcery-test.yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     addYaml(configurationStream).accept(builder);
-                    logger.info("Loaded " + resource);
+                    logger.log("Loaded " + resource);
                 }
             }
         } catch (IOException e) {
@@ -198,7 +199,7 @@ public class StandardConfigurationBuilder {
             if (overridesYamlFile.exists()) {
                 FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
                 addYaml(overridesYamlStream).accept(builder);
-                logger.info("Loaded " + overridesYamlFile);
+                logger.log("Loaded " + overridesYamlFile);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -212,7 +213,7 @@ public class StandardConfigurationBuilder {
             if (userYamlFile.exists()) {
                 FileInputStream userYamlStream = new FileInputStream(userYamlFile);
                 addYaml(userYamlStream).accept(builder);
-                logger.info("Loaded " + userYamlFile);
+                logger.log("Loaded " + userYamlFile);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -227,12 +228,12 @@ public class StandardConfigurationBuilder {
                 try {
                     if (configFile.getName().endsWith("yaml") || configFile.getName().endsWith("yml")) {
                         addYaml(new FileInputStream(configFile)).accept(builder);
-                        logger.info("Loaded " + configFile);
+                        logger.log("Loaded " + configFile);
                     } else if (configFile.getName().endsWith("properties")) {
                         addProperties(new FileInputStream(configFile)).accept(builder);
-                        logger.info("Loaded " + configFile);
+                        logger.log("Loaded " + configFile);
                     } else {
-                        logger.warn("Unknown configuration filetype: " + configFile);
+                        logger.log("Unknown configuration filetype: " + configFile);
                     }
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
@@ -247,7 +248,7 @@ public class StandardConfigurationBuilder {
         {
             try (InputStream in = resource.openStream()) {
                 addYaml(in).accept(builder);
-                logger.info("Loaded " + resource);
+                logger.log("Loaded " + resource);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

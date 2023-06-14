@@ -8,3 +8,46 @@ dns.client.nameServers:
 log4jpublisher.enabled: false
 
 metrics.enabled: false
+
+log4j2:
+  Configuration:
+    appenders:
+      Console:
+        name: STDOUT
+        target: SYSTEM_OUT
+        PatternLayout:
+          Pattern: "%d [%t] %-5level %marker %c{1.}: %msg%n%throwable"
+
+    Loggers:
+      logger:
+        - name: org.apache.logging.log4j
+          level: debug
+          additivity: false
+          AppenderRef:
+            ref: STDOUT
+
+        - name: com.exoreaction.xorcery.log4jsubscriber
+          level: debug
+          additivity: false
+          AppenderRef:
+            ref: STDOUT
+
+        - name: com.exoreaction.xorcery.core
+          level: debug
+
+        - name: com.exoreaction.xorcery.dns.server
+          level: info
+
+        - name: com.exoreaction.xorcery.certificates.server
+          level: info
+
+        - name: com.exoreaction.xorcery.reactivestreams.resources.websocket
+          level: info
+
+        - name: javax
+          level: info
+
+      Root:
+        level: info
+        AppenderRef:
+          - ref: STDOUT

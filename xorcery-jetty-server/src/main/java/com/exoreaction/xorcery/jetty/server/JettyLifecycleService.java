@@ -30,6 +30,8 @@ import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.thread.ThreadPool;
+import org.glassfish.hk2.api.Immediate;
+import org.glassfish.hk2.api.PostConstruct;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
@@ -37,17 +39,23 @@ import org.jvnet.hk2.annotations.Service;
 @Service(name = "jetty.server")
 @RunLevel(18)
 public class JettyLifecycleService
-        implements PreDestroy {
+        implements PostConstruct, PreDestroy {
 
-    private final Logger logger = LogManager.getLogger(getClass());
+    private final Logger logger;
     private final Server server;
 
     @Inject
-    public JettyLifecycleService(Server server, HealthCheckRegistry healthCheckRegistry) throws Exception {
+    public JettyLifecycleService(Server server, HealthCheckRegistry healthCheckRegistry, Logger logger) throws Exception {
         this.server = server;
+        this.logger = logger;
         healthCheckRegistry.register("jetty.server", this::check);
         server.start();
         logger.info("Started Jetty server");
+    }
+
+    @Override
+    public void postConstruct() {
+        logger.info("Post construct");
     }
 
     @Override

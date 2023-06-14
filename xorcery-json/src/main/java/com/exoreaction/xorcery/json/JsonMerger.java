@@ -86,10 +86,37 @@ public class JsonMerger
             }
         } else if (value instanceof ArrayNode addingarray) {
             JsonNode currentValue = currentObject.path(key);
-            if (currentValue instanceof MissingNode) {
+            if (currentValue.isMissingNode()) {
                 currentObject.set(key, addingarray);
             } else if (currentValue instanceof ArrayNode currentArray) {
-                currentArray.addAll(addingarray);
+                addingarray.forEach(addingValue ->
+                {
+                    if (addingValue instanceof ObjectNode addingObject)
+                    {
+                        // Check if object with this identity exists in array
+                        boolean updatedObject = false;
+                        for (JsonNode jsonNode : currentArray) {
+                            if (jsonNode instanceof ObjectNode currentArrayObject)
+                            {
+                                // Merge it
+                                Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
+                                Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
+                                if (currentIdField.getKey().equals(addingIdField.getKey()) && currentIdField.getValue().equals(addingIdField.getValue())) {
+                                    merge0(currentArrayObject, addingObject, false);
+                                    updatedObject = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!updatedObject)
+                        {
+                            currentArray.add(addingValue);
+                        }
+                    } else
+                    {
+                        currentArray.add(addingValue);
+                    }
+                });
             }
         } else {
             currentObject.set(key, value);

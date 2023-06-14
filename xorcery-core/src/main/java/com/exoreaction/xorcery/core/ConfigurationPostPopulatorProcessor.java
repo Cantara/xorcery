@@ -20,11 +20,13 @@ import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.status.StatusLogger;
 import org.glassfish.hk2.api.PopulatorPostProcessor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.DescriptorImpl;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -34,8 +36,9 @@ import java.util.function.Function;
  *
  * @param configuration
  */
-public record ConfigurationPostPopulatorProcessor(Configuration configuration)
+public record ConfigurationPostPopulatorProcessor(Configuration configuration, Consumer<String> monitor)
         implements PopulatorPostProcessor {
+
     @Override
     public DescriptorImpl process(ServiceLocator serviceLocator, DescriptorImpl descriptorImpl) {
 
@@ -70,10 +73,10 @@ public record ConfigurationPostPopulatorProcessor(Configuration configuration)
                     JsonElement.toFlatMap(metadatas, "", object, mapper);
                     return metadatas;
                 }).ifPresent(descriptorImpl::addMetadata);
-                LogManager.getLogger(getClass()).debug("Enabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=true)");
+                monitor.accept("Enabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=true)");
                 return descriptorImpl;
             } else {
-                LogManager.getLogger(getClass()).debug("Disabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=false)");
+                monitor.accept("Disabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=false)");
                 return null;
             }
         } else {

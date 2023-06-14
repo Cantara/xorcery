@@ -9,6 +9,8 @@ objectarray:
     type: xyzzy2
   - id: asd2
     type: xyzzy2
+  - id: asd
+    type: xyzzy2
 
 object:
   value2: newvalue2

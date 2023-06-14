@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.configuration;
 
 import com.exoreaction.xorcery.builders.With;
-import com.exoreaction.xorcery.json.VariableResolver;
+import com.exoreaction.xorcery.json.JsonResolver;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -109,9 +109,14 @@ public record Configuration(ObjectNode json)
             return add(name, mapper.valueToTree(value));
         }
 
+        public Builder remove(String name) {
+            builder.remove(name);
+            return this;
+        }
+
         public Configuration build() {
             // Resolve any references
-            return new Configuration(new VariableResolver().apply(builder, builder));
+            return new Configuration(new JsonResolver().apply(builder, builder));
         }
 
         @Override

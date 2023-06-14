@@ -20,6 +20,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.util.Sockets;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.junit.jupiter.api.Test;
 
 public class PublisherSubscriberTest {
@@ -30,19 +31,29 @@ public class PublisherSubscriberTest {
 
     @Test
     public void testLog4jPublisherSubscriber() throws Exception {
-        Configuration configuration = new Configuration.Builder()
+        int port = Sockets.nextFreePort();
+        Configuration serverConfiguration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", Sockets.nextFreePort())
-                .add("log4jpublisher.subscriber.authority", "server.xorcery.test:{{ jetty.server.port }}")
+                .add("jetty.server.ssl.port", port)
                 .build();
 
-//        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        Configuration clientConfiguration = new Configuration.Builder()
+                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+                .add("jetty.server.enabled", false)
+                .add("reactivestreams.server.enabled", false)
+                .add("log4jsubscriber.enabled", false)
+                .add("log4jpublisher.subscriber.authority", "server.xorcery.test:"+port)
+                .build();
 
-        try (Xorcery xorcery = new Xorcery(configuration)) {
-            LogManager.getLogger(getClass()).info("Test");
-            Thread.sleep(1000);
+        System.out.println(serverConfiguration);
+        System.out.println(clientConfiguration);
+
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                client.getServiceLocator().getService(LoggerContext.class).getLogger(getClass()).info("Test");
+                Thread.sleep(1000);
+            }
         }
     }
-
 }
