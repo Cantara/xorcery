@@ -16,8 +16,8 @@
 package com.exoreaction.xorcery.configuration;
 
 import com.exoreaction.xorcery.builders.With;
-import com.exoreaction.xorcery.json.JsonResolver;
 import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.json.JsonResolver;
 import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -63,7 +63,11 @@ public record Configuration(ObjectNode json)
             int i = name.indexOf(".");
             if (i == -1) {
                 // name is the last element in path to navigate, navigation complete.
-                node.set(name, value);
+                if (node.path(name).isArray()) {
+                    ((ArrayNode) node.get(name)).add(value);
+                } else {
+                    node.set(name, value);
+                }
                 return node;
             }
             String childElement = name.substring(0, i);
