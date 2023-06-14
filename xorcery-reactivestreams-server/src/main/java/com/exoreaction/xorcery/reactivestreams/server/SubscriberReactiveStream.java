@@ -247,7 +247,18 @@ public class SubscriberReactiveStream
         if (cause instanceof ClosedChannelException) {
             // Ignore
         } else {
-            logger.warn(marker, "Subscriber websocket error", cause);
+            switch(cause.getClass().getName())
+            {
+                case "org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException":
+                {
+                    // Do nothing
+                }
+                default:
+                {
+                    logger.warn(marker, "Subscriber websocket error", cause);
+                }
+            }
+
             if (subscriber != null) {
                 subscriber.onError(cause);
             }

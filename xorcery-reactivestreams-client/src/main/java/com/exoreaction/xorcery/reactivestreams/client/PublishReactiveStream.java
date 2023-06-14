@@ -23,7 +23,9 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientStreamException;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -37,6 +39,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
+import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -296,22 +299,23 @@ public class PublishReactiveStream
             return;
         }
 
-        if (!uriIterator.hasNext()) {
-            if (publisherConfiguration.isRetryEnabled()) {
-
+        if (publisherConfiguration.isRetryEnabled()) {
+            if (uriIterator.hasNext()) {
+                connect(uriIterator);
+            } else {
+                if (cause instanceof ServerShutdownStreamException) {
+                    retryDelay = 0;
+                }
                 timer.schedule(this::start, retryDelay, TimeUnit.MILLISECONDS);
                 // Exponential backoff, gets reset on successful connect, max 60s delay
-                retryDelay = Math.min(retryDelay*2, 60000);
-            } else
-            {
-                if (cause == null)
-                    result.cancel(true);
-                else
-                    result.completeExceptionally(cause);
+                retryDelay = Math.min(retryDelay * 2, 60000);
             }
-
-        } else
-            connect(uriIterator);
+        } else {
+            if (cause == null)
+                result.cancel(true);
+            else
+                result.completeExceptionally(cause);
+        }
     }
 
     // WebSocket
@@ -382,12 +386,12 @@ public class PublishReactiveStream
 
         session = null;
         // TODO This has to be reviewed to see what codes should cause retry and what should cause cancellation of the process
-        if (statusCode == 1000 || statusCode == 1001 || statusCode == 1006) {
+        if (statusCode == StatusCode.NORMAL) {
             logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             result.complete(null);
-        } else {
+        } else if (statusCode == StatusCode.SHUTDOWN || statusCode == StatusCode.NO_CLOSE) {
             logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
-            retry(null);
+            retry(new ServerShutdownStreamException(reason));
         }
     }
 
@@ -425,11 +429,6 @@ public class PublishReactiveStream
     @Override
     public void onEvent(AtomicReference<Object> event, long sequence, boolean endOfBatch) throws Exception {
         try {
-            while (!semaphore.tryAcquire(1, TimeUnit.SECONDS) && !result.isDone()) {
-                if (session == null || !session.isOpen())
-                    return;
-            }
-
             ByteBufferOutputStream2 outputStream = new ByteBufferOutputStream2(pool, true);
 
             // Write event data
@@ -443,6 +442,15 @@ public class PublishReactiveStream
 
             // Send it
             ByteBuffer eventBuffer = outputStream.takeByteBuffer();
+
+            while (!semaphore.tryAcquire(1, TimeUnit.SECONDS) && !result.isDone()) {
+                if (session == null || !session.isOpen())
+                    return;
+            }
+
+            if (session == null) {
+                return;
+            }
 
             session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
                 @Override

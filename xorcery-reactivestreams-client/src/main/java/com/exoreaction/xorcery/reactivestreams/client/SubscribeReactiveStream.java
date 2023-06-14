@@ -280,23 +280,25 @@ public class SubscribeReactiveStream
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "retry");
         }
-        requests.set(outstandingRequests.get());
-        if (!uriIterator.hasNext()) {
-            if (subscriberConfiguration.isRetryEnabled()) {
+        if (subscriberConfiguration.isRetryEnabled()) {
+            requests.set(outstandingRequests.get());
+
+            if (uriIterator.hasNext()) {
+                connect(uriIterator);
+            } else {
                 timer.schedule(this::start, retryDelay, TimeUnit.MILLISECONDS);
                 // Exponential backoff, gets reset on successful connect, max 60s delay
                 retryDelay = Math.min(retryDelay * 2, 60000);
-            } else {
-                if (cause == null) {
-                    subscriber.onComplete();
-                    result.cancel(true);
-                } else {
-                    subscriber.onError(cause);
-                    result.completeExceptionally(cause);
-                }
             }
-        } else
-            connect(uriIterator);
+        } else {
+            if (cause == null) {
+                subscriber.onComplete();
+                result.cancel(true);
+            } else {
+                subscriber.onError(cause);
+                result.completeExceptionally(cause);
+            }
+        }
     }
 
     // Websocket

@@ -40,7 +40,6 @@ public class JettyServerFactory
     @Inject
     public JettyServerFactory(Configuration configuration, Provider<SslContextFactory.Server> sslContextFactoryProvider, Logger logger) {
 
-        logger.info("Jetty factory");
         JettyServerConfiguration jettyConfig = new JettyServerConfiguration(configuration.getConfiguration("jetty.server"));
         JettyServerHttp2Configuration jettyHttp2Config = new JettyServerHttp2Configuration(configuration.getConfiguration("jetty.server.http2"));
         JettyServerSslConfiguration jettyServerSslConfiguration = new JettyServerSslConfiguration(configuration.getConfiguration("jetty.server.ssl"));

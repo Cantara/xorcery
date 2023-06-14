@@ -39,7 +39,7 @@ import org.jvnet.hk2.annotations.Service;
 @Service(name = "jetty.server")
 @RunLevel(18)
 public class JettyLifecycleService
-        implements PostConstruct, PreDestroy {
+        implements PreDestroy {
 
     private final Logger logger;
     private final Server server;
@@ -51,11 +51,6 @@ public class JettyLifecycleService
         healthCheckRegistry.register("jetty.server", this::check);
         server.start();
         logger.info("Started Jetty server");
-    }
-
-    @Override
-    public void postConstruct() {
-        logger.info("Post construct");
     }
 
     @Override
