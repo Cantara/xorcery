@@ -130,7 +130,7 @@ public class Xorcery
         if (!serviceLocator.isShutdown()) {
             logger.info(marker, "Stopping");
             RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
-            runLevelController.proceedTo(0);
+            runLevelController.proceedTo(-1);
             serviceLocator.shutdown();
             logger.info(marker, "Stopped");
         }

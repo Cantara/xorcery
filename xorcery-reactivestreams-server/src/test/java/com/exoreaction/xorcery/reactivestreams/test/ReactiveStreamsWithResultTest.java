@@ -15,14 +15,15 @@
  */
 package com.exoreaction.xorcery.reactivestreams.test;
 
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
-import com.exoreaction.xorcery.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import com.exoreaction.xorcery.util.Sockets;
 import jakarta.ws.rs.NotAuthorizedException;
 import org.apache.logging.log4j.LogManager;
@@ -33,14 +34,13 @@ import org.junit.jupiter.api.Test;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cancelStream;
 
 public class ReactiveStreamsWithResultTest {
-
-    Logger logger = LogManager.getLogger(getClass());
 
     @Test
     public void testServerProducesResult() throws Exception {
@@ -57,14 +57,31 @@ public class ReactiveStreamsWithResultTest {
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
+            ReactiveStreamsServerConfiguration conf = new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
+
 
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("numbers", config -> new ServerIntegerSubscriber(), ServerIntegerSubscriber.class);
 
             // When
+            ClientIntegerWithResultPublisher publisher = new ClientIntegerWithResultPublisher();
+            CompletableFuture<Void> stream = reactiveStreamsClient.publish(conf.getURI(), "numbers",
+                    Configuration::empty, publisher, ClientIntegerWithResultPublisher.class, ClientConfiguration.defaults());
+
+            Logger logger = LogManager.getLogger();
+
             AtomicInteger result = new AtomicInteger(0);
-            ClientIntegerPublisher subscriber = new ClientIntegerPublisher(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "numbers",
-                    Configuration::empty, subscriber, ClientIntegerPublisher.class, ClientConfiguration.defaults());
+            for (int i = 0; i < 100; i++) {
+                publisher.publish(i).whenComplete((v, t) ->
+                {
+                    logger.info("Result:" + v);
+                    result.addAndGet(v);
+                });
+            }
+
+            publisher.close();
+
+            Thread.sleep(1000);
+
 
             // Then
             stream.orTimeout(1000, TimeUnit.SECONDS)
@@ -197,6 +214,8 @@ public class ReactiveStreamsWithResultTest {
     }*/
 
     private void report(Integer total, Throwable throwable) {
+        Logger logger = LogManager.getLogger(getClass());
+
         if (throwable != null)
             logger.error("Error", throwable);
         else {
@@ -240,48 +259,51 @@ public class ReactiveStreamsWithResultTest {
         }
     }
 
-    public static class ClientIntegerPublisher
+    public static class ClientIntegerWithResultPublisher
+            extends ClientWithResultPublisher<Integer, Integer>
             implements Flow.Publisher<WithResult<Integer, Integer>> {
+    }
 
-        private final Logger logger = LogManager.getLogger(getClass());
-        private final AtomicInteger result;
+    public static class ClientWithResultPublisher<T, R>
+            implements AutoCloseable {
 
-        public ClientIntegerPublisher(AtomicInteger result) {
-            this.result = result;
+        private Flow.Subscriber<? super WithResult<T, R>> subscriber;
+        private final Semaphore requested = new Semaphore(0);
+
+        public ClientWithResultPublisher() {
         }
 
-        @Override
-        public void subscribe(Flow.Subscriber<? super WithResult<Integer, Integer>> subscriber) {
+        public void subscribe(Flow.Subscriber<? super WithResult<T, R>> subscriber) {
+            this.subscriber = subscriber;
             subscriber.onSubscribe(new Flow.Subscription() {
-
-                int current = 0;
-                int max = 100;
 
                 @Override
                 public void request(long n) {
 
-                    for (long i = 0; i < n && current < max; i++) {
-
-                        CompletableFuture<Integer> response = new CompletableFuture<Integer>();
-                        response.whenComplete((v, t)->
-                        {
-                            logger.info("Result:" + v);
-                            result.addAndGet(v);
-                        });
-                        subscriber.onNext(new WithResult<>(current++, response));
-                    }
-
-                    if (current == 100) {
-                        logger.info("Subscriber complete");
-                        subscriber.onComplete();
-                        current++;
-                    }
+                    requested.release((int) n);
                 }
 
                 @Override
                 public void cancel() {
                 }
             });
+        }
+
+        public CompletableFuture<R> publish(T item) {
+            CompletableFuture<R> response = new CompletableFuture<R>();
+            try {
+                requested.acquire();
+                subscriber.onNext(new WithResult<>(item, response));
+                return response;
+            } catch (InterruptedException e) {
+                response.completeExceptionally(e);
+                return response;
+            }
+        }
+
+        @Override
+        public void close() throws Exception {
+            subscriber.onComplete();
         }
     }
 
@@ -332,8 +354,7 @@ public class ReactiveStreamsWithResultTest {
 
         @Override
         public void onNext(WithResult<Integer, Integer> item) {
-            CompletableFuture.delayedExecutor(new Random().nextInt(5), TimeUnit.SECONDS).execute(()->
-                    item.result().complete(item.event()));
+            item.result().complete(item.event());
             logger.info("Received integer:" + item.event());
             subscription.request(1);
         }

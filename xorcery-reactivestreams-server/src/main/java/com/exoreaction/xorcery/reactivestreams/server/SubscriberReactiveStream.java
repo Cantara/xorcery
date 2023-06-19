@@ -128,7 +128,7 @@ public class SubscriberReactiveStream
     public void sendRequests() {
         try {
             if (!session.isOpen()) {
-                logger.info(marker, "Session closed, cannot send requests");
+                logger.debug(marker, "Session closed, cannot send requests");
                 return;
             }
 

@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module xorcery.benchmarks {
+open module xorcery.benchmarks {
+    exports com.exoreaction.xorcery.benchmarks.reactivestreams;
+    exports com.exoreaction.xorcery.benchmarks.reactivestreams.jmh_generated;
+
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
@@ -28,4 +31,5 @@ module xorcery.benchmarks {
     requires xorcery.reactivestreams.api;
     requires jmh.core;
     requires xorcery.jsonapi.server;
+    requires jdk.unsupported;
 }

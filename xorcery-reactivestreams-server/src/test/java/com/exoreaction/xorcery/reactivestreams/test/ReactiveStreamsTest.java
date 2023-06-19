@@ -24,6 +24,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.util.Sockets;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -205,9 +206,6 @@ public class ReactiveStreamsTest {
             // server subscribes
             BinaryFibonacciSubscriber subscriber = new BinaryFibonacciSubscriber();
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("fibonacci", config -> subscriber, BinaryFibonacciSubscriber.class);
-            subscriberComplete.thenAccept(v -> {
-                System.out.printf("subscriber completed!%n");
-            });
 
             // client publishes
             CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "fibonacci",
@@ -299,10 +297,6 @@ public class ReactiveStreamsTest {
             // server subscribes
             BinaryNioFibonacciSubscriber subscriber = new BinaryNioFibonacciSubscriber();
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("fibonacci", config -> subscriber, BinaryNioFibonacciSubscriber.class);
-            subscriberComplete.thenAccept(v -> {
-                // TODO figure out why this never happens!
-                System.out.printf("subscriber completed!%n");
-            });
 
             // client publishes
             CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "fibonacci",

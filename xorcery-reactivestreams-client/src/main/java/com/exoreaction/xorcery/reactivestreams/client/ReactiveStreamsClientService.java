@@ -17,7 +17,6 @@ package com.exoreaction.xorcery.reactivestreams.client;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.DefaultsConfiguration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
@@ -27,10 +26,12 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
@@ -44,6 +45,7 @@ public class ReactiveStreamsClientService
         extends ReactiveStreamsAbstractService
         implements ReactiveStreamsClient {
 
+    private final ReactiveStreamsClientConfiguration clientConfiguration;
     private DnsLookup dnsLookup;
     private MetricRegistry metricRegistry;
     private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
@@ -58,21 +60,32 @@ public class ReactiveStreamsClientService
                                         HttpClient httpClient,
                                         DnsLookupService dnsLookup,
                                         MetricRegistry metricRegistry,
-                                        Supplier<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
-        super(messageWorkers);
+                                        Supplier<LocalStreamFactories> localStreamFactoriesProvider,
+                                        Logger logger) throws Exception {
+        super(messageWorkers, logger);
         this.dnsLookup = dnsLookup;
         this.metricRegistry = metricRegistry;
         this.reactiveStreamsServerServiceProvider = localStreamFactoriesProvider;
         this.defaultScheme = configuration.getString("reactivestreams.client.scheme").orElseThrow();
 
+        clientConfiguration = new ReactiveStreamsClientConfiguration(configuration.getConfiguration("reactivestreams.client"));
+
         WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-        webSocketClient.setIdleTimeout(new DefaultsConfiguration(configuration.getConfiguration("defaults")).getIdleTimeout());
+        webSocketClient.setStopAtShutdown(false);
+        webSocketClient.setIdleTimeout(clientConfiguration.getIdleTimeout());
+        webSocketClient.setConnectTimeout(clientConfiguration.getConnectTimeout().toMillis());
+        webSocketClient.setAutoFragment(clientConfiguration.isAutoFragment());
+        webSocketClient.setMaxTextMessageSize(clientConfiguration.getMaxTextMessageSize());
+        webSocketClient.setMaxBinaryMessageSize(clientConfiguration.getMaxBinaryMessageSize());
+        webSocketClient.setMaxFrameSize(clientConfiguration.getMaxFrameSize());
+        webSocketClient.setInputBufferSize(clientConfiguration.getInputBufferSize());
+        webSocketClient.setOutputBufferSize(clientConfiguration.getOutputBufferSize());
         webSocketClient.start();
         this.webSocketClient = webSocketClient;
     }
 
     @Override
-    public CompletableFuture<Void> publish(String authority, String streamName, Supplier<Configuration> subscriberServerConfiguration,
+    public CompletableFuture<Void> publish(URI serverUri, String streamName, Supplier<Configuration> subscriberServerConfiguration,
                                            Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType, ClientConfiguration publisherClientConfiguration) {
 
         CompletableFuture<Void> result = new CompletableFuture<>();
@@ -87,7 +100,7 @@ public class ReactiveStreamsClientService
         });
         activePublishProcesses.add(result);
 
-        if (authority == null) {
+        if (serverUri == null) {
             LocalStreamFactories.WrappedSubscriberFactory subscriberFactory = reactiveStreamsServerServiceProvider.get().getSubscriberFactory(streamName);
 
             if (subscriberFactory != null) {
@@ -125,39 +138,83 @@ public class ReactiveStreamsClientService
 
         // Start publishing process
         if (resultReader != null) {
-            new PublishWithResultReactiveStream(
-                    defaultScheme, authority, streamName,
-                    publisherClientConfiguration,
-                    dnsLookup,
-                    webSocketClient,
-                    (Flow.Publisher<Object>) publisher,
-                    eventWriter,
-                    resultReader,
-                    subscriberServerConfiguration,
-                    timer,
-                    byteBufferPool,
-                    metricRegistry,
-                    result);
+            switch (clientConfiguration.getStrategy()) {
+                case standard -> {
+                    new PublishWithResultReactiveStreamStandard(
+                            serverUri, streamName,
+                            publisherClientConfiguration,
+                            dnsLookup,
+                            webSocketClient,
+                            (Flow.Publisher<Object>) publisher,
+                            eventWriter,
+                            resultReader,
+                            subscriberServerConfiguration,
+                            byteBufferPool,
+                            metricRegistry,
+                            result);
+                }
+                case disruptor -> {
+                    new PublishWithResultReactiveStreamDisruptor(
+                            serverUri.getScheme(), serverUri.getAuthority(), streamName,
+                            publisherClientConfiguration,
+                            dnsLookup,
+                            webSocketClient,
+                            (Flow.Publisher<Object>) publisher,
+                            eventWriter,
+                            resultReader,
+                            subscriberServerConfiguration,
+                            timer,
+                            byteBufferPool,
+                            metricRegistry,
+                            result);
+                }
+            }
         } else {
-            new PublishReactiveStream(
-                    defaultScheme, authority, streamName,
-                    publisherClientConfiguration,
-                    dnsLookup,
-                    webSocketClient,
-                    (Flow.Publisher<Object>) publisher,
-                    eventWriter,
-                    subscriberServerConfiguration,
-                    timer,
-                    byteBufferPool,
-                    metricRegistry,
-                    result);
-
+            switch (clientConfiguration.getStrategy()) {
+                case standard -> {
+                    new PublishReactiveStreamStandard(serverUri,
+                            streamName,
+                            publisherClientConfiguration,
+                            dnsLookup,
+                            webSocketClient,
+                            (Flow.Publisher<Object>) publisher,
+                            eventWriter,
+                            subscriberServerConfiguration,
+                            byteBufferPool,
+                            metricRegistry,
+                            result);
+                }
+                case disruptor -> {
+                    new PublishReactiveStreamDisruptor(serverUri.getScheme(), serverUri.getAuthority(),
+                            streamName,
+                            publisherClientConfiguration,
+                            dnsLookup,
+                            webSocketClient,
+                            (Flow.Publisher<Object>) publisher,
+                            eventWriter,
+                            subscriberServerConfiguration,
+                            timer,
+                            byteBufferPool,
+                            metricRegistry,
+                            result);
+                }
+            }
         }
         return result;
     }
 
     @Override
-    public CompletableFuture<Void> subscribe(String authority, String streamName, Supplier<Configuration> publisherConfiguration,
+    public CompletableFuture<Void> publish(String authority, String subscriberStreamName, Supplier<Configuration> subscriberServerConfiguration, Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType, ClientConfiguration publisherClientConfiguration) {
+        return publish(authority == null ? null : URI.create(defaultScheme + "://" + authority),
+                subscriberStreamName,
+                subscriberServerConfiguration,
+                publisher,
+                publisherType,
+                publisherClientConfiguration);
+    }
+
+    @Override
+    public CompletableFuture<Void> subscribe(URI serverUri, String streamName, Supplier<Configuration> publisherConfiguration,
                                              Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType, ClientConfiguration subscriberClientConfiguration) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
@@ -171,7 +228,7 @@ public class ReactiveStreamsClientService
         });
         activeSubscribeProcesses.add(result);
 
-        if (authority == null) {
+        if (serverUri == null) {
             LocalStreamFactories.WrappedPublisherFactory publisherFactory = reactiveStreamsServerServiceProvider.get().getPublisherFactory(streamName);
 
             if (publisherFactory != null) {
@@ -210,7 +267,7 @@ public class ReactiveStreamsClientService
         // Start subscription process
         if (resultWriter != null) {
             new SubscribeWithResultReactiveStream(
-                    defaultScheme, authority, streamName,
+                    serverUri.getScheme(), serverUri.getAuthority(), streamName,
                     subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
@@ -225,7 +282,7 @@ public class ReactiveStreamsClientService
 
         } else {
             new SubscribeReactiveStream(
-                    defaultScheme, authority, streamName,
+                    serverUri.getScheme(), serverUri.getAuthority(), streamName,
                     subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
@@ -238,6 +295,16 @@ public class ReactiveStreamsClientService
                     result);
         }
         return result;
+    }
+
+    @Override
+    public CompletableFuture<Void> subscribe(String toAuthority, String publisherStreamName, Supplier<Configuration> publisherServerConfiguration, Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType, ClientConfiguration subscriberClientConfiguration) {
+        return subscribe(toAuthority == null ? null : URI.create(defaultScheme + "://" + toAuthority),
+                publisherStreamName,
+                publisherServerConfiguration,
+                subscriber,
+                subscriberType,
+                subscriberClientConfiguration);
     }
 
     public void preDestroy() {

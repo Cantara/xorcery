@@ -6,7 +6,7 @@ log4j2:
     status: warn
     properties:
     thresholdFilter:
-      level: debug
+      level: trace
     appenders:
       Console:
         name: STDOUT
@@ -32,10 +32,10 @@ log4j2:
           level: debug
 
         - name: com.exoreaction.xorcery.dns.server
-          level: debug
+          level: info
 
         - name: com.exoreaction.xorcery.reactivestreams
-          level: info
+          level: debug
 
         - name: javax
           level: info

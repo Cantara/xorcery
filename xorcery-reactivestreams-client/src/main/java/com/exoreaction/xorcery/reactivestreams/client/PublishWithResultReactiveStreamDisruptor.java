@@ -40,32 +40,31 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-public class PublishWithResultReactiveStream
-        extends PublishReactiveStream {
-    private final static Logger logger = LogManager.getLogger(PublishReactiveStream.class);
+public class PublishWithResultReactiveStreamDisruptor
+        extends PublishReactiveStreamDisruptor {
+    private final static Logger logger = LogManager.getLogger(PublishWithResultReactiveStreamDisruptor.class);
     private final MessageReader<Object> resultReader;
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final Meter received;
 
-    public PublishWithResultReactiveStream(String defaultScheme,
-                                           String authorityOrBaseUri,
-                                           String streamName,
-                                           ClientConfiguration publisherConfiguration,
-                                           DnsLookup dnsLookup,
-                                           WebSocketClient webSocketClient,
-                                           Flow.Publisher<Object> publisher,
-                                           MessageWriter<Object> eventWriter,
-                                           MessageReader<Object> resultReader,
-                                           Supplier<Configuration> subscriberConfiguration,
-                                           ScheduledExecutorService timer,
-                                           ByteBufferPool pool,
-                                           MetricRegistry metricRegistry,
-                                           CompletableFuture<Void> result) {
+    public PublishWithResultReactiveStreamDisruptor(String defaultScheme,
+                                                    String authorityOrBaseUri,
+                                                    String streamName,
+                                                    ClientConfiguration publisherConfiguration,
+                                                    DnsLookup dnsLookup,
+                                                    WebSocketClient webSocketClient,
+                                                    Flow.Publisher<Object> publisher,
+                                                    MessageWriter<Object> eventWriter,
+                                                    MessageReader<Object> resultReader,
+                                                    Supplier<Configuration> subscriberConfiguration,
+                                                    ScheduledExecutorService timer,
+                                                    ByteBufferPool pool,
+                                                    MetricRegistry metricRegistry,
+                                                    CompletableFuture<Void> result) {
         super(defaultScheme, authorityOrBaseUri, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, timer, pool, metricRegistry, result);
         this.resultReader = resultReader;
         this.received = metricRegistry.meter("publish." + streamName + ".received");
-
     }
 
     public void onComplete() {

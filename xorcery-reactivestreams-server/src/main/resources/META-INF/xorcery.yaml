@@ -2,5 +2,10 @@ reactivestreams:
   enabled: "{{ defaults.enabled }}"
   server:
     enabled: "{{ reactivestreams.enabled }}"
+
+    scheme: "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}"
+    uri: "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}"
+
     idleTimeout: "{{ defaults.idleTimeout }}"
     maxTextMessageSize: 1048576
+    strategy: "standard"

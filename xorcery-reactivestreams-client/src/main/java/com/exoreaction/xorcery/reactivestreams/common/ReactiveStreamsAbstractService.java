@@ -41,9 +41,8 @@ public abstract class ReactiveStreamsAbstractService {
     // Magic bytes for sending exceptions
     public static final byte[] XOR = "XOR".getBytes(StandardCharsets.UTF_8);
 
-    protected final Logger logger = LogManager.getLogger(getClass());
-
     protected final MessageWorkers messageWorkers;
+    protected final Logger logger;
     protected final ObjectMapper objectMapper;
     protected final ByteBufferPool byteBufferPool;
     protected final ScheduledExecutorService timer;
@@ -51,8 +50,9 @@ public abstract class ReactiveStreamsAbstractService {
     //    protected final List<Flow.Subscription> activeSubscriptions = new CopyOnWriteArrayList<>();
     protected final List<SubscriberTracker> activeSubscribers = new CopyOnWriteArrayList<>();
 
-    public ReactiveStreamsAbstractService(MessageWorkers messageWorkers) {
+    public ReactiveStreamsAbstractService(MessageWorkers messageWorkers, Logger logger) {
         this.messageWorkers = messageWorkers;
+        this.logger = logger;
         this.objectMapper = new ObjectMapper();
         this.byteBufferPool = new ArrayByteBufferPool();
         timer = Executors.newSingleThreadScheduledExecutor();
@@ -118,6 +118,9 @@ public abstract class ReactiveStreamsAbstractService {
         //  If actual types are omitted, the type parameters will be used instead.
         if (actualArgs.length == 0) {
             actualArgs = offspring.getTypeParameters();
+        }
+        if (actualArgs.length == 0 && offspring.getTypeParameters().length > 0) {
+            actualArgs = ((ParameterizedType) offspring.getGenericSuperclass()).getActualTypeArguments();
         }
         // map type parameters into the actual types
         Map<String, Type> typeVariables = new HashMap<String, Type>();

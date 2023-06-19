@@ -27,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +54,7 @@ public class ReactiveStreamsLocalTest {
 
             // When
             IntegerPublisher subscriber = new IntegerPublisher();
-            CompletableFuture<Void> stream = reactiveStreamsClient.publish(null, "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.publish((URI) null, "numbers",
                     Configuration::empty, subscriber, IntegerPublisher.class, ClientConfiguration.defaults());
 
             // Then
@@ -81,7 +82,7 @@ public class ReactiveStreamsLocalTest {
 
             // When
             JsonSubscriber subscriber = new JsonSubscriber();
-            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(null, "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe((URI) null, "numbers",
                     Configuration::empty, subscriber, JsonSubscriber.class, ClientConfiguration.defaults());
 
             // Then

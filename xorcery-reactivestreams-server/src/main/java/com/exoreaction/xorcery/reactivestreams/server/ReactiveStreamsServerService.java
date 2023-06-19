@@ -24,6 +24,7 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import jakarta.inject.Inject;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.runlevel.*;
@@ -47,21 +48,25 @@ public class ReactiveStreamsServerService
         implements ReactiveStreamsServer,
         ProgressStartedListener,
         LocalStreamFactories {
+    private final ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration;
+
     private final Map<String, Supplier<Object>> publisherEndpointFactories = new ConcurrentHashMap<>();
     private final Map<String, WrappedPublisherFactory> publisherLocalFactories = new ConcurrentHashMap<>();
     private final Map<String, Supplier<Object>> subscriberEndpointFactories = new ConcurrentHashMap<>();
     private final Map<String, WrappedSubscriberFactory> subscriberLocalFactories = new ConcurrentHashMap<>();
+
     private final MetricRegistry metricRegistry;
 
     @Inject
     public ReactiveStreamsServerService(Configuration configuration,
                                         MetricRegistry metricRegistry,
                                         MessageWorkers messageWorkers,
-                                        ServletContextHandler servletContextHandler) {
-        super(messageWorkers);
+                                        ServletContextHandler servletContextHandler,
+                                        Logger logger) {
+        super(messageWorkers, logger);
         this.metricRegistry = metricRegistry;
 
-        ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
+        reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
 
         PublishersReactiveStreamsServlet publishersServlet = new PublishersReactiveStreamsServlet(reactiveStreamsServerConfiguration, streamName ->
         {
@@ -98,10 +103,15 @@ public class ReactiveStreamsServerService
         Function<Configuration, Flow.Publisher<Object>> wrappedPublisherFactory = (config) -> new ReactiveStreamsAbstractService.PublisherTracker((Flow.Publisher<Object>) publisherFactory.apply(config));
 
         publisherEndpointFactories.put(streamName, () ->
-        {
-            return resultReader == null ? new PublisherReactiveStream(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool) :
-                    new PublisherWithResultReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
-        });
+                switch (reactiveStreamsServerConfiguration.getStrategy()) {
+                    case standard -> resultReader == null ?
+                            new PublisherReactiveStreamStandard(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool) :
+                            new PublisherWithResultReactiveStreamDisruptor(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
+
+                    case disruptor -> resultReader == null ?
+                            new PublisherReactiveStreamDisruptor(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool) :
+                            new PublisherWithResultReactiveStreamDisruptor(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
+                });
         publisherLocalFactories.put(streamName, new WrappedPublisherFactory(wrappedPublisherFactory, publisherType));
 
         return result;

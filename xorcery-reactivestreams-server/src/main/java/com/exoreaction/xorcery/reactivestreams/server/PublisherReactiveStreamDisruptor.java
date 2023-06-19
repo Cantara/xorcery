@@ -45,10 +45,10 @@ import java.util.function.Function;
  * @author rickardoberg
  * @since 13/04/2022
  */
-public class PublisherReactiveStream
+public class PublisherReactiveStreamDisruptor
         extends ServerReactiveStream
         implements WebSocketListener, Flow.Subscriber<Object> {
-    private final static Logger logger = LogManager.getLogger(PublisherReactiveStream.class);
+    private final static Logger logger = LogManager.getLogger(PublisherReactiveStreamDisruptor.class);
 
     private final String streamName;
     protected Session session;
@@ -70,11 +70,11 @@ public class PublisherReactiveStream
     private final Disruptor<AtomicReference<Object>> disruptor;
     private long outstandingRequestAmount;
 
-    public PublisherReactiveStream(String streamName,
-                                   Function<Configuration, Flow.Publisher<Object>> publisherFactory,
-                                   MessageWriter<Object> messageWriter,
-                                   ObjectMapper objectMapper,
-                                   ByteBufferPool pool) {
+    public PublisherReactiveStreamDisruptor(String streamName,
+                                            Function<Configuration, Flow.Publisher<Object>> publisherFactory,
+                                            MessageWriter<Object> messageWriter,
+                                            ObjectMapper objectMapper,
+                                            ByteBufferPool pool) {
         this.streamName = streamName;
         this.publisherFactory = publisherFactory;
         this.messageWriter = messageWriter;
@@ -122,6 +122,7 @@ public class PublisherReactiveStream
                     logger.info(marker, "Received cancel on websocket " + streamName);
                     subscription.cancel();
                     subscription = null;
+                    session.close(StatusCode.NORMAL, "cancelled");
                 } else {
                     if (logger.isDebugEnabled())
                         logger.debug(marker, "Received request:" + requestAmount);

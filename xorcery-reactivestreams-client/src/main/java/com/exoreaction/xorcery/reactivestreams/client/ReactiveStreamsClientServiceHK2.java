@@ -23,6 +23,7 @@ import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -44,7 +45,8 @@ public class ReactiveStreamsClientServiceHK2 extends ReactiveStreamsClientServic
                                            HttpClient httpClient,
                                            DnsLookupService dnsLookup,
                                            MetricRegistry metricRegistry,
-                                           Provider<LocalStreamFactories> localStreamFactoriesProvider) throws Exception {
-        super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistry, localStreamFactoriesProvider::get);
+                                           Provider<LocalStreamFactories> localStreamFactoriesProvider,
+                                           Logger logger) throws Exception {
+        super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistry, localStreamFactoriesProvider::get, logger);
     }
 }

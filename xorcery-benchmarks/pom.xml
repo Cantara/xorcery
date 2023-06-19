@@ -78,6 +78,11 @@
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-keystores</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jersey-client</artifactId>
             <version>${project.version}</version>
         </dependency>

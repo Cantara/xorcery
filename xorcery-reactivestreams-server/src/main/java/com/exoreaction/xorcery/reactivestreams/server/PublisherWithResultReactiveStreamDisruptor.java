@@ -38,20 +38,20 @@ import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-public class PublisherWithResultReactiveStream
-        extends PublisherReactiveStream {
-    private final static Logger logger = LogManager.getLogger(PublisherReactiveStream.class);
+public class PublisherWithResultReactiveStreamDisruptor
+        extends PublisherReactiveStreamDisruptor {
+    private final static Logger logger = LogManager.getLogger(PublisherReactiveStreamDisruptor.class);
 
     private final MessageReader<Object> resultReader;
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
 
-    public PublisherWithResultReactiveStream(String streamName,
-                                             Function<Configuration, Flow.Publisher<Object>> publisherFactory,
-                                             MessageWriter<Object> messageWriter,
-                                             MessageReader<Object> resultReader,
-                                             ObjectMapper objectMapper,
-                                             ByteBufferPool pool) {
+    public PublisherWithResultReactiveStreamDisruptor(String streamName,
+                                                      Function<Configuration, Flow.Publisher<Object>> publisherFactory,
+                                                      MessageWriter<Object> messageWriter,
+                                                      MessageReader<Object> resultReader,
+                                                      ObjectMapper objectMapper,
+                                                      ByteBufferPool pool) {
         super(streamName, publisherFactory, messageWriter, objectMapper, pool);
         this.resultReader = resultReader;
     }

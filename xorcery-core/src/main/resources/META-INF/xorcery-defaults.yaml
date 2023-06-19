@@ -20,6 +20,7 @@ system:
 
 defaults:
   enabled: true
+  connectTimeout: 5s
   idleTimeout: -1s
 
 hk2:
