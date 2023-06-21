@@ -18,11 +18,14 @@ package com.exoreaction.xorcery.requestlogpublisher;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 
+import java.net.URI;
+import java.util.Optional;
+
 public record RequestLogConfiguration(Configuration context)
         implements ServiceConfiguration {
 
-    public String getSubscriberAuthority() {
-        return context.getString("subscriber.authority").orElse(null);
+    public Optional<URI> getSubscriberURI() {
+        return context.getURI("subscriber.uri");
     }
 
     public String getSubscriberStream() {

@@ -44,7 +44,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.exoreaction.xorcery.util.Exceptions.unwrap;
+import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 
 public class KeyStores {
 

@@ -19,12 +19,12 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import com.exoreaction.xorcery.reactivestreams.test.fibonacci.*;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
-import com.exoreaction.xorcery.util.Sockets;
-import org.junit.jupiter.api.Disabled;
+import com.exoreaction.xorcery.net.Sockets;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -59,7 +59,6 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
         System.out.println(configuration);
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -75,7 +74,7 @@ public class ReactiveStreamsTest {
             CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
             for (int i = 0; i < numberOfSubscribers; i++) {
                 FibonacciSubscriber subscriber = new FibonacciSubscriber();
-                CompletableFuture<Void> future = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "fibonacci",
+                CompletableFuture<Void> future = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "fibonacci",
                                 Configuration::empty, subscriber, FibonacciSubscriber.class, ClientConfiguration.defaults())
                         .thenAccept(v -> {
                             ArrayList<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
@@ -103,7 +102,6 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -119,7 +117,7 @@ public class ReactiveStreamsTest {
             });
 
             // client publishes
-            CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "fibonacci",
+            CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "fibonacci",
                     Configuration::empty, new FibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), FibonacciPublisher.class, ClientConfiguration.defaults());
             publisherComplete.join();
 
@@ -151,7 +149,6 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -166,7 +163,7 @@ public class ReactiveStreamsTest {
             CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
             for (int i = 0; i < numberOfSubscribers; i++) {
                 BinaryFibonacciSubscriber subscriber = new BinaryFibonacciSubscriber();
-                CompletableFuture<Void> future = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "fibonacci",
+                CompletableFuture<Void> future = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "fibonacci",
                                 Configuration::empty, subscriber, BinaryFibonacciSubscriber.class, ClientConfiguration.defaults())
                         .thenAccept(v -> {
                             ArrayList<byte[]> allReceivedNumbers = subscriber.getAllReceivedNumbers();
@@ -196,7 +193,6 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -208,7 +204,7 @@ public class ReactiveStreamsTest {
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("fibonacci", config -> subscriber, BinaryFibonacciSubscriber.class);
 
             // client publishes
-            CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "fibonacci",
+            CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "fibonacci",
                     Configuration::empty, new BinaryFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryFibonacciPublisher.class, ClientConfiguration.defaults());
             publisherComplete.join();
 
@@ -242,7 +238,6 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -257,7 +252,7 @@ public class ReactiveStreamsTest {
             CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
             for (int i = 0; i < numberOfSubscribers; i++) {
                 BinaryNioFibonacciSubscriber subscriber = new BinaryNioFibonacciSubscriber();
-                CompletableFuture<Void> future = reactiveStreamsClient.subscribe(standardConfiguration.getURI().getAuthority(), "fibonacci",
+                CompletableFuture<Void> future = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "fibonacci",
                                 Configuration::empty, subscriber, BinaryNioFibonacciSubscriber.class, ClientConfiguration.defaults())
                         .thenAccept(v -> {
                             ArrayList<byte[]> allReceivedNumbers = new ArrayList<>(subscriber.getAllReceivedNumbers().stream().map(ByteBuffer::array).toList());
@@ -287,7 +282,6 @@ public class ReactiveStreamsTest {
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -299,7 +293,7 @@ public class ReactiveStreamsTest {
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("fibonacci", config -> subscriber, BinaryNioFibonacciSubscriber.class);
 
             // client publishes
-            CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(standardConfiguration.getURI().getAuthority(), "fibonacci",
+            CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "fibonacci",
                     Configuration::empty, new BinaryNioFibonacciPublisher(NUMBERS_IN_FIBONACCI_SEQUENCE), BinaryNioFibonacciPublisher.class, ClientConfiguration.defaults());
             publisherComplete.join();
 

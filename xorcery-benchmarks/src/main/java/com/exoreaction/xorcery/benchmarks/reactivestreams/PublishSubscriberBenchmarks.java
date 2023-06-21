@@ -25,6 +25,7 @@ import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openjdk.jmh.annotations.*;
@@ -111,13 +112,12 @@ public class PublishSubscriberBenchmarks {
         reactiveStreams.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
 
         // Client publisher
-        client = new Xorcery(new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(clientConfig).build());
+        Configuration configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(clientConfig).build();
+        client = new Xorcery(configuration);
         clientPublisher = new ClientPublisher();
 
         ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(server.getServiceLocator().getService(Configuration.class).getConfiguration("instance"));
-        URI serverUri = standardConfiguration.getURI();
-        stream = reactiveStreamsClient.publish(serverUri.getAuthority(), "serversubscriber",
+        stream = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "serversubscriber",
                 Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), ClientConfiguration.defaults());
 
         logger.info("Setup done");

@@ -5,7 +5,7 @@ neo4jprojections:
   eventsubscriber:
     enabled: "{{ neo4jprojections.enabled }}"
   subscribers: []
-#  - authority: "somehost:someport"
+#  - uri: "wss://somehost:someport"
 #    stream: somestream
 #    projection: someprojection
 #    configuration: {}

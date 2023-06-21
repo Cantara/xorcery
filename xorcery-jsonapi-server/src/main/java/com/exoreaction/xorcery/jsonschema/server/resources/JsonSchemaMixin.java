@@ -25,7 +25,7 @@ import com.exoreaction.xorcery.jsonschema.Types;
 import com.exoreaction.xorcery.jsonschema.server.annotations.AttributeSchema;
 import com.exoreaction.xorcery.jsonschema.server.annotations.Cardinality;
 import com.exoreaction.xorcery.jsonschema.server.annotations.RelationshipSchema;
-import com.exoreaction.xorcery.util.Enums;
+import com.exoreaction.xorcery.lang.Enums;
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;

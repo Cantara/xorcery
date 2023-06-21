@@ -23,7 +23,7 @@ import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStrea
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

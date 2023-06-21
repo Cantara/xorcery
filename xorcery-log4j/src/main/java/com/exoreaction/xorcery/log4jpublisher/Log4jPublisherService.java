@@ -22,11 +22,13 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Flow;
 
 @Service(name = "log4jpublisher")
@@ -37,7 +39,7 @@ public class Log4jPublisherService {
 
     @Inject
     public Log4jPublisherService(ReactiveStreamsClient reactiveStreams,
-                                 Configuration configuration) {
+                                 Configuration configuration, Logger logger) {
 
         Log4jPublisherConfiguration log4jPublisherConfiguration = new Log4jPublisherConfiguration(configuration.getConfiguration("log4jpublisher"));
 
@@ -47,8 +49,14 @@ public class Log4jPublisherService {
         if (appender != null) {
             appender.setConfiguration(configuration);
 
-            reactiveStreams.publish(log4jPublisherConfiguration.getSubscriberAuthority(), log4jPublisherConfiguration.getSubscriberStream(),
-                    log4jPublisherConfiguration::getSubscriberConfiguration, new LogPublisher(), LogPublisher.class, new ClientConfiguration(log4jPublisherConfiguration.getPublisherConfiguration()));
+            reactiveStreams.publish(log4jPublisherConfiguration.getSubscriberURI().orElse(null), log4jPublisherConfiguration.getSubscriberStream(),
+                            log4jPublisherConfiguration::getSubscriberConfiguration, new LogPublisher(), LogPublisher.class, new ClientConfiguration(log4jPublisherConfiguration.getPublisherConfiguration()))
+                    .exceptionally(throwable ->
+                    {
+                        if (throwable instanceof CompletionException)
+                            logger.error("Could not publish log messages", throwable);
+                        return null;
+                    });
         } else {
             LogManager.getLogger(getClass()).warn("No appender {} added to Log4j2 configuration", appenderName);
         }

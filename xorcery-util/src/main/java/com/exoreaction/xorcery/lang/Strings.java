@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.util;
+package com.exoreaction.xorcery.lang;
 
-public final class Strings {
-    public static String capitalize(String name) {
+public interface Strings {
+    static String capitalize(String name) {
         if (name == null || name.length() == 0)
             return name;
         int offset1 = name.offsetByCodePoints(0, 1);

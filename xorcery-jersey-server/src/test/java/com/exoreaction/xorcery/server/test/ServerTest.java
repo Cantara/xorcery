@@ -18,7 +18,7 @@ package com.exoreaction.xorcery.server.test;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.util.Sockets;
+import com.exoreaction.xorcery.net.Sockets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.server.Connector;

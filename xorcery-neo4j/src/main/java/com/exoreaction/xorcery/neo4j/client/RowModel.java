@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.neo4j.client;
 
-import com.exoreaction.xorcery.util.Enums;
+import com.exoreaction.xorcery.lang.Enums;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;

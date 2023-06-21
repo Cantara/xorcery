@@ -31,7 +31,7 @@ public class CertificatesServer {
     public CertificatesServer(ServiceResourceObjects serviceResourceObjects,
                               Configuration configuration
     ) {
-        serviceResourceObjects.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "certificates")
+        serviceResourceObjects.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "certificates")
                 .with(b ->
                 {
                     b.api("request", "api/certificates/request");

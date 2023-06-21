@@ -49,7 +49,6 @@ public class ReactiveStreamsClientService
     private DnsLookup dnsLookup;
     private MetricRegistry metricRegistry;
     private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
-    private final String defaultScheme;
     private final WebSocketClient webSocketClient;
 
     private final List<CompletableFuture<Void>> activeSubscribeProcesses = new CopyOnWriteArrayList<>();
@@ -66,7 +65,6 @@ public class ReactiveStreamsClientService
         this.dnsLookup = dnsLookup;
         this.metricRegistry = metricRegistry;
         this.reactiveStreamsServerServiceProvider = localStreamFactoriesProvider;
-        this.defaultScheme = configuration.getString("reactivestreams.client.scheme").orElseThrow();
 
         clientConfiguration = new ReactiveStreamsClientConfiguration(configuration.getConfiguration("reactivestreams.client"));
 
@@ -124,6 +122,11 @@ public class ReactiveStreamsClientService
                 result.completeExceptionally(new IllegalArgumentException("No such subscriber:" + streamName));
                 return result;
             }
+        } else {
+            if (!("ws".equals(serverUri.getScheme()) || "wss".equals(serverUri.getScheme()) || "srv".equals(serverUri.getScheme()))) {
+                result.completeExceptionally(new IllegalArgumentException("URI scheme " + serverUri.getScheme() + " not supported. Must be one of 'ws', 'wss', or 'srv'"));
+            }
+
         }
 
         Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
@@ -204,16 +207,6 @@ public class ReactiveStreamsClientService
     }
 
     @Override
-    public CompletableFuture<Void> publish(String authority, String subscriberStreamName, Supplier<Configuration> subscriberServerConfiguration, Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType, ClientConfiguration publisherClientConfiguration) {
-        return publish(authority == null ? null : URI.create(defaultScheme + "://" + authority),
-                subscriberStreamName,
-                subscriberServerConfiguration,
-                publisher,
-                publisherType,
-                publisherClientConfiguration);
-    }
-
-    @Override
     public CompletableFuture<Void> subscribe(URI serverUri, String streamName, Supplier<Configuration> publisherConfiguration,
                                              Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType, ClientConfiguration subscriberClientConfiguration) {
         CompletableFuture<Void> result = new CompletableFuture<>();
@@ -252,6 +245,10 @@ public class ReactiveStreamsClientService
                 result.completeExceptionally(new IllegalArgumentException("No such publisher:" + streamName));
                 return result;
             }
+        } else {
+            if (!("ws".equals(serverUri.getScheme()) || "wss".equals(serverUri.getScheme()) || "srv".equals(serverUri.getScheme()))) {
+                result.completeExceptionally(new IllegalArgumentException("URI scheme " + serverUri.getScheme() + " not supported. Must be one of 'ws', 'wss', or 'srv'"));
+            }
         }
 
         Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
@@ -267,7 +264,7 @@ public class ReactiveStreamsClientService
         // Start subscription process
         if (resultWriter != null) {
             new SubscribeWithResultReactiveStream(
-                    serverUri.getScheme(), serverUri.getAuthority(), streamName,
+                    serverUri, streamName,
                     subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
@@ -282,7 +279,7 @@ public class ReactiveStreamsClientService
 
         } else {
             new SubscribeReactiveStream(
-                    serverUri.getScheme(), serverUri.getAuthority(), streamName,
+                    serverUri, streamName,
                     subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
@@ -295,16 +292,6 @@ public class ReactiveStreamsClientService
                     result);
         }
         return result;
-    }
-
-    @Override
-    public CompletableFuture<Void> subscribe(String toAuthority, String publisherStreamName, Supplier<Configuration> publisherServerConfiguration, Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType, ClientConfiguration subscriberClientConfiguration) {
-        return subscribe(toAuthority == null ? null : URI.create(defaultScheme + "://" + toAuthority),
-                publisherStreamName,
-                publisherServerConfiguration,
-                subscriber,
-                subscriberType,
-                subscriberClientConfiguration);
     }
 
     public void preDestroy() {

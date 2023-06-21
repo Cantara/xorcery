@@ -20,6 +20,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.net.URIs;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
@@ -204,40 +205,20 @@ public class PublishReactiveStreamStandard
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
 
+            if ("https".equals(subscriberWebsocketUri.getScheme()))
+                subscriberWebsocketUri = URIs.withScheme(subscriberWebsocketUri, "wss");
+            else if ("http".equals(subscriberWebsocketUri.getScheme()))
+                subscriberWebsocketUri = URIs.withScheme(subscriberWebsocketUri, "ws");
+
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "connect {}", subscriberWebsocketUri);
             }
 
-            URI schemaAdjustedSubscriberWebsocketUri = subscriberWebsocketUri;
-            if (subscriberWebsocketUri.getScheme() != null) {
-                if (subscriberWebsocketUri.getScheme().equals("https")) {
-                    try {
-                        schemaAdjustedSubscriberWebsocketUri = new URI(
-                                "wss",
-                                subscriberWebsocketUri.getAuthority(),
-                                subscriberWebsocketUri.getPath(),
-                                subscriberWebsocketUri.getQuery(),
-                                subscriberWebsocketUri.getFragment()
-                        );
-                    } catch (URISyntaxException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else if (subscriberWebsocketUri.getScheme().equals("http")) {
-                    try {
-                        schemaAdjustedSubscriberWebsocketUri = new URI(
-                                "ws",
-                                subscriberWebsocketUri.getAuthority(),
-                                subscriberWebsocketUri.getPath(),
-                                subscriberWebsocketUri.getQuery(),
-                                subscriberWebsocketUri.getFragment()
-                        );
-                    } catch (URISyntaxException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "connect {}", subscriberWebsocketUri);
             }
 
-            URI effectiveSubscriberWebsocketUri = URI.create(schemaAdjustedSubscriberWebsocketUri.getScheme() + "://" + schemaAdjustedSubscriberWebsocketUri.getAuthority() + "/streams/subscribers/" + streamName);
+            URI effectiveSubscriberWebsocketUri = URI.create(subscriberWebsocketUri.getScheme() + "://" + subscriberWebsocketUri.getAuthority() + "/streams/subscribers/" + streamName);
             logger.debug(marker, "Trying " + effectiveSubscriberWebsocketUri);
             try {
                 webSocketClient.connect(this, effectiveSubscriberWebsocketUri)

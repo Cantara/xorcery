@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.dns.client.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.util.Sockets;
+import com.exoreaction.xorcery.net.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;

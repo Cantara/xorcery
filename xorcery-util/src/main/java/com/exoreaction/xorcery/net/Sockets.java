@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.util;
+package com.exoreaction.xorcery.net;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class Sockets {
+public interface Sockets {
 
     /**
      * Find free port to use in the range 49152-65535.
-     *
      */
-    public static int nextFreePort() {
+    static int nextFreePort() {
         return nextFreePort(49152, 65535);
     }
 
@@ -38,7 +37,7 @@ public final class Sockets {
      * @param to
      * @return
      */
-    public static int nextFreePort(int from, int to) {
+    static int nextFreePort(int from, int to) {
         int port = ThreadLocalRandom.current().nextInt(from, to);
         while (true) {
             if (isLocalPortFree(port)) {
@@ -49,8 +48,7 @@ public final class Sockets {
         }
     }
 
-    public static InetSocketAddress getInetSocketAddress(String hostPort, int defaultPort)
-    {
+    static InetSocketAddress getInetSocketAddress(String hostPort, int defaultPort) {
         String[] hostPortArray = hostPort.split(":");
         String host = hostPortArray[0];
         int port = hostPortArray.length == 2 ? Integer.parseInt(hostPortArray[1]) : defaultPort;
@@ -64,8 +62,5 @@ public final class Sockets {
         } catch (IOException e) {
             return false;
         }
-    }
-
-    private Sockets() {
     }
 }

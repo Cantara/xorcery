@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.neo4j.client;
 
 import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.function.FallbackFunction;
-import com.exoreaction.xorcery.util.Enums;
+import com.exoreaction.xorcery.lang.Enums;
 import jakarta.ws.rs.NotFoundException;
 import org.neo4j.graphdb.Result;
 

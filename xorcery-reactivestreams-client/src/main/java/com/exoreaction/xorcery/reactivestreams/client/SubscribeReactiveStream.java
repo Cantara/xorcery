@@ -20,12 +20,13 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
+import com.exoreaction.xorcery.net.URIs;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientBadPayloadStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
-import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -39,7 +40,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.Charset;
@@ -53,9 +53,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 
-import static com.exoreaction.xorcery.util.Exceptions.unwrap;
+import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 
 public class SubscribeReactiveStream
         implements WebSocketPartialListener,
@@ -64,10 +63,7 @@ public class SubscribeReactiveStream
 
     private static final Logger logger = LogManager.getLogger(SubscribeReactiveStream.class);
 
-    private final static Pattern uriStartsWithSchemeAndAuthorityPattern = Pattern.compile(".+://.+");
-
-    private final String scheme;
-    private final String authority;
+    private final URI serverUri;
     private final String streamName;
 
     private ClientConfiguration subscriberConfiguration;
@@ -96,8 +92,7 @@ public class SubscribeReactiveStream
     protected final Meter receivedBytes;
     protected final Histogram requestsHistogram;
 
-    public SubscribeReactiveStream(String defaultScheme,
-                                   String authorityOrBaseUri,
+    public SubscribeReactiveStream(URI serverUri,
                                    String streamName,
                                    ClientConfiguration subscriberConfiguration,
                                    DnsLookup dnsLookup,
@@ -109,6 +104,7 @@ public class SubscribeReactiveStream
                                    ByteBufferPool pool,
                                    MetricRegistry metricRegistry,
                                    CompletableFuture<Void> result) {
+        this.serverUri = serverUri;
         this.streamName = streamName;
         this.subscriberConfiguration = subscriberConfiguration;
         this.retryDelay = Duration.parse("PT" + subscriberConfiguration.getRetryDelay()).toMillis();
@@ -127,20 +123,7 @@ public class SubscribeReactiveStream
 
         this.result = result;
 
-        if (uriStartsWithSchemeAndAuthorityPattern.matcher(authorityOrBaseUri).matches()) {
-            URI uri = URI.create(authorityOrBaseUri);
-            this.scheme = uri.getScheme();
-            if (uri.getPath() != null) {
-                this.authority = uri.getAuthority() + uri.getPath();
-            } else {
-                this.authority = uri.getAuthority();
-            }
-        } else {
-            this.authority = authorityOrBaseUri;
-            this.scheme = subscriberConfiguration.getScheme().orElse(defaultScheme);
-        }
-
-        this.marker = MarkerManager.getMarker(this.authority + "/" + streamName);
+        this.marker = MarkerManager.getMarker(this.serverUri.getAuthority() + "/" + streamName);
 
         this.result.exceptionally(throwable ->
         {
@@ -202,10 +185,10 @@ public class SubscribeReactiveStream
             retry(null);
         }
 
-        URI uri = URI.create(scheme + "://" + authority);
-        logger.debug(marker, "Resolving " + uri);
-        dnsLookup.resolve(uri).thenApply(list ->
+        logger.debug(marker, "Resolving " + serverUri);
+        dnsLookup.resolve(serverUri).thenApply(list ->
         {
+            logger.debug(marker, "Resolved " + list);
             this.uriIterator = list.iterator();
             return uriIterator;
         }).thenAccept(this::connect).exceptionally(this::exceptionally);
@@ -215,39 +198,18 @@ public class SubscribeReactiveStream
 
         if (publisherURIs.hasNext()) {
             URI publisherWebsocketUri = publisherURIs.next();
+
+            if ("https".equals(publisherWebsocketUri.getScheme()))
+                publisherWebsocketUri = URIs.withScheme(publisherWebsocketUri, "wss");
+            else if ("http".equals(publisherWebsocketUri.getScheme()))
+                publisherWebsocketUri = URIs.withScheme(publisherWebsocketUri, "ws");
+
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "connect {}", publisherWebsocketUri);
             }
-            URI schemaAdjustedPublishedWebsocketUri = publisherWebsocketUri;
-            if (publisherWebsocketUri.getScheme() != null) {
-                if (publisherWebsocketUri.getScheme().equals("https")) {
-                    try {
-                        schemaAdjustedPublishedWebsocketUri = new URI(
-                                "wss",
-                                publisherWebsocketUri.getAuthority(),
-                                publisherWebsocketUri.getPath(),
-                                publisherWebsocketUri.getQuery(),
-                                publisherWebsocketUri.getFragment()
-                        );
-                    } catch (URISyntaxException e) {
-                        throw new RuntimeException(e);
-                    }
-                } else if (publisherWebsocketUri.getScheme().equals("http")) {
-                    try {
-                        schemaAdjustedPublishedWebsocketUri = new URI(
-                                "ws",
-                                publisherWebsocketUri.getAuthority(),
-                                publisherWebsocketUri.getPath(),
-                                publisherWebsocketUri.getQuery(),
-                                publisherWebsocketUri.getFragment()
-                        );
-                    } catch (URISyntaxException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-            URI effectivePublisherWebsocketUri = URI.create(schemaAdjustedPublishedWebsocketUri.getScheme() + "://" + schemaAdjustedPublishedWebsocketUri.getAuthority() + "/streams/publishers/" + streamName);
-            logger.info(marker, "Trying " + effectivePublisherWebsocketUri);
+
+            URI effectivePublisherWebsocketUri = URI.create(publisherWebsocketUri.getScheme() + "://" + publisherWebsocketUri.getAuthority() + "/streams/publishers/" + streamName);
+            logger.debug(marker, "Trying " + effectivePublisherWebsocketUri);
             try {
                 webSocketClient.connect(this, effectivePublisherWebsocketUri)
                         .thenAccept(this::connected)

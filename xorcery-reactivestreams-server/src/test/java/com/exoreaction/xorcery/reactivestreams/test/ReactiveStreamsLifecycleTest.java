@@ -22,7 +22,8 @@ import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
-import com.exoreaction.xorcery.util.Sockets;
+import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
+import com.exoreaction.xorcery.net.Sockets;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
@@ -40,6 +41,7 @@ public class ReactiveStreamsLifecycleTest {
     private InstanceConfiguration serverInstanceConfiguration;
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
+    private ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration;
 
     @BeforeEach
     public void setup() {
@@ -59,6 +61,7 @@ public class ReactiveStreamsLifecycleTest {
                 .build();
 
         serverInstanceConfiguration = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
+        reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(serverConfiguration.getConfiguration("reactivestreams.server"));
     }
 
     @Test
@@ -77,7 +80,7 @@ public class ReactiveStreamsLifecycleTest {
                 // When
                 CompletableFuture<Integer> result = new CompletableFuture<>();
                 IntegerSubscriber subscriber = new IntegerSubscriber(result, new CompletableFuture<>());
-                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(serverInstanceConfiguration.getURI().getAuthority(), "numbers",
+                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
 
                 // Then
@@ -103,7 +106,7 @@ public class ReactiveStreamsLifecycleTest {
                 // When
                 CompletableFuture<Integer> result = new CompletableFuture<>();
                 IntegerSubscriber subscriber = new IntegerSubscriber(result, new CompletableFuture<>());
-                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(serverInstanceConfiguration.getURI().getAuthority(), "numbers",
+                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
 
                 // Then
@@ -135,7 +138,7 @@ public class ReactiveStreamsLifecycleTest {
                 // When
                 CompletableFuture<Void> result = new CompletableFuture<>();
                 IntegerSubscriber subscriber = new IntegerSubscriber(new CompletableFuture<>(), result);
-                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(serverInstanceConfiguration.getURI().getAuthority(), "numbers",
+                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
 
                 // Then
@@ -168,7 +171,7 @@ public class ReactiveStreamsLifecycleTest {
                 // When
                 CompletableFuture<Configuration> result = new CompletableFuture<>();
                 ClientConfigurationSubscriber subscriber = new ClientConfigurationSubscriber(result);
-                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(serverInstanceConfiguration.getURI().getAuthority(), "numbers",
+                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         () -> new Configuration.Builder().add(HttpHeaders.AUTHORIZATION, "Bearer:abc").build(), subscriber, ClientConfigurationSubscriber.class, ClientConfiguration.defaults());
 
                 // Then
@@ -207,7 +210,7 @@ public class ReactiveStreamsLifecycleTest {
 
                 // When
                 IntegerSubscriber subscriber = new IntegerSubscriber(new CompletableFuture<>(), error);
-                stream = reactiveStreamsClient.subscribe(serverInstanceConfiguration.getURI().getAuthority(), "numbers",
+                stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, subscriber, IntegerSubscriber.class, new ClientConfiguration.Builder().isRetryEnabled(false).build());
 
                 Thread.sleep(2000);
@@ -237,7 +240,7 @@ public class ReactiveStreamsLifecycleTest {
 
                 // When
                 IntegerNoopPublisher publisher = new IntegerNoopPublisher();
-                CompletableFuture<Void> stream = reactiveStreamsClient.publish(serverInstanceConfiguration.getURI().getAuthority(), "numbers",
+                CompletableFuture<Void> stream = reactiveStreamsClient.publish(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, publisher, IntegerNoopPublisher.class, ClientConfiguration.defaults());
 
                 // Wait

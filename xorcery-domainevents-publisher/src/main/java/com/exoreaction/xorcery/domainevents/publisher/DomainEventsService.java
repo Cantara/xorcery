@@ -54,7 +54,7 @@ public class DomainEventsService
                 .build();
         DomainEventsConfiguration domainEventsConfiguration = new DomainEventsConfiguration(configuration.getConfiguration("domainevents"));
         SubscriberConfiguration subscriberConfiguration = domainEventsConfiguration.getSubscriberConfiguration();
-        reactiveStreams.publish(subscriberConfiguration.getAuthority(), subscriberConfiguration.getStream(),
+        reactiveStreams.publish(subscriberConfiguration.getUri().orElse(null), subscriberConfiguration.getStream(),
                         subscriberConfiguration::getConfiguration,
                         this, DomainEventsService.class, new ClientConfiguration(domainEventsConfiguration.getPublisherConfiguration()))
                 .exceptionally(t ->

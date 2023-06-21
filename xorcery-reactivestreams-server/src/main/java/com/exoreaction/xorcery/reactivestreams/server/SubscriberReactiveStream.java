@@ -20,7 +20,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
-import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.websocket.api.*;
 
 import java.io.IOException;
@@ -171,7 +172,7 @@ public class SubscriberReactiveStream
     @Override
     public void onWebSocketConnect(Session session) {
         if (logger.isTraceEnabled())
-            logger.trace(marker,"onWebSocketConnect {}", session.getRemoteAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
 
         this.session = session;
         session.getRemote().setBatchMode(BatchMode.ON);
@@ -180,7 +181,7 @@ public class SubscriberReactiveStream
     @Override
     public void onWebSocketPartialText(String message, boolean fin) {
         if (logger.isTraceEnabled())
-            logger.trace(marker,"onWebSocketPartialText {} {}", message, fin);
+            logger.trace(marker, "onWebSocketPartialText {} {}", message, fin);
 
         if (subscriberConfiguration == null) {
             configurationMessage += message;
@@ -212,7 +213,7 @@ public class SubscriberReactiveStream
     @Override
     public void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
         if (logger.isTraceEnabled())
-            logger.trace(marker,"onWebSocketPartialBinary {}", fin);
+            logger.trace(marker, "onWebSocketPartialBinary {}", fin);
 
         byteBufferAccumulator.copyBuffer(payload);
         if (fin) {
@@ -242,25 +243,19 @@ public class SubscriberReactiveStream
     @Override
     public void onWebSocketError(Throwable cause) {
         if (logger.isTraceEnabled())
-            logger.trace(marker,"onWebSocketError", cause);
+            logger.trace(marker, "onWebSocketError", cause);
 
-        if (cause instanceof ClosedChannelException) {
-            // Ignore
-        } else {
-            switch(cause.getClass().getName())
-            {
-                case "org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException":
-                {
-                    // Do nothing
-                }
-                default:
-                {
-                    logger.warn(marker, "Subscriber websocket error", cause);
-                }
+        switch (cause.getClass().getName()) {
+            case "java.nio.channels.AsynchronousCloseException":
+            case "org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException":
+            case "org.eclipse.jetty.io.EofException": {
+                // Do nothing
             }
-
-            if (subscriber != null) {
-                subscriber.onError(cause);
+            default: {
+                logger.warn(marker, "Subscriber websocket error", cause);
+                if (subscriber != null) {
+                    subscriber.onError(cause);
+                }
             }
         }
     }
@@ -268,7 +263,7 @@ public class SubscriberReactiveStream
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
         if (logger.isTraceEnabled())
-            logger.trace(marker,"onWebSocketClose {} {}", statusCode, reason);
+            logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
 
         try {
             if (subscriber != null) subscriber.onComplete();

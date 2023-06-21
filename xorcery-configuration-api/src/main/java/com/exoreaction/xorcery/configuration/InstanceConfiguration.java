@@ -29,6 +29,11 @@ import java.net.UnknownHostException;
  * @since 20/04/2022
  */
 public record InstanceConfiguration(Configuration configuration) {
+    public static InstanceConfiguration get(Configuration configuration)
+    {
+        return new InstanceConfiguration(configuration.getConfiguration("instance"));
+    }
+
     public String getId() {
         return configuration.getString("id").orElse(null);
     }

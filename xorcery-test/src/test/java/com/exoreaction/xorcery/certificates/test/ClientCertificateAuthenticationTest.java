@@ -21,7 +21,7 @@ import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import com.exoreaction.xorcery.test.ClientTester;
-import com.exoreaction.xorcery.util.Sockets;
+import com.exoreaction.xorcery.net.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

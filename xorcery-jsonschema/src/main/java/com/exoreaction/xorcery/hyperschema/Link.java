@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.exoreaction.xorcery.util.Strings.capitalize;
+import static com.exoreaction.xorcery.lang.Strings.capitalize;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 

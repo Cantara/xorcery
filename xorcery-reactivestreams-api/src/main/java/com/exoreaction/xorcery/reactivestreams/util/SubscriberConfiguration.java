@@ -17,10 +17,13 @@ package com.exoreaction.xorcery.reactivestreams.util;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 
+import java.net.URI;
+import java.util.Optional;
+
 public record SubscriberConfiguration(Configuration configuration) {
 
-    public String getAuthority() {
-        return configuration.getString("authority").orElse(null);
+    public Optional<URI> getUri() {
+        return configuration.getURI("uri");
     }
 
     public String getStream() {

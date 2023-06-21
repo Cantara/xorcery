@@ -24,7 +24,7 @@ import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.util.ByteBufferBackedInputStream;
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
@@ -35,6 +35,7 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
@@ -49,8 +50,7 @@ public class SubscribeWithResultReactiveStream
 
     private final MessageWriter<Object> resultWriter;
 
-    public SubscribeWithResultReactiveStream(String defaultScheme,
-                                             String authorityOrBaseUri,
+    public SubscribeWithResultReactiveStream(URI serverUri,
                                              String streamName,
                                              ClientConfiguration subscriberConfiguration,
                                              DnsLookup dnsLookup,
@@ -63,7 +63,7 @@ public class SubscribeWithResultReactiveStream
                                              ByteBufferPool pool,
                                              MetricRegistry metricRegistry,
                                              CompletableFuture<Void> result) {
-        super(defaultScheme, authorityOrBaseUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, timer, pool, metricRegistry, result);
+        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, timer, pool, metricRegistry, result);
         this.resultWriter = resultWriter;
     }
 

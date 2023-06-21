@@ -78,8 +78,6 @@ public class Xorcery
 
         this.serviceLocator = serviceLocator;
 
-        InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
-        marker = MarkerManager.getMarker(instanceConfiguration.getId());
 
         List<String> configurationMonitor = new ArrayList<>();
         PopulatorPostProcessor populatorPostProcessor = new ConfigurationPostPopulatorProcessor(configuration, configurationMonitor::add);
@@ -88,6 +86,8 @@ public class Xorcery
 
         // Instantiate all enabled services
         serviceLocator.inject(this);
+        InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
+        marker = MarkerManager.getMarker(instanceConfiguration.getId());
         ExtendedLogger xorceryLogger = loggerContext.getLogger(Xorcery.class);
         if (xorceryLogger.isDebugEnabled()) {
             for (String msg : ConfigurationLogger.getLogger().drain()) {

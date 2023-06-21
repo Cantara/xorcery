@@ -27,8 +27,8 @@ open module xorcery.log4j {
     requires xorcery.reactivestreams.api;
 
     requires com.lmax.disruptor;
-    requires org.apache.logging.log4j;
-    requires org.apache.logging.log4j.core;
+    requires transitive org.apache.logging.log4j;
+    requires transitive org.apache.logging.log4j.core;
     requires jakarta.inject;
     requires com.fasterxml.jackson.databind;
     requires log4j.layout.template.json;

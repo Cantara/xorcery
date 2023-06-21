@@ -51,7 +51,7 @@ public class MetricsService
 
         MetricsConfiguration metricsConfiguration = new MetricsConfiguration(configuration.getConfiguration("metrics"));
 
-        result = reactiveStreamsClient.publish(metricsConfiguration.getSubscriberAuthority(), metricsConfiguration.getSubscriberStream(),
+        result = reactiveStreamsClient.publish(metricsConfiguration.getSubscriberURI().orElse(null), metricsConfiguration.getSubscriberStream(),
                 metricsConfiguration::getSubscriberConfiguration,
                 new JmxMetricsPublisher(metricsConfiguration, deploymentMetadata, managementServer), JmxMetricsPublisher.class, new ClientConfiguration(metricsConfiguration.getPublisherConfiguration()));
     }

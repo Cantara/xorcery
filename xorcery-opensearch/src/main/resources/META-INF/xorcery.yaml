@@ -6,7 +6,7 @@ opensearch:
   deleteOnExit: false
   publishers:
     - server:
-        authority: "somehost:someport"
+        uri: "wss://somehost:someport"
         stream: "somestream"
         configuration: {}
       client:

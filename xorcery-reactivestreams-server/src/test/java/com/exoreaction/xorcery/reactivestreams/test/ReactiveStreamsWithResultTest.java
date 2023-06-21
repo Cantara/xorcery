@@ -24,14 +24,13 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
-import com.exoreaction.xorcery.util.Sockets;
+import com.exoreaction.xorcery.net.Sockets;
 import jakarta.ws.rs.NotAuthorizedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.Semaphore;
@@ -115,7 +114,7 @@ public class ReactiveStreamsWithResultTest {
             // When
             CompletableFuture<Integer> result = new CompletableFuture<>();
             ClientIntegerSubscriber subscriber = new ClientIntegerSubscriber(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getServerUri().getAuthority(), "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "numbers",
                     Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
 
             // Then
@@ -153,7 +152,7 @@ public class ReactiveStreamsWithResultTest {
             // When
             CompletableFuture<Integer> result = new CompletableFuture<>();
             ClientIntegerSubscriber subscriber = new ClientIntegerSubscriber(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getServerUri().getAuthority(), "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "numbers",
                     Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
 
             // Then
@@ -193,7 +192,7 @@ public class ReactiveStreamsWithResultTest {
             // When
             CompletableFuture<Configuration> result = new CompletableFuture<>();
             ClientConfigurationSubscriber subscriber = new ClientConfigurationSubscriber(result);
-            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(standardConfiguration.getServerUri().getAuthority(), "numbers",
+            CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "numbers",
                     () -> new Configuration.Builder().add(HttpHeaders.AUTHORIZATION, "Bearer:abc").build(), subscriber, ClientConfigurationSubscriber.class, Configuration.empty());
 
             // Then

@@ -34,6 +34,7 @@ import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -70,7 +71,7 @@ public class Neo4jProjectionsSubscribersService {
                 Optional<ProjectionModel> currentProjection = neo4jProjectionsService.getCurrentProjection(publisher.getProjection());
                 currentProjection.ifPresent(projectionModel -> publisherConfiguration.json().set("revision", publisherConfiguration.json().numberNode(projectionModel.getRevision().orElse(0L))));
 
-                reactiveStreamsClient.subscribe(publisher.getAuthority(), publisher.getStream(),
+                reactiveStreamsClient.subscribe(publisher.getURI().orElse(null), publisher.getStream(),
                         () ->
                         {
                             // Update to current revision, if available
@@ -94,8 +95,8 @@ public class Neo4jProjectionsSubscribersService {
 
     record Publisher(ContainerNode<?> json)
             implements JsonElement {
-        String getAuthority() {
-            return getString("authority").orElseThrow();
+        Optional<URI> getURI() {
+            return JsonElement.super.getURI("uri");
         }
 
         String getStream() {

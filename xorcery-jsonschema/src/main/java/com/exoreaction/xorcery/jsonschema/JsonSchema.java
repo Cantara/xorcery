@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.jsonschema;
 
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.xorcery.util.Strings;
+import com.exoreaction.xorcery.lang.Strings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

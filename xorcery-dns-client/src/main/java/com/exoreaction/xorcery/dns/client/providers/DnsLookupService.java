@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static com.exoreaction.xorcery.util.Exceptions.unwrap;
+import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 
 public class DnsLookupService
         implements DnsLookup {

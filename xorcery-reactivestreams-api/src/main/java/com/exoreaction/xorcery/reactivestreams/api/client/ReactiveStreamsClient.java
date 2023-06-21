@@ -31,29 +31,7 @@ public interface ReactiveStreamsClient {
                                     Class<? extends Flow.Publisher<?>> publisherType,
                                     ClientConfiguration publisherClientConfiguration);
 
-    /**
-     * @deprecated Use the version with URI instead
-     */
-    CompletableFuture<Void> publish(String toAuthority,
-                                    String subscriberStreamName,
-                                    Supplier<Configuration> subscriberServerConfiguration,
-
-                                    Flow.Publisher<?> publisher,
-                                    Class<? extends Flow.Publisher<?>> publisherType,
-                                    ClientConfiguration publisherClientConfiguration);
-
     CompletableFuture<Void> subscribe(URI serverUri,
-                                      String publisherStreamName,
-                                      Supplier<Configuration> publisherServerConfiguration,
-
-                                      Flow.Subscriber<?> subscriber,
-                                      Class<? extends Flow.Subscriber<?>> subscriberType,
-                                      ClientConfiguration subscriberClientConfiguration);
-
-    /**
-     * @deprecated Use the version with URI instead
-     */
-    CompletableFuture<Void> subscribe(String toAuthority,
                                       String publisherStreamName,
                                       Supplier<Configuration> publisherServerConfiguration,
 

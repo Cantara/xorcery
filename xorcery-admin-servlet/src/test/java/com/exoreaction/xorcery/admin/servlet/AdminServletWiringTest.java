@@ -20,7 +20,7 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jersey.server.JerseyServerService;
-import com.exoreaction.xorcery.util.Sockets;
+import com.exoreaction.xorcery.net.Sockets;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.hk2.api.ServiceHandle;

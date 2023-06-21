@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.util;
+package com.exoreaction.xorcery.lang;
 
-public interface Exceptions {
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-    static Throwable unwrap(Throwable throwable)
-    {
-        while (throwable.getCause() != null) {
-            throwable = throwable.getCause();
-        }
-        return throwable;
+public interface Enums {
+
+    Map<Enum<?>, String> fieldMappings = new ConcurrentHashMap<>();
+
+    /**
+     * Map an enum Some.name to "some_name"
+     *
+     * @param anEnum enum value
+     * @return stringified enum
+     */
+    public static String toField(Enum<?> anEnum) {
+        return fieldMappings.computeIfAbsent(anEnum, e ->
+                e.getDeclaringClass().getSimpleName().toLowerCase() + "_" + e.name());
     }
 }

@@ -17,10 +17,8 @@ package com.exoreaction.xorcery.jetty.server;
 
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.core.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.util.Sockets;
-import org.apache.logging.log4j.LogManager;
+import com.exoreaction.xorcery.net.Sockets;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.hk2.api.ServiceLocator;

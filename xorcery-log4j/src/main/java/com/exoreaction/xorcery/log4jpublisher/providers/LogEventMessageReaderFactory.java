@@ -31,6 +31,9 @@ import java.nio.channels.Channels;
 public class LogEventMessageReaderFactory
         implements MessageReader.Factory {
 
+    public LogEventMessageReaderFactory() {
+    }
+
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
         if (LogEvent.class.isAssignableFrom(type))
@@ -39,7 +42,7 @@ public class LogEventMessageReaderFactory
             return null;
     }
 
-    class MessageWriterImplementation
+    static class MessageWriterImplementation
             implements MessageReader<LogEvent> {
 
         private final JsonLogEventParser parser= new JsonLogEventParser();;

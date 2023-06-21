@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.neo4j.client;
 
-import com.exoreaction.xorcery.util.Enums;
+import com.exoreaction.xorcery.lang.Enums;
 
 import java.util.ArrayList;
 import java.util.HashMap;

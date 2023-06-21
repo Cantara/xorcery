@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.dns.client.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.util.Sockets;
+import com.exoreaction.xorcery.net.Sockets;
 import org.xbill.DNS.*;
 import org.xbill.DNS.hosts.HostsFileParser;
 import org.xbill.DNS.lookup.LookupSession;

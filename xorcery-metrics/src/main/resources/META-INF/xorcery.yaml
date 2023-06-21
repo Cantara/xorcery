@@ -2,7 +2,7 @@ metrics:
   enabled: "{{ defaults.enabled }}"
   filter: []
   subscriber:
-    authority: null
+    uri: null
     stream: "metrics"
     configuration:
       instance:

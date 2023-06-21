@@ -18,8 +18,7 @@ package com.exoreaction.xorcery.log4j;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.util.Sockets;
-import org.apache.logging.log4j.LogManager;
+import com.exoreaction.xorcery.net.Sockets;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +35,7 @@ public class PublisherSubscriberTest {
                 .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", port)
+                .add("log4jpublisher.enabled", false)
                 .build();
 
         Configuration clientConfiguration = new Configuration.Builder()
@@ -43,7 +43,7 @@ public class PublisherSubscriberTest {
                 .add("jetty.server.enabled", false)
                 .add("reactivestreams.server.enabled", false)
                 .add("log4jsubscriber.enabled", false)
-                .add("log4jpublisher.subscriber.authority", "server.xorcery.test:"+port)
+                .add("log4jpublisher.subscriber.uri", "wss://server.xorcery.test:"+port)
                 .build();
 
         System.out.println(serverConfiguration);
@@ -52,7 +52,7 @@ public class PublisherSubscriberTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 client.getServiceLocator().getService(LoggerContext.class).getLogger(getClass()).info("Test");
-                Thread.sleep(1000);
+                Thread.sleep(5000);
             }
         }
     }

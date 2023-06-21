@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -44,7 +45,7 @@ public class OpenSearchSubscriberConnector {
         this.openSearchCommitPublisher = openSearchCommitPublisher;
     }
 
-    public void connect(String authority, String streamName, final Configuration publisherConfiguration, Configuration subscriberConfiguration) {
+    public void connect(URI serverUri, String streamName, final Configuration publisherConfiguration, Configuration subscriberConfiguration) {
 
         String indexOrAliasName = subscriberConfiguration.getString("alias")
                 .orElseGet(() -> subscriberConfiguration.getString("index").orElseThrow());
@@ -70,10 +71,10 @@ public class OpenSearchSubscriberConnector {
         }).whenComplete((updatedConfiguration, throwable) ->
         {
             if (throwable != null) {
-                reactiveStreams.subscribe(authority, streamName,
+                reactiveStreams.subscribe(serverUri, streamName,
                         () -> publisherConfiguration, new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration), OpenSearchSubscriber.class, ClientConfiguration.defaults());
             } else {
-                reactiveStreams.subscribe(authority, streamName,
+                reactiveStreams.subscribe(serverUri, streamName,
                         () -> updatedConfiguration, new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration), OpenSearchSubscriber.class, ClientConfiguration.defaults());
             }
         });

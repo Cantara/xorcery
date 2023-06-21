@@ -100,7 +100,7 @@ public class OpenSearchService
             openSearchConfiguration.getPublishers().ifPresent(publishers ->
             {
                 for (Publisher publisher : publishers) {
-                    connector.connect(publisher.getAuthority(), publisher.getStream(), publisher.getServerConfiguration().orElseGet(Configuration::empty), publisher.getClientConfiguration().orElseGet(Configuration::empty));
+                    connector.connect(publisher.getURI().orElse(null), publisher.getStream(), publisher.getServerConfiguration().orElseGet(Configuration::empty), publisher.getClientConfiguration().orElseGet(Configuration::empty));
                 }
             });
 
@@ -226,8 +226,8 @@ public class OpenSearchService
 
     record Publisher(ContainerNode<?> json)
             implements JsonElement {
-        String getAuthority() {
-            return getString("server.authority").orElseThrow();
+        Optional<URI> getURI() {
+            return JsonElement.super.getURI("server.uri");
         }
 
         String getStream() {

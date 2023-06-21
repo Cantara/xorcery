@@ -10,6 +10,12 @@ import static com.exoreaction.xorcery.configuration.Configuration.missing;
 
 public record ReactiveStreamsServerConfiguration(Configuration context)
         implements ServiceConfiguration {
+
+    public static ReactiveStreamsServerConfiguration get(Configuration configuration)
+    {
+        return new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
+    }
+
     public URI getURI() {
         return context.getURI("uri").orElseThrow(missing("reactivestreams.server.uri"));
     }

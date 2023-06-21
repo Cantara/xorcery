@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.util;
+package com.exoreaction.xorcery.lang;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+public interface Exceptions {
 
-public final class Classes {
-
-    public static Class<Object> getClass(Type type)
+    static Throwable unwrap(Throwable throwable)
     {
-        return (Class<Object>)(type instanceof ParameterizedType pt ? pt.getRawType() : type);
+        while (throwable.getCause() != null) {
+            throwable = throwable.getCause();
+        }
+        return throwable;
     }
 }

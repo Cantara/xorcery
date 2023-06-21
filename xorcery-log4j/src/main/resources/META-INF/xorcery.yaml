@@ -2,7 +2,7 @@ log4jpublisher:
   enabled: "{{ defaults.enabled }}"
   appender: "Log4jPublisher"
   subscriber:
-    authority:
+    uri:
     stream: "logs"
     configuration: {}
   publisher:
@@ -11,7 +11,7 @@ log4jpublisher:
 requestlog:
   enabled: "{{ log4jpublisher.enabled }}"
   subscriber:
-    authority: "{{ log4jpublisher.subscriber.authority }}"
+    uri: "{{ log4jpublisher.subscriber.uri }}"
     stream: "{{ log4jpublisher.subscriber.stream }}"
     configuration: "{{ log4jpublisher.subscriber.configuration }}"
   publisher:

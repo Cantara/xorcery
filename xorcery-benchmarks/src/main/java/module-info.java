@@ -32,4 +32,5 @@ open module xorcery.benchmarks {
     requires jmh.core;
     requires xorcery.jsonapi.server;
     requires jdk.unsupported;
+    requires xorcery.reactivestreams.server;
 }

@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.util;
+package com.exoreaction.xorcery.lang;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
-public final class Enums {
+public final class Classes {
 
-    private static final Map<Enum<?>, String> fieldMappings = new ConcurrentHashMap<>();
-
-    /**
-     * Map an enum Some.name to "some_name"
-     *
-     * @param anEnum enum value
-     * @return stringified enum
-     */
-    public static String toField(Enum<?> anEnum) {
-        return fieldMappings.computeIfAbsent(anEnum, e ->
-                e.getDeclaringClass().getSimpleName().toLowerCase() + "_" + e.name());
+    public static Class<Object> getClass(Type type)
+    {
+        return (Class<Object>)(type instanceof ParameterizedType pt ? pt.getRawType() : type);
     }
 }

@@ -18,6 +18,9 @@ package com.exoreaction.xorcery.log4jpublisher;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 
+import java.net.URI;
+import java.util.Optional;
+
 public record Log4jPublisherConfiguration(Configuration context)
     implements ServiceConfiguration
 {
@@ -26,8 +29,8 @@ public record Log4jPublisherConfiguration(Configuration context)
         return context.getString("appender").orElse("Log4jPublisher");
     }
 
-    public String getSubscriberAuthority() {
-        return context.getString("subscriber.authority").orElse(null);
+    public Optional<URI> getSubscriberURI() {
+        return context.getURI("subscriber.uri");
     }
 
     public String getSubscriberStream() {

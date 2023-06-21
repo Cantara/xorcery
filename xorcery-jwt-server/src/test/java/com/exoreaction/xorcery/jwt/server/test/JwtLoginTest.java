@@ -25,7 +25,7 @@ import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.Link;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
-import com.exoreaction.xorcery.util.Sockets;
+import com.exoreaction.xorcery.net.Sockets;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

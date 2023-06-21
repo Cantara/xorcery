@@ -27,12 +27,12 @@ import java.util.Optional;
 
 /**
  * Resource loading helper. Checks JPMS system resources first, then classloader of this class.
- *
+ * <p>
  * For single resources it also tries to find it as a file.
  */
-public final class Resources {
+public interface Resources {
 
-    public static Optional<URL> getResource(String path) {
+    static Optional<URL> getResource(String path) {
         URL resource = ClassLoader.getSystemResource(path);
         if (resource != null)
             return Optional.of(resource);
@@ -41,8 +41,7 @@ public final class Resources {
             return Optional.of(resource);
         // Check if file
         File file = new File(path);
-        if (file.exists())
-        {
+        if (file.exists()) {
             try {
                 return Optional.of(file.toURI().toURL());
             } catch (MalformedURLException e) {
@@ -52,15 +51,14 @@ public final class Resources {
         return Optional.empty();
     }
 
-    public static List<URL> getResources(String path)
+    static List<URL> getResources(String path)
             throws UncheckedIOException {
         try {
             List<URL> resources = new ArrayList<>();
             ClassLoader.getSystemResources(path).asIterator().forEachRemaining(resources::add);
             Resources.class.getClassLoader().getResources(path).asIterator().forEachRemaining(url ->
             {
-                if (!resources.contains(url))
-                {
+                if (!resources.contains(url)) {
                     resources.add(url);
                 }
             });

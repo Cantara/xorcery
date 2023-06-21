@@ -19,4 +19,7 @@ open module xorcery.util {
     exports com.exoreaction.xorcery.function;
     exports com.exoreaction.xorcery.builders;
     exports com.exoreaction.xorcery.process;
+    exports com.exoreaction.xorcery.lang;
+    exports com.exoreaction.xorcery.io;
+    exports com.exoreaction.xorcery.net;
 }

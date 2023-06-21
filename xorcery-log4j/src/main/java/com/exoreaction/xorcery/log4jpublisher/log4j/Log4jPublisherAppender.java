@@ -84,6 +84,11 @@ public class Log4jPublisherAppender
     @Override
     public void append(final LogEvent event) {
 
+        if (event.getContextData().containsKey("log4jsubscriber"))
+        {
+            return;
+        }
+
         disruptor.publishEvent((holder, seq, e) ->
         {
             Metadata.Builder builder = new Metadata.Builder();
