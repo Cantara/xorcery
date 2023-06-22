@@ -15,18 +15,15 @@
  */
 package com.exoreaction.xorcery.jetty.server.security.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.eclipse.jetty.util.security.Credential;
 
-public class ClaimsCredential
-    extends Credential
-{
-    private Claims claims;
+public class JwtCredential
+        extends Credential {
+    private DecodedJWT jwt;
 
-    public ClaimsCredential(Claims claims) {
-        this.claims = claims;
+    public JwtCredential(DecodedJWT jwt) {
+        this.jwt = jwt;
     }
 
     @Override
@@ -34,12 +31,12 @@ public class ClaimsCredential
         return true;
     }
 
-    public Claims getClaims() {
-        return claims;
+    public DecodedJWT getJwt() {
+        return jwt;
     }
 
     @Override
     public String toString() {
-        return Jwts.builder().setClaims(claims).compact();
+        return jwt.getToken();
     }
 }

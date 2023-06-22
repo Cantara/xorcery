@@ -59,8 +59,8 @@ public class SubscriberWithResultReactiveStream
                                               MessageWriter<Object> resultWriter,
                                               ObjectMapper objectMapper,
                                               ByteBufferPool byteBufferPool,
-                                              Executor executor, MetricRegistry metricRegistry) {
-        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, executor, metricRegistry);
+                                              MetricRegistry metricRegistry) {
+        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry);
 
         this.resultsSent = metricRegistry.meter("subscriber." + streamName + ".results");
 

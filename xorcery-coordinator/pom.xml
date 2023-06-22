@@ -42,6 +42,8 @@
             <artifactId>xorcery-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- Jetty/Jersey -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jersey-server</artifactId>
@@ -57,6 +59,8 @@
             <artifactId>xorcery-handlebars</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- DNS -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-dns-server</artifactId>
@@ -67,6 +71,8 @@
             <artifactId>xorcery-dns-registration</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- Certificates -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-certificates-server</artifactId>
@@ -87,6 +93,15 @@
             <artifactId>xorcery-reactivestreams-server</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- JWT -->
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jwt-server</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Metrics -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jmxmetrics</artifactId>
@@ -97,6 +112,8 @@
             <artifactId>xorcery-metrics</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- Logging -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-log4j</artifactId>

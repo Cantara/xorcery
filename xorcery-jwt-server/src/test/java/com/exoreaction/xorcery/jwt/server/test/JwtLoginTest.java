@@ -15,33 +15,26 @@
  */
 package com.exoreaction.xorcery.jwt.server.test;
 
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
-import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
-import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.Link;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
+import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
+import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
+import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.net.Sockets;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.time.temporal.ChronoUnit;
-import java.util.Base64;
-import java.util.Date;
 
 public class JwtLoginTest {
 
@@ -49,6 +42,7 @@ public class JwtLoginTest {
             dns.client.enabled: true
             dns.client.discovery.enabled: false
             keystores.enabled: true
+            jetty.server.http.port: "{{SYSTEM.port}}"
             jetty.server.ssl.enabled: false
             jetty.server.security.enabled: true
             jetty.server.security.method: "jwt"
@@ -60,28 +54,14 @@ public class JwtLoginTest {
 
     @Test
     public void testJwtLogin() throws Exception {
-        Logger logger = LogManager.getLogger(getClass());
-
-        KeyPair keyPair = Keys.keyPairFor(SignatureAlgorithm.ES256);
-
-        String publicKey = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
-        String privateKey = Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded());
-
-        int managerPort = Sockets.nextFreePort();
-        managerPort = 8443;
-        Configuration serverConfiguration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.security.jwt.issuers", JsonNodeFactory.instance.objectNode().set("server.xorcery.test", JsonNodeFactory.instance.textNode(publicKey)))
-                .add("jwt.server.key", privateKey)
-                .build();
+        System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
+        Configuration serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(config).build();
         System.out.println(serverConfiguration);
         try (Xorcery server = new Xorcery(serverConfiguration)) {
-
+            Logger logger = LogManager.getLogger();
             server.getServiceLocator().inject(this);
 
             InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
-            String jwt = createJwt(keyPair.getPrivate());
             try (Client client = clientBuilder
                     .register(JsonElementMessageBodyReader.class)
                     .register(JsonElementMessageBodyWriter.class)
@@ -89,34 +69,20 @@ public class JwtLoginTest {
                 JsonApiClient jsonApiClient = new JsonApiClient(client);
                 jsonApiClient.get(new Link("login", cfg.getURI().resolve("api/login").toASCIIString()))
                         .thenCompose(rd -> rd.getResource().map(ro ->
-                        {
-                            return jsonApiClient.submit(rd.getLinks().getSelf().orElseThrow(), new ResourceObject.Builder(ro)
-                                    .attributes(new Attributes.Builder(ro.getAttributes().json())
-                                            .attribute("username", "foobar")
-                                            .attribute("password", "secret")
-                                            .build()).build());
-                        }).orElseThrow(IllegalStateException::new))
-                        .whenComplete((result, t) -> System.out.println(result)).toCompletableFuture().join();
+                                jsonApiClient.submit(rd.getLinks().getSelf().orElseThrow(), new ResourceObject.Builder(ro)
+                                        .attributes(new Attributes.Builder(ro.getAttributes().json())
+                                                .attribute("username", "someuser")
+                                                .attribute("password", "secret")
+                                                .build()).build())).orElseThrow(IllegalStateException::new))
+                        .whenComplete((result, t) ->
+                                {
+                                    String token = result.getAttributes().getString("token").orElseThrow();
+                                    DecodedJWT decoded = JWT.decode(token);
+                                    Assertions.assertEquals("someuser", decoded.getSubject());
+                                    logger.info("alg:{},kid:{},typ:{},cty:{},claims:{}", decoded.getAlgorithm(), decoded.getKeyId(), decoded.getType(), decoded.getContentType(), decoded.getClaims());
+                                }
+                        ).toCompletableFuture().join();
             }
         }
-    }
-
-    private String createJwt(PrivateKey key) {
-        Date now = new Date();
-        Date tomorrow = Date.from(now.toInstant().plus(1, ChronoUnit.DAYS));
-
-        String jws = Jwts.builder()
-                .setIssuer("server.xorcery.test")
-                .setSubject("gandalf")
-                .claim("name", "Gandalf")
-                .claim("scope", "users")
-                .claim("tenant", "SomeTenant")
-                // Fri Jun 24 2016 15:33:42 GMT-0400 (EDT)
-                .setIssuedAt(now)
-                // Sat Jun 24 2116 15:33:42 GMT-0400 (EDT)
-                .setExpiration(tomorrow)
-                .signWith(key, SignatureAlgorithm.ES256)
-                .compact();
-        return jws;
     }
 }

@@ -160,6 +160,7 @@ public class Neo4jProjectionEventHandler
                         tx.close();
                     } catch (Throwable e) {
                         logger.error("Could not commit Neo4j updates", e);
+                        tx.close();
                     }
 
                     logger.trace("Applied {}", currentBatchSize);

@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.certificates;
 
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -24,35 +25,39 @@ import java.util.Optional;
 
 import static com.exoreaction.xorcery.configuration.Configuration.missing;
 
-public interface CertificatesConfiguration
-        extends ServiceConfiguration {
-    default Optional<String> getURI() {
+public record CertificatesConfiguration(Configuration context)
+        implements ServiceConfiguration {
+
+    public static CertificatesConfiguration get(Configuration configuration)
+    {
+        return new CertificatesConfiguration(configuration.getConfiguration("certificates"));
+    }
+
+    Optional<String> getURI() {
         return context().getString("uri");
     }
 
-    default String getCertificateStoreName() {
+    String getCertificateStoreName() {
         return context().getString("keystore").orElse("ssl");
     }
 
-    default String getSubject() {
+    String getSubject() {
         return context().getString("subject").orElseThrow(missing("certificates.subject"));
     }
 
-    default boolean isRenewOnStartup() {
+    boolean isRenewOnStartup() {
         return context().getBoolean("renewOnStartup").orElse(false);
     }
 
-    default String getAlias() {
+    String getAlias() {
         return context().getString("alias").orElseThrow(missing("certificates.alias"));
     }
 
-    default List<String> getIpAddresses()
-    {
+    List<String> getIpAddresses() {
         return context().getListAs("ipAddresses", JsonNode::textValue).orElse(Collections.emptyList());
     }
 
-    default List<String> getDnsNames()
-    {
+    List<String> getDnsNames() {
         return context().getListAs("dnsNames", JsonNode::textValue).orElse(Collections.emptyList());
     }
 }

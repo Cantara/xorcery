@@ -38,5 +38,12 @@ jetty:
         enabled: "{{ jetty.server.security.enabled }}"
       jwt:
         enabled: "{{ jetty.server.security.enabled }}"
-        issuers: {}
-      #    someissuer: somekey
+        issuers:
+          default:
+            keys: []
+      #    someissuer:
+      #       keys:
+      #         - alg: RSA256
+      #           kid: 1234
+      #           key: MII...
+      #

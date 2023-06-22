@@ -58,11 +58,10 @@ public class PublishWithResultReactiveStreamDisruptor
                                                     MessageWriter<Object> eventWriter,
                                                     MessageReader<Object> resultReader,
                                                     Supplier<Configuration> subscriberConfiguration,
-                                                    ScheduledExecutorService timer,
                                                     ByteBufferPool pool,
                                                     MetricRegistry metricRegistry,
                                                     CompletableFuture<Void> result) {
-        super(defaultScheme, authorityOrBaseUri, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, timer, pool, metricRegistry, result);
+        super(defaultScheme, authorityOrBaseUri, streamName, publisherConfiguration, dnsLookup, webSocketClient, publisher, eventWriter, subscriberConfiguration, pool, metricRegistry, result);
         this.resultReader = resultReader;
         this.received = metricRegistry.meter("publish." + streamName + ".received");
     }

@@ -1,10 +1,12 @@
 jwt:
   server:
-    enabled: "{{ defaults.enabled }}"
-    key: "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCBElMmpbIZRHmXmxpk/7iKV5jV45Xibvh3IuxmrrEzg6w=="
-    configuration:
-      users:
-        foobar:
-          password: "secret"
-          claims:
-            tenant: "tenant1"
+    keys:
+      - keyId: "2d3f1d1f-4038-4c01-beb7-97b260462ada"
+        alg: "ES256"
+        publicKey: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEd7L6zz97U1MMaj9MSN325SZ15htR26mec0/1A0vt1b8Yfcu0QuiN9E4ijSfMRiof+B57P/hkrb+OuRSYLL854Q=="
+        privateKey: "secret:MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCCSHC362NTeBZYTkYGXK3vfRvoqQum+Uo6DFUDzvX7MuA=="
+  users:
+    someuser:
+      password: "secret:secret"
+      claims:
+        tenant: "tenant1"

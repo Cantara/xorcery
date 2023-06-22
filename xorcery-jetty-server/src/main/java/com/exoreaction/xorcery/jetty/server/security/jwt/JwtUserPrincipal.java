@@ -15,18 +15,18 @@
  */
 package com.exoreaction.xorcery.jetty.server.security.jwt;
 
-import io.jsonwebtoken.Claims;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import org.eclipse.jetty.security.UserPrincipal;
 
 public class JwtUserPrincipal
     extends UserPrincipal
 {
-    public JwtUserPrincipal(String name, ClaimsCredential credential) {
+    public JwtUserPrincipal(String name, JwtCredential credential) {
         super(name, credential);
     }
 
-    public Claims getClaims()
+    public DecodedJWT getJwt()
     {
-        return ((ClaimsCredential)_credential).getClaims();
+        return ((JwtCredential)_credential).getJwt();
     }
 }

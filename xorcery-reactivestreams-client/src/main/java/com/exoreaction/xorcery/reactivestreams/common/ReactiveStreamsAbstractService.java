@@ -31,10 +31,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Flow;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 
 public abstract class ReactiveStreamsAbstractService {
     // Magic bytes for sending exceptions
@@ -44,7 +41,6 @@ public abstract class ReactiveStreamsAbstractService {
     protected final Logger logger;
     protected final ObjectMapper objectMapper;
     protected final ByteBufferPool byteBufferPool;
-    protected final ScheduledExecutorService timer;
 
     //    protected final List<Flow.Subscription> activeSubscriptions = new CopyOnWriteArrayList<>();
     protected final List<SubscriberTracker> activeSubscribers = new CopyOnWriteArrayList<>();
@@ -54,13 +50,10 @@ public abstract class ReactiveStreamsAbstractService {
         this.logger = logger;
         this.objectMapper = new ObjectMapper();
         this.byteBufferPool = new ArrayByteBufferPool();
-        timer = Executors.newSingleThreadScheduledExecutor();
     }
 
     public void preDestroy() {
         logger.info("Stop reactive streams");
-
-        timer.shutdown();
 
         cancelActiveSubscriptions();
     }
@@ -73,6 +66,19 @@ public abstract class ReactiveStreamsAbstractService {
             for (SubscriberTracker activeSubscriber : activeSubscribers) {
                 activeSubscriber.getSubscription().cancel();
                 activeSubscriber.onError(new ServerShutdownStreamException("Server is shutting down"));
+
+                // Wait for it to finish cleanly
+/* TODO This needs review for the various cases
+                CompletableFuture<Void> result = activeSubscriber.getResult();
+                if (result != null) {
+                    try {
+                        result.get(10, TimeUnit.SECONDS);
+                    } catch (Throwable e) {
+                        // Ignore
+                        logger.warn("Could not cancel subscription", e);
+                    }
+                }
+*/
             }
         }
     }
@@ -183,14 +189,12 @@ public abstract class ReactiveStreamsAbstractService {
 
     protected class SubscriberTracker implements Flow.Subscriber<Object> {
         private final Flow.Subscriber<Object> subscriber;
+        private final CompletableFuture<Void> result;
         private Flow.Subscription subscription;
 
-        public Flow.Subscription getSubscription() {
-            return subscription;
-        }
-
-        public SubscriberTracker(Flow.Subscriber<Object> subscriber) {
+        public SubscriberTracker(Flow.Subscriber<Object> subscriber, CompletableFuture<Void> result) {
             this.subscriber = subscriber;
+            this.result = result;
             activeSubscribers.add(this);
         }
 
@@ -207,18 +211,24 @@ public abstract class ReactiveStreamsAbstractService {
 
         @Override
         public void onError(Throwable throwable) {
-            if (activeSubscribers.remove(this))
-            {
+            if (activeSubscribers.remove(this)) {
                 subscriber.onError(throwable);
             }
         }
 
         @Override
         public void onComplete() {
-            if (activeSubscribers.remove(this))
-            {
+            if (activeSubscribers.remove(this)) {
                 subscriber.onComplete();
             }
+        }
+
+        public Flow.Subscription getSubscription() {
+            return subscription;
+        }
+
+        public CompletableFuture<Void> getResult() {
+            return result;
         }
     }
 
@@ -231,7 +241,7 @@ public abstract class ReactiveStreamsAbstractService {
 
         @Override
         public void subscribe(Flow.Subscriber<? super Object> subscriber) {
-            publisher.subscribe(new SubscriberTracker(subscriber));
+            publisher.subscribe(new SubscriberTracker(subscriber, null));
         }
     }
 }

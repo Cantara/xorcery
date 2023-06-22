@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.certificates.test;
 
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
@@ -48,48 +49,49 @@ public class ClientCertificateAuthenticationTest {
                 ssl:
                     enabled: true
             jetty.server.enabled: true
+            jetty.server.http.enabled: false
             jetty.server.ssl.enabled: true
             jetty.server.security.enabled: true    
             secrets.enabled: true
             keystores.enabled: true
-            """;
+                    """;
+
+    String serverConfig = """
+            instance.id: "xorcery1"
+            instance.host: "server1"
+            jetty.server.ssl.port": "{{SYSTEM.port}}"
+            jetty.server.ssl.sniRequired: true
+            jetty.server.security.enabled: true
+                    """;
+
+    String clientConfig = """
+            jetty.server.enabled: false
+            clienttester.enabled: true
+                    """;
 
     @Test
     public void testClientCertAuthValid() throws Exception {
-        Logger logger = LogManager.getLogger(getClass());
-
         //System.setProperty("javax.net.debug", "ssl,handshake");
 
-        int managerPort = Sockets.nextFreePort();
-        managerPort = Sockets.nextFreePort();
-        Configuration serverConfiguration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("instance.id", "xorcery1")
-                .add("instance.host", "server1")
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", managerPort)
-                .add("jetty.server.ssl.sniRequired", true)
-                .add("jetty.server.security.enabled", true)
+        System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
+        Configuration serverConfiguration = new ConfigurationBuilder()
+                .addTestDefaults()
+                .addYaml(config)
+                .addYaml(serverConfig)
                 .build();
 //        System.out.println(serverConfiguration);
-        Configuration clientConfiguration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("instance.id", "xorcery2")
-                .add("instance.host", "server2")
-                .add("clienttester.enabled", "true")
-                .add("jetty.server.enabled", false)
+        Configuration clientConfiguration = new ConfigurationBuilder()
+                .addTestDefaults()
+                .addYaml(config)
+                .addYaml(clientConfig)
                 .build();
-        System.out.println(clientConfiguration);
+//        System.out.println(clientConfiguration);
         try (Xorcery server = new Xorcery(serverConfiguration)) {
-
             try (Xorcery client = new Xorcery(clientConfiguration)) {
-                System.out.println("DONE");
-
                 InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
                 ResourceDocument doc = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getURI().resolve("api/subject")).toCompletableFuture().join();
-                Assertions.assertEquals(List.of("CN=Test Service"), doc.getResource().get().getAttributes().getListAs("principals", JsonNode::textValue).orElse(Collections.emptyList()));
+                Assertions.assertEquals(List.of("CN=Test Service", "localhost", "server.xorcery.test", "127.0.0.1"), doc.getResource().get().getAttributes().getListAs("names", JsonNode::textValue).orElse(Collections.emptyList()));
             }
-
         }
     }
 }

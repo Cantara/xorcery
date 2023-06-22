@@ -3,7 +3,7 @@ instance:
   id: "{{ ENV.SERVER_ID | SYSTEM.server_id | instance.host}}"
   name: genericserver
   version: "unknown"
-  host: "{{ ENV.HOSTNAME | \"server\" }}"
+  host: "{{ ENV.HOSTNAME | CALCULATED.hostName }}"
   fqdn: "{{ instance.host }}.{{ instance.domain }}"
   ip: "{{ ENV.IP | CALCULATED.ip | null }}"
   domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
@@ -45,14 +45,10 @@ log4j2:
     status: warn
     properties: {}
     thresholdFilter:
-      level: debug
+      level: info
     appenders: {}
 
     Loggers:
-      logger:
-        - name: com.exoreaction.xorcery.core
-          level: info
-
       Root:
         level: info
         AppenderRef: []

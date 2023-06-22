@@ -29,8 +29,9 @@ open module xorcery.jwt.jsonapi {
     requires jakarta.ws.rs;
     requires xorcery.domainevents.jsonapi;
     requires xorcery.jetty.server;
-    requires jjwt.api;
+    requires com.auth0.jwt;
     requires xorcery.service.api;
     requires org.bouncycastle.provider;
     requires org.bouncycastle.pkix;
+    requires xorcery.secrets;
 }

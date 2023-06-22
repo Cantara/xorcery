@@ -26,6 +26,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientBadPayloadStream
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +49,6 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -74,7 +74,6 @@ public class SubscribeReactiveStream
     protected final Flow.Subscriber<Object> subscriber;
     protected final MessageReader<Object> eventReader;
     private final Supplier<Configuration> publisherConfiguration;
-    private final ScheduledExecutorService timer;
     protected final ByteBufferPool byteBufferPool;
     protected final CompletableFuture<Void> result;
 
@@ -100,7 +99,6 @@ public class SubscribeReactiveStream
                                    Flow.Subscriber<Object> subscriber,
                                    MessageReader<Object> eventReader,
                                    Supplier<Configuration> publisherConfiguration,
-                                   ScheduledExecutorService timer,
                                    ByteBufferPool pool,
                                    MetricRegistry metricRegistry,
                                    CompletableFuture<Void> result) {
@@ -113,7 +111,6 @@ public class SubscribeReactiveStream
         this.subscriber = subscriber;
         this.eventReader = eventReader;
         this.publisherConfiguration = publisherConfiguration;
-        this.timer = timer;
         this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
         this.byteBufferPool = pool;
 
@@ -128,7 +125,7 @@ public class SubscribeReactiveStream
         this.result.exceptionally(throwable ->
         {
             // Check if session is open
-            if (session != null) {
+            if (session != null && session.isOpen()) {
 
                 WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
                 session.close(StatusCode.NORMAL, "cancel", callback);
@@ -157,7 +154,7 @@ public class SubscribeReactiveStream
         requests.addAndGet(n);
         outstandingRequests.addAndGet(n);
         if (session != null)
-            timer.execute(this::sendRequests);
+            CompletableFuture.runAsync(this::sendRequests);
     }
 
     @Override
@@ -168,7 +165,7 @@ public class SubscribeReactiveStream
         cancelled.set(true);
         requests.set(Long.MIN_VALUE);
         if (session != null)
-            timer.execute(this::sendRequests);
+            CompletableFuture.runAsync(this::sendRequests);
     }
 
     // Connection process
@@ -248,9 +245,13 @@ public class SubscribeReactiveStream
             if (uriIterator.hasNext()) {
                 connect(uriIterator);
             } else {
-                timer.schedule(this::start, retryDelay, TimeUnit.MILLISECONDS);
-                // Exponential backoff, gets reset on successful connect, max 60s delay
-                retryDelay = Math.min(retryDelay * 2, 60000);
+                if (cause instanceof ServerTimeoutStreamException) {
+                    start();
+                } else {
+                    CompletableFuture.delayedExecutor(retryDelay, TimeUnit.MILLISECONDS).execute(this::start);
+                    // Exponential backoff, gets reset on successful connect, max 60s delay
+                    retryDelay = Math.min(retryDelay * 2, 60000);
+                }
             }
         } else {
             if (cause == null) {
@@ -278,7 +279,7 @@ public class SubscribeReactiveStream
                 f.future().thenAcceptAsync(Void ->
                 {
                     logger.debug(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
-                    timer.submit(this::sendRequests);
+                    CompletableFuture.runAsync(this::sendRequests);
                 }).exceptionally(t ->
                 {
                     session.close(StatusCode.SERVER_ERROR, t.getMessage());
@@ -385,8 +386,13 @@ public class SubscribeReactiveStream
             logger.warn(marker, "Bad payload:{} {}", statusCode, reason);
             result.completeExceptionally(new ClientBadPayloadStreamException(reason)); // Now considered done
         } else if (statusCode == StatusCode.SHUTDOWN) {
-            logger.warn(marker, "Server is shutting down, retrying:{} {}", statusCode, reason);
-            retry(new ServerShutdownStreamException("Server is shutting down"));
+            if (reason.equals("Connection Idle Timeout")) {
+                logger.debug(marker, "Server timeout, retrying:{} {}", statusCode, reason);
+                retry(new ServerTimeoutStreamException("Server closed due to timeout"));
+            } else {
+                logger.warn(marker, "Server is shutting down, retrying:{} {}", statusCode, reason);
+                retry(new ServerShutdownStreamException("Server is shutting down"));
+            }
         } else {
             logger.warn(marker, "Websocket failed, retrying:{} {}", statusCode, reason);
             retry(new ServerStreamException("Websocket failed:" + reason));

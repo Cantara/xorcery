@@ -45,5 +45,6 @@ open module xorcery.jetty.server {
     requires org.apache.logging.log4j;
     requires com.codahale.metrics;
 
-    requires jjwt.api;
+    requires com.auth0.jwt;
+    requires org.bouncycastle.provider;
 }

@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.Charset;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
 import java.util.concurrent.Semaphore;
@@ -69,7 +70,6 @@ public class SubscriberReactiveStream
 
     protected final ObjectMapper objectMapper;
     protected final Marker marker;
-    protected final Executor executor;
 
     protected Session session;
 
@@ -86,14 +86,13 @@ public class SubscriberReactiveStream
                                     MessageReader<Object> eventReader,
                                     ObjectMapper objectMapper,
                                     ByteBufferPool byteBufferPool,
-                                    Executor executor, MetricRegistry metricRegistry) {
+                                    MetricRegistry metricRegistry) {
         this.subscriberFactory = subscriberFactory;
         this.eventReader = eventReader;
         this.objectMapper = objectMapper;
         this.byteBufferPool = byteBufferPool;
         this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, false);
         this.marker = MarkerManager.getMarker(streamName);
-        this.executor = executor;
 
         this.received = metricRegistry.meter("subscriber." + streamName + ".received");
         this.receivedBytes = metricRegistry.meter("subscriber." + streamName + ".received.bytes");
@@ -111,7 +110,7 @@ public class SubscriberReactiveStream
         }
         requests.addAndGet(n);
         if (session != null)
-            executor.execute(this::sendRequests);
+            CompletableFuture.runAsync(this::sendRequests);
     }
 
     @Override
@@ -122,7 +121,7 @@ public class SubscriberReactiveStream
         cancelled.set(true);
         requests.set(Long.MIN_VALUE);
         if (session != null)
-            executor.execute(this::sendRequests);
+            CompletableFuture.runAsync(this::sendRequests);
     }
 
     // Send requests

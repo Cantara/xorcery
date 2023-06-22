@@ -42,12 +42,12 @@ public class SubjectResource
             for (Principal principal : subject.getPrincipals()) {
                 arrayNode.add(principal.getName());
             }
-            b.attribute("principals", arrayNode);
+            b.attribute("names", arrayNode);
             arrayNode = JsonNodeFactory.instance.arrayNode();
             for (Object credential : subject.getPrivateCredentials()) {
                 arrayNode.add(credential.toString());
             }
-            b.attribute("principals", arrayNode);
+            b.attribute("credentials", arrayNode);
 
         }).build()).build()).build();
     }

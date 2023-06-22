@@ -78,7 +78,6 @@ public class PublishReactiveStreamDisruptor
     protected final MessageWriter<Object> eventWriter;
 
     private final Supplier<Configuration> subscriberConfiguration;
-    private ScheduledExecutorService timer;
     protected final ByteBufferPool pool;
     protected CompletableFuture<Void> result;
     protected final Marker marker;
@@ -106,7 +105,6 @@ public class PublishReactiveStreamDisruptor
                                           Flow.Publisher<Object> publisher,
                                           MessageWriter<Object> eventWriter,
                                           Supplier<Configuration> subscriberConfiguration,
-                                          ScheduledExecutorService timer,
                                           ByteBufferPool pool,
                                           MetricRegistry metricRegistry,
                                           CompletableFuture<Void> result) {
@@ -117,7 +115,6 @@ public class PublishReactiveStreamDisruptor
         this.publisher = publisher;
         this.eventWriter = eventWriter;
         this.subscriberConfiguration = subscriberConfiguration;
-        this.timer = timer;
         this.pool = pool;
         this.result = result;
         this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
@@ -304,7 +301,7 @@ public class PublishReactiveStreamDisruptor
                 if (cause instanceof ServerShutdownStreamException) {
                     retryDelay = 0;
                 }
-                timer.schedule(this::start, retryDelay, TimeUnit.MILLISECONDS);
+                CompletableFuture.delayedExecutor(retryDelay, TimeUnit.MILLISECONDS).execute(this::start);
                 // Exponential backoff, gets reset on successful connect, max 60s delay
                 retryDelay = Math.min(retryDelay * 2, 60000);
             }

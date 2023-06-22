@@ -16,18 +16,14 @@
 package com.exoreaction.xorcery.jwt.server;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.xorcery.jetty.server.security.jwt.ClaimsCredential;
-import com.exoreaction.xorcery.jetty.server.security.jwt.JwtUserPrincipal;
-import com.fasterxml.jackson.databind.JsonNode;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import com.exoreaction.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.security.*;
 import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.util.security.Password;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
@@ -39,13 +35,13 @@ import java.util.List;
 @ContractsProvided({LoginService.class,JwtConfigurationLoginService.class})
 public class JwtConfigurationLoginService
         extends AbstractLoginService {
-    private final Logger logger = LogManager.getLogger(getClass());
-
     private final Configuration users;
+    private final Secrets secrets;
 
     @Inject
-    public JwtConfigurationLoginService(Configuration configuration) {
-        this.users = configuration.getConfiguration("jwt.server.configuration.users");
+    public JwtConfigurationLoginService(Configuration configuration, Secrets secrets) {
+        this.users = configuration.getConfiguration("jwt.users");
+        this.secrets = secrets;
     }
 
     @Override
@@ -61,22 +57,15 @@ public class JwtConfigurationLoginService
         Configuration user = users.getConfiguration(username);
 
         // Check password
-        if (!user.getString("password").orElse("").equals(credentials.toString()))
+        if (!user.getString("password").map(secrets::getSecretString).orElse("").equals(credentials.toString()))
             return null;
 
-        Claims claims = Jwts.claims();
-        claims.putAll(JsonElement.toMap(user.getConfiguration("claims").json(), JsonNode::textValue));
-
-        JwtUserPrincipal jwtUserPrincipal = new JwtUserPrincipal(username, new ClaimsCredential(claims));
+        UserPrincipal userPrincipal = new UserPrincipal(username, new Password(credentials.toString()));
         Subject subject = new Subject();
-        jwtUserPrincipal.configureSubject(subject);
+        userPrincipal.configureSubject(subject);
         subject.setReadOnly();
 
-        UserIdentity userIdentity = new DefaultUserIdentity(subject, jwtUserPrincipal, new String[0]);
-
-        logger.debug(username + " created a JWT token");
-
-        return userIdentity;
+        return new DefaultUserIdentity(subject, userPrincipal, new String[0]);
     }
 
     @Override

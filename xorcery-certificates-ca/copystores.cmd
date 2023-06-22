@@ -14,10 +14,9 @@
 @REM limitations under the License.
 @REM
 
-REM List all keystores
-cls
-keytool -keystore rootcakeystore.p12 -list -storepass password
-keytool -keystore intermediatecakeystore.p12 -list -storepass password
-keytool -keystore ssl.p12 -list -storepass password
-keytool -keystore truststore.p12 -list -storepass password
-keytool -keystore test-ssl.p12 -list -storepass password
+REM Copy created stores to the correct locations
+copy rootcakeystore.p12
+copy intermediatecakeystore.p12 src/main/resources/META-INF/intermediatecakeystore.p12
+copy ssl.p12 ../xorcery-certificates/src/main/resources/META-INF/ssl.p12
+copy truststore.p12 ../xorcery-certificates/src/main/resources/META-INF/truststore.p12
+copy test-ssl.p12 test-ssl.p12

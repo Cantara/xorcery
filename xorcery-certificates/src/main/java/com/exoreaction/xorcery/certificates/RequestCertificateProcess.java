@@ -50,7 +50,7 @@ public record RequestCertificateProcess(PKCS10CertificationRequest csr,
         }
 
         public RequestCertificateProcess create(PKCS10CertificationRequest csr) {
-            CertificatesConfiguration certificatesConfig = () -> configuration.getConfiguration("certificates");
+            CertificatesConfiguration certificatesConfig = CertificatesConfiguration.get(configuration);
             return new RequestCertificateProcess(csr, new CompletableFuture<>(),
                     keyStores.getKeyStore(certificatesConfig.getCertificateStoreName()), keyStores,
                     certificatesConfig, providers, LogManager.getLogger(RequestCertificateProcess.class));

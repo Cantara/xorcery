@@ -1,13 +1,16 @@
 jwt:
   server:
     enabled: "{{ defaults.enabled }}"
-    key: null
-    configuration:
-      users:
-        foobar:
-          password: "secret"
-          claims:
-            tenant: "tenant1"
+    issuer: "{{ instance.fqdn }}"
+    keys: []
+  configuration:
+    enabled: "{{ defaults.enabled }}"
+
+  users: {}
+#    someuser:
+#      password: "secret"
+#      claims:
+#        tenant: "tenant1"
 
 jersey.server.register:
   - com.exoreaction.xorcery.jwt.server.resources.JwtLoginResource

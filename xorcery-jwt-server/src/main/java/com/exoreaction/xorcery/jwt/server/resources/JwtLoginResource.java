@@ -17,45 +17,41 @@ package com.exoreaction.xorcery.jwt.server.resources;
 
 import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsJsonSchemaMixin;
 import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsMixin;
-import com.exoreaction.xorcery.jsonapi.MediaTypes;
-import com.exoreaction.xorcery.jsonapi.Attributes;
-import com.exoreaction.xorcery.jsonapi.Links;
-import com.exoreaction.xorcery.jsonapi.ResourceDocument;
-import com.exoreaction.xorcery.jsonapi.ResourceObject;
+import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonapischema.ResourceObjectSchema;
 import com.exoreaction.xorcery.jsonschema.JsonSchema;
 import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaMixin;
-import com.exoreaction.xorcery.jwt.server.JwtJsonApiService;
-import com.exoreaction.xorcery.jetty.server.security.jwt.JwtUserPrincipal;
-import io.jsonwebtoken.Jwts;
+import com.exoreaction.xorcery.jwt.server.JwtConfigurationLoginService;
+import com.exoreaction.xorcery.jwt.server.JwtService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.UserIdentity;
 
-import java.util.Date;
-import java.util.UUID;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-import static com.exoreaction.xorcery.jsonapi.MediaTypes.APPLICATION_JSON_API;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.describedby;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
+import static com.exoreaction.xorcery.jsonapi.MediaTypes.APPLICATION_JSON_API;
 
 @Path("api/login")
 public class JwtLoginResource
         extends JsonApiResource
         implements JsonSchemaMixin, CommandsJsonSchemaMixin, CommandsMixin {
 
-    private final JwtJsonApiService jsonApiService;
+    private final JwtService jwtService;
+    private final LoginService loginService;
 
     @Inject
-    public JwtLoginResource(JwtJsonApiService jsonApiService) {
-        this.jsonApiService = jsonApiService;
+    public JwtLoginResource(JwtService jwtService, JwtConfigurationLoginService loginService) {
+        this.jwtService = jwtService;
+        this.loginService = loginService;
     }
 
     @GET
@@ -92,26 +88,23 @@ public class JwtLoginResource
     @Consumes({"application/x-www-form-urlencoded", APPLICATION_JSON_API})
     public Response post(ResourceObject resourceObject) {
 
-        UserIdentity userIdentity = jsonApiService.getLoginService().login(resourceObject.getAttributes().getString("username").orElse(null), resourceObject.getAttributes().getString("password").orElse(null), getHttpServletRequest());
-        if (userIdentity == null)
-        {
+        String username = resourceObject.getAttributes().getString("username").orElse(null);
+        String password = resourceObject.getAttributes().getString("password").orElse(null);
+        UserIdentity userIdentity = loginService.login(username, password, getHttpServletRequest());
+        if (userIdentity == null) {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
-        JwtUserPrincipal principal = (JwtUserPrincipal) userIdentity.getUserPrincipal();
-        io.jsonwebtoken.Claims claims = principal.getClaims();
-
-        String token = Jwts.builder()
-                .setClaims(claims)
-                .setId(UUID.randomUUID().toString())
-                .setIssuer(getHttpServletRequest().getHeader(HttpHeader.HOST.lowerCaseName()))
-                .setIssuedAt(new Date())
-                .setSubject(principal.getName())
-                .signWith(jsonApiService.getSigningKey())
-                .compact();
-        return Response.ok(new ResourceObject.Builder("jwt").attributes(new Attributes.Builder().attribute("token", token).build()).build())
-                .cookie(new NewCookie.Builder("token").value(token).build())
-                .build();
+        try {
+            String token = jwtService.createJwt(username);
+            return Response.ok(new ResourceObject.Builder("jwt").attributes(new Attributes.Builder().attribute("token", token).build()).build())
+                    .cookie(new NewCookie.Builder("token").value(token).build())
+                    .build();
+        } catch (WebApplicationException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new ServerErrorException(Response.Status.INTERNAL_SERVER_ERROR, e);
+        }
     }
 
     private ResourceObjectSchema loginSchema() {

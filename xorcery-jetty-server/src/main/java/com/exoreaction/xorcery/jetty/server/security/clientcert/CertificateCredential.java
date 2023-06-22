@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.jetty.server.security.clientcert;
 
-import io.jsonwebtoken.Claims;
 import org.eclipse.jetty.util.security.Credential;
 
 import java.security.cert.X509Certificate;

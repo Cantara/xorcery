@@ -60,7 +60,7 @@ public class Xorcery
 
     private final ServiceLocator serviceLocator;
 
-    public Xorcery(Configuration configuration) throws Exception {
+    public  Xorcery(Configuration configuration) throws Exception {
         this(configuration, ServiceLocatorFactory.getInstance().create(null));
     }
 

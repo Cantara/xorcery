@@ -166,7 +166,6 @@ public class ReactiveStreamsClientService
                             eventWriter,
                             resultReader,
                             subscriberServerConfiguration,
-                            timer,
                             byteBufferPool,
                             metricRegistry,
                             result);
@@ -196,7 +195,6 @@ public class ReactiveStreamsClientService
                             (Flow.Publisher<Object>) publisher,
                             eventWriter,
                             subscriberServerConfiguration,
-                            timer,
                             byteBufferPool,
                             metricRegistry,
                             result);
@@ -259,7 +257,7 @@ public class ReactiveStreamsClientService
         MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
         // Subscriber wrapper so we can track active subscriptions
-        subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber);
+        subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber, result);
 
         // Start subscription process
         if (resultWriter != null) {
@@ -272,7 +270,6 @@ public class ReactiveStreamsClientService
                     eventReader,
                     resultWriter,
                     publisherConfiguration,
-                    timer,
                     byteBufferPool,
                     metricRegistry,
                     result);
@@ -286,7 +283,6 @@ public class ReactiveStreamsClientService
                     (Flow.Subscriber<Object>) subscriber,
                     eventReader,
                     publisherConfiguration,
-                    timer,
                     byteBufferPool,
                     metricRegistry,
                     result);

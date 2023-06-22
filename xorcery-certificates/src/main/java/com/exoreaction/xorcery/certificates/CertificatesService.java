@@ -66,7 +66,7 @@ public class CertificatesService
                                Secrets secrets,
                                Configuration configuration) throws GeneralSecurityException, IOException, OperatorCreationException {
         this.requestCertificatesProcessFactory = requestCertificateProcessFactory;
-        certificatesConfiguration = () -> configuration.getConfiguration("certificates");
+        certificatesConfiguration = CertificatesConfiguration.get(configuration);
         this.keyStore = keyStores.getKeyStore(certificatesConfiguration.getCertificateStoreName());
         this.keyStores = keyStores;
 
@@ -81,7 +81,11 @@ public class CertificatesService
         issuedCertKeyPair = keyGen.generateKeyPair();
 
         // Request new certificate
-        if (!keyStore.containsAlias(alias) || certificatesConfiguration.isRenewOnStartup()) {
+        X509Certificate certificate = (X509Certificate) keyStore.getCertificate(alias);
+
+        if (certificate == null || // No certificate
+                !certificate.getSubjectX500Principal().getName().equals(certificatesConfiguration.getSubject()) || // FQDN has changed
+                certificatesConfiguration.isRenewOnStartup()) {
             // Request certificate
             requestCertificateProcess = requestCertificatesProcessFactory.create(createRequest());
             requestCertificateProcess.start();

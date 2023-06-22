@@ -27,6 +27,15 @@ public class CalculatedConfigurationProvider
         }
     }
 
+    public JsonNode hostName()
+    {
+        try {
+            return JsonNodeFactory.instance.textNode(InetAddress.getLocalHost().getHostName());
+        } catch (UnknownHostException e) {
+            return MissingNode.getInstance();
+        }
+    }
+
     public JsonNode ip() {
 
         try {

@@ -15,3 +15,5 @@ jersey:
 root.enabled: true
 jetty.enabled: true
 xorcery.enabled: true
+
+log4j2.Configuration.thresholdFilter.level: info

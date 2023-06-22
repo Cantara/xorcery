@@ -59,11 +59,10 @@ public class SubscribeWithResultReactiveStream
                                              MessageReader<Object> eventReader,
                                              MessageWriter<Object> resultWriter,
                                              Supplier<Configuration> publisherConfiguration,
-                                             ScheduledExecutorService timer,
                                              ByteBufferPool pool,
                                              MetricRegistry metricRegistry,
                                              CompletableFuture<Void> result) {
-        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, timer, pool, metricRegistry, result);
+        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, pool, metricRegistry, result);
         this.resultWriter = resultWriter;
     }
 

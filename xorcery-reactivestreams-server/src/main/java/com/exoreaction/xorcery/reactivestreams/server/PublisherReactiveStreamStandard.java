@@ -32,6 +32,7 @@ import org.eclipse.jetty.websocket.api.BatchMode;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,6 +42,7 @@ import java.nio.channels.ClosedChannelException;
 import java.util.ArrayDeque;
 import java.util.Base64;
 import java.util.Deque;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
@@ -119,38 +121,44 @@ public class PublisherReactiveStreamStandard
                 session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
             }
         } else {
-            long requestAmount = Long.parseLong(message);
+            // Handle async
+            CompletableFuture.runAsync(() ->
+            {
+                long requestAmount = Long.parseLong(message);
 
-            if (subscription != null) {
-                if (requestAmount == Long.MIN_VALUE) {
-                    logger.info(marker, "Received cancel on websocket " + streamName);
-                    session.close(StatusCode.NORMAL, "cancelled");
-                } else {
-                    if (logger.isDebugEnabled())
-                        logger.debug(marker, "Received request:" + requestAmount);
+                synchronized (session) {
+                    if (subscription != null) {
+                        if (requestAmount == Long.MIN_VALUE) {
+                            logger.info(marker, "Received cancel on websocket " + streamName);
+                            session.close(StatusCode.NORMAL, "cancelled");
+                        } else {
+                            if (logger.isDebugEnabled())
+                                logger.debug(marker, "Received request:" + requestAmount);
 
-                    Object item;
-                    while (requestAmount > 0 && (item = queue.poll()) != null) {
-                        send(item);
-                        requestAmount--;
-                    }
+                            Object item;
+                            while (requestAmount > 0 && (item = queue.poll()) != null) {
+                                send(item);
+                                requestAmount--;
+                            }
 
-                    if (isComplete) {
-                        if (queue.isEmpty() && requestAmount == 0) {
-                            // We're done
-                            session.close(StatusCode.NORMAL, "complete");
+                            if (isComplete) {
+                                if (queue.isEmpty() && requestAmount == 0) {
+                                    // We're done
+                                    session.close(StatusCode.NORMAL, "complete");
+                                }
+                            } else {
+                                if (requestAmount > 0) {
+                                    requested += requestAmount;
+                                    subscription.request(requestAmount);
+                                }
+                            }
+
                         }
                     } else {
-                        if (requestAmount > 0) {
-                            requested += requestAmount;
-                            subscription.request(requestAmount);
-                        }
+                        outstandingRequestAmount += requestAmount;
                     }
-
                 }
-            } else {
-                outstandingRequestAmount += requestAmount;
-            }
+            });
         }
     }
 
@@ -181,7 +189,9 @@ public class PublisherReactiveStreamStandard
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketError", cause);
 
-        if (cause instanceof ClosedChannelException && subscription != null) {
+        if ((cause instanceof ClosedChannelException ||
+                cause instanceof WebSocketTimeoutException)
+                && subscription != null) {
             // Ignore
             subscription.cancel();
             subscription = null;
@@ -280,7 +290,7 @@ public class PublisherReactiveStreamStandard
             logger.trace(marker, "onComplete");
 
         synchronized (session) {
-            if (queue.isEmpty()) {
+            if (queue.isEmpty() && session.isOpen()) {
                 session.close(StatusCode.NORMAL, "complete");
             } else {
                 // Wait for requests to drain the remaining items
