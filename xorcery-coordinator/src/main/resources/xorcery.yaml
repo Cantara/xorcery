@@ -11,6 +11,8 @@ metrics.enabled: false
 
 log4j2:
   Configuration:
+    thresholdFilter:
+      level: debug
     appenders:
       Console:
         name: STDOUT
