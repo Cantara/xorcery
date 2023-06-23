@@ -1,6 +1,6 @@
 secrets:
   enabled: "{{defaults.enabled}}"
-  default: "env"
+  default: "secret"
 
   env:
     enabled: "{{ secrets.enabled }}"

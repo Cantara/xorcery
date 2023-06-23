@@ -42,6 +42,7 @@ public class JwtAuthenticationTest {
     String config = """
             dns.client.enabled: true
             dns.client.discovery.enabled: false
+            secrets.enabled: true
             keystores.enabled: true
             jetty.server.http.enabled: true
             jetty.server.http.port: "{{ SYSTEM.port }}"
@@ -55,7 +56,7 @@ public class JwtAuthenticationTest {
                     keys:
                       - alg: "ES256"
                         kid: "{{SYSTEM.kid}}"
-                        key: "{{SYSTEM.key}}"                        
+                        key: "secret:{{SYSTEM.key}}"                        
             """;
 
     @Inject

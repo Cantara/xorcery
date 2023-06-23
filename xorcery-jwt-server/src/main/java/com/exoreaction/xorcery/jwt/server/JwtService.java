@@ -17,68 +17,57 @@ package com.exoreaction.xorcery.jwt.server;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.json.JsonElement;
+import com.exoreaction.xorcery.jwt.server.JwtServerConfiguration.JwtKey;
+import com.exoreaction.xorcery.jwt.server.spi.ClaimsProvider;
 import com.exoreaction.xorcery.secrets.Secrets;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.util.UUIDs;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.NotFoundException;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.http.HttpHeader;
+import org.glassfish.hk2.api.IterableProvider;
 import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import static com.exoreaction.xorcery.configuration.Configuration.missing;
-
 @Service(name = "jwt.server")
 public class JwtService {
 
-    private final List<JwtKey> keys;
     private final Logger logger;
+    private final IterableProvider<ClaimsProvider> claimsProviders;
 
     private final String keyId;
     private final Algorithm algorithm;
-    private final Configuration users;
     private final JwtServerConfiguration jwtServerConfiguration;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    // TODO: Change this to create signed JWT given username, change login service to ONLY authenticate username+password, change resource to only call createJwt(username)
 
     @Inject
     public JwtService(Configuration configuration,
                       ServiceResourceObjects serviceResourceObjects,
                       Secrets secrets,
-                      Logger logger) throws NoSuchAlgorithmException, InvalidKeySpecException {
+                      Logger logger,
+                      IterableProvider<ClaimsProvider> claimsProviders) throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-        this.users = configuration.getConfiguration("jwt.users");
         this.jwtServerConfiguration = new JwtServerConfiguration(configuration.getConfiguration("jwt.server"));
 
-        keys = configuration.getObjectListAs("jwt.server.keys", JwtKey::new).orElse(Collections.emptyList());
+        List<JwtKey> keys = jwtServerConfiguration.getKeys();
         this.logger = logger;
+        this.claimsProviders = claimsProviders;
 
         if (keys.isEmpty())
             throw new IllegalArgumentException("No signing keys configured");
 
         JwtKey firstKey = keys.get(0);
-        byte[] keyBytes = Base64.getDecoder().decode(secrets.getByteSecret(firstKey.getPrivateKey()));
+        byte[] keyBytes = Base64.getDecoder().decode(secrets.getSecretBytes(firstKey.getPrivateKey()));
 
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
         KeyFactory kf = KeyFactory.getInstance(firstKey.getAlg().startsWith("RSA") ? "RSA" : "EC");
@@ -117,11 +106,19 @@ public class JwtService {
             throws IOException {
         Date now = new Date();
         Date tomorrow = Date.from(now.toInstant().plus(1, ChronoUnit.DAYS));
-        if (!users.json().has(userName))
-            throw new NotFoundException(userName);
-        Configuration user = users.getConfiguration(userName);
 
-        Map<String, ?> claims = objectMapper.treeToValue(user.getConfiguration("claims").json(), Map.class);
+        // Get all the claims for this user
+        Map<String, Object> claims = new HashMap<>();
+        for (ClaimsProvider claimsProvider : claimsProviders) {
+            Map<String, ?> providerUserClaims = claimsProvider.getClaims(userName);
+            claims.putAll(providerUserClaims);
+        }
+
+/* What makes the most sense here? A user can be authenticated and then have no claims other then sub, and that is fine?
+        // If no claims, this is not a known user
+        if (claims.isEmpty())
+            throw new BadRequestException(userName);
+*/
 
         String token = JWT.create()
                 .withPayload(claims)
@@ -135,27 +132,5 @@ public class JwtService {
 
         logger.debug("Created JWT token for {}:{}", userName, token);
         return token;
-    }
-
-    public record JwtKey(Configuration configuration) {
-        public JwtKey(ObjectNode on) {
-            this(new Configuration(on));
-        }
-
-        public String getAlg() {
-            return configuration.getString("alg").orElse("ES256");
-        }
-
-        public String getKeyId() {
-            return configuration.getString("keyId").orElseThrow(missing("keyId"));
-        }
-
-        public String getPublicKey() {
-            return configuration.getString("publicKey").orElseThrow(missing("publicKey"));
-        }
-
-        public String getPrivateKey() {
-            return configuration.getString("privateKey").orElseThrow(missing("privateKey"));
-        }
     }
 }

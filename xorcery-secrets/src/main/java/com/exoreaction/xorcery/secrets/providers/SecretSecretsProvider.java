@@ -13,9 +13,4 @@ public class SecretSecretsProvider
     public String getSecretString(String name) {
         return name;
     }
-
-    @Override
-    public byte[] getSecretBytes(String name) {
-        return name.getBytes(StandardCharsets.UTF_8);
-    }
 }

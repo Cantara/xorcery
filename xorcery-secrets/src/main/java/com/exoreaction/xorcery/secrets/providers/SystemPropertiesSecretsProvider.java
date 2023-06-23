@@ -5,11 +5,11 @@ import com.exoreaction.xorcery.secrets.spi.SecretsProvider;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-public class EnvSecretsProvider
+public class SystemPropertiesSecretsProvider
         implements SecretsProvider {
     @Override
     public String getSecretString(String name) {
-        return Optional.ofNullable(System.getenv(name))
-                .orElseThrow(() -> new IllegalArgumentException("No such environment variable:" + name));
+        return Optional.ofNullable(System.getProperty(name))
+                .orElseThrow(() -> new IllegalArgumentException("No such system property:" + name));
     }
 }

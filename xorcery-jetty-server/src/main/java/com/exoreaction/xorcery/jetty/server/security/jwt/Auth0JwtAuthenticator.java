@@ -21,6 +21,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -36,7 +37,6 @@ import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import javax.security.auth.Subject;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPublicKey;
@@ -53,11 +53,10 @@ public class Auth0JwtAuthenticator
     private final Logger logger = LogManager.getLogger(Auth0JwtAuthenticator.class);
 
     private final JWT jwtParser;
-    private Map<String, Map<String, JWTVerifier>> verifiers = new HashMap<>();
+    private final Map<String, Map<String, JWTVerifier>> verifiers = new HashMap<>();
 
     @Inject
-    public Auth0JwtAuthenticator(Configuration configuration) throws NoSuchAlgorithmException {
-
+    public Auth0JwtAuthenticator(Configuration configuration, Secrets secrets) throws NoSuchAlgorithmException {
         jwtParser = new JWT();
         JwtConfiguration jwtConfiguration = new JwtConfiguration(configuration.getConfiguration("jetty.server.security.jwt"));
 
@@ -71,7 +70,7 @@ public class Auth0JwtAuthenticator
                 String defaultKid = "default";
                 int defaultKidNr = 2;
                 for (IssuerConfiguration.JwtKey key : config.getKeys()) {
-                    byte[] publicKeyBase64 = key.getKey().getBytes(StandardCharsets.UTF_8);
+                    byte[] publicKeyBase64 = secrets.getSecretBytes(key.getKey());
                     byte[] keyBytes = Base64.getDecoder().decode(publicKeyBase64);
                     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
 
