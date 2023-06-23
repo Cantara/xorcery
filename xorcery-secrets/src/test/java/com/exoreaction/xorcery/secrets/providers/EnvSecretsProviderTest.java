@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.secrets.providers;
 
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.secrets.Secrets;
 import org.junit.jupiter.api.Assertions;
@@ -18,7 +18,8 @@ public class EnvSecretsProviderTest {
         try (Xorcery xorcery = new Xorcery(configuration)) {
 
             Secrets secrets = xorcery.getServiceLocator().getService(Secrets.class);
-            Assertions.assertEquals(System.getenv("JAVA_HOME"), secrets.getSecretString("env:JAVA_HOME"));
+            String firstEnvVar = System.getenv().keySet().iterator().next();
+            Assertions.assertEquals(System.getenv(firstEnvVar), secrets.getSecretString(String.format("env:%s", firstEnvVar)));
         }
     }
 }
