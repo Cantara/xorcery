@@ -19,6 +19,8 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientShutdownStreamException;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -201,7 +203,7 @@ public class SubscriberReactiveStream
                     subscriber = subscriberFactory.apply(subscriberConfiguration);
                     subscriber.onSubscribe(this);
 
-                    logger.info(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
+                    logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
                 } catch (Throwable e) {
                     // TODO Send exception here
                 }
@@ -245,12 +247,12 @@ public class SubscriberReactiveStream
             logger.trace(marker, "onWebSocketError", cause);
 
         switch (cause.getClass().getName()) {
-            case "java.nio.channels.AsynchronousCloseException":
-            case "org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException":
-            case "org.eclipse.jetty.io.EofException": {
+            case "java.nio.channels.AsynchronousCloseException",
+                    "org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException",
+                    "org.eclipse.jetty.io.EofException" -> {
                 // Do nothing
             }
-            default: {
+            default -> {
                 logger.warn(marker, "Subscriber websocket error", cause);
                 if (subscriber != null) {
                     subscriber.onError(cause);
@@ -265,7 +267,21 @@ public class SubscriberReactiveStream
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
 
         try {
-            if (subscriber != null) subscriber.onComplete();
+            if (statusCode == StatusCode.NORMAL)
+            {
+                if (subscriber != null)
+                {
+                    subscriber.onComplete();
+                }
+            } else if (statusCode == StatusCode.SHUTDOWN) {
+                if (subscriber != null) {
+                    if (reason.equals("Connection Idle Timeout")) {
+                        subscriber.onError(new ServerTimeoutStreamException(reason));
+                    } else {
+                        subscriber.onError(new ClientShutdownStreamException(reason));
+                    }
+                }
+            }
         } catch (Exception e) {
             logger.warn(marker, "Could not close subscription sink", e);
         }

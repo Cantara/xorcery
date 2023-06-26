@@ -21,7 +21,7 @@ import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 public record EventStoreConfiguration(Configuration context)
         implements ServiceConfiguration {
 
-    public String getURL() {
-        return context.getString("url").orElseThrow(() -> new IllegalArgumentException("Missing URL"));
+    public String getURI() {
+        return context.getString("uri").orElseThrow(missing("eventstore.uri"));
     }
 }

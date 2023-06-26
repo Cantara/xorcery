@@ -193,7 +193,7 @@ public class PublishReactiveStreamStandard
             retry(null);
         }
 
-        logger.info(marker, "Resolving " + serverUri);
+        logger.debug(marker, "Resolving " + serverUri);
         dnsLookup.resolve(serverUri).thenApply(list ->
         {
             this.uriIterator = list.iterator();
@@ -245,7 +245,6 @@ public class PublishReactiveStreamStandard
             }
             if (session != null) {
                 session.close(StatusCode.NORMAL, throwable.getMessage());
-                session = null;
             }
 
             if (throwable instanceof SSLHandshakeException) {
@@ -327,7 +326,6 @@ public class PublishReactiveStreamStandard
         if (requestAmount == Long.MIN_VALUE) {
             logger.debug(marker, "Received cancel on websocket");
             session.close();
-            session = null;
 
             // Try another subscriber
             retry(null);
@@ -344,6 +342,9 @@ public class PublishReactiveStreamStandard
             requestsHistogram.update(requestAmount);
             requested += requestAmount;
             subscription.request(requestAmount);
+
+            if (!isSending)
+                send();
         }
     }
 
@@ -361,7 +362,6 @@ public class PublishReactiveStreamStandard
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
 
-        session = null;
         // TODO This has to be reviewed to see what codes should cause retry and what should cause cancellation of the process
         if (statusCode == StatusCode.NORMAL) {
             logger.debug(marker, "Session closed:{} {}", statusCode, reason);
@@ -428,7 +428,7 @@ public class PublishReactiveStreamStandard
 
     protected void checkDone()
     {
-        if (isComplete) {
+        if (isComplete && queue.isEmpty()) {
             if (session != null) {
                 logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
                 session.close(StatusCode.NORMAL, "complete");
@@ -458,20 +458,18 @@ public class PublishReactiveStreamStandard
             logger.trace(marker, "writeSuccess");
         }
 
-//        synchronized (session)
+        synchronized (session)
         {
-            synchronized (this) {
-                sentBytes.mark(eventBuffer.position());
-                pool.release(eventBuffer);
+            sentBytes.mark(eventBuffer.position());
+            pool.release(eventBuffer);
 
-                requested--;
-                batchSize++;
-                if (requested == 0 || queue.isEmpty() || batchSize == maxBatchSize) {
+            requested--;
+            batchSize++;
+            if (requested == 0 || queue.isEmpty() || batchSize == maxBatchSize) {
 //                    logger.debug(marker, "doFlush {} {} {}", requested, queue.size(), batchSize);
-                    CompletableFuture.runAsync(this::flush);
-                } else {
-                    send();
-                }
+                CompletableFuture.runAsync(this::flush);
+            } else {
+                send();
             }
         }
     }
@@ -483,7 +481,7 @@ public class PublishReactiveStreamStandard
         try {
             session.getRemote().flush();
 
-            synchronized (this) {
+            synchronized (session) {
                 sent.mark(batchSize);
                 sentBatchSize.update(batchSize);
                 batchSize = 0;

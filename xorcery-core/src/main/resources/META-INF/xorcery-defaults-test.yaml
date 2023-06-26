@@ -3,12 +3,10 @@ instance:
   name: "xorcery-test"
   host: "server"
   domain: "xorcery.test"
+  resources: "{{ instance.home }}/target/classes"
 
 hk2:
   threadPolicy: "USE_NO_THREADS"
-
-build_test_resources: "{{ instance.home }}/target/test-classes"
-test_resources: "{{ ENV.TEST_RESOURCES | build_test_resources }}"
 
 dns.client.hosts:
   server.xorcery.test: 127.0.0.1

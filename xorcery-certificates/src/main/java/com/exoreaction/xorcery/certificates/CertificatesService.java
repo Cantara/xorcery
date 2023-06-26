@@ -125,10 +125,13 @@ public class CertificatesService
 
         // Sign the new KeyPair with the Provisioning cert Private Key
         JcaContentSignerBuilder contentSignerBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider("BC");
-        PrivateKey provisioning = (PrivateKey) keyStore.getKey("provisioning", password);
-        logger.warn("No provisioning key in keystore. Using self-signing key instead");
+        PrivateKey signingKey = (PrivateKey) keyStore.getKey("provisioning", password);
 
-        PrivateKey signingKey = provisioning != null ? provisioning : issuedCertKeyPair.getPrivate();
+        if (signingKey == null)
+        {
+            logger.warn("No provisioning key in keystore. Using self-signing key instead");
+            signingKey = issuedCertKeyPair.getPrivate();
+        }
 
         ContentSigner csrContentSigner = contentSignerBuilder.build(signingKey);
         PKCS10CertificationRequest csr = csrBuilder.build(csrContentSigner);

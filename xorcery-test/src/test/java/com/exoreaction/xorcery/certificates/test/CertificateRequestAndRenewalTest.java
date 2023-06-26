@@ -48,7 +48,6 @@ public class CertificateRequestAndRenewalTest {
                     enabled: true
             jetty.server.enabled: true
             jetty.server.ssl.enabled: true    
-            keystores.enabled: true
             """;
 
     @Test

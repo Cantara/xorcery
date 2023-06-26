@@ -42,7 +42,6 @@ public class HttpClientFactory {
 
     public HttpClientFactory(Configuration configuration, Supplier<DnsLookupService> dnsLookup, Supplier<SslContextFactory.Client> clientSslContextFactoryProvider) throws Exception {
 
-//        Configuration clientConfig = configuration.getConfiguration("jetty.client");
         JettyClientConfiguration jettyClientConfiguration = new JettyClientConfiguration(configuration.getConfiguration("jetty.client"));
 
         // Client setup

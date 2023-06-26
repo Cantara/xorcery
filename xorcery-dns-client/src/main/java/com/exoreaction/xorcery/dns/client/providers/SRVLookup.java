@@ -16,6 +16,8 @@
 package com.exoreaction.xorcery.dns.client.providers;
 
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.*;
 import org.xbill.DNS.lookup.LookupResult;
@@ -29,13 +31,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 public class SRVLookup
         implements DnsLookup {
 
     private final LookupSession lookupSession;
-    private final Map<URI, AtomicInteger> serverRequests = new ConcurrentHashMap<>();
+    private final Map<String, AtomicLong> serverRequests = new ConcurrentHashMap<>();
 
     public SRVLookup(LookupSession lookupSession) {
         this.lookupSession = lookupSession;
@@ -55,7 +58,7 @@ public class SRVLookup
             if (lookupResult.getRecords().isEmpty()) {
                 return CompletableFuture.completedFuture(Collections.emptyList());
             } else {
-                List<URI> servers = new ArrayList<>();
+                List<ServerEntry> servers = new ArrayList<>();
 
                 // Get TXT record
                 LookupResult txtResult = lookupSession.lookupAsync(Name.fromString(authority), Type.TXT).toCompletableFuture().join();
@@ -65,6 +68,7 @@ public class SRVLookup
                         for (String txtRecordString : txtRecord.getStrings()) {
                             if (txtRecordString.startsWith("self=")) {
                                 path = txtRecordString.substring("self=".length());
+                                break;
                             }
                         }
                     }
@@ -82,45 +86,50 @@ public class SRVLookup
                         LookupResult serverResult = lookupSession.lookupAsync(srvRecord.getTarget(), Type.A).toCompletableFuture().join();
                         for (Record serverResultRecord : serverResult.getRecords()) {
                             if (serverResultRecord instanceof ARecord aRecord) {
-                                servers.add(new URI(scheme, uri.getUserInfo(), aRecord.getAddress().getHostAddress(), srvRecord.getPort(), path, uri.getQuery(), uri.getFragment()));
+                                URI serverUri = new URI(scheme, uri.getUserInfo(), aRecord.getAddress().getHostAddress(), srvRecord.getPort(), path, uri.getQuery(), uri.getFragment());
+                                servers.add(new ServerEntry(serverUri,
+                                        srvRecord.getPriority(), serverRequests.computeIfAbsent(serverUri.getAuthority(), u -> new AtomicLong(1)).get(), srvRecord.getWeight()));
                             }
                         }
                     }
                 }
 
-/*
                 if (!servers.isEmpty()) {
                     // Sort based on priority and weight
                     Collections.sort(servers);
-                    System.out.println("Sorted:" + servers);
-                    serverRequests.get(servers.get(0)).incrementAndGet();
+                    Logger logger = LogManager.getLogger();
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Sorted {}: {}", uri, servers);
+                    }
+                    serverRequests.get(servers.get(0).uri().getAuthority()).incrementAndGet();
                 }
-*/
 
-                return CompletableFuture.completedFuture(servers);
+                return CompletableFuture.completedFuture(servers.stream().map(ServerEntry::uri).collect(Collectors.toList()));
             }
         } catch (Throwable e) {
-            if (e.getCause() instanceof NoSuchDomainException)
-            {
+            if (e.getCause() instanceof NoSuchDomainException) {
                 return CompletableFuture.completedFuture(Collections.emptyList());
-            } else
-            {
+            } else {
                 return CompletableFuture.failedFuture(e);
             }
         }
     }
 
-    record ServerEntry(URI uri, int priority, int requests, int weight)
+    public record ServerEntry(URI uri, int priority, long requests, long weight)
             implements Comparable<ServerEntry> {
         @Override
         public int compareTo(ServerEntry entry) {
 
             if (entry.priority == priority) {
+
+                long totalWeight = entry.weight + weight;
+
                 // Same priority, use weight and the nr of requests so far
-                return entry.weight / entry.requests - weight / requests;
+                return Long.compare(100L * requests / (totalWeight - entry.weight), 100L * entry.requests / (totalWeight - weight));
             }
 
-            return entry.priority - priority;
+            // Lowest priority should come first
+            return Long.compare(priority, entry.priority);
         }
     }
 }

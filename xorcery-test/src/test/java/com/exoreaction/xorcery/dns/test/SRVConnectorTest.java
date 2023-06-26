@@ -15,9 +15,11 @@
  */
 package com.exoreaction.xorcery.dns.test;
 
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import jakarta.ws.rs.client.Client;
@@ -28,53 +30,48 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled
-public class SRVResolverTest {
+public class SRVConnectorTest {
 
-    Logger logger = LogManager.getLogger(getClass());
+    private String config = """
+            dns.registration.enabled: true            
+            jetty.server.http.enabled: false
+            jetty.client.ssl.enabled: true
+            dns.dyndns.enabled: true
+            """;
 
     @Test
-    public void testClientSRVResolverLoadBalancing() throws Exception {
-        StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
-        Configuration configuration1 = new Configuration.Builder()
-                .with(standardConfigurationBuilder.addTestDefaultsWithYaml("""
-                        name: xorcery1
-                        jetty.server.http.port: 8888
+    public void testClientSRVConnectorLoadBalancing() throws Exception {
+        Configuration server1Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""                        
+                        instance.host: server1
+                        jetty.server.ssl.port: 8443
+                        servicetest.srv.weight: 2
                         dns:
-                            hosts:
-                                analytics:
-                                    - 127.0.0.1:8888
-                                    - 127.0.0.1:8080
                             server:
                                 enabled: true
-                        """)).build();
-        Configuration configuration2 = new Configuration.Builder()
-                .with(standardConfigurationBuilder.addTestDefaultsWithYaml("""
-                        name: xorcery2
-                        jetty.server.http.port: 8888
-                        """)).build();
-        logger.info("Resolved configuration1:\n" + configuration1);
-        logger.info("Resolved configuration2:\n" + configuration2);
+                        """).build();
+        Configuration server2Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""
+                        instance.host: server2
+                        jetty.server.ssl.port: 8444
+                        """).build();
 
-        try (Xorcery xorcery1 = new Xorcery(configuration1)) {
-            try (Xorcery xorcery2 = new Xorcery(configuration2)) {
-                ClientBuilder clientConfig = xorcery2.getServiceLocator().getService(ClientBuilder.class);
-                Client client = clientConfig.register(JsonElementMessageBodyReader.class).build();
+        try (Xorcery server = new Xorcery(server1Configuration)) {
+            try (Xorcery client = new Xorcery(server2Configuration)) {
+                LogManager.getLogger().info("Server 1 configuration:\n" + server1Configuration);
+                LogManager.getLogger().info("Server 2 configuration:\n" + server2Configuration);
+                ClientBuilder clientConfig = client.getServiceLocator().getService(ClientBuilder.class);
+                Client httpClient = clientConfig.register(JsonElementMessageBodyReader.class).build();
 
-                for (int i = 0; i < 1; i++) {
-//                    System.out.println(client.target("http://analytics/").request(MediaTypes.APPLICATION_JSON_API_TYPE).get().readEntity(String.class));
-                    ResourceDocument resourceDocument = client.target("http://analytics/").request().get().readEntity(ResourceDocument.class);
+                for (int i = 0; i < 10; i++) {
+                    ResourceDocument resourceDocument = httpClient.target("srv://_servicetest._sub._https._tcp/").request(MediaTypes.APPLICATION_JSON_API).get().readEntity(ResourceDocument.class);
                     System.out.println(resourceDocument.getLinks().getByRel("self").orElse(null).getHrefAsUri());
-                    System.out.println(resourceDocument.getMeta().getMeta().toPrettyString());
-//                    MultivaluedMap<String, Object> headers = client.target("http://analytics").request().get().getHeaders();
-//                    System.out.println(headers);
-//                    Thread.sleep(1000);
+                    System.out.println(resourceDocument.getResource().get().getAttributes().getAttribute("foo").orElse(null));
                 }
             }
         }
     }
 
     @Test
+    @Disabled
     public void testClientSRVResolverFailover() throws Exception {
         StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
         Configuration configuration2 = new Configuration.Builder()

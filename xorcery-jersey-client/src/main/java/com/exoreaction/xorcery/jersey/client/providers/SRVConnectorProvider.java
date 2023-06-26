@@ -25,17 +25,15 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
 public class SRVConnectorProvider
         implements ConnectorProvider {
     private final DnsLookup dnsLookup;
-    private String scheme;
     private ConnectorProvider delegateProvider;
 
-    public SRVConnectorProvider(DnsLookupService dnsLookup, String scheme, ConnectorProvider delegateProvider) {
+    public SRVConnectorProvider(DnsLookupService dnsLookup, ConnectorProvider delegateProvider) {
         this.dnsLookup = dnsLookup;
-        this.scheme = scheme;
         this.delegateProvider = delegateProvider;
     }
 
     @Override
     public Connector getConnector(Client client, Configuration runtimeConfig) {
-        return new SRVConnector(dnsLookup, scheme, delegateProvider.getConnector(client, runtimeConfig));
+        return new SRVConnector(dnsLookup, delegateProvider.getConnector(client, runtimeConfig));
     }
 }

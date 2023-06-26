@@ -32,7 +32,7 @@ public class ServiceTester {
                          ServiceResourceObjects sro) {
         sro.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "servicetest")
                 .attribute("foo", "bar")
-                .api("foorel", "somepath")
+                .api("self", "api/service")
                 .build());
     }
 }

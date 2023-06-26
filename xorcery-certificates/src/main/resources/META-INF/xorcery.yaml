@@ -18,5 +18,8 @@ keystores:
     password: "{{ keystores.defaultPassword }}"
     addRootCa: true
 
+jetty.client.ssl.keystore: "ssl"
+jetty.client.ssl.truststore: "truststore"
+
 jetty.server.ssl.keystore: "ssl"
 jetty.server.ssl.truststore: "truststore"

@@ -50,8 +50,8 @@ public class StandardConfigurationBuilder {
         addExtensions(builder);
         addApplication(builder);
 
-        addUserDirectory(builder);
         addHome(builder);
+        addUserDirectory(builder);
 
         addSystemProperties(builder);
         addEnvironmentVariables(builder);
@@ -192,6 +192,20 @@ public class StandardConfigurationBuilder {
         }
     }
 
+    public void addHome(Configuration.Builder builder) throws UncheckedIOException {
+        // Load user home overrides
+        try {
+            File userYamlFile = new File(System.getProperty("user.home"), ".xorcery/xorcery.yaml");
+            if (userYamlFile.exists()) {
+                FileInputStream userYamlStream = new FileInputStream(userYamlFile);
+                addYaml(userYamlStream).accept(builder);
+                logger.log("Loaded " + userYamlFile);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     public void addUserDirectory(Configuration.Builder builder) throws UncheckedIOException {
         // Load user directory overrides
         try {
@@ -200,20 +214,6 @@ public class StandardConfigurationBuilder {
                 FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
                 addYaml(overridesYamlStream).accept(builder);
                 logger.log("Loaded " + overridesYamlFile);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    public void addHome(Configuration.Builder builder) throws UncheckedIOException {
-        // Load user home overrides
-        try {
-            File userYamlFile = new File(System.getProperty("user.home"), "xorcery/xorcery.yaml");
-            if (userYamlFile.exists()) {
-                FileInputStream userYamlStream = new FileInputStream(userYamlFile);
-                addYaml(userYamlStream).accept(builder);
-                logger.log("Loaded " + userYamlFile);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);

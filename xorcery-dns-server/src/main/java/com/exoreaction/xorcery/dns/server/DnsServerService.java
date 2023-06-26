@@ -110,6 +110,7 @@ public class DnsServerService
     public void preDestroy() {
         executorService.shutdown();
         socket.close();
+        logger.info("Stopped DNS server");
     }
 
     private void process() {
@@ -226,8 +227,6 @@ public class DnsServerService
     }
 
     private int addAnswer(Message response, Name name, int type, int dClass, int iterations, int flags) {
-        logger.info("Answer for:" + name);
-
         SetResponse sr;
         int rcode = Rcode.NOERROR;
 

@@ -15,36 +15,55 @@
  */
 package com.exoreaction.xorcery.opensearch;
 
+import com.exoreaction.xorcery.configuration.ComponentConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
+import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ContainerNode;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
 public record OpenSearchConfiguration(Configuration context)
-    implements ServiceConfiguration
-{
+        implements ServiceConfiguration {
     public JsonNode getComponentTemplates() {
-        return context.getJson("componentTemplates").orElseThrow(() ->
-                new IllegalArgumentException("Missing opensearch.componentTemplates configuration"));
+        return context.getJson("componentTemplates").orElseThrow(missing("opensearch.componentTemplates"));
     }
 
     public JsonNode getIndexTemplates() {
-        return context.getJson("indexTemplates").orElseThrow(() ->
-                new IllegalArgumentException("Missing opensearch.indexTemplates configuration"));
+        return context.getJson("indexTemplates").orElseThrow(missing("opensearch.indexTemplates"));
     }
 
     public boolean isDeleteOnExit() {
         return context.getBoolean("deleteOnExit").orElse(false);
     }
 
-    public URI getURL() {
-        return context.getURI("url").orElseThrow(()->new IllegalArgumentException("Missing opensearch.url configuration"));
+    public URI getURI() {
+        return context.getURI("uri").orElseThrow(missing("opensearch.uri"));
     }
 
-    public Optional<List<OpenSearchService.Publisher>> getPublishers() {
-        return context.getObjectListAs("publishers", OpenSearchService.Publisher::new);
+    public Optional<List<Publisher>> getPublishers() {
+        return context.getObjectListAs("publishers", Publisher::new);
+    }
+
+    public record Publisher(ContainerNode<?> json)
+            implements JsonElement, ComponentConfiguration {
+        Optional<URI> getURI() {
+            return JsonElement.super.getURI("server.uri");
+        }
+
+        String getStream() {
+            return getString("server.stream").orElseThrow(missing("server.stream"));
+        }
+
+        Optional<Configuration> getServerConfiguration() {
+            return getObjectAs("server.configuration", Configuration::new);
+        }
+
+        Optional<Configuration> getClientConfiguration() {
+            return getObjectAs("client.configuration", Configuration::new);
+        }
     }
 }

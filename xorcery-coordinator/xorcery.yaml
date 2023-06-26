@@ -18,8 +18,7 @@ instance:
   domain: "exoreaction.dev"
 
 certificates:
-  subject: "*.analytics.catalystone.dev"
+#  subject: "*.analytics.catalystone.dev"
   renewOnStartup: true
 
-intermediateca:
-  enabled: false
+# intermediateca.enabled: false

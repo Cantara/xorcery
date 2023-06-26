@@ -82,12 +82,10 @@ public class JerseyClientConfigFactory
         DnsLookupService dnsLookup = dnsLookups.get();
 
         JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
-        JettyClientSslConfiguration sslConfiguration = new JettyClientSslConfiguration(configuration.getConfiguration("jetty.client.ssl"));
-        String scheme = sslConfiguration.isEnabled() ? "https" : "http";
         return clientConfig
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
                 .register(new JettyHttpClientSupplier(client))
-                .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, scheme, jettyConnectorProvider) : jettyConnectorProvider);
+                .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, jettyConnectorProvider) : jettyConnectorProvider);
     }
 
     @Override

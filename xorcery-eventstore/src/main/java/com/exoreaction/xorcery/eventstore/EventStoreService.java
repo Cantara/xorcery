@@ -18,7 +18,6 @@ package com.exoreaction.xorcery.eventstore;
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.Configuration;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jvnet.hk2.annotations.Service;
@@ -35,7 +34,7 @@ public class EventStoreService {
     public EventStoreService(Configuration configuration) throws ConnectionStringParsingException {
 
         EventStoreConfiguration eventStoreConfiguration = new EventStoreConfiguration(configuration.getConfiguration("eventstore"));
-        settings = EventStoreDBConnectionString.parse(eventStoreConfiguration.getURL());
+        settings = EventStoreDBConnectionString.parse(eventStoreConfiguration.getURI());
         client = EventStoreDBClient.create(settings);
 
         // Test connection

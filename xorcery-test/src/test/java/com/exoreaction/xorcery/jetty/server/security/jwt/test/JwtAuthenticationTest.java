@@ -40,10 +40,6 @@ import java.util.UUID;
 
 public class JwtAuthenticationTest {
     String config = """
-            dns.client.enabled: true
-            dns.client.discovery.enabled: false
-            secrets.enabled: true
-            keystores.enabled: true
             jetty.server.http.enabled: true
             jetty.server.http.port: "{{ SYSTEM.port }}"
             jetty.server.ssl.enabled: false

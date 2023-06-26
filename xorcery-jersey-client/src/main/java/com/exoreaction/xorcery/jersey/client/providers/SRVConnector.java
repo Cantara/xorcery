@@ -32,12 +32,10 @@ public class SRVConnector
         implements Connector {
     private DnsLookup dnsLookup;
     private final Connector delegate;
-    private String scheme;
 
-    public SRVConnector(DnsLookup dnsLookup, String scheme, Connector delegate) {
+    public SRVConnector(DnsLookup dnsLookup, Connector delegate) {
         this.dnsLookup = dnsLookup;
         this.delegate = delegate;
-        this.scheme = scheme;
     }
 
     @Override
@@ -48,7 +46,10 @@ public class SRVConnector
             List<URI> servers = dnsLookup.resolve(srvUri).join();
             ProcessingException throwable = null;
             for (URI server : servers) {
-                server = UriBuilder.fromUri(server).scheme(scheme).build();
+
+                if (server.getScheme().equals("srv"))
+                    throw new ProcessingException("Could not resolve " + srvUri);
+
                 request.setUri(server);
                 ClientResponse clientResponse = null;
                 try {
@@ -77,7 +78,7 @@ public class SRVConnector
                 if (servers != null) {
                     Iterator<URI> serverIterator = servers.iterator();
                     if (serverIterator.hasNext()) {
-                        URI server = UriBuilder.fromUri(serverIterator.next()).scheme(scheme).build();
+                        URI server = serverIterator.next();
                         request.setUri(server);
                         delegate.apply(request, new AsyncConnectorCallback() {
                             @Override
@@ -88,7 +89,7 @@ public class SRVConnector
                             @Override
                             public void failure(Throwable failure) {
                                 if (serverIterator.hasNext()) {
-                                    URI server = UriBuilder.fromUri(serverIterator.next()).scheme(scheme).build();
+                                    URI server = serverIterator.next();
                                     request.setUri(server);
                                     delegate.apply(request, this);
                                 } else {

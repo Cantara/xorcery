@@ -33,7 +33,14 @@ import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
 import javax.management.*;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.MalformedURLException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -55,17 +62,28 @@ public class JmxMetricsService
 
     public static final String SERVICE_TYPE = "jmxmetrics";
 
-    private final Logger logger = LogManager.getLogger(getClass());
     private final MBeanServer managementServer;
     private final CompletionStage<Void> result;
+    private final JMXConnectorServer jmxConnectorServer;
+    private final Logger logger;
+    private final Registry registry;
     private ScheduledExecutorService scheduledExecutorService;
 
     @Inject
     public JmxMetricsService(ReactiveStreamsServer reactiveStreamsServer,
-                             Configuration configuration) {
+                             Configuration configuration, Logger logger) throws IOException {
+        this.logger = logger;
 
+        JmxMetricsConfiguration jmxMetricsConfiguration = new JmxMetricsConfiguration(configuration.getConfiguration("jmxmetrics"));
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+
+        registry = LocateRegistry.createRegistry(jmxMetricsConfiguration.getPort());
+        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        JMXServiceURL url = new JMXServiceURL(jmxMetricsConfiguration.getURI());
+        jmxConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbs);
+        jmxConnectorServer.start();
+        logger.info("JMX metrics available at: {}", jmxMetricsConfiguration.getExternalURI());
 
         result = reactiveStreamsServer.subscriber("metrics",
                 cfg -> new MetricsSubscriber(scheduledExecutorService, cfg.getString("instance.id").orElse("unknown")),
@@ -74,6 +92,11 @@ public class JmxMetricsService
 
     @Override
     public void preDestroy() {
+        try {
+            jmxConnectorServer.stop();
+        } catch (IOException e) {
+            logger.warn("Could not stop JMX connector", e);
+        }
         scheduledExecutorService.shutdown();
         result.toCompletableFuture().complete(null);
     }

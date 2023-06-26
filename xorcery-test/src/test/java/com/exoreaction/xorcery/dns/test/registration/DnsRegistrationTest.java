@@ -36,7 +36,6 @@ public class DnsRegistrationTest {
             jetty.server.http.enabled: true
             jetty.server.ssl.enabled: false
 
-            secrets.enabled: true
             dns.client.enabled: true
             dns.server.enabled: true
             dns.registration.enabled: true

@@ -21,6 +21,7 @@ import com.eventstore.dbclient.ReadStreamOptions;
 import com.eventstore.dbclient.WriteResult;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.core.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.eventstore.EventStoreService;
 import com.exoreaction.xorcery.net.Sockets;
@@ -43,8 +44,17 @@ import java.util.stream.Collectors;
 @Testcontainers(disabledWithoutDocker = true)
 public class EventStoreTest {
 
+    private static Configuration configuration = new Configuration.Builder()
+            .with(new StandardConfigurationBuilder()::addTestDefaults)
+            .add("jetty.server.http.port", Sockets.nextFreePort())
+            .add("jetty.server.ssl.port", Sockets.nextFreePort())
+            .build();
+
+    static{
+        LoggerContextFactory.initialize(configuration);
+    }
+
     private static Xorcery xorcery;
-    private static final Logger logger = LogManager.getLogger(EventStoreTest.class);
 
     @Container
     public static DockerComposeContainer environment =
@@ -54,16 +64,10 @@ public class EventStoreTest {
 
     @BeforeAll
     public static void setup() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", Sockets.nextFreePort())
-                .build();
-        logger.info(configuration);
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
-                logger.error("Uncaught exception "+t.getName(), e);
+                LogManager.getLogger().error("Uncaught exception "+t.getName(), e);
             }
         });
         xorcery = new Xorcery(configuration);
@@ -84,7 +88,7 @@ public class EventStoreTest {
                 EventData.builderAsJson("someEventType", new EventRecord(3, "foobar")).build()
         ).join();
 
-        logger.info("Write complete");
+        LogManager.getLogger().info("Write complete");
 
         ReadResult readResult = eventStoreService.getClient().readStream("stream1", ReadStreamOptions.get().fromStart().forwards()).join();
 
@@ -95,7 +99,7 @@ public class EventStoreTest {
                 throw new RuntimeException(e);
             }
         }).collect(Collectors.toList());
-        logger.info(events);
+        LogManager.getLogger().info(events);
     }
 
     record EventRecord(int val1, String val2) {

@@ -1,17 +1,16 @@
 ---
 instance:
-  id: "{{ ENV.SERVER_ID | SYSTEM.server_id | instance.host}}"
+  id: "{{ instance.host}}"
   name: genericserver
   version: "unknown"
-  host: "{{ ENV.HOSTNAME | CALCULATED.hostName }}"
+  host: "{{ CALCULATED.hostName }}"
   fqdn: "{{ instance.host }}.{{ instance.domain }}"
-  ip: "{{ ENV.IP | CALCULATED.ip | null }}"
-  domain: "{{ ENV.DOMAIN | \"xorcery.test\" }}"
+  ip: "{{ CALCULATED.ip | null }}"
+  domain: "{{ \"xorcery.test\" }}"
   environment: development
   tag: default
-  home: "{{ ENV.XORCERY_HOME | SYSTEM.user_dir }}"
-  buildResources: "{{ instance.home }}/target/classes"
-  resources: "{{ ENV.RESOURCES | instance.buildResources }}"
+  home: "{{ SYSTEM.user_dir }}"
+  resources: "{{ instance.home }}/conf"
   uri: "{{ jetty.server.uri | \"http://localhost\"}}"
 
 system:

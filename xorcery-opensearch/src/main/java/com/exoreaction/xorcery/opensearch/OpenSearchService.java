@@ -17,7 +17,6 @@ package com.exoreaction.xorcery.opensearch;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.opensearch.client.index.AcknowledgedResponse;
 import com.exoreaction.xorcery.opensearch.client.index.CreateComponentTemplateRequest;
@@ -32,7 +31,6 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ContainerNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.inject.Inject;
@@ -50,7 +48,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -79,7 +76,7 @@ public class OpenSearchService
         this.openSearchConfiguration = new OpenSearchConfiguration(configuration.getConfiguration("opensearch"));
         this.objectMapper = new ObjectMapper(new YAMLFactory());
 
-        URI host = openSearchConfiguration.getURL();
+        URI host = openSearchConfiguration.getURI();
         client = new OpenSearchClient(clientBuilder, host);
 
         loadComponentTemplates();
@@ -99,7 +96,7 @@ public class OpenSearchService
             OpenSearchSubscriberConnector connector = new OpenSearchSubscriberConnector(client, reactiveStreamsClient, openSearchCommitPublisher);
             openSearchConfiguration.getPublishers().ifPresent(publishers ->
             {
-                for (Publisher publisher : publishers) {
+                for (OpenSearchConfiguration.Publisher publisher : publishers) {
                     connector.connect(publisher.getURI().orElse(null), publisher.getStream(), publisher.getServerConfiguration().orElseGet(Configuration::empty), publisher.getClientConfiguration().orElseGet(Configuration::empty));
                 }
             });
@@ -224,22 +221,4 @@ public class OpenSearchService
         }
     }
 
-    record Publisher(ContainerNode<?> json)
-            implements JsonElement {
-        Optional<URI> getURI() {
-            return JsonElement.super.getURI("server.uri");
-        }
-
-        String getStream() {
-            return getString("server.stream").orElseThrow();
-        }
-
-        Optional<Configuration> getServerConfiguration() {
-            return getObjectAs("server.configuration", Configuration::new);
-        }
-
-        Optional<Configuration> getClientConfiguration() {
-            return getObjectAs("client.configuration", Configuration::new);
-        }
-    }
 }

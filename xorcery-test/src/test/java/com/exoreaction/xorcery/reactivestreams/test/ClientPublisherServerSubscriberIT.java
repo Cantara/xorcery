@@ -39,8 +39,6 @@ import java.util.concurrent.Flow;
 public class ClientPublisherServerSubscriberIT {
 
     private static final String config = """
-            keystores.enabled: true
-            reactivestreams.enabled: true
             jetty.server.ssl.enabled: true
             jetty.server.http2.enabled: true
             jetty.server.security.enabled: true

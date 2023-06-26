@@ -35,7 +35,6 @@ import java.util.List;
 public class ClientCertificateAuthenticationTest {
 
     String config = """
-            dns.client.enabled: true
             dns.client.hosts:
                 server1.xorcery.test: 127.0.0.1
                 wrongserver.xorcery.test: 127.0.0.1
@@ -52,8 +51,6 @@ public class ClientCertificateAuthenticationTest {
             jetty.server.http.enabled: false
             jetty.server.ssl.enabled: true
             jetty.server.security.enabled: true    
-            secrets.enabled: true
-            keystores.enabled: true
                     """;
 
     String serverConfig = """
@@ -66,6 +63,7 @@ public class ClientCertificateAuthenticationTest {
 
     String clientConfig = """
             jetty.server.enabled: false
+            reactivestreams.server.enabled: false
             clienttester.enabled: true
                     """;
 

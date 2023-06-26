@@ -73,10 +73,10 @@ public record ConfigurationPostPopulatorProcessor(Configuration configuration, C
                     JsonElement.toFlatMap(metadatas, "", object, mapper);
                     return metadatas;
                 }).ifPresent(descriptorImpl::addMetadata);
-                monitor.accept("Enabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=true)");
+                monitor.accept("Enabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + ": true)");
                 return descriptorImpl;
             } else {
-                monitor.accept("Disabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + "=false)");
+                monitor.accept("Disabled " + descriptorImpl.getImplementation() + "(" + enabledFlag + ": false)");
                 return null;
             }
         } else {

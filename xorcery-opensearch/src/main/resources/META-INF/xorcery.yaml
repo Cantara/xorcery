@@ -1,6 +1,6 @@
 opensearch:
   enabled: "{{ defaults.enabled }}"
-  url: "http://{{ ENV.OPENSEARCH_HOST | \"localhost\" }}:9200"
+  uri: "http://localhost:9200"
   componentTemplates: {}
   indexTemplates: {}
   deleteOnExit: false

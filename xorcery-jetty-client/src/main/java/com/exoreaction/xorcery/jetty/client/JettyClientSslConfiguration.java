@@ -17,10 +17,20 @@ package com.exoreaction.xorcery.jetty.client;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 
+import java.util.Optional;
+
 public record JettyClientSslConfiguration(Configuration configuration) {
 
     public boolean isEnabled() {
         return configuration.getBoolean("enabled").orElse(false);
+    }
+
+    public Optional<String> getKeyStoreName() {
+        return configuration.getString("keystore");
+    }
+
+    public Optional<String> getTrustStoreName() {
+        return configuration.getString("truststore");
     }
 
     public String getAlias() {

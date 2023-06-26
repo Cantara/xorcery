@@ -1,6 +1,6 @@
 eventstore:
   enabled: "{{ defaults.enabled }}"
-  url: "esdb://{{ ENV.EVENTSTORE_HOST | \"localhost\" }}:2113?tls=false"
+  uri: "esdb://localhost:2113?tls=false"
   projections:
     enabled: "{{ eventstore.enabled }}"
     projections: []

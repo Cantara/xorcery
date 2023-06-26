@@ -41,10 +41,19 @@ public class ClientSslContextFactoryFactory {
         // Client settings
         keyStores.ifPresentOrElse(ks ->
         {
-            factory.setKeyStore(ks.getKeyStore("ssl"));
-            factory.setTrustStore(ks.getKeyStore("truststore"));
-            factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration("ssl").getPassword().map(secrets::getSecretString).orElse(null));
-            factory.setCertAlias(jettyClientSslConfiguration.getAlias());
+            jettyClientSslConfiguration.getKeyStoreName().ifPresentOrElse(name ->
+            {
+                factory.setKeyStore(ks.getKeyStore(name));
+                factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration(name).getPassword().map(secrets::getSecretString).orElse(null));
+                factory.setCertAlias(jettyClientSslConfiguration.getAlias());
+            }, ()->
+            {
+                logger.warn("SSL enabled but no keystore specified");
+            });
+            jettyClientSslConfiguration.getTrustStoreName().ifPresent(name ->
+            {
+                factory.setTrustStore(ks.getKeyStore(name));
+            });
         },()->
         {
             logger.warn("SSL enabled but no keystore specified");
