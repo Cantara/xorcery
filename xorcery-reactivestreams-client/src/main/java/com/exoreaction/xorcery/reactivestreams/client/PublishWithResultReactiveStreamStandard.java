@@ -74,15 +74,18 @@ public class PublishWithResultReactiveStreamStandard
 
     @Override
     protected void checkDone() {
-        if (isComplete && resultQueue.isEmpty()) {
+        if (isComplete && resultQueue.isEmpty() && !result.isDone()) {
+            if (session != null) {
+                logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
+                session.close(StatusCode.NORMAL, "complete");
+            }
             result.complete(null);
-            logger.info(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
-            session.close(StatusCode.NORMAL, "complete");
         }
+
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public synchronized void onWebSocketBinary(byte[] payload, int offset, int len) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketBinary");
         }

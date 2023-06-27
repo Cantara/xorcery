@@ -1,16 +1,16 @@
 ---
 instance:
-  id: "{{ instance.host}}"
+  id: "{{ instance.host}}.{{ instance.name}}"
   name: genericserver
   version: "unknown"
   host: "{{ CALCULATED.hostName }}"
   fqdn: "{{ instance.host }}.{{ instance.domain }}"
   ip: "{{ CALCULATED.ip | null }}"
-  domain: "{{ \"xorcery.test\" }}"
+  domain: "xorcery.test"
   environment: development
   tag: default
   home: "{{ SYSTEM.user_dir }}"
-  resources: "{{ instance.home }}/conf"
+  resources: "{{ instance.home }}"
   uri: "{{ jetty.server.uri | \"http://localhost\"}}"
 
 system:

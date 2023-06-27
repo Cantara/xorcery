@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @State(Scope.Benchmark)
 @Fork(value = 1, warmups = 1, jvmArgs = "-Dcom.sun.management.jmxremote=true")
 @Warmup(iterations = 1)
-@Measurement(iterations = 10)
+@Measurement(iterations = 3)
 public class PublishSubscriberWithResultBenchmarks {
 
     private static final String config = """
@@ -77,7 +77,7 @@ public class PublishSubscriberWithResultBenchmarks {
     public static void main(String[] args) throws Exception {
 
         new Runner(new OptionsBuilder()
-//                .include(ReactiveStreamsBenchmarks.class.getSimpleName() + ".writes")
+                .include(PublishSubscriberWithResultBenchmarks.class.getSimpleName() + ".*")
                 .forks(0)
                 .jvmArgs("-Dcom.sun.management.jmxremote=true")
                 .build()).run();
@@ -144,9 +144,11 @@ public class PublishSubscriberWithResultBenchmarks {
     @BenchmarkMode(Mode.Throughput)
     public void writes() throws ExecutionException, InterruptedException, TimeoutException {
 
+        CompletableFuture<Integer> integerCompletableFuture = new CompletableFuture<>();
+        integerCompletableFuture.whenComplete((i,t) -> total.addAndGet(i));
         clientPublisher.publish(new WithResult<>(new WithMetadata<>(new Metadata.Builder()
                 .add("foo", "bar")
-                .build(), System.currentTimeMillis() + ""), new CompletableFuture<>()));
+                .build(), System.currentTimeMillis() + ""), integerCompletableFuture));
     }
 
     public static abstract class ServerSubscriber<T>

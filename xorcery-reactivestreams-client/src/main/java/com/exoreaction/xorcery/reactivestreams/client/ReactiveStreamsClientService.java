@@ -26,6 +26,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -272,6 +273,7 @@ public class ReactiveStreamsClientService
                     publisherConfiguration,
                     byteBufferPool,
                     metricRegistry,
+                    LogManager.getLogger(SubscribeReactiveStream.class),
                     result);
 
         } else {
@@ -285,6 +287,7 @@ public class ReactiveStreamsClientService
                     publisherConfiguration,
                     byteBufferPool,
                     metricRegistry,
+                    LogManager.getLogger(SubscribeReactiveStream.class),
                     result);
         }
         return result;

@@ -45,11 +45,10 @@ import java.util.function.Function;
 
 public class SubscriberWithResultReactiveStream
         extends SubscriberReactiveStream {
-    private final static Logger logger = LogManager.getLogger(SubscriberReactiveStream.class);
-
-
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final MessageWriter<Object> resultWriter;
+    boolean isFlushPending = false;
+    private ByteBufferOutputStream2 resultOutputStream;
 
     protected final Meter resultsSent;
 
@@ -59,12 +58,14 @@ public class SubscriberWithResultReactiveStream
                                               MessageWriter<Object> resultWriter,
                                               ObjectMapper objectMapper,
                                               ByteBufferPool byteBufferPool,
-                                              MetricRegistry metricRegistry) {
-        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry);
+                                              MetricRegistry metricRegistry,
+                                              Logger logger) {
+        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, logger);
 
         this.resultsSent = metricRegistry.meter("subscriber." + streamName + ".results");
 
         this.resultWriter = resultWriter;
+        resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
     }
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
@@ -94,20 +95,18 @@ public class SubscriberWithResultReactiveStream
 
     private synchronized void sendResult(Object result, Throwable throwable) {
         // Send result back, but from the queue so that we ensure ordering
-        // TODO do something more clever than synchronized
-
         CompletableFuture<Object> future;
+        isFlushPending = false;
         while ((future = resultQueue.peek()) != null && future.isDone()) {
             resultQueue.remove();
 
-            future.handle((r, t) ->
+            future.whenComplete((r, t) ->
             {
-                ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
                 try {
                     if (t != null) {
                         resultOutputStream.write(ReactiveStreamsAbstractService.XOR);
                         ObjectOutputStream out = new ExceptionObjectOutputStream(resultOutputStream);
-                        out.writeObject(throwable);
+                        out.writeObject(t);
                     } else {
                         resultWriter.writeTo(r, resultOutputStream);
                     }
@@ -125,16 +124,22 @@ public class SubscriberWithResultReactiveStream
                             byteBufferPool.release(data);
                             resultsSent.mark();
                             logger.trace("Sent result: {}", r);
+                            isFlushPending = true;
                         }
                     });
-                    session.getRemote().flush();
                 } catch (IOException ex) {
                     logger.error(marker, "Could not send result", ex);
                     session.close(StatusCode.SERVER_ERROR, ex.getMessage());
                 }
-                return null;
             });
         }
-
+        if (isFlushPending) {
+            try {
+                session.getRemote().flush();
+            } catch (IOException e) {
+                logger.error(marker, "Could not flush results", e);
+                session.close(StatusCode.SERVER_ERROR, e.getMessage());
+            }
+        }
     }
 }

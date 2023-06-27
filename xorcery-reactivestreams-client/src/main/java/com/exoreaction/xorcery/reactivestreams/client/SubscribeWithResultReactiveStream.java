@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.reactivestreams.client;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
@@ -38,7 +39,9 @@ import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Flow;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
@@ -46,9 +49,12 @@ import java.util.function.Supplier;
 public class SubscribeWithResultReactiveStream
         extends SubscribeReactiveStream {
 
-    private static final Logger logger = LogManager.getLogger(SubscribeReactiveStream.class);
-
+    private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final MessageWriter<Object> resultWriter;
+    boolean isFlushPending = false;
+    private ByteBufferOutputStream2 resultOutputStream;
+
+    protected final Meter resultsSent;
 
     public SubscribeWithResultReactiveStream(URI serverUri,
                                              String streamName,
@@ -61,9 +67,14 @@ public class SubscribeWithResultReactiveStream
                                              Supplier<Configuration> publisherConfiguration,
                                              ByteBufferPool pool,
                                              MetricRegistry metricRegistry,
+                                             Logger logger,
                                              CompletableFuture<Void> result) {
-        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, pool, metricRegistry, result);
+        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, pool, metricRegistry, logger, result);
+
+        this.resultsSent = metricRegistry.meter("subscribe." + streamName + ".results");
+
         this.resultWriter = resultWriter;
+        resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
     }
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
@@ -73,47 +84,60 @@ public class SubscribeWithResultReactiveStream
         try {
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
+            received.mark();
+            receivedBytes.mark(byteBuffer.position());
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
-            event = new WithResult<>(event, new CompletableFuture<>().whenComplete(this::sendResult));
+            CompletableFuture<Object> resultFuture = new CompletableFuture<>();
+            resultFuture.whenComplete(this::sendResult);
+            resultQueue.add(resultFuture);
+            event = new WithResult<>(event, resultFuture);
+
             subscriber.onNext(event);
         } catch (IOException e) {
             logger.error(marker, "Could not receive value", e);
+            subscriber.onError(e);
             session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
             result.completeExceptionally(e);
         }
     }
 
-    private void sendResult(Object result, Throwable throwable) {
-        // Send result back
-        ByteBufferOutputStream2 resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
+    private synchronized void sendResult(Object result, Throwable throwable) {
+        // Send result back, but from the queue so that we ensure ordering
+        CompletableFuture<Object> future;
+        isFlushPending = false;
+        while ((future = resultQueue.peek()) != null && future.isDone()) {
+            resultQueue.remove();
 
-        try {
-            if (throwable != null) {
-                resultOutputStream.write(ReactiveStreamsAbstractService.XOR);
-                ObjectOutputStream out = new ExceptionObjectOutputStream(resultOutputStream);
-                out.writeObject(throwable);
-            } else {
-                resultWriter.writeTo(result, resultOutputStream);
-            }
+            future.whenComplete((r, t) ->
+            {
+                try {
+                    if (t != null) {
+                        resultOutputStream.write(ReactiveStreamsAbstractService.XOR);
+                        ObjectOutputStream out = new ExceptionObjectOutputStream(resultOutputStream);
+                        out.writeObject(t);
+                    } else {
+                        resultWriter.writeTo(result, resultOutputStream);
+                    }
 
-            ByteBuffer data = resultOutputStream.takeByteBuffer();
-            session.getRemote().sendBytes(data, new WriteCallback() {
-                @Override
-                public void writeFailed(Throwable x) {
-                    logger.error(marker, "Could not send result", x);
-                }
+                    ByteBuffer data = resultOutputStream.takeByteBuffer();
+                    session.getRemote().sendBytes(data, new WriteCallback() {
+                        @Override
+                        public void writeFailed(Throwable x) {
+                            logger.error(marker, "Could not send result", x);
+                        }
 
-                @Override
-                public void writeSuccess() {
-                    byteBufferPool.release(data);
+                        @Override
+                        public void writeSuccess() {
+                            byteBufferPool.release(data);
+                        }
+                    });
+                } catch (IOException ex) {
+                    logger.error(marker, "Could not send result", ex);
+                    session.close(StatusCode.SERVER_ERROR, ex.getMessage());
+                    this.result.completeExceptionally(ex); // TODO This should probably do a retry instead
                 }
             });
-        } catch (IOException ex) {
-            logger.error(marker, "Could not send result", ex);
-            session.close(StatusCode.SERVER_ERROR, ex.getMessage());
-            this.result.completeExceptionally(ex); // TODO This should probably do a retry instead
         }
     }
-
 }

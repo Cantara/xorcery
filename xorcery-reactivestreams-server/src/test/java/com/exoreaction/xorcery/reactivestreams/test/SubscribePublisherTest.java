@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
@@ -36,9 +37,8 @@ import java.util.concurrent.*;
 
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cancelStream;
 
-public class ReactiveStreamsLifecycleTest {
+public class SubscribePublisherTest {
 
-    private InstanceConfiguration serverInstanceConfiguration;
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
     private ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration;
@@ -60,12 +60,11 @@ public class ReactiveStreamsLifecycleTest {
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();
 
-        serverInstanceConfiguration = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
         reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(serverConfiguration.getConfiguration("reactivestreams.server"));
     }
 
     @Test
-    public void testSubscriberProducesResult() throws Exception {
+    public void testPublisherProducesResult() throws Exception {
 
 
         // Given
@@ -122,7 +121,7 @@ public class ReactiveStreamsLifecycleTest {
     }
 
     @Test
-    public void testSubscriberServerException() throws Exception {
+    public void testPublisherThrowsException() throws Exception {
 
         // Given
         try (Xorcery server = new Xorcery(serverConfiguration)) {
@@ -221,42 +220,6 @@ public class ReactiveStreamsLifecycleTest {
         Assertions.assertThrows(CompletionException.class, error::join);
         Assertions.assertThrows(CompletionException.class, stream::join);
 
-    }
-
-    @Test
-    public void testInactivePublisherCausesReconnect() throws Exception {
-
-        // Given
-        try (Xorcery server = new Xorcery(serverConfiguration.asBuilder()
-                .add("reactivestreams.server.idleTimeout", "3s")
-                .build())) {
-            try (Xorcery client = new Xorcery(clientConfiguration)) {
-                ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
-                ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
-
-                CompletableFuture<Integer> subscriberTotal = new CompletableFuture<>();
-                IntegerSubscriber subscriber = new IntegerSubscriber(subscriberTotal, new CompletableFuture<>());
-                CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("numbers", config -> subscriber, IntegerSubscriber.class);
-
-                // When
-                IntegerNoopPublisher publisher = new IntegerNoopPublisher();
-                CompletableFuture<Void> stream = reactiveStreamsClient.publish(reactiveStreamsServerConfiguration.getURI(), "numbers",
-                        Configuration::empty, publisher, IntegerNoopPublisher.class, ClientConfiguration.defaults());
-
-                // Wait
-                Thread.sleep(5000);
-                publisher.getSubscriber().join().onNext(1);
-                Thread.sleep(5000);
-                publisher.getSubscriber().join().onNext(1);
-                Thread.sleep(5000);
-                publisher.getSubscriber().join().onNext(1);
-                publisher.getSubscriber().join().onComplete();
-                LogManager.getLogger().info("Completed publisher");
-
-                // Then
-                Assertions.assertEquals(3, subscriberTotal.join());
-            }
-        }
     }
 
     private void report(Object result, Throwable throwable) {

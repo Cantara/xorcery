@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.reactivestreams.api.client;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 
+import javax.net.ssl.SSLHandshakeException;
 import java.util.Optional;
 
 public record ClientConfiguration(Configuration configuration) {
@@ -58,6 +59,19 @@ public record ClientConfiguration(Configuration configuration) {
 
     public boolean isRetryEnabled() {
         return configuration.getBoolean("retry.enabled").orElse(true);
+    }
+
+    public boolean isRetryable(Throwable throwable)
+    {
+        if (throwable == null)
+            return true;
+
+        if (throwable instanceof SSLHandshakeException) {
+            return false;
+        }
+
+        // TODO Allow includes and excludes in config
+        return true;
     }
 
     public String getRetryDelay() {
