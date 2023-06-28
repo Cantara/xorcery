@@ -21,29 +21,24 @@ import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
+import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.websocket.api.*;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -60,6 +55,7 @@ public class SubscriberReactiveStream
     private String configurationMessage = "";
     private Configuration subscriberConfiguration;
     protected Flow.Subscriber<Object> subscriber;
+    protected CompletableFuture<Void> result;
 
     protected final MessageReader<Object> eventReader;
 
@@ -78,7 +74,7 @@ public class SubscriberReactiveStream
 
     // Subscription
     private final AtomicLong requests = new AtomicLong();
-    private final AtomicBoolean cancelled = new AtomicBoolean();
+    private boolean isCancelled;
     private boolean isSendingRequests;
 
     public SubscriberReactiveStream(String streamName,
@@ -103,11 +99,11 @@ public class SubscriberReactiveStream
 
     // Subscription
     @Override
-    public void request(long n) {
+    public synchronized void request(long n) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "request {}", n);
 
-        if (cancelled.get()) {
+        if (isCancelled) {
             return;
         }
         requests.addAndGet(n);
@@ -120,7 +116,7 @@ public class SubscriberReactiveStream
         if (logger.isTraceEnabled())
             logger.trace(marker, "cancel");
 
-        cancelled.set(true);
+        isCancelled = true;
         requests.set(Long.MIN_VALUE);
         if (session != null)
             CompletableFuture.runAsync(this::sendRequests);
@@ -144,9 +140,10 @@ public class SubscriberReactiveStream
             }
 
             long rn;
-            while ((rn = requests.getAndSet(0)) > 0) {
-                logger.trace(marker, "Sending request: {}", rn);
-                requestsHistogram.update(rn);
+            while ((rn = requests.getAndSet(0)) != 0) {
+
+                if (rn != Long.MIN_VALUE)
+                    requestsHistogram.update(rn);
                 final long finalRn = rn;
                 session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
                     @Override
@@ -156,14 +153,12 @@ public class SubscriberReactiveStream
 
                     @Override
                     public void writeSuccess() {
-                        logger.trace(marker, "Successfully sent request {}", finalRn);
                     }
                 });
 
                 try {
-                    logger.trace(marker, "Flushing remote session...");
                     session.getRemote().flush();
-                    logger.trace(marker, "Remote session flushed.");
+                    logger.trace(marker, "Flushed remote session");
                 } catch (IOException e) {
                     logger.error(marker, "While flushing remote session", e);
                 }
@@ -171,7 +166,10 @@ public class SubscriberReactiveStream
         } catch (Throwable t) {
             logger.error(marker, "Error sending requests", t);
         } finally {
-            isSendingRequests = false;
+            synchronized (this)
+            {
+                isSendingRequests = false;
+            }
         }
     }
 
@@ -208,6 +206,7 @@ public class SubscriberReactiveStream
 
                 try {
                     subscriber = subscriberFactory.apply(subscriberConfiguration);
+                    result = ((ReactiveStreamsAbstractService.SubscriberTracker)subscriber).getResult();
                     subscriber.onSubscribe(this);
 
                     logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
@@ -277,14 +276,18 @@ public class SubscriberReactiveStream
             if (statusCode == StatusCode.NORMAL) {
                 if (subscriber != null) {
                     subscriber.onComplete();
+                    result.complete(null);
                 }
             } else if (statusCode == StatusCode.SHUTDOWN) {
                 if (subscriber != null) {
+                    Throwable throwable;
                     if (reason.equals("Connection Idle Timeout")) {
-                        subscriber.onError(new ServerTimeoutStreamException(reason));
+                        throwable = new ServerTimeoutStreamException(reason);
                     } else {
-                        subscriber.onError(new ClientShutdownStreamException(reason));
+                        throwable = new ClientShutdownStreamException(reason);
                     }
+                    subscriber.onError(throwable);
+                    result.completeExceptionally(throwable);
                 }
             }
         } catch (Exception e) {

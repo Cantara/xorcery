@@ -168,15 +168,6 @@ public class PublishReactiveStreamStandard
         if (subscriberURIs.hasNext()) {
             URI subscriberWebsocketUri = subscriberURIs.next();
 
-            if ("https".equals(subscriberWebsocketUri.getScheme()))
-                subscriberWebsocketUri = URIs.withScheme(subscriberWebsocketUri, "wss");
-            else if ("http".equals(subscriberWebsocketUri.getScheme()))
-                subscriberWebsocketUri = URIs.withScheme(subscriberWebsocketUri, "ws");
-
-            if (logger.isTraceEnabled()) {
-                logger.trace(marker, "connect {}", subscriberWebsocketUri);
-            }
-
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "connect {}", subscriberWebsocketUri);
             }
@@ -297,7 +288,7 @@ public class PublishReactiveStreamStandard
             }
 
             if (cause == null)
-                result.cancel(true);
+                result.complete(null);
             else
                 result.completeExceptionally(cause);
         }
@@ -344,10 +335,10 @@ public class PublishReactiveStreamStandard
 
         if (requestAmount == Long.MIN_VALUE) {
             logger.debug(marker, "Received cancel on websocket");
-            session.close();
+            session.close(StatusCode.NORMAL, "cancel");
 
             // Maybe try another subscriber
-            retry(null);
+            retry(new ServerShutdownStreamException("cancel"));
         } else {
             if (subscription == null) {
                 publisher.subscribe(this);
@@ -372,36 +363,30 @@ public class PublishReactiveStreamStandard
     }
 
     @Override
+    public synchronized void onWebSocketError(Throwable cause) {
+
+        if (cause instanceof ClosedChannelException) {
+            // Ignore
+            return;
+        }
+
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onWebSocketError", cause);
+        }
+    }
+
+    @Override
     public synchronized void onWebSocketClose(int statusCode, String reason) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
 
-        // TODO This has to be reviewed to see what codes should cause retry and what should cause cancellation of the process
         if (statusCode == StatusCode.NORMAL) {
             logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             result.complete(null);
         } else if (statusCode == StatusCode.SHUTDOWN || statusCode == StatusCode.NO_CLOSE) {
             logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
             retry(new ServerShutdownStreamException(reason));
-        }
-    }
-
-    @Override
-    public synchronized void onWebSocketError(Throwable cause) {
-
-        if (cause instanceof ClosedChannelException) {
-            // Ignore
-            retry(cause);
-        } else {
-            if (logger.isTraceEnabled()) {
-                logger.trace(marker, "onWebSocketError", cause);
-            }
-
-            logger.error(marker, "Publisher websocket error", cause);
-            if (subscription != null)
-                subscription.cancel();
-            result.completeExceptionally(cause); // Now considered done
         }
     }
 

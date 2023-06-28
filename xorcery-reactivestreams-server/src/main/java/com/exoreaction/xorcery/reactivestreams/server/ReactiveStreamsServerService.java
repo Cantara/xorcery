@@ -140,7 +140,7 @@ public class ReactiveStreamsServerService
         MessageReader<Object> eventReader = getReader(eventType);
         MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
-        Function<Configuration, Flow.Subscriber<Object>> wrappedSubscriberFactory = (config) -> new ReactiveStreamsAbstractService.SubscriberTracker((Flow.Subscriber<Object>) subscriberFactory.apply(config), result);
+        Function<Configuration, Flow.Subscriber<Object>> wrappedSubscriberFactory = (config) -> new ReactiveStreamsAbstractService.SubscriberTracker((Flow.Subscriber<Object>) subscriberFactory.apply(config), new CompletableFuture<>());
 
         subscriberEndpointFactories.put(streamName, () ->
                 resultWriter == null ? new SubscriberReactiveStream(streamName, wrappedSubscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, loggerContext.getLogger(SubscriberReactiveStream.class)) :

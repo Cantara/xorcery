@@ -63,22 +63,22 @@ public abstract class ReactiveStreamsAbstractService {
             logger.info("Cancel active subscriptions:" + activeSubscribers.size());
 
             // Cancel active subscriptions
+            List<SubscriberTracker> currentSubscribers = new ArrayList<>(activeSubscribers);
             for (SubscriberTracker activeSubscriber : activeSubscribers) {
                 activeSubscriber.getSubscription().cancel();
                 activeSubscriber.onError(new ServerShutdownStreamException("Server is shutting down"));
+            }
 
+            // Wait for cleanup
+            for (SubscriberTracker activeSubscriber : currentSubscribers) {
                 // Wait for it to finish cleanly
-/* TODO This needs review for the various cases
-                CompletableFuture<Void> result = activeSubscriber.getResult();
-                if (result != null) {
-                    try {
-                        result.get(10, TimeUnit.SECONDS);
-                    } catch (Throwable e) {
-                        // Ignore
-                        logger.warn("Could not cancel subscription", e);
-                    }
+                try {
+                    activeSubscriber.getResult().get(10, TimeUnit.SECONDS);
+                    logger.info("Subscriber cleaned up");
+                } catch (Throwable e) {
+                    // Ignore
+                    logger.warn("Could not cancel subscription", e);
                 }
-*/
             }
         }
     }
@@ -187,7 +187,7 @@ public abstract class ReactiveStreamsAbstractService {
         return offspring.equals(base) ? actualArgs : null;
     }
 
-    protected class SubscriberTracker implements Flow.Subscriber<Object> {
+    public class SubscriberTracker implements Flow.Subscriber<Object> {
         private final Flow.Subscriber<Object> subscriber;
         private final CompletableFuture<Void> result;
         private Flow.Subscription subscription;
@@ -241,7 +241,7 @@ public abstract class ReactiveStreamsAbstractService {
 
         @Override
         public void subscribe(Flow.Subscriber<? super Object> subscriber) {
-            publisher.subscribe(new SubscriberTracker(subscriber, null));
+            publisher.subscribe(new SubscriberTracker(subscriber, new CompletableFuture<>()));
         }
     }
 }

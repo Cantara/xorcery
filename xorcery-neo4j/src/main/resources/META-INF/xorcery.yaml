@@ -12,3 +12,7 @@ neo4jdatabase:
 
 jersey.server.register:
   - com.exoreaction.xorcery.neo4j.resources.Neo4jConsoleResource
+
+log4j2.Configuration.Loggers.logger:
+      - name: org.apache.commons.beanutils.FluentPropertyBeanIntrospector
+        level: warn

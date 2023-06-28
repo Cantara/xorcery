@@ -56,7 +56,7 @@ public class ClientCertificateAuthenticationTest {
     String serverConfig = """
             instance.id: "xorcery1"
             instance.host: "server1"
-            jetty.server.ssl.port": "{{SYSTEM.port}}"
+            jetty.server.ssl.port: "{{SYSTEM.port}}"
             jetty.server.ssl.sniRequired: true
             jetty.server.security.enabled: true
                     """;
@@ -72,12 +72,13 @@ public class ClientCertificateAuthenticationTest {
         //System.setProperty("javax.net.debug", "ssl,handshake");
 
         System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
+        System.out.println(System.getProperty("port"));
         Configuration serverConfiguration = new ConfigurationBuilder()
                 .addTestDefaults()
                 .addYaml(config)
                 .addYaml(serverConfig)
                 .build();
-//        System.out.println(serverConfiguration);
+        System.out.println(serverConfiguration);
         Configuration clientConfiguration = new ConfigurationBuilder()
                 .addTestDefaults()
                 .addYaml(config)

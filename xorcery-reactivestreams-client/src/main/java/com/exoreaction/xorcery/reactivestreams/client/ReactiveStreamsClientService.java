@@ -137,9 +137,6 @@ public class ReactiveStreamsClientService
         MessageWriter<Object> eventWriter = getWriter(eventType);
         MessageReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
 
-        // Publisher wrapper so we can track active subscriptions
-        publisher = new PublisherTracker((Flow.Publisher<Object>) publisher);
-
         // Start publishing process
         if (resultReader != null) {
             switch (clientConfiguration.getStrategy()) {
@@ -258,7 +255,7 @@ public class ReactiveStreamsClientService
         MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
         // Subscriber wrapper so we can track active subscriptions
-        subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber, result);
+//        subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber, result);
 
         // Start subscription process
         if (resultWriter != null) {

@@ -16,6 +16,7 @@ instance:
 system:
   "java.util.logging.manager": "org.apache.logging.log4j.jul.LogManager"
   "log4j2.isThreadContextMapInheritable": true
+  "Log4jContextSelector": "org.apache.logging.log4j.core.selector.BasicContextSelector"
 
 defaults:
   enabled: true

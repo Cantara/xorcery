@@ -29,7 +29,7 @@ public class LoggerContextFactory
             byte[] log4j2YamlConfig = yaml.getBytes(StandardCharsets.UTF_8);
             URL baseConfigUrl = Resources.getResource("META-INF/xorcery-defaults.yaml").orElseThrow();
             ConfigurationSource configurationSource = new ConfigurationSource(new ByteArrayInputStream(log4j2YamlConfig), baseConfigUrl);
-            loggerContext = Configurator.initialize(Xorcery.class.getClassLoader(), configurationSource, configuration.getString("instance.id").orElse("xorcery"));
+            loggerContext = Configurator.initialize(null, configurationSource, null);
             return loggerContext;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

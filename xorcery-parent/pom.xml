@@ -123,7 +123,7 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>neo4j-apoc-jpms-shaded</artifactId>
-                <version>5.6.0</version>
+                <version>5.9.0</version>
             </dependency>
 
             <!-- CLI -->

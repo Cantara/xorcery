@@ -95,7 +95,7 @@ public class PublisherReactiveStreamStandard
 
     // WebSocket
     @Override
-    public void onWebSocketConnect(Session session) {
+    public synchronized void onWebSocketConnect(Session session) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
 
@@ -104,7 +104,7 @@ public class PublisherReactiveStreamStandard
     }
 
     @Override
-    public void onWebSocketText(String message) {
+    public synchronized void onWebSocketText(String message) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketText {}", message);
 
@@ -126,7 +126,7 @@ public class PublisherReactiveStreamStandard
             {
                 long requestAmount = Long.parseLong(message);
 
-                synchronized (session) {
+                synchronized (this) {
                     if (subscription != null) {
                         if (requestAmount == Long.MIN_VALUE) {
                             logger.info(marker, "Received cancel on websocket " + streamName);
@@ -163,7 +163,7 @@ public class PublisherReactiveStreamStandard
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public synchronized void onWebSocketBinary(byte[] payload, int offset, int len) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketBinary");
 
@@ -174,7 +174,7 @@ public class PublisherReactiveStreamStandard
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
+    public synchronized void onWebSocketClose(int statusCode, String reason) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
 
@@ -185,7 +185,7 @@ public class PublisherReactiveStreamStandard
     }
 
     @Override
-    public void onWebSocketError(Throwable cause) {
+    public synchronized void onWebSocketError(Throwable cause) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketError", cause);
 
@@ -202,33 +202,29 @@ public class PublisherReactiveStreamStandard
 
     // Subscriber
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public synchronized void onSubscribe(Flow.Subscription subscription) {
 
-        synchronized (session) {
-            if (logger.isTraceEnabled())
-                logger.trace(marker, "onSubscribe");
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onSubscribe");
 
-            this.subscription = subscription;
+        this.subscription = subscription;
 
-            if (outstandingRequestAmount > 0) {
-                subscription.request(outstandingRequestAmount);
-                outstandingRequestAmount = 0;
-            }
+        if (outstandingRequestAmount > 0) {
+            subscription.request(outstandingRequestAmount);
+            outstandingRequestAmount = 0;
         }
     }
 
     @Override
-    public void onNext(Object item) {
+    public synchronized void onNext(Object item) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onNext {}", item.toString());
 
-        synchronized (session) {
-            if (session.isOpen() && requested > 0) {
-                send(item);
-                requested--;
-            } else {
-                queue.add(item);
-            }
+        if (session.isOpen() && requested > 0) {
+            send(item);
+            requested--;
+        } else {
+            queue.add(item);
         }
     }
 
@@ -260,42 +256,38 @@ public class PublisherReactiveStreamStandard
         messageWriter.writeTo(item, outputStream);
     }
 
-    public void onError(Throwable throwable) {
+    public synchronized void onError(Throwable throwable) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onError", throwable);
 
-        synchronized (session) {
-            if (throwable instanceof ServerShutdownStreamException) {
-                session.close(StatusCode.SHUTDOWN, throwable.getMessage());
-            } else {
-                // Send exception
-                // Client should receive exception and close session
-                try {
-                    ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                    ObjectOutputStream out = new ExceptionObjectOutputStream(bout);
-                    out.writeObject(throwable);
-                    out.close();
-                    String base64Throwable = Base64.getEncoder().encodeToString(bout.toByteArray());
-                    session.getRemote().sendString(base64Throwable);
-                    session.getRemote().flush();
-                } catch (IOException e) {
-                    logger.error(marker, "Could not send exception", e);
-                }
+        if (throwable instanceof ServerShutdownStreamException) {
+            session.close(StatusCode.SHUTDOWN, throwable.getMessage());
+        } else {
+            // Send exception
+            // Client should receive exception and close session
+            try {
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ExceptionObjectOutputStream(bout);
+                out.writeObject(throwable);
+                out.close();
+                String base64Throwable = Base64.getEncoder().encodeToString(bout.toByteArray());
+                session.getRemote().sendString(base64Throwable);
+                session.getRemote().flush();
+            } catch (IOException e) {
+                logger.error(marker, "Could not send exception", e);
             }
         }
     }
 
-    public void onComplete() {
+    public synchronized void onComplete() {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onComplete");
 
-        synchronized (session) {
-            if (queue.isEmpty() && session.isOpen()) {
-                session.close(StatusCode.NORMAL, "complete");
-            } else {
-                // Wait for requests to drain the remaining items
-                isComplete = true;
-            }
+        if (queue.isEmpty() && session.isOpen()) {
+            session.close(StatusCode.NORMAL, "complete");
+        } else {
+            // Wait for requests to drain the remaining items
+            isComplete = true;
         }
     }
 }

@@ -48,9 +48,11 @@ public class EventStoreTest {
             .with(new StandardConfigurationBuilder()::addTestDefaults)
             .add("jetty.server.http.port", Sockets.nextFreePort())
             .add("jetty.server.ssl.port", Sockets.nextFreePort())
+            .add("eventstore.uri", "esdb://localhost:2115?tls=false"
+            )
             .build();
 
-    static{
+    static {
         LoggerContextFactory.initialize(configuration);
     }
 
@@ -60,14 +62,14 @@ public class EventStoreTest {
     public static DockerComposeContainer environment =
             new DockerComposeContainer(new File("src/test/resources/compose-test.yaml"))
                     .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreTest.class)))
-                    .withExposedService("eventstore", 2113);
+                    .withExposedService("eventstore", 2115);
 
     @BeforeAll
     public static void setup() throws Exception {
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread t, Throwable e) {
-                LogManager.getLogger().error("Uncaught exception "+t.getName(), e);
+                LogManager.getLogger().error("Uncaught exception " + t.getName(), e);
             }
         });
         xorcery = new Xorcery(configuration);

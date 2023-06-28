@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.reactivestreams.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
@@ -40,27 +41,30 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cance
 
 public class PublishSubscriberTest {
 
+    private String clientConf = """
+                instance.id: client
+                jetty.server.enabled: false
+                reactivestreams.server.enabled: false
+""";
+
+    private String serverConf = """
+                instance.id: server
+                jetty.client.enabled: false
+                reactivestreams.client.enabled: false
+                jetty.server.http.enabled: false
+                jetty.server.ssl.port: "{{ SYSTEM.port }}"
+""";
+
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
+
     private ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration;
 
     @BeforeEach
     public void setup() {
-        clientConfiguration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("instance.id", "client")
-                .add("jetty.server.enabled", false)
-                .add("reactivestreams.server.enabled", false)
-                .build();
-        serverConfiguration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("instance.id", "server")
-                .add("jetty.client.enabled", false)
-                .add("reactivestreams.client.enabled", false)
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", Sockets.nextFreePort())
-                .build();
-
+        System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
+        clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
+        serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
         reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(serverConfiguration.getConfiguration("reactivestreams.server"));
     }
 
@@ -100,7 +104,11 @@ public class PublishSubscriberTest {
     }
 
     @Test
-    public void testPublisherTimesOut() throws Exception {
+    public void testServerTimesOut() throws Exception {
+
+        serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).addYaml("""
+                reactivestreams.server.idleTimeout: "2s"
+                """).build();
 
         // Given
         try (Xorcery server = new Xorcery(serverConfiguration)) {
@@ -116,14 +124,57 @@ public class PublishSubscriberTest {
                 CompletableFuture<Void> stream = reactiveStreamsClient.publish(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, publisher, ClientPublisher.class, ClientConfiguration.defaults());
 
+                for (int i = 0; i < 3; i++) {
+                    publisher.publish(i).join();
+
+                    Thread.sleep(3000);
+                }
+                publisher.close();
+
                 // Then
-                Assertions.assertThrows(CompletionException.class, () ->
-                {
-                    result.orTimeout(5, TimeUnit.SECONDS)
-                            .exceptionallyCompose(cancelStream(stream))
-                            .whenComplete(this::report)
-                            .toCompletableFuture().join();
-                });
+                result.orTimeout(10, TimeUnit.SECONDS)
+                        .exceptionallyCompose(cancelStream(stream))
+                        .whenComplete(this::report)
+                        .toCompletableFuture().join();
+            }
+        }
+    }
+
+    @Test
+    public void testClientTimesOut() throws Exception {
+
+        clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).addYaml("""
+                reactivestreams.client.idleTimeout: "2s"
+                """).build();
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
+                ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
+
+                CompletableFuture<Integer> result = new CompletableFuture<>();
+                IntegerSubscriber subscriber = new IntegerSubscriber(result, new CompletableFuture<>());
+                CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("numbers", config -> subscriber, IntegerSubscriber.class);
+
+                // When
+                ClientPublisher publisher = new ClientPublisher();
+                CompletableFuture<Void> stream = reactiveStreamsClient.publish(reactiveStreamsServerConfiguration.getURI(), "numbers",
+                        Configuration::empty, publisher, ClientPublisher.class, ClientConfiguration.defaults());
+
+                for (int i = 0; i < 3; i++) {
+                    publisher.publish(i).join();
+
+                    Thread.sleep(3000);
+                }
+                publisher.close();
+                stream.join();
+
+                // Then
+                result.orTimeout(10, TimeUnit.SECONDS)
+                        .exceptionallyCompose(cancelStream(stream))
+                        .whenComplete(this::report)
+                        .toCompletableFuture().join();
             }
         }
     }
@@ -147,9 +198,9 @@ public class PublishSubscriberTest {
                 ClientPublisher publisher = new ClientPublisher();
                 stream = reactiveStreamsClient.publish(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, publisher, ClientPublisher.class, new ClientConfiguration.Builder().isRetryEnabled(false).build());
-
                 Thread.sleep(2000);
             }
+            Thread.sleep(2000);
         }
 
         // Then
