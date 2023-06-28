@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.ProcessingException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.util.BytesRequestContent;
@@ -38,6 +40,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 public class JsonApiClient {
+    private static final Logger LOGGER = LogManager.getLogger(JsonApiClient.class);
 
     private ObjectMapper objectMapper = new JsonMapper();
 
@@ -53,8 +56,10 @@ public class JsonApiClient {
         return dnsLookup.resolve(link.getHrefAsUri())
                 .thenCompose(uris ->
                 {
+                    var target = uris.get(0);
+                    LOGGER.trace("Resolved href: {} as : {}", link.getHrefAsUri(), target);
                     CompletableFuture<ContentResponse> future = new CompletableFuture<>();
-                    httpClient.newRequest(uris.get(0))
+                    httpClient.newRequest(target)
                             .accept(MediaTypes.APPLICATION_JSON_API)
                             .method(HttpMethod.GET)
                             .send(new CompletableFutureResponseListener(future));
