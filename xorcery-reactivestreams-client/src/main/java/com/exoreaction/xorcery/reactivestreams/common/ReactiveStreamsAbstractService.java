@@ -77,7 +77,9 @@ public abstract class ReactiveStreamsAbstractService {
                     logger.info("Subscriber cleaned up");
                 } catch (Throwable e) {
                     // Ignore
-                    logger.warn("Could not cancel subscription", e);
+                    if (e instanceof TimeoutException) {
+                        logger.warn("Could not cancel subscription", e);
+                    }
                 }
             }
         }
@@ -213,6 +215,7 @@ public abstract class ReactiveStreamsAbstractService {
         public void onError(Throwable throwable) {
             if (activeSubscribers.remove(this)) {
                 subscriber.onError(throwable);
+                result.completeExceptionally(throwable);
             }
         }
 
@@ -220,6 +223,7 @@ public abstract class ReactiveStreamsAbstractService {
         public void onComplete() {
             if (activeSubscribers.remove(this)) {
                 subscriber.onComplete();
+                result.complete(null);
             }
         }
 
