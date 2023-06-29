@@ -61,10 +61,10 @@ public class Xorcery
     private final ServiceLocator serviceLocator;
 
     public  Xorcery(Configuration configuration) throws Exception {
-        this(configuration, ServiceLocatorFactory.getInstance().create(null));
+        this(configuration, null);
     }
 
-    public Xorcery(Configuration configuration, ServiceLocator serviceLocator) throws Exception {
+    public Xorcery(Configuration configuration, ServiceLocator sl) throws Exception {
 
         // Set configured system properties
         Configuration system = configuration.getConfiguration("system");
@@ -76,8 +76,7 @@ public class Xorcery
 
         Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
 
-        this.serviceLocator = serviceLocator;
-
+        this.serviceLocator = sl == null ? ServiceLocatorFactory.getInstance().create(null) : sl;
 
         List<String> configurationMonitor = new ArrayList<>();
         PopulatorPostProcessor populatorPostProcessor = new ConfigurationPostPopulatorProcessor(configuration, configurationMonitor::add);

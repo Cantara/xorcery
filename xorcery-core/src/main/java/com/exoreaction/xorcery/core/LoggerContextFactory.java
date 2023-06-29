@@ -9,6 +9,7 @@ import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.yaml.YamlConfiguration;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
@@ -29,7 +30,15 @@ public class LoggerContextFactory
             byte[] log4j2YamlConfig = yaml.getBytes(StandardCharsets.UTF_8);
             URL baseConfigUrl = Resources.getResource("META-INF/xorcery-defaults.yaml").orElseThrow();
             ConfigurationSource configurationSource = new ConfigurationSource(new ByteArrayInputStream(log4j2YamlConfig), baseConfigUrl);
-            loggerContext = Configurator.initialize(null, configurationSource, null);
+
+            // Reconfigure or initialize as appropriate
+            if (LogManager.getFactory().hasContext(Configurator.class.getName(), LoggerContextFactory.class.getClassLoader(), false)) {
+                org.apache.logging.log4j.core.LoggerContext context = (org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(LoggerContextFactory.class.getClassLoader(), false);
+                Configurator.reconfigure(new YamlConfiguration(context, configurationSource));
+                loggerContext = context;
+            } else {
+                loggerContext = Configurator.initialize(null, configurationSource, null);
+            }
             return loggerContext;
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
