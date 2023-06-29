@@ -44,7 +44,7 @@ public class SRVConnectorTest {
         Configuration server1Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""                        
                         instance.host: server1
                         jetty.server.ssl.port: 8443
-                        servicetest.srv.weight: 2
+                        servicetest.srv.weight: 50
                         dns:
                             server:
                                 enabled: true
@@ -64,7 +64,7 @@ public class SRVConnectorTest {
                 for (int i = 0; i < 10; i++) {
                     ResourceDocument resourceDocument = httpClient.target("srv://_servicetest._sub._https._tcp/").request(MediaTypes.APPLICATION_JSON_API).get().readEntity(ResourceDocument.class);
                     System.out.println(resourceDocument.getLinks().getByRel("self").orElse(null).getHrefAsUri());
-                    System.out.println(resourceDocument.getResource().get().getAttributes().getAttribute("foo").orElse(null));
+                    System.out.println(resourceDocument.getResource().get().getAttributes().toMap());
                 }
             }
         }

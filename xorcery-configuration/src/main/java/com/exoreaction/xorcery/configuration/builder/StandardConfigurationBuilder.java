@@ -31,6 +31,7 @@ import org.apache.logging.log4j.status.StatusLogger;
 
 import java.io.*;
 import java.net.URL;
+import java.util.ServiceLoader;
 import java.util.function.Consumer;
 
 public class StandardConfigurationBuilder {
@@ -53,9 +54,7 @@ public class StandardConfigurationBuilder {
         addHome(builder);
         addUserDirectory(builder);
 
-        addSystemProperties(builder);
-        addEnvironmentVariables(builder);
-        addCalculatedConfiguration(builder);
+        addConfigurationProviders(builder);
     }
 
 
@@ -75,53 +74,26 @@ public class StandardConfigurationBuilder {
         // Then any custom and environment configuration
         addUserDirectory(builder);
 
-        addSystemProperties(builder);
-        addEnvironmentVariables(builder);
-        addCalculatedConfiguration(builder);
+        addConfigurationProviders(builder);
     }
 
     public Consumer<Configuration.Builder> addTestDefaultsWithYaml(String yamlString)
             throws UncheckedIOException {
         return builder ->
         {
-            // First add the standard configuration
-            addXorceryDefaults(builder);
-            addExtensions(builder);
-            addApplication(builder);
-
-            // Then add the test configuration on top
-            addXorceryTestDefaults(builder);
-            addExtensionsTest(builder);
-            addApplicationTest(builder);
-
-            // Then any custom and environment configuration
-            addUserDirectory(builder);
-
-            addSystemProperties(builder);
-            addEnvironmentVariables(builder);
-            addCalculatedConfiguration(builder);
+            addTestDefaults(builder);
 
             addYaml(yamlString).accept(builder);
         };
     }
 
-    public Consumer<Configuration.Builder> addConfigurationProvider(String name, ConfigurationProvider configurationProvider) {
-        return builder -> builder.add(name, new ConfigurationProviderContainerNode(configurationProvider));
-    }
+    public void addConfigurationProviders(Configuration.Builder builder) {
 
-    public void addSystemProperties(Configuration.Builder builder) {
-        addConfigurationProvider("SYSTEM", new SystemPropertiesConfigurationProvider()).accept(builder);
-        logger.log("Added system properties");
-    }
-
-    public void addEnvironmentVariables(Configuration.Builder builder) {
-        addConfigurationProvider("ENV", new EnvironmentVariablesConfigurationProvider()).accept(builder);
-        logger.log("Added environment variables");
-    }
-
-    public void addCalculatedConfiguration(Configuration.Builder builder) {
-        addConfigurationProvider("CALCULATED", new CalculatedConfigurationProvider()).accept(builder);
-        logger.log("Added calculated variables");
+        ServiceLoader<ConfigurationProvider> load = ServiceLoader.load(ConfigurationProvider.class);
+        for (ConfigurationProvider configurationProvider : load) {
+            builder.add(configurationProvider.getNamespace(), new ConfigurationProviderContainerNode(configurationProvider));
+            logger.log("Added "+configurationProvider.getNamespace()+" configuration provider");
+        }
     }
 
     public void addXorceryDefaults(Configuration.Builder builder) throws UncheckedIOException {

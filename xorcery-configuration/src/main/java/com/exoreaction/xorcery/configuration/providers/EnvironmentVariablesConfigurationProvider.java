@@ -20,6 +20,11 @@ public class EnvironmentVariablesConfigurationProvider
     }
 
     @Override
+    public String getNamespace() {
+        return "ENV";
+    }
+
+    @Override
     public JsonNode getJson(String name) {
         return Optional.ofNullable(System.getenv(name))
                 .map(value ->

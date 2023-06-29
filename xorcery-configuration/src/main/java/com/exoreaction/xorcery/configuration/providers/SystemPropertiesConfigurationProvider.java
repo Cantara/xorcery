@@ -20,6 +20,11 @@ public class SystemPropertiesConfigurationProvider
     }
 
     @Override
+    public String getNamespace() {
+        return "SYSTEM";
+    }
+
+    @Override
     public JsonNode getJson(String name) {
         return Optional.ofNullable(System.getProperty(name.replace('_', '.')))
                 .map(value ->

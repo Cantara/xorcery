@@ -1,3 +1,5 @@
+import com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider;
+
 /*
  * Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
  *
@@ -14,6 +16,7 @@
  * limitations under the License.
  */
 open module xorcery.configuration {
+    uses com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
     exports com.exoreaction.xorcery.configuration.builder;
     exports com.exoreaction.xorcery.configuration.providers;
     exports com.exoreaction.xorcery.configuration.spi;
@@ -23,4 +26,9 @@ open module xorcery.configuration {
     requires com.fasterxml.jackson.dataformat.javaprop;
     requires com.fasterxml.jackson.dataformat.yaml;
     requires org.apache.logging.log4j;
+
+    provides com.exoreaction.xorcery.configuration.spi.ConfigurationProvider with
+            com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigurationProvider,
+            com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider,
+            com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider;
 }

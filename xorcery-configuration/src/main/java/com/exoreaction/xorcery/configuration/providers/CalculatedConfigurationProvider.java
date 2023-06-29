@@ -13,6 +13,12 @@ import java.util.Collections;
 
 public class CalculatedConfigurationProvider
         implements ConfigurationProvider {
+
+    @Override
+    public String getNamespace() {
+        return "CALCULATED";
+    }
+
     @Override
     public JsonNode getJson(String name) {
 

@@ -1,0 +1,3 @@
+com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigurationProvider
+com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider
+com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider

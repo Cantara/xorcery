@@ -35,13 +35,16 @@ public class ServiceResource
     @GET
     public ResourceDocument get() {
 
-        return new ResourceDocument.Builder()
+        ResourceDocument resourceDocument = new ResourceDocument.Builder()
                 .links(new Links.Builder()
                         .link("self", getUriInfo().getRequestUri())
                         .build())
                 .data(new ResourceObject.Builder("service").attributes(new Attributes.Builder().with(b ->
-        {
-            b.attribute("foo", "bar");
-        }).build()).build()).build();
+                {
+                    b.attribute("foo", "bar")
+                            .attribute("host", getHttpServletRequest().getHeader("host"));
+                }).build()).build()).build();
+
+        return resourceDocument;
     }
 }

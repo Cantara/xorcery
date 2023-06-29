@@ -1,4 +1,4 @@
-jetty.server.http.port: "{{ SYSTEM.server_http_port | 8080 }}"
-jetty.server.ssl.port: "{{ SYSTEM.server_ssl_port | 8443 }}"
+jetty.server.http.port: 8080
+jetty.server.ssl.port: 8443
 
 jetty.server.minThreads: 3

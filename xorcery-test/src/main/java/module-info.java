@@ -27,4 +27,5 @@ open module xorcery.test {
     requires xorcery.keystores;
     requires xorcery.jsonapi.server;
     requires org.apache.logging.log4j;
+    requires jetty.servlet.api;
 }

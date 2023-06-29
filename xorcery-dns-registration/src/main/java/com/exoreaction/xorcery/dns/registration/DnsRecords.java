@@ -86,8 +86,7 @@ public class DnsRecords {
         Name serverName = Name.fromString(serverHttpType);
         int weight = configuration.getInteger("jetty.server.srv.weight").orElse(1);
         int priority = configuration.getInteger("jetty.server.srv.priority").orElse(1);
-        if (httpPort.isPresent())
-        {
+        if (httpPort.isPresent()) {
             records.add(new SRVRecord(serverName, DClass.IN, ttl, priority, weight, httpPort.get(), target));
         }
         if (httpsPort.isPresent()) {
@@ -101,8 +100,8 @@ public class DnsRecords {
 
             // HTTP(S) SRV records
             String type = serviceResource.getServiceIdentifier().resourceObjectIdentifier().getType();
-            weight = configuration.getInteger(type + ".srv.weight").orElse(1);
-            priority = configuration.getInteger(type + ".srv.priority").orElse(1);
+            weight = configuration.getInteger(type + ".srv.weight").orElseGet(() -> configuration.getInteger("jetty.server.srv.weight").orElse(100));
+            priority = configuration.getInteger(type + ".srv.priority").orElseGet(() -> configuration.getInteger("jetty.server.srv.priority").orElse(2));
             int srvTtl = configuration.getInteger(type + ".srv.ttl").orElse(ttl);
 
             {
@@ -160,8 +159,7 @@ public class DnsRecords {
 
                 if (hasWsEndpoints) {
 
-                    if (httpPort.isPresent())
-                    {
+                    if (httpPort.isPresent()) {
                         SRVRecord srvRecord = new SRVRecord(serviceName, DClass.IN, srvTtl, priority, weight, httpPort.get(), target);
                         records.add(srvRecord);
                         TXTRecord txtRecord = new TXTRecord(serviceName, DClass.IN, srvTtl, props);

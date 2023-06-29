@@ -23,12 +23,10 @@ import org.xbill.DNS.*;
 import org.xbill.DNS.lookup.LookupResult;
 import org.xbill.DNS.lookup.LookupSession;
 import org.xbill.DNS.lookup.NoSuchDomainException;
+import org.xbill.DNS.lookup.NoSuchRRSetException;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,7 +36,9 @@ public class SRVLookup
         implements DnsLookup {
 
     private final LookupSession lookupSession;
-    private final Map<String, AtomicLong> serverRequests = new ConcurrentHashMap<>();
+    private final Map<URI, List<URI>> currentUriMappings = new ConcurrentHashMap<>(); // Track current mapping from srv URI to list of URIs
+    private final Map<URI, Map<String, AtomicLong>> uriServerRequests = new ConcurrentHashMap<>(); // Track current request counts for URIs of a particular srv URI
+    private final Logger logger = LogManager.getLogger(getClass());
 
     public SRVLookup(LookupSession lookupSession) {
         this.lookupSession = lookupSession;
@@ -53,15 +53,26 @@ public class SRVLookup
         }
 
         try {
-            LookupResult lookupResult = lookupSession.lookupAsync(Name.fromString(authority), Type.SRV).toCompletableFuture().join();
+            Name srvName = Name.fromString(authority);
 
-            if (lookupResult.getRecords().isEmpty()) {
-                return CompletableFuture.completedFuture(Collections.emptyList());
+            // Convert scheme from name, e.g. _foobar._sub._https._tcp.somedomain.com -> https
+            String scheme = uri.getScheme();
+            for (int i = srvName.labels() - 1; i > 0; i--) {
+                if (srvName.getLabelString(i).equals("_tcp")) {
+                    scheme = srvName.getLabelString(i - 1).substring(1);
+                    break;
+                }
+            }
+            LookupResult srvLookupResult = lookupSession.lookupAsync(srvName, Type.SRV).toCompletableFuture().join();
+
+            if (srvLookupResult.getRecords().isEmpty()) {
+                return CompletableFuture.failedFuture(new NoSuchRRSetException(srvName, Type.SRV));
             } else {
                 List<ServerEntry> servers = new ArrayList<>();
+                List<URI> serverURIs = new ArrayList<>();
 
-                // Get TXT record
-                LookupResult txtResult = lookupSession.lookupAsync(Name.fromString(authority), Type.TXT).toCompletableFuture().join();
+                // Get TXT record and extract path
+                LookupResult txtResult = lookupSession.lookupAsync(srvName, Type.TXT).toCompletableFuture().join();
                 String path = uri.getPath();
                 for (Record record : txtResult.getRecords()) {
                     if (record instanceof TXTRecord txtRecord) {
@@ -74,34 +85,37 @@ public class SRVLookup
                     }
                 }
 
-                for (Record record : lookupResult.getRecords()) {
+                Map<String, AtomicLong> serverRequests = uriServerRequests.computeIfAbsent(uri, u -> new ConcurrentHashMap<>());
+                for (Record record : srvLookupResult.getRecords()) {
                     if (record instanceof SRVRecord srvRecord) {
-                        String scheme = uri.getScheme();
-                        String name = srvRecord.getName().toString(false);
-                        if (name.contains("_http.")) {
-                            scheme = "http";
-                        } else if (name.contains("_https.")) {
-                            scheme = "https";
-                        }
-                        LookupResult serverResult = lookupSession.lookupAsync(srvRecord.getTarget(), Type.A).toCompletableFuture().join();
-                        for (Record serverResultRecord : serverResult.getRecords()) {
-                            if (serverResultRecord instanceof ARecord aRecord) {
-                                URI serverUri = new URI(scheme, uri.getUserInfo(), aRecord.getAddress().getHostAddress(), srvRecord.getPort(), path, uri.getQuery(), uri.getFragment());
-                                servers.add(new ServerEntry(serverUri,
-                                        srvRecord.getPriority(), serverRequests.computeIfAbsent(serverUri.getAuthority(), u -> new AtomicLong(1)).get(), srvRecord.getWeight()));
-                            }
-                        }
+
+                        URI serverUri = new URI(scheme, uri.getUserInfo(), srvRecord.getTarget().toString(true), srvRecord.getPort(), path, uri.getQuery(), uri.getFragment());
+                        serverURIs.add(serverUri);
+                        servers.add(new ServerEntry(serverUri,
+                                srvRecord.getPriority(), serverRequests.computeIfAbsent(serverUri.getAuthority(), u -> new AtomicLong(1)).get(), srvRecord.getWeight()));
                     }
                 }
 
+                // Sort based on priority and weight
                 if (!servers.isEmpty()) {
-                    // Sort based on priority and weight
                     Collections.sort(servers);
-                    Logger logger = LogManager.getLogger();
                     if (logger.isTraceEnabled()) {
                         logger.trace("Sorted {}: {}", uri, servers);
                     }
                     serverRequests.get(servers.get(0).uri().getAuthority()).incrementAndGet();
+                }
+
+                // Check if URI list has changed and we should reset the counts
+                List<URI> currentMappings = this.currentUriMappings.get(uri);
+                if (currentMappings == null) {
+                    currentUriMappings.put(uri, serverURIs);
+                } else if (!currentMappings.equals(serverURIs)) {
+                    // Mapping from SRV to list of URIs has changed, reset the request counts
+                    serverRequests.clear();
+                    currentUriMappings.put(uri, serverURIs);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Reset request counts for {}", uri);
+                    }
                 }
 
                 return CompletableFuture.completedFuture(servers.stream().map(ServerEntry::uri).collect(Collectors.toList()));
@@ -130,6 +144,19 @@ public class SRVLookup
 
             // Lowest priority should come first
             return Long.compare(priority, entry.priority);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ServerEntry that = (ServerEntry) o;
+            return Objects.equals(uri, that.uri);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(uri);
         }
     }
 }
