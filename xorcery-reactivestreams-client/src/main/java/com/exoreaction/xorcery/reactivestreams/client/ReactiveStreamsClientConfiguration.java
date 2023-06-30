@@ -38,14 +38,4 @@ public record ReactiveStreamsClientConfiguration(Configuration context)
     public int getOutputBufferSize() {
         return context.getInteger("maxTextMessageSize").orElse(4096);
     }
-
-    public Strategy getStrategy() {
-        return context.getEnum("strategy", Strategy.class).orElse(Strategy.standard);
-    }
-
-    public enum Strategy
-    {
-        standard,
-        disruptor
-    }
 }

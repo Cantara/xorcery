@@ -53,14 +53,14 @@ import java.util.function.Function;
 public class PublisherReactiveStreamStandard
         extends ServerReactiveStream
         implements WebSocketListener, Flow.Subscriber<Object> {
-    private final static Logger logger = LogManager.getLogger(PublisherReactiveStreamStandard.class);
+
+    protected final Logger logger;
 
     private final String streamName;
     protected volatile Session session;
 
     private final Function<Configuration, Flow.Publisher<Object>> publisherFactory;
     private Configuration publisherConfiguration;
-    private Flow.Publisher<Object> publisher;
     protected Flow.Subscription subscription;
     private boolean isComplete = false;
 
@@ -82,7 +82,8 @@ public class PublisherReactiveStreamStandard
                                            Function<Configuration, Flow.Publisher<Object>> publisherFactory,
                                            MessageWriter<Object> messageWriter,
                                            ObjectMapper objectMapper,
-                                           ByteBufferPool pool) {
+                                           ByteBufferPool pool,
+                                           Logger logger) {
         this.streamName = streamName;
         this.publisherFactory = publisherFactory;
         this.messageWriter = messageWriter;
@@ -91,6 +92,35 @@ public class PublisherReactiveStreamStandard
         marker = MarkerManager.getMarker(streamName);
 
         outputStream = new ByteBufferOutputStream2(pool, true);
+        this.logger = logger;
+    }
+
+    // Subscriber
+    @Override
+    public synchronized void onSubscribe(Flow.Subscription subscription) {
+
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onSubscribe");
+
+        this.subscription = subscription;
+
+        if (outstandingRequestAmount > 0) {
+            subscription.request(outstandingRequestAmount);
+            outstandingRequestAmount = 0;
+        }
+    }
+
+    @Override
+    public synchronized void onNext(Object item) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onNext {}", item.toString());
+
+        if (session.isOpen() && requested > 0) {
+            send(item);
+            requested--;
+        } else {
+            queue.add(item);
+        }
     }
 
     // WebSocket
@@ -115,7 +145,7 @@ public class PublisherReactiveStreamStandard
                 publisherConfiguration = new Configuration.Builder(configurationJson)
                         .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
                         .build();
-                publisher = publisherFactory.apply(publisherConfiguration);
+                Flow.Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
                 publisher.subscribe(this);
             } catch (JsonProcessingException e) {
                 session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
@@ -197,34 +227,6 @@ public class PublisherReactiveStreamStandard
             subscription = null;
         } else {
             logger.error(marker, "Publisher websocket error", cause);
-        }
-    }
-
-    // Subscriber
-    @Override
-    public synchronized void onSubscribe(Flow.Subscription subscription) {
-
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onSubscribe");
-
-        this.subscription = subscription;
-
-        if (outstandingRequestAmount > 0) {
-            subscription.request(outstandingRequestAmount);
-            outstandingRequestAmount = 0;
-        }
-    }
-
-    @Override
-    public synchronized void onNext(Object item) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onNext {}", item.toString());
-
-        if (session.isOpen() && requested > 0) {
-            send(item);
-            requested--;
-        } else {
-            queue.add(item);
         }
     }
 

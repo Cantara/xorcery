@@ -108,15 +108,9 @@ public class ReactiveStreamsServerService
         Function<Configuration, Flow.Publisher<Object>> wrappedPublisherFactory = (config) -> new ReactiveStreamsAbstractService.PublisherTracker((Flow.Publisher<Object>) publisherFactory.apply(config));
 
         publisherEndpointFactories.put(streamName, () ->
-                switch (reactiveStreamsServerConfiguration.getStrategy()) {
-                    case standard -> resultReader == null ?
-                            new PublisherReactiveStreamStandard(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool) :
-                            new PublisherWithResultReactiveStreamDisruptor(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
-
-                    case disruptor -> resultReader == null ?
-                            new PublisherReactiveStreamDisruptor(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool) :
-                            new PublisherWithResultReactiveStreamDisruptor(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool);
-                });
+                resultReader == null ?
+                        new PublisherReactiveStreamStandard(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool, loggerContext.getLogger(PublisherReactiveStreamStandard.class)) :
+                        new PublisherWithResultReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool, loggerContext.getLogger(PublisherWithResultReactiveStream.class)));
         publisherLocalFactories.put(streamName, new WrappedPublisherFactory(wrappedPublisherFactory, publisherType));
 
         return result;

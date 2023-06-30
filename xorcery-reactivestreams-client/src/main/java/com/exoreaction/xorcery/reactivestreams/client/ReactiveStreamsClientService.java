@@ -87,17 +87,28 @@ public class ReactiveStreamsClientService
     public CompletableFuture<Void> publish(URI serverUri, String streamName, Supplier<Configuration> subscriberServerConfiguration,
                                            Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType, ClientConfiguration publisherClientConfiguration) {
 
-        CompletableFuture<Void> result = new CompletableFuture<>();
-
         if (publisherType == null)
             publisherType = (Class<? extends Flow.Publisher<?>>) publisher.getClass();
 
-        // TODO Track the publishing process itself. Need to ensure they are cancelled on shutdown
-        result.whenComplete((r, t) ->
-        {
-            activePublishProcesses.remove(result);
-        });
-        activePublishProcesses.add(result);
+        MessageWriter<Object> eventWriter = null;
+        MessageReader<Object> resultReader = null;
+
+        if (serverUri != null) {
+            Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
+            Type eventType = getEventType(type);
+            Optional<Type> resultType = getResultType(type);
+
+            eventWriter = getWriter(eventType);
+            resultReader = resultType.map(this::getReader).orElse(null);
+        }
+
+        return publish(serverUri, streamName, subscriberServerConfiguration, publisher, eventWriter, resultReader, publisherClientConfiguration);
+    }
+
+    @Override
+    public CompletableFuture<Void> publish(URI serverUri, String streamName, Supplier<Configuration> subscriberServerConfiguration, Flow.Publisher<?> publisher, MessageWriter<?> messageWriter, MessageReader<?> messageReader, ClientConfiguration publisherClientConfiguration) {
+
+        CompletableFuture<Void> result = new CompletableFuture<>();
 
         if (serverUri == null) {
             LocalStreamFactories.WrappedSubscriberFactory subscriberFactory = reactiveStreamsServerServiceProvider.get().getSubscriberFactory(streamName);
@@ -105,18 +116,7 @@ public class ReactiveStreamsClientService
             if (subscriberFactory != null) {
                 // Local
                 Flow.Subscriber<Object> subscriber = subscriberFactory.factory().apply(subscriberServerConfiguration.get());
-                Type subscriberEventType = getEventType(resolveActualTypeArgs(subscriberFactory.subscriberType(), Flow.Subscriber.class)[0]);
-                Type publisherEventType = getEventType(resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0]);
-
-                if (!subscriberEventType.equals(publisherEventType)) {
-                    // Do type conversion
-                    MessageWriter<Object> writer = getWriter(publisherEventType);
-                    MessageReader<Object> reader = getReader(subscriberEventType);
-                    subscriber = new SubscriberConverter(subscriber, writer, reader);
-                }
-
                 subscriber = new SubscribeResultHandler(subscriber, result);
-
                 publisher.subscribe(subscriber);
                 return result;
             } else {
@@ -127,77 +127,41 @@ public class ReactiveStreamsClientService
             if (!("ws".equals(serverUri.getScheme()) || "wss".equals(serverUri.getScheme()) || "srv".equals(serverUri.getScheme()))) {
                 result.completeExceptionally(new IllegalArgumentException("URI scheme " + serverUri.getScheme() + " not supported. Must be one of 'ws', 'wss', or 'srv'"));
             }
-
         }
 
-        Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
-        Type eventType = getEventType(type);
-        Optional<Type> resultType = getResultType(type);
-
-        MessageWriter<Object> eventWriter = getWriter(eventType);
-        MessageReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
+        // TODO Track the publishing process itself. Need to ensure they are cancelled on shutdown
+        result.whenComplete((r, t) ->
+        {
+            activePublishProcesses.remove(result);
+        });
+        activePublishProcesses.add(result);
 
         // Start publishing process
-        if (resultReader != null) {
-            switch (clientConfiguration.getStrategy()) {
-                case standard -> {
-                    new PublishWithResultReactiveStreamStandard(
-                            serverUri, streamName,
-                            publisherClientConfiguration,
-                            dnsLookup,
-                            webSocketClient,
-                            (Flow.Publisher<Object>) publisher,
-                            eventWriter,
-                            resultReader,
-                            subscriberServerConfiguration,
-                            byteBufferPool,
-                            metricRegistry,
-                            result);
-                }
-                case disruptor -> {
-                    new PublishWithResultReactiveStreamDisruptor(
-                            serverUri.getScheme(), serverUri.getAuthority(), streamName,
-                            publisherClientConfiguration,
-                            dnsLookup,
-                            webSocketClient,
-                            (Flow.Publisher<Object>) publisher,
-                            eventWriter,
-                            resultReader,
-                            subscriberServerConfiguration,
-                            byteBufferPool,
-                            metricRegistry,
-                            result);
-                }
-            }
+        if (messageReader != null) {
+            new PublishWithResultReactiveStreamStandard(
+                    serverUri, streamName,
+                    publisherClientConfiguration,
+                    dnsLookup,
+                    webSocketClient,
+                    (Flow.Publisher<Object>) publisher,
+                    (MessageWriter<Object>) messageWriter,
+                    (MessageReader<Object>) messageReader,
+                    subscriberServerConfiguration,
+                    byteBufferPool,
+                    metricRegistry,
+                    result);
         } else {
-            switch (clientConfiguration.getStrategy()) {
-                case standard -> {
-                    new PublishReactiveStreamStandard(serverUri,
-                            streamName,
-                            publisherClientConfiguration,
-                            dnsLookup,
-                            webSocketClient,
-                            (Flow.Publisher<Object>) publisher,
-                            eventWriter,
-                            subscriberServerConfiguration,
-                            byteBufferPool,
-                            metricRegistry,
-                            result);
-                }
-                case disruptor -> {
-                    new PublishReactiveStreamDisruptor(serverUri.getScheme(), serverUri.getAuthority(),
-                            streamName,
-                            publisherClientConfiguration,
-                            dnsLookup,
-                            webSocketClient,
-                            (Flow.Publisher<Object>) publisher,
-                            eventWriter,
-                            subscriberServerConfiguration,
-                            byteBufferPool,
-                            metricRegistry,
-                            result);
-                }
-            }
+            new PublishReactiveStreamStandard(serverUri,
+                    streamName,
+                    publisherClientConfiguration,
+                    dnsLookup,
+                    webSocketClient,
+                    (Flow.Publisher<Object>) publisher,
+                    (MessageWriter<Object>) messageWriter,
+                    subscriberServerConfiguration,
+                    byteBufferPool,
+                    metricRegistry,
+                    result);
         }
         return result;
     }
@@ -205,17 +169,27 @@ public class ReactiveStreamsClientService
     @Override
     public CompletableFuture<Void> subscribe(URI serverUri, String streamName, Supplier<Configuration> publisherConfiguration,
                                              Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType, ClientConfiguration subscriberClientConfiguration) {
-        CompletableFuture<Void> result = new CompletableFuture<>();
 
         if (subscriberType == null)
             subscriberType = (Class<? extends Flow.Subscriber<?>>) subscriber.getClass();
 
-        // Track the subscription process itself. Need to ensure they are cancelled on shutdown
-        result.whenComplete((r, t) ->
-        {
-            activeSubscribeProcesses.remove(result);
-        });
-        activeSubscribeProcesses.add(result);
+        Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
+        Type eventType = getEventType(type);
+        Optional<Type> resultType = getResultType(type);
+
+        MessageReader<Object> eventReader = getReader(eventType);
+        MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
+
+        return subscribe(serverUri, streamName, publisherConfiguration, subscriber, eventReader, resultWriter, subscriberClientConfiguration);
+    }
+
+    @Override
+    public CompletableFuture<Void> subscribe(URI serverUri, String streamName, Supplier<Configuration> publisherConfiguration,
+                                             Flow.Subscriber<?> subscriber,
+                                             MessageReader<?> messageReader,
+                                             MessageWriter<?> messageWriter,
+                                             ClientConfiguration subscriberClientConfiguration) {
+        CompletableFuture<Void> result = new CompletableFuture<>();
 
         if (serverUri == null) {
             LocalStreamFactories.WrappedPublisherFactory publisherFactory = reactiveStreamsServerServiceProvider.get().getPublisherFactory(streamName);
@@ -223,18 +197,7 @@ public class ReactiveStreamsClientService
             if (publisherFactory != null) {
                 // Local
                 Flow.Publisher<Object> publisher = publisherFactory.factory().apply(publisherConfiguration.get());
-                Type subscriberEventType = getEventType(resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0]);
-                Type publisherEventType = getEventType(resolveActualTypeArgs(publisherFactory.publisherType(), Flow.Publisher.class)[0]);
-
-                if (!subscriberEventType.equals(publisherEventType)) {
-                    // Do type conversion
-                    MessageWriter<Object> writer = getWriter(publisherEventType);
-                    MessageReader<Object> reader = getReader(subscriberEventType);
-                    subscriber = new SubscriberConverter((Flow.Subscriber<Object>) subscriber, writer, reader);
-                }
-
                 subscriber = new SubscribeResultHandler((Flow.Subscriber<Object>) subscriber, result);
-
                 publisher.subscribe((Flow.Subscriber<Object>) subscriber);
                 return result;
             } else {
@@ -247,26 +210,27 @@ public class ReactiveStreamsClientService
             }
         }
 
-        Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
-        Type eventType = getEventType(type);
-        Optional<Type> resultType = getResultType(type);
+        // Track the subscription process itself. Need to ensure they are cancelled on shutdown
+        result.whenComplete((r, t) ->
+        {
+            activeSubscribeProcesses.remove(result);
+        });
+        activeSubscribeProcesses.add(result);
 
-        MessageReader<Object> eventReader = getReader(eventType);
-        MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
         // Subscriber wrapper so we can track active subscriptions
 //        subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber, result);
 
         // Start subscription process
-        if (resultWriter != null) {
+        if (messageWriter != null) {
             new SubscribeWithResultReactiveStream(
                     serverUri, streamName,
                     subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
                     (Flow.Subscriber<Object>) subscriber,
-                    eventReader,
-                    resultWriter,
+                    (MessageReader<Object>) messageReader,
+                    (MessageWriter<Object>) messageWriter,
                     publisherConfiguration,
                     byteBufferPool,
                     metricRegistry,
@@ -280,7 +244,7 @@ public class ReactiveStreamsClientService
                     dnsLookup,
                     webSocketClient,
                     (Flow.Subscriber<Object>) subscriber,
-                    eventReader,
+                    (MessageReader<Object>) messageReader,
                     publisherConfiguration,
                     byteBufferPool,
                     metricRegistry,

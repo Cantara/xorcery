@@ -21,8 +21,6 @@ import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractSer
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lmax.disruptor.EventHandler;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
@@ -35,31 +33,29 @@ import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Flow;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-public class PublisherWithResultReactiveStreamDisruptor
-        extends PublisherReactiveStreamDisruptor {
-    private final static Logger logger = LogManager.getLogger(PublisherReactiveStreamDisruptor.class);
-
+public class PublisherWithResultReactiveStream
+        extends PublisherReactiveStreamStandard {
     private final MessageReader<Object> resultReader;
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
 
-    public PublisherWithResultReactiveStreamDisruptor(String streamName,
-                                                      Function<Configuration, Flow.Publisher<Object>> publisherFactory,
-                                                      MessageWriter<Object> messageWriter,
-                                                      MessageReader<Object> resultReader,
-                                                      ObjectMapper objectMapper,
-                                                      ByteBufferPool pool) {
-        super(streamName, publisherFactory, messageWriter, objectMapper, pool);
+    public PublisherWithResultReactiveStream(String streamName,
+                                             Function<Configuration, Flow.Publisher<Object>> publisherFactory,
+                                             MessageWriter<Object> messageWriter,
+                                             MessageReader<Object> resultReader,
+                                             ObjectMapper objectMapper,
+                                             ByteBufferPool pool,
+                                             Logger logger) {
+        super(streamName, publisherFactory, messageWriter, objectMapper, pool, logger);
         this.resultReader = resultReader;
     }
 
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
         if (logger.isTraceEnabled())
-            logger.trace(marker,"onWebSocketBinary");
+            logger.trace(marker, "onWebSocketBinary");
 
         try {
             // Check if we are getting an exception back
@@ -80,19 +76,10 @@ public class PublisherWithResultReactiveStreamDisruptor
     }
 
     @Override
-    protected EventHandler<AtomicReference<Object>> createSender() {
-        return new SenderWithResult();
-    }
-
-    // EventHandler
-    public class SenderWithResult
-            extends Sender {
-        @Override
-        protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
-            WithResult<?, Object> withResult = (WithResult<?, Object>) item;
-            CompletableFuture<Object> result = withResult.result().toCompletableFuture();
-            resultQueue.add(result);
-            messageWriter.writeTo(withResult.event(), outputStream);
-        }
+    protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
+        WithResult<?, Object> withResult = (WithResult<?, Object>) item;
+        CompletableFuture<Object> result = withResult.result().toCompletableFuture();
+        resultQueue.add(result);
+        messageWriter.writeTo(withResult.event(), outputStream);
     }
 }

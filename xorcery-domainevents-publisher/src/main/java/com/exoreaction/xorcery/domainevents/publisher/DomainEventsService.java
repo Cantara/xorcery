@@ -15,12 +15,14 @@
  */
 package com.exoreaction.xorcery.domainevents.publisher;
 
+import com.exoreaction.xorcery.concurrent.CloseableSemaphore;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
@@ -31,19 +33,20 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Flow;
+import java.util.concurrent.*;
 
 @Service(name = "domainevents")
 @ContractsProvided({DomainEventPublisher.class, PreDestroy.class})
 public class DomainEventsService
         implements DomainEventPublisher,
-        Flow.Publisher<WithMetadata<DomainEvents>>,
+        Flow.Publisher<WithResult<WithMetadata<DomainEvents>, Metadata>>,
         PreDestroy {
 
     private final DeploymentMetadata deploymentMetadata;
 
-    private Flow.Subscriber<? super WithMetadata<DomainEvents>> subscriber;
+    private Flow.Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber;
+
+    private final CloseableSemaphore requests = new CloseableSemaphore(0);
 
     @Inject
     public DomainEventsService(ReactiveStreamsClient reactiveStreams,
@@ -67,16 +70,17 @@ public class DomainEventsService
 
     @Override
     public void preDestroy() {
+        requests.close();
         subscriber.onComplete();
     }
 
     @Override
-    public void subscribe(Flow.Subscriber<? super WithMetadata<DomainEvents>> subscriber) {
+    public void subscribe(Flow.Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber) {
         this.subscriber = subscriber;
         subscriber.onSubscribe(new Flow.Subscription() {
             @Override
             public void request(long n) {
-
+                requests.release((int) n);
             }
 
             @Override
@@ -86,8 +90,14 @@ public class DomainEventsService
         });
     }
 
-    public void publish(Metadata metadata, DomainEvents events) {
-        if (subscriber != null)
-            subscriber.onNext(new WithMetadata<>(metadata.toBuilder().add(deploymentMetadata.context()).build(), events));
+    public CompletableFuture<Metadata> publish(Metadata metadata, DomainEvents events) {
+        try {
+            requests.tryAcquire(10, TimeUnit.SECONDS);
+            CompletableFuture<Metadata> future = new CompletableFuture<>();
+            subscriber.onNext(new WithResult<>(new WithMetadata<>(metadata.toBuilder().add(deploymentMetadata.context()).build(), events), future));
+            return future;
+        } catch (InterruptedException e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 }

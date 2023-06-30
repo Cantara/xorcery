@@ -28,12 +28,11 @@ open module xorcery.reactivestreams.server {
     requires xorcery.jetty.client;
 
     requires org.eclipse.jetty.websocket.jetty.server;
-    requires com.lmax.disruptor;
     requires org.eclipse.jetty.servlet;
     requires org.eclipse.jetty.server;
     requires jakarta.inject;
     requires org.glassfish.hk2.api;
-    requires org.apache.logging.log4j;
     requires org.glassfish.hk2.runlevel;
+    requires org.apache.logging.log4j;
     requires com.codahale.metrics;
 }

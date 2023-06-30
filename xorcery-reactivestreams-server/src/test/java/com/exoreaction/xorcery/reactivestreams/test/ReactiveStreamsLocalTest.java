@@ -22,6 +22,8 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.net.Sockets;
+import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
+import com.exoreaction.xorcery.reactivestreams.util.TypeConverterProcessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,9 +55,12 @@ public class ReactiveStreamsLocalTest {
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("numbers", config -> new JsonSubscriber(), JsonSubscriber.class);
 
             // When
-            IntegerPublisher subscriber = new IntegerPublisher();
+            MessageWorkers messageWorkers = xorcery.getServiceLocator().getService(MessageWorkers.class);
+            TypeConverterProcessor<Integer, JsonNode> converter = new TypeConverterProcessor<>(messageWorkers.newWriter(Integer.class, Integer.class, "*/*"), messageWorkers.newReader(JsonNode.class, JsonNode.class, "application/json"));
+            IntegerPublisher publisher = new IntegerPublisher();
+            publisher.subscribe(converter);
             CompletableFuture<Void> stream = reactiveStreamsClient.publish((URI) null, "numbers",
-                    Configuration::empty, subscriber, IntegerPublisher.class, ClientConfiguration.defaults());
+                    Configuration::empty, converter, IntegerPublisher.class, ClientConfiguration.defaults());
 
             // Then
             stream.orTimeout(1000, TimeUnit.SECONDS)
@@ -81,9 +86,12 @@ public class ReactiveStreamsLocalTest {
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.publisher("numbers", config -> new IntegerPublisher(), IntegerPublisher.class);
 
             // When
+            MessageWorkers messageWorkers = xorcery.getServiceLocator().getService(MessageWorkers.class);
+            TypeConverterProcessor<Integer, JsonNode> converter = new TypeConverterProcessor<>(messageWorkers.newWriter(Integer.class, Integer.class, "*/*"), messageWorkers.newReader(JsonNode.class, JsonNode.class, "application/json"));
             JsonSubscriber subscriber = new JsonSubscriber();
+            converter.subscribe(subscriber);
             CompletableFuture<Void> stream = reactiveStreamsClient.subscribe((URI) null, "numbers",
-                    Configuration::empty, subscriber, JsonSubscriber.class, ClientConfiguration.defaults());
+                    Configuration::empty, converter, JsonSubscriber.class, ClientConfiguration.defaults());
 
             // Then
             stream.orTimeout(1000, TimeUnit.SECONDS)

@@ -122,58 +122,6 @@ public class SubscriberReactiveStream
             CompletableFuture.runAsync(this::sendRequests);
     }
 
-    // Send requests
-    protected void sendRequests() {
-        try {
-
-            synchronized (this)
-            {
-                if (isSendingRequests)
-                    return;
-
-                if (!session.isOpen()) {
-                    logger.debug(marker, "Session closed, cannot send requests");
-                    return;
-                }
-
-                isSendingRequests = true;
-            }
-
-            long rn;
-            while ((rn = requests.getAndSet(0)) != 0) {
-
-                if (rn != Long.MIN_VALUE)
-                    requestsHistogram.update(rn);
-                final long finalRn = rn;
-                session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
-                    @Override
-                    public void writeFailed(Throwable x) {
-                        logger.error(marker, "Could not send requests {}", finalRn, x);
-                    }
-
-                    @Override
-                    public void writeSuccess() {
-                    }
-                });
-
-                try {
-                    session.getRemote().flush();
-                    logger.trace(marker, "Flushed remote session");
-                } catch (IOException e) {
-                    logger.error(marker, "While flushing remote session", e);
-                }
-            }
-        } catch (Throwable t) {
-            logger.error(marker, "Error sending requests", t);
-        } finally {
-            synchronized (this)
-            {
-                isSendingRequests = false;
-            }
-        }
-    }
-
-
     // WebSocket
     @Override
     public synchronized void onWebSocketConnect(Session session) {
@@ -206,7 +154,7 @@ public class SubscriberReactiveStream
 
                 try {
                     subscriber = subscriberFactory.apply(subscriberConfiguration);
-                    result = ((ReactiveStreamsAbstractService.SubscriberTracker)subscriber).getResult();
+                    result = ((ReactiveStreamsAbstractService.SubscriberTracker) subscriber).getResult();
                     subscriber.onSubscribe(this);
 
                     logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
@@ -292,6 +240,55 @@ public class SubscriberReactiveStream
             }
         } catch (Exception e) {
             logger.warn(marker, "Could not close subscription sink", e);
+        }
+    }
+
+    // Send requests
+    protected void sendRequests() {
+        try {
+
+            synchronized (this) {
+                if (isSendingRequests)
+                    return;
+
+                if (!session.isOpen()) {
+                    logger.debug(marker, "Session closed, cannot send requests");
+                    return;
+                }
+
+                isSendingRequests = true;
+            }
+
+            long rn;
+            while ((rn = requests.getAndSet(0)) != 0) {
+
+                if (rn != Long.MIN_VALUE)
+                    requestsHistogram.update(rn);
+                final long finalRn = rn;
+                session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
+                    @Override
+                    public void writeFailed(Throwable x) {
+                        logger.error(marker, "Could not send requests {}", finalRn, x);
+                    }
+
+                    @Override
+                    public void writeSuccess() {
+                    }
+                });
+
+                try {
+                    session.getRemote().flush();
+                    logger.trace(marker, "Flushed remote session");
+                } catch (IOException e) {
+                    logger.error(marker, "While flushing remote session", e);
+                }
+            }
+        } catch (Throwable t) {
+            logger.error(marker, "Error sending requests", t);
+        } finally {
+            synchronized (this) {
+                isSendingRequests = false;
+            }
         }
     }
 }
