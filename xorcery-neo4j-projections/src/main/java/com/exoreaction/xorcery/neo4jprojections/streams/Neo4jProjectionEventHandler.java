@@ -158,6 +158,7 @@ public class Neo4jProjectionEventHandler
 
                         tx.commit();
                         tx.close();
+                        logger.trace("Updated projection "+projectionId+" to revision "+revision);
                     } catch (Throwable e) {
                         logger.error("Could not commit Neo4j updates", e);
                         tx.close();
