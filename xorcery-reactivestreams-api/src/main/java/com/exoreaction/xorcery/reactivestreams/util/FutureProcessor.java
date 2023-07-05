@@ -1,15 +1,9 @@
 package com.exoreaction.xorcery.reactivestreams.util;
 
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
-import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
-import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Flow.Processor that tracks the state of the stream with a CompletableFuture.

@@ -15,12 +15,11 @@
  */
 package com.exoreaction.xorcery.reactivestreams.common;
 
-import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
+import com.exoreaction.xorcery.lang.Classes;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.lang.Classes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
@@ -31,7 +30,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
 
 public abstract class ReactiveStreamsAbstractService {
     // Magic bytes for sending exceptions
