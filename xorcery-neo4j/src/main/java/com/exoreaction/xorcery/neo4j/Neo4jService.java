@@ -30,6 +30,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -71,12 +72,15 @@ public class Neo4jService
     private final DatabaseManagementService managementService;
 
     private final Map<String, GraphDatabase> databases = new ConcurrentHashMap<>();
+    private final LoggerContext loggerContext;
 
     @Inject
     public Neo4jService(ServiceResourceObjects serviceResourceObjects,
                         ServiceLocator serviceLocator,
-                        Configuration configuration
+                        Configuration configuration,
+                        LoggerContext loggerContext
     ) {
+        this.loggerContext = loggerContext;
         Neo4jConfiguration neo4jConfiguration = new Neo4jConfiguration(configuration.getConfiguration("neo4jdatabase"));
 
         Path home = neo4jConfiguration.getDatabasePath();
@@ -191,9 +195,9 @@ public class Neo4jService
                 .build());
     }
 
-    private static DatabaseManagementService createDatabaseManagementService(Path home, Path tmpConfigFile) {
+    private DatabaseManagementService createDatabaseManagementService(Path home, Path tmpConfigFile) {
         return new DatabaseManagementServiceBuilder(home)
-                .setUserLogProvider(new Log4jLogProvider(new Neo4jLoggerContext(LogManager.getContext(), () -> {
+                .setUserLogProvider(new Log4jLogProvider(new Neo4jLoggerContext(loggerContext, () -> {
                 })))
                 .loadPropertiesFromFile(tmpConfigFile)
                 .build();
