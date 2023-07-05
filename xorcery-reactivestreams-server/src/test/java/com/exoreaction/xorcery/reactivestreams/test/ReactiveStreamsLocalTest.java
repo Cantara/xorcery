@@ -64,8 +64,9 @@ public class ReactiveStreamsLocalTest {
 
             // Then
             stream.orTimeout(1000, TimeUnit.SECONDS)
-                    .exceptionallyCompose(cancelStream(stream))
                     .toCompletableFuture().join();
+
+            subscriberComplete.complete(null);
         }
     }
 

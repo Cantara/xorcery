@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.reactivestreams.test;
 
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
@@ -39,27 +40,29 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cance
 
 public class SubscribePublisherTest {
 
+    private String clientConf = """
+                            instance.id: client
+                            jetty.server.enabled: false
+                            reactivestreams.server.enabled: false
+            """;
+
+    private String serverConf = """
+                            instance.id: server
+                            jetty.client.enabled: false
+                            reactivestreams.client.enabled: false
+                            jetty.server.http.enabled: false
+                            jetty.server.ssl.port: "{{ SYSTEM.port }}"
+            """;
+
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
     private ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration;
 
     @BeforeEach
     public void setup() {
-        clientConfiguration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("instance.id", "client")
-                .add("jetty.server.enabled", false)
-                .add("reactivestreams.server.enabled", false)
-                .build();
-        serverConfiguration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("instance.id", "server")
-                .add("jetty.client.enabled", false)
-                .add("reactivestreams.client.enabled", false)
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", Sockets.nextFreePort())
-                .build();
-
+        System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
+        clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
+        serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
         reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(serverConfiguration.getConfiguration("reactivestreams.server"));
     }
 
@@ -78,7 +81,7 @@ public class SubscribePublisherTest {
 
                 // When
                 CompletableFuture<Integer> result = new CompletableFuture<>();
-                IntegerSubscriber subscriber = new IntegerSubscriber(result, new CompletableFuture<>());
+                IntegerSubscriber subscriber = new IntegerSubscriber(result);
                 CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
 
@@ -95,6 +98,9 @@ public class SubscribePublisherTest {
     public void testSubscriberTimesOut() throws Exception {
 
         // Given
+        serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).addYaml("""
+                reactivestreams.server.idleTimeout: 3s
+                """).build();
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
@@ -104,7 +110,38 @@ public class SubscribePublisherTest {
 
                 // When
                 CompletableFuture<Integer> result = new CompletableFuture<>();
-                IntegerSubscriber subscriber = new IntegerSubscriber(result, new CompletableFuture<>());
+                IntegerSubscriber subscriber = new IntegerSubscriber(result);
+                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
+                        Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
+
+                Thread.sleep(5000);
+
+                // Then
+                Assertions.assertThrows(CompletionException.class, () ->
+                {
+                    result.orTimeout(5, TimeUnit.SECONDS)
+                            .exceptionallyCompose(cancelStream(stream))
+                            .whenComplete(this::report)
+                            .toCompletableFuture().join();
+                });
+            }
+        }
+    }
+
+    @Test
+    public void testSubscriberReconnect() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
+                ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
+
+                CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("numbers", config -> new IntegerNoopPublisher(), IntegerNoopPublisher.class);
+
+                // When
+                CompletableFuture<Integer> result = new CompletableFuture<>();
+                IntegerSubscriber subscriber = new IntegerSubscriber(result);
                 CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
 
@@ -135,8 +172,8 @@ public class SubscribePublisherTest {
                 }, ServerIntegerExceptionPublisher.class);
 
                 // When
-                CompletableFuture<Void> result = new CompletableFuture<>();
-                IntegerSubscriber subscriber = new IntegerSubscriber(new CompletableFuture<>(), result);
+                CompletableFuture<Integer> result = new CompletableFuture<>();
+                IntegerSubscriber subscriber = new IntegerSubscriber(result);
                 CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
 
@@ -194,7 +231,7 @@ public class SubscribePublisherTest {
     public void testPublisherShutdownWithoutRetryCausesOnError() throws Exception {
 
         // Given
-        CompletableFuture<Void> error = new CompletableFuture<>();
+        CompletableFuture<Integer> result = new CompletableFuture<>();
         CompletableFuture<Void> stream = null;
 
         try (Xorcery client = new Xorcery(clientConfiguration)) {
@@ -208,7 +245,7 @@ public class SubscribePublisherTest {
                 }, IntegerNoopPublisher.class);
 
                 // When
-                IntegerSubscriber subscriber = new IntegerSubscriber(new CompletableFuture<>(), error);
+                IntegerSubscriber subscriber = new IntegerSubscriber(result);
                 stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
                         Configuration::empty, subscriber, IntegerSubscriber.class, new ClientConfiguration.Builder().isRetryEnabled(false).build());
 
@@ -217,7 +254,7 @@ public class SubscribePublisherTest {
         }
 
         // Then
-        Assertions.assertThrows(CompletionException.class, error::join);
+        Assertions.assertThrows(CompletionException.class, result::join);
         Assertions.assertThrows(CompletionException.class, stream::join);
 
     }
@@ -237,12 +274,10 @@ public class SubscribePublisherTest {
 
         private int total = 0;
         private Flow.Subscription subscription;
-        private final CompletableFuture<Integer> complete;
-        private final CompletableFuture<Void> error;
+        private final CompletableFuture<Integer> result;
 
-        public IntegerSubscriber(CompletableFuture<Integer> complete, CompletableFuture<Void> error) {
-            this.complete = complete;
-            this.error = error;
+        public IntegerSubscriber(CompletableFuture<Integer> result) {
+            this.result = result;
         }
 
         @Override
@@ -259,13 +294,13 @@ public class SubscribePublisherTest {
 
         @Override
         public void onError(Throwable throwable) {
-            error.completeExceptionally(throwable);
+            result.completeExceptionally(throwable);
         }
 
         @Override
         public void onComplete() {
             logger.info("Subscriber complete, total:" + total);
-            complete.complete(total);
+            result.complete(total);
         }
     }
 
@@ -315,7 +350,8 @@ public class SubscribePublisherTest {
 
                 @Override
                 public void cancel() {
-                    logger.info("Cancelled");
+                    logger.info("Cancelled", new Exception());
+                    subscriber.onComplete();
                 }
             });
         }

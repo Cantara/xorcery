@@ -42,47 +42,11 @@ public abstract class ReactiveStreamsAbstractService {
     protected final ObjectMapper objectMapper;
     protected final ByteBufferPool byteBufferPool;
 
-    //    protected final List<Flow.Subscription> activeSubscriptions = new CopyOnWriteArrayList<>();
-    protected final List<SubscriberTracker> activeSubscribers = new CopyOnWriteArrayList<>();
-
     public ReactiveStreamsAbstractService(MessageWorkers messageWorkers, Logger logger) {
         this.messageWorkers = messageWorkers;
         this.logger = logger;
         this.objectMapper = new ObjectMapper();
         this.byteBufferPool = new ArrayByteBufferPool();
-    }
-
-    public void preDestroy() {
-        logger.info("Stop reactive streams");
-
-        cancelActiveSubscriptions();
-    }
-
-    protected void cancelActiveSubscriptions() {
-        if (!activeSubscribers.isEmpty()) {
-            logger.info("Cancel active subscriptions:" + activeSubscribers.size());
-
-            // Cancel active subscriptions
-            List<SubscriberTracker> currentSubscribers = new ArrayList<>(activeSubscribers);
-            for (SubscriberTracker activeSubscriber : activeSubscribers) {
-                activeSubscriber.getSubscription().cancel();
-                activeSubscriber.onError(new ServerShutdownStreamException("Server is shutting down"));
-            }
-
-            // Wait for cleanup
-            for (SubscriberTracker activeSubscriber : currentSubscribers) {
-                // Wait for it to finish cleanly
-                try {
-                    activeSubscriber.getResult().get(10, TimeUnit.SECONDS);
-                    logger.info("Subscriber cleaned up");
-                } catch (Throwable e) {
-                    // Ignore
-                    if (e instanceof TimeoutException) {
-                        logger.warn("Could not cancel subscription", e);
-                    }
-                }
-            }
-        }
     }
 
     protected Type getEventType(Type type) {
@@ -187,65 +151,5 @@ public abstract class ReactiveStreamsAbstractService {
 
         // we have a result if we reached the base class.
         return offspring.equals(base) ? actualArgs : null;
-    }
-
-    public class SubscriberTracker implements Flow.Subscriber<Object> {
-        private final Flow.Subscriber<Object> subscriber;
-        private final CompletableFuture<Void> result;
-        private Flow.Subscription subscription;
-
-        public SubscriberTracker(Flow.Subscriber<Object> subscriber, CompletableFuture<Void> result) {
-            this.subscriber = subscriber;
-            this.result = result;
-            activeSubscribers.add(this);
-        }
-
-        @Override
-        public void onSubscribe(Flow.Subscription subscription) {
-            this.subscription = subscription;
-            subscriber.onSubscribe(subscription);
-        }
-
-        @Override
-        public void onNext(Object item) {
-            subscriber.onNext(item);
-        }
-
-        @Override
-        public void onError(Throwable throwable) {
-            if (activeSubscribers.remove(this)) {
-                subscriber.onError(throwable);
-                result.completeExceptionally(throwable);
-            }
-        }
-
-        @Override
-        public void onComplete() {
-            if (activeSubscribers.remove(this)) {
-                subscriber.onComplete();
-                result.complete(null);
-            }
-        }
-
-        public Flow.Subscription getSubscription() {
-            return subscription;
-        }
-
-        public CompletableFuture<Void> getResult() {
-            return result;
-        }
-    }
-
-    public class PublisherTracker implements Flow.Publisher<Object> {
-        private final Flow.Publisher<Object> publisher;
-
-        public PublisherTracker(Flow.Publisher<Object> publisher) {
-            this.publisher = publisher;
-        }
-
-        @Override
-        public void subscribe(Flow.Subscriber<? super Object> subscriber) {
-            publisher.subscribe(new SubscriberTracker(subscriber, new CompletableFuture<>()));
-        }
     }
 }

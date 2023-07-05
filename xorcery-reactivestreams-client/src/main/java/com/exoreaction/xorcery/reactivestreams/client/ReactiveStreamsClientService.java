@@ -26,6 +26,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import com.exoreaction.xorcery.reactivestreams.util.FutureProcessor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -52,8 +53,7 @@ public class ReactiveStreamsClientService
     private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
     private final WebSocketClient webSocketClient;
 
-    private final List<CompletableFuture<Void>> activeSubscribeProcesses = new CopyOnWriteArrayList<>();
-    private final List<CompletableFuture<Void>> activePublishProcesses = new CopyOnWriteArrayList<>();
+    private final List<FutureProcessor<Object>> activeSubscriptions = new CopyOnWriteArrayList<>();
 
     public ReactiveStreamsClientService(Configuration configuration,
                                         MessageWorkers messageWorkers,
@@ -116,8 +116,15 @@ public class ReactiveStreamsClientService
             if (subscriberFactory != null) {
                 // Local
                 Flow.Subscriber<Object> subscriber = subscriberFactory.factory().apply(subscriberServerConfiguration.get());
-                subscriber = new SubscribeResultHandler(subscriber, result);
-                publisher.subscribe(subscriber);
+                FutureProcessor<Object> futureProcessor = new FutureProcessor<>(result);
+                result.whenComplete((r, t) ->
+                        {
+                            activeSubscriptions.remove(futureProcessor);
+                        }
+                );
+                futureProcessor.subscribe(subscriber);
+                publisher.subscribe(futureProcessor);
+                activeSubscriptions.add(futureProcessor);
                 return result;
             } else {
                 result.completeExceptionally(new IllegalArgumentException("No such subscriber:" + streamName));
@@ -129,21 +136,23 @@ public class ReactiveStreamsClientService
             }
         }
 
-        // TODO Track the publishing process itself. Need to ensure they are cancelled on shutdown
+        FutureProcessor<Object> futureProcessor = new FutureProcessor<>(result);
         result.whenComplete((r, t) ->
-        {
-            activePublishProcesses.remove(result);
-        });
-        activePublishProcesses.add(result);
+                {
+                    activeSubscriptions.remove(futureProcessor);
+                }
+        );
+        publisher.subscribe(futureProcessor);
+        activeSubscriptions.add(futureProcessor);
 
         // Start publishing process
         if (messageReader != null) {
-            new PublishWithResultReactiveStreamStandard(
+            new PublishWithResultReactiveStream(
                     serverUri, streamName,
                     publisherClientConfiguration,
                     dnsLookup,
                     webSocketClient,
-                    (Flow.Publisher<Object>) publisher,
+                    futureProcessor,
                     (MessageWriter<Object>) messageWriter,
                     (MessageReader<Object>) messageReader,
                     subscriberServerConfiguration,
@@ -151,12 +160,12 @@ public class ReactiveStreamsClientService
                     metricRegistry,
                     result);
         } else {
-            new PublishReactiveStreamStandard(serverUri,
+            new PublishReactiveStream(serverUri,
                     streamName,
                     publisherClientConfiguration,
                     dnsLookup,
                     webSocketClient,
-                    (Flow.Publisher<Object>) publisher,
+                    futureProcessor,
                     (MessageWriter<Object>) messageWriter,
                     subscriberServerConfiguration,
                     byteBufferPool,
@@ -197,8 +206,15 @@ public class ReactiveStreamsClientService
             if (publisherFactory != null) {
                 // Local
                 Flow.Publisher<Object> publisher = publisherFactory.factory().apply(publisherConfiguration.get());
-                subscriber = new SubscribeResultHandler((Flow.Subscriber<Object>) subscriber, result);
-                publisher.subscribe((Flow.Subscriber<Object>) subscriber);
+                FutureProcessor<Object> futureProcessor = new FutureProcessor<>(result);
+                result.whenComplete((r, t) ->
+                        {
+                            activeSubscriptions.remove(futureProcessor);
+                        }
+                );
+                activeSubscriptions.add(futureProcessor);
+                futureProcessor.subscribe((Flow.Subscriber<? super Object>) subscriber);
+                publisher.subscribe(futureProcessor);
                 return result;
             } else {
                 result.completeExceptionally(new IllegalArgumentException("No such publisher:" + streamName));
@@ -210,16 +226,14 @@ public class ReactiveStreamsClientService
             }
         }
 
-        // Track the subscription process itself. Need to ensure they are cancelled on shutdown
+        FutureProcessor<Object> futureProcessor = new FutureProcessor<>(result);
         result.whenComplete((r, t) ->
-        {
-            activeSubscribeProcesses.remove(result);
-        });
-        activeSubscribeProcesses.add(result);
-
-
-        // Subscriber wrapper so we can track active subscriptions
-//        subscriber = new SubscriberTracker((Flow.Subscriber<Object>) subscriber, result);
+                {
+                    activeSubscriptions.remove(futureProcessor);
+                }
+        );
+        activeSubscriptions.add(futureProcessor);
+        futureProcessor.subscribe((Flow.Subscriber<? super Object>) subscriber);
 
         // Start subscription process
         if (messageWriter != null) {
@@ -228,7 +242,7 @@ public class ReactiveStreamsClientService
                     subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
-                    (Flow.Subscriber<Object>) subscriber,
+                    futureProcessor,
                     (MessageReader<Object>) messageReader,
                     (MessageWriter<Object>) messageWriter,
                     publisherConfiguration,
@@ -243,7 +257,7 @@ public class ReactiveStreamsClientService
                     subscriberClientConfiguration,
                     dnsLookup,
                     webSocketClient,
-                    (Flow.Subscriber<Object>) subscriber,
+                    futureProcessor,
                     (MessageReader<Object>) messageReader,
                     publisherConfiguration,
                     byteBufferPool,
@@ -255,39 +269,28 @@ public class ReactiveStreamsClientService
     }
 
     public void preDestroy() {
-        logger.info("Cancel active subscribe processes:" + activeSubscribeProcesses.size());
-        for (CompletableFuture<Void> activeSubscriptionProcess : activeSubscribeProcesses) {
-            if (!activeSubscriptionProcess.isDone()) {
-                activeSubscriptionProcess.cancel(true);
-            }
-            activeSubscriptionProcess.orTimeout(100, TimeUnit.SECONDS)
-                    .whenComplete((r, t) ->
-                    {
-//                        logger.info("Subscription process whenComplete {} {}", r, t);
-                        if (t != null && !(t instanceof CancellationException)) {
-                            logger.error("Subscribe process ended with error", t);
-                        }
-                    });
+
+        // Close existing streams
+        logger.info("Cancel subscriptions on shutdown");
+
+        // Cancel all subscriptions
+        for (FutureProcessor<Object> activeSubscription : activeSubscriptions) {
+            activeSubscription.close();
         }
 
-        logger.info("Cancel active publish processes:" + activePublishProcesses.size());
-        for (CompletableFuture<Void> activePublishProcess : activePublishProcesses) {
-            if (!activePublishProcess.isDone()) {
-                activePublishProcess.cancel(true);
+        // Wait for them to finish
+        for (FutureProcessor<Object> activePublisherSubscription : activeSubscriptions) {
+            try {
+                activePublisherSubscription.getResult().get(10, TimeUnit.SECONDS);
+                logger.debug("Subscription closed");
+            } catch (CancellationException e) {
+                // Ignore, this is ok
+            } catch (Throwable e) {
+                logger.warn("Could not shutdown subscription", e);
             }
-            activePublishProcess.orTimeout(100, TimeUnit.SECONDS)
-                    .whenComplete((r, t) ->
-                    {
-//                        logger.info("Subscription process whenComplete {} {}", r, t);
-                        if (t != null && !(t instanceof CancellationException)) {
-                            logger.error("Publish process ended with error", t);
-                        }
-                    });
         }
 
-        super.preDestroy();
-
-        logger.info("Shutdown reactive services client");
+        logger.info("Shutdown reactive streams client");
         try {
             webSocketClient.stop();
         } catch (Exception e) {

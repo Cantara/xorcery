@@ -46,7 +46,7 @@ import java.util.function.Function;
  * @author rickardoberg
  * @since 13/04/2022
  */
-public class SubscriberReactiveStream
+public class SubscriberSubscriptionReactiveStream
         extends ServerReactiveStream
         implements WebSocketPartialListener,
         WebSocketConnectionListener,
@@ -55,7 +55,6 @@ public class SubscriberReactiveStream
     private String configurationMessage = "";
     private Configuration subscriberConfiguration;
     protected Flow.Subscriber<Object> subscriber;
-    protected CompletableFuture<Void> result;
 
     protected final MessageReader<Object> eventReader;
 
@@ -77,13 +76,13 @@ public class SubscriberReactiveStream
     private boolean isCancelled;
     private boolean isSendingRequests;
 
-    public SubscriberReactiveStream(String streamName,
-                                    Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
-                                    MessageReader<Object> eventReader,
-                                    ObjectMapper objectMapper,
-                                    ByteBufferPool byteBufferPool,
-                                    MetricRegistry metricRegistry,
-                                    Logger logger) {
+    public SubscriberSubscriptionReactiveStream(String streamName,
+                                                Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
+                                                MessageReader<Object> eventReader,
+                                                ObjectMapper objectMapper,
+                                                ByteBufferPool byteBufferPool,
+                                                MetricRegistry metricRegistry,
+                                                Logger logger) {
         this.subscriberFactory = subscriberFactory;
         this.eventReader = eventReader;
         this.objectMapper = objectMapper;
@@ -154,7 +153,6 @@ public class SubscriberReactiveStream
 
                 try {
                     subscriber = subscriberFactory.apply(subscriberConfiguration);
-                    result = ((ReactiveStreamsAbstractService.SubscriberTracker) subscriber).getResult();
                     subscriber.onSubscribe(this);
 
                     logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
@@ -224,7 +222,6 @@ public class SubscriberReactiveStream
             if (statusCode == StatusCode.NORMAL) {
                 if (subscriber != null) {
                     subscriber.onComplete();
-                    result.complete(null);
                 }
             } else if (statusCode == StatusCode.SHUTDOWN) {
                 if (subscriber != null) {
@@ -235,7 +232,6 @@ public class SubscriberReactiveStream
                         throwable = new ClientShutdownStreamException(reason);
                     }
                     subscriber.onError(throwable);
-                    result.completeExceptionally(throwable);
                 }
             }
         } catch (Exception e) {

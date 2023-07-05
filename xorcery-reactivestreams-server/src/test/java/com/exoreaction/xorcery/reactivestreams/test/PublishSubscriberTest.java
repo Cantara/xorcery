@@ -205,7 +205,7 @@ public class PublishSubscriberTest {
 
         // Then
         Assertions.assertThrows(CompletionException.class, error::join);
-        Assertions.assertThrows(CompletionException.class, stream::join);
+        Assertions.assertThrows(CancellationException.class, stream::join);
     }
 
     @Test
@@ -232,14 +232,14 @@ public class PublishSubscriberTest {
                 Thread.sleep(5000);
                 publisher.getSubscriber().join().onNext(1);
                 Thread.sleep(5000);
-                publisher.getSubscriber().join().onNext(1);
+                publisher.getSubscriber().join().onNext(2);
                 Thread.sleep(5000);
-                publisher.getSubscriber().join().onNext(1);
+                publisher.getSubscriber().join().onNext(3);
                 publisher.getSubscriber().join().onComplete();
                 LogManager.getLogger().info("Completed publisher");
 
                 // Then
-                Assertions.assertEquals(3, subscriberTotal.join());
+                Assertions.assertEquals(6, subscriberTotal.orTimeout(10, TimeUnit.SECONDS).join());
             }
         }
     }

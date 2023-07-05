@@ -22,12 +22,12 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.websocket.api.BatchMode;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
@@ -50,7 +50,7 @@ import java.util.function.Function;
  * @author rickardoberg
  * @since 13/04/2022
  */
-public class PublisherReactiveStreamStandard
+public class PublisherSubscriptionReactiveStream
         extends ServerReactiveStream
         implements WebSocketListener, Flow.Subscriber<Object> {
 
@@ -78,12 +78,12 @@ public class PublisherReactiveStreamStandard
 
     private long outstandingRequestAmount;
 
-    public PublisherReactiveStreamStandard(String streamName,
-                                           Function<Configuration, Flow.Publisher<Object>> publisherFactory,
-                                           MessageWriter<Object> messageWriter,
-                                           ObjectMapper objectMapper,
-                                           ByteBufferPool pool,
-                                           Logger logger) {
+    public PublisherSubscriptionReactiveStream(String streamName,
+                                               Function<Configuration, Flow.Publisher<Object>> publisherFactory,
+                                               MessageWriter<Object> messageWriter,
+                                               ObjectMapper objectMapper,
+                                               ByteBufferPool pool,
+                                               Logger logger) {
         this.streamName = streamName;
         this.publisherFactory = publisherFactory;
         this.messageWriter = messageWriter;
@@ -220,11 +220,10 @@ public class PublisherReactiveStreamStandard
             logger.trace(marker, "onWebSocketError", cause);
 
         if ((cause instanceof ClosedChannelException ||
-                cause instanceof WebSocketTimeoutException)
+                cause instanceof WebSocketTimeoutException ||
+                cause instanceof EofException)
                 && subscription != null) {
             // Ignore
-            subscription.cancel();
-            subscription = null;
         } else {
             logger.error(marker, "Publisher websocket error", cause);
         }
@@ -285,8 +284,10 @@ public class PublisherReactiveStreamStandard
         if (logger.isTraceEnabled())
             logger.trace(marker, "onComplete");
 
-        if (queue.isEmpty() && session.isOpen()) {
-            session.close(StatusCode.NORMAL, "complete");
+        if (queue.isEmpty()) {
+            if (session.isOpen()) {
+                session.close(StatusCode.NORMAL, "complete");
+            }
         } else {
             // Wait for requests to drain the remaining items
             isComplete = true;

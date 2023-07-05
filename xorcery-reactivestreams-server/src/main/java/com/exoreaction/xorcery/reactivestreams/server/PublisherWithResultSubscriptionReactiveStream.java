@@ -35,19 +35,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
-public class PublisherWithResultReactiveStream
-        extends PublisherReactiveStreamStandard {
+public class PublisherWithResultSubscriptionReactiveStream
+        extends PublisherSubscriptionReactiveStream {
     private final MessageReader<Object> resultReader;
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
 
-    public PublisherWithResultReactiveStream(String streamName,
-                                             Function<Configuration, Flow.Publisher<Object>> publisherFactory,
-                                             MessageWriter<Object> messageWriter,
-                                             MessageReader<Object> resultReader,
-                                             ObjectMapper objectMapper,
-                                             ByteBufferPool pool,
-                                             Logger logger) {
+    public PublisherWithResultSubscriptionReactiveStream(String streamName,
+                                                         Function<Configuration, Flow.Publisher<Object>> publisherFactory,
+                                                         MessageWriter<Object> messageWriter,
+                                                         MessageReader<Object> resultReader,
+                                                         ObjectMapper objectMapper,
+                                                         ByteBufferPool pool,
+                                                         Logger logger) {
         super(streamName, publisherFactory, messageWriter, objectMapper, pool, logger);
         this.resultReader = resultReader;
     }

@@ -47,6 +47,7 @@ import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
@@ -125,6 +126,7 @@ public class SubscribeReactiveStream
 
         this.marker = MarkerManager.getMarker(this.serverUri.getAuthority() + "/" + streamName);
 
+/*
         this.result.whenComplete((r, t) ->
         {
             // Check if session is open
@@ -145,6 +147,7 @@ public class SubscribeReactiveStream
                 }
             }
         });
+*/
 
         subscriber.onSubscribe(this);
 
@@ -165,13 +168,19 @@ public class SubscribeReactiveStream
             retry(null);
         }
 
-        logger.debug(marker, "Resolving " + serverUri);
-        dnsLookup.resolve(serverUri).thenApply(list ->
+        if (serverUri.getScheme().equals("srv"))
         {
-            logger.debug(marker, "Resolved " + list);
-            this.uriIterator = list.iterator();
-            return uriIterator;
-        }).thenAccept(this::connect).exceptionally(this::connectException);
+            logger.debug(marker, "Resolving " + serverUri);
+            dnsLookup.resolve(serverUri).thenApply(list ->
+            {
+                this.uriIterator = list.iterator();
+                return uriIterator;
+            }).thenAccept(this::connect).exceptionally(this::connectException);
+        } else
+        {
+            this.uriIterator = List.of(serverUri).iterator();
+            connect(uriIterator);
+        }
     }
 
     private synchronized void connect(Iterator<URI> publisherURIs) {
@@ -198,14 +207,6 @@ public class SubscribeReactiveStream
         }
     }
 
-    private Void connectException(Throwable throwable) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "exceptionally", throwable);
-        }
-        retry(throwable);
-        return null;
-    }
-
     private void connected(Session session) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "connected");
@@ -214,11 +215,20 @@ public class SubscribeReactiveStream
         this.isRetrying = false;
     }
 
-    public synchronized void retry(Throwable cause) {
+    private Void connectException(Throwable throwable) {
         if (logger.isTraceEnabled()) {
-            logger.trace(marker, "retry");
+            logger.trace(marker, "exceptionally", throwable);
         }
+        retry(throwable);
+        return null;
+    }
+
+    public synchronized void retry(Throwable cause) {
         if (subscriberConfiguration.isRetryEnabled()) {
+
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "retry");
+            }
 
             if (!isRetrying) {
                 logger.debug(marker, "Retrying");
@@ -401,7 +411,7 @@ public class SubscribeReactiveStream
 
         if (statusCode == StatusCode.NORMAL) {
             try {
-                if (!result.isCompletedExceptionally() && !isComplete) {
+                if (!isComplete) {
                     isComplete = true;
                     subscriber.onComplete();
                 }
@@ -423,10 +433,10 @@ public class SubscribeReactiveStream
             result.completeExceptionally(new ClientBadPayloadStreamException(reason)); // Now considered done
         } else if (statusCode == StatusCode.SHUTDOWN) {
             if (reason.equals("Connection Idle Timeout")) {
-                logger.debug(marker, "Server timeout, retrying:{} {}", statusCode, reason);
+                logger.debug(marker, "Server timeout:{} {}", statusCode, reason);
                 retry(new ServerTimeoutStreamException("Server closed due to timeout"));
             } else {
-                logger.warn(marker, "Server is shutting down, retrying:{} {}", statusCode, reason);
+                logger.warn(marker, "Server is shutting down:{} {}", statusCode, reason);
                 retry(new ServerShutdownStreamException("Server is shutting down"));
             }
         } else {

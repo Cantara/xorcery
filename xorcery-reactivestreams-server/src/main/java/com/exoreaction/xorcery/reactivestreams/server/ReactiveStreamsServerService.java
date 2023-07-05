@@ -16,15 +16,17 @@
 package com.exoreaction.xorcery.reactivestreams.server;
 
 import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.concurrent.CompletableFutures;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import com.exoreaction.xorcery.reactivestreams.util.FutureProcessor;
 import jakarta.inject.Inject;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -34,11 +36,10 @@ import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Flow;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -59,6 +60,14 @@ public class ReactiveStreamsServerService
     private final Map<String, WrappedSubscriberFactory> subscriberLocalFactories = new ConcurrentHashMap<>();
 
     private final MetricRegistry metricRegistry;
+
+    // Currently active subscriptions
+    // These need to cancel on shutdown
+    protected final List<FutureProcessor<Object>> activeSubscriptions = new CopyOnWriteArrayList<>();
+
+    // Currently active publishers and subscribers
+    // These need to cancel on shutdown
+    protected final List<CompletableFuture<Object>> activePublisherAndSubscribers = new CopyOnWriteArrayList<>();
 
     @Inject
     public ReactiveStreamsServerService(Configuration configuration,
@@ -92,26 +101,41 @@ public class ReactiveStreamsServerService
                                              Class<? extends Flow.Publisher<?>> publisherType) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        // TODO Track the subscriptions to this publisher. Need to ensure they are cancelled on shutdown and cancel of the future
-        result.whenComplete((r, t) ->
-        {
-            publisherEndpointFactories.remove(streamName);
-            publisherLocalFactories.remove(streamName);
-        });
-
         Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
         MessageWriter<Object> eventWriter = getWriter(eventType);
         MessageReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
 
-        Function<Configuration, Flow.Publisher<Object>> wrappedPublisherFactory = (config) -> new ReactiveStreamsAbstractService.PublisherTracker((Flow.Publisher<Object>) publisherFactory.apply(config));
+        Function<Configuration, Flow.Publisher<Object>> wrappedPublisherFactory = (config) ->
+        {
+            Flow.Publisher<Object> publisher = (Flow.Publisher<Object>) publisherFactory.apply(config);
+
+            CompletableFuture<Void> subscriptionResult = new CompletableFuture<>();
+            FutureProcessor<Object> futureProcessor = new FutureProcessor<>(subscriptionResult);
+            subscriptionResult.whenComplete((r, t) ->
+                    {
+                        activeSubscriptions.remove(futureProcessor);
+                    }
+            );
+
+            publisher.subscribe(futureProcessor);
+            activeSubscriptions.add(futureProcessor);
+            // Cancel this subscription when the publisher itself cancels
+            result.whenComplete(CompletableFutures.transfer(subscriptionResult));
+            return futureProcessor;
+        };
 
         publisherEndpointFactories.put(streamName, () ->
                 resultReader == null ?
-                        new PublisherReactiveStreamStandard(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool, loggerContext.getLogger(PublisherReactiveStreamStandard.class)) :
-                        new PublisherWithResultReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool, loggerContext.getLogger(PublisherWithResultReactiveStream.class)));
+                        new PublisherSubscriptionReactiveStream(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool, loggerContext.getLogger(PublisherSubscriptionReactiveStream.class)) :
+                        new PublisherWithResultSubscriptionReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool, loggerContext.getLogger(PublisherWithResultSubscriptionReactiveStream.class)));
         publisherLocalFactories.put(streamName, new WrappedPublisherFactory(wrappedPublisherFactory, publisherType));
+        result.whenComplete((r, t) ->
+        {
+            publisherEndpointFactories.remove(streamName);
+            publisherLocalFactories.remove(streamName);
+        });
 
         return result;
     }
@@ -121,25 +145,36 @@ public class ReactiveStreamsServerService
                                               Class<? extends Flow.Subscriber<?>> subscriberType) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        // TODO Track the subscriptions to this publisher. Need to ensure they are cancelled on shutdown and cancel of the future
-        result.whenComplete((r, t) ->
-        {
-            subscriberEndpointFactories.remove(streamName);
-            subscriberLocalFactories.remove(streamName);
-        });
-
         Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
         MessageReader<Object> eventReader = getReader(eventType);
         MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
-        Function<Configuration, Flow.Subscriber<Object>> wrappedSubscriberFactory = (config) -> new ReactiveStreamsAbstractService.SubscriberTracker((Flow.Subscriber<Object>) subscriberFactory.apply(config), new CompletableFuture<>());
+        Function<Configuration, Flow.Subscriber<Object>> wrappedSubscriberFactory = (config) ->
+        {
+            Flow.Subscriber<Object> subscriber = (Flow.Subscriber<Object>) subscriberFactory.apply(config);
+
+            CompletableFuture<Void> subscriptionResult = new CompletableFuture<>();
+            FutureProcessor<Object> futureProcessor = new FutureProcessor<>(subscriptionResult);
+            futureProcessor.subscribe(subscriber);
+            activeSubscriptions.add(futureProcessor);
+            // Cancel this subscription when the subscriber itself cancels
+            result.whenComplete(CompletableFutures.transfer(subscriptionResult));
+            result.whenComplete((r, t) -> activeSubscriptions.remove(futureProcessor));
+            return futureProcessor;
+        };
 
         subscriberEndpointFactories.put(streamName, () ->
-                resultWriter == null ? new SubscriberReactiveStream(streamName, wrappedSubscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, loggerContext.getLogger(SubscriberReactiveStream.class)) :
-                        new SubscriberWithResultReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, metricRegistry, loggerContext.getLogger(SubscriberWithResultReactiveStream.class)));
+                resultWriter == null ? new SubscriberSubscriptionReactiveStream(streamName, wrappedSubscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, loggerContext.getLogger(SubscriberSubscriptionReactiveStream.class)) :
+                        new SubscriberWithResultSubscriptionReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, metricRegistry, loggerContext.getLogger(SubscriberWithResultSubscriptionReactiveStream.class)));
         subscriberLocalFactories.put(streamName, new WrappedSubscriberFactory(wrappedSubscriberFactory, subscriberType));
+        result.whenComplete((r, t) ->
+        {
+            subscriberEndpointFactories.remove(streamName);
+            subscriberLocalFactories.remove(streamName);
+        });
+
         return result;
     }
 
@@ -157,7 +192,28 @@ public class ReactiveStreamsServerService
         if (currentLevel == 20 && currentJob.getProposedLevel() < currentLevel) {
             // Close existing streams
             logger.info("Cancel subscriptions on shutdown");
-            cancelActiveSubscriptions();
+
+            // Cancel all subscriptions
+            for (FutureProcessor<Object> activeSubscription : activeSubscriptions) {
+                activeSubscription.close();
+            }
+
+            // Wait for them to finish
+            for (FutureProcessor<Object> activePublisherSubscription : activeSubscriptions) {
+                try {
+                    activePublisherSubscription.getResult().get(10, TimeUnit.SECONDS);
+                    logger.debug("Subscription closed");
+                } catch (CancellationException e) {
+                    // Ignore, this is ok
+                } catch (Throwable e) {
+                    logger.warn("Could not shutdown subscription", e);
+                }
+            }
+
+            // Close publisher futures
+            for (CompletableFuture<Object> activePublisherAndSubscriber : activePublisherAndSubscribers) {
+                activePublisherAndSubscriber.completeExceptionally(new ServerShutdownStreamException("Shutting down server"));
+            }
         }
     }
 }

@@ -41,8 +41,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Flow;
 import java.util.function.Function;
 
-public class SubscriberWithResultReactiveStream
-        extends SubscriberReactiveStream {
+public class SubscriberWithResultSubscriptionReactiveStream
+        extends SubscriberSubscriptionReactiveStream {
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final MessageWriter<Object> resultWriter;
     boolean isFlushPending = false;
@@ -50,14 +50,14 @@ public class SubscriberWithResultReactiveStream
 
     protected final Meter resultsSent;
 
-    public SubscriberWithResultReactiveStream(String streamName,
-                                              Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
-                                              MessageReader<Object> eventReader,
-                                              MessageWriter<Object> resultWriter,
-                                              ObjectMapper objectMapper,
-                                              ByteBufferPool byteBufferPool,
-                                              MetricRegistry metricRegistry,
-                                              Logger logger) {
+    public SubscriberWithResultSubscriptionReactiveStream(String streamName,
+                                                          Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
+                                                          MessageReader<Object> eventReader,
+                                                          MessageWriter<Object> resultWriter,
+                                                          ObjectMapper objectMapper,
+                                                          ByteBufferPool byteBufferPool,
+                                                          MetricRegistry metricRegistry,
+                                                          Logger logger) {
         super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, logger);
 
         this.resultsSent = metricRegistry.meter("subscriber." + streamName + ".results");

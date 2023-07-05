@@ -20,7 +20,6 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.net.URIs;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
@@ -37,7 +36,6 @@ import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
-import javax.net.ssl.SSLHandshakeException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -46,6 +44,7 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
@@ -54,12 +53,12 @@ import java.util.function.Supplier;
 /**
  * @author rickardoberg
  */
-public class PublishReactiveStreamStandard
+public class PublishReactiveStream
         implements WebSocketListener,
         WriteCallback,
         Flow.Subscriber<Object> {
 
-    private final static Logger logger = LogManager.getLogger(PublishReactiveStreamStandard.class);
+    private final static Logger logger = LogManager.getLogger(PublishReactiveStream.class);
 
     private final WebSocketClient webSocketClient;
     private final DnsLookup dnsLookup;
@@ -99,17 +98,17 @@ public class PublishReactiveStreamStandard
     protected boolean isRetrying = false;
     private long retryDelay;
 
-    public PublishReactiveStreamStandard(URI serverUri,
-                                         String streamName,
-                                         ClientConfiguration publisherConfiguration,
-                                         DnsLookup dnsLookup,
-                                         WebSocketClient webSocketClient,
-                                         Flow.Publisher<Object> publisher,
-                                         MessageWriter<Object> eventWriter,
-                                         Supplier<Configuration> subscriberConfiguration,
-                                         ByteBufferPool pool,
-                                         MetricRegistry metricRegistry,
-                                         CompletableFuture<Void> result) {
+    public PublishReactiveStream(URI serverUri,
+                                 String streamName,
+                                 ClientConfiguration publisherConfiguration,
+                                 DnsLookup dnsLookup,
+                                 WebSocketClient webSocketClient,
+                                 Flow.Publisher<Object> publisher,
+                                 MessageWriter<Object> eventWriter,
+                                 Supplier<Configuration> subscriberConfiguration,
+                                 ByteBufferPool pool,
+                                 MetricRegistry metricRegistry,
+                                 CompletableFuture<Void> result) {
         this.serverUri = serverUri;
         this.streamName = streamName;
         this.publisherConfiguration = publisherConfiguration;
@@ -138,7 +137,6 @@ public class PublishReactiveStreamStandard
         if (!isComplete) {
             isComplete = true;
             send();
-            checkDone();
         }
     }
 
@@ -156,12 +154,17 @@ public class PublishReactiveStreamStandard
             retry(null);
         }
 
-        logger.debug(marker, "Resolving " + serverUri);
-        dnsLookup.resolve(serverUri).thenApply(list ->
-        {
-            this.uriIterator = list.iterator();
-            return uriIterator;
-        }).thenAccept(this::connect).whenComplete(this::connectException);
+        if (serverUri.getScheme().equals("srv")) {
+            logger.debug(marker, "Resolving " + serverUri);
+            dnsLookup.resolve(serverUri).thenApply(list ->
+            {
+                this.uriIterator = list.iterator();
+                return uriIterator;
+            }).thenAccept(this::connect).exceptionally(this::connectException);
+        } else {
+            this.uriIterator = List.of(serverUri).iterator();
+            connect(uriIterator);
+        }
     }
 
     private synchronized void connect(Iterator<URI> subscriberURIs) {
@@ -176,7 +179,8 @@ public class PublishReactiveStreamStandard
             logger.debug(marker, "Trying " + effectiveSubscriberWebsocketUri);
             try {
                 webSocketClient.connect(this, effectiveSubscriberWebsocketUri)
-                        .whenComplete(this::connectException);
+                        .thenAccept(this::connected)
+                        .exceptionally(this::connectException);
             } catch (Throwable e) {
                 logger.error(marker, "Could not subscribe to " + effectiveSubscriberWebsocketUri.toASCIIString(), e);
                 retry(e);
@@ -186,15 +190,21 @@ public class PublishReactiveStreamStandard
         }
     }
 
-    private synchronized <T> void connectException(T value, Throwable throwable) {
-        if (throwable != null) {
-
-            if (logger.isTraceEnabled()) {
-                logger.trace(marker, "connectException", throwable);
-            }
-
-            retry(throwable);
+    private void connected(Session session) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "connected");
         }
+        this.session = session;
+        this.isRetrying = false;
+    }
+
+    private synchronized Void connectException(Throwable throwable) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "connectException", throwable);
+        }
+
+        retry(throwable);
+        return null;
     }
 
     // Subscriber
@@ -253,7 +263,13 @@ public class PublishReactiveStreamStandard
     // Whoever calls this should have a synchronized on the session, if available
     public synchronized void retry(Throwable cause) {
 
-        if (isComplete || result.isDone() || isRetrying) {
+        if (isComplete) {
+            if (!result.isDone() && !isSending) {
+                result.complete(null);
+            }
+        }
+
+        if (result.isDone() || isRetrying) {
             return;
         }
 
@@ -420,7 +436,7 @@ public class PublishReactiveStreamStandard
             } catch (Throwable t) {
                 isSending = false;
                 logger.error(marker, "Could not send event", t);
-                connectException(null, t);
+                connectException(t);
             }
         } else {
             isSending = false;
@@ -429,12 +445,17 @@ public class PublishReactiveStreamStandard
     }
 
     protected void checkDone() {
-        if (isComplete && queue.isEmpty() && !result.isDone()) {
-            if (session != null) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "checkDone {} {} {}", isComplete, queue.isEmpty(), result.isDone());
+        }
+
+        if (isComplete && queue.isEmpty()) {
+            if (session != null && session.isOpen()) {
                 logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
                 session.close(StatusCode.NORMAL, "complete");
             }
-            result.complete(null);
+            if (!result.isDone())
+                result.complete(null);
         }
     }
 
