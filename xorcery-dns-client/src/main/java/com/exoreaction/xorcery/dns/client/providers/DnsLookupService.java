@@ -15,14 +15,17 @@
  */
 package com.exoreaction.xorcery.dns.client.providers;
 
+import com.exoreaction.xorcery.concurrent.CompletableFutures;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
-import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
 
 public class DnsLookupService
         implements DnsLookup {
@@ -36,20 +39,33 @@ public class DnsLookupService
     @Override
     public CompletableFuture<List<URI>> resolve(URI uri) {
 
-        try {
-            if (validIP(uri.getHost())) {
-                return CompletableFuture.completedFuture(List.of(uri));
-            }
-
-            for (DnsLookup lookup : lookups) {
-                CompletableFuture<List<URI>> result = lookup.resolve(uri);
-                if (!result.get().isEmpty())
-                    return result;
-            }
+        if (validIP(uri.getHost())) {
             return CompletableFuture.completedFuture(List.of(uri));
-        } catch (Throwable e) {
-            return CompletableFuture.failedFuture(unwrap(e));
         }
+
+        CompletableFuture<List<URI>> result = new CompletableFuture<>();
+        Iterator<DnsLookup> dnsLookupIterator = lookups.iterator();
+
+        if (dnsLookupIterator.hasNext()) {
+            dnsLookupIterator.next().resolve(uri).thenCompose(handleResult(uri, dnsLookupIterator))
+                    .whenComplete(CompletableFutures.transfer(result));
+        }
+
+        return result;
+    }
+
+    private Function<List<URI>, CompletionStage<List<URI>>> handleResult(URI uri, Iterator<DnsLookup> dnsLookupIterator) {
+        return r ->
+        {
+            if (r.isEmpty()) {
+                if (dnsLookupIterator.hasNext())
+                    return dnsLookupIterator.next().resolve(uri).thenCompose(handleResult(uri, dnsLookupIterator));
+                else
+                    return CompletableFuture.failedStage(new UnknownHostException(uri.getHost()));
+            } else {
+                return CompletableFuture.completedStage(r);
+            }
+        };
     }
 
     public static boolean validIP(String ip) {

@@ -43,6 +43,10 @@ public record DnsClientConfiguration(Configuration context)
         return Duration.parse("PT" + context().getString("timeout").orElse("30s"));
     }
 
+    public boolean getForceTCP() {
+        return context.getBoolean("forceTcp").orElse(false);
+    }
+
     public List<Name> getSearchDomains() {
         return context().getListAs("search", json -> {
             try {

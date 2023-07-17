@@ -51,6 +51,7 @@ public class DnsLookupSessionFactory {
                 .orElseGet(ExtendedResolver::new);
 
         resolver.setTimeout(dnsClientConfiguration.getTimeout());
+        resolver.setTCP(dnsClientConfiguration.getForceTCP());
 
         lookupSession = LookupSession.builder()
                 .searchPath(dnsClientConfiguration.getSearchDomains())
