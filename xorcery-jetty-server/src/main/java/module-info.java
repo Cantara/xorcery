@@ -36,7 +36,7 @@ open module xorcery.jetty.server {
 
     requires io.dropwizard.metrics.jetty11;
 
-    requires org.eclipse.jetty.server;
+    requires transitive org.eclipse.jetty.server;
     requires org.eclipse.jetty.alpn.java.server;
     requires org.eclipse.jetty.http2.server;
     requires org.eclipse.jetty.servlet;
