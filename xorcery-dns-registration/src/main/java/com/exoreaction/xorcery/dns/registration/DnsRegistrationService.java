@@ -27,6 +27,7 @@ import org.xbill.DNS.Record;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service(name = "dns.registration")
 @RunLevel(20)
@@ -45,7 +46,7 @@ public class DnsRegistrationService
         this.logger = logger;
         this.records = dnsRecords.getRecords();
 
-        dnsUpdates.updateDns(records).toCompletableFuture().join();
+        dnsUpdates.updateDns(records).toCompletableFuture().orTimeout(10, TimeUnit.SECONDS).join();
         logger.info("Registered services in DNS");
     }
 
@@ -58,7 +59,7 @@ public class DnsRegistrationService
         }
 
         try {
-            dnsUpdates.updateDns(deleteRecords).toCompletableFuture().join();
+            dnsUpdates.updateDns(deleteRecords).toCompletableFuture().orTimeout(10, TimeUnit.SECONDS).join();
             logger.info("Deregistered services from DNS");
         } catch (Exception e) {
             logger.error("Failed to deregister services from DNS", e);
