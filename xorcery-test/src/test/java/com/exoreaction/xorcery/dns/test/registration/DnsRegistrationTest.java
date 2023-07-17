@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.dns.test.registration;
 
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 //@Disabled
 public class DnsRegistrationTest {
@@ -37,7 +39,7 @@ public class DnsRegistrationTest {
             jetty.server.ssl.enabled: false
 
             dns.client.enabled: true
-            dns.server.enabled: true
+            dns.client.forceTcp: true
             dns.registration.enabled: true
             dns.dyndns.enabled: true
             dns.dyndns.key:
@@ -45,54 +47,58 @@ public class DnsRegistrationTest {
                 secret: secret:BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg==
             """;
 
+    String server1 = """
+            instance.id: "xorcery1"
+            instance.host: "server1"
+            dns.server.enabled: true
+            jetty.server.http.port: "{{ SYSTEM.server1 }}"
+                    """;
+
+    String server2 = """
+            instance.id: "xorcery2"
+            instance.host: "server2"
+            jetty.server.http.port: "{{ SYSTEM.server2 }}"
+            """;
+
     @Test
     public void testRegisterServersAndServices() throws Exception {
         Logger logger = LogManager.getLogger(getClass());
 
-        Configuration configuration1 = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("instance.id", "xorcery1")
-                .add("instance.host", "server1")
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .build();
-        System.out.println(configuration1);
-        Xorcery server = new Xorcery(configuration1);
-        Xorcery client = new Xorcery(new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .add("instance.id", "xorcery2")
-                .add("instance.host", "server2")
-                .add("dns.server.enabled", false)
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .build());
+        System.setProperty("server1", Integer.toString(Sockets.nextFreePort()));
+        System.setProperty("server2", Integer.toString(Sockets.nextFreePort()));
+        Configuration server1Config = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(server1).build();
+        Configuration server2Config = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(server2).build();
+        System.out.println("server1:\n"+server1Config);
+        System.out.println("server2:\n"+server2Config);
+        Xorcery xorcery1 = new Xorcery(server1Config);
+        Xorcery xorcery2 = new Xorcery(server2Config);
         logger.info("After startup");
-        DnsLookupService dnsLookupService = client.getServiceLocator().getService(DnsLookupService.class);
+        DnsLookupService dnsLookupService = xorcery2.getServiceLocator().getService(DnsLookupService.class);
         {
-            List<URI> hosts = dnsLookupService.resolve(URI.create("http://server1:80")).get();
-            System.out.println(hosts);
+            List<URI> hosts = dnsLookupService.resolve(URI.create("http://server1:80")).orTimeout(10, TimeUnit.SECONDS).join();
+            System.out.println("http://server1:80 "+hosts);
         }
         {
-            List<URI> hosts = dnsLookupService.resolve(URI.create("http://server2:80")).get();
-            System.out.println(hosts);
-        }
-
-        {
-            List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_servicetest._sub._http._tcp.xorcery.test")).get();
-            System.out.println(hosts);
+            List<URI> hosts = dnsLookupService.resolve(URI.create("http://server2:80")).orTimeout(10, TimeUnit.SECONDS).join();
+            System.out.println("http://server2:80 "+hosts);
         }
 
-        client.close();
-        logger.info("After client shutdown");
-        dnsLookupService = server.getServiceLocator().getService(DnsLookupService.class);
         {
-            List<URI> hosts = dnsLookupService.resolve(URI.create("http://server1:80")).get();
+            List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_servicetest._sub._http._tcp.xorcery.test")).orTimeout(10, TimeUnit.SECONDS).join();
+            System.out.println("srv://_servicetest._sub._http._tcp.xorcery.test "+hosts);
+        }
+
+        xorcery2.close();
+        logger.info("After server2 shutdown");
+        dnsLookupService = xorcery1.getServiceLocator().getService(DnsLookupService.class);
+        {
+            List<URI> hosts = dnsLookupService.resolve(URI.create("http://server1:80")).orTimeout(10, TimeUnit.SECONDS).join();
             System.out.println(hosts);
         }
-        try
-        {
-            List<URI> hosts = dnsLookupService.resolve(URI.create("http://server2:80")).get();
+        try {
+            List<URI> hosts = dnsLookupService.resolve(URI.create("http://server2:80")).orTimeout(10, TimeUnit.SECONDS).join();
             System.out.println(hosts);
-        } catch (Throwable t)
-        {
+        } catch (Throwable t) {
             logger.info("Could not look up server", t);
         }
 
@@ -101,6 +107,6 @@ public class DnsRegistrationTest {
             System.out.println(hosts);
         }
 
-        server.close();
+        xorcery1.close();
     }
 }

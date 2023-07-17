@@ -23,3 +23,9 @@ log4j2.Configuration.thresholdFilter.level: debug
 log4j2.Configuration.Loggers.logger:
   - name: "com.exoreaction.xorcery.dns.update"
     level: "debug"
+  - name: "com.exoreaction.xorcery.dns.server"
+    level: "debug"
+#  - name: "com.exoreaction.xorcery.dns.server.tcp"
+#    level: "debug"
+#  - name: "org.xbill.DNS"
+#    level: "trace"
