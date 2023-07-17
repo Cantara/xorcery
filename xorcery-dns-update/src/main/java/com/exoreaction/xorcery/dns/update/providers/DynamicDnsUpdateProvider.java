@@ -58,7 +58,7 @@ public class DynamicDnsUpdateProvider
         logger.debug("Update:" + msg);
         return resolver.sendAsync(msg).thenApply(response ->
         {
-            LogManager.getLogger(getClass()).debug("Response:" + response);
+            logger.debug("Response:" + response);
             return null;
         });
     }
@@ -89,7 +89,8 @@ public class DynamicDnsUpdateProvider
                 });
 
 
-        resolver.setTimeout(dynamicDnsConfiguration.getTtl());
+        resolver.setTimeout(dnsClientConfiguration.getTimeout());
+        resolver.setTCP(dnsClientConfiguration.getForceTCP());
 
         return resolver;
     }
