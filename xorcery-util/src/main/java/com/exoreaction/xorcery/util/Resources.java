@@ -55,7 +55,12 @@ public interface Resources {
             throws UncheckedIOException {
         try {
             List<URL> resources = new ArrayList<>();
-            ClassLoader.getSystemResources(path).asIterator().forEachRemaining(resources::add);
+            ClassLoader.getSystemResources(path).asIterator().forEachRemaining(url ->
+            {
+                if (!resources.contains(url)) {
+                    resources.add(url);
+                }
+            });
             Resources.class.getClassLoader().getResources(path).asIterator().forEachRemaining(url ->
             {
                 if (!resources.contains(url)) {
