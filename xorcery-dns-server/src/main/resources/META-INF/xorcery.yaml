@@ -1,7 +1,12 @@
 dns:
-  enabled: "{{ defaults.enabled }}"
   server:
-    enabled: "{{ dns.enabled }}"
+    enabled: "{{ defaults.enabled }}"
     port: 53
     zones: []
     keys: []
+    tcp:
+      enabled: "{{ dns.server.enabled }}"
+      idleTimeout: "{{ defaults.idleTimeout }}"
+
+    udp:
+      enabled: "{{ dns.server.enabled }}"

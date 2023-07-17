@@ -15,13 +15,14 @@
  */
 open module xorcery.dns.server {
     exports com.exoreaction.xorcery.dns.server;
+    exports com.exoreaction.xorcery.dns.server.tcp;
 
     requires xorcery.configuration.api;
     requires xorcery.jsonapi;
     requires xorcery.service.api;
+    requires xorcery.jetty.server;
 
     requires org.dnsjava;
-    requires javax.jmdns;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires org.apache.logging.log4j;

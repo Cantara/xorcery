@@ -58,6 +58,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jetty-server</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
@@ -73,10 +79,6 @@
         <dependency>
             <groupId>dnsjava</groupId>
             <artifactId>dnsjava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jmdns</groupId>
-            <artifactId>jmdns</artifactId>
         </dependency>
 
         <dependency>

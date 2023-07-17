@@ -16,28 +16,15 @@
 package com.exoreaction.xorcery.dns.server;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.ServiceConfiguration;
+import com.exoreaction.xorcery.json.JsonElement;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
-public record DnsServerConfiguration(Configuration context)
-        implements ServiceConfiguration {
-    public int getPort() {
-        return context.getInteger("port").orElse(53);
-    }
-
-    public Optional<List<KeyConfiguration>> getKeys() {
-        return context.getObjectListAs("keys", KeyConfiguration::new);
-    }
-
-    public Optional<List<ZoneConfiguration>> getZones() {
-        return context.getObjectListAs("zones", ZoneConfiguration::new);
-    }
-
-    public DNSTCPConfiguration getDNSTCPConfiguration()
-    {
-        return new DNSTCPConfiguration(context.getConfiguration("tcp"));
+public record DNSTCPConfiguration(Configuration configuration) {
+    public Duration getIdleTimeout() {
+        return Duration.parse("PT" + configuration.getString("idleTimeout").orElse("-1s"));
     }
 }

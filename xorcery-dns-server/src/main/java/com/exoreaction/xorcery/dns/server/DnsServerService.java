@@ -45,20 +45,13 @@ import static org.xbill.DNS.Message.MAXLENGTH;
 import static org.xbill.DNS.Record.fromString;
 
 @Service(name = "dns.server")
-@RunLevel(2)
-public class DnsServerService
-        implements PreDestroy {
+public class DnsServerService {
     private final Logger logger = LogManager.getLogger(getClass());
 
     static final int FLAG_DNSSECOK = 1;
     static final int FLAG_SIGONLY = 2;
 
-    private final DatagramSocket socket;
-    private final byte[] in = new byte[MAXLENGTH];
-
-    private ExecutorService executorService;
     private Configuration configuration;
-    private final int port;
 
     private final Map<String, TSIG> TSIGs = new HashMap<>();
     private final Map<Name, TSIG> zoneTSIGs = new HashMap<>();
@@ -70,7 +63,6 @@ public class DnsServerService
         this.configuration = configuration;
         InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         DnsServerConfiguration dnsServerConfiguration = new DnsServerConfiguration(configuration.getConfiguration("dns.server"));
-        port = dnsServerConfiguration.getPort();
 
         // Create keys
         dnsServerConfiguration.getKeys().ifPresent(list -> list.forEach(kc ->
@@ -99,54 +91,10 @@ public class DnsServerService
             }
         }));
 
-        executorService = Executors.newSingleThreadExecutor();
-        socket = new DatagramSocket(port);
-        executorService.submit(this::process);
-
         logger.info("Started DNS server");
     }
 
-    @Override
-    public void preDestroy() {
-        executorService.shutdown();
-        socket.close();
-        logger.info("Stopped DNS server");
-    }
-
-    private void process() {
-        try {
-            // Read the request
-            DatagramPacket indp = new DatagramPacket(in, MAXLENGTH);
-            socket.receive(indp);
-
-            Message request = new Message(in);
-            Message response = new Message(request.getHeader().getID());
-            response.addRecord(request.getQuestion(), Section.QUESTION);
-
-            logger.debug("Request:" + request.toString());
-
-            handle(request, response);
-
-            logger.debug("Response:" + response.toString());
-
-            byte[] resp = response.toWire();
-            DatagramPacket outdp = new DatagramPacket(resp, resp.length, indp.getAddress(), indp.getPort());
-            socket.send(outdp);
-        } catch (SocketException e) {
-            if (e.getCause() instanceof AsynchronousCloseException) {
-                // Done
-                return;
-            } else {
-                logger.error("Failed to handle DNS request", e);
-            }
-        } catch (Throwable e) {
-            logger.error("Failed to handle DNS request", e);
-        }
-
-        executorService.submit(this::process);
-    }
-
-    private void handle(Message request, Message response)
+    public void handle(Message request, Message response)
             throws IOException {
         Header header = request.getHeader();
 
