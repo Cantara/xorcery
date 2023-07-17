@@ -57,22 +57,25 @@
         <module>xorcery-secrets</module>
         <module>xorcery-keystores</module>
 
-        <module>xorcery-dns-server</module>
         <module>xorcery-dns-client</module>
+        <module>xorcery-jetty-client</module>
+        <module>xorcery-certificates</module>
+
+        <module>xorcery-jetty-server</module>
+        <module>xorcery-dns-server</module>
+
         <module>xorcery-dns-update</module>
         <module>xorcery-dns-registration</module>
         <module>xorcery-dns-multicast</module>
 
-        <module>xorcery-certificates</module>
-        <module>xorcery-jetty-client</module>
         <module>xorcery-jersey-client</module>
-        <module>xorcery-jetty-server</module>
         <module>xorcery-jersey-server</module>
-        <module>xorcery-admin-servlet</module>
-
         <module>xorcery-reactivestreams-api</module>
         <module>xorcery-reactivestreams-client</module>
+        <module>xorcery-metrics</module>
         <module>xorcery-reactivestreams-server</module>
+
+        <module>xorcery-admin-servlet</module>
 
         <module>xorcery-certificates-server</module>
         <module>xorcery-certificates-ca</module>
@@ -93,10 +96,10 @@
         <module>xorcery-neo4j-projections</module>
         <module>xorcery-domainevents-neo4jprojection</module>
         <module>xorcery-jsonapi-server-neo4j</module>
+
         <module>xorcery-opensearch</module>
 
         <module>xorcery-log4j</module>
-        <module>xorcery-metrics</module>
         <module>xorcery-jmxmetrics</module>
 
         <module>xorcery-coordinator</module>
