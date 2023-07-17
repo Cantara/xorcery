@@ -57,10 +57,6 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>dnsjava</groupId>
-            <artifactId>dnsjava</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.jmdns</groupId>
             <artifactId>jmdns</artifactId>
         </dependency>
