@@ -68,7 +68,8 @@ public class PublishWithResultReactiveStream
 
     @Override
     public void retry(Throwable cause) {
-        resultQueue.clear();
+        if (resultQueue != null)
+            resultQueue.clear();
         super.retry(cause);
     }
 
