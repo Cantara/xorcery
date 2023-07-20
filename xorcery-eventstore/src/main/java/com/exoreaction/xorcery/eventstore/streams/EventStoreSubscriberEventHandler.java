@@ -24,11 +24,11 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.reactivestreams.Subscription;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.Flow;
 
 /**
  * @author rickardoberg
@@ -40,10 +40,10 @@ public class EventStoreSubscriberEventHandler
     private final EventStoreDBClient client;
     private final Optional<String> streamId;
     private final Logger logger = LogManager.getLogger(getClass());
-    private final Flow.Subscription subscription;
+    private final Subscription subscription;
     private final JsonMapper jsonMapper = new JsonMapper();
 
-    public EventStoreSubscriberEventHandler(EventStoreDBClient client, Flow.Subscription subscription, Optional<String> streamId) {
+    public EventStoreSubscriberEventHandler(EventStoreDBClient client, Subscription subscription, Optional<String> streamId) {
 
         this.client = client;
         this.subscription = subscription;

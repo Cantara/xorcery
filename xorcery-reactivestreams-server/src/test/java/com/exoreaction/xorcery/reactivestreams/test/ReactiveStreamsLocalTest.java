@@ -15,23 +15,25 @@
  */
 package com.exoreaction.xorcery.reactivestreams.test;
 
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
-import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.util.TypeConverterProcessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cancelStream;
@@ -102,7 +104,7 @@ public class ReactiveStreamsLocalTest {
     }
 
     public static class IntegerPublisher
-            implements Flow.Publisher<Integer> {
+            implements Publisher<Integer> {
 
         private final Logger logger = LogManager.getLogger(getClass());
 
@@ -110,8 +112,8 @@ public class ReactiveStreamsLocalTest {
         }
 
         @Override
-        public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
-            subscriber.onSubscribe(new Flow.Subscription() {
+        public void subscribe(Subscriber<? super Integer> subscriber) {
+            subscriber.onSubscribe(new Subscription() {
 
                 int current = 0;
                 int max = 100;
@@ -144,13 +146,13 @@ public class ReactiveStreamsLocalTest {
     }
 
     public static class JsonSubscriber
-            implements Flow.Subscriber<JsonNode> {
+            implements Subscriber<JsonNode> {
 
         Logger logger = LogManager.getLogger(getClass());
-        private Flow.Subscription subscription;
+        private Subscription subscription;
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
             subscription.request(100);
         }

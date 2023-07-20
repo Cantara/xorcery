@@ -19,11 +19,10 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
-import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
-import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,12 +32,13 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
@@ -50,11 +50,11 @@ public class SubscriberSubscriptionReactiveStream
         extends ServerReactiveStream
         implements WebSocketPartialListener,
         WebSocketConnectionListener,
-        Flow.Subscription {
-    private final Function<Configuration, Flow.Subscriber<Object>> subscriberFactory;
+        Subscription {
+    private final Function<Configuration, Subscriber<Object>> subscriberFactory;
     private String configurationMessage = "";
     private Configuration subscriberConfiguration;
-    protected Flow.Subscriber<Object> subscriber;
+    protected Subscriber<Object> subscriber;
 
     protected final MessageReader<Object> eventReader;
 
@@ -77,7 +77,7 @@ public class SubscriberSubscriptionReactiveStream
     private boolean isSendingRequests;
 
     public SubscriberSubscriptionReactiveStream(String streamName,
-                                                Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
+                                                Function<Configuration, Subscriber<Object>> subscriberFactory,
                                                 MessageReader<Object> eventReader,
                                                 ObjectMapper objectMapper,
                                                 ByteBufferPool byteBufferPool,

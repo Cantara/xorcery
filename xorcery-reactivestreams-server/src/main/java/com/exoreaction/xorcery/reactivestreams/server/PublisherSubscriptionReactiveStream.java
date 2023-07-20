@@ -33,6 +33,9 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,7 +46,6 @@ import java.util.ArrayDeque;
 import java.util.Base64;
 import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 /**
@@ -52,16 +54,16 @@ import java.util.function.Function;
  */
 public class PublisherSubscriptionReactiveStream
         extends ServerReactiveStream
-        implements WebSocketListener, Flow.Subscriber<Object> {
+        implements WebSocketListener, Subscriber<Object> {
 
     protected final Logger logger;
 
     private final String streamName;
     protected volatile Session session;
 
-    private final Function<Configuration, Flow.Publisher<Object>> publisherFactory;
+    private final Function<Configuration, Publisher<Object>> publisherFactory;
     private Configuration publisherConfiguration;
-    protected Flow.Subscription subscription;
+    protected Subscription subscription;
     private boolean isComplete = false;
 
     private int requested;
@@ -79,7 +81,7 @@ public class PublisherSubscriptionReactiveStream
     private long outstandingRequestAmount;
 
     public PublisherSubscriptionReactiveStream(String streamName,
-                                               Function<Configuration, Flow.Publisher<Object>> publisherFactory,
+                                               Function<Configuration, Publisher<Object>> publisherFactory,
                                                MessageWriter<Object> messageWriter,
                                                ObjectMapper objectMapper,
                                                ByteBufferPool pool,
@@ -97,7 +99,7 @@ public class PublisherSubscriptionReactiveStream
 
     // Subscriber
     @Override
-    public synchronized void onSubscribe(Flow.Subscription subscription) {
+    public synchronized void onSubscribe(Subscription subscription) {
 
         if (logger.isTraceEnabled())
             logger.trace(marker, "onSubscribe");
@@ -145,7 +147,7 @@ public class PublisherSubscriptionReactiveStream
                 publisherConfiguration = new Configuration.Builder(configurationJson)
                         .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
                         .build();
-                Flow.Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
+                Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
                 publisher.subscribe(this);
             } catch (JsonProcessingException e) {
                 session.close(StatusCode.BAD_PAYLOAD, e.getMessage());

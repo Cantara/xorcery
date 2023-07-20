@@ -22,12 +22,13 @@ import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lmax.disruptor.dsl.Disruptor;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
-import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 
 public class OpenSearchSubscriber
-        implements Flow.Subscriber<WithMetadata<JsonNode>> {
+        implements Subscriber<WithMetadata<JsonNode>> {
 
     private final OpenSearchClient client;
     private final String indexName;
@@ -44,7 +45,7 @@ public class OpenSearchSubscriber
     }
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
 
         disruptor = new Disruptor<>(WithMetadata::new, configuration.getInteger("bufferSize").orElse(64), new NamedThreadFactory("OpenSearch-" + indexName + "-"));
         disruptor.handleEventsWith(new OpenSearchEventHandler(client, openSearchCommitPublisher, subscription, indexName));

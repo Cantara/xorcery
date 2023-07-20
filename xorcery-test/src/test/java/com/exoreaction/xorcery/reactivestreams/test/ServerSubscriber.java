@@ -15,15 +15,16 @@
  */
 package com.exoreaction.xorcery.reactivestreams.test;
 
-import java.util.concurrent.Flow;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 public abstract class ServerSubscriber<T>
-        implements Flow.Subscriber<T> {
+        implements Subscriber<T> {
 
-    protected Flow.Subscription subscription;
+    protected Subscription subscription;
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         this.subscription = subscription;
         subscription.request(8192);
     }

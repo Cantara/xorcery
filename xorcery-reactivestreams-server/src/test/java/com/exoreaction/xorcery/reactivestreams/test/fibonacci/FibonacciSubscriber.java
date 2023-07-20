@@ -15,22 +15,24 @@
  */
 package com.exoreaction.xorcery.reactivestreams.test.fibonacci;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
-public class FibonacciSubscriber implements Flow.Subscriber<Long> {
-    private Flow.Subscription subscription;
+public class FibonacciSubscriber implements Subscriber<Long> {
+    private Subscription subscription;
 
     private final List<Long> receivedNumbers = new Vector<>();
 
     private final CountDownLatch terminatedLatch = new CountDownLatch(1);
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         System.out.printf("received onSubscribe()%n");
         this.subscription = subscription;
         subscription.request(2);

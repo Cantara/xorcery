@@ -35,6 +35,9 @@ import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.IOException;
 import java.net.URI;
@@ -46,7 +49,6 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -56,7 +58,7 @@ import java.util.function.Supplier;
 public class PublishReactiveStream
         implements WebSocketListener,
         WriteCallback,
-        Flow.Subscriber<Object> {
+        Subscriber<Object> {
 
     private final static Logger logger = LogManager.getLogger(PublishReactiveStream.class);
 
@@ -81,12 +83,12 @@ public class PublishReactiveStream
 
     private final URI serverUri;
     private final String streamName;
-    private final Flow.Publisher<Object> publisher;
+    private final Publisher<Object> publisher;
 
     // All the state which requires synchronized access to session
     protected Session session;
     private Iterator<URI> uriIterator;
-    protected Flow.Subscription subscription;
+    protected Subscription subscription;
     private final Deque<Object> queue = new ArrayDeque<>();
     protected final ByteBufferOutputStream2 outputStream;
     private long requested = 0;
@@ -103,7 +105,7 @@ public class PublishReactiveStream
                                  ClientConfiguration publisherConfiguration,
                                  DnsLookup dnsLookup,
                                  WebSocketClient webSocketClient,
-                                 Flow.Publisher<Object> publisher,
+                                 Publisher<Object> publisher,
                                  MessageWriter<Object> eventWriter,
                                  Supplier<Configuration> subscriberConfiguration,
                                  ByteBufferPool pool,
@@ -210,7 +212,7 @@ public class PublishReactiveStream
     // Subscriber
     // These calls come from the upstream client publisher
     @Override
-    public synchronized void onSubscribe(Flow.Subscription subscription) {
+    public synchronized void onSubscribe(Subscription subscription) {
         // Session is already synchronized by onWebsocketText
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onSubscribe");

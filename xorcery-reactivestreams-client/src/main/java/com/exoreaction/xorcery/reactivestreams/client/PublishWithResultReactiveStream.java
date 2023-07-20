@@ -29,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.reactivestreams.Publisher;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class PublishWithResultReactiveStream
                                            ClientConfiguration publisherConfiguration,
                                            DnsLookup dnsLookup,
                                            WebSocketClient webSocketClient,
-                                           Flow.Publisher<Object> publisher,
+                                           Publisher<Object> publisher,
                                            MessageWriter<Object> eventWriter,
                                            MessageReader<Object> resultReader,
                                            Supplier<Configuration> subscriberConfiguration,

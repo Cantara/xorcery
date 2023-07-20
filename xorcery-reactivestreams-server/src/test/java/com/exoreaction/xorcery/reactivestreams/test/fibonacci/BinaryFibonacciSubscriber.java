@@ -16,23 +16,24 @@
 package com.exoreaction.xorcery.reactivestreams.test.fibonacci;
 
 import org.apache.logging.log4j.LogManager;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
-public class BinaryFibonacciSubscriber implements Flow.Subscriber<byte[]> {
-    private Flow.Subscription subscription;
+public class BinaryFibonacciSubscriber implements Subscriber<byte[]> {
+    private Subscription subscription;
 
     private final List<byte[]> receivedNumbers = new Vector<>();
 
     private final CountDownLatch terminatedLatch = new CountDownLatch(1);
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         LogManager.getLogger(getClass()).info("received onSubscribe()");
         this.subscription = subscription;
         subscription.request(2);

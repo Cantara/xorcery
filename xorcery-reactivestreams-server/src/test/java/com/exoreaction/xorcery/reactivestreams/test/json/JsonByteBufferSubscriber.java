@@ -23,14 +23,19 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
-public class JsonByteBufferSubscriber implements Flow.Subscriber<WithMetadata<byte[]>> {
-    private Flow.Subscription subscription;
+public class JsonByteBufferSubscriber implements Subscriber<WithMetadata<byte[]>> {
+    private Subscription subscription;
 
     private final BlockingDeque<JsonNode> receivedEvents = new LinkedBlockingDeque<>();
 
@@ -44,7 +49,7 @@ public class JsonByteBufferSubscriber implements Flow.Subscriber<WithMetadata<by
             .build();
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         System.out.printf("received onSubscribe()%n");
         this.subscription = subscription;
         subscription.request(2);

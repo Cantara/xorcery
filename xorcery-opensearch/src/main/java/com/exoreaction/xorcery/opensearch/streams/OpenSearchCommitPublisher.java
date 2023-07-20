@@ -19,16 +19,17 @@ import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import org.apache.logging.log4j.LogManager;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
-import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 
 public class OpenSearchCommitPublisher
-        implements Flow.Publisher<WithMetadata<IndexCommit>>, Consumer<WithMetadata<IndexCommit>> {
+        implements Publisher<WithMetadata<IndexCommit>>, Consumer<WithMetadata<IndexCommit>> {
     BroadcastEventHandler<WithMetadata<IndexCommit>> broadcastEventHandler = new BroadcastEventHandler<>(true);
 
     @Override
-    public void subscribe(Flow.Subscriber<? super WithMetadata<IndexCommit>> subscriber) {
+    public void subscribe(Subscriber<? super WithMetadata<IndexCommit>> subscriber) {
         subscriber.onSubscribe(broadcastEventHandler.add(subscriber));
     }
 

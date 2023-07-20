@@ -18,19 +18,20 @@ package com.exoreaction.xorcery.jmxmetrics;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import javax.management.*;
 import javax.management.remote.JMXConnectorServer;
@@ -38,7 +39,6 @@ import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
-import java.net.MalformedURLException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.*;
@@ -101,14 +101,14 @@ public class JmxMetricsService
         result.toCompletableFuture().complete(null);
     }
 
-    private Map<String, Flow.Subscription> subscriptions = new ConcurrentHashMap<>();
+    private Map<String, Subscription> subscriptions = new ConcurrentHashMap<>();
     private Map<String, Map<String, AtomicReference<ObjectNode>>> polledMetrics = new ConcurrentHashMap<>();
 
     private class MetricsSubscriber
-            implements Flow.Subscriber<WithMetadata<ObjectNode>>, EventHandler<WithMetadata<ObjectNode>> {
+            implements Subscriber<WithMetadata<ObjectNode>>, EventHandler<WithMetadata<ObjectNode>> {
         private final ScheduledExecutorService scheduledExecutorService;
         private String serverId;
-        private Flow.Subscription subscription;
+        private Subscription subscription;
         private Disruptor<WithMetadata<ObjectNode>> disruptor;
         private ObjectName serverName;
 
@@ -120,10 +120,10 @@ public class JmxMetricsService
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
             Optional.ofNullable(subscriptions.put(serverId, subscription))
-                    .ifPresent(Flow.Subscription::cancel);
+                    .ifPresent(Subscription::cancel);
 
             disruptor = new Disruptor<>(WithMetadata::new, 8, new NamedThreadFactory("JmxMetrics-"));
             disruptor.handleEventsWith(this);

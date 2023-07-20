@@ -27,11 +27,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.reactivestreams.Subscription;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -48,7 +48,7 @@ public class OpenSearchEventHandler
     private final String index;
     private Logger logger = LogManager.getLogger(getClass());
 
-    private Flow.Subscription subscription;
+    private Subscription subscription;
 
     private IndexBulkRequest.Builder bulkRequest;
     private long lastTimestamp; // To ensure we don't reuse id's
@@ -56,7 +56,7 @@ public class OpenSearchEventHandler
 
     public OpenSearchEventHandler(OpenSearchClient client,
                                   Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher,
-                                  Flow.Subscription subscription,
+                                  Subscription subscription,
                                   String index) {
         this.client = client;
         this.openSearchCommitPublisher = openSearchCommitPublisher;

@@ -15,14 +15,17 @@
  */
 package com.exoreaction.xorcery.reactivestreams.test.fibonacci;
 
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class BinaryFibonacciPublisher implements Flow.Publisher<byte[]> {
+public class BinaryFibonacciPublisher implements Publisher<byte[]> {
 
     private final int maxNumbersInFibonacciSequence;
 
@@ -33,18 +36,18 @@ public class BinaryFibonacciPublisher implements Flow.Publisher<byte[]> {
     }
 
     @Override
-    public void subscribe(Flow.Subscriber<? super byte[]> subscriber) {
+    public void subscribe(Subscriber<? super byte[]> subscriber) {
         MySubscription subscription = new MySubscription(subscriber);
         subscriber.onSubscribe(subscription);
         subscription.start();
         subscriptions.add(subscription);
     }
 
-    private class MySubscription implements Flow.Subscription, Runnable {
+    private class MySubscription implements Subscription, Runnable {
 
         private static final AtomicInteger nextId = new AtomicInteger(1);
         private final int id;
-        private final Flow.Subscriber<? super byte[]> subscriber;
+        private final Subscriber<? super byte[]> subscriber;
         private final AtomicLong budget = new AtomicLong(0);
 
         private final Iterator<byte[]> fibonacciSequence;
@@ -54,7 +57,7 @@ public class BinaryFibonacciPublisher implements Flow.Publisher<byte[]> {
 
         private final Object sync = new Object();
 
-        private MySubscription(Flow.Subscriber<? super byte[]> subscriber) {
+        private MySubscription(Subscriber<? super byte[]> subscriber) {
             this.id = nextId.getAndIncrement();
             FibonacciSequence fibonacciSequence = new FibonacciSequence(maxNumbersInFibonacciSequence);
             this.fibonacciSequence = fibonacciSequence.binaryIterator();

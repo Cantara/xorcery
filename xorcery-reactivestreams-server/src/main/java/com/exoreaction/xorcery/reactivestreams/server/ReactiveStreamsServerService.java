@@ -34,6 +34,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.runlevel.*;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -97,19 +99,19 @@ public class ReactiveStreamsServerService
     }
 
     public CompletableFuture<Void> publisher(String streamName,
-                                             final Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,
-                                             Class<? extends Flow.Publisher<?>> publisherType) {
+                                             final Function<Configuration, ? extends Publisher<?>> publisherFactory,
+                                             Class<? extends Publisher<?>> publisherType) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
+        Type type = resolveActualTypeArgs(publisherType, Publisher.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
         MessageWriter<Object> eventWriter = getWriter(eventType);
         MessageReader<Object> resultReader = resultType.map(this::getReader).orElse(null);
 
-        Function<Configuration, Flow.Publisher<Object>> wrappedPublisherFactory = (config) ->
+        Function<Configuration, Publisher<Object>> wrappedPublisherFactory = (config) ->
         {
-            Flow.Publisher<Object> publisher = (Flow.Publisher<Object>) publisherFactory.apply(config);
+            Publisher<Object> publisher = (Publisher<Object>) publisherFactory.apply(config);
 
             CompletableFuture<Void> subscriptionResult = new CompletableFuture<>();
             FutureProcessor<Object> futureProcessor = new FutureProcessor<>(subscriptionResult);
@@ -141,19 +143,19 @@ public class ReactiveStreamsServerService
     }
 
     public CompletableFuture<Void> subscriber(String streamName,
-                                              Function<Configuration, Flow.Subscriber<?>> subscriberFactory,
-                                              Class<? extends Flow.Subscriber<?>> subscriberType) {
+                                              Function<Configuration, Subscriber<?>> subscriberFactory,
+                                              Class<? extends Subscriber<?>> subscriberType) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
+        Type type = resolveActualTypeArgs(subscriberType, Subscriber.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
         MessageReader<Object> eventReader = getReader(eventType);
         MessageWriter<Object> resultWriter = resultType.map(this::getWriter).orElse(null);
 
-        Function<Configuration, Flow.Subscriber<Object>> wrappedSubscriberFactory = (config) ->
+        Function<Configuration, Subscriber<Object>> wrappedSubscriberFactory = (config) ->
         {
-            Flow.Subscriber<Object> subscriber = (Flow.Subscriber<Object>) subscriberFactory.apply(config);
+            Subscriber<Object> subscriber = (Subscriber<Object>) subscriberFactory.apply(config);
 
             CompletableFuture<Void> subscriptionResult = new CompletableFuture<>();
             FutureProcessor<Object> futureProcessor = new FutureProcessor<>(subscriptionResult);

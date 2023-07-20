@@ -18,17 +18,18 @@ package com.exoreaction.xorcery.neo4jprojections.api;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WaitForProjectionCommit
-        implements Flow.Subscriber<WithMetadata<ProjectionCommit>>, AutoCloseable {
+        implements Subscriber<WithMetadata<ProjectionCommit>>, AutoCloseable {
 
     record ProjectionWaiter(Optional<Long> version, Optional<Long> timestamp,
                             CompletableFuture<WithMetadata<ProjectionCommit>> future) {
@@ -37,7 +38,7 @@ public class WaitForProjectionCommit
     private static final Logger logger = LogManager.getLogger(WaitForProjectionCommit.class);
     private final String projectionId;
     private final BlockingQueue<ProjectionWaiter> queue = new ArrayBlockingQueue<>(1024);
-    private Flow.Subscription subscription;
+    private Subscription subscription;
     private final AtomicReference<WithMetadata<ProjectionCommit>> currentCommit = new AtomicReference<>();
     private final AtomicLong currentVersion = new AtomicLong();
     private final AtomicLong currentTimestamp = new AtomicLong();
@@ -79,7 +80,7 @@ public class WaitForProjectionCommit
     }
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         this.subscription = subscription;
         subscription.request(64);
     }

@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.lang.Enums;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4jprojections.Projection;
@@ -25,7 +26,6 @@ import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.lang.Enums;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,12 +34,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
+import org.reactivestreams.Subscription;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 
 /**
@@ -56,7 +56,7 @@ public class Neo4jProjectionEventHandler
     private List<Neo4jEventProjection> projections;
     private final Histogram batchSize;
 
-    private final Flow.Subscription subscription;
+    private final Subscription subscription;
     private final Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher;
 
     private final String projectionId;
@@ -72,7 +72,7 @@ public class Neo4jProjectionEventHandler
     private long currentBatchSize;
 
     public Neo4jProjectionEventHandler(GraphDatabaseService graphDatabaseService,
-                                       Flow.Subscription subscription,
+                                       Subscription subscription,
                                        Optional<ProjectionModel> projectionModel,
                                        String projectionId,
                                        Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,

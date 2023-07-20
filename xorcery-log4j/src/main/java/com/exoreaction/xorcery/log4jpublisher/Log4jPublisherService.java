@@ -27,9 +27,10 @@ import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.Flow;
 
 @Service(name = "log4jpublisher")
 @RunLevel(8)
@@ -63,9 +64,9 @@ public class Log4jPublisherService {
     }
 
     public class LogPublisher
-            implements Flow.Publisher<WithMetadata<LogEvent>> {
+            implements Publisher<WithMetadata<LogEvent>> {
         @Override
-        public void subscribe(Flow.Subscriber<? super WithMetadata<LogEvent>> subscriber) {
+        public void subscribe(Subscriber<? super WithMetadata<LogEvent>> subscriber) {
             subscriber.onSubscribe(appender.getUnicastEventHandler().add(subscriber));
         }
     }

@@ -18,18 +18,19 @@ package com.exoreaction.xorcery.reactivestreams.server;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WriteCallback;
+import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -38,7 +39,6 @@ import java.nio.charset.Charset;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 public class SubscriberWithResultSubscriptionReactiveStream
@@ -51,7 +51,7 @@ public class SubscriberWithResultSubscriptionReactiveStream
     protected final Meter resultsSent;
 
     public SubscriberWithResultSubscriptionReactiveStream(String streamName,
-                                                          Function<Configuration, Flow.Subscriber<Object>> subscriberFactory,
+                                                          Function<Configuration, Subscriber<Object>> subscriberFactory,
                                                           MessageReader<Object> eventReader,
                                                           MessageWriter<Object> resultWriter,
                                                           ObjectMapper objectMapper,

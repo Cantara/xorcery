@@ -15,15 +15,18 @@
  */
 package com.exoreaction.xorcery.reactivestreams.test.fibonacci;
 
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class BinaryNioFibonacciPublisher implements Flow.Publisher<ByteBuffer> {
+public class BinaryNioFibonacciPublisher implements Publisher<ByteBuffer> {
 
     private final int maxNumbersInFibonacciSequence;
 
@@ -34,18 +37,18 @@ public class BinaryNioFibonacciPublisher implements Flow.Publisher<ByteBuffer> {
     }
 
     @Override
-    public void subscribe(Flow.Subscriber<? super ByteBuffer> subscriber) {
+    public void subscribe(Subscriber<? super ByteBuffer> subscriber) {
         MySubscription subscription = new MySubscription(subscriber);
         subscriber.onSubscribe(subscription);
         subscription.start();
         subscriptions.add(subscription);
     }
 
-    private class MySubscription implements Flow.Subscription, Runnable {
+    private class MySubscription implements Subscription, Runnable {
 
         private static final AtomicInteger nextId = new AtomicInteger(1);
         private final int id;
-        private final Flow.Subscriber<? super ByteBuffer> subscriber;
+        private final Subscriber<? super ByteBuffer> subscriber;
         private final AtomicLong budget = new AtomicLong(0);
 
         private final Iterator<ByteBuffer> fibonacciSequence;
@@ -55,7 +58,7 @@ public class BinaryNioFibonacciPublisher implements Flow.Publisher<ByteBuffer> {
 
         private final Object sync = new Object();
 
-        private MySubscription(Flow.Subscriber<? super ByteBuffer> subscriber) {
+        private MySubscription(Subscriber<? super ByteBuffer> subscriber) {
             this.id = nextId.getAndIncrement();
             FibonacciSequence fibonacciSequence = new FibonacciSequence(maxNumbersInFibonacciSequence);
             this.fibonacciSequence = fibonacciSequence.binaryNioIterator();

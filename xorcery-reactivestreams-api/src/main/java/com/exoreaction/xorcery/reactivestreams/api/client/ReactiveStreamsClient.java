@@ -18,10 +18,11 @@ package com.exoreaction.xorcery.reactivestreams.api.client;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.function.Supplier;
 
 public interface ReactiveStreamsClient {
@@ -29,15 +30,15 @@ public interface ReactiveStreamsClient {
                                     String subscriberStreamName,
                                     Supplier<Configuration> subscriberServerConfiguration,
 
-                                    Flow.Publisher<?> publisher,
-                                    Class<? extends Flow.Publisher<?>> publisherType,
+                                    Publisher<?> publisher,
+                                    Class<? extends Publisher<?>> publisherType,
                                     ClientConfiguration publisherClientConfiguration);
 
     CompletableFuture<Void> publish(URI serverUri,
                                     String subscriberStreamName,
                                     Supplier<Configuration> subscriberServerConfiguration,
 
-                                    Flow.Publisher<?> publisher,
+                                    Publisher<?> publisher,
                                     MessageWriter<?> messageWriter,
                                     MessageReader<?> messageReader,
                                     ClientConfiguration publisherClientConfiguration);
@@ -46,15 +47,15 @@ public interface ReactiveStreamsClient {
                                       String publisherStreamName,
                                       Supplier<Configuration> publisherServerConfiguration,
 
-                                      Flow.Subscriber<?> subscriber,
-                                      Class<? extends Flow.Subscriber<?>> subscriberType,
+                                      Subscriber<?> subscriber,
+                                      Class<? extends Subscriber<?>> subscriberType,
                                       ClientConfiguration subscriberClientConfiguration);
 
     CompletableFuture<Void> subscribe(URI serverUri,
                                       String publisherStreamName,
                                       Supplier<Configuration> publisherServerConfiguration,
 
-                                      Flow.Subscriber<?> subscriber,
+                                      Subscriber<?> subscriber,
                                       MessageReader<?> messageReader,
                                       MessageWriter<?> messageWriter,
                                       ClientConfiguration subscriberClientConfiguration);

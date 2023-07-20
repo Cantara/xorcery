@@ -19,20 +19,22 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
-import com.exoreaction.xorcery.net.Sockets;
 import jakarta.ws.rs.NotAuthorizedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -224,10 +226,10 @@ public class ReactiveStreamsWithResultTest {
     }
 
     public static class ClientIntegerSubscriber
-            implements Flow.Subscriber<Integer> {
+            implements Subscriber<Integer> {
 
         private int total = 0;
-        private Flow.Subscription subscription;
+        private Subscription subscription;
         private CompletableFuture<Integer> future;
 
 
@@ -236,7 +238,7 @@ public class ReactiveStreamsWithResultTest {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
             subscription.request(1);
         }
@@ -260,21 +262,21 @@ public class ReactiveStreamsWithResultTest {
 
     public static class ClientIntegerWithResultPublisher
             extends ClientWithResultPublisher<Integer, Integer>
-            implements Flow.Publisher<WithResult<Integer, Integer>> {
+            implements Publisher<WithResult<Integer, Integer>> {
     }
 
     public static class ClientWithResultPublisher<T, R>
             implements AutoCloseable {
 
-        private Flow.Subscriber<? super WithResult<T, R>> subscriber;
+        private Subscriber<? super WithResult<T, R>> subscriber;
         private final Semaphore requested = new Semaphore(0);
 
         public ClientWithResultPublisher() {
         }
 
-        public void subscribe(Flow.Subscriber<? super WithResult<T, R>> subscriber) {
+        public void subscribe(Subscriber<? super WithResult<T, R>> subscriber) {
             this.subscriber = subscriber;
-            subscriber.onSubscribe(new Flow.Subscription() {
+            subscriber.onSubscribe(new Subscription() {
 
                 @Override
                 public void request(long n) {
@@ -307,13 +309,13 @@ public class ReactiveStreamsWithResultTest {
     }
 
     public static class ServerIntegerNoopPublisher
-            implements Flow.Publisher<Integer> {
+            implements Publisher<Integer> {
 
         Logger logger = LogManager.getLogger(getClass());
 
         @Override
-        public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
-            subscriber.onSubscribe(new Flow.Subscription() {
+        public void subscribe(Subscriber<? super Integer> subscriber) {
+            subscriber.onSubscribe(new Subscription() {
                 @Override
                 public void request(long n) {
 
@@ -328,25 +330,25 @@ public class ReactiveStreamsWithResultTest {
     }
 
     public static class ServerIntegerExceptionPublisher
-            implements Flow.Publisher<Integer> {
+            implements Publisher<Integer> {
 
         Logger logger = LogManager.getLogger(getClass());
 
         @Override
-        public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
+        public void subscribe(Subscriber<? super Integer> subscriber) {
             subscriber.onError(new NotAuthorizedException("Not authorized"));
         }
     }
 
     public static class ServerIntegerSubscriber
-            implements Flow.Subscriber<WithResult<Integer, Integer>> {
+            implements Subscriber<WithResult<Integer, Integer>> {
 
         Logger logger = LogManager.getLogger(getClass());
         private Configuration config;
-        private Flow.Subscription subscription;
+        private Subscription subscription;
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
             subscription.request(100);
         }
@@ -370,7 +372,7 @@ public class ReactiveStreamsWithResultTest {
     }
 
     public static class ServerConfigurationPublisher
-            implements Flow.Publisher<Configuration> {
+            implements Publisher<Configuration> {
 
         Logger logger = LogManager.getLogger(getClass());
         private Configuration configuration;
@@ -380,8 +382,8 @@ public class ReactiveStreamsWithResultTest {
         }
 
         @Override
-        public void subscribe(Flow.Subscriber<? super Configuration> subscriber) {
-            subscriber.onSubscribe(new Flow.Subscription() {
+        public void subscribe(Subscriber<? super Configuration> subscriber) {
+            subscriber.onSubscribe(new Subscription() {
 
                 @Override
                 public void request(long n) {

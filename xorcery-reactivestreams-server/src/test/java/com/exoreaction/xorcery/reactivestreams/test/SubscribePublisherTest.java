@@ -33,6 +33,9 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.util.concurrent.*;
 
@@ -268,12 +271,12 @@ public class SubscribePublisherTest {
     }
 
     public static class IntegerSubscriber
-            implements Flow.Subscriber<Integer> {
+            implements Subscriber<Integer> {
 
         Logger logger = LogManager.getLogger(getClass());
 
         private int total = 0;
-        private Flow.Subscription subscription;
+        private Subscription subscription;
         private final CompletableFuture<Integer> result;
 
         public IntegerSubscriber(CompletableFuture<Integer> result) {
@@ -281,7 +284,7 @@ public class SubscribePublisherTest {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
             subscription.request(1);
         }
@@ -305,11 +308,11 @@ public class SubscribePublisherTest {
     }
 
     public static class ServerIntegerPublisher
-            implements Flow.Publisher<Integer> {
+            implements Publisher<Integer> {
 
         @Override
-        public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
-            subscriber.onSubscribe(new Flow.Subscription() {
+        public void subscribe(Subscriber<? super Integer> subscriber) {
+            subscriber.onSubscribe(new Subscription() {
 
                 int current = 0;
                 int max = 100;
@@ -333,16 +336,16 @@ public class SubscribePublisherTest {
     }
 
     public static class IntegerNoopPublisher
-            implements Flow.Publisher<Integer> {
+            implements Publisher<Integer> {
 
         Logger logger = LogManager.getLogger(getClass());
 
-        private CompletableFuture<Flow.Subscriber<? super Integer>> subscriber = new CompletableFuture<>();
+        private CompletableFuture<Subscriber<? super Integer>> subscriber = new CompletableFuture<>();
 
         @Override
-        public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
+        public void subscribe(Subscriber<? super Integer> subscriber) {
             this.subscriber.complete(subscriber);
-            subscriber.onSubscribe(new Flow.Subscription() {
+            subscriber.onSubscribe(new Subscription() {
                 @Override
                 public void request(long n) {
 
@@ -356,29 +359,29 @@ public class SubscribePublisherTest {
             });
         }
 
-        public CompletableFuture<Flow.Subscriber<? super Integer>> getSubscriber() {
+        public CompletableFuture<Subscriber<? super Integer>> getSubscriber() {
             return subscriber;
         }
     }
 
     public static class ServerIntegerExceptionPublisher
-            implements Flow.Publisher<Integer> {
+            implements Publisher<Integer> {
 
         Logger logger = LogManager.getLogger(getClass());
 
         @Override
-        public void subscribe(Flow.Subscriber<? super Integer> subscriber) {
+        public void subscribe(Subscriber<? super Integer> subscriber) {
             subscriber.onError(new NotAuthorizedException("Not authorized"));
         }
     }
 
     public static class ClientConfigurationSubscriber
-            implements Flow.Subscriber<Configuration> {
+            implements Subscriber<Configuration> {
 
         Logger logger = LogManager.getLogger(getClass());
         private CompletableFuture<Configuration> future;
         private Configuration config;
-        private Flow.Subscription subscription;
+        private Subscription subscription;
 
 
         public ClientConfigurationSubscriber(CompletableFuture<Configuration> future) {
@@ -386,7 +389,7 @@ public class SubscribePublisherTest {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
             subscription.request(1);
         }
@@ -411,7 +414,7 @@ public class SubscribePublisherTest {
     }
 
     public static class ServerConfigurationPublisher
-            implements Flow.Publisher<Configuration> {
+            implements Publisher<Configuration> {
 
         Logger logger = LogManager.getLogger(getClass());
         private Configuration configuration;
@@ -421,8 +424,8 @@ public class SubscribePublisherTest {
         }
 
         @Override
-        public void subscribe(Flow.Subscriber<? super Configuration> subscriber) {
-            subscriber.onSubscribe(new Flow.Subscription() {
+        public void subscribe(Subscriber<? super Configuration> subscriber) {
+            subscriber.onSubscribe(new Subscription() {
 
                 @Override
                 public void request(long n) {

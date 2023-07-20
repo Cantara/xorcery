@@ -17,12 +17,12 @@ package com.exoreaction.xorcery.reactivestreams.client;
 
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
-import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
+import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
+import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -31,6 +31,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -39,7 +41,6 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -85,16 +86,16 @@ public class ReactiveStreamsClientService
 
     @Override
     public CompletableFuture<Void> publish(URI serverUri, String streamName, Supplier<Configuration> subscriberServerConfiguration,
-                                           Flow.Publisher<?> publisher, Class<? extends Flow.Publisher<?>> publisherType, ClientConfiguration publisherClientConfiguration) {
+                                           Publisher<?> publisher, Class<? extends Publisher<?>> publisherType, ClientConfiguration publisherClientConfiguration) {
 
         if (publisherType == null)
-            publisherType = (Class<? extends Flow.Publisher<?>>) publisher.getClass();
+            publisherType = (Class<? extends Publisher<?>>) publisher.getClass();
 
         MessageWriter<Object> eventWriter = null;
         MessageReader<Object> resultReader = null;
 
         if (serverUri != null) {
-            Type type = resolveActualTypeArgs(publisherType, Flow.Publisher.class)[0];
+            Type type = resolveActualTypeArgs(publisherType, Publisher.class)[0];
             Type eventType = getEventType(type);
             Optional<Type> resultType = getResultType(type);
 
@@ -106,7 +107,7 @@ public class ReactiveStreamsClientService
     }
 
     @Override
-    public CompletableFuture<Void> publish(URI serverUri, String streamName, Supplier<Configuration> subscriberServerConfiguration, Flow.Publisher<?> publisher, MessageWriter<?> messageWriter, MessageReader<?> messageReader, ClientConfiguration publisherClientConfiguration) {
+    public CompletableFuture<Void> publish(URI serverUri, String streamName, Supplier<Configuration> subscriberServerConfiguration, Publisher<?> publisher, MessageWriter<?> messageWriter, MessageReader<?> messageReader, ClientConfiguration publisherClientConfiguration) {
 
         CompletableFuture<Void> result = new CompletableFuture<>();
 
@@ -115,7 +116,7 @@ public class ReactiveStreamsClientService
 
             if (subscriberFactory != null) {
                 // Local
-                Flow.Subscriber<Object> subscriber = subscriberFactory.factory().apply(subscriberServerConfiguration.get());
+                org.reactivestreams.Subscriber<Object> subscriber = subscriberFactory.factory().apply(subscriberServerConfiguration.get());
                 FutureProcessor<Object> futureProcessor = new FutureProcessor<>(result);
                 result.whenComplete((r, t) ->
                         {
@@ -177,12 +178,12 @@ public class ReactiveStreamsClientService
 
     @Override
     public CompletableFuture<Void> subscribe(URI serverUri, String streamName, Supplier<Configuration> publisherConfiguration,
-                                             Flow.Subscriber<?> subscriber, Class<? extends Flow.Subscriber<?>> subscriberType, ClientConfiguration subscriberClientConfiguration) {
+                                             Subscriber<?> subscriber, Class<? extends Subscriber<?>> subscriberType, ClientConfiguration subscriberClientConfiguration) {
 
         if (subscriberType == null)
-            subscriberType = (Class<? extends Flow.Subscriber<?>>) subscriber.getClass();
+            subscriberType = (Class<? extends Subscriber<?>>) subscriber.getClass();
 
-        Type type = resolveActualTypeArgs(subscriberType, Flow.Subscriber.class)[0];
+        Type type = resolveActualTypeArgs(subscriberType, Subscriber.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
 
@@ -194,7 +195,7 @@ public class ReactiveStreamsClientService
 
     @Override
     public CompletableFuture<Void> subscribe(URI serverUri, String streamName, Supplier<Configuration> publisherConfiguration,
-                                             Flow.Subscriber<?> subscriber,
+                                             Subscriber<?> subscriber,
                                              MessageReader<?> messageReader,
                                              MessageWriter<?> messageWriter,
                                              ClientConfiguration subscriberClientConfiguration) {
@@ -205,7 +206,7 @@ public class ReactiveStreamsClientService
 
             if (publisherFactory != null) {
                 // Local
-                Flow.Publisher<Object> publisher = publisherFactory.factory().apply(publisherConfiguration.get());
+                Publisher<Object> publisher = publisherFactory.factory().apply(publisherConfiguration.get());
                 FutureProcessor<Object> futureProcessor = new FutureProcessor<>(result);
                 result.whenComplete((r, t) ->
                         {
@@ -213,7 +214,7 @@ public class ReactiveStreamsClientService
                         }
                 );
                 activeSubscriptions.add(futureProcessor);
-                futureProcessor.subscribe((Flow.Subscriber<? super Object>) subscriber);
+                futureProcessor.subscribe((Subscriber<? super Object>) subscriber);
                 publisher.subscribe(futureProcessor);
                 return result;
             } else {
@@ -233,7 +234,7 @@ public class ReactiveStreamsClientService
                 }
         );
         activeSubscriptions.add(futureProcessor);
-        futureProcessor.subscribe((Flow.Subscriber<? super Object>) subscriber);
+        futureProcessor.subscribe((Subscriber<? super Object>) subscriber);
 
         // Start subscription process
         if (messageWriter != null) {

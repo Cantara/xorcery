@@ -19,15 +19,16 @@ import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import javax.management.MBeanServer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Flow;
 
 public class JmxMetricsPublisher
-        implements Flow.Publisher<WithMetadata<ObjectNode>> {
+        implements Publisher<WithMetadata<ObjectNode>> {
     private final MetricsConfiguration configuration;
     private DeploymentMetadata deploymentMetadata;
     private MBeanServer managementServer;
@@ -42,7 +43,7 @@ public class JmxMetricsPublisher
 
 
     @Override
-    public void subscribe(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
+    public void subscribe(Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
         Optional<List<String>> filters = configuration.getFilters().map(list ->
         {
             List<String> f = new ArrayList<>();

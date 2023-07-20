@@ -22,29 +22,34 @@ import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.util.SubscriberConfiguration;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 
 @Service(name = "domainevents")
 @ContractsProvided({DomainEventPublisher.class, PreDestroy.class})
 public class DomainEventsService
         implements DomainEventPublisher,
-        Flow.Publisher<WithResult<WithMetadata<DomainEvents>, Metadata>>,
+        Publisher<WithResult<WithMetadata<DomainEvents>, Metadata>>,
         PreDestroy {
 
     private final DeploymentMetadata deploymentMetadata;
 
-    private Flow.Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber;
+    private Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber;
 
     private final CloseableSemaphore requests = new CloseableSemaphore(0);
 
@@ -75,9 +80,9 @@ public class DomainEventsService
     }
 
     @Override
-    public void subscribe(Flow.Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber) {
+    public void subscribe(Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber) {
         this.subscriber = subscriber;
-        subscriber.onSubscribe(new Flow.Subscription() {
+        subscriber.onSubscribe(new Subscription() {
             @Override
             public void request(long n) {
                 requests.release((int) n);

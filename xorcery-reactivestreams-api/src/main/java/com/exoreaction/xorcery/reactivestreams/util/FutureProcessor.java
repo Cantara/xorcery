@@ -1,22 +1,24 @@
 package com.exoreaction.xorcery.reactivestreams.util;
 
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
+import org.reactivestreams.Processor;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 
 /**
- * Flow.Processor that tracks the state of the stream with a CompletableFuture.
+ * Processor that tracks the state of the stream with a CompletableFuture.
  * <p>
  * Can either be triggered by the future, or complete the future itself.
  *
  * @param <T>
  */
 public class FutureProcessor<T>
-        implements Flow.Processor<T, T>, Flow.Subscription, AutoCloseable {
+        implements Processor<T, T>, Subscription, AutoCloseable {
     private final CompletableFuture<Void> result;
-    private Flow.Subscriber<? super T> subscriber;
-    private Flow.Subscription subscription;
+    private Subscriber<? super T> subscriber;
+    private Subscription subscription;
 
     public FutureProcessor(CompletableFuture<Void> result) {
         this.result = result;
@@ -27,11 +29,11 @@ public class FutureProcessor<T>
         return result;
     }
 
-    public synchronized Flow.Subscriber<? super T> getSubscriber() {
+    public synchronized Subscriber<? super T> getSubscriber() {
         return subscriber;
     }
 
-    public synchronized Flow.Subscription getSubscription() {
+    public synchronized Subscription getSubscription() {
         return subscription;
     }
 
@@ -41,7 +43,7 @@ public class FutureProcessor<T>
 
     // Publisher
     @Override
-    public synchronized void subscribe(Flow.Subscriber<? super T> subscriber) {
+    public synchronized void subscribe(Subscriber<? super T> subscriber) {
         this.subscriber = subscriber;
         if (subscription != null)
             subscriber.onSubscribe(this);
@@ -57,7 +59,7 @@ public class FutureProcessor<T>
 
     // Subscriber
     @Override
-    public synchronized void onSubscribe(Flow.Subscription subscription) {
+    public synchronized void onSubscribe(Subscription subscription) {
         this.subscription = subscription;
         if (result.isDone()) {
             subscription.cancel();
@@ -95,7 +97,7 @@ public class FutureProcessor<T>
     // Subscription
     @Override
     public void request(long n) {
-        Flow.Subscription sub = subscription;
+        Subscription sub = subscription;
         if (sub != null) {
             sub.request(n);
         }
@@ -103,7 +105,7 @@ public class FutureProcessor<T>
 
     @Override
     public void cancel() {
-        Flow.Subscription sub = subscription;
+        Subscription sub = subscription;
         if (sub != null) {
             subscription = null;
             sub.cancel();
@@ -117,7 +119,7 @@ public class FutureProcessor<T>
     public synchronized void close() {
         if (subscriber != null)
         {
-            Flow.Subscriber<? super T> sub = subscriber;
+            Subscriber<? super T> sub = subscriber;
             subscriber = null;
             cancel();
             ServerShutdownStreamException exception = new ServerShutdownStreamException("shutdown");

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.reactivestreams.Publisher;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -32,7 +33,6 @@ import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 public class PublisherWithResultSubscriptionReactiveStream
@@ -42,7 +42,7 @@ public class PublisherWithResultSubscriptionReactiveStream
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
 
     public PublisherWithResultSubscriptionReactiveStream(String streamName,
-                                                         Function<Configuration, Flow.Publisher<Object>> publisherFactory,
+                                                         Function<Configuration, Publisher<Object>> publisherFactory,
                                                          MessageWriter<Object> messageWriter,
                                                          MessageReader<Object> resultReader,
                                                          ObjectMapper objectMapper,

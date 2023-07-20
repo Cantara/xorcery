@@ -19,20 +19,20 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
-import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
+import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -42,8 +42,6 @@ import java.nio.charset.Charset;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Flow;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 
 public class SubscribeWithResultReactiveStream
@@ -61,7 +59,7 @@ public class SubscribeWithResultReactiveStream
                                              ClientConfiguration subscriberConfiguration,
                                              DnsLookup dnsLookup,
                                              WebSocketClient webSocketClient,
-                                             Flow.Subscriber<Object> subscriber,
+                                             Subscriber<Object> subscriber,
                                              MessageReader<Object> eventReader,
                                              MessageWriter<Object> resultWriter,
                                              Supplier<Configuration> publisherConfiguration,

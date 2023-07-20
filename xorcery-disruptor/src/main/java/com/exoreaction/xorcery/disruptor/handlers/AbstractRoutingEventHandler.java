@@ -16,10 +16,11 @@
 package com.exoreaction.xorcery.disruptor.handlers;
 
 import com.lmax.disruptor.EventHandler;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -35,10 +36,10 @@ public abstract class AbstractRoutingEventHandler<T>
         this.subscribers = new CopyOnWriteArrayList<>();
     }
 
-    public Flow.Subscription add(Flow.Subscriber<? super T> subscriber, Flow.Subscription subscription) {
+    public Subscription add(Subscriber<? super T> subscriber, Subscription subscription) {
         SubscriptionTracker<T> tracker = new SubscriptionTracker<>(subscriber, new AtomicLong());
         subscribers.add(tracker);
-        return new Flow.Subscription() {
+        return new Subscription() {
             @Override
             public void request(long n) {
                 tracker.requests().addAndGet(n);
@@ -53,10 +54,10 @@ public abstract class AbstractRoutingEventHandler<T>
         };
     }
 
-    public Flow.Subscription add(Flow.Subscriber<? super T> subscriber) {
+    public Subscription add(Subscriber<? super T> subscriber) {
         SubscriptionTracker<T> tracker = new SubscriptionTracker<>(subscriber, new AtomicLong());
         subscribers.add(tracker);
-        return new Flow.Subscription() {
+        return new Subscription() {
             @Override
             public void request(long n) {
                 tracker.requests().addAndGet(n);
@@ -70,7 +71,7 @@ public abstract class AbstractRoutingEventHandler<T>
         };
     }
 
-    public void remove(Flow.Subscriber<? super T> subscriber)
+    public void remove(Subscriber<? super T> subscriber)
     {
         subscribers.removeIf(t -> t.subscriber() == subscriber);
     }
@@ -86,6 +87,6 @@ public abstract class AbstractRoutingEventHandler<T>
         }
     }
 
-    public record SubscriptionTracker<T>(Flow.Subscriber<? super T> subscriber, AtomicLong requests) {
+    public record SubscriptionTracker<T>(Subscriber<? super T> subscriber, AtomicLong requests) {
     }
 }

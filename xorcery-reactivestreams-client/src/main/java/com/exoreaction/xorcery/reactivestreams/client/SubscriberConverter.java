@@ -17,27 +17,28 @@ package com.exoreaction.xorcery.reactivestreams.client;
 
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.concurrent.Flow;
 
-class SubscriberConverter implements Flow.Subscriber<Object> {
-    private final Flow.Subscriber<Object> subscriber;
+class SubscriberConverter implements Subscriber<Object> {
+    private final Subscriber<Object> subscriber;
     private MessageWriter<Object> writer;
     private MessageReader<Object> reader;
-    private Flow.Subscription subscription;
+    private Subscription subscription;
 
-    public SubscriberConverter(Flow.Subscriber<Object> subscriber, MessageWriter<Object> writer, MessageReader<Object> reader) {
+    public SubscriberConverter(Subscriber<Object> subscriber, MessageWriter<Object> writer, MessageReader<Object> reader) {
         this.subscriber = subscriber;
         this.writer = writer;
         this.reader = reader;
     }
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         this.subscription = subscription;
         subscriber.onSubscribe(subscription);
     }

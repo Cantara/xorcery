@@ -204,6 +204,18 @@
                 <version>5.0.2</version>
             </dependency>
 
+            <!-- Reactive Streams -->
+            <dependency>
+                <groupId>org.reactivestreams</groupId>
+                <artifactId>reactive-streams</artifactId>
+                <version>1.0.4</version>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-bom</artifactId>
+                <version>2022.0.9</version>
+            </dependency>
+
             <!-- Bouncy Castle Cryptography APIs -->
             <dependency>
                 <groupId>org.bouncycastle</groupId>
@@ -321,11 +333,6 @@
             </dependency>
 
             <!-- Dependency version conflicts -->
-            <dependency>
-                <groupId>org.reactivestreams</groupId>
-                <artifactId>reactive-streams</artifactId>
-                <version>1.0.4</version>
-            </dependency>
             <dependency>
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>

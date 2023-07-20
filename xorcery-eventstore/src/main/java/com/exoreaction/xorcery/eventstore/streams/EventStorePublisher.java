@@ -28,14 +28,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 
 public class EventStorePublisher
-        implements Flow.Publisher<WithMetadata<ByteBuffer>> {
+        implements Publisher<WithMetadata<ByteBuffer>> {
     private static final Logger logger = LogManager.getLogger(EventStorePublisher.class);
 
     private final EventStoreDBClient client;
@@ -49,18 +51,18 @@ public class EventStorePublisher
     }
 
     @Override
-    public void subscribe(Flow.Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
+    public void subscribe(Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
         new EventsProcessor(subscriber);
     }
 
     private class EventsProcessor
             extends SubscriptionListener
-            implements Flow.Subscription {
+            implements Subscription {
 
-        private Flow.Subscriber<? super WithMetadata<ByteBuffer>> subscriber;
+        private Subscriber<? super WithMetadata<ByteBuffer>> subscriber;
         private com.eventstore.dbclient.Subscription subscription;
 
-        public EventsProcessor(Flow.Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
+        public EventsProcessor(Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
             try {
                 this.subscriber = subscriber;
 

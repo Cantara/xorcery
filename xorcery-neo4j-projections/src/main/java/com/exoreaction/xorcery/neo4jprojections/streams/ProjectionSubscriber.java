@@ -24,25 +24,26 @@ import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.LogManager;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class ProjectionSubscriber
-        implements Flow.Subscriber<WithMetadata<ArrayNode>> {
+        implements Subscriber<WithMetadata<ArrayNode>> {
 
-    private final Function<Flow.Subscription, Neo4jProjectionEventHandler> handlerFactory;
+    private final Function<Subscription, Neo4jProjectionEventHandler> handlerFactory;
     private Disruptor<WithMetadata<ArrayNode>> disruptor;
     private final DisruptorConfiguration disruptorConfiguration;
 
-    public ProjectionSubscriber(Function<Flow.Subscription, Neo4jProjectionEventHandler> handlerFactory, DisruptorConfiguration disruptorConfiguration) {
+    public ProjectionSubscriber(Function<Subscription, Neo4jProjectionEventHandler> handlerFactory, DisruptorConfiguration disruptorConfiguration) {
         this.disruptorConfiguration = disruptorConfiguration;
         this.handlerFactory = handlerFactory;
     }
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         disruptor = new Disruptor<>(WithMetadata::new, disruptorConfiguration.getSize(), new NamedThreadFactory("Neo4jProjection-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());

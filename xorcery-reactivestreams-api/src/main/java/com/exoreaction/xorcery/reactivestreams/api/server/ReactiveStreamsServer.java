@@ -16,17 +16,18 @@
 package com.exoreaction.xorcery.reactivestreams.api.server;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 public interface ReactiveStreamsServer {
     CompletableFuture<Void> publisher(String streamName,
-                                      Function<Configuration, ? extends Flow.Publisher<?>> publisherFactory,
-                                      Class<? extends Flow.Publisher<?>> publisherType);
+                                      Function<Configuration, ? extends Publisher<?>> publisherFactory,
+                                      Class<? extends Publisher<?>> publisherType);
 
     CompletableFuture<Void> subscriber(String streamName,
-                                       Function<Configuration, Flow.Subscriber<?>> subscriberFactory,
-                                       Class<? extends Flow.Subscriber<?>> subscriberType);
+                                       Function<Configuration, Subscriber<?>> subscriberFactory,
+                                       Class<? extends Subscriber<?>> subscriberType);
 }

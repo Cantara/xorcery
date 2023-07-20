@@ -16,29 +16,18 @@
 package com.exoreaction.xorcery.log4jsubscriber;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.reactivestreams.providers.WithMetadataMessageReaderFactory;
-import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
-import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
-import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
+import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 import org.apache.logging.log4j.*;
-import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.core.parser.JsonLogEventParser;
-import org.apache.logging.log4j.core.parser.ParseException;
 import org.glassfish.hk2.runlevel.RunLevel;
-import org.glassfish.hk2.utilities.reflection.ParameterizedTypeImpl;
 import org.jvnet.hk2.annotations.Service;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.concurrent.Flow;
 
 @Service(name = "log4jsubscriber")
 @RunLevel(6)
@@ -55,10 +44,10 @@ public class Log4jSubscriberService {
     }
 
     static class LogSubscriber
-            implements Flow.Subscriber<WithMetadata<JsonNode>> {
+            implements Subscriber<WithMetadata<JsonNode>> {
 
         private final Logger logger;
-        private Flow.Subscription subscription;
+        private Subscription subscription;
 
         public LogSubscriber(Configuration configuration) {
 
@@ -66,7 +55,7 @@ public class Log4jSubscriberService {
         }
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
             subscription.request(512);
         }

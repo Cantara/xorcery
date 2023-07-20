@@ -17,6 +17,7 @@ open module xorcery.disruptor {
     exports com.exoreaction.xorcery.disruptor;
     exports com.exoreaction.xorcery.disruptor.handlers;
 
+    requires org.reactivestreams;
     requires xorcery.configuration.api;
     requires transitive com.lmax.disruptor;
 }

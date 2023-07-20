@@ -21,14 +21,12 @@ import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
-import com.exoreaction.xorcery.net.URIs;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientBadPayloadStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -36,6 +34,8 @@ import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -49,7 +49,6 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
@@ -59,7 +58,7 @@ import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 public class SubscribeReactiveStream
         implements WebSocketPartialListener,
         WebSocketConnectionListener,
-        Flow.Subscription {
+        Subscription {
 
     private final URI serverUri;
     private final String streamName;
@@ -69,7 +68,7 @@ public class SubscribeReactiveStream
 
     private final DnsLookup dnsLookup;
     private final WebSocketClient webSocketClient;
-    protected final Flow.Subscriber<Object> subscriber;
+    protected final Subscriber<Object> subscriber;
     protected final MessageReader<Object> eventReader;
     private final Supplier<Configuration> publisherConfiguration;
     protected final ByteBufferPool byteBufferPool;
@@ -98,7 +97,7 @@ public class SubscribeReactiveStream
                                    ClientConfiguration subscriberConfiguration,
                                    DnsLookup dnsLookup,
                                    WebSocketClient webSocketClient,
-                                   Flow.Subscriber<Object> subscriber,
+                                   Subscriber<Object> subscriber,
                                    MessageReader<Object> eventReader,
                                    Supplier<Configuration> publisherConfiguration,
                                    ByteBufferPool pool,

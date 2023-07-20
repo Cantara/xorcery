@@ -16,24 +16,23 @@
 package com.exoreaction.xorcery.reactivestreams.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
-import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 
 //@Disabled
 public class ClientPublisherServerSubscriberIT {
@@ -100,12 +99,12 @@ public class ClientPublisherServerSubscriberIT {
                 }
             };
 
-            reactiveStreamsServer.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
+            reactiveStreamsServer.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Subscriber<?>>) serverSubscriber.getClass());
 
             // Client publisher
             final ClientPublisher<WithResult<String, Integer>> clientPublisher = new ClientPublisher<>() {
                 @Override
-                protected void publish(Flow.Subscriber<? super WithResult<String, Integer>> subscriber) {
+                protected void publish(Subscriber<? super WithResult<String, Integer>> subscriber) {
                     for (int i = 0; i < 100; i++) {
                         CompletableFuture<Integer> future = new CompletableFuture<>();
                         future.whenComplete((r, t) ->
@@ -117,7 +116,7 @@ public class ClientPublisherServerSubscriberIT {
                 }
             };
 
-            reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), ClientConfiguration.defaults())
+            reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Publisher<?>>) clientPublisher.getClass(), ClientConfiguration.defaults())
                     .toCompletableFuture().get();
 
             System.out.println("DONE!");
@@ -144,13 +143,13 @@ public class ClientPublisherServerSubscriberIT {
                 }
             };
 
-            reactiveStreamsServer.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
+            reactiveStreamsServer.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Subscriber<?>>) serverSubscriber.getClass());
 
             // Client publisher
             final long total = 1000;
             final ClientPublisher<WithResult<WithMetadata<String>, Integer>> clientPublisher = new ClientPublisher<>() {
                 @Override
-                protected void publish(Flow.Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber) {
+                protected void publish(Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber) {
                     for (int i = 0; i < total; i++) {
                         CompletableFuture<Integer> future = new CompletableFuture<>();
                         future.whenComplete((r, t) ->
@@ -166,7 +165,7 @@ public class ClientPublisherServerSubscriberIT {
             };
 
             long start = System.currentTimeMillis();
-            reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), ClientConfiguration.defaults())
+            reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "serversubscriber", Configuration::empty, clientPublisher, (Class<? extends Publisher<?>>) clientPublisher.getClass(), ClientConfiguration.defaults())
                     .whenComplete((r, t) ->
                             System.out.println("Process complete")).toCompletableFuture().get();
 
@@ -186,7 +185,7 @@ public class ClientPublisherServerSubscriberIT {
         }
 
         @Override
-        protected void publish(Flow.Subscriber<? super String> subscriber) {
+        protected void publish(Subscriber<? super String> subscriber) {
             for (int i = 0; i < total; i++) {
                 subscriber.onNext(i + "");
             }

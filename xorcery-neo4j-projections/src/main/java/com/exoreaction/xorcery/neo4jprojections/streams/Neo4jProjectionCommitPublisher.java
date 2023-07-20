@@ -19,16 +19,17 @@ import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import org.apache.logging.log4j.LogManager;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
-import java.util.concurrent.Flow;
 import java.util.function.Consumer;
 
 public class Neo4jProjectionCommitPublisher
-        implements Flow.Publisher<WithMetadata<ProjectionCommit>>, Consumer<WithMetadata<ProjectionCommit>> {
+        implements Publisher<WithMetadata<ProjectionCommit>>, Consumer<WithMetadata<ProjectionCommit>> {
     BroadcastEventHandler<WithMetadata<ProjectionCommit>> broadcastEventHandler = new BroadcastEventHandler<>(true);
 
     @Override
-    public void subscribe(Flow.Subscriber<? super WithMetadata<ProjectionCommit>> subscriber) {
+    public void subscribe(Subscriber<? super WithMetadata<ProjectionCommit>> subscriber) {
         subscriber.onSubscribe(broadcastEventHandler.add(subscriber));
     }
 

@@ -24,27 +24,28 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import javax.management.*;
 import javax.management.openmbean.CompositeData;
 import java.lang.reflect.Array;
 import java.util.*;
-import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 class JmxMetricSubscription
-        implements Flow.Subscription {
+        implements Subscription {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber;
+    private final Subscriber<? super WithMetadata<ObjectNode>> subscriber;
     private DeploymentMetadata deploymentMetadata;
     private final Optional<List<String>> filters;
     private final MBeanServer managementServer;
     private final Set<MBeanAttributeInfo> unsupportedOperationAttributes = new HashSet<>();
     private final Map<ObjectName, Map<String, Function<Object, JsonNode>>> valueConverters = new HashMap<>();
 
-    public JmxMetricSubscription(DeploymentMetadata deploymentMetadata, Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber, Optional<List<String>> filters, MBeanServer managementServer) {
+    public JmxMetricSubscription(DeploymentMetadata deploymentMetadata, Subscriber<? super WithMetadata<ObjectNode>> subscriber, Optional<List<String>> filters, MBeanServer managementServer) {
         this.deploymentMetadata = deploymentMetadata;
         this.filters = filters;
         this.managementServer = managementServer;

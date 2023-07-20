@@ -15,15 +15,18 @@
  */
 package com.exoreaction.xorcery.reactivestreams.test;
 
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 
 public abstract class ClientPublisher<T>
-        implements Flow.Publisher<T> {
+        implements Publisher<T> {
 
     @Override
-    public void subscribe(Flow.Subscriber<? super T> subscriber) {
-        subscriber.onSubscribe(new Flow.Subscription() {
+    public void subscribe(Subscriber<? super T> subscriber) {
+        subscriber.onSubscribe(new Subscription() {
             @Override
             public void request(long n) {
             }
@@ -39,5 +42,5 @@ public abstract class ClientPublisher<T>
         });
     }
 
-    protected abstract void publish(Flow.Subscriber<? super T> subscriber);
+    protected abstract void publish(Subscriber<? super T> subscriber);
 }

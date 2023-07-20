@@ -17,18 +17,18 @@ package com.exoreaction.xorcery.requestlogpublisher;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.log4jpublisher.LoggingMetadata;
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import org.eclipse.jetty.server.Server;
 import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.Service;
-
-import java.util.concurrent.Flow;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 @Service(name = "requestlogpublisher")
 public class RequestLogPublisherService
@@ -56,12 +56,12 @@ public class RequestLogPublisherService
     }
 
     public static class RequestLogPublisher
-            implements Flow.Publisher<WithMetadata<ObjectNode>> {
+            implements Publisher<WithMetadata<ObjectNode>> {
 
-        private Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber;
+        private Subscriber<? super WithMetadata<ObjectNode>> subscriber;
 
         @Override
-        public void subscribe(Flow.Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
+        public void subscribe(Subscriber<? super WithMetadata<ObjectNode>> subscriber) {
             this.subscriber = subscriber;
         }
 

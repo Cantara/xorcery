@@ -17,24 +17,25 @@ package com.exoreaction.xorcery.reactivestreams.client;
 
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 
-class SubscribeResultHandler implements Flow.Subscriber<Object> {
-    private final Flow.Subscriber<Object> subscriber;
+class SubscribeResultHandler implements Subscriber<Object> {
+    private final Subscriber<Object> subscriber;
     private CompletableFuture<Void> result;
     private MessageWriter<Object> writer;
     private MessageReader<Object> reader;
-    private Flow.Subscription subscription;
+    private Subscription subscription;
 
-    public SubscribeResultHandler(Flow.Subscriber<Object> subscriber, CompletableFuture<Void> result) {
+    public SubscribeResultHandler(Subscriber<Object> subscriber, CompletableFuture<Void> result) {
         this.subscriber = subscriber;
         this.result = result;
     }
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         this.subscription = subscription;
         subscriber.onSubscribe(subscription);
     }

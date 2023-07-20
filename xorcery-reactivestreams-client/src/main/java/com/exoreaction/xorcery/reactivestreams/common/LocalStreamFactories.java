@@ -16,8 +16,9 @@
 package com.exoreaction.xorcery.reactivestreams.common;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
-import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 /**
@@ -29,11 +30,11 @@ public interface LocalStreamFactories {
 
     WrappedPublisherFactory getPublisherFactory(String streamName);
 
-    record WrappedPublisherFactory(Function<Configuration, ? extends Flow.Publisher<Object>> factory,
-                                   Class<? extends Flow.Publisher<?>> publisherType) {
+    record WrappedPublisherFactory(Function<Configuration, ? extends Publisher<Object>> factory,
+                                   Class<? extends Publisher<?>> publisherType) {
     }
 
-    record WrappedSubscriberFactory(Function<Configuration, Flow.Subscriber<Object>> factory,
-                                    Class<? extends Flow.Subscriber<?>> subscriberType) {
+    record WrappedSubscriberFactory(Function<Configuration, Subscriber<Object>> factory,
+                                    Class<? extends Subscriber<?>> subscriberType) {
     }
 }

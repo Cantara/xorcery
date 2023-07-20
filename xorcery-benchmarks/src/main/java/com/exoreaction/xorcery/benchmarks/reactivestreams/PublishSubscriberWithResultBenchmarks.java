@@ -16,9 +16,7 @@
 package com.exoreaction.xorcery.benchmarks.reactivestreams;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
@@ -32,11 +30,12 @@ import org.apache.logging.log4j.Logger;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
-import java.net.URI;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 @State(Scope.Benchmark)
 @Fork(value = 1, warmups = 1, jvmArgs = "-Dcom.sun.management.jmxremote=true")
@@ -116,7 +115,7 @@ public class PublishSubscriberWithResultBenchmarks {
             }
         };
 
-        reactiveStreams.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Flow.Subscriber<?>>) serverSubscriber.getClass());
+        reactiveStreams.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Subscriber<?>>) serverSubscriber.getClass());
 
         // Client publisher
         Configuration configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(clientConfig).build();
@@ -125,7 +124,7 @@ public class PublishSubscriberWithResultBenchmarks {
 
         ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
         stream = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "serversubscriber",
-                Configuration::empty, clientPublisher, (Class<? extends Flow.Publisher<?>>) clientPublisher.getClass(), ClientConfiguration.defaults());
+                Configuration::empty, clientPublisher, (Class<? extends Publisher<?>>) clientPublisher.getClass(), ClientConfiguration.defaults());
 
         logger.info("Setup done");
     }
@@ -145,19 +144,19 @@ public class PublishSubscriberWithResultBenchmarks {
     public void writes() throws ExecutionException, InterruptedException, TimeoutException {
 
         CompletableFuture<Integer> integerCompletableFuture = new CompletableFuture<>();
-        integerCompletableFuture.whenComplete((i,t) -> total.addAndGet(i));
+        integerCompletableFuture.whenComplete((i, t) -> total.addAndGet(i));
         clientPublisher.publish(new WithResult<>(new WithMetadata<>(new Metadata.Builder()
                 .add("foo", "bar")
                 .build(), System.currentTimeMillis() + ""), integerCompletableFuture));
     }
 
     public static abstract class ServerSubscriber<T>
-            implements Flow.Subscriber<T> {
+            implements Subscriber<T> {
 
-        protected Flow.Subscription subscription;
+        protected Subscription subscription;
 
         @Override
-        public void onSubscribe(Flow.Subscription subscription) {
+        public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
             subscription.request(8192);
         }
@@ -173,11 +172,11 @@ public class PublishSubscriberWithResultBenchmarks {
     }
 
     public static class ClientPublisher
-            implements Flow.Publisher<WithResult<WithMetadata<String>, Integer>> {
+            implements Publisher<WithResult<WithMetadata<String>, Integer>> {
 
         private final CompletableFuture<Void> done = new CompletableFuture<>();
         private final Semaphore semaphore = new Semaphore(0);
-        private Flow.Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber;
+        private Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber;
 
         public void publish(WithResult<WithMetadata<String>, Integer> item) throws InterruptedException {
             if (!semaphore.tryAcquire(5, TimeUnit.SECONDS)) {
@@ -192,9 +191,9 @@ public class PublishSubscriberWithResultBenchmarks {
         }
 
         @Override
-        public void subscribe(Flow.Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber) {
+        public void subscribe(Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber) {
             this.subscriber = subscriber;
-            subscriber.onSubscribe(new Flow.Subscription() {
+            subscriber.onSubscribe(new Subscription() {
                 @Override
                 public void request(long n) {
                     semaphore.release((int) n);

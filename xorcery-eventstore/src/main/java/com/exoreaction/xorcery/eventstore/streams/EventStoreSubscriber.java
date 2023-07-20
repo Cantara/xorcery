@@ -22,12 +22,13 @@ import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.Flow;
 
 public class EventStoreSubscriber
-        implements Flow.Subscriber<WithMetadata<ByteBuffer>> {
+        implements Subscriber<WithMetadata<ByteBuffer>> {
 
     private Disruptor<WithMetadata<ByteBuffer>> disruptor;
     private EventStoreDBClient client;
@@ -39,7 +40,7 @@ public class EventStoreSubscriber
     }
 
     @Override
-    public void onSubscribe(Flow.Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         disruptor = new Disruptor<>(WithMetadata::new, 512, new NamedThreadFactory("EventStoreSubscriber-"),
                 ProducerType.SINGLE,
                 new BlockingWaitStrategy());
