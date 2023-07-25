@@ -30,6 +30,10 @@ public record Link(String rel, JsonNode value) {
         this(rel, JsonNodeFactory.instance.textNode(uri));
     }
 
+    public Link(String rel, URI uri) {
+        this(rel, JsonNodeFactory.instance.textNode(uri.toASCIIString()));
+    }
+
     public String getHref() {
         return value.isTextual() ? value.textValue() : value.path("href").textValue();
     }

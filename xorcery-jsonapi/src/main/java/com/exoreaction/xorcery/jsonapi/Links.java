@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.net.URI;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 
 /**
@@ -72,6 +73,8 @@ public record Links(ObjectNode json)
         }
     }
 
+    private static final Pattern spaceSeparated = Pattern.compile(" ");
+
     public boolean isEmpty() {
         return object().isEmpty();
     }
@@ -84,11 +87,16 @@ public record Links(ObjectNode json)
         if (name == null) {
             return Optional.empty();
         } else {
+            String[] findRels = spaceSeparated.split(name);
             Iterator<String> names = object().fieldNames();
-            while (names.hasNext()) {
+            nextRel: while (names.hasNext()) {
                 String rel = names.next();
-                if (rel.contains(name))
-                    return Optional.of(new Link(rel, object().get(rel)));
+                String[] rels = spaceSeparated.split(rel);
+                for (String findRel : findRels) {
+                    if (!Arrays.asList(rels).contains(findRel))
+                        continue nextRel;
+                }
+                return Optional.of(new Link(rel, object().get(rel)));
             }
             return Optional.empty();
         }
