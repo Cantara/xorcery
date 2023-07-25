@@ -35,11 +35,11 @@ class KeyStoresTest {
             keystores:
               enabled: "{{ defaults.enabled }}"
               teststore:
-                path: "{{ instance.home }}/target/teststore.p12"
+                path: "{{ instance.home }}/teststore.p12"
                 template: "META-INF/teststore.p12"
                 password: "{{ keystores.defaultPassword }}"
               emptystore:
-                path: "{{ instance.home }}/target/emptystore.p12"
+                path: "{{ instance.home }}/emptystore.p12"
                 password: "{{ keystores.defaultPassword }}"
                         """;
 

@@ -126,6 +126,11 @@ public class KeyStores {
                     // Copy template to file
                     try (InputStream inputStream = templateStoreUrl.openStream()) {
                         LogManager.getLogger(getClass()).info("Copying template keystore " + templateStoreUrl + " to local keystore file " + keyStoreOutput);
+                        File keyStoreDir = keyStoreOutput.getParentFile();
+                        if (!keyStoreDir.exists())
+                        {
+                            keyStoreDir.mkdirs();
+                        }
                         try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreOutput)) {
                             fileOutputStream.write(inputStream.readAllBytes());
                         }
@@ -134,6 +139,11 @@ public class KeyStores {
                         LogManager.getLogger(getClass()).warn("Could not find template keystore, continuing with empty keystore " + keyStoreName);
                         // Create empty store
                         keyStore.load(null, password);
+                        File keyStoreDir = keyStoreOutput.getParentFile();
+                        if (!keyStoreDir.exists())
+                        {
+                            keyStoreDir.mkdirs();
+                        }
                         try (FileOutputStream outputStream = new FileOutputStream(keyStoreOutput)) {
                             keyStore.store(outputStream, password);
                         }
@@ -152,6 +162,11 @@ public class KeyStores {
                         // Create empty store
                         char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
                         keyStore.load(null, password);
+                        File keyStoreDir = file.getParentFile();
+                        if (!keyStoreDir.exists())
+                        {
+                            keyStoreDir.mkdirs();
+                        }
                         try (FileOutputStream outputStream = new FileOutputStream(file)) {
                             keyStore.store(outputStream, password);
                         }
@@ -181,6 +196,12 @@ public class KeyStores {
                 URL templateStoreUrl = keyStoreConfiguration.getTemplate();
                 if (templateStoreUrl != null && keyStoreUrl.getProtocol().equals("file")) {
                     // Copy template to file
+                    File keyStoreDir = new File(keyStoreUrl.getFile()).getParentFile();
+                    if (!keyStoreDir.exists())
+                    {
+                        keyStoreDir.mkdirs();
+                    }
+
                     try (InputStream inputStream = templateStoreUrl.openStream()) {
                         try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreUrl.getFile())) {
                             fileOutputStream.write(inputStream.readAllBytes());
