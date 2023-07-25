@@ -20,7 +20,6 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
-import com.exoreaction.xorcery.neo4j.client.GraphDatabases;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionEventHandler;
 import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionSubscriber;
@@ -55,10 +54,10 @@ public class Neo4jProjectionsSubscribersService {
     public Neo4jProjectionsSubscribersService(Neo4jProjectionsService neo4jProjectionsService,
                                               ReactiveStreamsClient reactiveStreamsClient,
                                               Configuration configuration,
-                                              GraphDatabases graphDatabases,
+                                              GraphDatabase graphDatabase,
                                               IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
                                               MetricRegistry metricRegistry) {
-        graphDatabase = graphDatabases.apply("neo4j");
+        this.graphDatabase = graphDatabase;
 
         // This service can subscribe to external publishers
         configuration.getObjectListAs("neo4jprojections.subscribers", Publisher::new).ifPresent(publishers ->

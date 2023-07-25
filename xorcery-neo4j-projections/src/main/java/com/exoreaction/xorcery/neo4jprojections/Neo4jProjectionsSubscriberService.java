@@ -19,11 +19,10 @@ import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
-import com.exoreaction.xorcery.neo4j.client.GraphDatabases;
+import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionCommitPublisher;
 import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionEventHandler;
 import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionSubscriber;
-import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
@@ -50,10 +49,9 @@ public class Neo4jProjectionsSubscriberService {
     public Neo4jProjectionsSubscriberService(ReactiveStreamsServer reactiveStreamsServer,
                                              Neo4jProjectionsService neo4jProjectionsService,
                                              Configuration configuration,
-                                             GraphDatabases graphDatabases,
+                                             GraphDatabase graphDatabase,
                                              IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
                                              MetricRegistry metricRegistry) {
-        GraphDatabase graphDatabase = graphDatabases.apply("neo4j");
 
         Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
 
@@ -63,7 +61,7 @@ public class Neo4jProjectionsSubscriberService {
         neo4jEventProjectionList.forEach(projectionList::add);
 
         reactiveStreamsServer.subscriber("neo4jprojections", cfg -> new ProjectionSubscriber(subscription -> new Neo4jProjectionEventHandler(
-                graphDatabases.apply(cfg.getString("database").orElse("neo4j")).getGraphDatabaseService(),
+                graphDatabase.getGraphDatabaseService(),
                 subscription,
                 neo4jProjectionsService.getCurrentProjection(cfg.getString("projection").orElseThrow()),
                 cfg.getString("projection").orElseThrow(),
