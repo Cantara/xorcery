@@ -3,7 +3,8 @@ instance:
   name: "xorcery-test"
   host: "server"
   domain: "xorcery.test"
-  resources: "{{ instance.home }}/target/classes"
+  resources: "{{ instance.home }}/../classes"
+  home: "{{ SYSTEM.user_dir }}/target/xorcery"
 
 hk2:
   threadPolicy: "USE_NO_THREADS"

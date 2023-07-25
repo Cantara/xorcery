@@ -31,6 +31,7 @@ import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,12 @@ public class Xorcery
                 System.setProperty(entry.getKey(), entry.getValue().asText());
         });
 
+        // Ensure home directory exists
+        boolean createdHome = false;
+        File homeDir = new File(InstanceConfiguration.get(configuration).getHome());
+        if (!homeDir.exists())
+            createdHome = homeDir.mkdirs();
+
         Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
 
         this.serviceLocator = sl == null ? ServiceLocatorFactory.getInstance().create(null) : sl;
@@ -96,6 +103,9 @@ public class Xorcery
                 xorceryLogger.debug(msg);
             }
         }
+
+        if (createdHome)
+            logger.info(marker, "Create home directory "+homeDir);
         logger.info(marker, "Starting");
 
         Filter configurationFilter = getEnabledServicesFilter(configuration);
