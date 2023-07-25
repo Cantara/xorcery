@@ -23,17 +23,23 @@ import java.util.function.Consumer;
 /**
  * JUnit Extension to create Xorcery instances. It is possible to specify instance id (to easily look up the instance within tests), configuration,
  * and optionally provide a Zip archive name from src/test/resources which is unzipped into home directory data.
- *
+ * <p>
  * If an archive is provided the home directory data is not deleted after the test finishes to make subsequent tests with the same test data run faster.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class XorceryExtension implements Extension, ParameterResolver, BeforeAllCallback, AfterAllCallback {
+public class XorceryExtension
+        implements
+        TestExecutionExceptionHandler,
+        ParameterResolver,
+        BeforeAllCallback,
+        AfterAllCallback {
     public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create("xorcery");
 
     private final Configuration configuration;
     private final boolean isArchive;
     private Xorcery xorcery;
     private File tempDir;
+    private boolean hasError = false;
 
     public static Builder xorcery() {
         return new Builder();
@@ -127,7 +133,7 @@ public class XorceryExtension implements Extension, ParameterResolver, BeforeAll
         xorcery.close();
 
         // Allow archive temp dirs to survive between tests to speed things up
-        if (!isArchive) {
+        if (!isArchive && !hasError) {
             Files.walk(tempDir.toPath())
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
@@ -143,5 +149,15 @@ public class XorceryExtension implements Extension, ParameterResolver, BeforeAll
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
         return extensionContext.getStore(NAMESPACE).get(parameterContext.getParameter().getType());
+    }
+
+    @Override
+    public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        hasError = true;
+        throw throwable;
+    }
+
+    public Xorcery getXorcery() {
+        return xorcery;
     }
 }

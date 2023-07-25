@@ -15,12 +15,15 @@
  */
 package com.exoreaction.xorcery.keystores;
 
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.keystores.KeyStores;
 import com.exoreaction.xorcery.secrets.Secrets;
+import com.exoreaction.xorcery.test.XorceryExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -31,7 +34,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 class KeyStoresTest {
 
-    String config = """
+
+    static String config = """
             keystores:
               enabled: "{{ defaults.enabled }}"
               teststore:
@@ -43,42 +47,34 @@ class KeyStoresTest {
                 password: "{{ keystores.defaultPassword }}"
                         """;
 
+    @RegisterExtension
+    static XorceryExtension xorcery = XorceryExtension.xorcery()
+            .configuration(ConfigurationBuilder::addTestDefaults)
+            .configuration(c -> c.addYaml(config))
+            .build();
+
     @Test
     public void testKeyStoreTemplate() throws Exception {
 
         // Given
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .build();
+        KeyStores keyStores = xorcery.getXorcery().getServiceLocator().getService(KeyStores.class);
 
-        System.out.println(configuration);
+        // When
+        KeyStore keyStore = keyStores.getKeyStore("teststore");
 
-        try (Xorcery xorcery = new Xorcery(configuration)) {
-            KeyStores keyStores = xorcery.getServiceLocator().getService(KeyStores.class);
-
-            // When
-            KeyStore keyStore = keyStores.getKeyStore("teststore");
-
-            // Then
-            assertThat(keyStore, notNullValue());
-        }
+        // Then
+        assertThat(keyStore, notNullValue());
     }
 
     @Test
     public void testCreateEmptyKeyStore() throws Exception {
         // Given
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
-                .build();
+        KeyStores keyStores = xorcery.getXorcery().getServiceLocator().getService(KeyStores.class);
 
-        try (Xorcery xorcery = new Xorcery(configuration)) {
-            KeyStores keyStores = xorcery.getServiceLocator().getService(KeyStores.class);
+        // When
+        KeyStore keyStore = keyStores.getKeyStore("emptystore");
 
-            // When
-            KeyStore keyStore = keyStores.getKeyStore("emptystore");
-
-            // Then
-            assertThat(keyStore, notNullValue());
-        }
+        // Then
+        assertThat(keyStore, notNullValue());
     }
 }
