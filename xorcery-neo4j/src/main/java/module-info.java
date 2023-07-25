@@ -33,4 +33,5 @@ open module xorcery.neo4j {
     requires jakarta.inject;
     requires com.fasterxml.jackson.dataformat.yaml;
     requires com.codahale.metrics;
+    requires org.glassfish.hk2.runlevel;
 }

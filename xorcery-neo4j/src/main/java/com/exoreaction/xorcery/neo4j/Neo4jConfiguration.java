@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,12 +39,8 @@ public record Neo4jConfiguration(Configuration context)
         return JsonElement.toFlatMap(context().getConfiguration("settings").json(), JsonNode::asText);
     }
 
-    public String getTemporarySettingsFile() {
-        return context.getString("temporarySettingsFile").orElseThrow();
-    }
-
     public boolean isWipeOnBreakingChanges() {
-        return context.getBoolean("domain.wipe_on_breaking_change").orElseThrow();
+        return context.getBoolean("domain.wipeOnBreakingChange").orElseThrow();
     }
 
     public SemanticVersion getVersion() {
@@ -52,7 +49,7 @@ public record Neo4jConfiguration(Configuration context)
                 .orElseThrow();
     }
 
-    public Optional<List<DatabaseConfiguration>> getDatabases() {
-        return context.getListAs("databases", json -> new DatabaseConfiguration((ObjectNode) json));
+    List<String> getStartupCypherStatements() {
+        return context.getListAs("startup", JsonNode::textValue).orElse(Collections.emptyList());
     }
 }

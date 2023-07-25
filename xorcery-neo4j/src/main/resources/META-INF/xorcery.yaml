@@ -2,13 +2,15 @@ neo4jdatabase:
   enabled: "{{ defaults.enabled }}"
   path: "{{ instance.home }}/neo4j"
   startup: []
-  temporarySettingsFile: "tmp_neo4j.conf"
   domain:
     version: "1.0.0"
-    wipe_on_breaking_change: true
+    wipeOnBreakingChange: true
   settings:
-    dbms:
-      allow_upgrade: true
+    server:
+      directories:
+        data: "{{ neo4jdatabase.path }}/data"
+  metrics:
+    enabled: "{{ defaults.enabled }}"
 
 jersey.server.register:
   - com.exoreaction.xorcery.neo4j.resources.Neo4jConsoleResource
