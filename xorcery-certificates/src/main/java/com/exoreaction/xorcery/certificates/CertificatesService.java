@@ -34,6 +34,7 @@ import org.bouncycastle.pkcs.PKCS10CertificationRequestBuilder;
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
@@ -45,6 +46,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
+import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 import static org.bouncycastle.jce.provider.BouncyCastleProvider.PROVIDER_NAME;
 
 public class CertificatesService
@@ -89,8 +91,21 @@ public class CertificatesService
             // Request certificate
             requestCertificateProcess = requestCertificatesProcessFactory.create(createRequest());
             requestCertificateProcess.start();
-            requestCertificateProcess.result()
-                    .whenComplete(this::updateCertificates).join();
+            try {
+                requestCertificateProcess.result()
+                        .whenComplete(this::updateCertificates).orTimeout(10, TimeUnit.SECONDS).join();
+            } catch (Exception e) {
+                if (unwrap(e) instanceof ConnectException)
+                {
+                    if (certificate != null)
+                    {
+                        logger.warn("Could not renew certificate. Continuing and will try again later", e);
+                    } else
+                    {
+                        throw e;
+                    }
+                }
+            }
         }
 
         scheduleRenewal();
