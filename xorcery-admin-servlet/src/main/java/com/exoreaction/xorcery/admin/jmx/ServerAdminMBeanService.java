@@ -18,6 +18,8 @@ package com.exoreaction.xorcery.admin.jmx;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import jakarta.inject.Inject;
+import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
@@ -26,10 +28,30 @@ import java.lang.management.ManagementFactory;
 
 @Service
 @RunLevel(20)
-public class ServerAdminMBeanService {
+public class ServerAdminMBeanService
+    implements PreDestroy
+{
+
+    private final ServerMXBean.Model serverMXBean;
+    private final ObjectName objectName;
+    private final Logger logger;
 
     @Inject
-    public ServerAdminMBeanService(Xorcery xorcery, Configuration configuration) throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
-        ManagementFactory.getPlatformMBeanServer().registerMBean(new ServerMXBean.Model(configuration, xorcery), ObjectName.getInstance("xorcery:name=admin"));
+    public ServerAdminMBeanService(Xorcery xorcery, Configuration configuration, Logger logger) throws MalformedObjectNameException, NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
+        this.logger = logger;
+        serverMXBean = new ServerMXBean.Model(configuration, xorcery);
+        objectName = ObjectName.getInstance("xorcery:name=admin");
+        ManagementFactory.getPlatformMBeanServer().registerMBean(serverMXBean, objectName);
+    }
+
+    @Override
+    public void preDestroy() {
+        try {
+            ManagementFactory.getPlatformMBeanServer().unregisterMBean(objectName);
+        } catch (InstanceNotFoundException e) {
+            // IGnore
+        } catch (MBeanRegistrationException e) {
+            logger.warn("Could not deregister admin MBean");
+        }
     }
 }
