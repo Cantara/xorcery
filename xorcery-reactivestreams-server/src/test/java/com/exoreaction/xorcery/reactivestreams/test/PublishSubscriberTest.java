@@ -202,8 +202,15 @@ public class PublishSubscriberTest {
         }
 
         // Then
-        Assertions.assertThrows(CompletionException.class, error::join);
-        Assertions.assertThrows(CancellationException.class, stream::join);
+        Assertions.assertThrows(CompletionException.class, ()->
+        {
+            error.orTimeout(10, TimeUnit.SECONDS).join();
+        });
+        CompletableFuture<Void> finalStream = stream;
+        Assertions.assertThrows(CancellationException.class, ()->
+        {
+            finalStream.orTimeout(10, TimeUnit.SECONDS).join();
+        });
     }
 
     @Test
