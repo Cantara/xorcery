@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.core.test {
+open module xorcery.junit {
+    exports com.exoreaction.xorcery.junit;
+
+    requires transitive xorcery.configuration.api;
+    requires transitive xorcery.configuration;
     requires transitive xorcery.core;
 
     requires transitive org.junit.jupiter.api;
-    requires transitive org.hamcrest;
-
+    requires transitive org.apache.logging.log4j.core;
 }
