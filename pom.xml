@@ -51,6 +51,8 @@
         <module>xorcery-jsonapi-server</module>
 
         <module>xorcery-core</module>
+        <module>xorcery-junit</module>
+        <module>xorcery-runner</module>
 
         <module>xorcery-metricregistry</module>
 

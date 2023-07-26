@@ -39,7 +39,7 @@
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
+            <artifactId>xorcery-runner</artifactId>
             <version>${project.version}</version>
         </dependency>
 

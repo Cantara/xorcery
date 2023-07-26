@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.core;
+package com.exoreaction.xorcery.runner;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationLogger;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.exoreaction.xorcery.core.Xorcery;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.MarkerManager;
-import org.apache.logging.log4j.status.StatusLogger;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -34,7 +32,7 @@ import java.util.concurrent.Callable;
  * @since 12/04/2022
  */
 
-@CommandLine.Command(name = "xorcery", version = "1.0")
+@CommandLine.Command(name = "xorcery", versionProvider = ConfigurationVersionProvider.class)
 public class Main
         implements Callable<Integer> {
 
@@ -69,7 +67,7 @@ public class Main
         return 0;
     }
 
-    protected Configuration loadConfiguration() {
+    public Configuration loadConfiguration() {
         StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
         ConfigurationBuilder builder = new ConfigurationBuilder().addDefaults().with(standardConfigurationBuilder.addFile(configuration));
 

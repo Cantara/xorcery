@@ -16,18 +16,11 @@
 package com.exoreaction.xorcery.keystores;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.keystores.KeyStores;
-import com.exoreaction.xorcery.secrets.Secrets;
-import com.exoreaction.xorcery.test.XorceryExtension;
+import com.exoreaction.xorcery.junit.XorceryExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;

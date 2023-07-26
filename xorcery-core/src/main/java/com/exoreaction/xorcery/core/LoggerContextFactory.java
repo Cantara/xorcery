@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-@Service
+@Service(name = "log4j2", metadata = "enabled=log4j2")
 public class LoggerContextFactory
         implements Factory<LoggerContext> {
 

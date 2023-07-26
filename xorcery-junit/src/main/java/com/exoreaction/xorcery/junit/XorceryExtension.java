@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.test;
+package com.exoreaction.xorcery.junit;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
@@ -66,6 +66,11 @@ public class XorceryExtension
             return this;
         }
 
+        public Builder addYaml(String yamlConfig) {
+            configurationBuilder.addYaml(yamlConfig);
+            return this;
+        }
+
         public XorceryExtension build() {
 
             if (instanceId != null)
@@ -130,14 +135,17 @@ public class XorceryExtension
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        xorcery.close();
+        if (xorcery != null)
+        {
+            xorcery.close();
 
-        // Allow archive temp dirs to survive between tests to speed things up
-        if (!isArchive && !hasError) {
-            Files.walk(tempDir.toPath())
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
+            // Allow archive temp dirs to survive between tests to speed things up
+            if (!isArchive && !hasError) {
+                Files.walk(tempDir.toPath())
+                        .sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            }
         }
     }
 

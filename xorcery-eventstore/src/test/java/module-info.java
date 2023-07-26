@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 open module xorcery.eventstore.test {
-    requires xorcery.core.test;
+    requires xorcery.junit;
     requires xorcery.eventstore;
     requires xorcery.reactivestreams.server;
     requires xorcery.jetty.client;
