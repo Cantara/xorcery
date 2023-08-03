@@ -120,7 +120,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>neo4j-apoc-jpms-shaded</artifactId>
+            <artifactId>neo4j-shaded</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>

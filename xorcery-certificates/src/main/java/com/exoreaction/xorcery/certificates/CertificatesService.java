@@ -95,15 +95,14 @@ public class CertificatesService
                 requestCertificateProcess.result()
                         .whenComplete(this::updateCertificates).orTimeout(10, TimeUnit.SECONDS).join();
             } catch (Exception e) {
-                if (unwrap(e) instanceof ConnectException)
-                {
-                    if (certificate != null)
-                    {
+                if (unwrap(e) instanceof ConnectException) {
+                    if (certificate != null) {
                         logger.warn("Could not renew certificate. Continuing and will try again later", e);
-                    } else
-                    {
+                    } else {
                         throw e;
                     }
+                } else {
+                    throw e;
                 }
             }
         }
@@ -142,8 +141,7 @@ public class CertificatesService
         JcaContentSignerBuilder contentSignerBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider("BC");
         PrivateKey signingKey = (PrivateKey) keyStore.getKey("provisioning", password);
 
-        if (signingKey == null)
-        {
+        if (signingKey == null) {
             logger.warn("No provisioning key in keystore. Using self-signing key instead");
             signingKey = issuedCertKeyPair.getPrivate();
         }

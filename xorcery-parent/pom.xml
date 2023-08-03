@@ -122,8 +122,8 @@
             <!-- Xorcery other -->
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>neo4j-apoc-jpms-shaded</artifactId>
-                <version>5.9.0</version>
+                <artifactId>neo4j-shaded</artifactId>
+                <version>5.10.0-SNAPSHOT</version>
             </dependency>
 
             <!-- CLI -->

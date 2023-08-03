@@ -51,7 +51,7 @@ public class Main
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {
             Logger mainLogger = LogManager.getLogger(Main.class);
-            mainLogger.info("Shutting down server");
+            mainLogger.info("Shutting down");
             try {
                 xorcery.close();
             } catch (Exception e) {

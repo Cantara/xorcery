@@ -109,7 +109,14 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>neo4j-apoc-jpms-shaded</artifactId>
+            <artifactId>neo4j-shaded</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-junit</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
