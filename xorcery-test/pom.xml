@@ -119,10 +119,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>neo4j-shaded</artifactId>
-        </dependency>
-        <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>

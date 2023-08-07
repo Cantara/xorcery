@@ -52,6 +52,7 @@ public class SRVConnectorTest {
         Configuration server2Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""
                         instance.host: server2
                         jetty.server.ssl.port: 8444
+                        jetty.client.ssl.trustAll: true
                         """).build();
 
         try (Xorcery server = new Xorcery(server1Configuration)) {

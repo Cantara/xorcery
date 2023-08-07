@@ -36,7 +36,7 @@ public class ClientCertificateAuthenticationTest {
 
     String config = """
             dns.client.hosts:
-                server1.xorcery.test: 127.0.0.1
+                server.xorcery.test: 127.0.0.1
                 wrongserver.xorcery.test: 127.0.0.1
             dns.server.enabled: false
             dns.registration.enabled: false
@@ -55,7 +55,7 @@ public class ClientCertificateAuthenticationTest {
 
     String serverConfig = """
             instance.id: "xorcery1"
-            instance.host: "server1"
+            instance.host: "server"
             jetty.server.ssl.port: "{{SYSTEM.port}}"
             jetty.server.ssl.sniRequired: true
             jetty.server.security.enabled: true
