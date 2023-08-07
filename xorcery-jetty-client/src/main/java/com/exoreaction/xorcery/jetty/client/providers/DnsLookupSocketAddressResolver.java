@@ -20,12 +20,17 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import org.eclipse.jetty.util.Promise;
 import org.eclipse.jetty.util.SocketAddressResolver;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Use the Xorcery DNS lookup service to resolve names.
+ * Apart from normal DNS lookups this would also include manually configured nameservers, multicast discoveries, and mappings in the Configuration.
+ */
 public class DnsLookupSocketAddressResolver
         implements SocketAddressResolver {
     private final DnsLookup dnsLookup;
@@ -47,7 +52,8 @@ public class DnsLookupSocketAddressResolver
                             try {
                                 List<InetSocketAddress> addressList = new ArrayList<>(list.size());
                                 for (URI uri : list) {
-                                    addressList.add(new InetSocketAddress(uri.getHost(), uri.getPort()));
+                                    InetAddress inetAddress = InetAddress.getByAddress(host, InetAddress.getByName(uri.getHost()).getAddress());
+                                    addressList.add(new InetSocketAddress(inetAddress, uri.getPort()));
                                 }
                                 promise.succeeded(addressList);
                             } catch (Exception e) {

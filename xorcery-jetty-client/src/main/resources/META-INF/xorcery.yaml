@@ -13,4 +13,4 @@ jetty:
       #      truststore: null
       #Server
       endpointIdentificationAlgorithm: "HTTPS"
-      trustAll: true
+      trustAll: false
