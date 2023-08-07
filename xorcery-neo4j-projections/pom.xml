@@ -77,10 +77,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>neo4j-shaded</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
         </dependency>
