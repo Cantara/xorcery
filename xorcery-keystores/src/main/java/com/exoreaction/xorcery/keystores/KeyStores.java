@@ -86,10 +86,11 @@ public class KeyStores {
                 String name = stringKeyStoreEntry.getKey();
                 KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(name);
                 URL keyStoreUrl = keyStoreConfiguration.getURL();
-                try (FileOutputStream outputStream = new FileOutputStream(keyStoreUrl.getFile())) {
+                File file = new File(keyStoreUrl.getFile()).getCanonicalFile();
+                try (FileOutputStream outputStream = new FileOutputStream(file)) {
                     keyStore.store(outputStream, keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null));
                 }
-                LogManager.getLogger(getClass()).info("Saved keystore " + name);
+                LogManager.getLogger(getClass()).info("Saved keystore " + name + " to " + file);
                 publish(keyStore);
                 return;
             }
@@ -117,7 +118,7 @@ public class KeyStores {
             KeyStore keyStore = KeyStore.getInstance(keyStoreConfiguration.getType());
 
             if (!keyStoreConfiguration.configuration().getJson("template").orElse(MissingNode.getInstance()).isMissingNode()) {
-                File keyStoreOutput = new File(keyStoreConfiguration.getPath()).getAbsoluteFile();
+                File keyStoreOutput = new File(keyStoreConfiguration.getPath()).getCanonicalFile();
                 keyStoreUrl = keyStoreOutput.toURI().toURL();
                 if (!keyStoreOutput.exists()) {
                     // Copy template to file
@@ -127,8 +128,7 @@ public class KeyStores {
                     try (InputStream inputStream = templateStoreUrl.openStream()) {
                         LogManager.getLogger(getClass()).info("Copying template keystore " + templateStoreUrl + " to local keystore file " + keyStoreOutput);
                         File keyStoreDir = keyStoreOutput.getParentFile();
-                        if (!keyStoreDir.exists())
-                        {
+                        if (!keyStoreDir.exists()) {
                             keyStoreDir.mkdirs();
                         }
                         try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreOutput)) {
@@ -136,12 +136,11 @@ public class KeyStores {
                         }
                     } catch (FileNotFoundException e) {
                         // Continue with empty keystore
-                        LogManager.getLogger(getClass()).warn("Could not find template keystore, continuing with empty keystore " + keyStoreName);
+                        LogManager.getLogger(getClass()).warn("Could not find template keystore, continuing with empty keystore " + keyStoreName, e);
                         // Create empty store
                         keyStore.load(null, password);
                         File keyStoreDir = keyStoreOutput.getParentFile();
-                        if (!keyStoreDir.exists())
-                        {
+                        if (!keyStoreDir.exists()) {
                             keyStoreDir.mkdirs();
                         }
                         try (FileOutputStream outputStream = new FileOutputStream(keyStoreOutput)) {
@@ -163,8 +162,7 @@ public class KeyStores {
                         char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
                         keyStore.load(null, password);
                         File keyStoreDir = file.getParentFile();
-                        if (!keyStoreDir.exists())
-                        {
+                        if (!keyStoreDir.exists()) {
                             keyStoreDir.mkdirs();
                         }
                         try (FileOutputStream outputStream = new FileOutputStream(file)) {
@@ -197,8 +195,7 @@ public class KeyStores {
                 if (templateStoreUrl != null && keyStoreUrl.getProtocol().equals("file")) {
                     // Copy template to file
                     File keyStoreDir = new File(keyStoreUrl.getFile()).getParentFile();
-                    if (!keyStoreDir.exists())
-                    {
+                    if (!keyStoreDir.exists()) {
                         keyStoreDir.mkdirs();
                     }
 
