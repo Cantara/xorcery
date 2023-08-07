@@ -24,7 +24,7 @@ jetty:
       port: 443
 #      keystore: null
 #      truststore: null
-      trustAll: true
+      trustAll: false
       needClientAuth: false
       wantClientAuth: true
       sniRequired: false
