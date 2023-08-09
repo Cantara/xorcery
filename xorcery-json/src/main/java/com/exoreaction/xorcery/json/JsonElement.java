@@ -141,6 +141,13 @@ public interface JsonElement {
         }
     }
 
+    default Map<String, JsonNode> asMap()
+    {
+        if (json() instanceof ObjectNode on)
+            return toMap(on, Function.identity());
+        return Collections.emptyMap();
+    }
+
     default String toJsonString() {
         return json().toPrettyString();
     }
