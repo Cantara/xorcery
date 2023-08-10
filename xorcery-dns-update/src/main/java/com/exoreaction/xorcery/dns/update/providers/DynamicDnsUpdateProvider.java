@@ -74,6 +74,7 @@ public class DynamicDnsUpdateProvider
                         for (String nameserver : hosts) {
                             SimpleResolver simpleResolver = new SimpleResolver(Sockets.getInetSocketAddress(nameserver, 53));
                             resolvers.add(simpleResolver);
+                            logger.debug("DNS updates will be sent to:" + nameserver);
                         }
                         if (resolvers.size() == 1) {
                             return Optional.of(resolvers.get(0));
@@ -85,9 +86,10 @@ public class DynamicDnsUpdateProvider
                 .orElseGet(() ->
                 {
                     List<InetSocketAddress> servers = ResolverConfig.getCurrentConfig().servers();
-                    return new SimpleResolver(servers.get(0));
+                    InetSocketAddress defaultNameServer = servers.get(0);
+                    logger.debug("DNS updates will be sent to:" + defaultNameServer.getHostName());
+                    return new SimpleResolver(defaultNameServer);
                 });
-
 
         resolver.setTimeout(dnsClientConfiguration.getTimeout());
         resolver.setTCP(dnsClientConfiguration.getForceTCP());

@@ -15,19 +15,22 @@
  */
 package com.exoreaction.xorcery.certificates.client;
 
+import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.Link;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
-import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
-import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
+import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
+import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
+import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.server.api.ServerResourceDocument;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
-import org.eclipse.jetty.client.HttpClient;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
@@ -49,12 +52,16 @@ public class ClientCertificatesProvider
     private final JsonApiClient client;
     private final CertificatesClientConfiguration certificatesClientConfiguration;
 
-    public ClientCertificatesProvider(HttpClient httpClient,
-                                      DnsLookupService dnsLookupService,
+    public ClientCertificatesProvider(ClientBuilder clientBuilder,
                                       Configuration configuration) {
         this.certificatesClientConfiguration = () -> configuration.getConfiguration("certificates.client");
 
-        this.client = new JsonApiClient(httpClient, dnsLookupService);
+        Client client = clientBuilder
+                .register(JsonElementMessageBodyReader.class)
+                .register(JsonElementMessageBodyWriter.class)
+                .build();
+
+        this.client = new JsonApiClient(client);
     }
 
     @Override

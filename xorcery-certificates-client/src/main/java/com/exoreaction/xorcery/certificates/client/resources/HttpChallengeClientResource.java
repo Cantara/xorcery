@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.certificates.client.resources;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Path;
 
+// TODO Fix this to allow clients to use LetsEncrypt provider on server
 @Path(".well-known/acme-challenge/{id}")
 public class HttpChallengeClientResource {
 

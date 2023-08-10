@@ -34,4 +34,6 @@ open module xorcery.certificates.client {
     requires jakarta.ws.rs;
     requires xorcery.keystores;
     requires xorcery.service.api;
+    requires xorcery.jsonapi.jaxrs;
+    requires xorcery.jsonapi.client;
 }

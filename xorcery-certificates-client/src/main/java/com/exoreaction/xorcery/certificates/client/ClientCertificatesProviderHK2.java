@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.client.ClientBuilder;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
@@ -30,9 +31,8 @@ import org.jvnet.hk2.annotations.Service;
 public class ClientCertificatesProviderHK2
         extends ClientCertificatesProvider {
     @Inject
-    public ClientCertificatesProviderHK2(HttpClient httpClient,
-                                         DnsLookupService dnsLookupService,
+    public ClientCertificatesProviderHK2(ClientBuilder clientBuilder,
                                          Configuration configuration) {
-        super(httpClient, dnsLookupService, configuration);
+        super(clientBuilder, configuration);
     }
 }
