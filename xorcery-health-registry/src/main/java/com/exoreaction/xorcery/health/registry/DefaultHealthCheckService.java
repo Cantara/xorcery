@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.health.registry;
 
+import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.health.api.HealthCheck;
@@ -69,13 +70,14 @@ public class DefaultHealthCheckService implements HealthCheckService {
     public DefaultHealthCheckService(Configuration configuration, com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry) {
         this.minUpdateInterval = Duration.parse("PT"+configuration.getString("health.updater.interval").orElse("1S")).toMillis();
         this.healthCheckRegistry = healthCheckRegistry;
-        InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
+        InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
+        ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
         try {
             synchronized (lock) {
                 currentHealth = mapper.createObjectNode();
                 currentHealth.put("Status", "false");
-                currentHealth.put("version", instanceConfiguration.getVersion());
-                currentHealth.put("name", instanceConfiguration.getName());
+                currentHealth.put("version", applicationConfiguration.getVersion());
+                currentHealth.put("name", applicationConfiguration.getName());
                 currentHealth.put("ip", instanceConfiguration.getIp().getHostAddress());
                 currentHealth.put("ip-all", getMyIPAddressesString());
                 currentHealth.put("running since", timeAtStart);

@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jetty.server;
 
+import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import jakarta.servlet.ServletException;
@@ -35,9 +36,10 @@ public class Log4j2TheadContextHandler
 
     public Log4j2TheadContextHandler(Configuration configuration) {
         context = new HashMap<>();
-        InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
+        InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
+        ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
         context.put("id", instanceConfiguration.getId());
-        context.put("name", instanceConfiguration.getName());
+        context.put("name", applicationConfiguration.getName());
     }
 
     @Override

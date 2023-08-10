@@ -1,8 +1,6 @@
 ---
 instance:
   id: "{{ instance.host}}.{{ instance.name}}"
-  name: genericserver
-  version: "unknown"
   host: "{{ CALCULATED.hostName }}"
   fqdn: "{{ instance.host }}.{{ instance.domain }}"
   ip: "{{ CALCULATED.ip | null }}"
@@ -12,6 +10,10 @@ instance:
   home: "{{ SYSTEM.user_dir }}"
   resources: "{{ instance.home }}"
   uri: "{{ jetty.server.uri | \"http://localhost\"}}"
+
+application:
+  name: genericserver
+  version: "unknown"
 
 system:
   "java.util.logging.manager": "org.apache.logging.log4j.jul.LogManager"

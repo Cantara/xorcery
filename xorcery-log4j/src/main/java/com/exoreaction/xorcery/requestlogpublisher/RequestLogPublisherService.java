@@ -45,7 +45,7 @@ public class RequestLogPublisherService
                 requestLogConfiguration::getSubscriberConfiguration, requestLogPublisher, RequestLogPublisher.class, new ClientConfiguration(requestLogConfiguration.getPublisherConfiguration()));
 
         JsonRequestLog requestLog = new JsonRequestLog(new LoggingMetadata.Builder(new Metadata.Builder())
-                .configuration(new InstanceConfiguration(configuration.getConfiguration("instance")))
+                .configuration(configuration)
                 .build(), requestLogPublisher);
         server.setRequestLog(requestLog);
     }

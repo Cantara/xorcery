@@ -58,7 +58,7 @@ public class DomainEventsService
                                Configuration configuration) {
 
         this.deploymentMetadata = new DomainEventMetadata.Builder(new Metadata.Builder())
-                .configuration(new InstanceConfiguration(configuration.getConfiguration("instance")))
+                .configuration(configuration)
                 .build();
         DomainEventsConfiguration domainEventsConfiguration = new DomainEventsConfiguration(configuration.getConfiguration("domainevents"));
         SubscriberConfiguration subscriberConfiguration = domainEventsConfiguration.getSubscriberConfiguration();

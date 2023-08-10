@@ -46,7 +46,7 @@ public class MetricsService
 
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
         this.deploymentMetadata = new MetricsMetadata.Builder(new Metadata.Builder())
-                .configuration(new InstanceConfiguration(configuration.getConfiguration("instance")))
+                .configuration(configuration)
                 .build();
 
         MetricsConfiguration metricsConfiguration = new MetricsConfiguration(configuration.getConfiguration("metrics"));

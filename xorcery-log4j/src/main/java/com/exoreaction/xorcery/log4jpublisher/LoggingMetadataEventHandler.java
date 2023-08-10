@@ -35,6 +35,6 @@ public class LoggingMetadataEventHandler
                 .timestamp(System.currentTimeMillis());
         Configuration conf = configuration.get();
         if (conf != null)
-            builder.configuration(new InstanceConfiguration(conf.getConfiguration("instance")));
+            builder.configuration(conf);
     }
 }

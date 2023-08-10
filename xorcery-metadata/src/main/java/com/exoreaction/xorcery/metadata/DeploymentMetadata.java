@@ -16,6 +16,8 @@
 package com.exoreaction.xorcery.metadata;
 
 import com.exoreaction.xorcery.builders.WithContext;
+import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 
 public interface DeploymentMetadata
@@ -24,17 +26,14 @@ public interface DeploymentMetadata
     interface Builder<T> {
         Metadata.Builder builder();
 
-        default T configuration(InstanceConfiguration configuration) {
-            builder().add("environment", configuration.getEnvironment())
-                    .add("tag", configuration.getTag())
-                    .add("name", configuration.getName())
-                    .add("host", configuration.getHost());
-            return (T) this;
-        }
-
-        default T version(String value)
-        {
-            builder().add("version", value);
+        default T configuration(Configuration configuration) {
+            InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
+            ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
+            builder().add("environment", instanceConfiguration.getEnvironment())
+                    .add("tag", instanceConfiguration.getTag())
+                    .add("name", applicationConfiguration.getName())
+                    .add("version", applicationConfiguration.getVersion())
+                    .add("host", instanceConfiguration.getHost());
             return (T) this;
         }
     }

@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.admin.jmx;
 
+import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
@@ -30,7 +31,7 @@ public interface ServerMXBean {
 
         @Override
         public String getName() {
-            return new InstanceConfiguration(configuration).getName();
+            return new ApplicationConfiguration(configuration).getName();
         }
 
         @Override
