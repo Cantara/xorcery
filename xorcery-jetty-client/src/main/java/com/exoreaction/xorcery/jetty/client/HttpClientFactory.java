@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jetty.client;
 
+import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.jetty.client.providers.DnsLookupSocketAddressResolver;
@@ -78,9 +79,10 @@ public class HttpClientFactory {
 
         client = new HttpClient(transport);
         QueuedThreadPool executor = new QueuedThreadPool();
-        executor.setName(configuration.getString("instance.name").orElseThrow());
+        ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
+        executor.setName(applicationConfiguration.getName());
         client.setExecutor(executor);
-        client.setScheduler(new ScheduledExecutorScheduler(configuration.getString("instance.name").orElseThrow() + "-scheduler", false));
+        client.setScheduler(new ScheduledExecutorScheduler(applicationConfiguration.getName() + "-scheduler", false));
 
         if (dnsLookup.get() != null) {
             client.setSocketAddressResolver(new DnsLookupSocketAddressResolver(dnsLookup.get()));

@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.jmxmetrics;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
@@ -86,7 +87,7 @@ public class JmxMetricsService
         logger.info("JMX metrics available at: {}", jmxMetricsConfiguration.getExternalURI());
 
         result = reactiveStreamsServer.subscriber("metrics",
-                cfg -> new MetricsSubscriber(scheduledExecutorService, cfg.getString("instance.id").orElse("unknown")),
+                cfg -> new MetricsSubscriber(scheduledExecutorService, InstanceConfiguration.get(cfg).getId()),
                 MetricsSubscriber.class);
     }
 

@@ -1,6 +1,6 @@
 ---
 instance:
-  id: "{{ instance.host}}.{{ instance.name}}"
+  id: "{{ instance.host}}.{{ application.name}}"
   host: "{{ CALCULATED.hostName }}"
   fqdn: "{{ instance.host }}.{{ instance.domain }}"
   ip: "{{ CALCULATED.ip | null }}"
