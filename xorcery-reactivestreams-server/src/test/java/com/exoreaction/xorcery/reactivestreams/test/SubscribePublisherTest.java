@@ -80,7 +80,35 @@ public class SubscribePublisherTest {
                 ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
                 ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
 
-                CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("numbers", config -> new ServerIntegerPublisher(), ServerIntegerPublisher.class);
+                CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("numbers", config -> new ServerIntegerPublisher(100), ServerIntegerPublisher.class);
+
+                // When
+                CompletableFuture<Integer> result = new CompletableFuture<>();
+                IntegerSubscriber subscriber = new IntegerSubscriber(result);
+                CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(reactiveStreamsServerConfiguration.getURI(), "numbers",
+                        Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
+
+                // Then
+                result.orTimeout(10, TimeUnit.SECONDS)
+                        .exceptionallyCompose(cancelStream(stream))
+                        .whenComplete(this::report)
+                        .toCompletableFuture().join();
+            }
+        }
+    }
+
+    @Test
+    public void testSlowSubscriber() throws Exception {
+
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(serverConfiguration);
+                ReactiveStreamsServer reactiveStreamsServer = server.getServiceLocator().getService(ReactiveStreamsServer.class);
+                ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
+
+                CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("numbers", config -> new ServerIntegerPublisher(10000), ServerIntegerPublisher.class);
 
                 // When
                 CompletableFuture<Integer> result = new CompletableFuture<>();
@@ -275,6 +303,7 @@ public class SubscribePublisherTest {
 
         Logger logger = LogManager.getLogger(getClass());
 
+        private int count = 0;
         private int total = 0;
         private Subscription subscription;
         private final CompletableFuture<Integer> result;
@@ -286,13 +315,22 @@ public class SubscribePublisherTest {
         @Override
         public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
-            subscription.request(1);
+            subscription.request(100);
         }
 
         @Override
         public void onNext(Integer item) {
             total += item;
-            subscription.request(1);
+            count++;
+            if (count % 100 == 0)
+            {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                subscription.request(100);
+            }
         }
 
         @Override
@@ -310,12 +348,17 @@ public class SubscribePublisherTest {
     public static class ServerIntegerPublisher
             implements Publisher<Integer> {
 
+        int max = 100;
+
+        public ServerIntegerPublisher(int max) {
+            this.max = max;
+        }
+
         @Override
         public void subscribe(Subscriber<? super Integer> subscriber) {
             subscriber.onSubscribe(new Subscription() {
 
                 int current = 0;
-                int max = 100;
 
                 @Override
                 public void request(long n) {
@@ -324,7 +367,7 @@ public class SubscribePublisherTest {
                         subscriber.onNext(current++);
                     }
 
-                    if (current == 100)
+                    if (current == max)
                         subscriber.onComplete();
                 }
 

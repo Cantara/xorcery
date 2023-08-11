@@ -28,10 +28,7 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
-import org.eclipse.jetty.websocket.api.BatchMode;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -168,7 +165,7 @@ public class PublisherSubscriptionReactiveStream
                                 logger.debug(marker, "Received request:" + requestAmount);
 
                             Object item;
-                            while (requestAmount > 0 && (item = queue.poll()) != null) {
+                            while (requestAmount > 0 && (item = queue.poll()) != null && session.isOpen()) {
                                 send(item);
                                 requestAmount--;
                             }
@@ -242,13 +239,31 @@ public class PublisherSubscriptionReactiveStream
             // Send it
             ByteBuffer eventBuffer = outputStream.takeByteBuffer();
 
-            session.getRemote().sendBytes(eventBuffer);
+            session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
+                @Override
+                public void writeFailed(Throwable x) {
+                    logger.error(marker, "Could not send event", x);
+                    session.close(StatusCode.SERVER_ERROR, x.getMessage());
+                }
 
-            if (queue.isEmpty()) {
-                if (logger.isTraceEnabled())
-                    logger.trace(marker, "flush");
-                session.getRemote().flush();
-            }
+                @Override
+                public void writeSuccess() {
+                    CompletableFuture.runAsync(() ->
+                    {
+                        if (queue.isEmpty()) {
+                            if (logger.isTraceEnabled())
+                                logger.trace(marker, "flush");
+                            try {
+                                session.getRemote().flush();
+                            } catch (IOException e) {
+                                logger.error(marker, "Could not flush events", e);
+                                session.close(StatusCode.SERVER_ERROR, e.getMessage());
+                            }
+                        }
+                    });
+                }
+            });
+
         } catch (Throwable t) {
             logger.error(marker, "Could not send event", t);
             session.close(StatusCode.SERVER_ERROR, t.getMessage());
