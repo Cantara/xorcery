@@ -24,8 +24,10 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Use the Xorcery DNS lookup service to resolve names.
@@ -35,8 +37,11 @@ public class DnsLookupSocketAddressResolver
         implements SocketAddressResolver {
     private final DnsLookup dnsLookup;
 
+    private final Random random;
+
     public DnsLookupSocketAddressResolver(DnsLookupService dnsLookup) {
         this.dnsLookup = dnsLookup;
+        random = new Random();
     }
 
     @Override
@@ -50,8 +55,12 @@ public class DnsLookupSocketAddressResolver
                             promise.failed(t);
                         } else {
                             try {
-                                List<InetSocketAddress> addressList = new ArrayList<>(list.size());
-                                for (URI uri : list) {
+                                // Randomly shift the list so that different clients see different orders of IPs
+                                int size = list.size();
+                                List<InetSocketAddress> addressList = new ArrayList<>(size);
+                                int shift = random.nextInt(size);
+                                for (int i = 0; i < size; i++) {
+                                    URI uri = list.get((i+shift)%size);
                                     InetAddress inetAddress = InetAddress.getByAddress(host, InetAddress.getByName(uri.getHost()).getAddress());
                                     addressList.add(new InetSocketAddress(inetAddress, uri.getPort()));
                                 }
