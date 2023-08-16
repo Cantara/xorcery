@@ -24,7 +24,5 @@ import java.io.IOException;
 import java.util.Map;
 
 public interface Neo4jEventProjection {
-    boolean isWritable(String eventClass);
-
-    void write(WithMetadata<ArrayNode> events, Map<String, Object> metadataMap, ObjectNode eventJson, int eventIndex, Transaction transaction) throws IOException;
+    void write(WithMetadata<ArrayNode> events, Transaction transaction) throws Throwable;
 }

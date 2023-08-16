@@ -58,6 +58,7 @@ public class Neo4jProjectionsSubscribersService {
                                               IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
                                               MetricRegistry metricRegistry) {
         this.graphDatabase = graphDatabase;
+        Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
 
         // This service can subscribe to external publishers
         configuration.getObjectListAs("neo4jprojections.subscribers", Publisher::new).ifPresent(publishers ->
@@ -80,6 +81,7 @@ public class Neo4jProjectionsSubscribersService {
                         new ProjectionSubscriber(
                                 subscription -> new Neo4jProjectionEventHandler(
                                         graphDatabase.getGraphDatabaseService(),
+                                        neo4jProjectionsConfiguration,
                                         subscription,
                                         currentProjection,
                                         publisher.getProjection(),

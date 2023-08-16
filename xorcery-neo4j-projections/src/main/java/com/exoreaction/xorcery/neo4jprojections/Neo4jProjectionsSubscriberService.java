@@ -62,6 +62,7 @@ public class Neo4jProjectionsSubscriberService {
 
         reactiveStreamsServer.subscriber("neo4jprojections", cfg -> new ProjectionSubscriber(subscription -> new Neo4jProjectionEventHandler(
                 graphDatabase.getGraphDatabaseService(),
+                neo4jProjectionsConfiguration,
                 subscription,
                 neo4jProjectionsService.getCurrentProjection(cfg.getString("projection").orElseThrow()),
                 cfg.getString("projection").orElseThrow(),

@@ -20,6 +20,7 @@ import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.ExceptionHandler;
 import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -49,6 +50,7 @@ public class ProjectionSubscriber
                 new BlockingWaitStrategy());
 
         disruptor.handleEventsWith(handlerFactory.apply(subscription));
+        disruptor.setDefaultExceptionHandler(new ProjectionExceptionHandler(subscription));
         disruptor.start();
         subscription.request(disruptor.getBufferSize());
     }
@@ -77,6 +79,32 @@ public class ProjectionSubscriber
             disruptor.shutdown(disruptorConfiguration.getShutdownTimeout(), TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             LogManager.getLogger(getClass()).warn("Could not shutdown disruptor within timeout", e);
+        }
+    }
+
+    private static class ProjectionExceptionHandler implements ExceptionHandler<WithMetadata<ArrayNode>> {
+        private final Subscription subscription;
+
+        public ProjectionExceptionHandler(Subscription subscription) {
+            this.subscription = subscription;
+        }
+
+        @Override
+        public void handleEventException(Throwable ex, long sequence, WithMetadata<ArrayNode> event) {
+            subscription.cancel();
+            LogManager.getLogger(getClass()).error("Cancelled subscription");
+        }
+
+        @Override
+        public void handleOnStartException(Throwable ex) {
+            subscription.cancel();
+            LogManager.getLogger(getClass()).warn("Cancelled subscription");
+        }
+
+        @Override
+        public void handleOnShutdownException(Throwable ex) {
+            subscription.cancel();
+            LogManager.getLogger(getClass()).warn("Cancelled subscription");
         }
     }
 }

@@ -18,6 +18,8 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.util.Resources;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
@@ -28,13 +30,15 @@ import org.neo4j.graphdb.Transaction;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 
-@Service(name="cypherprojection")
+@Service(name = "cypherprojection")
 @ContractsProvided({Neo4jEventProjection.class})
 public class CypherEventProjection
         implements Neo4jEventProjection {
@@ -43,28 +47,26 @@ public class CypherEventProjection
     private final Map<String, List<String>> cachedEventCypher = new HashMap<>();
 
     @Override
-    public boolean isWritable(String eventClass) {
-        return getCypher(eventClass) != null;
-    }
+    public void write(WithMetadata<ArrayNode> events, Transaction transaction) throws Throwable {
+        Map<String, Object> metadataMap = null;
 
-    @Override
-    public void write(WithMetadata<ArrayNode> events, Map<String, Object> metadataMap, ObjectNode eventJson, int eventIndex, Transaction transaction)
-            throws IOException {
+        for (JsonNode jsonNode : events.event()) {
+            ObjectNode eventJson = (ObjectNode) jsonNode;
 
-        String type = eventJson.path("@class").textValue();
-        List<String> statement = getCypher(type);
-        if (statement == null)
-            return;
+            String type = eventJson.path("@class").textValue();
+            List<String> statement = getCypher(type);
+            if (statement == null)
+                return;
 
-        Map<String, Object> parameters = Cypher.toMap(eventJson);
-        parameters.put("metadata", metadataMap);
+            // Only do this if any of the events are actually projected
+            if (metadataMap == null)
+                metadataMap = Cypher.toMap(events.metadata().metadata());
 
-        for (String stmt : statement) {
-            try {
+            Map<String, Object> parameters = Cypher.toMap(eventJson);
+            parameters.put("metadata", metadataMap);
+
+            for (String stmt : statement) {
                 transaction.execute(stmt, parameters);
-            } catch (Throwable e) {
-                logger.error(String.format("Could not apply Neo4j statement for event %s (metadata:%s,parameters:%s):\n%s", type, metadataMap.toString(), parameters.toString(), stmt), e);
-                throw e;
             }
         }
     }
@@ -73,16 +75,19 @@ public class CypherEventProjection
         return cachedEventCypher.computeIfAbsent(type, t ->
         {
             String statementFile = "META-INF/neo4j/event/" + t + ".cyp";
-            try (InputStream resourceAsStream = ClassLoader.getSystemResourceAsStream(statementFile)) {
-                if (resourceAsStream == null)
-                    return null;
-
-                return List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";"));
-            } catch (IOException e) {
-                logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+            List<URL> statementFiles = Resources.getResources(statementFile);
+            if (statementFiles.isEmpty())
                 return null;
+            List<String> statements = new ArrayList<>();
+            for (URL file : statementFiles) {
+                try (InputStream resourceAsStream = file.openStream()) {
+                    statements.addAll(List.of(new String(resourceAsStream.readAllBytes(), StandardCharsets.UTF_8).split(";")));
+                } catch (IOException e) {
+                    logger.error("Could not load Neo4j event projection Cypher statement:" + statementFile, e);
+                    return null;
+                }
             }
+            return statements;
         });
-
     }
 }

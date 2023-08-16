@@ -1,5 +1,6 @@
 neo4jprojections:
   enabled: "{{ defaults.enabled }}"
+  eventBatchSize: 1024
   commitpublisher:
     enabled: "{{ neo4jprojections.enabled }}"
   eventsubscriber:

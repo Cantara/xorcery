@@ -15,12 +15,11 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.streams;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.*;
 import com.exoreaction.xorcery.lang.Enums;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
+import com.exoreaction.xorcery.neo4jprojections.Neo4jProjectionsConfiguration;
 import com.exoreaction.xorcery.neo4jprojections.Projection;
 import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
@@ -34,6 +33,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.memory.MemoryLimitExceededException;
 import org.reactivestreams.Subscription;
 
 import java.util.HashMap;
@@ -53,6 +53,7 @@ public class Neo4jProjectionEventHandler
     private final Logger logger = LogManager.getLogger(getClass());
 
     private final GraphDatabaseService graphDatabaseService;
+    private int eventBatchSize;
     private List<Neo4jEventProjection> projections;
     private final Histogram batchSize;
 
@@ -62,30 +63,35 @@ public class Neo4jProjectionEventHandler
     private final String projectionId;
 
     private final Map<String, Object> updateParameters = new HashMap<>();
-    private final Map<String, Neo4jEventProjection> eventProjections = new HashMap<>();
 
     private Transaction tx;
     private long version;
     private Long revision;
+    private long previousRevision = 0L;
     private long lastTimestamp;
-    private int appliedEvents;
     private long currentBatchSize;
+    private int eventBatchCount;
+    private boolean aborted; // Set to true if projection fails
+    private final Meter revisionCounter;
+    private final Meter eventCounter;
 
     public Neo4jProjectionEventHandler(GraphDatabaseService graphDatabaseService,
+                                       Neo4jProjectionsConfiguration configuration,
                                        Subscription subscription,
                                        Optional<ProjectionModel> projectionModel,
                                        String projectionId,
                                        Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,
                                        List<Neo4jEventProjection> projections,
                                        MetricRegistry metrics) {
+        this.eventBatchSize = configuration.eventBatchSize();
         this.projectionCommitPublisher = projectionCommitPublisher;
         this.projectionId = projectionId;
 
         this.graphDatabaseService = graphDatabaseService;
         this.subscription = subscription;
         this.projections = projections;
-        metrics.gauge("neo4j.projections." + projectionId + ".version", (MetricRegistry.MetricSupplier<Gauge<Long>>) () -> () -> version);
-        metrics.gauge("neo4j.projections." + projectionId + ".revision", (MetricRegistry.MetricSupplier<Gauge<Long>>) () -> () -> revision);
+        revisionCounter = metrics.meter("neo4j.projections." + projectionId + ".revision");
+        eventCounter = metrics.meter("neo4j.projections." + projectionId + ".events");
         batchSize = metrics.histogram("neo4j.projections." + projectionId + ".batchsize");
 
         projectionModel.ifPresent(pm ->
@@ -101,90 +107,83 @@ public class Neo4jProjectionEventHandler
 
     @Override
     public void onEvent(WithMetadata<ArrayNode> event, long sequence, boolean endOfBatch) throws Exception {
+        if (aborted)
+            return;
+
+        if (tx == null) {
+            tx = graphDatabaseService.beginTx();
+        }
+
+        event.metadata().getLong("timestamp").ifPresent(value ->
+        {
+            lastTimestamp = Math.max(lastTimestamp, value);
+        });
+
+        ArrayNode eventsJson = event.event();
+        Map<String, Object> metadataMap = Cypher.toMap(event.metadata().metadata());
+
         try {
+            for (Neo4jEventProjection projection : projections) {
+                projection.write(event, tx);
+            }
+        } catch (Throwable t) {
+            logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, eventsJson.toPrettyString()), t);
+            tx.rollback();
+            tx.close();
+            tx = null;
+            aborted = true;
 
-            if (tx == null) {
-                tx = graphDatabaseService.beginTx();
+            if (t instanceof Exception e)
+                throw e;
+            else
+                throw new Exception(t);
+        }
+
+        version++;
+        eventBatchCount += event.event().size();
+
+        if (endOfBatch || eventBatchCount >= eventBatchSize) {
+            try {
+                // Update Projection node with current revision
+                updateParameters.put("projection_version", version);
+                revision = ((Number) Optional.ofNullable(metadataMap.get("revision")).orElse(0L)).longValue();
+                updateParameters.put("projection_revision", revision);
+                tx.execute("MERGE (projection:Projection {id:$projection_id}) SET " +
+                                "projection.version=$projection_version, " +
+                                "projection.revision=$projection_revision",
+                        updateParameters);
+
+                tx.commit();
+                tx.close();
+                logger.trace("Updated projection " + projectionId + " to revision " + revision);
+
+                revisionCounter.mark(revision - previousRevision);
+                eventCounter.mark(eventBatchCount);
+                previousRevision = revision;
+            } catch (Throwable t) {
+                logger.error("Could not commit Neo4j updates", t);
+                tx.close();
+
+                if (t instanceof Exception e)
+                    throw e;
+                else
+                    throw new Exception(t);
             }
 
-            event.metadata().getLong("timestamp").ifPresent(value ->
-            {
-                lastTimestamp = Math.max(lastTimestamp, value);
-            });
+            logger.trace("Applied {} commands, {} events", currentBatchSize, eventBatchCount);
 
-            ArrayNode eventsJson = event.event();
-            Map<String, Object> metadataMap = Cypher.toMap(event.metadata().metadata());
+            eventBatchCount = 0;
 
-            int i = 0;
-            for (JsonNode jsonNode : eventsJson) {
-                ObjectNode objectNode = (ObjectNode) jsonNode;
-                String type = objectNode.path("@class").textValue();
+            // Always send commit notification, even if no changes were made
+            projectionCommitPublisher.accept(new WithMetadata<>(new Neo4jMetadata.Builder(new Metadata.Builder())
+                    .timestamp(System.currentTimeMillis())
+                    .lastTimestamp(lastTimestamp)
+                    .build().context(), new ProjectionCommit(projectionId, version)));
 
-                try {
+            tx = null;
 
-                    Neo4jEventProjection projection = eventProjections.computeIfAbsent(type, t ->
-                    {
-                        for (Neo4jEventProjection eventProjection : projections) {
-                            if (eventProjection.isWritable(t)) {
-                                return eventProjection;
-                            }
-                        }
-                        throw new IllegalStateException("No projection can handle event with type:" + t);
-                    });
-
-                    projection.write(event, metadataMap, objectNode, i, tx);
-                } catch (Throwable e) {
-                    logger.error("Could not apply Neo4j event update", e);
-
-                    tx = graphDatabaseService.beginTx();
-                }
-
-                appliedEvents++;
-                version++;
-                i++;
-            }
-
-            if (endOfBatch) {
-                if (appliedEvents > 0) {
-                    try {
-                        // Update Projection node with current revision
-                        updateParameters.put("projection_version", version);
-                        revision = ((Number) Optional.ofNullable(metadataMap.get("revision")).orElse(0L)).longValue();
-                        updateParameters.put("projection_revision", revision);
-                        tx.execute("MERGE (projection:Projection {id:$projection_id}) SET " +
-                                        "projection.version=$projection_version, " +
-                                        "projection.revision=$projection_revision",
-                                updateParameters);
-
-                        tx.commit();
-                        tx.close();
-                        logger.trace("Updated projection "+projectionId+" to revision "+revision);
-                    } catch (Throwable e) {
-                        logger.error("Could not commit Neo4j updates", e);
-                        tx.close();
-                    }
-
-                    logger.trace("Applied {}", currentBatchSize);
-
-                    appliedEvents = 0;
-                } else {
-                    tx.commit();
-                    tx.close();
-                }
-
-                // Always send commit notification, even if no changes were made
-                projectionCommitPublisher.accept(new WithMetadata<>(new Neo4jMetadata.Builder(new Metadata.Builder())
-                        .timestamp(System.currentTimeMillis())
-                        .lastTimestamp(lastTimestamp)
-                        .build().context(), new ProjectionCommit(projectionId, version)));
-
-                tx = null;
-
+            if (endOfBatch)
                 subscription.request(currentBatchSize);
-            }
-
-        } catch (Exception e) {
-            logger.error("Could not update Neo4j event projection");
         }
     }
 

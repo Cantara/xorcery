@@ -28,4 +28,12 @@ public record Neo4jProjectionsConfiguration(Configuration context)
     public boolean isCommitPublisherEnabled() {
         return context.getBoolean("commitpublisher.enabled").orElse(true);
     }
+
+    /**
+     * How many individual events to apply before committing and starting a new transaction.
+     */
+    public int eventBatchSize()
+    {
+        return context.getInteger("eventBatchSize").orElse(1024);
+    }
 }
