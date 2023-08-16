@@ -79,6 +79,7 @@ public class SubscribeReactiveStream
     protected final ByteBufferAccumulator byteBufferAccumulator;
     private final AtomicLong requests = new AtomicLong();
     private final AtomicLong outstandingRequests = new AtomicLong();
+    private long sendRequestsThreshold = 0;
     private String exceptionPayload = "";
 
     private Iterator<URI> uriIterator;
@@ -452,13 +453,23 @@ public class SubscribeReactiveStream
                 return;
             }
 
-            final long rn = requests.getAndSet(0);
+            final long rn = requests.get();
             if (rn == 0) {
                 if (isCancelled) {
                     logger.debug(marker, "Subscription cancelled");
                 }
                 return;
             }
+            if (sendRequestsThreshold == 0)
+            {
+                sendRequestsThreshold = rn * 3 / 4;
+            } else
+            {
+                if (rn < sendRequestsThreshold)
+                    return; // Wait until we have more requests lined up
+            }
+
+            requests.set(0);
 
             logger.trace(marker, "Sending request: {}", rn);
             requestsHistogram.update(rn);
