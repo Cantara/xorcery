@@ -29,7 +29,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="adminservlet")
 @RunLevel(20)
 public class AdminServletConfigurator {
 

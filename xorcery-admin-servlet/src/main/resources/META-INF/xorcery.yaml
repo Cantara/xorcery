@@ -1,0 +1,4 @@
+adminservlet:
+  enabled: "{{ defaults.enabled }}"
+serveradmin:
+  enabled: "{{ defaults.enabled }}"

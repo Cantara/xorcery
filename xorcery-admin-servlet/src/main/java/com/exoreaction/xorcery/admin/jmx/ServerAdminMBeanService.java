@@ -26,7 +26,7 @@ import org.jvnet.hk2.annotations.Service;
 import javax.management.*;
 import java.lang.management.ManagementFactory;
 
-@Service
+@Service(name="serveradmin")
 @RunLevel(20)
 public class ServerAdminMBeanService
     implements PreDestroy
