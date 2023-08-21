@@ -1,0 +1,20 @@
+neo4jbrowser:
+  enabled: "{{ neo4jdatabase.enabled }}"
+
+neo4jdatabase:
+  settings:
+    server:
+      bolt:
+        enabled: "{{ neo4jbrowser.enabled }}"
+        tls_level: "REQUIRED"
+        listen_address: ":7687"
+        advertised_address: ":7687:"
+    dbms:
+      ssl:
+        policy:
+          bolt:
+            enabled: "{{ neo4jbrowser.enabled }}"
+            base_directory: "certificates/bolt"
+            private_key: "private.key"
+            public_certificate: "public.crt"
+            client_auth: "NONE"
