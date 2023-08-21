@@ -98,6 +98,7 @@
         <module>xorcery-neo4j-projections</module>
         <module>xorcery-domainevents-neo4jprojection</module>
         <module>xorcery-jsonapi-server-neo4j</module>
+        <module>xorcery-neo4j-browser</module>
 
         <module>xorcery-opensearch</module>
 
