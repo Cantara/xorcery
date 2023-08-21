@@ -22,6 +22,7 @@ import com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigura
 import com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
 import com.exoreaction.xorcery.json.JsonMerger;
 import com.exoreaction.xorcery.util.Resources;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -231,8 +232,11 @@ public class StandardConfigurationBuilder {
         return builder ->
         {
             try (yamlStream) {
-                ObjectNode yaml = (ObjectNode) yamlMapper.readTree(yamlStream);
-                new JsonMerger().merge(builder.builder(), yaml);
+                JsonNode jsonNode = yamlMapper.readTree(yamlStream);
+                if (jsonNode instanceof ObjectNode on)
+                {
+                    new JsonMerger().merge(builder.builder(), on);
+                }
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
