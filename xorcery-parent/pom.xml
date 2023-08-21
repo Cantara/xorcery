@@ -119,11 +119,16 @@
                 <version>2.1</version>
             </dependency>
 
-            <!-- Xorcery other -->
+            <!-- Neo4j -->
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>neo4j-shaded</artifactId>
                 <version>5.10.0.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.neo4j.client</groupId>
+                <artifactId>neo4j-browser</artifactId>
+                <version>5.11.0</version>
             </dependency>
 
             <!-- CLI -->
