@@ -1,6 +1,9 @@
 neo4jbrowser:
   enabled: "{{ neo4jdatabase.enabled }}"
 
+neo4jbrowser.ssl:
+  enabled: "{{ neo4jbrowser.enabled }}"
+
 neo4jdatabase:
   settings:
     server:

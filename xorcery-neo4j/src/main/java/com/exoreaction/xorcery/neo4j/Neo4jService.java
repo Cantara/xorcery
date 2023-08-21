@@ -110,7 +110,7 @@ public class Neo4jService
             if (wipeOnBreakingChanges) {
                 logger.warn("WIPING all data in neo4j projection.");
                 managementService.shutdown();
-                wipeDatabase(home);
+                wipeDatabase(home.resolve("data"));
                 managementService = createDatabaseManagementService(home, tmpConfigFile);
                 graphDb = createDatabase(managementService);
                 updateDomainVersionInDatabase(graphDb, targetVersion);
@@ -216,11 +216,11 @@ public class Neo4jService
     /**
      * This method will wipe ALL data in the database, do not use unless you know what you are doing!
      *
-     * @param neo4jHome the data folder of the neo4j server instance.
+     * @param neo4jData the data folder of the neo4j server instance.
      */
-    private static void wipeDatabase(Path neo4jHome) {
+    private static void wipeDatabase(Path neo4jData) {
         try {
-            Files.walk(neo4jHome)
+            Files.walk(neo4jData)
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
