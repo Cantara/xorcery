@@ -123,7 +123,7 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>neo4j-shaded</artifactId>
-                <version>5.10.0.1</version>
+                <version>5.10.0.2</version>
             </dependency>
             <dependency>
                 <groupId>org.neo4j.client</groupId>
