@@ -39,85 +39,75 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-runner</artifactId>
-
         </dependency>
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-server</artifactId>
-
         </dependency>
 
         <!-- Jetty/Jersey -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jersey-server</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jersey-client</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-handlebars</artifactId>
-
         </dependency>
 
         <!-- DNS -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-dns-server</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-dns-registration</artifactId>
-
         </dependency>
 
         <!-- Certificates -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-certificates-server</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-certificates-ca</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-certificates-letsencrypt</artifactId>
-
         </dependency>
 
         <!-- JWT -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jwt-server</artifactId>
-
         </dependency>
 
         <!-- Metrics -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jmxmetrics</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metrics</artifactId>
-
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jmxconnector</artifactId>
         </dependency>
 
         <!-- Logging -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-log4j</artifactId>
-
         </dependency>
 
         <dependency>

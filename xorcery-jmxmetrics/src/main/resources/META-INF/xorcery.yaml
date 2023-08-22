@@ -1,5 +1,2 @@
 jmxmetrics:
   enabled: "{{ defaults.enabled }}"
-  port: 1099
-  uri: "service:jmx:rmi://localhost:{{ jmxmetrics.port }}/jndi/rmi://localhost:{{ jmxmetrics.port }}/jmxrmi"
-  externalUri: "service:jmx:rmi://{{ instance.fqdn }}:{{ jmxmetrics.port }}/jndi/rmi://{{ instance.fqdn }}:{{ jmxmetrics.port }}/jmxrmi"

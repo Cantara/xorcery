@@ -65,9 +65,7 @@ public class JmxMetricsService
 
     private final MBeanServer managementServer;
     private final CompletionStage<Void> result;
-    private final JMXConnectorServer jmxConnectorServer;
     private final Logger logger;
-    private final Registry registry;
     private ScheduledExecutorService scheduledExecutorService;
 
     @Inject
@@ -79,13 +77,6 @@ public class JmxMetricsService
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
-        registry = LocateRegistry.createRegistry(jmxMetricsConfiguration.getPort());
-        MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        JMXServiceURL url = new JMXServiceURL(jmxMetricsConfiguration.getURI());
-        jmxConnectorServer = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbs);
-        jmxConnectorServer.start();
-        logger.info("JMX metrics available at: {}", jmxMetricsConfiguration.getExternalURI());
-
         result = reactiveStreamsServer.subscriber("metrics",
                 cfg -> new MetricsSubscriber(scheduledExecutorService, InstanceConfiguration.get(cfg).getId()),
                 MetricsSubscriber.class);
@@ -93,11 +84,6 @@ public class JmxMetricsService
 
     @Override
     public void preDestroy() {
-        try {
-            jmxConnectorServer.stop();
-        } catch (IOException e) {
-            logger.warn("Could not stop JMX connector", e);
-        }
         scheduledExecutorService.shutdown();
         result.toCompletableFuture().complete(null);
     }

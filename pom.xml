@@ -116,6 +116,7 @@
         <module>xorcery-opensearch</module>
 
         <module>xorcery-log4j</module>
+        <module>xorcery-jmxconnector</module>
         <module>xorcery-jmxmetrics</module>
 
         <module>xorcery-coordinator</module>
@@ -268,6 +269,11 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jetty-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-jmxconnector</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

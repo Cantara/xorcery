@@ -188,6 +188,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-jmxconnector</artifactId>
+                <version>0.30.3-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jmxmetrics</artifactId>
                 <version>0.30.3-SNAPSHOT</version>
             </dependency>

@@ -1,0 +1,11 @@
+jmxconnector:
+  enabled: "{{ defaults.enabled }}"
+  registryPort: 1099
+  rmiPort: 1100
+  uri: "service:jmx:rmi://localhost:{{ jmxconnector.rmiPort }}/jndi/rmi://localhost:{{ jmxconnector.registryPort }}/jmxrmi"
+  externalUri: "service:jmx:rmi://{{ instance.fqdn }}:{{ jmxconnector.rmiPort }}/jndi/rmi://{{ instance.fqdn }}:{{ jmxconnector.registryPort }}/jmxrmi"
+  ssl:
+    enabled: false
+  users:
+    - username: "admin"
+      password: "secret:password"
