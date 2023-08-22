@@ -1,13 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.exoreaction.xorcery</groupId>
-        <artifactId>xorcery-project</artifactId>
-        <version>0.30.3-SNAPSHOT</version>
-    </parent>
-
+    <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-bom</artifactId>
+    <version>0.30.3-SNAPSHOT</version>
     <name>Xorcery BOM</name>
     <description>Xorcery BOM artifact</description>
     <packaging>pom</packaging>
@@ -203,6 +199,11 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jsonapi</artifactId>
+                <version>0.30.3-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-jsonapi-server</artifactId>
                 <version>0.30.3-SNAPSHOT</version>
             </dependency>
             <dependency>

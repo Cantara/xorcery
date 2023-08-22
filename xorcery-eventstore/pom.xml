@@ -21,9 +21,8 @@
 
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
-        <artifactId>xorcery-parent</artifactId>
+        <artifactId>xorcery-project</artifactId>
         <version>0.30.3-SNAPSHOT</version>
-        <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>xorcery-eventstore</artifactId>
@@ -39,53 +38,53 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-api</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonapi-server</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metadata</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-configuration</artifactId>
-            <version>${project.version}</version>
+
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-configuration-api</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-service-api</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-json</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonapi</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-util</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonschema</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
 
         <dependency>
@@ -180,25 +179,25 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jersey-server</artifactId>
-            <version>${project.version}</version>
+
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-server</artifactId>
-            <version>${project.version}</version>
+
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-core</artifactId>
-            <version>${project.version}</version>
+
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-junit</artifactId>
-            <version>${project.version}</version>
+
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -21,9 +21,8 @@
 
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
-        <artifactId>xorcery-parent</artifactId>
+        <artifactId>xorcery-project</artifactId>
         <version>0.30.3-SNAPSHOT</version>
-        <relativePath>../xorcery-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>xorcery-dns-server</artifactId>
@@ -39,28 +38,26 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-configuration-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-service-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonapi</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-util</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jetty-server</artifactId>
-            <version>${project.version}</version>
+
         </dependency>
 
         <dependency>
