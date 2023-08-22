@@ -282,6 +282,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-neo4j-browser</artifactId>
+                <version>0.30.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opensearch</artifactId>
                 <version>0.30.2-SNAPSHOT</version>
             </dependency>
