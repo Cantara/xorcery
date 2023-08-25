@@ -183,6 +183,11 @@ public record JsonDomainEvent(ObjectNode json)
         return json;
     }
 
+    public String getName()
+    {
+        return json.path("event").asText();
+    }
+
     public boolean isCreatedOrUpdated() {
         return json.has("created") || json.has("updated");
     }
@@ -200,6 +205,17 @@ public record JsonDomainEvent(ObjectNode json)
     public JsonEntity getDeleted() {
         ObjectNode deleted = (ObjectNode) json.get("deleted");
         return deleted == null ? null : new JsonEntity(deleted);
+    }
+
+    public JsonEntity getEntity()
+    {
+        JsonEntity entity = getUpdated();
+        if (entity != null)
+            return entity;
+        entity = getCreated();
+        if (entity != null)
+            return entity;
+        return getDeleted();
     }
 
     public Map<String, JsonNode> getAttributes() {
