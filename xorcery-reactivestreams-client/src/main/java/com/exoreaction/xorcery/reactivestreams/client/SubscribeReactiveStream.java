@@ -168,16 +168,14 @@ public class SubscribeReactiveStream
             retry(null);
         }
 
-        if (serverUri.getScheme().equals("srv"))
-        {
+        if (serverUri.getScheme().equals("srv")) {
             logger.debug(marker, "Resolving " + serverUri);
             dnsLookup.resolve(serverUri).thenApply(list ->
             {
                 this.uriIterator = list.iterator();
                 return uriIterator;
             }).thenAccept(this::connect).exceptionally(this::connectException);
-        } else
-        {
+        } else {
             this.uriIterator = List.of(serverUri).iterator();
             connect(uriIterator);
         }
@@ -231,7 +229,7 @@ public class SubscribeReactiveStream
             }
 
             if (!isRetrying) {
-                logger.debug(marker, "Retrying");
+                logger.debug(marker, "Retrying", cause);
                 isRetrying = true;
             }
 
@@ -460,11 +458,9 @@ public class SubscribeReactiveStream
                 }
                 return;
             }
-            if (sendRequestsThreshold == 0)
-            {
+            if (sendRequestsThreshold == 0) {
                 sendRequestsThreshold = rn * 3 / 4;
-            } else
-            {
+            } else {
                 if (rn < sendRequestsThreshold)
                     return; // Wait until we have more requests lined up
             }
