@@ -1,7 +1,7 @@
 # Xorcery
 
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/Cantara/xorcery) 
-![Build Status](https://jenkins.quadim.ai/buildStatus/icon?Cantara%20%20xorcery) ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/Cantara/xorcerye) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active) [![Known Vulnerabilities](https://snyk.io/test/github/Cantara/xorcery/badge.svg)](https://snyk.io/test/github/Cantara/xorcery)
+![Build Status](https://jenkins.quadim.ai/buildStatus/icon?Cantara%20%20xorcery) ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/Cantara/xorcery) [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active) [![Known Vulnerabilities](https://snyk.io/test/github/Cantara/xorcery/badge.svg)](https://snyk.io/test/github/Cantara/xorcery)
 
 Xorcery, a boostrap like library designed to help you grow your solution and helping the developers with common service design features, such as REST API clients and servers, as well as reactive streaming of data in a way that doesn't suck.
 
