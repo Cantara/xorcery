@@ -23,6 +23,72 @@ On IntelliJ >2021.3.2: "Open 'Edit/run configurations' dialog" -> "Edit Configur
 You can also use mvn exec:exec to run it with the correct settings.
 Alterative in intelliJ, which can run on IntelliJ-downloaded/confed JVM: "Maven" tab on the right hand side -> "manager" -> Plugins -> "exec" -> "exec:exec" 
 
+## Adding xorcery to your project
+
+You may want to xorcery to your porject, you may use maven like this
+
+```bash
+    <properties>
+        <maven.compiler.release>17</maven.compiler.release>
+        <typelib.version>0.30.1</typelib.version>
+    </properties>
+
+  <dependencies>
+        ...
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-dns-client</artifactId>
+            <version>${xorcery.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jetty-client</artifactId>
+            <version>${xorcery.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-keystores</artifactId>
+            <version>${xorcery.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-certificates</artifactId>
+            <version>${xorcery.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-api</artifactId>
+            <version>${xorcery.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-client</artifactId>
+            <version>${xorcery.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-domainevents</artifactId>
+            <version>${xorcery.version}</version>
+        </dependency>
+    </dependencies>
+
+
+    <repositories>
+        ...
+        <repository>
+            <id>cantara-releases</id>
+            <name>Cantara Release Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/releases/</url>
+        </repository>
+        <repository>
+            <id>cantara-snapshots</id>
+            <name>Cantara Snapshot Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
+```
+
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
