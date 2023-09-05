@@ -39,6 +39,7 @@ import java.util.concurrent.CompletionStage;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.describedby;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 import static com.exoreaction.xorcery.jsonapi.MediaTypes.APPLICATION_JSON_API;
+import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 
 @Path("api/login")
 public class JwtLoginResource
@@ -69,6 +70,7 @@ public class JwtLoginResource
     }
 
     @GET
+    @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
     public CompletionStage<ResourceDocument> get(@QueryParam("rel") String rel) {
         return CompletableFuture.completedStage(new ResourceDocument.Builder()
                 .links(new Links.Builder()
