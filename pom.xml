@@ -583,7 +583,7 @@
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-bom</artifactId>
-                <version>2022.0.10</version>
+                <version>2022.0.11</version>
             </dependency>
 
             <!-- Bouncy Castle Cryptography APIs -->
