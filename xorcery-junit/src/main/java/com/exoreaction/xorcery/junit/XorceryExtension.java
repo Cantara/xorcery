@@ -49,6 +49,7 @@ public class XorceryExtension
 
         private String instanceId;
         private String archiveFileName;
+        private String targetDir;
         private ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 
         public Builder id(String instanceId) {
@@ -57,7 +58,12 @@ public class XorceryExtension
         }
 
         public Builder archive(String archiveFileName) {
+            return archive(archiveFileName, archiveFileName.split("\\.")[0]);
+        }
+
+        public Builder archive(String archiveFileName, String targetDir) {
             this.archiveFileName = archiveFileName;
+            this.targetDir = targetDir;
             return this;
         }
 
@@ -82,7 +88,7 @@ public class XorceryExtension
                     tempDir = Files.createTempDirectory(Path.of("target"), "xorcery").toFile();
                 } else {
                     File zipFile = Path.of(Resources.getResource(archiveFileName).orElseThrow(() -> new IllegalArgumentException("File not found in classpath:" + archiveFileName)).toURI()).toFile();
-                    tempDir = Path.of("target", archiveFileName.split("\\.")[0]).toFile();
+                    tempDir = Path.of("target", targetDir).toFile();
                     if (!tempDir.exists()) {
                         ConfigurationLogger.getLogger().log("Unzipping " + archiveFileName);
                         ZipFiles.unzip(zipFile, tempDir);
