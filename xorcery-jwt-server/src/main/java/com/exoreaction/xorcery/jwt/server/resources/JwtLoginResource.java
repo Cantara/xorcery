@@ -16,15 +16,17 @@
 package com.exoreaction.xorcery.jwt.server.resources;
 
 import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsJsonSchemaMixin;
-import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsMixin;
 import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonapischema.ResourceObjectSchema;
 import com.exoreaction.xorcery.jsonschema.JsonSchema;
+import com.exoreaction.xorcery.jsonschema.Properties;
+import com.exoreaction.xorcery.jsonschema.Types;
 import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaMixin;
 import com.exoreaction.xorcery.jwt.server.JwtConfigurationLoginService;
 import com.exoreaction.xorcery.jwt.server.JwtService;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.NewCookie;
@@ -33,6 +35,7 @@ import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.UserIdentity;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -44,7 +47,7 @@ import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_
 @Path("api/login")
 public class JwtLoginResource
         extends JsonApiResource
-        implements JsonSchemaMixin, CommandsJsonSchemaMixin, CommandsMixin {
+        implements JsonSchemaMixin, CommandsJsonSchemaMixin {
 
     private final JwtService jwtService;
     private final LoginService loginService;
@@ -56,20 +59,6 @@ public class JwtLoginResource
     }
 
     @GET
-    @Produces(MediaTypes.APPLICATION_JSON_SCHEMA)
-    public JsonSchema schema() {
-        return new ResourceDocumentSchema.Builder()
-                .resources(loginSchema())
-                .builder()
-                .links(new com.exoreaction.xorcery.hyperschema.Links.Builder()
-                        .link(selfLink()).link(describedbyLink(getAbsolutePath().toASCIIString()))
-                        .build())
-                .builder()
-                .title("Login")
-                .build();
-    }
-
-    @GET
     @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
     public CompletionStage<ResourceDocument> get(@QueryParam("rel") String rel) {
         return CompletableFuture.completedStage(new ResourceDocument.Builder()
@@ -78,10 +67,11 @@ public class JwtLoginResource
                         .link(describedby, getAbsolutePathBuilder().path(".schema").toTemplate())
                         .build())
                 .data(new ResourceObject.Builder("login")
+                        .links(new Links.Builder().link("login", getUriInfo().getRequestUri().toASCIIString()))
                         .attributes(new Attributes.Builder().with(a ->
                         {
-                            a.attribute("username", null);
-                            a.attribute("password", null);
+                            a.attribute("username", "");
+                            a.attribute("password", "");
                         })).build())
                 .build());
     }
@@ -109,9 +99,60 @@ public class JwtLoginResource
         }
     }
 
+    @GET
+    @Produces(MediaTypes.APPLICATION_JSON_SCHEMA)
+    public JsonSchema schema() {
+
+        // Login schema
+        List<String> required = List.of("username", "password");
+        Properties.Builder properties = new Properties.Builder();
+        properties.property("username", new JsonSchema.Builder().type(Types.String).title("Username").build());
+        properties.property("password", new JsonSchema.Builder().type(Types.String).title("Password").build());
+
+        JsonSchema formSchema = new JsonSchema.Builder()
+                .type(Types.Object)
+                .properties(new Properties.Builder()
+                        .property("data", new JsonSchema.Builder()
+                                .type(Types.Object)
+                                .additionalProperties(false)
+                                .required("type", "data")
+                                .properties(new Properties.Builder()
+                                        .property("id", new JsonSchema.Builder().type(Types.String).build())
+                                        .property("type", new JsonSchema.Builder().constant(JsonNodeFactory.instance.textNode("login")).build())
+                                        .property("attributes", new JsonSchema.Builder()
+                                                .type(Types.Object)
+                                                .required(required.toArray(new String[0]))
+                                                .properties(properties.build())
+                                                .build())
+                                        .build())
+                                .build())
+                        .build())
+                .build();
+
+        com.exoreaction.xorcery.hyperschema.Link.Builder builder = new com.exoreaction.xorcery.hyperschema.Link.Builder()
+                .rel("login")
+                .href("{+command_href}")
+                .templateRequired("command_href")
+                .templatePointer("command_href", "0/data/links/login")
+                .submissionMediaType(APPLICATION_JSON_API);
+
+        builder.submissionSchema(formSchema);
+
+        return new ResourceDocumentSchema.Builder()
+                .resources(loginSchema())
+                .builder()
+                .links(new com.exoreaction.xorcery.hyperschema.Links.Builder()
+                        .link(selfLink()).link(describedbyLink(getAbsolutePath().toASCIIString()))
+                        .link(builder.build()).build())
+                .builder()
+                .title("Login")
+                .build();
+    }
+
     private ResourceObjectSchema loginSchema() {
         return new ResourceObjectSchema.Builder()
                 .type(ApiTypes.login)
+                .link("login")
                 .attributes(attributes(LoginModel.username, LoginModel.password))
                 .with(b -> b.builder().builder().title("Login"))
                 .build();
