@@ -88,6 +88,17 @@ public class DnsRegistrationTest {
             System.out.println("srv://_servicetest._sub._http._tcp.xorcery.test "+hosts);
         }
 
+        {
+            List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_http._tcp")).orTimeout(10, TimeUnit.SECONDS).join();
+            System.out.println("srv://_http._tcp "+hosts);
+        }
+
+        {
+            List<URI> hosts = dnsLookupService.resolve(URI.create("srv://_http._tcp.xorcery.test")).orTimeout(10, TimeUnit.SECONDS).join();
+            System.out.println("srv://_http._tcp.xorcery.test "+hosts);
+        }
+
+
         xorcery2.close();
         logger.info("After server2 shutdown");
         dnsLookupService = xorcery1.getServiceLocator().getService(DnsLookupService.class);
