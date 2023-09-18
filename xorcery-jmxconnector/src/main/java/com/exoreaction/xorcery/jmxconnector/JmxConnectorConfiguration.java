@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.jmxmetrics;
+package com.exoreaction.xorcery.jmxconnector;
 
 import com.exoreaction.xorcery.configuration.ComponentConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;

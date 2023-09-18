@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 open module xorcery.jmxconnector {
+    exports com.exoreaction.xorcery.jmxconnector;
+
     requires xorcery.configuration.api;
+    requires xorcery.secrets;
 
     requires jakarta.inject;
     requires org.apache.logging.log4j;
-    requires java.management;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
+
+    requires java.management;
     requires java.rmi;
-    requires xorcery.secrets;
     requires java.management.rmi;
 }

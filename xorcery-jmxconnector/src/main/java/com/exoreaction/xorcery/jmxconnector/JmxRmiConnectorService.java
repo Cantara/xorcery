@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.jmxmetrics;
+package com.exoreaction.xorcery.jmxconnector;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.secrets.Secrets;
@@ -46,14 +46,14 @@ import java.util.Map;
 
 @Service(name = "jmxconnector")
 @RunLevel(6)
-public class JmxConnectorService
+public class JmxRmiConnectorService
         implements PreDestroy {
 
     private final JMXConnectorServer jmxConnectorServer;
     private final Logger logger;
 
     @Inject
-    public JmxConnectorService(Configuration configuration, Secrets secrets, Logger logger) throws IOException {
+    public JmxRmiConnectorService(Configuration configuration, Secrets secrets, Logger logger) throws IOException {
         this.logger = logger;
 
         JmxConnectorConfiguration jmxConnectorConfiguration = new JmxConnectorConfiguration(configuration.getConfiguration("jmxconnector"));

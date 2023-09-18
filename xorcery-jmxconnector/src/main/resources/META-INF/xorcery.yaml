@@ -9,3 +9,10 @@ jmxconnector:
   users:
     - username: "admin"
       password: "secret:password"
+
+system:
+  # This is only read on JVM startup, so doesn't work to set it here. Leaving it as a reminder
+  java.net.preferIPv4Stack: true
+  java.rmi.server.hostname: "{{ instance.ip }}"
+#  sun.rmi.transport.tcp.logLevel: "VERBOSE"
+#  sun.rmi.server.logLevel: "VERBOSE"
