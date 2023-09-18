@@ -78,6 +78,7 @@ public class HttpClientFactory {
         }
 
         client = new HttpClient(transport);
+        client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
         QueuedThreadPool executor = new QueuedThreadPool();
         ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
         executor.setName(applicationConfiguration.getName());

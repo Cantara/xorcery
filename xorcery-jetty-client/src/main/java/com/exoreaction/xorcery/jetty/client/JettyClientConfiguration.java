@@ -27,4 +27,8 @@ public record JettyClientConfiguration(Configuration context)
         return Duration.parse("PT" + context().getString("idleTimeout").orElse("-1s"));
     }
 
+    public Duration getConnectTimeout() {
+        return Duration.parse("PT" + context().getString("connectTimeout").orElse("5s"));
+    }
+
 }
