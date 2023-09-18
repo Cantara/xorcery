@@ -2,9 +2,6 @@ jwt:
   server:
     enabled: "{{ defaults.enabled }}"
     issuer: "{{ instance.fqdn }}"
-    claims:
-      configuration:
-        enabled: "{{ defaults.enabled }}"
     keys: []
   configuration:
     enabled: "{{ defaults.enabled }}"
