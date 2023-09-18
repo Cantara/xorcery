@@ -72,7 +72,12 @@ public class Xorcery
         system.json().fields().forEachRemaining(entry ->
         {
             if (!entry.getValue().isNull())
+            {
+                String key = entry.getKey();
+                String value = entry.getValue().asText();
+                ConfigurationLogger.getLogger().log("Set system property '"+key+"' to '"+value+"'");
                 System.setProperty(entry.getKey(), entry.getValue().asText());
+            }
         });
 
         // Ensure home directory exists
