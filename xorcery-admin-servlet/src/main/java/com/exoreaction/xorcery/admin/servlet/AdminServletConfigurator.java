@@ -42,7 +42,7 @@ public class AdminServletConfigurator {
             VisualeCompatibleHealthServlet visualeCompatibleHealthServlet,
             ServletContextHandler servletContextHandler) {
         if (visualeCompatibleHealthServlet != null) {
-            servletContextHandler.addServlet(new ServletHolder(visualeCompatibleHealthServlet), "/health/*");
+            servletContextHandler.addServlet(new ServletHolder("visuale", visualeCompatibleHealthServlet), "/health/*");
             logger.info("Installed Visuale compatible health servlet at /health/*");
         }
         AdminServlet adminServlet = new AdminServlet();
@@ -51,10 +51,10 @@ public class AdminServletConfigurator {
         if (healthCheckRegistry != null) {
             servletContextHandler.getServletContext().setAttribute(HealthCheckServlet.HEALTH_CHECK_REGISTRY, healthCheckRegistry);
         }
-        servletContextHandler.addServlet(new ServletHolder(adminServlet), "/admin/*");
+        servletContextHandler.addServlet(new ServletHolder("admin", adminServlet), "/admin/*");
         logger.info("Installed admin servlet at /admin/*");
 
-        servletContextHandler.addServlet(new ServletHolder(new MetricsServlet(metricRegistry)), "/admin/metrics/*");
+        servletContextHandler.addServlet(new ServletHolder("metrics", new MetricsServlet(metricRegistry)), "/admin/metrics/*");
         logger.info("Installed metrics at /admin/metrics");
     }
 }

@@ -35,7 +35,7 @@ import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "jersey.server")
-@RunLevel(4)
+@RunLevel(6)
 public class JerseyServerService
         implements PreDestroy {
     private final Logger logger = LogManager.getLogger(getClass());
@@ -67,7 +67,7 @@ public class JerseyServerService
         }
 
         servletContainer = new JerseyServletContainer(app);
-        ServletHolder servletHolder = new ServletHolder(servletContainer);
+        ServletHolder servletHolder = new ServletHolder("jersey", servletContainer);
         servletHolder.setInitOrder(1);
         ServletContextHandler servletContextHandler = ctxProvider.get();
         servletContextHandler.addServlet(servletHolder, "/*");

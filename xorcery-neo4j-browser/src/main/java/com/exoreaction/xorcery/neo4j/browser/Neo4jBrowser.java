@@ -18,7 +18,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 @Service(name = "neo4jbrowser")
-@RunLevel(4)
+@RunLevel(6)
 public class Neo4jBrowser {
 
     @Inject
@@ -30,7 +30,7 @@ public class Neo4jBrowser {
         URL webRootLocation = Resources.getResource("browser/index.html").orElseThrow();
         URI webRootUri = URI.create(webRootLocation.toURI().toASCIIString().replaceFirst("/index.html", "/"));
         DefaultServlet defaultServlet = new DefaultServlet();
-        ServletHolder servletHolder = new ServletHolder(defaultServlet);
+        ServletHolder servletHolder = new ServletHolder("neo4jbrowser", defaultServlet);
         ServletContextHandler servletContextHandler = ctxProvider.get();
         servletContextHandler.setInitParameter(DefaultServlet.CONTEXT_INIT + "resourceBase", webRootUri.toASCIIString());
         servletContextHandler.setInitParameter(DefaultServlet.CONTEXT_INIT + "pathInfoOnly", Boolean.TRUE.toString());

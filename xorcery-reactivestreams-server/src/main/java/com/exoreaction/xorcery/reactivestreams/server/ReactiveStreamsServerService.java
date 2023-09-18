@@ -88,13 +88,13 @@ public class ReactiveStreamsServerService
         {
             return Optional.ofNullable(publisherEndpointFactories.get(streamName)).map(Supplier::get).orElse(null);
         });
-        servletContextHandler.addServlet(new ServletHolder(publishersServlet), "/streams/publishers/*");
+        servletContextHandler.addServlet(new ServletHolder("reactivestreamspublisher", publishersServlet), "/streams/publishers/*");
 
         SubscribersReactiveStreamsServlet subscribersServlet = new SubscribersReactiveStreamsServlet(reactiveStreamsServerConfiguration, streamName ->
         {
             return Optional.ofNullable(subscriberEndpointFactories.get(streamName)).map(Supplier::get).orElse(null);
         });
-        servletContextHandler.addServlet(new ServletHolder(subscribersServlet), "/streams/subscribers/*");
+        servletContextHandler.addServlet(new ServletHolder("reactivestreamssubscriber", subscribersServlet), "/streams/subscribers/*");
 
     }
 
