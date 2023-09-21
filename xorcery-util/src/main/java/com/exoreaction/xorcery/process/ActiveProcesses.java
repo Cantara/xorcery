@@ -25,7 +25,7 @@ public class ActiveProcesses
         implements AutoCloseable {
     List<Process<?>> processes = new CopyOnWriteArrayList<>();
 
-    <T extends Process<?>> T add(T process) {
+    public <T extends Process<?>> T add(T process) {
         processes.add(process);
         process.result().whenComplete((v,t)->processes.remove(process));
         return process;
