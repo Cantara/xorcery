@@ -1,0 +1,1721 @@
+- metadata:
+    timestamp: 1695117812950
+    correlationId: "61c455fd-df29-4bb2-ab08-d5651a536766"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:32.9516052+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "b8172044-f8ed-58be-be5c-093f629e92c3"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "b8172044-f8ed-58be-be5c-093f629e92c3"
+      attributes:
+        enabled: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "b8172044-f8ed-58be-be5c-093f629e92c3"
+      attributes:
+        installed: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "b8172044-f8ed-58be-be5c-093f629e92c3"
+      attributes:
+        name: "English (CatalystOne)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "b8172044-f8ed-58be-be5c-093f629e92c3"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813037
+    correlationId: "6d39c811-7709-430d-8ba5-7263b3beb690"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0372885+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "d6e8257d-35f4-523c-b080-9e28e1ff159a"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "d6e8257d-35f4-523c-b080-9e28e1ff159a"
+      attributes:
+        enabled: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "d6e8257d-35f4-523c-b080-9e28e1ff159a"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "d6e8257d-35f4-523c-b080-9e28e1ff159a"
+      attributes:
+        name: "Norwegian Bokmål (Norway)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "d6e8257d-35f4-523c-b080-9e28e1ff159a"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813038
+    correlationId: "a7bc8dd5-1709-4cee-9c35-289b242a10b2"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0382876+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "4a194366-4f83-5c5e-a229-38693378da7c"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "4a194366-4f83-5c5e-a229-38693378da7c"
+      attributes:
+        enabled: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "4a194366-4f83-5c5e-a229-38693378da7c"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "4a194366-4f83-5c5e-a229-38693378da7c"
+      attributes:
+        name: "English (United States)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "4a194366-4f83-5c5e-a229-38693378da7c"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813039
+    correlationId: "2f97aba2-afe7-407a-9628-dfc81b69d57d"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0392887+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "cee32f02-10ba-51b3-8886-36396d0da4c2"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "cee32f02-10ba-51b3-8886-36396d0da4c2"
+      attributes:
+        enabled: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "cee32f02-10ba-51b3-8886-36396d0da4c2"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "cee32f02-10ba-51b3-8886-36396d0da4c2"
+      attributes:
+        name: "English (United Kingdom)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "cee32f02-10ba-51b3-8886-36396d0da4c2"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813041
+    correlationId: "25e346b1-afa6-4547-ad08-396822603732"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0412876+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "a63aca67-5e82-5e4e-95a3-6a0eebe5355e"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "a63aca67-5e82-5e4e-95a3-6a0eebe5355e"
+      attributes:
+        enabled: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "a63aca67-5e82-5e4e-95a3-6a0eebe5355e"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "a63aca67-5e82-5e4e-95a3-6a0eebe5355e"
+      attributes:
+        name: "Finnish (Finland)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "a63aca67-5e82-5e4e-95a3-6a0eebe5355e"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813042
+    correlationId: "3f3b4dd6-09b4-43fb-a38f-d0e36291680a"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0422877+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "0d7bca98-feff-538e-a007-a5efd32c0010"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "0d7bca98-feff-538e-a007-a5efd32c0010"
+      attributes:
+        enabled: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "0d7bca98-feff-538e-a007-a5efd32c0010"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "0d7bca98-feff-538e-a007-a5efd32c0010"
+      attributes:
+        name: "Danish (Denmark)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "0d7bca98-feff-538e-a007-a5efd32c0010"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813043
+    correlationId: "a6515188-4db1-42f1-9049-763c80ed139d"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0432878+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "04bb774b-93d8-548e-bb8c-c785290d6624"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "04bb774b-93d8-548e-bb8c-c785290d6624"
+      attributes:
+        enabled: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "04bb774b-93d8-548e-bb8c-c785290d6624"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "04bb774b-93d8-548e-bb8c-c785290d6624"
+      attributes:
+        name: "Swedish (Sweden)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "04bb774b-93d8-548e-bb8c-c785290d6624"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813044
+    correlationId: "c5991fb9-f098-4913-9256-f4c4ed6a5887"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0443063+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "42a098af-7d63-593e-8cb6-a43c4383c4ae"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "42a098af-7d63-593e-8cb6-a43c4383c4ae"
+      attributes:
+        enabled: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "42a098af-7d63-593e-8cb6-a43c4383c4ae"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "42a098af-7d63-593e-8cb6-a43c4383c4ae"
+      attributes:
+        name: "German (Germany)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "42a098af-7d63-593e-8cb6-a43c4383c4ae"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813044
+    correlationId: "ee035f5f-505a-4ef6-ab84-83680e65c0fe"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0443063+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "d14ccd2c-703a-5558-8948-ce9655528fa9"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "d14ccd2c-703a-5558-8948-ce9655528fa9"
+      attributes:
+        enabled: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "d14ccd2c-703a-5558-8948-ce9655528fa9"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "d14ccd2c-703a-5558-8948-ce9655528fa9"
+      attributes:
+        name: "Dutch (Netherlands)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "d14ccd2c-703a-5558-8948-ce9655528fa9"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813045
+    correlationId: "45a948c6-4745-45fa-88fe-5e4b15cc6fe6"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0453067+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "65b2a0f8-97ce-525a-926b-857a5008d3d7"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "65b2a0f8-97ce-525a-926b-857a5008d3d7"
+      attributes:
+        enabled: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "65b2a0f8-97ce-525a-926b-857a5008d3d7"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "65b2a0f8-97ce-525a-926b-857a5008d3d7"
+      attributes:
+        name: "Polish (Poland)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "65b2a0f8-97ce-525a-926b-857a5008d3d7"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813046
+    correlationId: "034f64e7-a94f-462a-a0c9-71a687e7bfa2"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.046308+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "ede6b478-521b-5b0b-b663-e427092deba8"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "ede6b478-521b-5b0b-b663-e427092deba8"
+      attributes:
+        enabled: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "ede6b478-521b-5b0b-b663-e427092deba8"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "ede6b478-521b-5b0b-b663-e427092deba8"
+      attributes:
+        name: "French (France)"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "ede6b478-521b-5b0b-b663-e427092deba8"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813047
+    correlationId: "13c2db41-3412-4ce7-9a10-a57def571561"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0473092+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "cd6a077b-84a1-4763-889a-234465755cd8"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "cd6a077b-84a1-4763-889a-234465755cd8"
+      attributes:
+        enabled: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "cd6a077b-84a1-4763-889a-234465755cd8"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "cd6a077b-84a1-4763-889a-234465755cd8"
+      attributes:
+        name: "Hindi"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "cd6a077b-84a1-4763-889a-234465755cd8"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813048
+    correlationId: "fe5ef13a-8996-4f7c-99f7-57562e9a8567"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0483092+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "e1b23522-d756-452a-b7ed-d28e68b91ad2"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "e1b23522-d756-452a-b7ed-d28e68b91ad2"
+      attributes:
+        enabled: false
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "e1b23522-d756-452a-b7ed-d28e68b91ad2"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "e1b23522-d756-452a-b7ed-d28e68b91ad2"
+      attributes:
+        name: "German"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "e1b23522-d756-452a-b7ed-d28e68b91ad2"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813050
+    correlationId: "9480ec56-a52a-43a5-8e1d-2cbcf6a76665"
+    agent: "databaseimporter"
+    domain: "LANGUAGE"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0513074+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "language"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedLanguage"
+      created:
+        type: "Language"
+        id: "d48c3edd-2e93-45ae-b2c4-7606f05e1d96"
+      attributes:
+        name: ""
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEnabled"
+      updated:
+        type: "Language"
+        id: "d48c3edd-2e93-45ae-b2c4-7606f05e1d96"
+      attributes:
+        enabled: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedInstalled"
+      updated:
+        type: "Language"
+        id: "d48c3edd-2e93-45ae-b2c4-7606f05e1d96"
+      attributes:
+        installed: true
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Language"
+        id: "d48c3edd-2e93-45ae-b2c4-7606f05e1d96"
+      attributes:
+        name: "Polish"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedLocale"
+      updated:
+        type: "Language"
+        id: "d48c3edd-2e93-45ae-b2c4-7606f05e1d96"
+      attributes:
+        locale: "LOCALE"
+- metadata:
+    timestamp: 1695117813081
+    correlationId: "fff79b28-085e-4d4a-8f53-a5ee95d63f67"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0814981+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "9c1abd02-2f04-59cc-83b4-3aa324c4d8f8"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "9c1abd02-2f04-59cc-83b4-3aa324c4d8f8"
+      attributes:
+        functionTextName: "CATEGORY_BASIC_SCALETYPES"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "9c1abd02-2f04-59cc-83b4-3aa324c4d8f8"
+      attributes:
+        sortOrder: 1
+- metadata:
+    timestamp: 1695117813084
+    correlationId: "85ef758c-7093-4bc9-814f-40ca291b630c"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0840092+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "94753332-133b-5723-b020-193922ec8860"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "94753332-133b-5723-b020-193922ec8860"
+      attributes:
+        functionTextName: "CATEGORY_APPRAISAL_MANAGER"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "94753332-133b-5723-b020-193922ec8860"
+      attributes:
+        sortOrder: 4
+- metadata:
+    timestamp: 1695117813085
+    correlationId: "33b296bd-8636-4770-a78d-d50a743dcd18"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0850121+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "369c15b6-d738-5f7b-a438-4ccfd2098f8a"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "94753332-133B-5723-B020-193922EC8860"
+          relationship: "ParentCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "369c15b6-d738-5f7b-a438-4ccfd2098f8a"
+      attributes:
+        functionTextName: "CATEGORY_AM_VALUES"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "369c15b6-d738-5f7b-a438-4ccfd2098f8a"
+      attributes:
+        sortOrder: 1
+- metadata:
+    timestamp: 1695117813086
+    correlationId: "892705a6-7851-4aa2-88cc-8ebf9d82136a"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0860105+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "a724872b-228b-5f76-a592-a446854d6ba5"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "a724872b-228b-5f76-a592-a446854d6ba5"
+      attributes:
+        functionTextName: "CATEGORY_COMPETENCE_DEVELOPER"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "a724872b-228b-5f76-a592-a446854d6ba5"
+      attributes:
+        sortOrder: 7
+- metadata:
+    timestamp: 1695117813087
+    correlationId: "92178343-cbe2-4ae8-864e-6d2cd09f5857"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0870122+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "4ca21942-7751-56b4-8fd6-fe9391d6d8af"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "94753332-133B-5723-B020-193922EC8860"
+          relationship: "ParentCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "4ca21942-7751-56b4-8fd6-fe9391d6d8af"
+      attributes:
+        functionTextName: "CATEGORY_AM_BUSINESS_PERFORMANCE"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "4ca21942-7751-56b4-8fd6-fe9391d6d8af"
+      attributes:
+        sortOrder: 3
+- metadata:
+    timestamp: 1695117813087
+    correlationId: "341efa32-e5cc-44d2-a348-535ebb5e36f1"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0880122+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "5113fcd1-f361-58bd-ac04-bea6b74bb2da"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "94753332-133B-5723-B020-193922EC8860"
+          relationship: "ParentCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "5113fcd1-f361-58bd-ac04-bea6b74bb2da"
+      attributes:
+        functionTextName: "CATEGORY_AM_PDG"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "5113fcd1-f361-58bd-ac04-bea6b74bb2da"
+      attributes:
+        sortOrder: 4
+- metadata:
+    timestamp: 1695117813088
+    correlationId: "7a65138b-7729-4026-903c-028d476975c0"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0880122+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "38c03151-dc91-5822-a1b7-d47e2141b126"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "94753332-133B-5723-B020-193922EC8860"
+          relationship: "ParentCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "38c03151-dc91-5822-a1b7-d47e2141b126"
+      attributes:
+        functionTextName: "CATEGORY_AM_OTHER"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "38c03151-dc91-5822-a1b7-d47e2141b126"
+      attributes:
+        sortOrder: 6
+- metadata:
+    timestamp: 1695117813089
+    correlationId: "26103b87-b484-4366-b920-1a3cf31c5d5a"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0890098+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "f03f64af-57eb-5384-bfd8-4a8615eed575"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "f03f64af-57eb-5384-bfd8-4a8615eed575"
+      attributes:
+        functionTextName: "CATEGORY_360"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "f03f64af-57eb-5384-bfd8-4a8615eed575"
+      attributes:
+        sortOrder: 5
+- metadata:
+    timestamp: 1695117813089
+    correlationId: "6c69480e-0ad8-4633-ab48-9d59c5470754"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0890098+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "d50752a8-a4e4-58d4-9ee1-a5ccf54c2257"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "d50752a8-a4e4-58d4-9ee1-a5ccf54c2257"
+      attributes:
+        functionTextName: "CV"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "d50752a8-a4e4-58d4-9ee1-a5ccf54c2257"
+      attributes:
+        sortOrder: 8
+- metadata:
+    timestamp: 1695117813090
+    correlationId: "253a655d-b6b8-47bd-b929-66a1c4bfc529"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0900102+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "e11e6c53-dbad-5ded-8c20-749fd02764b6"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "e11e6c53-dbad-5ded-8c20-749fd02764b6"
+      attributes:
+        functionTextName: "CATEGORY_CUSTOM_SCALE"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "e11e6c53-dbad-5ded-8c20-749fd02764b6"
+      attributes:
+        sortOrder: 999
+- metadata:
+    timestamp: 1695117813090
+    correlationId: "b4c4cd06-88dd-4305-9875-cb3ddf2a8112"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0900102+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "50cb9d46-6a71-532e-b5bf-ba50db8c88a8"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "50cb9d46-6a71-532e-b5bf-ba50db8c88a8"
+      attributes:
+        functionTextName: "CATEGORY_TALENT_MANAGEMENT"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "50cb9d46-6a71-532e-b5bf-ba50db8c88a8"
+      attributes:
+        sortOrder: 9
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "DeletedScaleTypeCategory"
+      deleted:
+        type: "ScaleTypeCategory"
+        id: "50cb9d46-6a71-532e-b5bf-ba50db8c88a8"
+- metadata:
+    timestamp: 1695117813091
+    correlationId: "81b38623-794c-4348-88d9-ef15f56f493f"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0910099+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "1e4f8350-ea63-58d4-8e0b-ee6b67361efe"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "1e4f8350-ea63-58d4-8e0b-ee6b67361efe"
+      attributes:
+        functionTextName: "SALARY_APPRAISAL"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "1e4f8350-ea63-58d4-8e0b-ee6b67361efe"
+      attributes:
+        sortOrder: 10
+- metadata:
+    timestamp: 1695117813091
+    correlationId: "27b14f3d-e613-4fae-b791-ce46e5321e09"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0910099+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "6c4df51f-af35-5bb1-90a2-01313f8c740e"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "6c4df51f-af35-5bb1-90a2-01313f8c740e"
+      attributes:
+        functionTextName: "STATUS_REVIEWER"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "6c4df51f-af35-5bb1-90a2-01313f8c740e"
+      attributes:
+        sortOrder: 5
+- metadata:
+    timestamp: 1695117813092
+    correlationId: "5dd0a32d-3610-4ee4-943f-b345ad13efa6"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0920093+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "28084bc3-b643-5830-95ba-1f479cab45b9"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "28084bc3-b643-5830-95ba-1f479cab45b9"
+      attributes:
+        functionTextName: "HRIS"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "28084bc3-b643-5830-95ba-1f479cab45b9"
+      attributes:
+        sortOrder: 2
+- metadata:
+    timestamp: 1695117813092
+    correlationId: "9cba46ec-6de9-4a28-a1b9-1382cfc5d4ca"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0920093+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "37cf1b68-e793-5d89-ba7c-aabc9c5e0eb9"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "37cf1b68-e793-5d89-ba7c-aabc9c5e0eb9"
+      attributes:
+        functionTextName: "CATEGORY_EMPLOYEE_SURVEY"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "37cf1b68-e793-5d89-ba7c-aabc9c5e0eb9"
+      attributes:
+        sortOrder: 100
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "DeletedScaleTypeCategory"
+      deleted:
+        type: "ScaleTypeCategory"
+        id: "37cf1b68-e793-5d89-ba7c-aabc9c5e0eb9"
+- metadata:
+    timestamp: 1695117813093
+    correlationId: "e5d69519-00d6-4157-9596-b4f6cb56e873"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0935207+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "255c9aff-bc85-5be5-85cc-2d321bed580c"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "37CF1B68-E793-5D89-BA7C-AABC9C5E0EB9"
+          relationship: "ParentCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "255c9aff-bc85-5be5-85cc-2d321bed580c"
+      attributes:
+        functionTextName: "CATEGORY_SCALE_QUESTION"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "255c9aff-bc85-5be5-85cc-2d321bed580c"
+      attributes:
+        sortOrder: 101
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "DeletedScaleTypeCategory"
+      deleted:
+        type: "ScaleTypeCategory"
+        id: "255c9aff-bc85-5be5-85cc-2d321bed580c"
+- metadata:
+    timestamp: 1695117813093
+    correlationId: "2a55571e-25db-4dc4-9b6e-cfa7844008ec"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0935207+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "3d5ddc19-7f87-5931-8ccc-b7b53119e3a9"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "3d5ddc19-7f87-5931-8ccc-b7b53119e3a9"
+      attributes:
+        functionTextName: "CATEGORY_CAREER_PLANNING"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "3d5ddc19-7f87-5931-8ccc-b7b53119e3a9"
+      attributes:
+        sortOrder: 3
+- metadata:
+    timestamp: 1695117813094
+    correlationId: "31720172-f405-4136-a4d2-0ef1b3512263"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0945274+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "075e18d2-05c5-540a-8b10-b5778343e082"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "075e18d2-05c5-540a-8b10-b5778343e082"
+      attributes:
+        functionTextName: "CATEGORY_LEARNING_MANAGER"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "075e18d2-05c5-540a-8b10-b5778343e082"
+      attributes:
+        sortOrder: 11
+- metadata:
+    timestamp: 1695117813094
+    correlationId: "399b12b4-b4e2-4ee0-a8d4-ff11851e152e"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.0945274+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleTypeCategory"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleTypeCategory"
+      created:
+        type: "ScaleTypeCategory"
+        id: "1327e694-bb98-5c93-b1dd-d6bd0a43822f"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFunctionTextName"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "1327e694-bb98-5c93-b1dd-d6bd0a43822f"
+      attributes:
+        functionTextName: "CATEGORY_ABSENCE_MANAGER"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedSortOrder"
+      updated:
+        type: "ScaleTypeCategory"
+        id: "1327e694-bb98-5c93-b1dd-d6bd0a43822f"
+      attributes:
+        sortOrder: 102
+- metadata:
+    timestamp: 1695117813115
+    correlationId: "9957f050-5037-46cd-ab1f-e133003b261a"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1157598+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "dd4a0f16-e87d-58b8-9a14-3fa5b1cfbf06"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "9C1ABD02-2F04-59CC-83B4-3AA324C4D8F8"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "dd4a0f16-e87d-58b8-9a14-3fa5b1cfbf06"
+      attributes:
+        name: "Category"
+- metadata:
+    timestamp: 1695117813116
+    correlationId: "31762ccb-7921-4dda-8430-2534909506a3"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1167968+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "bb8a7f59-c281-5416-bedb-42b797c99b50"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "9C1ABD02-2F04-59CC-83B4-3AA324C4D8F8"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "bb8a7f59-c281-5416-bedb-42b797c99b50"
+      attributes:
+        name: "Units"
+- metadata:
+    timestamp: 1695117813117
+    correlationId: "c59a64f9-a7c3-4a03-a563-4f644e02e369"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1173171+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "cafb00ac-f55f-542c-ab6a-26391d375228"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "369C15B6-D738-5F7B-A438-4CCFD2098F8A"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "cafb00ac-f55f-542c-ab6a-26391d375228"
+      attributes:
+        name: "Values/behaviour ratings"
+- metadata:
+    timestamp: 1695117813117
+    correlationId: "bf10e732-d50d-4cbc-b642-1cea0a1eb44f"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1178399+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "c2cde923-43cd-5af0-a341-4283c0934168"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "369C15B6-D738-5F7B-A438-4CCFD2098F8A"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "c2cde923-43cd-5af0-a341-4283c0934168"
+      attributes:
+        name: "Values/behaviour list"
+- metadata:
+    timestamp: 1695117813118
+    correlationId: "d778764f-c16f-4e22-a360-82b748d67e01"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1183682+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "f49f8b23-346d-539b-913c-053c37a268a3"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "A724872B-228B-5F76-A592-A446854D6BA5"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "f49f8b23-346d-539b-913c-053c37a268a3"
+      attributes:
+        name: "Competency ratings"
+- metadata:
+    timestamp: 1695117813118
+    correlationId: "bb2d6645-7525-46f4-aa8b-49de9f49f305"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1188929+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "17631424-2034-5292-8496-f1a34d2406a3"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "4CA21942-7751-56B4-8FD6-FE9391D6D8AF"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "17631424-2034-5292-8496-f1a34d2406a3"
+      attributes:
+        name: "Past business performance ratings"
+- metadata:
+    timestamp: 1695117813119
+    correlationId: "641dc6dd-2582-4c98-93ca-97dbfeb03cfd"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1194109+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "1c251f79-9e9f-5505-8626-211246c7e42a"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "5113FCD1-F361-58BD-AC04-BEA6B74BB2DA"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "1c251f79-9e9f-5505-8626-211246c7e42a"
+      attributes:
+        name: "Past personal development ratings"
+- metadata:
+    timestamp: 1695117813119
+    correlationId: "edc42190-5585-4ce7-8b36-f365532522a0"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1199321+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "b63fc787-7a0f-50b7-8995-b87de72696a6"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "38C03151-DC91-5822-A1B7-D47E2141B126"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "b63fc787-7a0f-50b7-8995-b87de72696a6"
+      attributes:
+        name: "Overall rating"
+- metadata:
+    timestamp: 1695117813119
+    correlationId: "9dcf2f0f-e351-48d8-8ee1-4a2a7c711520"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1204545+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "c7f9aa47-7ab1-5896-8f42-e50f2caced70"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "A724872B-228B-5F76-A592-A446854D6BA5"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "c7f9aa47-7ab1-5896-8f42-e50f2caced70"
+      attributes:
+        name: "Competency list"
+- metadata:
+    timestamp: 1695117813120
+    correlationId: "a7307ae8-ba66-4767-900b-2b37d924c8d9"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1204545+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "cebfbee0-7753-5291-bdc6-e6130d3b0c00"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "A724872B-228B-5F76-A592-A446854D6BA5"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "cebfbee0-7753-5291-bdc6-e6130d3b0c00"
+      attributes:
+        name: "Interpersonal skills list"
+- metadata:
+    timestamp: 1695117813120
+    correlationId: "a08d99cb-b20c-468e-b0d2-b1ee085e6ce1"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1209763+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "0996622d-df24-55bf-8771-279dabd532ae"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "5113FCD1-F361-58BD-AC04-BEA6B74BB2DA"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "0996622d-df24-55bf-8771-279dabd532ae"
+      attributes:
+        name: "PDG development area"
+- metadata:
+    timestamp: 1695117813121
+    correlationId: "7aa7db8d-14bf-4004-bd72-13cffbd858f4"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1215143+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "e61ae9ad-b29c-5e33-8807-ed81eead2a00"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "5113FCD1-F361-58BD-AC04-BEA6B74BB2DA"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "e61ae9ad-b29c-5e33-8807-ed81eead2a00"
+      attributes:
+        name: "PDG development sub-area"
+- metadata:
+    timestamp: 1695117813122
+    correlationId: "c6c61829-d609-44c5-9c86-7b919a33c53e"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.122037+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "166ae18f-73a4-511b-9f14-64c02ae6967b"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "38C03151-DC91-5822-A1B7-D47E2141B126"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "166ae18f-73a4-511b-9f14-64c02ae6967b"
+      attributes:
+        name: "Potential rating"
+- metadata:
+    timestamp: 1695117813122
+    correlationId: "00289edb-d7e8-416a-959c-d18a1f34102d"
+    agent: "databaseimporter"
+    domain: "SCALESANDLISTS"
+    host: "server"
+    commandType: "DatabaseImport"
+    changedAt: "2023-09-19T12:03:33.1225635+02:00"
+    changedByProfileGuid: "0"
+    changedByAccountGuid: "0"
+    eventType: "scaleType"
+    tenant: "tenant1"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "CreatedScaleType"
+      created:
+        type: "ScaleType"
+        id: "8c285dde-38e7-5708-8bd2-f65c89edbeeb"
+      addedrelationships:
+        - type: "ScaleTypeCategory"
+          id: "9C1ABD02-2F04-59CC-83B4-3AA324C4D8F8"
+          relationship: "ScaleTypeCategory"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "ScaleType"
+        id: "8c285dde-38e7-5708-8bd2-f65c89edbeeb"
+      attributes:
+        name: "Job Roles"

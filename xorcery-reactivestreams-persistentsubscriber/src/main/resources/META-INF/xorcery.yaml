@@ -1,0 +1,6 @@
+persistentsubscribers:
+  enabled: "{{ defaults.enabled }}"
+  defaultCheckpointProvider: "file"
+  defaultErrorLogProvider: "file"
+
+  subscribers: []
