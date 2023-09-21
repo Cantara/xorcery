@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jersey.server;
 
+import org.apache.logging.log4j.LogManager;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
@@ -28,9 +29,11 @@ public class JerseyServletContainer
 
     public JerseyServletContainer(ResourceConfig resourceConfig) {
         super(resourceConfig);
+        LogManager.getLogger().debug("Start");
     }
 
     public void stop() {
+        LogManager.getLogger().debug("Stop");
         getApplicationHandler().onShutdown(this);
     }
 
