@@ -72,9 +72,6 @@ public class StandardConfigurationBuilder {
         addExtensionsTest(builder);
         addApplicationTest(builder);
 
-        // Then any custom and environment configuration
-        addUserDirectory(builder);
-
         addConfigurationProviders(builder);
     }
 
