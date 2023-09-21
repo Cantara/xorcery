@@ -104,6 +104,7 @@
         <module>xorcery-jwt-server</module>
 
         <module>xorcery-eventstore</module>
+        <module>xorcery-reactivestreams-persistentsubscriber</module>
         <module>xorcery-handlebars</module>
 
         <module>xorcery-neo4j</module>
@@ -238,6 +239,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-handlebars</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -325,6 +331,7 @@
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-junit</artifactId>
                 <version>${project.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>

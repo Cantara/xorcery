@@ -153,6 +153,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
+                <version>0.33.3-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-handlebars</artifactId>
                 <version>0.33.3-SNAPSHOT</version>
             </dependency>
