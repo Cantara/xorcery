@@ -66,11 +66,15 @@ public class ProjectionSubscriber
 
     @Override
     public void onError(Throwable throwable) {
-        try {
-            disruptor.shutdown(disruptorConfiguration.getShutdownTimeout(), TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            LogManager.getLogger(getClass()).warn("Could not shutdown disruptor within timeout", e);
+        if (disruptor != null)
+        {
+            try {
+                disruptor.shutdown(disruptorConfiguration.getShutdownTimeout(), TimeUnit.SECONDS);
+            } catch (TimeoutException e) {
+                LogManager.getLogger(getClass()).warn("Could not shutdown disruptor within timeout", e);
+            }
         }
+        LogManager.getLogger().error("Projection failed", throwable);
     }
 
     @Override
