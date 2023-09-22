@@ -18,6 +18,7 @@ open module xorcery.core {
 
     requires transitive xorcery.configuration;
     requires transitive jakarta.inject;
+    requires transitive jakarta.annotation;
     requires transitive org.apache.logging.log4j;
     requires static org.apache.logging.log4j.core;
 
