@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberCheckpoint;
+import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberErrorLog;
 import com.exoreaction.xorcery.process.Process;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
@@ -34,6 +35,7 @@ public record PersistentSubscriberProcess(
 
         PersistentSubscriberSubscriber subscriber = new PersistentSubscriberSubscriber(
                 this,
+                configuration,
                 persistentSubscriber,
                 persistentSubscriberCheckpoint,
                 persistentSubscriberErrorLog,

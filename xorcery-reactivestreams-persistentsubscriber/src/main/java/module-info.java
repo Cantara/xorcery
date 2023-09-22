@@ -16,6 +16,8 @@
 open module xorcery.reactivestreams.persistentsubscriber {
     exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
     exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi;
+    exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers;
+    exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.filter;
 
     requires xorcery.reactivestreams.client;
     requires xorcery.configuration.api;

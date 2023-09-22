@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 
-import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;

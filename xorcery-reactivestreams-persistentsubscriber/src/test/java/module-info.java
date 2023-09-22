@@ -16,9 +16,12 @@
 open module xorcery.eventstore.persistentsubscriber.test {
     exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 
-    requires xorcery.reactivestreams.client;
-    requires xorcery.configuration.api;
-    requires xorcery.util;
+    requires xorcery.reactivestreams.persistentsubscriber;
+
+    requires xorcery.reactivestreams.server;
+    requires xorcery.jetty.server;
+    requires xorcery.configuration;
+    requires xorcery.junit;
 
     requires jakarta.inject;
     requires com.fasterxml.jackson.databind;
@@ -26,9 +29,4 @@ open module xorcery.eventstore.persistentsubscriber.test {
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
 
-    requires xorcery.reactivestreams.server;
-    requires xorcery.jetty.server;
-    requires xorcery.configuration;
-    requires xorcery.junit;
-    requires xorcery.reactivestreams.persistentsubscriber;
 }

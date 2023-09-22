@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi;
 
-import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.PersistentSubscriberConfiguration;
 import org.jvnet.hk2.annotations.Contract;
 
 import java.io.Closeable;

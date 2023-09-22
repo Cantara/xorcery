@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
 
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberCheckpoint;
+import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberErrorLog;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -9,28 +10,35 @@ import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 public class PersistentSubscriberSubscriber
         implements Subscriber<WithMetadata<ArrayNode>> {
     private final PersistentSubscriberProcess persistentSubscriberProcess;
+    private final PersistentSubscriberConfiguration configuration;
     private final PersistentSubscriber persistentSubscriber;
+    private final Predicate<WithMetadata<ArrayNode>> filter;
     private final PersistentSubscriberCheckpoint persistentSubscriberCheckpoint;
     private final PersistentSubscriberErrorLog persistentSubscriberErrorLog;
     private final Logger logger;
     private Subscription subscription;
 
+    long skipped = 0;
+
     public PersistentSubscriberSubscriber(
             PersistentSubscriberProcess persistentSubscriberProcess,
+            PersistentSubscriberConfiguration configuration,
             PersistentSubscriber persistentSubscriber,
             PersistentSubscriberCheckpoint persistentSubscriberCheckpoint,
             PersistentSubscriberErrorLog persistentSubscriberErrorLog,
             Logger logger) {
 
         this.persistentSubscriberProcess = persistentSubscriberProcess;
+        this.configuration = configuration;
         this.persistentSubscriber = persistentSubscriber;
+        this.filter = persistentSubscriber.getFilter();
         this.persistentSubscriberCheckpoint = persistentSubscriberCheckpoint;
         this.persistentSubscriberErrorLog = persistentSubscriberErrorLog;
         this.logger = logger;
@@ -46,24 +54,36 @@ public class PersistentSubscriberSubscriber
     @Override
     public void onNext(WithMetadata<ArrayNode> arrayNodeWithMetadata) {
 
-        long revision = arrayNodeWithMetadata.metadata().getLong("revision").orElseThrow(() -> new IllegalStateException("Metadata does not contain revision"));
-
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        persistentSubscriber.handle(arrayNodeWithMetadata, future);
-
         try {
+            if (!filter.test(arrayNodeWithMetadata)) {
+                skipped++;
+                if (skipped == 256) {
+                    subscription.request(skipped);
+                    skipped = 0;
+                    long revision = arrayNodeWithMetadata.metadata().getLong("revision").orElseThrow(() -> new IllegalStateException("Metadata does not contain revision"));
+                    persistentSubscriberCheckpoint.setCheckpoint(revision);
+                }
+                return;
+            }
+
+            long revision = arrayNodeWithMetadata.metadata().getLong("revision").orElseThrow(() -> new IllegalStateException("Metadata does not contain revision"));
+
+            CompletableFuture<Void> future = new CompletableFuture<>();
+            persistentSubscriber.handle(arrayNodeWithMetadata, future);
+
             try {
-                future.orTimeout(10, TimeUnit.SECONDS).join();
+                future.orTimeout(30, TimeUnit.SECONDS).join();
 
                 persistentSubscriberCheckpoint.setCheckpoint(revision);
             } catch (Throwable t) {
                 persistentSubscriberErrorLog.handle(arrayNodeWithMetadata, t);
             }
-        } catch (IOException e) {
+            subscription.request(1 + skipped);
+            skipped = 0;
+        } catch (Throwable e) {
             subscription.cancel();
+            logger.error("Persistent subscriber cancelled", e);
         }
-
-        subscription.request(1);
     }
 
     @Override

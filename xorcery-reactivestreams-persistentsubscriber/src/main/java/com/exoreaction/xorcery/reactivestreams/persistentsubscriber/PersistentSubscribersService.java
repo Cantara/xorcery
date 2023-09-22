@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberCheckpoint;
+import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberErrorLog;
 import com.exoreaction.xorcery.process.ActiveProcesses;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
@@ -53,6 +54,8 @@ public class PersistentSubscribersService
             if (subscriber == null) {
                 throw new IllegalArgumentException(String.format("Could not find persistent subscriber provider named '%s'", subscriberConfig.getName()));
             }
+
+            subscriber.init(subscriberConfig);
 
             String checkpointProviderName = subscriberConfig.getCheckpointProvider().orElseGet(persistentSubscribersConfiguration::getDefaultCheckpointProvider);
             PersistentSubscriberCheckpoint checkpoint = checkpointProviders.named(checkpointProviderName).get();

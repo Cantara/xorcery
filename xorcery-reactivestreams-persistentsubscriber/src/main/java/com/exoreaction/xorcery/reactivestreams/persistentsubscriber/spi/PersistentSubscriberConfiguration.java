@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
+package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.json.JsonElement;

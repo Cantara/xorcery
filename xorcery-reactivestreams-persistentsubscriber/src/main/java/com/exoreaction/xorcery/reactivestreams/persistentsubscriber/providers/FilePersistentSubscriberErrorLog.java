@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.PersistentSubscriberConfiguration;
+import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberErrorLog;
 import com.exoreaction.xorcery.metadata.Metadata;
@@ -39,10 +39,8 @@ public class FilePersistentSubscriberErrorLog
         name = configuration.getName();
         File errorLog = new File(configuration.getString("errors").orElseThrow(Configuration.missing("errors"))).getAbsoluteFile();
 
-        if (!errorLog.exists()) {
-            if (!errorLog.getParentFile().mkdirs()) {
-                logger.error("Could not create directories for {} ({})", errorLog, name);
-            }
+        if (!errorLog.getParentFile().exists() && !errorLog.getParentFile().mkdirs()) {
+            logger.error("Could not create directories for {} ({})", errorLog, name);
         }
 
         out = new FileOutputStream(errorLog, true);
@@ -83,7 +81,7 @@ public class FilePersistentSubscriberErrorLog
                 new FileOutputStream(recoveryLog).close(); // Just create the file as an empty file to indicate to users where to put attempts at recovery
             }
         } else {
-            if (!errorLog.getParentFile().mkdirs()) {
+            if (!recoveryLog.getParentFile().exists() && !recoveryLog.getParentFile().mkdirs()) {
                 logger.error("Could not create directories for {} ({})", errorLog, name);
             }
             new FileOutputStream(recoveryLog).close(); // Just create the file as an empty file to indicate to users where to put attempts at recovery

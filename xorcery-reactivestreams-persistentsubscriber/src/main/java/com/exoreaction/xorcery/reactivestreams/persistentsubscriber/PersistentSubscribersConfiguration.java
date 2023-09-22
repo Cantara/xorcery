@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
 
 import java.util.Collections;
 import java.util.List;

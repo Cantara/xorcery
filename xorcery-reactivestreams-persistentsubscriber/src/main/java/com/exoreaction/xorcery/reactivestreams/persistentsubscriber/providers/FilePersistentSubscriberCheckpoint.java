@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.PersistentSubscriberConfiguration;
+import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberCheckpoint;
 import org.apache.logging.log4j.Logger;
 
@@ -34,9 +34,9 @@ public class FilePersistentSubscriberCheckpoint
             byte[] bytes = new byte[(int) checkpointFile.length()];
             checkpointFile.read(bytes);
             revision = Long.parseLong(new String(bytes, StandardCharsets.UTF_8));
-            logger.info("Loading existing checkpoint {} for name: {}", file.toString(), revision);
+            logger.info("Loading existing checkpoint {} for '{}': {}", file.toString(), name);
         } else {
-            logger.info("Creating new checkpoint {} for name", file.toString());
+            logger.info("Creating new checkpoint {} for '{}", file.toString(), name);
         }
     }
 

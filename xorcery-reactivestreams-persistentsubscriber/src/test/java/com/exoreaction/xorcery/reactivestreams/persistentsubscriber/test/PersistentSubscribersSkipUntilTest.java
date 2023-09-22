@@ -10,7 +10,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.concurrent.CompletableFuture;
 
-public class PersistentSubscribersTest {
+public class PersistentSubscribersSkipUntilTest {
 
     static String config = String.format("""
             jetty.server.http.port: %d
@@ -24,11 +24,7 @@ public class PersistentSubscribersTest {
                       errors: "{{ instance.home }}/testevents/errors.yaml"
                       recovery: "{{ instance.home }}/testevents/recovery.yaml"
 
-#                      uri: "ws://localhost:8889"
-#                      stream: "events"
-#                      checkpoint: "{{ SYSTEM.user_dir }}/testevents/checkpoint.yaml"
-#                      errors: "{{ SYSTEM.user_dir }}/testevents/errors.yaml"
-#                      recovery: "{{ SYSTEM.user_dir }}/testevents/recovery.yaml"
+                      skipUntil: 1695117813092
 
                       configuration:
                         environment: "{{ instance.environment }}"
@@ -44,15 +40,15 @@ public class PersistentSubscribersTest {
     @BeforeAll
     public static void setup()
     {
-        YamlFilePublisher yamlFilePublisher = new YamlFilePublisher(PersistentSubscribersTest.class.getResource("/testevents.yaml"));
+        YamlFilePublisher yamlFilePublisher = new YamlFilePublisher(PersistentSubscribersSkipUntilTest.class.getResource("/testevents.yaml"));
         result = xorcery.getXorcery().getServiceLocator().getService(ReactiveStreamsServer.class).publisher("testevents", cfg -> yamlFilePublisher, YamlFilePublisher.class);
     }
 
     @Test
-    public void testPersistentSubscriber() throws InterruptedException {
-        while (TestSubscriber.handled.get() < 47)
+    public void testPersistentSubscriberSkipUntil() throws InterruptedException {
+        while (TestSubscriber.handled.get() < 20)
         {
-            System.out.println("SLEEP");
+            System.out.println("SLEEP "+TestSubscriber.handled.get());
             Thread.sleep(100);
         }
     }
