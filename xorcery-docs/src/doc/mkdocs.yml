@@ -1,6 +1,6 @@
 site_name: xorcery
 site_author: Rickard Oberg
-site_url: https://xorcery.org
+site_url: https://cantara.github.io/xorcery
 site_dir: target/site/
 repo_url: https://github.com/Cantara/xorcery
 edit_uri: ''
@@ -17,8 +17,6 @@ markdown_extensions:
       permalink: true
 nav:
   - 'index.md'
-  - JavaDocs:
-    - 'xorcery-core': apidocs/xorcery.core/module-summary.html
   - Usage:
     - 'usage/index.md'
     - 'usage/configuration.md'
@@ -26,5 +24,7 @@ nav:
     - 'usage/servicediscovery.md'
     - 'usage/reactivestreams.md'
     - 'usage/eventsourcing.md'
+  - JavaDocs:
+      - 'JavaDocs for all modules': apidocs/index.html
   - Development:
     - 'development/index.md'

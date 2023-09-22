@@ -812,7 +812,7 @@
                     <locale>en</locale>
                     <noqualifier>all</noqualifier>
                     <useStandardDocletOptions>false</useStandardDocletOptions>
-                    <reportOutputDirectory>${project.build.directory}/site</reportOutputDirectory>
+                    <reportOutputDirectory>${project.directory}/../xorcery-docs/src/doc/docs</reportOutputDirectory>
                     <destDir>apidocs</destDir>
                 </configuration>
                 <executions>
