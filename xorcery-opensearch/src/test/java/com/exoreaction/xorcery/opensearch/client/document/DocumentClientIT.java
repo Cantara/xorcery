@@ -50,7 +50,6 @@ public class DocumentClientIT {
                 "@timestamp": 1659070622328,
                 "metadata": {
                   "environment": "development",
-                  "tag": "default",
                   "version": "0.1.0",
                   "name": "genericserver",
                   "host": "localhost",

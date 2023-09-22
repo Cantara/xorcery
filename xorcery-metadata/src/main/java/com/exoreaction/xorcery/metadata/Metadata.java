@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -46,6 +47,11 @@ public record Metadata(ObjectNode json)
         }
 
         public Builder add(String name, ObjectNode value) {
+            builder.set(name, value);
+            return this;
+        }
+
+        public Builder add(String name, ArrayNode value) {
             builder.set(name, value);
             return this;
         }

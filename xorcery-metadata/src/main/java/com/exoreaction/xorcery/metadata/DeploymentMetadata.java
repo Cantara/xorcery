@@ -19,6 +19,13 @@ import com.exoreaction.xorcery.builders.WithContext;
 import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 public interface DeploymentMetadata
         extends WithContext<Metadata> {
@@ -30,7 +37,9 @@ public interface DeploymentMetadata
             InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
             ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
             builder().add("environment", instanceConfiguration.getEnvironment())
-                    .add("tag", instanceConfiguration.getTag())
+                    .add("tags", Optional.ofNullable(instanceConfiguration.configuration().json().get("tags"))
+                            .map(ArrayNode.class::cast)
+                            .orElseGet(JsonNodeFactory.instance::arrayNode))
                     .add("name", applicationConfiguration.getName())
                     .add("version", applicationConfiguration.getVersion())
                     .add("host", instanceConfiguration.getHost());
@@ -42,8 +51,8 @@ public interface DeploymentMetadata
         return context().getString("environment").orElse("default");
     }
 
-    default String getTag() {
-        return context().getString("tag").orElse("default");
+    default List<String> getTags() {
+        return context().getListAs("tags", JsonNode::textValue).orElse(Collections.emptyList());
     }
 
     default String getVersion() {

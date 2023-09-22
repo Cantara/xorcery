@@ -6,7 +6,7 @@ instance:
   ip: "{{ CALCULATED.ip | null }}"
   domain: "xorcery.test"
   environment: development
-  tag: default
+  tags: []
   home: "{{ SYSTEM.user_dir }}"
   resources: "{{ instance.home }}"
   uri: "{{ jetty.server.uri | \"http://localhost\"}}"

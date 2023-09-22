@@ -15,12 +15,16 @@
  */
 package com.exoreaction.xorcery.configuration;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Configuration wrapper for instance configuration
@@ -72,8 +76,8 @@ public record InstanceConfiguration(Configuration configuration) {
         return configuration.getString("environment").orElse(null);
     }
 
-    public String getTag() {
-        return configuration.getString("tag").orElse(null);
+    public List<String> getTags() {
+        return configuration.getListAs("tags", JsonNode::textValue).orElse(Collections.emptyList());
     }
 
     public String getHome() {
