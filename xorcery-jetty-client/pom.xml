@@ -29,21 +29,14 @@
     <version>0.40.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-dns-client</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-keystores</artifactId>
-
         </dependency>
 
         <!-- Jetty -->

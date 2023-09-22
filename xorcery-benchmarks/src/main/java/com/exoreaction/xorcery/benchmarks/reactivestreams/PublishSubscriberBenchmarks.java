@@ -96,14 +96,11 @@ public class PublishSubscriberBenchmarks {
         ServerSubscriber<WithMetadata<String>> serverSubscriber = new ServerSubscriber<>() {
 
             int i = 0;
-            int batchSize = 1024*4;
 
             @Override
             public void onNext(WithMetadata<String> item) {
                 i++;
-                if (i % batchSize == 0) {
-                    subscription.request(batchSize);
-                }
+                subscription.request(1);
             }
         };
 

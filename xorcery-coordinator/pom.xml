@@ -28,14 +28,7 @@
     <version>0.40.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
-
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-runner</artifactId>

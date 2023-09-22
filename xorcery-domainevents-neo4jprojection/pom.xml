@@ -29,41 +29,30 @@
     <version>0.40.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-domainevents-publisher</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-domainevents</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metadata</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-neo4j</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-neo4j-projections</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-json</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>

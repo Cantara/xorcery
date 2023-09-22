@@ -29,42 +29,26 @@
     <version>0.40.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-api</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonapi-server</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metadata</artifactId>
-
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-configuration</artifactId>
-
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-configuration-api</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-service-api</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
@@ -79,12 +63,10 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-util</artifactId>
-
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jsonschema</artifactId>
-
         </dependency>
 
         <dependency>
@@ -162,6 +144,11 @@
 
         <!-- Tests -->
         <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-configuration</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
@@ -179,25 +166,21 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jersey-server</artifactId>
-
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-server</artifactId>
-
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-core</artifactId>
-
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-junit</artifactId>
-
             <scope>test</scope>
         </dependency>
     </dependencies>
