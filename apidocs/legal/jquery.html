@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Rickard Oberg" /><link rel="canonical" href="https://cantara.github.io/xorcery/apidocs/legal/jquery.html" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Jquery - xorcery</title>
+<link rel="stylesheet" href="../../css/font.css" />
+<link rel="stylesheet" href="../../css/theme.css" />
+<link rel="stylesheet" href="../../css/theme_extra.css" />
+<link rel="stylesheet" href="../../css/theme_custom.css" />
+<link rel="stylesheet" href="../../css/theme_pygments.css" />
+
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Jquery";
+        var mkdocs_page_input_path = "apidocs\\legal\\jquery.md";
+        var mkdocs_page_url = "/xorcery/apidocs/legal/jquery.html";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]--> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../../index.html" class="icon icon-home"> xorcery
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../../index.html">Xorcery</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Usage</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../usage/index.html">Using Xorcery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../usage/configuration.html">Configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../usage/dependencyinjection.html">Dependency Injection</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../usage/servicediscovery.html">Service Discovery</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../usage/reactivestreams.html">Reactive Streams</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../usage/eventsourcing.html">Event Sourcing</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">JavaDocs</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../index.html">JavaDocs for all modules</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Development</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../development/index.html">Xorcery Development</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">xorcery</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="jquery-v351">jQuery v3.5.1<a class="headerlink" href="#jquery-v351" title="Permanent link">&para;</a></h2>
+<h3 id="jquery-license">jQuery License<a class="headerlink" href="#jquery-license" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="nt">jQuery</span><span class="w"> </span><span class="nt">v</span><span class="w"> </span><span class="nt">3</span><span class="p">.</span><span class="nc">5</span><span class="p">.</span><span class="nc">1</span>
+<span class="nt">Copyright</span><span class="w"> </span><span class="nt">JS</span><span class="w"> </span><span class="nt">Foundation</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">other</span><span class="w"> </span><span class="nt">contributors</span><span class="o">,</span><span class="w"> </span><span class="nt">https</span><span class="o">://</span><span class="nt">js</span><span class="p">.</span><span class="nc">foundation</span><span class="o">/</span>
+
+<span class="nt">Permission</span><span class="w"> </span><span class="nt">is</span><span class="w"> </span><span class="nt">hereby</span><span class="w"> </span><span class="nt">granted</span><span class="o">,</span><span class="w"> </span><span class="nt">free</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">charge</span><span class="o">,</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">any</span><span class="w"> </span><span class="nt">person</span><span class="w"> </span><span class="nt">obtaining</span>
+<span class="nt">a</span><span class="w"> </span><span class="nt">copy</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">this</span><span class="w"> </span><span class="nt">software</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">associated</span><span class="w"> </span><span class="nt">documentation</span><span class="w"> </span><span class="nt">files</span><span class="w"> </span><span class="o">(</span><span class="nt">the</span>
+<span class="s2">&quot;Software&quot;</span><span class="o">),</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">deal</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">Software</span><span class="w"> </span><span class="nt">without</span><span class="w"> </span><span class="nt">restriction</span><span class="o">,</span><span class="w"> </span><span class="nt">including</span>
+<span class="nt">without</span><span class="w"> </span><span class="nt">limitation</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">rights</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">use</span><span class="o">,</span><span class="w"> </span><span class="nt">copy</span><span class="o">,</span><span class="w"> </span><span class="nt">modify</span><span class="o">,</span><span class="w"> </span><span class="nt">merge</span><span class="o">,</span><span class="w"> </span><span class="nt">publish</span><span class="o">,</span>
+<span class="nt">distribute</span><span class="o">,</span><span class="w"> </span><span class="nt">sublicense</span><span class="o">,</span><span class="w"> </span><span class="nt">and</span><span class="o">/</span><span class="nt">or</span><span class="w"> </span><span class="nt">sell</span><span class="w"> </span><span class="nt">copies</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">Software</span><span class="o">,</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">to</span>
+<span class="nt">permit</span><span class="w"> </span><span class="nt">persons</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">whom</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">Software</span><span class="w"> </span><span class="nt">is</span><span class="w"> </span><span class="nt">furnished</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">do</span><span class="w"> </span><span class="nt">so</span><span class="o">,</span><span class="w"> </span><span class="nt">subject</span><span class="w"> </span><span class="nt">to</span>
+<span class="nt">the</span><span class="w"> </span><span class="nt">following</span><span class="w"> </span><span class="nt">conditions</span><span class="o">:</span>
+
+<span class="nt">The</span><span class="w"> </span><span class="nt">above</span><span class="w"> </span><span class="nt">copyright</span><span class="w"> </span><span class="nt">notice</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">this</span><span class="w"> </span><span class="nt">permission</span><span class="w"> </span><span class="nt">notice</span><span class="w"> </span><span class="nt">shall</span><span class="w"> </span><span class="nt">be</span>
+<span class="nt">included</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">all</span><span class="w"> </span><span class="nt">copies</span><span class="w"> </span><span class="nt">or</span><span class="w"> </span><span class="nt">substantial</span><span class="w"> </span><span class="nt">portions</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">Software</span><span class="o">.</span>
+
+<span class="nt">THE</span><span class="w"> </span><span class="nt">SOFTWARE</span><span class="w"> </span><span class="nt">IS</span><span class="w"> </span><span class="nt">PROVIDED</span><span class="w"> </span><span class="s2">&quot;AS IS&quot;</span><span class="o">,</span><span class="w"> </span><span class="nt">WITHOUT</span><span class="w"> </span><span class="nt">WARRANTY</span><span class="w"> </span><span class="nt">OF</span><span class="w"> </span><span class="nt">ANY</span><span class="w"> </span><span class="nt">KIND</span><span class="o">,</span>
+<span class="nt">EXPRESS</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">IMPLIED</span><span class="o">,</span><span class="w"> </span><span class="nt">INCLUDING</span><span class="w"> </span><span class="nt">BUT</span><span class="w"> </span><span class="nt">NOT</span><span class="w"> </span><span class="nt">LIMITED</span><span class="w"> </span><span class="nt">TO</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">WARRANTIES</span><span class="w"> </span><span class="nt">OF</span>
+<span class="nt">MERCHANTABILITY</span><span class="o">,</span><span class="w"> </span><span class="nt">FITNESS</span><span class="w"> </span><span class="nt">FOR</span><span class="w"> </span><span class="nt">A</span><span class="w"> </span><span class="nt">PARTICULAR</span><span class="w"> </span><span class="nt">PURPOSE</span><span class="w"> </span><span class="nt">AND</span>
+<span class="nt">NONINFRINGEMENT</span><span class="o">.</span><span class="w"> </span><span class="nt">IN</span><span class="w"> </span><span class="nt">NO</span><span class="w"> </span><span class="nt">EVENT</span><span class="w"> </span><span class="nt">SHALL</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">AUTHORS</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">COPYRIGHT</span><span class="w"> </span><span class="nt">HOLDERS</span><span class="w"> </span><span class="nt">BE</span>
+<span class="nt">LIABLE</span><span class="w"> </span><span class="nt">FOR</span><span class="w"> </span><span class="nt">ANY</span><span class="w"> </span><span class="nt">CLAIM</span><span class="o">,</span><span class="w"> </span><span class="nt">DAMAGES</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">OTHER</span><span class="w"> </span><span class="nt">LIABILITY</span><span class="o">,</span><span class="w"> </span><span class="nt">WHETHER</span><span class="w"> </span><span class="nt">IN</span><span class="w"> </span><span class="nt">AN</span><span class="w"> </span><span class="nt">ACTION</span>
+<span class="nt">OF</span><span class="w"> </span><span class="nt">CONTRACT</span><span class="o">,</span><span class="w"> </span><span class="nt">TORT</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">OTHERWISE</span><span class="o">,</span><span class="w"> </span><span class="nt">ARISING</span><span class="w"> </span><span class="nt">FROM</span><span class="o">,</span><span class="w"> </span><span class="nt">OUT</span><span class="w"> </span><span class="nt">OF</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">IN</span><span class="w"> </span><span class="nt">CONNECTION</span>
+<span class="nt">WITH</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">SOFTWARE</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">USE</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">OTHER</span><span class="w"> </span><span class="nt">DEALINGS</span><span class="w"> </span><span class="nt">IN</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">SOFTWARE</span><span class="o">.</span>
+
+<span class="o">******************************************</span>
+
+<span class="nt">The</span><span class="w"> </span><span class="nt">jQuery</span><span class="w"> </span><span class="nt">JavaScript</span><span class="w"> </span><span class="nt">Library</span><span class="w"> </span><span class="nt">v3</span><span class="p">.</span><span class="nc">5</span><span class="p">.</span><span class="nc">1</span><span class="w"> </span><span class="nt">also</span><span class="w"> </span><span class="nt">includes</span><span class="w"> </span><span class="nt">Sizzle</span><span class="p">.</span><span class="nc">js</span>
+
+<span class="nt">Sizzle</span><span class="p">.</span><span class="nc">js</span><span class="w"> </span><span class="nt">includes</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">following</span><span class="w"> </span><span class="nt">license</span><span class="o">:</span>
+
+<span class="nt">Copyright</span><span class="w"> </span><span class="nt">JS</span><span class="w"> </span><span class="nt">Foundation</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">other</span><span class="w"> </span><span class="nt">contributors</span><span class="o">,</span><span class="w"> </span><span class="nt">https</span><span class="o">://</span><span class="nt">js</span><span class="p">.</span><span class="nc">foundation</span><span class="o">/</span>
+
+<span class="nt">This</span><span class="w"> </span><span class="nt">software</span><span class="w"> </span><span class="nt">consists</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">voluntary</span><span class="w"> </span><span class="nt">contributions</span><span class="w"> </span><span class="nt">made</span><span class="w"> </span><span class="nt">by</span><span class="w"> </span><span class="nt">many</span>
+<span class="nt">individuals</span><span class="o">.</span><span class="w"> </span><span class="nt">For</span><span class="w"> </span><span class="nt">exact</span><span class="w"> </span><span class="nt">contribution</span><span class="w"> </span><span class="nt">history</span><span class="o">,</span><span class="w"> </span><span class="nt">see</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">revision</span><span class="w"> </span><span class="nt">history</span>
+<span class="nt">available</span><span class="w"> </span><span class="nt">at</span><span class="w"> </span><span class="nt">https</span><span class="o">://</span><span class="nt">github</span><span class="p">.</span><span class="nc">com</span><span class="o">/</span><span class="nt">jquery</span><span class="o">/</span><span class="nt">sizzle</span>
+
+<span class="nt">The</span><span class="w"> </span><span class="nt">following</span><span class="w"> </span><span class="nt">license</span><span class="w"> </span><span class="nt">applies</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">all</span><span class="w"> </span><span class="nt">parts</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">this</span><span class="w"> </span><span class="nt">software</span><span class="w"> </span><span class="nt">except</span><span class="w"> </span><span class="nt">as</span>
+<span class="nt">documented</span><span class="w"> </span><span class="nt">below</span><span class="o">:</span>
+
+<span class="o">====</span>
+
+<span class="nt">Permission</span><span class="w"> </span><span class="nt">is</span><span class="w"> </span><span class="nt">hereby</span><span class="w"> </span><span class="nt">granted</span><span class="o">,</span><span class="w"> </span><span class="nt">free</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">charge</span><span class="o">,</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">any</span><span class="w"> </span><span class="nt">person</span><span class="w"> </span><span class="nt">obtaining</span>
+<span class="nt">a</span><span class="w"> </span><span class="nt">copy</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">this</span><span class="w"> </span><span class="nt">software</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">associated</span><span class="w"> </span><span class="nt">documentation</span><span class="w"> </span><span class="nt">files</span><span class="w"> </span><span class="o">(</span><span class="nt">the</span>
+<span class="s2">&quot;Software&quot;</span><span class="o">),</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">deal</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">Software</span><span class="w"> </span><span class="nt">without</span><span class="w"> </span><span class="nt">restriction</span><span class="o">,</span><span class="w"> </span><span class="nt">including</span>
+<span class="nt">without</span><span class="w"> </span><span class="nt">limitation</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">rights</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">use</span><span class="o">,</span><span class="w"> </span><span class="nt">copy</span><span class="o">,</span><span class="w"> </span><span class="nt">modify</span><span class="o">,</span><span class="w"> </span><span class="nt">merge</span><span class="o">,</span><span class="w"> </span><span class="nt">publish</span><span class="o">,</span>
+<span class="nt">distribute</span><span class="o">,</span><span class="w"> </span><span class="nt">sublicense</span><span class="o">,</span><span class="w"> </span><span class="nt">and</span><span class="o">/</span><span class="nt">or</span><span class="w"> </span><span class="nt">sell</span><span class="w"> </span><span class="nt">copies</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">Software</span><span class="o">,</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">to</span>
+<span class="nt">permit</span><span class="w"> </span><span class="nt">persons</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">whom</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">Software</span><span class="w"> </span><span class="nt">is</span><span class="w"> </span><span class="nt">furnished</span><span class="w"> </span><span class="nt">to</span><span class="w"> </span><span class="nt">do</span><span class="w"> </span><span class="nt">so</span><span class="o">,</span><span class="w"> </span><span class="nt">subject</span><span class="w"> </span><span class="nt">to</span>
+<span class="nt">the</span><span class="w"> </span><span class="nt">following</span><span class="w"> </span><span class="nt">conditions</span><span class="o">:</span>
+
+<span class="nt">The</span><span class="w"> </span><span class="nt">above</span><span class="w"> </span><span class="nt">copyright</span><span class="w"> </span><span class="nt">notice</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">this</span><span class="w"> </span><span class="nt">permission</span><span class="w"> </span><span class="nt">notice</span><span class="w"> </span><span class="nt">shall</span><span class="w"> </span><span class="nt">be</span>
+<span class="nt">included</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">all</span><span class="w"> </span><span class="nt">copies</span><span class="w"> </span><span class="nt">or</span><span class="w"> </span><span class="nt">substantial</span><span class="w"> </span><span class="nt">portions</span><span class="w"> </span><span class="nt">of</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">Software</span><span class="o">.</span>
+
+<span class="nt">THE</span><span class="w"> </span><span class="nt">SOFTWARE</span><span class="w"> </span><span class="nt">IS</span><span class="w"> </span><span class="nt">PROVIDED</span><span class="w"> </span><span class="s2">&quot;AS IS&quot;</span><span class="o">,</span><span class="w"> </span><span class="nt">WITHOUT</span><span class="w"> </span><span class="nt">WARRANTY</span><span class="w"> </span><span class="nt">OF</span><span class="w"> </span><span class="nt">ANY</span><span class="w"> </span><span class="nt">KIND</span><span class="o">,</span>
+<span class="nt">EXPRESS</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">IMPLIED</span><span class="o">,</span><span class="w"> </span><span class="nt">INCLUDING</span><span class="w"> </span><span class="nt">BUT</span><span class="w"> </span><span class="nt">NOT</span><span class="w"> </span><span class="nt">LIMITED</span><span class="w"> </span><span class="nt">TO</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">WARRANTIES</span><span class="w"> </span><span class="nt">OF</span>
+<span class="nt">MERCHANTABILITY</span><span class="o">,</span><span class="w"> </span><span class="nt">FITNESS</span><span class="w"> </span><span class="nt">FOR</span><span class="w"> </span><span class="nt">A</span><span class="w"> </span><span class="nt">PARTICULAR</span><span class="w"> </span><span class="nt">PURPOSE</span><span class="w"> </span><span class="nt">AND</span>
+<span class="nt">NONINFRINGEMENT</span><span class="o">.</span><span class="w"> </span><span class="nt">IN</span><span class="w"> </span><span class="nt">NO</span><span class="w"> </span><span class="nt">EVENT</span><span class="w"> </span><span class="nt">SHALL</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">AUTHORS</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">COPYRIGHT</span><span class="w"> </span><span class="nt">HOLDERS</span><span class="w"> </span><span class="nt">BE</span>
+<span class="nt">LIABLE</span><span class="w"> </span><span class="nt">FOR</span><span class="w"> </span><span class="nt">ANY</span><span class="w"> </span><span class="nt">CLAIM</span><span class="o">,</span><span class="w"> </span><span class="nt">DAMAGES</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">OTHER</span><span class="w"> </span><span class="nt">LIABILITY</span><span class="o">,</span><span class="w"> </span><span class="nt">WHETHER</span><span class="w"> </span><span class="nt">IN</span><span class="w"> </span><span class="nt">AN</span><span class="w"> </span><span class="nt">ACTION</span>
+<span class="nt">OF</span><span class="w"> </span><span class="nt">CONTRACT</span><span class="o">,</span><span class="w"> </span><span class="nt">TORT</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">OTHERWISE</span><span class="o">,</span><span class="w"> </span><span class="nt">ARISING</span><span class="w"> </span><span class="nt">FROM</span><span class="o">,</span><span class="w"> </span><span class="nt">OUT</span><span class="w"> </span><span class="nt">OF</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">IN</span><span class="w"> </span><span class="nt">CONNECTION</span>
+<span class="nt">WITH</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">SOFTWARE</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">USE</span><span class="w"> </span><span class="nt">OR</span><span class="w"> </span><span class="nt">OTHER</span><span class="w"> </span><span class="nt">DEALINGS</span><span class="w"> </span><span class="nt">IN</span><span class="w"> </span><span class="nt">THE</span><span class="w"> </span><span class="nt">SOFTWARE</span><span class="o">.</span>
+
+<span class="o">====</span>
+
+<span class="nt">All</span><span class="w"> </span><span class="nt">files</span><span class="w"> </span><span class="nt">located</span><span class="w"> </span><span class="nt">in</span><span class="w"> </span><span class="nt">the</span><span class="w"> </span><span class="nt">node_modules</span><span class="w"> </span><span class="nt">and</span><span class="w"> </span><span class="nt">external</span><span class="w"> </span><span class="nt">directories</span><span class="w"> </span><span class="nt">are</span>
+<span class="nt">externally</span><span class="w"> </span><span class="nt">maintained</span><span class="w"> </span><span class="nt">libraries</span><span class="w"> </span><span class="nt">used</span><span class="w"> </span><span class="nt">by</span><span class="w"> </span><span class="nt">this</span><span class="w"> </span><span class="nt">software</span><span class="w"> </span><span class="nt">which</span><span class="w"> </span><span class="nt">have</span><span class="w"> </span><span class="nt">their</span>
+<span class="nt">own</span><span class="w"> </span><span class="nt">licenses</span><span class="o">;</span><span class="w"> </span><span class="nt">we</span><span class="w"> </span><span class="nt">recommend</span><span class="w"> </span><span class="nt">you</span><span class="w"> </span><span class="nt">read</span><span class="w"> </span><span class="nt">them</span><span class="o">,</span><span class="w"> </span><span class="nt">as</span><span class="w"> </span><span class="nt">their</span><span class="w"> </span><span class="nt">terms</span><span class="w"> </span><span class="nt">may</span><span class="w"> </span><span class="nt">differ</span><span class="w"> </span><span class="nt">from</span>
+<span class="nt">the</span><span class="w"> </span><span class="nt">terms</span><span class="w"> </span><span class="nt">above</span><span class="o">.</span>
+
+<span class="o">*********************</span>
+</code></pre></div>
+              
+            </div>
+          </div><footer>
+  <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+    
+    
+  </div>
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/Cantara/xorcery" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

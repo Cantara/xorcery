@@ -1,42 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://xorcery.dev/index.html</loc>
+         <loc>https://cantara.github.io/xorcery/index.html</loc>
          <lastmod>2023-09-22</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://xorcery.dev/development/index.html</loc>
+         <loc>https://cantara.github.io/xorcery/apidocs/legal/jquery.html</loc>
          <lastmod>2023-09-22</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://xorcery.dev/usage/index.html</loc>
+         <loc>https://cantara.github.io/xorcery/apidocs/legal/jqueryUI.html</loc>
          <lastmod>2023-09-22</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://xorcery.dev/usage/configuration.html</loc>
+         <loc>https://cantara.github.io/xorcery/development/index.html</loc>
          <lastmod>2023-09-22</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://xorcery.dev/usage/dependencyinjection.html</loc>
+         <loc>https://cantara.github.io/xorcery/usage/index.html</loc>
          <lastmod>2023-09-22</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://xorcery.dev/usage/eventsourcing.html</loc>
+         <loc>https://cantara.github.io/xorcery/usage/configuration.html</loc>
          <lastmod>2023-09-22</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://xorcery.dev/usage/reactivestreams.html</loc>
+         <loc>https://cantara.github.io/xorcery/usage/dependencyinjection.html</loc>
          <lastmod>2023-09-22</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://xorcery.dev/usage/servicediscovery.html</loc>
+         <loc>https://cantara.github.io/xorcery/usage/eventsourcing.html</loc>
+         <lastmod>2023-09-22</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://cantara.github.io/xorcery/usage/reactivestreams.html</loc>
+         <lastmod>2023-09-22</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://cantara.github.io/xorcery/usage/servicediscovery.html</loc>
          <lastmod>2023-09-22</lastmod>
          <changefreq>daily</changefreq>
     </url>
