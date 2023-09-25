@@ -3,6 +3,7 @@ package com.exoreaction.reactivestreams.server.extra.yaml.test;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
+import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
@@ -18,9 +19,15 @@ import java.util.concurrent.TimeUnit;
 
 public class YamlFilePublisherServiceTest {
 
+    static String config = String.format("""
+            jetty.server.http.port: %d
+            jetty.server.ssl.enabled: false
+                        """, Sockets.nextFreePort());
+
     @RegisterExtension
     static XorceryExtension xorceryExtension = XorceryExtension.xorcery()
             .configuration(ConfigurationBuilder::addTestDefaults)
+            .configuration(c -> c.addYaml(config))
             .build();
 
     @Test
