@@ -8,6 +8,7 @@ import com.exoreaction.xorcery.core.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.io.ZipFiles;
 import com.exoreaction.xorcery.util.Resources;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.*;
 
@@ -141,8 +142,7 @@ public class XorceryExtension
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        if (xorcery != null)
-        {
+        if (xorcery != null) {
             xorcery.close();
 
             // Allow archive temp dirs to survive between tests to speed things up
@@ -173,5 +173,13 @@ public class XorceryExtension
 
     public Xorcery getXorcery() {
         return xorcery;
+    }
+
+    public ServiceLocator getServiceLocator() {
+        return xorcery.getServiceLocator();
+    }
+
+    public Configuration getConfiguration() {
+        return xorcery.getServiceLocator().getService(Configuration.class);
     }
 }
