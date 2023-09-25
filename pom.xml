@@ -23,6 +23,7 @@
         <jackson.version>2.15.2</jackson.version>
         <metrics.version>4.2.19</metrics.version>
         <asm.version>9.5</asm.version>
+        <projectreactor.version>2022.0.11</projectreactor.version>
 
         <junit.version>5.10.0</junit.version>
         <junit.platform.version>1.10.0</junit.platform.version>
@@ -90,6 +91,7 @@
         <module>xorcery-reactivestreams-client</module>
         <module>xorcery-metrics</module>
         <module>xorcery-reactivestreams-server</module>
+        <module>xorcery-reactivestreams-server-extra</module>
 
         <module>xorcery-admin-servlet</module>
 
@@ -406,6 +408,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-reactivestreams-server-extra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-runner</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -451,6 +458,13 @@
                 <groupId>org.glassfish.hk2</groupId>
                 <artifactId>hk2-bom</artifactId>
                 <version>${hk2.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-bom</artifactId>
+                <version>${projectreactor.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -587,11 +601,6 @@
                 <groupId>org.reactivestreams</groupId>
                 <artifactId>reactive-streams</artifactId>
                 <version>1.0.4</version>
-            </dependency>
-            <dependency>
-                <groupId>io.projectreactor</groupId>
-                <artifactId>reactor-bom</artifactId>
-                <version>2022.0.11</version>
             </dependency>
 
             <!-- Bouncy Castle Cryptography APIs -->
