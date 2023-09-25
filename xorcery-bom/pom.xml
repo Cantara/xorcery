@@ -153,11 +153,6 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
-                <version>0.40.3-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-handlebars</artifactId>
                 <version>0.40.3-SNAPSHOT</version>
             </dependency>
@@ -314,7 +309,17 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-server</artifactId>
-                <version>0.40.3-SNAPSHOT</version>
+                <version>0.40.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-reactivestreams-server-extra</artifactId>
+                <version>0.40.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
+                <version>0.40.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>

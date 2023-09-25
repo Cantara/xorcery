@@ -1,0 +1,3 @@
+yamlfilepublisher:
+  enabled: "{{ defaults.enabled }}"
+  publishers: []

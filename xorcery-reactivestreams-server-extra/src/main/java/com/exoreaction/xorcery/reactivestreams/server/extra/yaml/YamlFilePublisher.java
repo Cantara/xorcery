@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
+package com.exoreaction.xorcery.reactivestreams.server.extra.yaml;
 
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
@@ -70,7 +70,7 @@ public class YamlFilePublisher
                 // No drainer running, start one
                 CompletableFuture.runAsync(this::drain);
             }
-            LogManager.getLogger().info("Reqest "+count+" "+cancelled.get()+" "+requests.get());
+            LogManager.getLogger().trace("Reqest "+count+" "+cancelled.get()+" "+requests.get());
         }
 
         @Override
@@ -81,7 +81,7 @@ public class YamlFilePublisher
         }
 
         public void drain() {
-            LogManager.getLogger().info("Drain begin");
+            LogManager.getLogger().trace("Drain begin");
             try {
                 JsonToken token = null;
                 while (!cancelled.get() && requests.getAndDecrement() > 0 && !(token = parser.nextToken()).isStructEnd()) {
@@ -103,7 +103,7 @@ public class YamlFilePublisher
                     if (cancelled.compareAndSet(false, true)) {
                         resourceAsStream.close();
                         subscriber.onComplete();
-                        LogManager.getLogger().info("Import complete");
+                        LogManager.getLogger().trace("Import complete");
                     }
                 }
             } catch (Throwable e) {
@@ -121,7 +121,7 @@ public class YamlFilePublisher
                 drain();
             else
             {
-                LogManager.getLogger().info("Drain complete");
+                LogManager.getLogger().trace("Drain complete");
             }
         }
     }
