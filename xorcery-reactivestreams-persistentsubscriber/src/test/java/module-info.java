@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.eventstore.persistentsubscriber.test {
+open module xorcery.reactivestreams.persistentsubscriber.test {
     exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 
     requires xorcery.reactivestreams.persistentsubscriber;
 
     requires xorcery.reactivestreams.server;
+    requires xorcery.reactivestreams.server.extra;
     requires xorcery.jetty.server;
     requires xorcery.configuration;
     requires xorcery.junit;

@@ -23,8 +23,10 @@ open module xorcery.reactivestreams.persistentsubscriber {
     requires xorcery.configuration.api;
     requires xorcery.util;
 
+    requires transitive com.fasterxml.jackson.databind;
+    requires transitive xorcery.reactivestreams.api;
+
     requires jakarta.inject;
-    requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;

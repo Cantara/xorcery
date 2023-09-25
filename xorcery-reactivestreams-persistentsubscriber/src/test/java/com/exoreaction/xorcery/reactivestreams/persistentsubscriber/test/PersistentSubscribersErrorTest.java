@@ -15,6 +15,10 @@ public class PersistentSubscribersErrorTest {
     static String config = String.format("""
             jetty.server.http.port: %d
             jetty.server.ssl.enabled: false
+            yamlfilepublisher:
+                publishers:
+                    - stream: "testevents"
+                      file: "file:///{{ instance.home }}/../test-classes/testevents.yaml"
             persistentsubscribers:
                 subscribers:
                     - name: testerrorsubscriber
@@ -33,13 +37,6 @@ public class PersistentSubscribersErrorTest {
             .configuration(c -> c.addYaml(config))
             .build();
     private static CompletableFuture<Void> result;
-
-    @BeforeAll
-    public static void setup()
-    {
-        YamlFilePublisher yamlFilePublisher = new YamlFilePublisher(PersistentSubscribersErrorTest.class.getResource("/testevents.yaml"));
-        result = xorcery.getXorcery().getServiceLocator().getService(ReactiveStreamsServer.class).publisher("testevents", cfg -> yamlFilePublisher, YamlFilePublisher.class);
-    }
 
     @Test
     public void testPersistentSubscriberErrors() throws InterruptedException {
