@@ -7,6 +7,8 @@ import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -24,17 +26,17 @@ public class YamlFilePublisherService {
 
         for (YamlFilePublishersConfiguration.YamlFilePublisherConfiguration yamlFilePublisherConfiguration : cfg.getYamlFilePublishers()) {
 
-            URI fileUri = yamlFilePublisherConfiguration.getFile();
+            File file = new File(yamlFilePublisherConfiguration.getFile());
 
             // Test it
-            URL fileUriURL = fileUri.toURL();
-            fileUriURL.openStream().close();
+            if (!file.exists())
+                throw new FileNotFoundException(file.getAbsolutePath());
 
             // Publish it
-            YamlFilePublisher yamlFilePublisher = new YamlFilePublisher(fileUriURL);
+            YamlFilePublisher yamlFilePublisher = new YamlFilePublisher(file.toURI().toURL());
             server.publisher(yamlFilePublisherConfiguration.getStream(), c -> yamlFilePublisher, YamlFilePublisher.class);
 
-            logger.info("Published stream '{}' backed by '{}'", yamlFilePublisherConfiguration.getStream(), fileUri.toASCIIString());
+            logger.info("Published stream '{}' backed by '{}'", yamlFilePublisherConfiguration.getStream(), file.toString());
         }
     }
 }

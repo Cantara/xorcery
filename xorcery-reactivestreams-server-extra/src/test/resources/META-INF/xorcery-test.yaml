@@ -1,7 +1,7 @@
 yamlfilepublisher:
   publishers:
     - stream: "testevents"
-      file: "file:///{{ instance.home }}/../test-classes/testevents.yaml"
+      file: "{{ instance.home }}/../test-classes/testevents.yaml"
 
 #log4j2.Configuration.thresholdFilter.level: trace
 #log4j2.Configuration.Loggers.logger:

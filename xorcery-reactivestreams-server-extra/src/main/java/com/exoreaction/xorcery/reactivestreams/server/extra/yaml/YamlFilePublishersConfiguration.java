@@ -24,8 +24,8 @@ public record YamlFilePublishersConfiguration(Configuration context)
             return configuration.getString("stream").orElseThrow(Configuration.missing("stream"));
         }
 
-        public URI getFile() {
-            return configuration.getURI("file").orElseThrow(Configuration.missing("file"));
+        public String getFile() {
+            return configuration.getString("file").orElseThrow(Configuration.missing("file"));
         }
     }
 }
