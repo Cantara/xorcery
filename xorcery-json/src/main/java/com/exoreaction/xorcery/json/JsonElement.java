@@ -61,7 +61,7 @@ public interface JsonElement {
 
     default Optional<URI> getURI(String name) {
 
-        return getString(name).map(s -> s.replace('\\','/')).map(URI::create);
+        return getString(name).map(s -> s.replace('\\','/').replace(' ', '+')).map(URI::create);
     }
 
     default Optional<Integer> getInteger(String name) {
