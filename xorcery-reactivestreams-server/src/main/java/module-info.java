@@ -23,7 +23,6 @@ open module xorcery.reactivestreams.server {
 
     requires xorcery.service.api;
     requires xorcery.util;
-    requires xorcery.metadata;
     requires xorcery.jetty.server;
     requires xorcery.jetty.client;
 

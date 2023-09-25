@@ -63,7 +63,7 @@ public class PublisherSubscriptionReactiveStream
     protected Subscription subscription;
     private boolean isComplete = false;
 
-    private int requested;
+    private long requested;
     private final Deque<Object> queue = new ArrayDeque<>();
     private final ByteBufferOutputStream2 outputStream;
 
