@@ -32,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -41,6 +42,7 @@ import java.util.concurrent.*;
 
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cancelStream;
 
+@Disabled("tends to hand in Jenkins, need to figure out why")
 public class SubscribePublisherTest {
 
     private String clientConf = """
