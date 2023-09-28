@@ -60,7 +60,7 @@ public record PersistentSubscriberProcess(
         try {
             Configuration.Builder builder = configuration.getConfiguration().asBuilder();
             long revision = persistentSubscriberCheckpoint.getCheckpoint();
-            builder.add("revision", revision);
+            builder.add("from", revision);
             return builder.build();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
