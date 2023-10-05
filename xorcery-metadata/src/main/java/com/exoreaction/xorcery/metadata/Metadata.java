@@ -52,12 +52,20 @@ public record Metadata(ObjectNode json)
             return add(name, builder.numberNode(value));
         }
 
+        public Builder add(String name, Enum<?> value) {
+            return add(name, builder.textNode(value.name()));
+        }
+
         public Builder add(Enum<?> name, String value) {
             return add(name.name(), builder.textNode(value));
         }
 
         public Builder add(Enum<?> name, long value) {
             return add(name.name(), builder.numberNode(value));
+        }
+
+        public Builder add(Enum<?> name, Enum<?> value) {
+            return add(name.name(), builder.textNode(value.name()));
         }
 
         public Builder add(Enum<?> name, JsonNode value) {
