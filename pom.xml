@@ -23,7 +23,7 @@
         <jackson.version>2.15.2</jackson.version>
         <metrics.version>4.2.20</metrics.version>
         <asm.version>9.6</asm.version>
-        <projectreactor.version>2022.0.11</projectreactor.version>
+        <projectreactor.version>2022.0.12</projectreactor.version>
 
         <junit.version>5.10.0</junit.version>
         <junit.platform.version>1.10.0</junit.platform.version>
