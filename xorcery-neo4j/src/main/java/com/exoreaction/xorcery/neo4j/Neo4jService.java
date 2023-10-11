@@ -134,6 +134,7 @@ public class Neo4jService
             for (Neo4jProvider neo4jProvider : ServiceLoader.load(Neo4jProvider.class)) {
                 globalProcedures.registerProcedure(neo4jProvider.getClass());
                 globalProcedures.registerFunction(neo4jProvider.getClass());
+                globalProcedures.registerAggregationFunction(neo4jProvider.getClass());
             }
         } catch (KernelException e) {
             throw new RuntimeException(e);
