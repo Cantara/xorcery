@@ -50,7 +50,7 @@ public final class Cypher {
                 case STRING -> next.getValue().textValue();
                 case NUMBER -> next.getValue().numberValue();
                 case BINARY -> null;
-                case BOOLEAN -> Boolean.TRUE;
+                case BOOLEAN -> next.getValue().booleanValue();
                 case MISSING -> null;
                 case NULL -> null;
                 case POJO -> null;

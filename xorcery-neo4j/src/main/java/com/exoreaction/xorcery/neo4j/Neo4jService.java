@@ -186,8 +186,8 @@ public class Neo4jService
 
     private DatabaseManagementService createDatabaseManagementService(Path home, Path tmpConfigFile) {
         return new DatabaseManagementServiceBuilder(home)
-                .setUserLogProvider(new Log4jLogProvider(new Neo4jLoggerContext(loggerContext, () -> {
-                })))
+                .setUserLogProvider(new Log4jLogProvider(
+                        new Neo4jLoggerContext(loggerContext, () -> {}, "")))
                 .loadPropertiesFromFile(tmpConfigFile)
                 .build();
     }
