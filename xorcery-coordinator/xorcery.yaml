@@ -22,3 +22,5 @@ certificates:
   renewOnStartup: true
 
 # intermediateca.enabled: false
+
+jetty.server.http.port: 8081
