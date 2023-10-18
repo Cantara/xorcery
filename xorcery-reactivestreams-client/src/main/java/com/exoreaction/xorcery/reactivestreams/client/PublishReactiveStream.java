@@ -97,6 +97,7 @@ public class PublishReactiveStream
 
     protected boolean isSending = false;
     protected boolean isComplete = false;
+    protected boolean isReconnecting = false;
     protected boolean isRetrying = false;
     private long retryDelay;
 
@@ -197,6 +198,7 @@ public class PublishReactiveStream
             logger.trace(marker, "connected");
         }
         this.session = session;
+        this.isReconnecting = false;
         this.isRetrying = false;
     }
 
@@ -204,6 +206,7 @@ public class PublishReactiveStream
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "connectException", throwable);
         }
+        this.isRetrying = false;
 
         retry(throwable);
         return null;
@@ -281,9 +284,9 @@ public class PublishReactiveStream
 
         if (publisherConfiguration.isRetryEnabled() && publisherConfiguration.isRetryable(cause)) {
 
-            if (!isRetrying) {
+            if (!isReconnecting) {
                 logger.debug(marker, "Reconnecting");
-                isRetrying = true;
+                isReconnecting = true;
             }
 
             // Reset state
@@ -295,6 +298,8 @@ public class PublishReactiveStream
                 if (cause instanceof ServerShutdownStreamException) {
                     retryDelay = 0;
                 }
+                isRetrying = true;
+                logger.trace(marker, "Retrying in {}s", retryDelay/1000);
                 CompletableFuture.delayedExecutor(retryDelay, TimeUnit.MILLISECONDS).execute(this::start);
                 // Exponential backoff, gets reset on successful connect, max 60s delay
                 retryDelay = Math.min(retryDelay * 2, 60000);
