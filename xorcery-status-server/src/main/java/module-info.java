@@ -13,27 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.reactivestreams.server {
-    exports com.exoreaction.xorcery.reactivestreams.server;
+open module xorcery.status.server {
+    exports com.exoreaction.xorcery.status;
+    exports com.exoreaction.xorcery.status.api;
 
-    requires transitive xorcery.reactivestreams.api;
+    requires xorcery.status.spi;
+    requires xorcery.jsonapi;
+    requires xorcery.jsonapi.server;
 
-    requires xorcery.reactivestreams.client;
-    requires xorcery.dns.client;
-
-    requires xorcery.service.api;
-    requires xorcery.util;
-    requires xorcery.jetty.server;
-    requires xorcery.jetty.client;
-
-    requires static xorcery.status.spi;
-
-    requires org.eclipse.jetty.websocket.jetty.server;
-    requires org.eclipse.jetty.servlet;
-    requires org.eclipse.jetty.server;
-    requires jakarta.inject;
+    requires jakarta.ws.rs;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
-    requires org.apache.logging.log4j;
-    requires com.codahale.metrics;
+    requires jakarta.inject;
+    requires xorcery.service.api;
 }

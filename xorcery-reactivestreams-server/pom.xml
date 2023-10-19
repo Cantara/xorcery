@@ -74,6 +74,12 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metricregistry</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-status-spi</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
 
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>

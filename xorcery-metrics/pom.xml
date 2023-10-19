@@ -53,6 +53,10 @@
             <artifactId>xorcery-configuration-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-status-spi</artifactId>
+        </dependency>
+        <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>

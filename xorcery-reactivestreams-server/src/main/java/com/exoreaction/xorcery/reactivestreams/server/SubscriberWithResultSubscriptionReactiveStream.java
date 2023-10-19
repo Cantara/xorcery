@@ -46,7 +46,7 @@ public class SubscriberWithResultSubscriptionReactiveStream
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final MessageWriter<Object> resultWriter;
     boolean isFlushPending = false;
-    private ByteBufferOutputStream2 resultOutputStream;
+    private final ByteBufferOutputStream2 resultOutputStream;
 
     protected final Meter resultsSent;
 
@@ -57,8 +57,9 @@ public class SubscriberWithResultSubscriptionReactiveStream
                                                           ObjectMapper objectMapper,
                                                           ByteBufferPool byteBufferPool,
                                                           MetricRegistry metricRegistry,
-                                                          Logger logger) {
-        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, logger);
+                                                          Logger logger,
+                                                          ActiveSubscriptions activeSubscriptions) {
+        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, logger, activeSubscriptions);
 
         this.resultsSent = metricRegistry.meter("subscriber." + streamName + ".results");
 

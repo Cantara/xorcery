@@ -65,6 +65,9 @@
         <module>xorcery-service-api</module>
         <module>xorcery-jsonapi-server</module>
 
+        <module>xorcery-status-spi</module>
+        <module>xorcery-status-server</module>
+
         <module>xorcery-core</module>
         <module>xorcery-junit</module>
         <module>xorcery-runner</module>
@@ -428,6 +431,16 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-status-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-status-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-util</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -540,6 +553,11 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-layout-template-json</artifactId>
                 <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jctools</groupId>
+                <artifactId>jctools-core</artifactId>
+                <version>3.3.0</version>
             </dependency>
 
             <dependency>

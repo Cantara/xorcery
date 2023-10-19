@@ -47,8 +47,9 @@ public class PublisherWithResultSubscriptionReactiveStream
                                                          MessageReader<Object> resultReader,
                                                          ObjectMapper objectMapper,
                                                          ByteBufferPool pool,
-                                                         Logger logger) {
-        super(streamName, publisherFactory, messageWriter, objectMapper, pool, logger);
+                                                         Logger logger,
+                                                         ActiveSubscriptions activeSubscriptions) {
+        super(streamName, publisherFactory, messageWriter, objectMapper, pool, logger, activeSubscriptions);
         this.resultReader = resultReader;
     }
 

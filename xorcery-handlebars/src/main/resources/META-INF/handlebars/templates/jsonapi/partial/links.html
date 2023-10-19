@@ -28,6 +28,15 @@
             </tr>
             {{/parameters}}
             {{/optional}}
+            {{^}}
+            #{{.}}#{{..}}#{{../..}}#{{../../..}}
+
+            {{#parameters ..}}
+            <tr>
+                <td><code>{{.}}</code></td>
+                <td colspan="2"><input type="text" name="{{.}}"/></td>
+            </tr>
+            {{/parameters}}
             {{/with}}
             <tr>
                 <td colspan="3"><input type="submit" value="GET"/></td>

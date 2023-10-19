@@ -20,8 +20,8 @@ import com.exoreaction.xorcery.concurrent.CompletableFutures;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
-import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
+import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -31,7 +31,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.hk2.runlevel.*;
+import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
+import org.glassfish.hk2.runlevel.ProgressStartedListener;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
@@ -53,8 +55,9 @@ public class ReactiveStreamsServerService
         implements ReactiveStreamsServer,
         ProgressStartedListener,
         LocalStreamFactories {
-    private final ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration;
     private final LoggerContext loggerContext;
+    private final ActivePublisherSubscriptions activePublisherSubscriptions;
+    private final ActiveSubscriberSubscriptions activeSubscriberSubscriptions;
 
     private final Map<String, Supplier<Object>> publisherEndpointFactories = new ConcurrentHashMap<>();
     private final Map<String, WrappedPublisherFactory> publisherLocalFactories = new ConcurrentHashMap<>();
@@ -77,12 +80,16 @@ public class ReactiveStreamsServerService
                                         MessageWorkers messageWorkers,
                                         ServletContextHandler servletContextHandler,
                                         Logger logger,
-                                        LoggerContext loggerContext) {
+                                        LoggerContext loggerContext,
+                                        ActivePublisherSubscriptions activePublisherSubscriptions,
+                                        ActiveSubscriberSubscriptions activeSubscriberSubscriptions) {
         super(messageWorkers, logger);
         this.metricRegistry = metricRegistry;
 
-        reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
+        ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
         this.loggerContext = loggerContext;
+        this.activePublisherSubscriptions = activePublisherSubscriptions;
+        this.activeSubscriberSubscriptions = activeSubscriberSubscriptions;
 
         PublishersReactiveStreamsServlet publishersServlet = new PublishersReactiveStreamsServlet(reactiveStreamsServerConfiguration, streamName ->
         {
@@ -130,8 +137,23 @@ public class ReactiveStreamsServerService
 
         publisherEndpointFactories.put(streamName, () ->
                 resultReader == null ?
-                        new PublisherSubscriptionReactiveStream(streamName, wrappedPublisherFactory, eventWriter, objectMapper, byteBufferPool, loggerContext.getLogger(PublisherSubscriptionReactiveStream.class)) :
-                        new PublisherWithResultSubscriptionReactiveStream(streamName, wrappedPublisherFactory, eventWriter, resultReader, objectMapper, byteBufferPool, loggerContext.getLogger(PublisherWithResultSubscriptionReactiveStream.class)));
+                        new PublisherSubscriptionReactiveStream(
+                                streamName,
+                                wrappedPublisherFactory,
+                                eventWriter,
+                                objectMapper,
+                                byteBufferPool,
+                                loggerContext.getLogger(PublisherSubscriptionReactiveStream.class),
+                                activePublisherSubscriptions) :
+                        new PublisherWithResultSubscriptionReactiveStream(
+                                streamName,
+                                wrappedPublisherFactory,
+                                eventWriter,
+                                resultReader,
+                                objectMapper,
+                                byteBufferPool,
+                                loggerContext.getLogger(PublisherWithResultSubscriptionReactiveStream.class),
+                                activePublisherSubscriptions));
         publisherLocalFactories.put(streamName, new WrappedPublisherFactory(wrappedPublisherFactory, publisherType));
         result.whenComplete((r, t) ->
         {
@@ -168,8 +190,25 @@ public class ReactiveStreamsServerService
         };
 
         subscriberEndpointFactories.put(streamName, () ->
-                resultWriter == null ? new SubscriberSubscriptionReactiveStream(streamName, wrappedSubscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, loggerContext.getLogger(SubscriberSubscriptionReactiveStream.class)) :
-                        new SubscriberWithResultSubscriptionReactiveStream(streamName, wrappedSubscriberFactory, eventReader, resultWriter, objectMapper, byteBufferPool, metricRegistry, loggerContext.getLogger(SubscriberWithResultSubscriptionReactiveStream.class)));
+                resultWriter == null ? new SubscriberSubscriptionReactiveStream(
+                        streamName,
+                        wrappedSubscriberFactory,
+                        eventReader,
+                        objectMapper,
+                        byteBufferPool,
+                        metricRegistry,
+                        loggerContext.getLogger(SubscriberSubscriptionReactiveStream.class),
+                        activeSubscriberSubscriptions) :
+                        new SubscriberWithResultSubscriptionReactiveStream(
+                                streamName,
+                                wrappedSubscriberFactory,
+                                eventReader,
+                                resultWriter,
+                                objectMapper,
+                                byteBufferPool,
+                                metricRegistry,
+                                loggerContext.getLogger(SubscriberWithResultSubscriptionReactiveStream.class),
+                                activeSubscriberSubscriptions));
         subscriberLocalFactories.put(streamName, new WrappedSubscriberFactory(wrappedSubscriberFactory, subscriberType));
         result.whenComplete((r, t) ->
         {

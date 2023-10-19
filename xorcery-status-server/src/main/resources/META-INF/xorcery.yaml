@@ -1,0 +1,6 @@
+status:
+  enabled: "{{ defaults.enabled }}"
+
+jersey.server.register:
+  - com.exoreaction.xorcery.status.api.StatusResource
+  - com.exoreaction.xorcery.status.api.StatusProviderResource

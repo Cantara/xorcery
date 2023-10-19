@@ -338,6 +338,16 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-status-spi</artifactId>
+                <version>0.50.6-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-status-server</artifactId>
+                <version>0.50.6-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-util</artifactId>
                 <version>0.50.6-SNAPSHOT</version>
             </dependency>

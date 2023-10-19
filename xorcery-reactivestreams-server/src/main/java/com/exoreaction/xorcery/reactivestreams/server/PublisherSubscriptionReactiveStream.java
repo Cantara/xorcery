@@ -43,6 +43,7 @@ import java.util.ArrayDeque;
 import java.util.Base64;
 import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /**
@@ -54,6 +55,7 @@ public class PublisherSubscriptionReactiveStream
         implements WebSocketListener, Subscriber<Object> {
 
     protected final Logger logger;
+    private final ActiveSubscriptions activeSubscriptions;
 
     private final String streamName;
     protected volatile Session session;
@@ -63,7 +65,6 @@ public class PublisherSubscriptionReactiveStream
     protected Subscription subscription;
     private boolean isComplete = false;
 
-    private long requested;
     private final Deque<Object> queue = new ArrayDeque<>();
     private final ByteBufferOutputStream2 outputStream;
 
@@ -76,13 +77,15 @@ public class PublisherSubscriptionReactiveStream
     private boolean redundancyNotificationIssued = false;
 
     private long outstandingRequestAmount;
+    private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
     public PublisherSubscriptionReactiveStream(String streamName,
                                                Function<Configuration, Publisher<Object>> publisherFactory,
                                                MessageWriter<Object> messageWriter,
                                                ObjectMapper objectMapper,
                                                ByteBufferPool pool,
-                                               Logger logger) {
+                                               Logger logger,
+                                               ActiveSubscriptions activeSubscriptions) {
         this.streamName = streamName;
         this.publisherFactory = publisherFactory;
         this.messageWriter = messageWriter;
@@ -92,6 +95,7 @@ public class PublisherSubscriptionReactiveStream
 
         outputStream = new ByteBufferOutputStream2(pool, true);
         this.logger = logger;
+        this.activeSubscriptions = activeSubscriptions;
     }
 
     // Subscriber
@@ -114,9 +118,9 @@ public class PublisherSubscriptionReactiveStream
         if (logger.isTraceEnabled())
             logger.trace(marker, "onNext {}", item.toString());
 
-        if (session.isOpen() && requested > 0) {
+        if (session.isOpen() && activeSubscription.requested().get() > 0) {
             send(item);
-            requested--;
+            activeSubscription.requested().decrementAndGet();
         } else {
             queue.add(item);
         }
@@ -146,6 +150,9 @@ public class PublisherSubscriptionReactiveStream
                         .build();
                 Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
                 publisher.subscribe(this);
+
+                activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
+                activeSubscriptions.addSubscription(activeSubscription);
             } catch (JsonProcessingException e) {
                 session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
             }
@@ -177,7 +184,7 @@ public class PublisherSubscriptionReactiveStream
                                 }
                             } else {
                                 if (requestAmount > 0) {
-                                    requested += requestAmount;
+                                    activeSubscription.requested().addAndGet(requestAmount);
                                     subscription.request(requestAmount);
                                 }
                             }
@@ -210,6 +217,7 @@ public class PublisherSubscriptionReactiveStream
         if (subscription != null) {
             subscription.cancel();
             subscription = null;
+            activeSubscriptions.removeSubscription(activeSubscription);
         }
     }
 
@@ -248,6 +256,7 @@ public class PublisherSubscriptionReactiveStream
 
                 @Override
                 public void writeSuccess() {
+                    activeSubscription.received().incrementAndGet();
                     CompletableFuture.runAsync(() ->
                     {
                         if (queue.isEmpty()) {

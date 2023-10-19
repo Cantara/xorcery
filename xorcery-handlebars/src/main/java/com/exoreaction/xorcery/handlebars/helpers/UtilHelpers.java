@@ -26,53 +26,41 @@ import java.util.Optional;
 
 public class UtilHelpers {
 
-    public Object optional( Optional<?> value, Options options ) throws IOException
-    {
-        if ( value != null && value.isPresent() )
-        {
+    public Object optional(Optional<?> value, Options options) throws IOException {
+        if (value != null && value.isPresent()) {
             Object val = value.get();
-            if ( options.tagType == TagType.SECTION )
-            {
+            if (options.tagType == TagType.SECTION) {
                 return options.fn(val);
-            }
-            else
-            {
+            } else {
                 return val;
             }
-        }
-        else
-        {
-            if ( options.tagType == TagType.SECTION )
-            {
+        } else {
+            if (options.tagType == TagType.SECTION) {
                 return options.inverse();
-            }
-            else
-            {
+            } else {
                 return null;
             }
         }
     }
 
-    public Object parameters(Link link, Options options ) throws IOException
-    {
-        return new EachHelper().apply( new UriTemplate( link.getHref() ).getTemplateVariables(), options );
+    public Object parameters(Link link, Options options) throws IOException {
+        if (link == null)
+            return "";
+        else
+            return new EachHelper().apply(new UriTemplate(link.getHref()).getTemplateVariables(), options);
     }
 
-    public Object stripquotes(String value, Options options)
-    {
+    public Object stripquotes(String value, Options options) {
         if (value.startsWith("\"") && value.endsWith("\""))
-            return value.substring(1, value.length()-1);
+            return value.substring(1, value.length() - 1);
         else
             return value;
     }
 
-    public Object isTemplate(Link link, Options options ) throws IOException
-    {
-        if (!new UriTemplate(link.getHref()).getTemplateVariables().isEmpty())
-        {
+    public Object isTemplate(Link link, Options options) throws IOException {
+        if (!new UriTemplate(link.getHref()).getTemplateVariables().isEmpty()) {
             return options.fn();
-        } else
-        {
+        } else {
             return options.inverse();
         }
     }

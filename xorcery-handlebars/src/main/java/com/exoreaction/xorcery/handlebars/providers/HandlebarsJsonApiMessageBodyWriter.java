@@ -16,11 +16,11 @@
 package com.exoreaction.xorcery.handlebars.providers;
 
 import com.exoreaction.xorcery.handlebars.helpers.OptionalValueResolver;
-import com.exoreaction.xorcery.hyperschema.client.HyperSchemaClient;
 import com.exoreaction.xorcery.hyperschema.HyperSchema;
+import com.exoreaction.xorcery.hyperschema.client.HyperSchemaClient;
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.xorcery.jsonapi.providers.JsonNodeMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.Link;
+import com.exoreaction.xorcery.jsonapi.providers.JsonNodeMessageBodyReader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Context;
 import com.github.jknack.handlebars.Handlebars;
@@ -47,6 +47,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -115,7 +116,8 @@ public class HandlebarsJsonApiMessageBodyWriter
     private Optional<Link> getSchema(JsonElement jsonElement, MultivaluedMap<String, Object> httpHeaders) {
         JsonNode schema = jsonElement.json().path("links").path(describedby);
         if (!schema.isMissingNode()) {
-            return Optional.of(new Link(describedby, schema));
+            URI schemaUri = requestContext.get().getUriInfo().getAbsolutePath().resolve(schema.textValue());
+            return Optional.of(new Link(describedby, schemaUri));
         }
 
         return Optional.ofNullable(httpHeaders.get("Link"))
@@ -123,21 +125,20 @@ public class HandlebarsJsonApiMessageBodyWriter
                         .map(jakarta.ws.rs.core.Link.class::cast)
                         .filter(link -> link.getRel().equals(describedby))
                         .findFirst()
-                        .map(link -> new Link(link.getRel(), link.getUri().toASCIIString())));
+                        .map(link -> {
+                            URI schemaUri = requestContext.get().getUriInfo().getAbsolutePath().resolve(link.getUri());
+                            return new Link(link.getRel(), schemaUri);
+                        }));
     }
 
     protected String calculateTemplate(UriInfo uriInfo) {
-        String htmlTemplateResult = "";
-
         if (uriInfo instanceof ExtendedUriInfo) {
             ExtendedUriInfo extendedUriInfo = (ExtendedUriInfo) uriInfo;
-            htmlTemplateResult = calculateTemplateFromExtendedUriInfo(extendedUriInfo);
+            return calculateTemplateFromExtendedUriInfo(extendedUriInfo);
         } else {
             logger.error("Expected ExtendedUriInfo, got {}", uriInfo.getClass().getCanonicalName());
             throw new InternalServerErrorException("Can't calculate template");
         }
-
-        return htmlTemplateResult;
     }
 
 

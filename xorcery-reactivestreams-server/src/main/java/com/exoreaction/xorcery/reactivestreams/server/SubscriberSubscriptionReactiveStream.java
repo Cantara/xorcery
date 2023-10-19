@@ -51,6 +51,7 @@ public class SubscriberSubscriptionReactiveStream
         implements WebSocketPartialListener,
         WebSocketConnectionListener,
         Subscription {
+    private final String streamName;
     private final Function<Configuration, Subscriber<Object>> subscriberFactory;
     private String configurationMessage = "";
     private Configuration subscriberConfiguration;
@@ -72,6 +73,8 @@ public class SubscriberSubscriptionReactiveStream
     protected final Histogram requestsHistogram;
 
     // Subscription
+    private final ActiveSubscriptions activeSubscriptions;
+    private ActiveSubscriptions.ActiveSubscription activeSubscription;
     private final AtomicLong requests = new AtomicLong();
     private boolean isCancelled;
     private boolean isSendingRequests;
@@ -82,7 +85,9 @@ public class SubscriberSubscriptionReactiveStream
                                                 ObjectMapper objectMapper,
                                                 ByteBufferPool byteBufferPool,
                                                 MetricRegistry metricRegistry,
-                                                Logger logger) {
+                                                Logger logger,
+                                                ActiveSubscriptions activeSubscriptions) {
+        this.streamName = streamName;
         this.subscriberFactory = subscriberFactory;
         this.eventReader = eventReader;
         this.objectMapper = objectMapper;
@@ -90,6 +95,7 @@ public class SubscriberSubscriptionReactiveStream
         this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, false);
         this.marker = MarkerManager.getMarker(streamName);
         this.logger = logger;
+        this.activeSubscriptions = activeSubscriptions;
 
         this.received = metricRegistry.meter("subscriber." + streamName + ".received");
         this.receivedBytes = metricRegistry.meter("subscriber." + streamName + ".received.bytes");
@@ -155,6 +161,9 @@ public class SubscriberSubscriptionReactiveStream
                     subscriber = subscriberFactory.apply(subscriberConfiguration);
                     subscriber.onSubscribe(this);
 
+                    activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), subscriberConfiguration);
+                    activeSubscriptions.addSubscription(activeSubscription);
+
                     logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
                 } catch (Throwable e) {
                     // TODO Send exception here
@@ -186,6 +195,8 @@ public class SubscriberSubscriptionReactiveStream
             receivedBytes.mark(byteBuffer.position());
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
             subscriber.onNext(event);
+            activeSubscription.requested().decrementAndGet();
+            activeSubscription.received().incrementAndGet();
         } catch (Throwable e) {
             logger.error("Could not receive value", e);
             subscriber.onError(e);
@@ -234,6 +245,7 @@ public class SubscriberSubscriptionReactiveStream
                     subscriber.onError(throwable);
                 }
             }
+            activeSubscriptions.removeSubscription(activeSubscription);
         } catch (Exception e) {
             logger.warn(marker, "Could not close subscription sink", e);
         }
@@ -269,6 +281,7 @@ public class SubscriberSubscriptionReactiveStream
 
                     @Override
                     public void writeSuccess() {
+                        activeSubscription.requested().addAndGet(finalRn);
                     }
                 });
 

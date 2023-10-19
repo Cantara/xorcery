@@ -13,15 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.metrics {
-    requires xorcery.metadata;
-    requires xorcery.reactivestreams.api;
-    requires xorcery.status.spi;
+open module xorcery.status.spi {
+    exports com.exoreaction.xorcery.status.spi;
+
+    requires transitive xorcery.jsonapi;
 
     requires org.glassfish.hk2.api;
-    requires org.glassfish.hk2.runlevel;
-    requires com.fasterxml.jackson.databind;
-    requires java.management;
-    requires org.apache.logging.log4j;
-    requires jakarta.inject;
 }
