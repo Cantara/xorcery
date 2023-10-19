@@ -5,11 +5,11 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-project</artifactId>
-        <version>0.50.6-SNAPSHOT</version>
+        <version>0.51.0</version>
     </parent>
 
     <artifactId>xorcery-docs</artifactId>
-    <version>0.50.6-SNAPSHOT</version>
+    <version>0.51.0</version>
     <packaging>pom</packaging>
 
     <build>
