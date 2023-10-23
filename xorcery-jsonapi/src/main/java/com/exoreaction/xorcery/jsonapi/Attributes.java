@@ -18,10 +18,7 @@ package com.exoreaction.xorcery.jsonapi;
 import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.*;
 
 import java.math.BigDecimal;
 import java.time.Period;
@@ -132,7 +129,7 @@ public record Attributes(ObjectNode json)
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
             JsonNode value = entry.getValue();
-            String mapValue = value.toPrettyString();
+            String mapValue = value instanceof ContainerNode ? value.toPrettyString() : value.asText();
             map.put(entry.getKey(), mapValue);
         }
         return map;

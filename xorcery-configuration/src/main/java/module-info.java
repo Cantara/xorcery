@@ -20,7 +20,6 @@ open module xorcery.configuration {
     exports com.exoreaction.xorcery.configuration.spi;
 
     requires transitive xorcery.configuration.api;
-    requires xorcery.status.spi;
 
     requires static org.glassfish.hk2.api;
     requires static jakarta.inject;

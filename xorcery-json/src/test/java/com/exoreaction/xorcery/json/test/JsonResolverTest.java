@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 
 class JsonResolverTest {
     private static ObjectNode result;
@@ -64,6 +65,13 @@ class JsonResolverTest {
             somedefaultsconditional2: "{{ falseflag ? 3 | trueflag ? 7 | number}}"
             
             somedefaultsconditionaltree: "{{ falseflag ? level1 | trueflag ? lvl1 | importedhierarchy}}"
+            
+            nullfalsy: "{{ falseflag ? 1 }}"
+            
+            nullfalsyarray:
+                - "1"
+                - "{{ falseflag ? 1 }}"
+                - "3"                
                         """;
 
     @BeforeAll
@@ -130,5 +138,10 @@ class JsonResolverTest {
         assertThat(result.get("somedefaultsconditional").asInt(), Matchers.equalTo(5));
         assertThat(result.get("somedefaultsconditional2").asInt(), Matchers.equalTo(7));
         assertThat(result.get("somedefaultsconditionaltree").toString(), Matchers.equalTo("{\"lvl2\":{\"level3\":\"abc\"}}"));
+    }
+
+    @Test
+    public void testFalsyWithNull() {
+        assertThat(result.get("nullfalsy"), nullValue());
     }
 }

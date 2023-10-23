@@ -44,6 +44,9 @@ import java.util.Base64;
 import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 /**
@@ -137,64 +140,64 @@ public class PublisherSubscriptionReactiveStream
     }
 
     @Override
-    public synchronized void onWebSocketText(String message) {
+    public void onWebSocketText(String message) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketText {}", message);
 
-        if (publisherConfiguration == null) {
-            // Read JSON parameters
-            try {
-                ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(message);
-                publisherConfiguration = new Configuration.Builder(configurationJson)
-                        .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
-                        .build();
-                Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
-                publisher.subscribe(this);
+        synchronized (this) {
+            if (publisherConfiguration == null) {
+                // Read JSON parameters
+                try {
+                    ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(message);
+                    publisherConfiguration = new Configuration.Builder(configurationJson)
+                            .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
+                            .build();
+                    Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
+                    publisher.subscribe(this);
 
-                activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
-                activeSubscriptions.addSubscription(activeSubscription);
-            } catch (JsonProcessingException e) {
-                session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+                    activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
+                    activeSubscriptions.addSubscription(activeSubscription);
+                    return;
+                } catch (JsonProcessingException e) {
+                    session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+                }
             }
-        } else {
-            // Handle async
-            CompletableFuture.runAsync(() ->
-            {
-                long requestAmount = Long.parseLong(message);
+        }
+
+        long requestAmount = Long.parseLong(message);
+
+        if (subscription != null) {
+            if (requestAmount == Long.MIN_VALUE) {
+                logger.info(marker, "Received cancel on websocket " + streamName);
+                session.close(StatusCode.NORMAL, "cancelled");
+            } else {
+                if (logger.isDebugEnabled())
+                    logger.debug(marker, "Received request:" + requestAmount);
 
                 synchronized (this) {
-                    if (subscription != null) {
-                        if (requestAmount == Long.MIN_VALUE) {
-                            logger.info(marker, "Received cancel on websocket " + streamName);
-                            session.close(StatusCode.NORMAL, "cancelled");
-                        } else {
-                            if (logger.isDebugEnabled())
-                                logger.debug(marker, "Received request:" + requestAmount);
 
-                            Object item;
-                            while (requestAmount > 0 && (item = queue.poll()) != null && session.isOpen()) {
-                                send(item);
-                                requestAmount--;
-                            }
+                    Object item;
+                    while (requestAmount > 0 && (item = queue.poll()) != null && session.isOpen()) {
+                        send(item);
+                        requestAmount--;
+                    }
 
-                            if (isComplete) {
-                                if (queue.isEmpty() && requestAmount == 0) {
-                                    // We're done
-                                    session.close(StatusCode.NORMAL, "complete");
-                                }
-                            } else {
-                                if (requestAmount > 0) {
-                                    activeSubscription.requested().addAndGet(requestAmount);
-                                    subscription.request(requestAmount);
-                                }
-                            }
-
+                    if (isComplete) {
+                        if (queue.isEmpty() && requestAmount == 0) {
+                            // We're done
+                            session.close(StatusCode.NORMAL, "complete");
                         }
-                    } else {
-                        outstandingRequestAmount += requestAmount;
+                        return;
                     }
                 }
-            });
+
+                if (requestAmount > 0) {
+                    activeSubscription.requested().addAndGet(requestAmount);
+                    subscription.request(requestAmount);
+                }
+            }
+        } else {
+            outstandingRequestAmount += requestAmount;
         }
     }
 

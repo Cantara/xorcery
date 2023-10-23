@@ -20,10 +20,11 @@ open module xorcery.status.server {
     requires xorcery.status.spi;
     requires xorcery.jsonapi;
     requires xorcery.jsonapi.server;
+    requires xorcery.service.api;
 
     requires jakarta.ws.rs;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
-    requires xorcery.service.api;
+    requires java.management;
 }

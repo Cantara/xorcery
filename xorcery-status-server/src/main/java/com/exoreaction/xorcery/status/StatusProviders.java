@@ -8,9 +8,7 @@ import jakarta.ws.rs.NotFoundException;
 import org.glassfish.hk2.api.IterableProvider;
 import org.jvnet.hk2.annotations.Service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service(name = "status")
 public class StatusProviders {
@@ -21,7 +19,7 @@ public class StatusProviders {
     public StatusProviders(
             IterableProvider<StatusProvider> statusProvider
     ) {
-        statusProviderMap = new HashMap<>();
+        statusProviderMap = new TreeMap<>(String::compareTo);
         for (StatusProvider provider : statusProvider) {
             statusProviderMap.put(provider.getId(), provider);
         }

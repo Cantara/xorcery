@@ -229,11 +229,8 @@ public class SubscribeReactiveStream
             }
 
             if (!isRetrying) {
-                logger.debug(marker, "Retrying", cause);
                 isRetrying = true;
             }
-
-            requests.set(outstandingRequests.get());
 
             if (uriIterator.hasNext()) {
                 connect(uriIterator);
@@ -241,6 +238,7 @@ public class SubscribeReactiveStream
                 if (cause instanceof ServerTimeoutStreamException) {
                     start();
                 } else {
+                    logger.debug(marker, String.format("Retrying in %ds", retryDelay/1000), cause);
                     CompletableFuture.delayedExecutor(retryDelay, TimeUnit.MILLISECONDS).execute(this::start);
                     // Exponential backoff, gets reset on successful connect, max 60s delay
                     retryDelay = Math.min(retryDelay * 2, 60000);
@@ -271,7 +269,6 @@ public class SubscribeReactiveStream
         }
 
         requests.addAndGet(n);
-        outstandingRequests.addAndGet(n);
 
         if (session != null) {
             if (isCancelled || isComplete) {
@@ -313,7 +310,11 @@ public class SubscribeReactiveStream
                 f.future().thenAcceptAsync(Void ->
                 {
                     logger.debug(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
-                    CompletableFuture.runAsync(this::sendRequests);
+
+                    long retryRequests = requests.get()+outstandingRequests.get();
+                    outstandingRequests.set(0);
+                    requests.set(0);
+                    request(retryRequests);
                 }).exceptionally(t ->
                 {
                     session.close(StatusCode.SERVER_ERROR, t.getMessage());
@@ -354,10 +355,12 @@ public class SubscribeReactiveStream
     }
 
     @Override
-    public synchronized void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
+    public void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
+/*
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketPartialBinary {} {}", Charset.defaultCharset().decode(payload.asReadOnlyBuffer()).toString(), fin);
         }
+*/
 
         byteBufferAccumulator.copyBuffer(payload);
         if (fin) {
@@ -378,15 +381,18 @@ public class SubscribeReactiveStream
         } catch (IOException e) {
             logger.error("Could not receive value", e);
 
-            if (!isComplete) {
-                isComplete = true;
-                subscriber.onError(e);
-            }
+            synchronized (this)
+            {
+                if (!isComplete) {
+                    isComplete = true;
+                    subscriber.onError(e);
+                }
 
-            // These kinds of errors are not retryable, we're done
-            WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
-            session.close(StatusCode.NORMAL, "onError", callback);
-            callback.future().handle((v, t) -> result.completeExceptionally(e));
+                // These kinds of errors are not retryable, we're done
+                WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
+                session.close(StatusCode.NORMAL, "onError", callback);
+                callback.future().handle((v, t) -> result.completeExceptionally(e));
+            }
         }
     }
 
@@ -459,13 +465,14 @@ public class SubscribeReactiveStream
                 return;
             }
             if (sendRequestsThreshold == 0) {
-                sendRequestsThreshold = rn * 3 / 4;
+                sendRequestsThreshold = Math.min(rn * 3 / 4, 4096);
             } else {
                 if (rn < sendRequestsThreshold)
                     return; // Wait until we have more requests lined up
             }
 
             requests.set(0);
+            outstandingRequests.addAndGet(rn);
 
             logger.trace(marker, "Sending request: {}", rn);
             requestsHistogram.update(rn);

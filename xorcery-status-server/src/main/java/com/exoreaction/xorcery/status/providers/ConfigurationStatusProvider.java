@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.configuration.providers;
+package com.exoreaction.xorcery.status.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.jsonapi.Attributes;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Service(name = "configuration.status")
+@Service(name = "status.configuration")
 public class ConfigurationStatusProvider
         implements StatusProvider {
 

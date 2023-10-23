@@ -71,7 +71,11 @@ public class JsonResolver
             if (value instanceof TextNode textNode) {
                 try {
                     JsonNode newValue = resolveValue(source, textNode);
-                    result.set(next, newValue);
+                    if (newValue instanceof MissingNode) {
+                        result.remove(next);
+                    } else {
+                        result.set(next, newValue);
+                    }
                 } catch (Throwable e) {
                     throw new IllegalArgumentException("Could not resolve variables for " + next + ":" + textNode.textValue(), e);
                 }
@@ -92,7 +96,7 @@ public class JsonResolver
             if (value instanceof TextNode textNode) {
                 try {
                     JsonNode newValue = resolveValue(source, textNode);
-                    if (!newValue.isNull())
+                    if (!newValue.isNull() && !newValue.isMissingNode())
                         result.add(newValue);
                 } catch (Throwable e) {
                     throw new IllegalArgumentException("Could not resolve variables: " + textNode.textValue(), e);
