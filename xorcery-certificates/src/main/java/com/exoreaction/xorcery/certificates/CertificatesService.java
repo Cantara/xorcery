@@ -36,12 +36,11 @@ import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.security.*;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
@@ -86,7 +85,7 @@ public class CertificatesService
         X509Certificate certificate = (X509Certificate) keyStore.getCertificate(alias);
 
         if (certificate == null || // No certificate
-                !certificate.getSubjectX500Principal().getName().equals(certificatesConfiguration.getSubject()) || // FQDN has changed
+                isCertificateConfigurationChanged(certificate) || // config for cert has changed
                 certificatesConfiguration.isRenewOnStartup()) {
             // Request certificate
             requestCertificateProcess = requestCertificatesProcessFactory.create(createRequest());
@@ -108,6 +107,32 @@ public class CertificatesService
         }
 
         scheduleRenewal();
+    }
+
+    private boolean isCertificateConfigurationChanged(X509Certificate certificate) {
+        // Check subject
+        if (!certificate.getSubjectX500Principal().getName().equals("CN="+certificatesConfiguration.getSubject()))
+            return true;
+
+        // Check domain names and IPs
+        try {
+            Set<String> wantedNames = new HashSet<>();
+            wantedNames.addAll(certificatesConfiguration.getDnsNames());
+            wantedNames.addAll(certificatesConfiguration.getIpAddresses());
+
+            Collection<List<?>> subjectAlternativeNames = certificate.getSubjectAlternativeNames();
+            if (subjectAlternativeNames == null)
+                return !wantedNames.isEmpty();
+
+            Set<String> existingNames = new HashSet<>();
+            for (List<?> subjectAlternativeName : subjectAlternativeNames) {
+                existingNames.add(subjectAlternativeName.get(1).toString());
+            }
+
+            return !existingNames.equals(wantedNames);
+        } catch (CertificateParsingException e) {
+            return true;
+        }
     }
 
     public PKCS10CertificationRequest createRequest() throws IOException, GeneralSecurityException, OperatorCreationException {

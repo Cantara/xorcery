@@ -127,13 +127,8 @@ public class IntermediateCACertificatesProvider
                 }
             }
 
-            // Add localhost, IP, and DNS names to be used for SSL
+            // Add requested DNS names and IP addresses
             List<GeneralName> names = new ArrayList<>();
-
-            names.add(new GeneralName(GeneralName.dNSName, csr.getSubject().getRDNs()[0].getFirst().getValue().toString()));
-            names.add(new GeneralName(GeneralName.dNSName, "localhost"));
-            names.add(new GeneralName(GeneralName.iPAddress, "127.0.0.1"));
-
             Extension san = csr.getRequestedExtensions().getExtension(Extension.subjectAlternativeName);
             if (san != null) {
                 GeneralNames generalNames = GeneralNames.getInstance(san.getExtnValue().getOctets());
