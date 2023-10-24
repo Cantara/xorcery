@@ -15,9 +15,12 @@
  */
 package com.exoreaction.xorcery.coordinator;
 
+import com.exoreaction.xorcery.runner.ConfigurationVersionProvider;
 import picocli.CommandLine;
 
+@CommandLine.Command(name = "coordinator", versionProvider = ConfigurationVersionProvider.class)
 public class Main
+    extends com.exoreaction.xorcery.runner.Main
 {
     public static void main(String[] args ) {
         System.exit(new CommandLine(new com.exoreaction.xorcery.runner.Main()).execute(args));

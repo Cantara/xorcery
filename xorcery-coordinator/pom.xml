@@ -38,6 +38,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-server</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-status-server</artifactId>
+        </dependency>
 
         <!-- Jetty/Jersey -->
         <dependency>
@@ -114,6 +118,12 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j2-impl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-junit</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

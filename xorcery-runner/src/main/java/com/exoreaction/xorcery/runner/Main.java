@@ -36,17 +36,22 @@ import java.util.concurrent.Callable;
 public class Main
         implements Callable<Integer> {
 
+    public static void main(String[] args) {
+        System.exit(new CommandLine(new Main()).execute(args));
+    }
+
     @CommandLine.Parameters(index = "0", arity = "0..1", description = "Configuration file")
     private File configuration;
 
     @CommandLine.Option(names = "-id", description = "Server id")
     private String id;
+    private volatile Xorcery xorcery;
 
     @Override
     public Integer call() throws Exception {
         Configuration configuration = loadConfiguration();
 
-        Xorcery xorcery = new Xorcery(configuration);
+        xorcery = new Xorcery(configuration);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {
@@ -60,9 +65,17 @@ public class Main
             mainLogger.info("Shutdown");
 
             LogManager.shutdown();
+
+            synchronized (xorcery)
+            {
+                xorcery.notifyAll();
+            }
         }));
 
-        Thread.currentThread().join();
+        synchronized (xorcery)
+        {
+            xorcery.wait();
+        }
 
         return 0;
     }
@@ -79,7 +92,7 @@ public class Main
         return configuration;
     }
 
-    public static void main(String[] args) {
-        System.exit(new CommandLine(new Main()).execute(args));
+    public Xorcery getXorcery() {
+        return xorcery;
     }
 }

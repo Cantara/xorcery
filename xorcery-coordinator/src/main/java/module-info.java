@@ -14,6 +14,23 @@
  * limitations under the License.
  */
 open module xorcery.coordinator {
+    exports com.exoreaction.xorcery.coordinator;
+
     requires info.picocli;
-    requires xorcery.runner;
+    requires transitive xorcery.runner;
+    requires transitive xorcery.log4j;
+    requires transitive xorcery.reactivestreams.server;
+    requires transitive xorcery.jersey.server;
+    requires transitive xorcery.jersey.client;
+    requires transitive xorcery.handlebars;
+    requires transitive xorcery.dns.server;
+    requires transitive xorcery.dns.registration;
+    requires transitive xorcery.certificates.server;
+    requires transitive xorcery.certificates.ca;
+    requires transitive xorcery.certificates.letsencrypt;
+    requires transitive xorcery.jwt.server;
+    requires transitive xorcery.status.server;
+
+    requires org.apache.logging.log4j.core;
+    requires log4j.layout.template.json;
 }

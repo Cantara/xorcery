@@ -14,7 +14,7 @@
         <maven.compiler.release>17</maven.compiler.release>
 
         <slf4j.version>2.0.9</slf4j.version>
-        <log4j.version>2.21.0</log4j.version>
+        <log4j.version>2.20.0</log4j.version>
         <jetty.version>11.0.17</jetty.version>
         <jersey.version>3.1.3</jersey.version>
         <hk2.version>3.0.5</hk2.version>
@@ -638,7 +638,7 @@
             <dependency>
                 <groupId>com.lmax</groupId>
                 <artifactId>disruptor</artifactId>
-                <version>4.0.0.RC1</version>
+                <version>4.0.0</version>
             </dependency>
 
             <!-- EventStore service -->

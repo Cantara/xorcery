@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.jwt.jsonapi {
+open module xorcery.jwt.server {
 
     requires transitive xorcery.jsonapi.server;
     requires transitive xorcery.metadata;

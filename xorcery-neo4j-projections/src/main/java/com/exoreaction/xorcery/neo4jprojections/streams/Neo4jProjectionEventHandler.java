@@ -187,8 +187,9 @@ public class Neo4jProjectionEventHandler
         }
     }
 
+
     @Override
-    public void onBatchStart(long batchSize) {
+    public void onBatchStart(long batchSize, long queueDepth) {
         this.currentBatchSize = batchSize;
         this.batchSize.update(batchSize);
     }

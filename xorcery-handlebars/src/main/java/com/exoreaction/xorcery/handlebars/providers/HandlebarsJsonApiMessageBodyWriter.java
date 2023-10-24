@@ -15,6 +15,8 @@
  */
 package com.exoreaction.xorcery.handlebars.providers;
 
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.handlebars.helpers.OptionalValueResolver;
 import com.exoreaction.xorcery.hyperschema.HyperSchema;
 import com.exoreaction.xorcery.hyperschema.client.HyperSchemaClient;
@@ -66,13 +68,17 @@ public class HandlebarsJsonApiMessageBodyWriter
     private final Client client;
     private final Handlebars handlebars;
     private final jakarta.inject.Provider<ContainerRequestContext> requestContext;
+    private final String title;
 
     @Inject
     public HandlebarsJsonApiMessageBodyWriter(Handlebars handlebars,
                                               jakarta.inject.Provider<ContainerRequestContext> requestContext,
-                                              ClientBuilder clientBuilder) {
+                                              ClientBuilder clientBuilder,
+                                              Configuration configuration) {
         this.handlebars = handlebars;
         this.requestContext = requestContext;
+        InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
+        this.title = String.format("%s (%s,%s)", instanceConfiguration.getId(), instanceConfiguration.getFQDN(), instanceConfiguration.getIp().toString());
         client = clientBuilder
                 .register(JsonNodeMessageBodyReader.class)
                 .build();
@@ -98,6 +104,7 @@ public class HandlebarsJsonApiMessageBodyWriter
             builder.combine("schema", hyperSchema);
         });
 
+        builder.combine("title", title);
         Context context = builder.build();
 
         OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8);
