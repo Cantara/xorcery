@@ -3,11 +3,13 @@ package com.exoreaction.xorcery.coordinator.test;
 import com.exoreaction.xorcery.coordinator.Main;
 import com.exoreaction.xorcery.core.Xorcery;
 import org.glassfish.hk2.runlevel.RunLevelController;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
 import java.util.concurrent.CompletableFuture;
 
+@Disabled("only run during development, not in CI")
 public class MainTest {
 
     @Test
