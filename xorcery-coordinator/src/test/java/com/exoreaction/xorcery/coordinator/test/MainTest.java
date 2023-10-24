@@ -20,11 +20,8 @@ public class MainTest {
             new CommandLine(main).execute();
         });
 
-        Thread.sleep(3000);
-        Xorcery xorcery = main.getXorcery();
-
-        RunLevelController runLevelController = xorcery.getServiceLocator().getService(RunLevelController.class);
-        while (runLevelController.getCurrentRunLevel() < 20)
+        Xorcery xorcery;
+        while ((xorcery = main.getXorcery()) == null)
         {
             Thread.sleep(1000);
         }

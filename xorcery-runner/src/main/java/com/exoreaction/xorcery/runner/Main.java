@@ -45,6 +45,7 @@ public class Main
 
     @CommandLine.Option(names = "-id", description = "Server id")
     private String id;
+
     private volatile Xorcery xorcery;
 
     @Override
