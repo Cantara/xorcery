@@ -114,7 +114,6 @@
         <module>xorcery-handlebars</module>
 
         <module>xorcery-neo4j</module>
-        <module>xorcery-neo4j-binarytree</module>
         <module>xorcery-neo4j-projections</module>
         <module>xorcery-domainevents-neo4jprojection</module>
         <module>xorcery-jsonapi-server-neo4j</module>
@@ -372,11 +371,6 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-neo4j</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-neo4j-binarytree</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -923,6 +917,14 @@
             <id>cantara-snapshots</id>
             <name>Cantara Snapshot Repository</name>
             <url>https://mvnrepo.cantara.no/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>apache.snapshots</id>
+            <name>Apache Snapshot Repository</name>
+            <url>https://repository.apache.org/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
         </repository>
     </repositories>
 

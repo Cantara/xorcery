@@ -278,11 +278,6 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-neo4j-binarytree</artifactId>
-                <version>0.56.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-neo4j-projections</artifactId>
                 <version>0.56.1-SNAPSHOT</version>
             </dependency>
