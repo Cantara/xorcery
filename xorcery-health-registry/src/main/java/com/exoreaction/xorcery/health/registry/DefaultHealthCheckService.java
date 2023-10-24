@@ -23,10 +23,13 @@ import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
 import com.exoreaction.xorcery.health.api.HealthCheckResult;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Inet4Address;
@@ -76,11 +79,13 @@ public class DefaultHealthCheckService implements HealthCheckService {
             synchronized (lock) {
                 currentHealth = mapper.createObjectNode();
                 currentHealth.put("Status", "false");
+                currentHealth.put("id", instanceConfiguration.getId());
                 currentHealth.put("version", applicationConfiguration.getVersion());
                 currentHealth.put("name", applicationConfiguration.getName());
                 currentHealth.put("ip", instanceConfiguration.getIp().getHostAddress());
                 currentHealth.put("ip-all", getMyIPAddressesString());
                 currentHealth.put("running since", timeAtStart);
+                currentHealth.put("self", instanceConfiguration.getURI().toASCIIString());
                 // TODO add service-name / alias / context-path and some other basic info/config about app
             }
         } catch (Throwable t) {
@@ -303,12 +308,25 @@ public class DefaultHealthCheckService implements HealthCheckService {
         );
     }
 
-    public static String getMyIPAddresssString() {
-        String fullString = getMyIPAddressesString();
-        String[] parts = fullString.split("\\s");
-        if (parts.length == 0) {
-            return "";
+    public void writeHealthState(OutputStream out, boolean prettyPrint) throws IOException {
+        ObjectNode health;
+        try {
+            health = getCurrentHealthJackson();
+            long healthComputeTimeMs = getHealthComputeTimeMs();
+            health.put("now", Instant.now().toString());
+            health.put("health-compute-time-ms", String.valueOf(healthComputeTimeMs));
+
+        } catch (Throwable t) {
+            log.error("While getting health", t);
+            health = mapper.createObjectNode();
+            health.put("Status", "FAIL");
+            health.put("errorMessage", "While getting health");
+            StringWriter strWriter = new StringWriter();
+            t.printStackTrace(new PrintWriter(strWriter));
+            health.put("errorCause", strWriter.toString());
         }
-        return parts[0];
+
+        ObjectWriter writer = prettyPrint ? this.mapper.writerWithDefaultPrettyPrinter() : this.mapper.writer();
+        writer.writeValue(out, health);
     }
 }

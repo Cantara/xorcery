@@ -16,11 +16,15 @@
 package com.exoreaction.xorcery.admin.servlet;
 
 import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jersey.server.JerseyServerService;
 import com.exoreaction.xorcery.net.Sockets;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.core.MediaType;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.hk2.api.ServiceHandle;
@@ -30,10 +34,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AdminServletWiringTest {
+public class AdminTest {
 
     @Test
-    void thatServletContextCanBeWiredByHK2() throws Exception {
+    void testHealth() throws Exception {
         Configuration.Builder builder = new Configuration.Builder();
         new StandardConfigurationBuilder().addTestDefaults(builder);
         Configuration configuration = builder.add("id", "xorcery2")
@@ -48,14 +52,14 @@ public class AdminServletWiringTest {
         Xorcery xorcery = new Xorcery(configuration);
         ServiceLocator serviceLocator = xorcery.getServiceLocator();
 
-        assertNotNull(serviceLocator.getService(Server.class));
-        assertNotNull(serviceLocator.getService(ServletContextHandler.class));
-        assertNotNull(serviceLocator.getService(AdminServletConfigurator.class));
-        assertNotNull(serviceLocator.getService(JerseyServerService.class));
-        assertTrue(serviceLocator.getService(Server.class).isStarted());
-        MetricRegistry defaultMetricRegistry = serviceLocator.getService(MetricRegistry.class);
-        ServiceHandle<MetricRegistry> defaultMetricRegistryHandle = serviceLocator.getServiceHandle(MetricRegistry.class);
-        MetricRegistry another = defaultMetricRegistryHandle.getService();
-        assertNotNull(defaultMetricRegistry);
+        Client client = serviceLocator.getService(ClientBuilder.class).build();
+
+        String response = client.target(InstanceConfiguration.get(configuration).getURI())
+                .path("/health")
+                .queryParam("compact", "true")
+                .request(MediaType.APPLICATION_JSON_TYPE)
+                        .get(String.class);
+
+//        System.out.println(response);
     }
 }

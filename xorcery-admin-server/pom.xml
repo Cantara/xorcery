@@ -25,7 +25,7 @@
         <version>0.56.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>xorcery-admin-servlet</artifactId>
+    <artifactId>xorcery-admin-server</artifactId>
     <version>0.56.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -83,24 +83,16 @@
             <artifactId>metrics-healthchecks</artifactId>
         </dependency>
 
-
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jersey-client</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j2-impl</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-
     </dependencies>
 
 </project>

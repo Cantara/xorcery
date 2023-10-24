@@ -2,3 +2,6 @@ adminservlet:
   enabled: "{{ defaults.enabled }}"
 serveradmin:
   enabled: "{{ defaults.enabled }}"
+
+jersey.server.register:
+  - com.exoreaction.xorcery.admin.api.VisualeHealthResource

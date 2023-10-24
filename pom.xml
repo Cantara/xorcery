@@ -96,7 +96,7 @@
         <module>xorcery-reactivestreams-server</module>
         <module>xorcery-reactivestreams-server-extra</module>
 
-        <module>xorcery-admin-servlet</module>
+        <module>xorcery-admin-server</module>
 
         <module>xorcery-certificates-server</module>
         <module>xorcery-certificates-ca</module>
@@ -140,7 +140,7 @@
             <!-- Xorcery dependencies -->
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-admin-servlet</artifactId>
+                <artifactId>xorcery-admin-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -817,11 +817,6 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.2.1</version>
                     <dependencies>
-                        <dependency>
-                            <groupId>org.junit.jupiter</groupId>
-                            <artifactId>junit-jupiter-engine</artifactId>
-                            <version>${junit.version}</version>
-                        </dependency>
                         <dependency>
                             <groupId>me.fabriciorby</groupId>
                             <artifactId>maven-surefire-junit5-tree-reporter</artifactId>

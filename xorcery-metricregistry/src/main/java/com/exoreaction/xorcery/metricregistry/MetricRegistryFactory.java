@@ -18,10 +18,12 @@ package com.exoreaction.xorcery.metricregistry;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
 import jakarta.inject.Inject;
-import org.glassfish.hk2.api.*;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.Injectee;
+import org.glassfish.hk2.api.InstantiationService;
+import org.glassfish.hk2.api.PerLookup;
 import org.jvnet.hk2.annotations.Service;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

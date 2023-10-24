@@ -48,7 +48,7 @@
         <dependencies>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-admin-servlet</artifactId>
+                <artifactId>xorcery-admin-server</artifactId>
                 <version>0.56.1-SNAPSHOT</version>
             </dependency>
             <dependency>
