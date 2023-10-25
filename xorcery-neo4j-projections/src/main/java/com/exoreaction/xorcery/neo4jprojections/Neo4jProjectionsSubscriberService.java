@@ -19,10 +19,12 @@ import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
+import com.exoreaction.xorcery.neo4jprojections.api.WaitForProjectionCommit;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionCommitPublisher;
 import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionEventHandler;
 import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionSubscriber;
+import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionWithResultSubscriber;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
@@ -60,15 +62,24 @@ public class Neo4jProjectionsSubscriberService {
         List<Neo4jEventProjection> projectionList = new ArrayList<>();
         neo4jEventProjectionList.forEach(projectionList::add);
 
-        reactiveStreamsServer.subscriber("neo4jprojections", cfg -> new ProjectionSubscriber(subscription -> new Neo4jProjectionEventHandler(
-                graphDatabase.getGraphDatabaseService(),
-                neo4jProjectionsConfiguration,
-                subscription,
-                neo4jProjectionsService.getCurrentProjection(cfg.getString("projection").orElseThrow()),
-                cfg.getString("projection").orElseThrow(),
-                neo4jProjectionCommitPublisher,
-                projectionList,
-                metricRegistry), new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))), ProjectionSubscriber.class);
+        reactiveStreamsServer.subscriber("neo4jprojections", cfg ->
+                {
+                    WaitForProjectionCommit waitForProjectionCommit = new WaitForProjectionCommit(cfg.getString("projection").orElseThrow());
+                    neo4jProjectionCommitPublisher.subscribe(waitForProjectionCommit);
+                    return new ProjectionWithResultSubscriber(
+                            new ProjectionSubscriber(subscription -> new Neo4jProjectionEventHandler(
+                                    graphDatabase.getGraphDatabaseService(),
+                                    neo4jProjectionsConfiguration,
+                                    subscription,
+                                    neo4jProjectionsService.getCurrentProjection(cfg.getString("projection").orElseThrow()),
+                                    cfg.getString("projection").orElseThrow(),
+                                    neo4jProjectionCommitPublisher,
+                                    projectionList,
+                                    metricRegistry),
+                                    new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))),
+                            waitForProjectionCommit);
+                },
+                ProjectionSubscriber.class);
 
         if (neo4jProjectionsConfiguration.isCommitPublisherEnabled()) {
             reactiveStreamsServer.publisher("neo4jprojectioncommits", cfg -> neo4jProjectionCommitPublisher, Neo4jProjectionCommitPublisher.class);

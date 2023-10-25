@@ -27,6 +27,9 @@ import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.util.SubscriberConfiguration;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.PreDestroy;
@@ -44,14 +47,15 @@ import java.util.concurrent.TimeUnit;
 @ContractsProvided({DomainEventPublisher.class, PreDestroy.class})
 public class DomainEventsService
         implements DomainEventPublisher,
-        Publisher<WithResult<WithMetadata<DomainEvents>, Metadata>>,
+        Publisher<WithResult<WithMetadata<ArrayNode>, Metadata>>,
         PreDestroy {
 
     private final DeploymentMetadata deploymentMetadata;
 
-    private Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber;
+    private Subscriber<? super WithResult<WithMetadata<ArrayNode>, Metadata>> subscriber;
 
     private final CloseableSemaphore requests = new CloseableSemaphore(0);
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     public DomainEventsService(ReactiveStreamsClient reactiveStreams,
@@ -80,7 +84,7 @@ public class DomainEventsService
     }
 
     @Override
-    public void subscribe(Subscriber<? super WithResult<WithMetadata<DomainEvents>, Metadata>> subscriber) {
+    public void subscribe(Subscriber<? super WithResult<WithMetadata<ArrayNode>, Metadata>> subscriber) {
         this.subscriber = subscriber;
         subscriber.onSubscribe(new Subscription() {
             @Override
@@ -99,7 +103,8 @@ public class DomainEventsService
         try {
             requests.tryAcquire(10, TimeUnit.SECONDS);
             CompletableFuture<Metadata> future = new CompletableFuture<>();
-            subscriber.onNext(new WithResult<>(new WithMetadata<>(metadata.toBuilder().add(deploymentMetadata.context()).build(), events), future));
+            ArrayNode json = objectMapper.valueToTree(events);
+            subscriber.onNext(new WithResult<>(new WithMetadata<>(metadata.toBuilder().add(deploymentMetadata.context()).build(), json), future));
             return future;
         } catch (InterruptedException e) {
             return CompletableFuture.failedFuture(e);

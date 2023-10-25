@@ -8,6 +8,7 @@ import com.exoreaction.xorcery.core.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.io.ZipFiles;
 import com.exoreaction.xorcery.util.Resources;
+import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.*;
@@ -19,6 +20,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -132,6 +134,12 @@ public class XorceryExtension
             LoggerContextFactory.initialize(configuration);
             xorcery = new Xorcery(configuration);
         } catch (Exception e) {
+
+            List<String> messages = ConfigurationLogger.getLogger().drain();
+            for (String message : messages) {
+                System.out.println(message);
+            }
+
             throw new RuntimeException(e);
         }
 

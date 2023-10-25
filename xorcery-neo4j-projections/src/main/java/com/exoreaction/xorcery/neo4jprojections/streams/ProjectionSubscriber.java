@@ -96,19 +96,19 @@ public class ProjectionSubscriber
         @Override
         public void handleEventException(Throwable ex, long sequence, WithMetadata<ArrayNode> event) {
             subscription.cancel();
-            LogManager.getLogger(getClass()).error("Cancelled subscription");
+            LogManager.getLogger(getClass()).error("Cancelled subscription", ex);
         }
 
         @Override
         public void handleOnStartException(Throwable ex) {
             subscription.cancel();
-            LogManager.getLogger(getClass()).warn("Cancelled subscription");
+            LogManager.getLogger(getClass()).warn("Cancelled subscription", ex);
         }
 
         @Override
         public void handleOnShutdownException(Throwable ex) {
             subscription.cancel();
-            LogManager.getLogger(getClass()).warn("Cancelled subscription");
+            LogManager.getLogger(getClass()).warn("Cancelled subscription", ex);
         }
     }
 }
