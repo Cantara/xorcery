@@ -143,7 +143,7 @@ public interface CommandsMixin
         {
             Class<? extends Command> commandClass = c.getClass();
             try {
-                ObjectMapper objectMapper = service(ObjectMapper.class);
+                ObjectMapper objectMapper = objectMapper();
                 ObjectNode json = resourceObject.getAttributes().json();
                 json.set("@class", json.textNode(commandClass.getName()));
                 if (resourceObject.getId() != null)

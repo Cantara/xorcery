@@ -46,7 +46,13 @@ public class DnsRegistrationService
         this.logger = logger;
         this.records = dnsRecords.getRecords();
 
-        dnsUpdates.updateDns(records).toCompletableFuture().orTimeout(10, TimeUnit.SECONDS).join();
+        dnsUpdates.updateDns(records).toCompletableFuture().orTimeout(10, TimeUnit.SECONDS).whenComplete((result, throwable)->
+        {
+            if (throwable != null)
+            {
+                logger.error("Could not register with DNS", throwable);
+            }
+        }).join();
         logger.info("Registered services in DNS");
     }
 

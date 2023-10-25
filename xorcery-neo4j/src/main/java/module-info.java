@@ -28,6 +28,7 @@ open module xorcery.neo4j {
     requires xorcery.jsonapi.server;
 
     requires xorcery.neo4j.shaded;
+    requires jdk.unsupported;
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.api;
     requires jakarta.inject;

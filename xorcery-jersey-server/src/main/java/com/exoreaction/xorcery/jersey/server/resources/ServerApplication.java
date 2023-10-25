@@ -40,6 +40,6 @@ public class ServerApplication
         String mediaTypesString = String.join(",", mediaTypesList);
         property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
-        LogManager.getLogger(getClass()).info("Media types:\n" + mediaTypesString.replace(',', '\n'));
+        LogManager.getLogger(getClass()).debug("Media types:\n" + mediaTypesString.replace(',', '\n'));
     }
 }

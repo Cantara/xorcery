@@ -111,7 +111,7 @@ public class CertificatesService
 
     private boolean isCertificateConfigurationChanged(X509Certificate certificate) {
         // Check subject
-        if (!certificate.getSubjectX500Principal().getName().equals("CN="+certificatesConfiguration.getSubject()))
+        if (!certificate.getSubjectX500Principal().getName().equals("CN="+certificatesConfiguration.getSubject().toLowerCase()))
             return true;
 
         // Check domain names and IPs
@@ -137,7 +137,7 @@ public class CertificatesService
 
     public PKCS10CertificationRequest createRequest() throws IOException, GeneralSecurityException, OperatorCreationException {
         X500Name issuedCertSubject = new X500NameBuilder()
-                .addRDN(BCStyle.CN, certificatesConfiguration.getSubject())
+                .addRDN(BCStyle.CN, certificatesConfiguration.getSubject().toLowerCase())
                 .build();
 
         ExtensionsGenerator extensionsGenerator = new ExtensionsGenerator();
@@ -156,8 +156,11 @@ public class CertificatesService
         certificatesConfiguration.getIpAddresses().forEach(ipAddress -> subAtlNamesList.add(new GeneralName(GeneralName.iPAddress, ipAddress)));
         certificatesConfiguration.getDnsNames().forEach(dnsName -> subAtlNamesList.add(new GeneralName(GeneralName.dNSName, dnsName)));
         GeneralNames subAtlNames = new GeneralNames(subAtlNamesList.toArray(new GeneralName[0]));
-        extensionsGenerator.addExtension(
-                Extension.subjectAlternativeName, true, subAtlNames);
+        if (!subAtlNamesList.isEmpty())
+        {
+            extensionsGenerator.addExtension(
+                    Extension.subjectAlternativeName, true, subAtlNames);
+        }
 
         PKCS10CertificationRequestBuilder csrBuilder = new JcaPKCS10CertificationRequestBuilder(issuedCertSubject, issuedCertKeyPair.getPublic())
                 .addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extensionsGenerator.generate());
@@ -185,13 +188,13 @@ public class CertificatesService
             int i = 1;
             while (keyStore.containsAlias(alias + i)) {
                 X509Certificate otherCert = (X509Certificate) keyStore.getCertificate(alias + i);
-                logger.info("Current certificate:" + otherCert);
+                logger.debug("Current certificate:" + otherCert);
                 earliestExpiry = Math.min(earliestExpiry, otherCert.getNotAfter().getTime());
                 i++;
             }
             Instant oneWeekBeforeExpiry = Instant.ofEpochMilli(earliestExpiry).minus(7, ChronoUnit.DAYS);
 
-            logger.info("Current certificate:" + certificate);
+            logger.debug("Current certificate:" + certificate);
             if (new Date().toInstant().isAfter(oneWeekBeforeExpiry)) {
                 requestCertificateProcess = requestCertificatesProcessFactory.create(createRequest());
                 requestCertificateProcess.start();

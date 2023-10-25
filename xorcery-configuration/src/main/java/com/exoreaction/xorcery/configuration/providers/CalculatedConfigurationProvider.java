@@ -36,7 +36,7 @@ public class CalculatedConfigurationProvider
     public JsonNode hostName()
     {
         try {
-            return JsonNodeFactory.instance.textNode(InetAddress.getLocalHost().getHostName());
+            return JsonNodeFactory.instance.textNode(InetAddress.getLocalHost().getHostName().toLowerCase());
         } catch (UnknownHostException e) {
             return MissingNode.getInstance();
         }

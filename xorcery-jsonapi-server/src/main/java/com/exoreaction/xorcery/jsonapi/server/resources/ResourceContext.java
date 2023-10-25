@@ -102,7 +102,9 @@ public interface ResourceContext {
         return getContainerRequestContext().getCookies().get("token");
     }
 
+
     default ObjectMapper objectMapper() {
-        return service(ObjectMapper.class);
+        return objectMapper;
     }
+    ObjectMapper objectMapper = new ObjectMapper();
 }

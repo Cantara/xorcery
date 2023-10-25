@@ -142,7 +142,10 @@ public class IntermediateCACertificatesProvider
                 }
             }
 
-            issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(names.toArray(new ASN1Encodable[0])));
+            if (!names.isEmpty())
+            {
+                issuedCertBuilder.addExtension(Extension.subjectAlternativeName, false, new DERSequence(names.toArray(new ASN1Encodable[0])));
+            }
 
             JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider(PROVIDER_NAME);
             char[] password = keyStoresConfiguration.getKeyStoreConfiguration("ssl").getPassword()
