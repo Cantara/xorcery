@@ -26,6 +26,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -73,6 +74,7 @@ public class SubscribeReactiveStream
     private final Supplier<Configuration> publisherConfiguration;
     protected final ByteBufferPool byteBufferPool;
     protected final Logger logger;
+    private final ActiveSubscriptions activeSubscriptions;
     protected final CompletableFuture<Void> result;
 
     protected final Marker marker;
@@ -92,6 +94,8 @@ public class SubscribeReactiveStream
     protected boolean isComplete; // true if onComplete or onError has been called
     protected boolean isRetrying; // true if we're in the process of retrying/reconnecting
     protected boolean isCancelled; // true if cancel() has been called or the result has been completed
+    private ActiveSubscriptions.ActiveSubscription activeSubscription;
+    private long firstRequest;
 
     public SubscribeReactiveStream(URI serverUri,
                                    String streamName,
@@ -104,6 +108,7 @@ public class SubscribeReactiveStream
                                    ByteBufferPool pool,
                                    MetricRegistry metricRegistry,
                                    Logger logger,
+                                   ActiveSubscriptions activeSubscriptions,
                                    CompletableFuture<Void> result) {
         this.serverUri = serverUri;
         this.streamName = streamName;
@@ -117,6 +122,7 @@ public class SubscribeReactiveStream
         this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
         this.byteBufferPool = pool;
         this.logger = logger;
+        this.activeSubscriptions = activeSubscriptions;
 
         this.received = metricRegistry.meter("subscribe." + streamName + ".received");
         this.receivedBytes = metricRegistry.meter("subscribe." + streamName + ".received.bytes");
@@ -125,29 +131,6 @@ public class SubscribeReactiveStream
         this.result = result;
 
         this.marker = MarkerManager.getMarker(this.serverUri.getAuthority() + "/" + streamName);
-
-/*
-        this.result.whenComplete((r, t) ->
-        {
-            // Check if session is open
-            if (session != null) {
-                synchronized (session) {
-                    isComplete = true;
-                    if (session.isOpen()) {
-
-                        WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
-                        session.close(StatusCode.NORMAL, "cancel", callback);
-                        callback.future().join();
-
-                        if (!isComplete) {
-                            isComplete = true;
-                            subscriber.onError(t);
-                        }
-                    }
-                }
-            }
-        });
-*/
 
         subscriber.onSubscribe(this);
 
@@ -305,7 +288,10 @@ public class SubscribeReactiveStream
         this.retryDelay = Duration.parse("PT" + subscriberConfiguration.getRetryDelay()).toMillis();
 
         // First send parameters, if available
-        String parameterString = publisherConfiguration.get().json().toPrettyString();
+        Configuration configuration = publisherConfiguration.get();
+        activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), configuration);
+        activeSubscriptions.addSubscription(activeSubscription);
+        String parameterString = configuration.json().toPrettyString();
         session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture().with(f ->
                 f.future().thenAcceptAsync(Void ->
                 {
@@ -377,6 +363,8 @@ public class SubscribeReactiveStream
             receivedBytes.mark(byteBuffer.position());
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
             subscriber.onNext(event);
+            activeSubscription.requested().decrementAndGet();
+            activeSubscription.received().incrementAndGet();
             outstandingRequests.decrementAndGet();
         } catch (IOException e) {
             logger.error("Could not receive value", e);
@@ -413,6 +401,11 @@ public class SubscribeReactiveStream
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
 
+        if (activeSubscription != null)
+        {
+            activeSubscriptions.removeSubscription(activeSubscription);
+            activeSubscription = null;
+        }
         if (statusCode == StatusCode.NORMAL) {
             try {
                 if (!isComplete) {
@@ -465,14 +458,16 @@ public class SubscribeReactiveStream
                 return;
             }
             if (sendRequestsThreshold == 0) {
+                firstRequest = rn;
                 sendRequestsThreshold = Math.min(rn * 3 / 4, 4096);
             } else {
-                if (rn < sendRequestsThreshold)
+                if (rn < sendRequestsThreshold || rn+outstandingRequests.get() < firstRequest)
                     return; // Wait until we have more requests lined up
             }
 
             requests.set(0);
             outstandingRequests.addAndGet(rn);
+            activeSubscription.requested().addAndGet(rn);
 
             logger.trace(marker, "Sending request: {}", rn);
             requestsHistogram.update(rn);

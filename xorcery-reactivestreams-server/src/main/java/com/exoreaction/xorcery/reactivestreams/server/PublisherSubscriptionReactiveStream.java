@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -44,9 +45,6 @@ import java.util.Base64;
 import java.util.Deque;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 /**
@@ -123,10 +121,10 @@ public class PublisherSubscriptionReactiveStream
 
         if (session.isOpen() && activeSubscription.requested().get() > 0) {
             send(item);
-            activeSubscription.requested().decrementAndGet();
         } else {
             queue.add(item);
         }
+        activeSubscription.requested().decrementAndGet();
     }
 
     // WebSocket
@@ -250,6 +248,7 @@ public class PublisherSubscriptionReactiveStream
             // Send it
             ByteBuffer eventBuffer = outputStream.takeByteBuffer();
 
+            boolean shouldFlush = queue.isEmpty();
             session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
                 @Override
                 public void writeFailed(Throwable x) {
@@ -262,7 +261,7 @@ public class PublisherSubscriptionReactiveStream
                     activeSubscription.received().incrementAndGet();
                     CompletableFuture.runAsync(() ->
                     {
-                        if (queue.isEmpty()) {
+                        if (shouldFlush) {
                             if (logger.isTraceEnabled())
                                 logger.trace(marker, "flush");
                             try {

@@ -22,6 +22,7 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
@@ -66,8 +67,9 @@ public class SubscribeWithResultReactiveStream
                                              ByteBufferPool pool,
                                              MetricRegistry metricRegistry,
                                              Logger logger,
+                                             ActiveSubscriptions activeSubscriptions,
                                              CompletableFuture<Void> result) {
-        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, pool, metricRegistry, logger, result);
+        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, pool, metricRegistry, logger, activeSubscriptions, result);
 
         this.resultsSent = metricRegistry.meter("subscribe." + streamName + ".results");
 

@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.reactivestreams.server;
+package com.exoreaction.xorcery.reactivestreams.common;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 
@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * This tracks active subscriptions to publishers or from subscribers exposed by this server
  */
-public abstract class ActiveSubscriptions {
+public class ActiveSubscriptions {
 
     private final Set<ActiveSubscription> activeSubscriptions = new CopyOnWriteArraySet<>();
 

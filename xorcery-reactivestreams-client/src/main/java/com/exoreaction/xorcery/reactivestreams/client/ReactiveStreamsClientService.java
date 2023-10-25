@@ -21,6 +21,7 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
@@ -49,6 +50,8 @@ public class ReactiveStreamsClientService
         implements ReactiveStreamsClient {
 
     private final ReactiveStreamsClientConfiguration clientConfiguration;
+    private final ActiveSubscriptions activePublisherSubscriptions;
+    private final ActiveSubscriptions activeSubscriberSubscriptions;
     private DnsLookup dnsLookup;
     private MetricRegistry metricRegistry;
     private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
@@ -62,11 +65,15 @@ public class ReactiveStreamsClientService
                                         DnsLookupService dnsLookup,
                                         MetricRegistry metricRegistry,
                                         Supplier<LocalStreamFactories> localStreamFactoriesProvider,
-                                        Logger logger) throws Exception {
+                                        Logger logger,
+                                        ActiveSubscriptions activePublisherSubscriptions,
+                                        ActiveSubscriptions activeSubscriberSubscriptions) throws Exception {
         super(messageWorkers, logger);
         this.dnsLookup = dnsLookup;
         this.metricRegistry = metricRegistry;
         this.reactiveStreamsServerServiceProvider = localStreamFactoriesProvider;
+        this.activePublisherSubscriptions = activePublisherSubscriptions;
+        this.activeSubscriberSubscriptions = activeSubscriberSubscriptions;
 
         clientConfiguration = new ReactiveStreamsClientConfiguration(configuration.getConfiguration("reactivestreams.client"));
 
@@ -159,6 +166,7 @@ public class ReactiveStreamsClientService
                     subscriberServerConfiguration,
                     byteBufferPool,
                     metricRegistry,
+                    activePublisherSubscriptions,
                     result);
         } else {
             new PublishReactiveStream(serverUri,
@@ -171,7 +179,9 @@ public class ReactiveStreamsClientService
                     subscriberServerConfiguration,
                     byteBufferPool,
                     metricRegistry,
-                    result);
+                    activePublisherSubscriptions,
+                    result
+                    );
         }
         return result;
     }
@@ -250,6 +260,7 @@ public class ReactiveStreamsClientService
                     byteBufferPool,
                     metricRegistry,
                     LogManager.getLogger(SubscribeReactiveStream.class),
+                    activeSubscriberSubscriptions,
                     result);
 
         } else {
@@ -264,6 +275,7 @@ public class ReactiveStreamsClientService
                     byteBufferPool,
                     metricRegistry,
                     LogManager.getLogger(SubscribeReactiveStream.class),
+                    activeSubscriberSubscriptions,
                     result);
         }
         return result;

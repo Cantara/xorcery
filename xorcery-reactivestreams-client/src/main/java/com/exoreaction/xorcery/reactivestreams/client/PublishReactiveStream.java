@@ -23,6 +23,8 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions.ActiveSubscription;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,6 +52,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 /**
@@ -69,6 +72,7 @@ public class PublishReactiveStream
 
     private final ClientConfiguration publisherConfiguration;
     private final Supplier<Configuration> subscriberConfiguration;
+    private final ActiveSubscriptions activeSubscriptions;
     protected final CompletableFuture<Void> result;
     protected final Marker marker;
 
@@ -91,7 +95,6 @@ public class PublishReactiveStream
     protected Subscription subscription;
     private final Deque<Object> queue = new ArrayDeque<>();
     protected final ByteBufferOutputStream2 outputStream;
-    private long requested = 0;
     private ByteBuffer eventBuffer;
     private Object item;
 
@@ -100,6 +103,7 @@ public class PublishReactiveStream
     protected boolean isReconnecting = false;
     protected boolean isRetrying = false;
     private long retryDelay;
+    private ActiveSubscription activeSubscription;
 
     public PublishReactiveStream(URI serverUri,
                                  String streamName,
@@ -111,6 +115,7 @@ public class PublishReactiveStream
                                  Supplier<Configuration> subscriberConfiguration,
                                  ByteBufferPool pool,
                                  MetricRegistry metricRegistry,
+                                 ActiveSubscriptions activeSubscriptions,
                                  CompletableFuture<Void> result) {
         this.serverUri = serverUri;
         this.streamName = streamName;
@@ -121,6 +126,7 @@ public class PublishReactiveStream
         this.eventWriter = eventWriter;
         this.subscriberConfiguration = subscriberConfiguration;
         this.pool = pool;
+        this.activeSubscriptions = activeSubscriptions;
         this.result = result;
         this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
         this.marker = MarkerManager.getMarker(serverUri.getAuthority() + "/" + streamName);
@@ -289,9 +295,6 @@ public class PublishReactiveStream
                 isReconnecting = true;
             }
 
-            // Reset state
-            requested = 0;
-
             if (uriIterator.hasNext()) {
                 connect(uriIterator);
             } else {
@@ -330,12 +333,14 @@ public class PublishReactiveStream
             isRetrying = false;
         }
 
-        this.requested = 0;
         this.session = session;
         this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
 
         // First send parameters, if available
-        String parameterString = subscriberConfiguration.get().json().toPrettyString();
+        Configuration configuration = subscriberConfiguration.get();
+        activeSubscription = new ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), configuration);
+        activeSubscriptions.addSubscription(activeSubscription);
+        String parameterString = configuration.json().toPrettyString();
         session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture(new CompletableFuture<>()
                 .thenAccept(Void ->
                 {
@@ -368,7 +373,7 @@ public class PublishReactiveStream
             }
 
             requestsHistogram.update(requestAmount);
-            requested += requestAmount;
+            activeSubscription.requested().addAndGet(requestAmount);
             subscription.request(requestAmount);
 
             if (!isSending)
@@ -404,6 +409,8 @@ public class PublishReactiveStream
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
 
+        activeSubscriptions.removeSubscription(activeSubscription);
+        activeSubscription = null;
         if (statusCode == StatusCode.NORMAL) {
             logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             result.complete(null);
@@ -418,7 +425,7 @@ public class PublishReactiveStream
             logger.trace(marker, "send {}", isSending);
         }
 
-        if (requested > 0 && session != null) {
+        if (activeSubscription.requested().get() > 0 && session != null) {
             item = queue.poll();
             if (item == null) {
                 isSending = false;
@@ -492,7 +499,8 @@ public class PublishReactiveStream
         sentBytes.mark(eventBuffer.position());
         pool.release(eventBuffer);
 
-        requested--;
+        activeSubscription.received().incrementAndGet();
+        long requested = activeSubscription.requested().decrementAndGet();
         batchSize++;
         if (requested == 0 || queue.isEmpty() || batchSize == maxBatchSize) {
 //                    logger.debug(marker, "doFlush {} {} {}", requested, queue.size(), batchSize);

@@ -19,6 +19,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.common.ActivePublisherSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriberSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import jakarta.inject.Inject;
@@ -46,7 +48,19 @@ public class ReactiveStreamsClientServiceHK2 extends ReactiveStreamsClientServic
                                            DnsLookupService dnsLookup,
                                            MetricRegistry metricRegistry,
                                            Provider<LocalStreamFactories> localStreamFactoriesProvider,
-                                           Logger logger) throws Exception {
-        super(configuration, messageWorkers, httpClient, dnsLookup, metricRegistry, localStreamFactoriesProvider::get, logger);
+                                           Logger logger,
+                                           ActivePublisherSubscriptions activePublisherSubscriptions,
+                                           ActiveSubscriberSubscriptions activeSubscriberSubscriptions
+    ) throws Exception {
+        super(
+                configuration,
+                messageWorkers,
+                httpClient,
+                dnsLookup,
+                metricRegistry,
+                localStreamFactoriesProvider::get,
+                logger,
+                activePublisherSubscriptions,
+                activeSubscriberSubscriptions);
     }
 }
