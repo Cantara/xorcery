@@ -1,7 +1,15 @@
 jwt:
   server:
     enabled: "{{ defaults.enabled }}"
-    issuer: "{{ instance.fqdn }}"
+    token:
+      duration: "P7D"
+      issuer: "{{ instance.fqdn }}"
+    cookie:
+      duration: "P7D"
+      name: "token"
+      path: "/"
+      domain: "{{ instance.domain }}"
+
     keys: []
   configuration:
     enabled: "{{ defaults.enabled }}"
@@ -13,4 +21,4 @@ jwt:
 #        tenant: "tenant1"
 
 jersey.server.register:
-  - com.exoreaction.xorcery.jwt.server.resources.JwtLoginResource
+  - com.exoreaction.xorcery.jwt.server.api.JwtLoginResource

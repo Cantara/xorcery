@@ -37,7 +37,8 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.time.temporal.ChronoUnit;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 @Service(name = "jwt.server")
@@ -49,6 +50,7 @@ public class JwtService {
     private final String keyId;
     private final Algorithm algorithm;
     private final JwtServerConfiguration jwtServerConfiguration;
+    private final Duration tokenDuration;
 
     @Inject
     public JwtService(Configuration configuration,
@@ -62,6 +64,8 @@ public class JwtService {
         List<JwtKey> keys = jwtServerConfiguration.getKeys();
         this.logger = logger;
         this.claimsProviders = claimsProviders;
+
+        this.tokenDuration = jwtServerConfiguration.getTokenDuration();
 
         if (keys.isEmpty())
             throw new IllegalArgumentException("No signing keys configured");
@@ -104,8 +108,8 @@ public class JwtService {
 
     public String createJwt(String userName)
             throws IOException {
-        Date now = new Date();
-        Date tomorrow = Date.from(now.toInstant().plus(1, ChronoUnit.DAYS));
+        Instant now = Instant.now();
+        Date expiresAt = Date.from(now.plus(tokenDuration));
 
         // Get all the claims for this user
         Map<String, Object> claims = new HashMap<>();
@@ -114,17 +118,11 @@ public class JwtService {
             claims.putAll(providerUserClaims);
         }
 
-/* What makes the most sense here? A user can be authenticated and then have no claims other then sub, and that is fine?
-        // If no claims, this is not a known user
-        if (claims.isEmpty())
-            throw new BadRequestException(userName);
-*/
-
         String token = JWT.create()
                 .withPayload(claims)
-                .withIssuer(jwtServerConfiguration.getIssuer())
+                .withIssuer(jwtServerConfiguration.getTokenIssuer())
                 .withIssuedAt(now)
-                .withExpiresAt(tomorrow)
+                .withExpiresAt(expiresAt)
                 .withSubject(userName)
                 .withKeyId(keyId)
                 .withJWTId(UUIDs.newId())
@@ -132,5 +130,9 @@ public class JwtService {
 
         logger.debug("Created JWT token for {}:{}", userName, token);
         return token;
+    }
+
+    public JwtServerConfiguration getJwtServerConfiguration() {
+        return jwtServerConfiguration;
     }
 }

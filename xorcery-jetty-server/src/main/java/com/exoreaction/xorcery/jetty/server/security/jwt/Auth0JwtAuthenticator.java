@@ -56,7 +56,7 @@ public class Auth0JwtAuthenticator
     private final Map<String, Map<String, JWTVerifier>> verifiers = new HashMap<>();
 
     @Inject
-    public Auth0JwtAuthenticator(Configuration configuration, Secrets secrets) throws NoSuchAlgorithmException {
+    public Auth0JwtAuthenticator(Configuration configuration, LoginService loginService, Secrets secrets) throws NoSuchAlgorithmException {
         jwtParser = new JWT();
         JwtConfiguration jwtConfiguration = new JwtConfiguration(configuration.getConfiguration("jetty.server.security.jwt"));
 
@@ -181,7 +181,10 @@ public class Auth0JwtAuthenticator
                 userPrincipal.configureSubject(subject);
                 subject.setReadOnly();
 
-                UserIdentity userIdentity = new DefaultUserIdentity(subject, userPrincipal, new String[0]);
+                List<String> roles = (List<String>)decodedJwt.getClaim("claims").asMap().get("roles");
+                if (roles == null)
+                    roles = Collections.emptyList();
+                UserIdentity userIdentity = new DefaultUserIdentity(subject, userPrincipal, roles.toArray(new String[0]));
                 authentication = new UserAuthentication(getAuthMethod(), userIdentity);
 
             } catch (Exception e) {

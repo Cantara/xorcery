@@ -22,18 +22,19 @@ import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.eclipse.jetty.security.*;
 import org.glassfish.hk2.api.Factory;
+import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.util.Optional;
 
 @Service(name = "jetty.server.security")
-public class SecurityHandlerService
-        implements Factory<SecurityHandler> {
+public class SecurityHandlerFactory
+        implements Factory<ConstraintSecurityHandler> {
 
     private final ConstraintSecurityHandler securityHandler;
 
     @Inject
-    public SecurityHandlerService(Configuration configuration,
+    public SecurityHandlerFactory(Configuration configuration,
                                   Provider<Authenticator.Factory> authenticatorFactoryProvider,
                                   Provider<LoginService> loginServiceProvider,
                                   Provider<IdentityService> identityServiceProvider
@@ -46,18 +47,18 @@ public class SecurityHandlerService
         securityHandler.setLoginService(loginService);
         securityHandler.setIdentityService(identityService);
         securityHandler.setAuthenticatorFactory(Optional.ofNullable(authenticatorFactoryProvider.get()).orElseGet(DefaultAuthenticatorFactory::new));
-        configuration.getString("jetty.server.security.method").ifPresent(securityHandler::setAuthMethod);
+        JettySecurityConfiguration.get(configuration).getAuthenticationMethod().ifPresent(securityHandler::setAuthMethod);
     }
 
     @Override
     @Singleton
     @Named("jetty.server.security")
-    public SecurityHandler provide() {
+    public ConstraintSecurityHandler provide() {
         return securityHandler;
     }
 
     @Override
-    public void dispose(SecurityHandler instance) {
+    public void dispose(ConstraintSecurityHandler instance) {
 
     }
 }

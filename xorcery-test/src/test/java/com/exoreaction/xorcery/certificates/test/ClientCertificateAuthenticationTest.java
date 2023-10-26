@@ -51,6 +51,7 @@ public class ClientCertificateAuthenticationTest {
             jetty.server.http.enabled: false
             jetty.server.ssl.enabled: true
             jetty.server.security.enabled: true    
+            jetty.server.security.method: CLIENT_CERT    
                     """;
 
     String serverConfig = """

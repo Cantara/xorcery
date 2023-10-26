@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.jwt.server.resources;
+package com.exoreaction.xorcery.jwt.server.api;
 
 import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsJsonSchemaMixin;
 import com.exoreaction.xorcery.jsonapi.*;
@@ -25,6 +25,7 @@ import com.exoreaction.xorcery.jsonschema.Properties;
 import com.exoreaction.xorcery.jsonschema.Types;
 import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaMixin;
 import com.exoreaction.xorcery.jwt.server.JwtConfigurationLoginService;
+import com.exoreaction.xorcery.jwt.server.JwtServerConfiguration;
 import com.exoreaction.xorcery.jwt.server.JwtService;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.inject.Inject;
@@ -35,6 +36,8 @@ import org.eclipse.jetty.security.LoginService;
 import org.eclipse.jetty.server.UserIdentity;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -89,8 +92,18 @@ public class JwtLoginResource
 
         try {
             String token = jwtService.createJwt(username);
+            JwtServerConfiguration jwtServerConfiguration = jwtService.getJwtServerConfiguration();
+
+
+            Date expiresAt = Date.from(Instant.now().plus(jwtServerConfiguration.getCookieDuration()));
+
             return Response.ok(new ResourceObject.Builder("jwt").attributes(new Attributes.Builder().attribute("token", token).build()).build())
-                    .cookie(new NewCookie.Builder("token").value(token).build())
+                    .cookie(new NewCookie.Builder(jwtServerConfiguration.getCookieName())
+                            .path(jwtServerConfiguration.getCookiePath())
+                            .value(token)
+                            .domain(jwtServerConfiguration.getCookieDomain())
+                            .expiry(expiresAt)
+                            .build())
                     .build();
         } catch (WebApplicationException e) {
             throw e;

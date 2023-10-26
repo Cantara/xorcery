@@ -21,7 +21,10 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import jakarta.validation.Constraint;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -43,7 +46,7 @@ public class ServletContextHandlerFactory
     public ServletContextHandlerFactory(Server server,
                                         Configuration configuration,
                                         ServiceLocator serviceLocator,
-                                        IterableProvider<SecurityHandler> securityHandlerProvider,
+                                        Provider<ConstraintSecurityHandler> securityHandlerProvider,
                                         MetricRegistry metricRegistry) {
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
@@ -52,8 +55,8 @@ public class ServletContextHandlerFactory
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
 
         Handler handler = servletContextHandler;
-        if (securityHandlerProvider.getHandle() != null) {
-            SecurityHandler securityHandler = securityHandlerProvider.get();
+        ConstraintSecurityHandler securityHandler = securityHandlerProvider.get();
+        if (securityHandler != null) {
             securityHandler.setHandler(handler);
             handler = securityHandler;
         }

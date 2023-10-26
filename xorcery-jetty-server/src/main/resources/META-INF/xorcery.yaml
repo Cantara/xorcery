@@ -37,11 +37,19 @@ jetty:
 
     security:
       enabled: "{{ defaults.enabled }}"
-      method: "CLIENT_CERT"
+      method: "jwt"
+      constraints:
+        - name: admin
+          roles:
+            - admin
+      mappings: []
+
       certificate:
         enabled: "{{ jetty.server.security.enabled }}"
       jwt:
         enabled: "{{ jetty.server.security.enabled }}"
+        cookies:
+          - token
         issuers:
           default:
             keys: []
