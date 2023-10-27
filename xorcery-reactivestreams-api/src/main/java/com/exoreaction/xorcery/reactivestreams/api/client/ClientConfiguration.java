@@ -16,8 +16,11 @@
 package com.exoreaction.xorcery.reactivestreams.api.client;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import javax.net.ssl.SSLHandshakeException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public record ClientConfiguration(Configuration configuration) {
@@ -42,13 +45,9 @@ public record ClientConfiguration(Configuration configuration) {
             return this;
         }
 
-        public Builder scheme(String wsOrWss) {
-            builder.add("scheme", wsOrWss);
-            return this;
-        }
-
-        public Builder disruptorSize(int value) {
-            builder.add("disruptor.size", value);
+        public Builder extensions(String... websocketExtensionName)
+        {
+            builder.add("websocket.extensions", websocketExtensionName);
             return this;
         }
 
@@ -78,11 +77,7 @@ public record ClientConfiguration(Configuration configuration) {
         return configuration.getString("retry.delay").orElse("10S");
     }
 
-    public Optional<String> getScheme() {
-        return configuration.getString("scheme");
-    }
-
-    public int getDisruptorSize() {
-        return configuration.getInteger("disruptor.size").orElse(512);
+    public List<String> getExtensions() {
+        return configuration.getListAs("websocket.extensions", JsonNode::textValue).orElse(Collections.emptyList());
     }
 }

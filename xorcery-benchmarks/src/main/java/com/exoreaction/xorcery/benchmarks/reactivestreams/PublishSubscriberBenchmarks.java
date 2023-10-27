@@ -45,6 +45,9 @@ public class PublishSubscriberBenchmarks {
             secrets.enabled: true
             keystores.enabled: true
             dns.client.enabled: true
+            
+            dns.client.hosts:
+                server.xorcery.test: "{{ instance.ip }}"
                         
             jetty.client.enabled: true
             jetty.client.ssl.enabled: true
@@ -63,7 +66,9 @@ public class PublishSubscriberBenchmarks {
     private static final String serverConfig = """
             instance.id: server
             jetty.server.enabled: true
-            jetty.server.ssl.enabled: true
+            jetty.server.http.enabled: true
+            jetty.server.http2.enabled: false
+            jetty.server.ssl.enabled: false
             jetty.server.ssl.port: 8443
             reactivestreams.server.enabled: true
             """;
@@ -112,8 +117,9 @@ public class PublishSubscriberBenchmarks {
         clientPublisher = new ClientPublisher();
 
         ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
-        stream = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "serversubscriber",
-                Configuration::empty, clientPublisher, (Class<? extends Publisher<?>>) clientPublisher.getClass(), ClientConfiguration.defaults());
+        ClientConfiguration clientConfiguration = new ClientConfiguration.Builder().extensions("permessage-deflate").build();
+        stream = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(serverConf).getURI(), "serversubscriber",
+                Configuration::empty, clientPublisher, (Class<? extends Publisher<?>>) clientPublisher.getClass(), clientConfiguration);
 
         logger.info("Setup done");
     }

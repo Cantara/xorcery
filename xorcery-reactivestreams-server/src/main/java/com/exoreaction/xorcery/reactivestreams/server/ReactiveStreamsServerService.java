@@ -146,7 +146,8 @@ public class ReactiveStreamsServerService
                                 objectMapper,
                                 byteBufferPool,
                                 loggerContext.getLogger(PublisherSubscriptionReactiveStream.class),
-                                activePublisherSubscriptions) :
+                                activePublisherSubscriptions,
+                                metricRegistry) :
                         new PublisherWithResultSubscriptionReactiveStream(
                                 streamName,
                                 wrappedPublisherFactory,
@@ -155,7 +156,8 @@ public class ReactiveStreamsServerService
                                 objectMapper,
                                 byteBufferPool,
                                 loggerContext.getLogger(PublisherWithResultSubscriptionReactiveStream.class),
-                                activePublisherSubscriptions));
+                                activePublisherSubscriptions,
+                                metricRegistry));
         publisherLocalFactories.put(streamName, new WrappedPublisherFactory(wrappedPublisherFactory, publisherType));
         result.whenComplete((r, t) ->
         {

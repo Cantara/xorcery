@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.reactivestreams.server;
 
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
@@ -49,8 +50,9 @@ public class PublisherWithResultSubscriptionReactiveStream
                                                          ObjectMapper objectMapper,
                                                          ByteBufferPool pool,
                                                          Logger logger,
-                                                         ActiveSubscriptions activeSubscriptions) {
-        super(streamName, publisherFactory, messageWriter, objectMapper, pool, logger, activeSubscriptions);
+                                                         ActiveSubscriptions activeSubscriptions,
+                                                         MetricRegistry metricRegistry) {
+        super(streamName, publisherFactory, messageWriter, objectMapper, pool, logger, activeSubscriptions, metricRegistry);
         this.resultReader = resultReader;
     }
 

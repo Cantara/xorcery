@@ -36,6 +36,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.WriteCallback;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -187,7 +188,9 @@ public class PublishReactiveStream
             URI effectiveSubscriberWebsocketUri = URI.create(subscriberWebsocketUri.getScheme() + "://" + subscriberWebsocketUri.getAuthority() + "/streams/subscribers/" + streamName);
             logger.debug(marker, "Trying " + effectiveSubscriberWebsocketUri);
             try {
-                webSocketClient.connect(this, effectiveSubscriberWebsocketUri)
+                ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
+                publisherConfiguration.getExtensions().forEach(clientUpgradeRequest::addExtensions);
+                webSocketClient.connect(this, effectiveSubscriberWebsocketUri, clientUpgradeRequest)
                         .thenAccept(this::connected)
                         .exceptionally(this::connectException);
             } catch (Throwable e) {

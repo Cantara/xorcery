@@ -34,6 +34,7 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -176,7 +177,9 @@ public class SubscribeReactiveStream
             URI effectivePublisherWebsocketUri = URI.create(publisherWebsocketUri.getScheme() + "://" + publisherWebsocketUri.getAuthority() + "/streams/publishers/" + streamName);
             logger.debug(marker, "Trying " + effectivePublisherWebsocketUri);
             try {
-                webSocketClient.connect(this, effectivePublisherWebsocketUri)
+                ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
+                clientUpgradeRequest.addExtensions("permessage-deflate");
+                webSocketClient.connect(this, effectivePublisherWebsocketUri, clientUpgradeRequest)
                         .thenAccept(this::connected)
                         .exceptionally(this::connectException);
             } catch (Throwable e) {

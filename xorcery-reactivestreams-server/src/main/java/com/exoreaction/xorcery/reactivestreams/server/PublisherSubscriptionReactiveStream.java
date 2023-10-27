@@ -15,6 +15,9 @@
  */
 package com.exoreaction.xorcery.reactivestreams.server;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
@@ -29,6 +32,7 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
+import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.reactivestreams.Publisher;
@@ -40,11 +44,12 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.util.ArrayDeque;
-import java.util.Base64;
-import java.util.Deque;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 /**
@@ -64,9 +69,11 @@ public class PublisherSubscriptionReactiveStream
     private final Function<Configuration, Publisher<Object>> publisherFactory;
     private Configuration publisherConfiguration;
     protected Subscription subscription;
-    private boolean isComplete = false;
 
-    private final Deque<Object> queue = new ArrayDeque<>();
+    private AtomicBoolean isComplete = new AtomicBoolean();
+    private final BlockingArrayQueue<Object> sendQueue = new BlockingArrayQueue<>(4096);
+    private AtomicBoolean isDraining = new AtomicBoolean();
+    private Lock drainLock = new ReentrantLock();
     private final ByteBufferOutputStream2 outputStream;
 
     protected final MessageWriter<Object> messageWriter;
@@ -80,13 +87,19 @@ public class PublisherSubscriptionReactiveStream
     private long outstandingRequestAmount;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
+    private final Meter sent;
+    private final Meter sentBytes;
+    private final Histogram requestsHistogram;
+    private final Histogram flushHistogram;
+
     public PublisherSubscriptionReactiveStream(String streamName,
                                                Function<Configuration, Publisher<Object>> publisherFactory,
                                                MessageWriter<Object> messageWriter,
                                                ObjectMapper objectMapper,
                                                ByteBufferPool pool,
                                                Logger logger,
-                                               ActiveSubscriptions activeSubscriptions) {
+                                               ActiveSubscriptions activeSubscriptions,
+                                               MetricRegistry metricRegistry) {
         this.streamName = streamName;
         this.publisherFactory = publisherFactory;
         this.messageWriter = messageWriter;
@@ -97,6 +110,11 @@ public class PublisherSubscriptionReactiveStream
         outputStream = new ByteBufferOutputStream2(pool, true);
         this.logger = logger;
         this.activeSubscriptions = activeSubscriptions;
+
+        this.sent = metricRegistry.meter("publisher." + streamName + ".sent");
+        this.sentBytes = metricRegistry.meter("publisher." + streamName + ".sent.bytes");
+        this.requestsHistogram = metricRegistry.histogram("publisher." + streamName + ".requests");
+        this.flushHistogram = metricRegistry.histogram("publisher." + streamName + ".flush.size");
     }
 
     // Subscriber
@@ -115,14 +133,13 @@ public class PublisherSubscriptionReactiveStream
     }
 
     @Override
-    public synchronized void onNext(Object item) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onNext {}", item.toString());
+    public void onNext(Object item) {
+//        if (logger.isTraceEnabled())
+//            logger.trace(marker, "onNext {}", item.toString());
 
-        if (session.isOpen() && activeSubscription.requested().get() > 0) {
-            send(item);
-        } else {
-            queue.add(item);
+        sendQueue.offer(item);
+        if (!isDraining.get()) {
+            drainQueue();
         }
         activeSubscription.requested().decrementAndGet();
     }
@@ -172,26 +189,10 @@ public class PublisherSubscriptionReactiveStream
                 if (logger.isDebugEnabled())
                     logger.debug(marker, "Received request:" + requestAmount);
 
-                synchronized (this) {
-
-                    Object item;
-                    while (requestAmount > 0 && (item = queue.poll()) != null && session.isOpen()) {
-                        send(item);
-                        requestAmount--;
-                    }
-
-                    if (isComplete) {
-                        if (queue.isEmpty() && requestAmount == 0) {
-                            // We're done
-                            session.close(StatusCode.NORMAL, "complete");
-                        }
-                        return;
-                    }
-                }
-
                 if (requestAmount > 0) {
                     activeSubscription.requested().addAndGet(requestAmount);
                     subscription.request(requestAmount);
+                    requestsHistogram.update(requestAmount);
                 }
             }
         } else {
@@ -237,48 +238,69 @@ public class PublisherSubscriptionReactiveStream
         }
     }
 
-    protected void send(Object item) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "send {}", item.getClass().toString());
+    private void drainQueue() {
+        isDraining.set(true);
+        CompletableFuture.runAsync(this::drainJob);
+    }
 
-        // Write event data
+    private void drainJob() {
+        drainLock.lock();
         try {
-            writeItem(messageWriter, item, outputStream);
-
-            // Send it
-            ByteBuffer eventBuffer = outputStream.takeByteBuffer();
-
-            boolean shouldFlush = queue.isEmpty();
-            session.getRemote().sendBytes(eventBuffer, new WriteCallback() {
-                @Override
-                public void writeFailed(Throwable x) {
-                    logger.error(marker, "Could not send event", x);
-                    session.close(StatusCode.SERVER_ERROR, x.getMessage());
+            logger.trace(marker, "Start drain");
+            List<Object> items = new ArrayList<>(4096);
+            int count;
+            int itemsSent = 0;
+            while ((count = sendQueue.drainTo(items)) > 0) {
+                for (Object item : items) {
+                    send(item);
                 }
+                itemsSent += count;
 
-                @Override
-                public void writeSuccess() {
-                    activeSubscription.received().incrementAndGet();
-                    CompletableFuture.runAsync(() ->
-                    {
-                        if (shouldFlush) {
-                            if (logger.isTraceEnabled())
-                                logger.trace(marker, "flush");
-                            try {
-                                session.getRemote().flush();
-                            } catch (IOException e) {
-                                logger.error(marker, "Could not flush events", e);
-                                session.close(StatusCode.SERVER_ERROR, e.getMessage());
-                            }
-                        }
-                    });
+                if (itemsSent > 1024) {
+                    if (logger.isTraceEnabled())
+                        logger.trace(marker, "flush {}", itemsSent);
+                    session.getRemote().flush();
+                    flushHistogram.update(itemsSent);
+                    itemsSent = 0;
                 }
-            });
+                activeSubscription.received().addAndGet(count);
+                items.clear();
+            }
 
+            if (itemsSent > 0) {
+                if (logger.isTraceEnabled())
+                    logger.trace(marker, "flush {}", itemsSent);
+                session.getRemote().flush();
+                flushHistogram.update(itemsSent);
+            }
+
+            isDraining.set(false);
         } catch (Throwable t) {
             logger.error(marker, "Could not send event", t);
-            session.close(StatusCode.SERVER_ERROR, t.getMessage());
+            if (session.isOpen()) {
+                session.close(StatusCode.SERVER_ERROR, t.getMessage());
+            }
+        } finally {
+            logger.trace(marker, "Stop drain");
+
+            if (isComplete.get() && session.isOpen()) {
+                session.close(StatusCode.NORMAL, "complete");
+            }
+            drainLock.unlock();
         }
+    }
+
+    protected void send(Object item) throws IOException {
+//        if (logger.isTraceEnabled())
+//            logger.trace(marker, "send {}", item.getClass().toString());
+
+        // Write event data
+        writeItem(messageWriter, item, outputStream);
+        ByteBuffer eventBuffer = outputStream.takeByteBuffer();
+        sent.mark();
+        sentBytes.mark(eventBuffer.limit());
+        session.getRemote().sendBytes(eventBuffer);
+        pool.release(eventBuffer);
     }
 
     protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
@@ -308,17 +330,17 @@ public class PublisherSubscriptionReactiveStream
         }
     }
 
-    public synchronized void onComplete() {
+    public void onComplete() {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onComplete");
 
-        if (queue.isEmpty()) {
+        if (!isDraining.get()) {
             if (session.isOpen()) {
                 session.close(StatusCode.NORMAL, "complete");
             }
         } else {
             // Wait for requests to drain the remaining items
-            isComplete = true;
+            isComplete.set(true);
         }
     }
 }

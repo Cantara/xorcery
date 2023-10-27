@@ -16,10 +16,12 @@
 package com.exoreaction.xorcery.reactivestreams.server;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import org.eclipse.jetty.websocket.api.ExtensionConfig;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServlet;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServletFactory;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -45,6 +47,8 @@ public class PublishersReactiveStreamsServlet
         factory.setIdleTimeout(configuration.getIdleTimeout());
 
         factory.setCreator((jettyServerUpgradeRequest, jettyServerUpgradeResponse) ->
-                publisherWebSocketEndpointFactory.apply(jettyServerUpgradeRequest.getRequestPath().substring( "/streams/publishers/".length())));
+                {
+                    return publisherWebSocketEndpointFactory.apply(jettyServerUpgradeRequest.getRequestPath().substring( "/streams/publishers/".length()));
+                });
     }
 }
