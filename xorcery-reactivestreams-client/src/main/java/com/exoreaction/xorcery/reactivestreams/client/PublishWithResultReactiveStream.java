@@ -27,6 +27,7 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -78,9 +79,7 @@ public class PublishWithResultReactiveStream
         );
         this.resultReader = resultReader;
         this.received = metricRegistry.meter("publish." + streamName + ".received");
-
     }
-
 
     @Override
     public void retry(Throwable cause) {
@@ -89,20 +88,21 @@ public class PublishWithResultReactiveStream
         super.retry(cause);
     }
 
-    @Override
     protected void checkDone() {
-        if (isComplete && resultQueue.isEmpty() && !result.isDone()) {
-            if (session != null) {
+        if (isComplete.get() && resultQueue.isEmpty()) {
+            if (session != null && session.isOpen()) {
                 logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
                 session.close(StatusCode.NORMAL, "complete");
-            }
-            result.complete(null);
-        }
 
+                if (!result.isDone())
+                    result.complete(null);
+            }
+        }
     }
 
+
     @Override
-    public synchronized void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public void onWebSocketBinary(byte[] payload, int offset, int len) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketBinary");
         }
@@ -133,7 +133,7 @@ public class PublishWithResultReactiveStream
     }
 
     @Override
-    protected void writeEvent(Object item) throws IOException {
+    protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
         WithResult<?, Object> withResult = (WithResult<?, Object>) item;
         CompletableFuture<Object> result = withResult.result().toCompletableFuture();
         resultQueue.add(result);

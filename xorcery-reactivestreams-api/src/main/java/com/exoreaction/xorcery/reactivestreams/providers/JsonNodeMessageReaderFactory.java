@@ -18,6 +18,8 @@ package com.exoreaction.xorcery.reactivestreams.providers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +27,11 @@ import java.lang.reflect.Type;
 
 public class JsonNodeMessageReaderFactory
         implements MessageReader.Factory {
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectReader objectReader;
+
+    public JsonNodeMessageReaderFactory() {
+        this.objectReader = new JsonMapper().reader();
+    }
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
@@ -41,7 +47,7 @@ public class JsonNodeMessageReaderFactory
         @Override
         public JsonNode readFrom(InputStream entityStream) throws IOException {
             try {
-                return objectMapper.readTree(entityStream);
+                return objectReader.readTree(entityStream);
             } catch (Throwable e) {
                 throw new IOException(e);
             }

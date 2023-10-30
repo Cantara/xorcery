@@ -76,8 +76,7 @@ public class SubscriberWithResultSubscriptionReactiveStream
 
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
-            received.mark();
-            receivedBytes.mark(byteBuffer.position());
+            receivedBytes.update(byteBuffer.position());
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
             CompletableFuture<Object> resultFuture = new CompletableFuture<>();

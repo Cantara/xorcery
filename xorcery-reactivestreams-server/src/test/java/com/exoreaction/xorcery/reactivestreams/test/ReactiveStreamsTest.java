@@ -259,7 +259,7 @@ public class ReactiveStreamsTest {
                             byte[][] allReceivedNumbersArray = allReceivedNumbers.toArray(new byte[0][0]);
                             byte[][] expectedArray = FibonacciSequence.binarySequenceOf(numbersInFibonacciSequence).toArray(new byte[0][0]);
                             if (!Arrays.deepEquals(expectedArray, allReceivedNumbersArray)) {
-                                throw new RuntimeException("Bad list!");
+                                throw new RuntimeException(String.format("Bad list, expected:{}, actual:{}", expectedArray, allReceivedNumbersArray));
                             }
                         });
                 subscriberCompleteArray[i] = future;

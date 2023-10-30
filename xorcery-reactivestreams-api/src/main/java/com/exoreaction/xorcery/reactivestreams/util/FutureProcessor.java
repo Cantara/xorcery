@@ -43,7 +43,7 @@ public class FutureProcessor<T>
 
     // Publisher
     @Override
-    public synchronized void subscribe(Subscriber<? super T> subscriber) {
+    public void subscribe(Subscriber<? super T> subscriber) {
         this.subscriber = subscriber;
         if (subscription != null)
             subscriber.onSubscribe(this);
@@ -59,7 +59,7 @@ public class FutureProcessor<T>
 
     // Subscriber
     @Override
-    public synchronized void onSubscribe(Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         this.subscription = subscription;
         if (result.isDone()) {
             subscription.cancel();
@@ -68,12 +68,12 @@ public class FutureProcessor<T>
     }
 
     @Override
-    public synchronized void onNext(T item) {
+    public void onNext(T item) {
         subscriber.onNext(item);
     }
 
     @Override
-    public synchronized void onError(Throwable throwable) {
+    public void onError(Throwable throwable) {
         if (subscriber != null)
         {
             subscription = null;
@@ -84,7 +84,7 @@ public class FutureProcessor<T>
     }
 
     @Override
-    public synchronized void onComplete() {
+    public void onComplete() {
         if (subscriber != null)
         {
             subscription = null;
@@ -116,7 +116,7 @@ public class FutureProcessor<T>
 
     // Closeable
     @Override
-    public synchronized void close() {
+    public void close() {
         if (subscriber != null)
         {
             Subscriber<? super T> sub = subscriber;

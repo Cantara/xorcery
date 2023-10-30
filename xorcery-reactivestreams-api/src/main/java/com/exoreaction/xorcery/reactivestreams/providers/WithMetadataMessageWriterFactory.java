@@ -21,6 +21,7 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,12 +33,14 @@ public class WithMetadataMessageWriterFactory
         implements MessageWriter.Factory {
 
     private final ObjectMapper objectMapper;
+    private final ObjectWriter objectWriter;
     private Supplier<MessageWorkers> messageWorkers;
 
     public WithMetadataMessageWriterFactory(Supplier<MessageWorkers> messageWorkers) {
         objectMapper = new ObjectMapper();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectWriter = objectMapper.writer();
         this.messageWorkers = messageWorkers;
     }
 
@@ -65,7 +68,7 @@ public class WithMetadataMessageWriterFactory
 
         @Override
         public void writeTo(WithMetadata<T> instance, OutputStream entityStream) throws IOException {
-            objectMapper.writeValue(entityStream, instance.metadata().metadata());
+            objectWriter.writeValue(entityStream, instance.metadata().metadata());
             eventWriter.writeTo(instance.event(), entityStream);
         }
     }

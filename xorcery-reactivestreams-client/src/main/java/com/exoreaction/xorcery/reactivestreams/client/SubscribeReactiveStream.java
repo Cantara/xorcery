@@ -52,7 +52,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
@@ -66,37 +69,46 @@ public class SubscribeReactiveStream
     private final String streamName;
 
     private ClientConfiguration subscriberConfiguration;
+    private Iterator<URI> uriIterator;
     private long retryDelay;
-
     private final DnsLookup dnsLookup;
     private final WebSocketClient webSocketClient;
+    private final Supplier<Configuration> publisherConfiguration;
+
     protected final Subscriber<Object> subscriber;
     protected final MessageReader<Object> eventReader;
-    private final Supplier<Configuration> publisherConfiguration;
+
     protected final ByteBufferPool byteBufferPool;
-    protected final Logger logger;
-    private final ActiveSubscriptions activeSubscriptions;
-    protected final CompletableFuture<Void> result;
+    protected final ByteBufferAccumulator byteBufferAccumulator;
+    private final AtomicBoolean isFirstBinary = new AtomicBoolean();
 
     protected final Marker marker;
-    protected final ByteBufferAccumulator byteBufferAccumulator;
-    private final AtomicLong requests = new AtomicLong();
-    private final AtomicLong outstandingRequests = new AtomicLong();
-    private long sendRequestsThreshold = 0;
-    private String exceptionPayload = "";
+    protected final Logger logger;
+    protected final CompletableFuture<Void> result;
 
-    private Iterator<URI> uriIterator;
     protected Session session;
 
-    protected final Meter received;
-    protected final Meter receivedBytes;
+    private final AtomicBoolean isCancelled = new AtomicBoolean(); // true if cancel() has been called or the result has been completed
+    protected final AtomicBoolean isComplete = new AtomicBoolean(); // true if onComplete or onError has been called
+    protected final AtomicBoolean isRetrying = new AtomicBoolean(); // true if we're in the process of retrying/reconnecting
+
+    private long firstRequest;
+    private long sendRequestsThreshold = 0;
+    private final AtomicLong requests = new AtomicLong();
+    private final AtomicLong outstandingRequests = new AtomicLong();
+
+    private final AtomicBoolean isSendingRequests = new AtomicBoolean();
+    private final Lock sendLock = new ReentrantLock();
+    private final SendWriteCallback sendWriteCallback = new SendWriteCallback();
+
+    private String exceptionPayload = "";
+
+    private final ActiveSubscriptions activeSubscriptions;
+    private ActiveSubscriptions.ActiveSubscription activeSubscription;
+
+    protected final Histogram receivedBytes;
     protected final Histogram requestsHistogram;
 
-    protected boolean isComplete; // true if onComplete or onError has been called
-    protected boolean isRetrying; // true if we're in the process of retrying/reconnecting
-    protected boolean isCancelled; // true if cancel() has been called or the result has been completed
-    private ActiveSubscriptions.ActiveSubscription activeSubscription;
-    private long firstRequest;
 
     public SubscribeReactiveStream(URI serverUri,
                                    String streamName,
@@ -114,32 +126,29 @@ public class SubscribeReactiveStream
         this.serverUri = serverUri;
         this.streamName = streamName;
         this.subscriberConfiguration = subscriberConfiguration;
+        this.eventReader = eventReader;
         this.retryDelay = Duration.parse("PT" + subscriberConfiguration.getRetryDelay()).toMillis();
         this.dnsLookup = dnsLookup;
         this.webSocketClient = webSocketClient;
         this.subscriber = subscriber;
-        this.eventReader = eventReader;
         this.publisherConfiguration = publisherConfiguration;
+
         this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
         this.byteBufferPool = pool;
+        this.marker = MarkerManager.getMarker(this.serverUri.getAuthority() + "/" + streamName);
         this.logger = logger;
         this.activeSubscriptions = activeSubscriptions;
 
-        this.received = metricRegistry.meter("subscribe." + streamName + ".received");
-        this.receivedBytes = metricRegistry.meter("subscribe." + streamName + ".received.bytes");
+        this.receivedBytes = metricRegistry.histogram("subscribe." + streamName + ".received.bytes");
         this.requestsHistogram = metricRegistry.histogram("subscribe." + streamName + ".requests");
 
         this.result = result;
-
-        this.marker = MarkerManager.getMarker(this.serverUri.getAuthority() + "/" + streamName);
-
-        subscriber.onSubscribe(this);
 
         start();
     }
 
     // Connection process
-    public synchronized void start() {
+    public void start() {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "start");
         }
@@ -165,7 +174,7 @@ public class SubscribeReactiveStream
         }
     }
 
-    private synchronized void connect(Iterator<URI> publisherURIs) {
+    private void connect(Iterator<URI> publisherURIs) {
 
         if (publisherURIs.hasNext()) {
             URI publisherWebsocketUri = publisherURIs.next();
@@ -196,7 +205,6 @@ public class SubscribeReactiveStream
             logger.trace(marker, "connected");
         }
         this.session = session;
-        this.isRetrying = false;
     }
 
     private Void connectException(Throwable throwable) {
@@ -207,15 +215,15 @@ public class SubscribeReactiveStream
         return null;
     }
 
-    public synchronized void retry(Throwable cause) {
+    public void retry(Throwable cause) {
         if (subscriberConfiguration.isRetryEnabled()) {
 
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "retry");
             }
 
-            if (!isRetrying) {
-                isRetrying = true;
+            if (!isRetrying.get()) {
+                isRetrying.set(true);
             }
 
             if (uriIterator.hasNext()) {
@@ -224,7 +232,7 @@ public class SubscribeReactiveStream
                 if (cause instanceof ServerTimeoutStreamException) {
                     start();
                 } else {
-                    logger.debug(marker, String.format("Retrying in %ds", retryDelay/1000), cause);
+                    logger.debug(marker, String.format("Retrying in %ds", retryDelay / 1000), cause);
                     CompletableFuture.delayedExecutor(retryDelay, TimeUnit.MILLISECONDS).execute(this::start);
                     // Exponential backoff, gets reset on successful connect, max 60s delay
                     retryDelay = Math.min(retryDelay * 2, 60000);
@@ -232,14 +240,14 @@ public class SubscribeReactiveStream
             }
         } else {
             if (cause == null) {
-                if (!isComplete) {
-                    isComplete = true;
+                if (!isComplete.get()) {
+                    isComplete.set(true);
                     subscriber.onComplete();
                 }
                 result.cancel(true);
             } else {
-                if (!isComplete) {
-                    isComplete = true;
+                if (!isComplete.get()) {
+                    isComplete.set(true);
                     subscriber.onError(cause);
                 }
                 result.completeExceptionally(cause);
@@ -249,41 +257,31 @@ public class SubscribeReactiveStream
 
     // Subscription
     @Override
-    public synchronized void request(long n) {
+    public void request(long n) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "request {}", n);
         }
 
         requests.addAndGet(n);
-
-        if (session != null) {
-            if (isCancelled || isComplete) {
-                return;
-            }
-            if (session.isOpen())
-                CompletableFuture.runAsync(this::sendRequests);
+        if (!isSendingRequests.get())
+        {
+            CompletableFuture.runAsync(this::sendRequests);
         }
     }
 
     @Override
-    public synchronized void cancel() {
+    public void cancel() {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "cancel");
         }
 
-        if (session != null) {
-            synchronized (session) {
-                isCancelled = true;
-                requests.set(Long.MIN_VALUE);
-                if (session.isOpen())
-                    CompletableFuture.runAsync(this::sendRequests);
-            }
-        }
+        isCancelled.set(true);
+        sendRequests();
     }
 
     // Websocket
     @Override
-    public synchronized void onWebSocketConnect(Session session) {
+    public void onWebSocketConnect(Session session) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
         }
@@ -300,10 +298,15 @@ public class SubscribeReactiveStream
                 {
                     logger.debug(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
 
-                    long retryRequests = requests.get()+outstandingRequests.get();
-                    outstandingRequests.set(0);
-                    requests.set(0);
-                    request(retryRequests);
+                    if (isRetrying.get()) {
+                        isRetrying.set(false);
+                        long retryRequests = requests.get() + outstandingRequests.get();
+                        outstandingRequests.set(0);
+                        requests.set(0);
+                        request(retryRequests);
+                    } else {
+                        subscriber.onSubscribe(this);
+                    }
                 }).exceptionally(t ->
                 {
                     session.close(StatusCode.SERVER_ERROR, t.getMessage());
@@ -314,7 +317,7 @@ public class SubscribeReactiveStream
     }
 
     @Override
-    public synchronized void onWebSocketPartialText(String payload, boolean fin) {
+    public void onWebSocketPartialText(String payload, boolean fin) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketPartialText {} {}", payload, fin);
         }
@@ -330,8 +333,8 @@ public class SubscribeReactiveStream
                 throwable = e;
             }
 
-            if (!isComplete) {
-                isComplete = true;
+            if (!isComplete.get()) {
+                isComplete.set(true);
                 subscriber.onError(throwable);
             }
 
@@ -350,45 +353,56 @@ public class SubscribeReactiveStream
             logger.trace(marker, "onWebSocketPartialBinary {} {}", Charset.defaultCharset().decode(payload.asReadOnlyBuffer()).toString(), fin);
         }
 */
-
-        byteBufferAccumulator.copyBuffer(payload);
-        if (fin) {
-            onWebSocketBinary(byteBufferAccumulator.takeByteBuffer());
-            byteBufferAccumulator.close();
+        if (isFirstBinary.get()) {
+            if (fin) {
+                onWebSocketBinary(payload);
+            } else {
+                isFirstBinary.set(false);
+                byteBufferAccumulator.copyBuffer(payload);
+            }
+        } else {
+            if (fin)
+            {
+                byteBufferAccumulator.copyBuffer(payload);
+                onWebSocketBinary(byteBufferAccumulator.takeByteBuffer());
+                byteBufferAccumulator.close();
+                isFirstBinary.set(true);
+            } else
+            {
+                byteBufferAccumulator.copyBuffer(payload);
+            }
         }
     }
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
         try {
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()).toString());
+            }
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
-            received.mark();
-            receivedBytes.mark(byteBuffer.position());
-            byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
             subscriber.onNext(event);
+            receivedBytes.update(byteBuffer.position());
             activeSubscription.requested().decrementAndGet();
             activeSubscription.received().incrementAndGet();
             outstandingRequests.decrementAndGet();
         } catch (IOException e) {
             logger.error("Could not receive value", e);
 
-            synchronized (this)
-            {
-                if (!isComplete) {
-                    isComplete = true;
-                    subscriber.onError(e);
-                }
-
-                // These kinds of errors are not retryable, we're done
-                WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
-                session.close(StatusCode.NORMAL, "onError", callback);
-                callback.future().handle((v, t) -> result.completeExceptionally(e));
+            if (!isComplete.get()) {
+                isComplete.set(true);
+                subscriber.onError(e);
             }
+
+            // These kinds of errors are not retryable, we're done
+            WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
+            session.close(StatusCode.NORMAL, "onError", callback);
+            callback.future().handle((v, t) -> result.completeExceptionally(e));
         }
     }
 
     @Override
-    public synchronized void onWebSocketError(Throwable cause) {
+    public void onWebSocketError(Throwable cause) {
         cause = unwrap(cause);
 
         if (!(cause instanceof ClosedChannelException)) {
@@ -399,20 +413,19 @@ public class SubscribeReactiveStream
     }
 
     @Override
-    public synchronized void onWebSocketClose(int statusCode, String reason) {
+    public void onWebSocketClose(int statusCode, String reason) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
 
-        if (activeSubscription != null)
-        {
+        if (activeSubscription != null) {
             activeSubscriptions.removeSubscription(activeSubscription);
             activeSubscription = null;
         }
         if (statusCode == StatusCode.NORMAL) {
             try {
-                if (!isComplete) {
-                    isComplete = true;
+                if (!isComplete.get()) {
+                    isComplete.set(true);
                     subscriber.onComplete();
                 }
             } catch (Exception e) {
@@ -422,8 +435,8 @@ public class SubscribeReactiveStream
             result.complete(null); // Now considered done
         } else if (statusCode == StatusCode.BAD_PAYLOAD) {
             try {
-                if (!result.isCompletedExceptionally() && !isComplete) {
-                    isComplete = true;
+                if (!result.isCompletedExceptionally() && !isComplete.get()) {
+                    isComplete.set(true);
                     subscriber.onError(new ClientBadPayloadStreamException(reason));
                 }
             } catch (Exception e) {
@@ -446,55 +459,62 @@ public class SubscribeReactiveStream
     }
 
     // Send requests
-    public synchronized void sendRequests() {
+    protected void sendRequests() {
+        sendLock.lock();
+        isSendingRequests.set(true);
         try {
-            if (!session.isOpen()) {
-                logger.debug(marker, "Session closed, cannot send requests");
-                return;
-            }
-
-            final long rn = requests.get();
-            if (rn == 0) {
-                if (isCancelled) {
-                    logger.debug(marker, "Subscription cancelled");
-                }
-                return;
-            }
-            if (sendRequestsThreshold == 0) {
-                firstRequest = rn;
-                sendRequestsThreshold = Math.min(rn * 3 / 4, 4096);
-            } else {
-                if (rn < sendRequestsThreshold || rn+outstandingRequests.get() < firstRequest)
-                    return; // Wait until we have more requests lined up
-            }
-
-            requests.set(0);
-            outstandingRequests.addAndGet(rn);
-            activeSubscription.requested().addAndGet(rn);
-
-            logger.trace(marker, "Sending request: {}", rn);
-            requestsHistogram.update(rn);
-            session.getRemote().sendString(Long.toString(rn), new WriteCallback() {
-                @Override
-                public void writeFailed(Throwable x) {
-                    logger.error(marker, "Could not send requests {}", rn, x);
-                }
-
-                @Override
-                public void writeSuccess() {
-                    logger.trace(marker, "Successfully sent request {}", rn);
-                }
-            });
-
             try {
-                logger.trace(marker, "Flushing remote session...");
-                session.getRemote().flush();
-                logger.trace(marker, "Remote session flushed.");
-            } catch (IOException e) {
-                logger.error(marker, "While flushing remote session", e);
+                long rn;
+                if (isCancelled.get()) {
+                    rn = Long.MIN_VALUE;
+                } else {
+                    rn = requests.get();
+
+                    if (sendRequestsThreshold == 0) {
+                        firstRequest = rn;
+                        sendRequestsThreshold = Math.min((rn * 3) / 4, 2048);
+                    } else {
+                        if (rn < sendRequestsThreshold) {
+/*
+                            if (logger.isTraceEnabled())
+                                logger.trace(marker, "sendRequest not yet {}", rn);
+*/
+                            return; // Wait until we have more requests lined up
+                        }
+                    }
+
+                    requests.set(0);
+                    outstandingRequests.addAndGet(rn);
+                    activeSubscription.requested().addAndGet(rn);
+                    requestsHistogram.update(rn);
+                }
+
+                session.getRemote().sendString(Long.toString(rn), sendWriteCallback);
+                if (logger.isTraceEnabled())
+                    logger.trace(marker, "sendRequest {}", rn);
+
+            } catch (Throwable t) {
+                logger.error(marker, "Error sending requests", t);
+            } finally {
+                sendLock.unlock();
             }
-        } catch (Throwable t) {
-            logger.error(marker, "Error sending requests", t);
+        } finally {
+            isSendingRequests.set(false);
+            sendLock.unlock();
         }
     }
+
+    private class SendWriteCallback
+            implements WriteCallback {
+        @Override
+        public void writeFailed(Throwable x) {
+            logger.error(marker, "Could not send requests", x);
+        }
+
+        @Override
+        public void writeSuccess() {
+            // Do nothing
+        }
+    }
+
 }

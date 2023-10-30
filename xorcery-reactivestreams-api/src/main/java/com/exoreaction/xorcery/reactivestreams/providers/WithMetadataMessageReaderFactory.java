@@ -35,12 +35,14 @@ public class WithMetadataMessageReaderFactory
         implements MessageReader.Factory {
 
     private final ObjectMapper objectMapper;
+    private final JsonFactory jsonFactory;
     private Supplier<MessageWorkers> messageWorkers;
 
     public WithMetadataMessageReaderFactory(Supplier<MessageWorkers> messageWorkers) {
         objectMapper = new ObjectMapper();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        jsonFactory = new JsonFactory(objectMapper);
         this.messageWorkers = messageWorkers;
     }
 
@@ -70,16 +72,16 @@ public class WithMetadataMessageReaderFactory
         @Override
         public WithMetadata<T> readFrom(InputStream entityStream) throws IOException {
             entityStream.mark(entityStream.available());
-            JsonFactory jf = new JsonFactory(objectMapper);
-            JsonParser jp = jf.createParser(entityStream);
-            Metadata metadata = jp.readValueAs(Metadata.class);
-            long offset = jp.getCurrentLocation().getByteOffset();
+            try (JsonParser jp = jsonFactory.createParser(entityStream))
+            {
+                Metadata metadata = jp.readValueAs(Metadata.class);
+                long offset = jp.getCurrentLocation().getByteOffset();
 
-            entityStream.reset();
-            entityStream.skip(offset);
-
-            Object event = eventReader.readFrom(entityStream);
-            return (WithMetadata<T>) new WithMetadata<>(metadata, event);
+                entityStream.reset();
+                entityStream.skip(offset);
+                Object event = eventReader.readFrom(entityStream);
+                return (WithMetadata<T>) new WithMetadata<>(metadata, event);
+            }
         }
     }
 }

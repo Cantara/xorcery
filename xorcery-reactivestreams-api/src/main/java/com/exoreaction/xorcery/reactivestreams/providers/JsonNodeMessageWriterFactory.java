@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,11 +29,14 @@ import java.lang.reflect.Type;
 public class JsonNodeMessageWriterFactory
         implements MessageWriter.Factory {
     private ObjectMapper objectMapper;
+    private ObjectWriter objectWriter;
 
     public JsonNodeMessageWriterFactory() {
         objectMapper = new ObjectMapper();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//        objectWriter = objectMapper.writer().withDefaultPrettyPrinter();
+        objectWriter = objectMapper.writer();
     }
 
     @Override
@@ -47,7 +51,7 @@ public class JsonNodeMessageWriterFactory
             implements MessageWriter<JsonNode> {
         @Override
         public void writeTo(JsonNode instance, OutputStream out) throws IOException {
-            objectMapper.writer().withDefaultPrettyPrinter().writeValue(out, instance);
+            objectWriter.writeValue(out, instance);
         }
     }
 }

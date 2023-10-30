@@ -32,12 +32,11 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.eclipse.jetty.websocket.api.WriteCallback;
+import org.eclipse.jetty.util.BlockingArrayQueue;
+import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.glassfish.hk2.api.AOPProxyCtl;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -47,13 +46,13 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 /**
@@ -77,13 +76,6 @@ public class PublishReactiveStream
     protected final CompletableFuture<Void> result;
     protected final Marker marker;
 
-    protected final Meter sent;
-    protected final Meter sentBytes;
-    protected final Histogram sentBatchSize;
-    protected final Histogram requestsHistogram;
-    private final long maxBatchSize = 4096;
-    protected long batchSize;
-
     private boolean redundancyNotificationIssued = false;
 
     private final URI serverUri;
@@ -94,17 +86,22 @@ public class PublishReactiveStream
     protected Session session;
     private Iterator<URI> uriIterator;
     protected Subscription subscription;
-    private final Deque<Object> queue = new ArrayDeque<>();
-    protected final ByteBufferOutputStream2 outputStream;
-    private ByteBuffer eventBuffer;
-    private Object item;
 
-    protected boolean isSending = false;
-    protected boolean isComplete = false;
-    protected boolean isReconnecting = false;
-    protected boolean isRetrying = false;
+    private final BlockingArrayQueue<Object> sendQueue = new BlockingArrayQueue<>(4096, 1024);
+    private final AtomicBoolean isDraining = new AtomicBoolean();
+    private final Lock drainLock = new ReentrantLock();
+
+    protected final ByteBufferOutputStream2 outputStream;
+
+    protected AtomicBoolean isComplete = new AtomicBoolean();
+    protected AtomicBoolean isReconnecting = new AtomicBoolean();
+    protected AtomicBoolean isRetrying = new AtomicBoolean();
     private long retryDelay;
     private ActiveSubscription activeSubscription;
+
+    protected final Histogram sentBytes;
+    protected final Histogram requestsHistogram;
+    protected final Histogram flushHistogram;
 
     public PublishReactiveStream(URI serverUri,
                                  String streamName,
@@ -131,11 +128,11 @@ public class PublishReactiveStream
         this.result = result;
         this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
         this.marker = MarkerManager.getMarker(serverUri.getAuthority() + "/" + streamName);
-        this.sent = metricRegistry.meter("publish." + streamName + ".sent");
-        this.sentBytes = metricRegistry.meter("publish." + streamName + ".sent.bytes");
-        this.sentBatchSize = metricRegistry.histogram("publish." + streamName + ".sent.batchsize");
+        this.outputStream = new ByteBufferOutputStream2(pool, false);
+
+        this.sentBytes = metricRegistry.histogram("publish." + streamName + ".sent.bytes");
         this.requestsHistogram = metricRegistry.histogram("publish." + streamName + ".requests");
-        this.outputStream = new ByteBufferOutputStream2(pool, true);
+        this.flushHistogram = metricRegistry.histogram("publish." + streamName + ".flush.size");
 
         // Client completed
         result.whenComplete(this::resultComplete);
@@ -143,11 +140,8 @@ public class PublishReactiveStream
         start();
     }
 
-    private synchronized void resultComplete(Void result, Throwable throwable) {
-        if (!isComplete) {
-            isComplete = true;
-            send();
-        }
+    private void resultComplete(Void result, Throwable throwable) {
+        isComplete.set(true);
     }
 
     // Connection process
@@ -207,16 +201,15 @@ public class PublishReactiveStream
             logger.trace(marker, "connected");
         }
         this.session = session;
-        this.isReconnecting = false;
-        this.isRetrying = false;
+        this.isReconnecting.set(false);
+        this.isRetrying.set(false);
     }
 
-    private synchronized Void connectException(Throwable throwable) {
+    private Void connectException(Throwable throwable) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "connectException", throwable);
         }
-        this.isRetrying = false;
-
+        this.isRetrying.set(false);
         retry(throwable);
         return null;
     }
@@ -224,7 +217,7 @@ public class PublishReactiveStream
     // Subscriber
     // These calls come from the upstream client publisher
     @Override
-    public synchronized void onSubscribe(Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
         // Session is already synchronized by onWebsocketText
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onSubscribe");
@@ -233,21 +226,24 @@ public class PublishReactiveStream
     }
 
     @Override
-    public synchronized void onNext(Object item) {
+    public void onNext(Object item) {
         if (logger.isTraceEnabled()) {
 //            logger.trace(marker, "onNext {}", item.toString());
         }
-        if (isComplete)
-            return;
 
-        queue.offer(item);
+        if (!sendQueue.offer(item))
+        {
+            logger.error(marker, "Could not put item on queue {}/{}", sendQueue.getCapacity(), sendQueue.getMaxCapacity());
+        }
 
-        if (!isSending)
-            send();
+        if (!isDraining.get()) {
+            CompletableFuture.runAsync(this::drainJob);
+        }
+        activeSubscription.requested().decrementAndGet();
     }
 
     @Override
-    public synchronized void onError(Throwable throwable) {
+    public void onError(Throwable throwable) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onError", throwable);
         }
@@ -263,27 +259,28 @@ public class PublishReactiveStream
         }
     }
 
-    public synchronized void onComplete() {
+    public void onComplete() {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onComplete");
         }
 
-        isComplete = true;
-        if (!isSending)
-            send();
+        isComplete.set(true);
+        if (!isDraining.get()) {
+            CompletableFuture.runAsync(this::drainJob);
+        }
         logger.debug(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
     }
 
     // Whoever calls this should have a synchronized on the session, if available
-    public synchronized void retry(Throwable cause) {
+    public void retry(Throwable cause) {
 
-        if (isComplete) {
-            if (!result.isDone() && !isSending) {
+        if (isComplete.get()) {
+            if (!result.isDone() && !isDraining.get()) {
                 result.complete(null);
             }
         }
 
-        if (result.isDone() || isRetrying) {
+        if (result.isDone() || isRetrying.get()) {
             return;
         }
 
@@ -293,9 +290,9 @@ public class PublishReactiveStream
 
         if (publisherConfiguration.isRetryEnabled() && publisherConfiguration.isRetryable(cause)) {
 
-            if (!isReconnecting) {
+            if (!isReconnecting.get()) {
                 logger.debug(marker, "Reconnecting");
-                isReconnecting = true;
+                isReconnecting.set(true);
             }
 
             if (uriIterator.hasNext()) {
@@ -304,14 +301,14 @@ public class PublishReactiveStream
                 if (cause instanceof ServerShutdownStreamException) {
                     retryDelay = 0;
                 }
-                isRetrying = true;
-                logger.trace(marker, "Retrying in {}s", retryDelay/1000);
+                isRetrying.set(true);
+                logger.trace(marker, "Retrying in {}s", retryDelay / 1000);
                 CompletableFuture.delayedExecutor(retryDelay, TimeUnit.MILLISECONDS).execute(this::start);
                 // Exponential backoff, gets reset on successful connect, max 60s delay
                 retryDelay = Math.min(retryDelay * 2, 60000);
             }
         } else {
-            isComplete = true;
+            isComplete.set(true);
             if (subscription != null) {
                 subscription.cancel();
             }
@@ -325,18 +322,19 @@ public class PublishReactiveStream
 
     // WebSocket
     @Override
-    public synchronized void onWebSocketConnect(Session session) {
+    public void onWebSocketConnect(Session session) {
 
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
         }
 
-        if (isRetrying) {
+        if (isRetrying.get()) {
             logger.debug(marker, "Reconnected");
-            isRetrying = false;
+            isRetrying.set(false);
         }
 
         this.session = session;
+        session.getRemote().setBatchMode(BatchMode.ON);
         this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
 
         // First send parameters, if available
@@ -344,20 +342,19 @@ public class PublishReactiveStream
         activeSubscription = new ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), configuration);
         activeSubscriptions.addSubscription(activeSubscription);
         String parameterString = configuration.json().toPrettyString();
-        session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture(new CompletableFuture<>()
-                .thenAccept(Void ->
-                {
-                    logger.info(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
-                }).exceptionally(t ->
-                {
-                    session.close(StatusCode.SERVER_ERROR, t.getMessage());
-                    logger.error(marker, "Parameter handshake failed", t);
-                    return null;
-                })));
+
+        try {
+            session.getRemote().sendString(parameterString);
+            session.getRemote().flush();
+            logger.info(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
+        } catch (Throwable t) {
+            session.close(StatusCode.SERVER_ERROR, t.getMessage());
+            logger.error(marker, "Parameter handshake failed", t);
+        }
     }
 
     @Override
-    public synchronized void onWebSocketText(String message) {
+    public void onWebSocketText(String message) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketText {}", message);
         }
@@ -378,14 +375,11 @@ public class PublishReactiveStream
             requestsHistogram.update(requestAmount);
             activeSubscription.requested().addAndGet(requestAmount);
             subscription.request(requestAmount);
-
-            if (!isSending)
-                send();
         }
     }
 
     @Override
-    public synchronized void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public void onWebSocketBinary(byte[] payload, int offset, int len) {
 
         if (!redundancyNotificationIssued) {
             logger.warn(marker, "Receiving redundant results from subscriber");
@@ -394,20 +388,20 @@ public class PublishReactiveStream
     }
 
     @Override
-    public synchronized void onWebSocketError(Throwable cause) {
+    public void onWebSocketError(Throwable cause) {
 
         if (cause instanceof ClosedChannelException) {
             // Ignore
             return;
         }
 
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketError", cause);
+        if (logger.isDebugEnabled()) {
+            logger.debug(marker, "onWebSocketError", cause);
         }
     }
 
     @Override
-    public synchronized void onWebSocketClose(int statusCode, String reason) {
+    public void onWebSocketClose(int statusCode, String reason) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
@@ -423,110 +417,77 @@ public class PublishReactiveStream
         }
     }
 
-    protected void send() {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "send {}", isSending);
-        }
+    private void drainJob() {
+        drainLock.lock();
+        isDraining.set(true);
+        try {
+            logger.trace(marker, "Start drain");
+            int count;
+            int itemsSent = 0;
+            List<Object> items = new ArrayList<>(sendQueue.size());
+            while ((count = sendQueue.drainTo(items)) > 0) {
+                for (Object item : items) {
+                    send(item);
 
-        if (activeSubscription.requested().get() > 0 && session != null) {
-            item = queue.poll();
-            if (item == null) {
-                isSending = false;
-                checkDone();
-
-                return;
-            }
-
-            isSending = true;
-
-            try {
-                // Write event data
-                if (logger.isTraceEnabled()) {
-                    logger.trace(marker, "writeEvent {}", item);
+                    itemsSent++;
+                    if (itemsSent == 1024) {
+                        if (logger.isTraceEnabled())
+                            logger.trace(marker, "flush {}", itemsSent);
+                        session.getRemote().flush();
+                        flushHistogram.update(itemsSent);
+                        itemsSent = 0;
+                    }
                 }
-                writeEvent(item);
-
-                // Send it
-                eventBuffer = outputStream.takeByteBuffer();
-                session.getRemote().sendBytes(eventBuffer, this);
-
-            } catch (Throwable t) {
-                isSending = false;
-                logger.error(marker, "Could not send event", t);
-                connectException(t);
+                activeSubscription.received().addAndGet(count);
+                items.clear();
             }
-        } else {
-            isSending = false;
+
+            if (itemsSent > 0) {
+                if (logger.isTraceEnabled())
+                    logger.trace(marker, "flush {}", itemsSent);
+                session.getRemote().flush();
+                flushHistogram.update(itemsSent);
+            }
+
+        } catch (Throwable t) {
+            logger.error(marker, "Could not send event", t);
+            if (session.isOpen()) {
+                session.close(StatusCode.SERVER_ERROR, t.getMessage());
+            }
+        } finally {
+            logger.trace(marker, "Stop drain");
+
             checkDone();
+            isDraining.set(false);
+            drainLock.unlock();
         }
+    }
+
+    protected void send(Object item) throws IOException {
+//        if (logger.isTraceEnabled())
+//            logger.trace(marker, "send {}", item.getClass().toString());
+
+        // Write event data
+        writeItem(eventWriter, item, outputStream);
+        ByteBuffer eventBuffer = outputStream.takeByteBuffer();
+        sentBytes.update(eventBuffer.limit());
+        session.getRemote().sendBytes(eventBuffer);
+        pool.release(eventBuffer);
+    }
+
+    protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
+        messageWriter.writeTo(item, outputStream);
     }
 
     protected void checkDone() {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "checkDone {} {} {}", isComplete, queue.isEmpty(), result.isDone());
-        }
-
-        if (isComplete && queue.isEmpty()) {
+        if (isComplete.get()) {
             if (session != null && session.isOpen()) {
                 logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
                 session.close(StatusCode.NORMAL, "complete");
+
+                if (!result.isDone())
+                    result.complete(null);
             }
-            if (!result.isDone())
-                result.complete(null);
-        }
-    }
-
-    protected void writeEvent(Object item) throws IOException {
-        if (item == null)
-            throw new IOException("Item is null");
-        eventWriter.writeTo(item, outputStream);
-    }
-
-    @Override
-    public synchronized void writeFailed(Throwable t) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "writeFailed", t);
-        }
-
-        queue.push(item);
-        pool.release(eventBuffer);
-        retry(t);
-    }
-
-    @Override
-    public synchronized void writeSuccess() {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "writeSuccess");
-        }
-
-        sentBytes.mark(eventBuffer.position());
-        pool.release(eventBuffer);
-
-        activeSubscription.received().incrementAndGet();
-        long requested = activeSubscription.requested().decrementAndGet();
-        batchSize++;
-        if (requested == 0 || queue.isEmpty() || batchSize == maxBatchSize) {
-//                    logger.debug(marker, "doFlush {} {} {}", requested, queue.size(), batchSize);
-            CompletableFuture.runAsync(this::flush);
-        } else {
-            send();
-        }
-    }
-
-    protected synchronized void flush() {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "flush {}", batchSize);
-        }
-        try {
-            session.getRemote().flush();
-
-            sent.mark(batchSize);
-            sentBatchSize.update(batchSize);
-            batchSize = 0;
-            send();
-        } catch (IOException e) {
-            logger.error(marker, "Could not send event", e);
-            retry(e);
         }
     }
 }

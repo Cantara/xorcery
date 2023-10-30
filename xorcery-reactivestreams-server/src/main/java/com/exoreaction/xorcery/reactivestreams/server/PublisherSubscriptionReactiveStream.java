@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.reactivestreams.server;
 
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -62,6 +63,7 @@ public class PublisherSubscriptionReactiveStream
 
     protected final Logger logger;
     private final ActiveSubscriptions activeSubscriptions;
+    private final MetricRegistry metricRegistry;
 
     private final String streamName;
     protected volatile Session session;
@@ -71,9 +73,11 @@ public class PublisherSubscriptionReactiveStream
     protected Subscription subscription;
 
     private AtomicBoolean isComplete = new AtomicBoolean();
-    private final BlockingArrayQueue<Object> sendQueue = new BlockingArrayQueue<>(4096);
-    private AtomicBoolean isDraining = new AtomicBoolean();
-    private Lock drainLock = new ReentrantLock();
+
+    private final BlockingArrayQueue<Object> sendQueue = new BlockingArrayQueue<>(4096, 1024);
+    private final AtomicBoolean isDraining = new AtomicBoolean();
+    private final Lock drainLock = new ReentrantLock();
+
     private final ByteBufferOutputStream2 outputStream;
 
     protected final MessageWriter<Object> messageWriter;
@@ -87,8 +91,7 @@ public class PublisherSubscriptionReactiveStream
     private long outstandingRequestAmount;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
-    private final Meter sent;
-    private final Meter sentBytes;
+    private final Histogram sentBytes;
     private final Histogram requestsHistogram;
     private final Histogram flushHistogram;
 
@@ -107,19 +110,19 @@ public class PublisherSubscriptionReactiveStream
         this.pool = pool;
         marker = MarkerManager.getMarker(streamName);
 
-        outputStream = new ByteBufferOutputStream2(pool, true);
+        outputStream = new ByteBufferOutputStream2(pool, false);
         this.logger = logger;
         this.activeSubscriptions = activeSubscriptions;
+        this.metricRegistry = metricRegistry;
 
-        this.sent = metricRegistry.meter("publisher." + streamName + ".sent");
-        this.sentBytes = metricRegistry.meter("publisher." + streamName + ".sent.bytes");
+        this.sentBytes = metricRegistry.histogram("publisher." + streamName + ".sent.bytes");
         this.requestsHistogram = metricRegistry.histogram("publisher." + streamName + ".requests");
         this.flushHistogram = metricRegistry.histogram("publisher." + streamName + ".flush.size");
     }
 
     // Subscriber
     @Override
-    public synchronized void onSubscribe(Subscription subscription) {
+    public void onSubscribe(Subscription subscription) {
 
         if (logger.isTraceEnabled())
             logger.trace(marker, "onSubscribe");
@@ -137,177 +140,17 @@ public class PublisherSubscriptionReactiveStream
 //        if (logger.isTraceEnabled())
 //            logger.trace(marker, "onNext {}", item.toString());
 
-        sendQueue.offer(item);
+        if (!sendQueue.offer(item)) {
+            logger.error(marker, "Could not put item on queue {}/{}", sendQueue.getCapacity(), sendQueue.getMaxCapacity());
+        }
+
         if (!isDraining.get()) {
-            drainQueue();
+            CompletableFuture.runAsync(this::drainJob);
         }
         activeSubscription.requested().decrementAndGet();
     }
 
-    // WebSocket
-    @Override
-    public synchronized void onWebSocketConnect(Session session) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
-
-        this.session = session;
-        session.getRemote().setBatchMode(BatchMode.ON);
-    }
-
-    @Override
-    public void onWebSocketText(String message) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketText {}", message);
-
-        synchronized (this) {
-            if (publisherConfiguration == null) {
-                // Read JSON parameters
-                try {
-                    ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(message);
-                    publisherConfiguration = new Configuration.Builder(configurationJson)
-                            .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
-                            .build();
-                    Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
-                    publisher.subscribe(this);
-
-                    activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
-                    activeSubscriptions.addSubscription(activeSubscription);
-                    return;
-                } catch (JsonProcessingException e) {
-                    session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
-                }
-            }
-        }
-
-        long requestAmount = Long.parseLong(message);
-
-        if (subscription != null) {
-            if (requestAmount == Long.MIN_VALUE) {
-                logger.info(marker, "Received cancel on websocket " + streamName);
-                session.close(StatusCode.NORMAL, "cancelled");
-            } else {
-                if (logger.isDebugEnabled())
-                    logger.debug(marker, "Received request:" + requestAmount);
-
-                if (requestAmount > 0) {
-                    activeSubscription.requested().addAndGet(requestAmount);
-                    subscription.request(requestAmount);
-                    requestsHistogram.update(requestAmount);
-                }
-            }
-        } else {
-            outstandingRequestAmount += requestAmount;
-        }
-    }
-
-    @Override
-    public synchronized void onWebSocketBinary(byte[] payload, int offset, int len) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketBinary");
-
-        if (!redundancyNotificationIssued) {
-            logger.warn(marker, "Receiving redundant results from subscriber");
-            redundancyNotificationIssued = true;
-        }
-    }
-
-    @Override
-    public synchronized void onWebSocketClose(int statusCode, String reason) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
-
-        if (subscription != null) {
-            subscription.cancel();
-            subscription = null;
-            activeSubscriptions.removeSubscription(activeSubscription);
-        }
-    }
-
-    @Override
-    public synchronized void onWebSocketError(Throwable cause) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketError", cause);
-
-        if ((cause instanceof ClosedChannelException ||
-                cause instanceof WebSocketTimeoutException ||
-                cause instanceof EofException)
-                && subscription != null) {
-            // Ignore
-        } else {
-            logger.error(marker, "Publisher websocket error", cause);
-        }
-    }
-
-    private void drainQueue() {
-        isDraining.set(true);
-        CompletableFuture.runAsync(this::drainJob);
-    }
-
-    private void drainJob() {
-        drainLock.lock();
-        try {
-            logger.trace(marker, "Start drain");
-            List<Object> items = new ArrayList<>(4096);
-            int count;
-            int itemsSent = 0;
-            while ((count = sendQueue.drainTo(items)) > 0) {
-                for (Object item : items) {
-                    send(item);
-                }
-                itemsSent += count;
-
-                if (itemsSent > 1024) {
-                    if (logger.isTraceEnabled())
-                        logger.trace(marker, "flush {}", itemsSent);
-                    session.getRemote().flush();
-                    flushHistogram.update(itemsSent);
-                    itemsSent = 0;
-                }
-                activeSubscription.received().addAndGet(count);
-                items.clear();
-            }
-
-            if (itemsSent > 0) {
-                if (logger.isTraceEnabled())
-                    logger.trace(marker, "flush {}", itemsSent);
-                session.getRemote().flush();
-                flushHistogram.update(itemsSent);
-            }
-
-            isDraining.set(false);
-        } catch (Throwable t) {
-            logger.error(marker, "Could not send event", t);
-            if (session.isOpen()) {
-                session.close(StatusCode.SERVER_ERROR, t.getMessage());
-            }
-        } finally {
-            logger.trace(marker, "Stop drain");
-
-            if (isComplete.get() && session.isOpen()) {
-                session.close(StatusCode.NORMAL, "complete");
-            }
-            drainLock.unlock();
-        }
-    }
-
-    protected void send(Object item) throws IOException {
-//        if (logger.isTraceEnabled())
-//            logger.trace(marker, "send {}", item.getClass().toString());
-
-        // Write event data
-        writeItem(messageWriter, item, outputStream);
-        ByteBuffer eventBuffer = outputStream.takeByteBuffer();
-        sent.mark();
-        sentBytes.mark(eventBuffer.limit());
-        session.getRemote().sendBytes(eventBuffer);
-        pool.release(eventBuffer);
-    }
-
-    protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
-        messageWriter.writeTo(item, outputStream);
-    }
-
-    public synchronized void onError(Throwable throwable) {
+    public void onError(Throwable throwable) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onError", throwable);
 
@@ -334,13 +177,168 @@ public class PublisherSubscriptionReactiveStream
         if (logger.isTraceEnabled())
             logger.trace(marker, "onComplete");
 
+        isComplete.set(true);
         if (!isDraining.get()) {
-            if (session.isOpen()) {
-                session.close(StatusCode.NORMAL, "complete");
+            CompletableFuture.runAsync(this::drainJob);
+        }
+    }
+
+    // WebSocket
+    @Override
+    public void onWebSocketConnect(Session session) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+
+        this.session = session;
+        session.getRemote().setBatchMode(BatchMode.ON);
+    }
+
+    @Override
+    public void onWebSocketText(String message) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketText {}", message);
+
+        if (publisherConfiguration == null) {
+            // Read JSON parameters
+            try {
+                ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(message);
+                publisherConfiguration = new Configuration.Builder(configurationJson)
+                        .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
+                        .build();
+                Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
+                publisher.subscribe(this);
+
+                activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
+                activeSubscriptions.addSubscription(activeSubscription);
+                metricRegistry.gauge("publisher." + streamName + "." + session.getLocalAddress() + ".requests",
+                        () -> (Gauge<Long>) () -> activeSubscription.requested().get());
+                return;
+            } catch (JsonProcessingException e) {
+                session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+            }
+        }
+
+        long requestAmount = Long.parseLong(message);
+
+        if (subscription != null) {
+            if (requestAmount == Long.MIN_VALUE) {
+                logger.info(marker, "Received cancel on websocket " + streamName);
+                session.close(StatusCode.NORMAL, "cancelled");
+            } else {
+                if (logger.isTraceEnabled())
+                    logger.trace(marker, "Received request:" + requestAmount);
+
+                if (requestAmount > 0) {
+                    requestsHistogram.update(requestAmount);
+                    activeSubscription.requested().addAndGet(requestAmount);
+                    subscription.request(requestAmount);
+                }
             }
         } else {
-            // Wait for requests to drain the remaining items
-            isComplete.set(true);
+            outstandingRequestAmount += requestAmount;
         }
+    }
+
+    @Override
+    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketBinary");
+
+        if (!redundancyNotificationIssued) {
+            logger.warn(marker, "Receiving redundant results from subscriber");
+            redundancyNotificationIssued = true;
+        }
+    }
+
+    @Override
+    public void onWebSocketError(Throwable cause) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketError", cause);
+
+        if ((cause instanceof ClosedChannelException ||
+                cause instanceof WebSocketTimeoutException ||
+                cause instanceof EofException)
+                && subscription != null) {
+            // Ignore
+        } else {
+            logger.error(marker, "Publisher websocket error", cause);
+        }
+    }
+
+    @Override
+    public void onWebSocketClose(int statusCode, String reason) {
+        if (logger.isTraceEnabled())
+            logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
+
+        if (subscription != null) {
+            subscription.cancel();
+            subscription = null;
+            activeSubscriptions.removeSubscription(activeSubscription);
+            metricRegistry.remove("publisher." + streamName + "." + session.getLocalAddress() + ".requests");
+        }
+    }
+
+    private void drainJob() {
+        drainLock.lock();
+        isDraining.set(true);
+        try {
+            logger.trace(marker, "Start drain");
+            int count;
+            int itemsSent = 0;
+            List<Object> items = new ArrayList<>(sendQueue.size());
+            while ((count = sendQueue.drainTo(items)) > 0) {
+                for (Object item : items) {
+                    send(item);
+
+                    itemsSent++;
+                    if (itemsSent == 1024) {
+                        if (logger.isTraceEnabled())
+                            logger.trace(marker, "flush {}", itemsSent);
+                        session.getRemote().flush();
+                        flushHistogram.update(itemsSent);
+                        itemsSent = 0;
+                    }
+                }
+                activeSubscription.received().addAndGet(count);
+                items.clear();
+            }
+
+            if (itemsSent > 0) {
+                if (logger.isTraceEnabled())
+                    logger.trace(marker, "flush {}", itemsSent);
+                session.getRemote().flush();
+                flushHistogram.update(itemsSent);
+            }
+
+        } catch (Throwable t) {
+            logger.error(marker, "Could not send event", t);
+            if (session.isOpen()) {
+                session.close(StatusCode.SERVER_ERROR, t.getMessage());
+            }
+        } finally {
+            logger.trace(marker, "Stop drain");
+
+            if (isComplete.get() && session.isOpen()) {
+                session.close(StatusCode.NORMAL, "complete");
+            }
+            isDraining.set(false);
+            drainLock.unlock();
+        }
+    }
+
+    protected void send(Object item) throws IOException {
+//        if (logger.isTraceEnabled())
+//            logger.trace(marker, "send {}", item.getClass().toString());
+
+        // Write event data
+        writeItem(messageWriter, item, outputStream);
+        ByteBuffer eventBuffer = outputStream.takeByteBuffer();
+        sentBytes.update(eventBuffer.limit());
+        session.getRemote().sendBytes(eventBuffer);
+        pool.release(eventBuffer);
+    }
+
+    protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
+        messageWriter.writeTo(item, outputStream);
     }
 }
