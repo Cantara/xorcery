@@ -41,7 +41,7 @@ import java.util.concurrent.*;
 @Fork(value = 1, warmups = 1, jvmArgs = "-Dcom.sun.management.jmxremote=true")
 @Warmup(iterations = 1)
 @Measurement(iterations = 30)
-public class PublishSubscriberBenchmarks {
+public class SubscribePublisherBenchmarks {
 
     private static final String config = """
             secrets.enabled: true
@@ -76,13 +76,13 @@ public class PublishSubscriberBenchmarks {
             reactivestreams.server.enabled: true
             """;
 
-    private ClientPublisher clientPublisher;
+    private ServerPublisher serverPublisher;
     private CompletableFuture<Void> stream;
 
     public static void main(String[] args) throws Exception {
 
         new Runner(new OptionsBuilder()
-                .include(PublishSubscriberBenchmarks.class.getSimpleName() + ".*")
+                .include(SubscribePublisherBenchmarks.class.getSimpleName() + ".*")
                 .forks(0)
                 .jvmArgs("-Dcom.sun.management.jmxremote=true")
                 .build()).run();
@@ -101,14 +101,7 @@ public class PublishSubscriberBenchmarks {
             }
         });
 
-        Configuration serverConf = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(serverConfig).build();
-        System.out.println(serverConf);
-        server = new Xorcery(serverConf);
-        ReactiveStreamsServer reactiveStreams = server.getServiceLocator().getService(ReactiveStreamsServer.class);
-        Logger logger = LogManager.getLogger(getClass());
-
-        // Server subscriber
-        ServerSubscriber<WithMetadata<JsonNode>> serverSubscriber = new ServerSubscriber<>() {
+        ClientSubscriber<WithMetadata<JsonNode>> clientSubscriber = new ClientSubscriber<>() {
 
             int i = 0;
 
@@ -118,24 +111,29 @@ public class PublishSubscriberBenchmarks {
                 subscription.request(1);
             }
         };
+        serverPublisher = new ServerPublisher();
 
-        reactiveStreams.subscriber("serversubscriber", cfg -> serverSubscriber, (Class<? extends Subscriber<?>>) serverSubscriber.getClass());
+        Configuration serverConf = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(serverConfig).build();
+        System.out.println(serverConf);
+        server = new Xorcery(serverConf);
+        ReactiveStreamsServer reactiveStreams = server.getServiceLocator().getService(ReactiveStreamsServer.class);
+        Logger logger = LogManager.getLogger(getClass());
+        reactiveStreams.publisher("serverpublisher", cfg -> serverPublisher, serverPublisher.getClass());
 
-        // Client publisher
+        // Client subscriber
         Configuration configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(clientConfig).build();
         // Use the configuration as payload
 //        payload = configuration.json();
         payload = JsonNodeFactory.instance.textNode("foo");
 
         client = new Xorcery(configuration);
-        clientPublisher = new ClientPublisher();
 
         ReactiveStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ReactiveStreamsClient.class);
         ClientConfiguration clientConfiguration = new ClientConfiguration.Builder()
 //                .extensions("permessage-deflate")
                 .build();
-        stream = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(serverConf).getURI(), "serversubscriber",
-                Configuration::empty, clientPublisher, (Class<? extends Publisher<?>>) clientPublisher.getClass(), clientConfiguration);
+        stream = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(serverConf).getURI(), "serverpublisher",
+                Configuration::empty, clientSubscriber, (Class<? extends Subscriber<?>>) clientSubscriber.getClass(), clientConfiguration);
 
         logger.info("Setup done");
     }
@@ -143,7 +141,6 @@ public class PublishSubscriberBenchmarks {
     @TearDown
     public void teardown() throws Exception {
         stream.complete(null);
-//        clientPublisher.getDone().get();
         client.close();
         server.close();
         LogManager.getLogger().info("Teardown done");
@@ -154,12 +151,12 @@ public class PublishSubscriberBenchmarks {
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public void writes() throws ExecutionException, InterruptedException, TimeoutException {
-        clientPublisher.publish(new WithMetadata<>(new Metadata.Builder()
+        serverPublisher.publish(new WithMetadata<>(new Metadata.Builder()
                 .add("foo", "bar")
                 .build(), payload));
     }
 
-    public static abstract class ServerSubscriber<T>
+    public static abstract class ClientSubscriber<T>
             implements Subscriber<T> {
 
         protected Subscription subscription;
@@ -181,7 +178,7 @@ public class PublishSubscriberBenchmarks {
         }
     }
 
-    public static class ClientPublisher
+    public static class ServerPublisher
             implements Publisher<WithMetadata<JsonNode>> {
 
         private final CompletableFuture<Void> done = new CompletableFuture<>();
@@ -194,10 +191,6 @@ public class PublishSubscriberBenchmarks {
                 LogManager.getLogger().warn("Waiting for requests:" + semaphore.availablePermits());
             }
             subscriber.onNext(item);
-        }
-
-        public CompletableFuture<Void> getDone() {
-            return done;
         }
 
         @Override
