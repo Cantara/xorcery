@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
@@ -39,12 +40,14 @@ import java.lang.reflect.Type;
 public class JsonMessageBodyReader
         implements MessageBodyReader<Object> {
     private final ObjectMapper objectMapper;
+    private final ObjectReader reader;
 
     @Inject
     public JsonMessageBodyReader() {
         objectMapper = new ObjectMapper();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        reader = objectMapper.reader();
     }
 
     @Override
@@ -54,7 +57,6 @@ public class JsonMessageBodyReader
 
     @Override
     public Object readFrom(Class<Object> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
-
-        return objectMapper.readValue(entityStream, type);
+        return reader.readValue(entityStream, type);
     }
 }
