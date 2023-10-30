@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
@@ -53,9 +54,8 @@ public class Neo4jProjectionEventHandler
     private final Logger logger = LogManager.getLogger(getClass());
 
     private final GraphDatabaseService graphDatabaseService;
-    private int eventBatchSize;
-    private List<Neo4jEventProjection> projections;
-    private final Histogram batchSize;
+    private final int eventBatchSize;
+    private final List<Neo4jEventProjection> projections;
 
     private final Subscription subscription;
     private final Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher;
@@ -72,8 +72,11 @@ public class Neo4jProjectionEventHandler
     private long currentBatchSize;
     private int eventBatchCount;
     private boolean aborted; // Set to true if projection fails
+
     private final Meter revisionCounter;
     private final Meter eventCounter;
+    private final Histogram batchSize;
+    private final Histogram commitSize;
 
     public Neo4jProjectionEventHandler(GraphDatabaseService graphDatabaseService,
                                        Neo4jProjectionsConfiguration configuration,
@@ -93,6 +96,7 @@ public class Neo4jProjectionEventHandler
         revisionCounter = metrics.meter("neo4j.projections." + projectionId + ".revision");
         eventCounter = metrics.meter("neo4j.projections." + projectionId + ".events");
         batchSize = metrics.histogram("neo4j.projections." + projectionId + ".batchsize");
+        commitSize = metrics.histogram("neo4j.projections." + projectionId + ".commitsize");
 
         projectionModel.ifPresent(pm ->
         {
@@ -144,6 +148,7 @@ public class Neo4jProjectionEventHandler
 
         if (endOfBatch || eventBatchCount >= eventBatchSize) {
             try {
+
                 // Update Projection node with current revision
                 updateParameters.put("projection_version", version);
                 revision = ((Number) Optional.ofNullable(metadataMap.get("revision")).orElse(0L)).longValue();
@@ -154,31 +159,33 @@ public class Neo4jProjectionEventHandler
                         updateParameters);
 
                 tx.commit();
-                tx.close();
                 logger.trace("Updated projection " + projectionId + " to revision " + revision);
 
                 revisionCounter.mark(revision - previousRevision);
                 eventCounter.mark(eventBatchCount);
+                commitSize.update(eventBatchCount);
                 previousRevision = revision;
+
+                // Always send commit notification, even if no changes were made
+                projectionCommitPublisher.accept(new WithMetadata<>(new Neo4jMetadata.Builder(new Metadata.Builder())
+                        .timestamp(System.currentTimeMillis())
+                        .lastTimestamp(lastTimestamp)
+                        .build().context(), new ProjectionCommit(projectionId, version)));
             } catch (Throwable t) {
                 logger.error("Could not commit Neo4j updates", t);
-                tx.close();
 
                 if (t instanceof Exception e)
                     throw e;
                 else
                     throw new Exception(t);
+            } finally
+            {
+                tx.close();
             }
 
             logger.trace("Applied {} commands, {} events", currentBatchSize, eventBatchCount);
 
             eventBatchCount = 0;
-
-            // Always send commit notification, even if no changes were made
-            projectionCommitPublisher.accept(new WithMetadata<>(new Neo4jMetadata.Builder(new Metadata.Builder())
-                    .timestamp(System.currentTimeMillis())
-                    .lastTimestamp(lastTimestamp)
-                    .build().context(), new ProjectionCommit(projectionId, version)));
 
             tx = null;
 

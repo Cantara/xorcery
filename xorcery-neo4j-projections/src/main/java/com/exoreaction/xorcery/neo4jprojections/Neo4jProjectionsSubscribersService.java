@@ -21,6 +21,7 @@ import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
+import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
 import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionEventHandler;
 import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionSubscriber;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
@@ -56,6 +57,7 @@ public class Neo4jProjectionsSubscribersService {
                                               Configuration configuration,
                                               GraphDatabase graphDatabase,
                                               IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
+                                              IterableProvider<Neo4jEventProjectionPreProcessor> neo4jEventProjectionPreProcessors,
                                               MetricRegistry metricRegistry) {
         this.graphDatabase = graphDatabase;
         Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
@@ -88,6 +90,7 @@ public class Neo4jProjectionsSubscribersService {
                                         neo4jProjectionsService.getNeo4jProjectionCommitPublisher(),
                                         projectionList,
                                         metricRegistry),
+                                neo4jEventProjectionPreProcessors,
                                 new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))),
                         ProjectionSubscriber.class, ClientConfiguration.defaults());
             }

@@ -17,17 +17,22 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
+import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.ExceptionHandler;
+import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.EventHandlerGroup;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.LogManager;
+import org.glassfish.hk2.api.IterableProvider;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -36,9 +41,13 @@ public class ProjectionSubscriber
 
     private final Function<Subscription, Neo4jProjectionEventHandler> handlerFactory;
     private Disruptor<WithMetadata<ArrayNode>> disruptor;
+    private final IterableProvider<Neo4jEventProjectionPreProcessor> preProcessors;
     private final DisruptorConfiguration disruptorConfiguration;
 
-    public ProjectionSubscriber(Function<Subscription, Neo4jProjectionEventHandler> handlerFactory, DisruptorConfiguration disruptorConfiguration) {
+    public ProjectionSubscriber(Function<Subscription, Neo4jProjectionEventHandler> handlerFactory,
+                                IterableProvider<Neo4jEventProjectionPreProcessor> preProcessors,
+                                DisruptorConfiguration disruptorConfiguration) {
+        this.preProcessors = preProcessors;
         this.disruptorConfiguration = disruptorConfiguration;
         this.handlerFactory = handlerFactory;
     }
@@ -47,9 +56,24 @@ public class ProjectionSubscriber
     public void onSubscribe(Subscription subscription) {
         disruptor = new Disruptor<>(WithMetadata::new, disruptorConfiguration.getSize(), new NamedThreadFactory("Neo4jProjection-"),
                 ProducerType.SINGLE,
-                new BlockingWaitStrategy());
+                new SleepingWaitStrategy());
 
-        disruptor.handleEventsWith(handlerFactory.apply(subscription));
+        EventHandlerGroup<WithMetadata<ArrayNode>> eventHandlerGroup = null;
+        for (Neo4jEventProjectionPreProcessor preProcessor : preProcessors) {
+            eventHandlerGroup = (eventHandlerGroup == null) ?
+                    disruptor.handleEventsWith(new PreProcessorEventHandler(preProcessor)):
+                    eventHandlerGroup.handleEventsWith(new PreProcessorEventHandler(preProcessor));
+        }
+
+        Neo4jProjectionEventHandler neo4jProjectionEventHandler = handlerFactory.apply(subscription);
+        if (eventHandlerGroup == null)
+        {
+            disruptor.handleEventsWith(neo4jProjectionEventHandler);
+        } else
+        {
+            eventHandlerGroup.handleEventsWith(neo4jProjectionEventHandler);
+        }
+
         disruptor.setDefaultExceptionHandler(new ProjectionExceptionHandler(subscription));
         disruptor.start();
         subscription.request(disruptor.getBufferSize());
