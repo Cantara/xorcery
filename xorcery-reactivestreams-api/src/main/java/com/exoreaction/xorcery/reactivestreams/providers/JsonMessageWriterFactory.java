@@ -21,6 +21,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,32 +30,32 @@ import java.lang.reflect.Type;
 
 public class JsonMessageWriterFactory
         implements MessageWriter.Factory {
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper jsonMapper;
 
     public JsonMessageWriterFactory() {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        jsonMapper = new JsonMapper()
+                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (objectMapper.canSerialize(type)
+        if (jsonMapper.canSerialize(type)
                 && !JsonNode.class.isAssignableFrom(type)
-                && !WithMetadata.class.isAssignableFrom(type))
-        {
-            return (MessageWriter<T>) new MessageWriterImplementation();
-        } else
-        {
+                && !WithMetadata.class.isAssignableFrom(type)) {
+            return (MessageWriter<T>) new JsonMessageWriter();
+        } else {
             return null;
         }
     }
 
-    class MessageWriterImplementation
+    class JsonMessageWriter
             implements MessageWriter<Object> {
         @Override
         public void writeTo(Object instance, OutputStream out) throws IOException {
-            objectMapper.writer().withDefaultPrettyPrinter().writeValue(out, instance);
+            try (JsonGenerator generator = jsonMapper.createGenerator(out)) {
+                generator.writeObject(instance);
+            }
         }
     }
 }

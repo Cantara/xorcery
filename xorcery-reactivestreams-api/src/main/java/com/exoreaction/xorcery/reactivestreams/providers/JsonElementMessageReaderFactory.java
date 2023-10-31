@@ -17,8 +17,14 @@ package com.exoreaction.xorcery.reactivestreams.providers;
 
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,29 +32,45 @@ import java.lang.reflect.Type;
 
 public class JsonElementMessageReaderFactory
         implements MessageReader.Factory {
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper jsonMapper;
+
+    public JsonElementMessageReaderFactory() {
+        jsonMapper = new ObjectMapper()
+                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
         if (JsonElement.class.isAssignableFrom(type))
-            return (MessageReader<T>) new MessageWriterImplementation((Class<JsonElement>) type);
+            return (MessageReader<T>) new JsonElementMessageReader((Class<JsonElement>) type);
         else
             return null;
     }
 
-    class MessageWriterImplementation
+    class JsonElementMessageReader
             implements MessageReader<JsonElement> {
 
         private Class<JsonElement> type;
 
-        public MessageWriterImplementation(Class<JsonElement> type) {
+        public JsonElementMessageReader(Class<JsonElement> type) {
             this.type = type;
+        }
+
+        public JsonElement readFrom(byte[] bytes, int offset, int len)
+                throws IOException {
+            try (JsonParser jp = jsonMapper.createParser(bytes, offset, len)) {
+                JsonNode json = jp.readValueAsTree();
+                return type.getConstructor(json.getClass()).newInstance(json);
+            } catch (Throwable e) {
+                throw new IOException(e);
+            }
         }
 
         @Override
         public JsonElement readFrom(InputStream entityStream) throws IOException {
-            try {
-                JsonNode json = objectMapper.readTree(entityStream);
+            try (JsonParser jp = jsonMapper.createParser(entityStream)) {
+                JsonNode json = jp.readValueAsTree();
                 return type.getConstructor(json.getClass()).newInstance(json);
             } catch (Throwable e) {
                 throw new IOException(e);

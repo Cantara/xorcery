@@ -16,11 +16,9 @@
 package com.exoreaction.xorcery.reactivestreams.client;
 
 import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
-import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientBadPayloadStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
@@ -43,9 +41,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Iterator;
@@ -61,7 +58,7 @@ import java.util.function.Supplier;
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 
 public class SubscribeReactiveStream
-        implements WebSocketPartialListener,
+        implements WebSocketListener,
         WebSocketConnectionListener,
         Subscription {
 
@@ -100,8 +97,6 @@ public class SubscribeReactiveStream
     private final AtomicBoolean isSendingRequests = new AtomicBoolean();
     private final Lock sendLock = new ReentrantLock();
     private final SendWriteCallback sendWriteCallback = new SendWriteCallback();
-
-    private String exceptionPayload = "";
 
     private final ActiveSubscriptions activeSubscriptions;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
@@ -263,8 +258,7 @@ public class SubscribeReactiveStream
         }
 
         requests.addAndGet(n);
-        if (!isSendingRequests.get())
-        {
+        if (!isSendingRequests.get()) {
             CompletableFuture.runAsync(this::sendRequests);
         }
     }
@@ -317,42 +311,42 @@ public class SubscribeReactiveStream
     }
 
     @Override
-    public void onWebSocketPartialText(String payload, boolean fin) {
+    public void onWebSocketText(String payload) {
         if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketPartialText {} {}", payload, fin);
+            logger.trace(marker, "onWebSocketPartialText {} {}", payload);
         }
 
-        exceptionPayload += payload;
-        if (fin) {
-            Throwable throwable;
-            try {
-                ByteArrayInputStream bin = new ByteArrayInputStream(Base64.getDecoder().decode(exceptionPayload));
-                ObjectInputStream oin = new ObjectInputStream(bin);
-                throwable = (Throwable) oin.readObject();
-            } catch (Throwable e) {
-                throwable = e;
-            }
-
-            if (!isComplete.get()) {
-                isComplete.set(true);
-                subscriber.onError(throwable);
-            }
-
-            // Ack to publisher
-            WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
-            session.close(StatusCode.NORMAL, "onError", callback);
-            Throwable finalThrowable = throwable;
-            callback.future().handle((v, t) -> result.completeExceptionally(finalThrowable));
+        Throwable throwable;
+        try {
+            ByteArrayInputStream bin = new ByteArrayInputStream(Base64.getDecoder().decode(payload));
+            ObjectInputStream oin = new ObjectInputStream(bin);
+            throwable = (Throwable) oin.readObject();
+        } catch (Throwable e) {
+            throwable = e;
         }
+
+        if (!isComplete.get()) {
+            isComplete.set(true);
+            subscriber.onError(throwable);
+        }
+
+        // Ack to publisher
+        WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
+        session.close(StatusCode.NORMAL, "onError", callback);
+        Throwable finalThrowable = throwable;
+        callback.future().handle((v, t) -> result.completeExceptionally(finalThrowable));
     }
 
+/*
     @Override
     public void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
+*/
 /*
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketPartialBinary {} {}", Charset.defaultCharset().decode(payload.asReadOnlyBuffer()).toString(), fin);
         }
-*/
+*//*
+
         if (isFirstBinary.get()) {
             if (fin) {
                 onWebSocketBinary(payload);
@@ -361,28 +355,28 @@ public class SubscribeReactiveStream
                 byteBufferAccumulator.copyBuffer(payload);
             }
         } else {
-            if (fin)
-            {
+            if (fin) {
                 byteBufferAccumulator.copyBuffer(payload);
                 onWebSocketBinary(byteBufferAccumulator.takeByteBuffer());
                 byteBufferAccumulator.close();
                 isFirstBinary.set(true);
-            } else
-            {
+            } else {
                 byteBufferAccumulator.copyBuffer(payload);
             }
         }
     }
+*/
 
-    protected void onWebSocketBinary(ByteBuffer byteBuffer) {
+    @Override
+    public void onWebSocketBinary(byte[] payload, int offset, int len) {
         try {
             if (logger.isTraceEnabled()) {
-                logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()).toString());
+                logger.trace(marker, "onWebSocketBinary {}", new String(payload, offset, len, StandardCharsets.UTF_8));
             }
-            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-            Object event = eventReader.readFrom(inputStream);
+//            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
+            Object event = eventReader.readFrom(payload, offset, len);
             subscriber.onNext(event);
-            receivedBytes.update(byteBuffer.position());
+            receivedBytes.update(len);
             activeSubscription.requested().decrementAndGet();
             activeSubscription.received().incrementAndGet();
             outstandingRequests.decrementAndGet();

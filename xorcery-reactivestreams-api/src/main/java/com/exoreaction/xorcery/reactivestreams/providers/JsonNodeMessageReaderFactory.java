@@ -15,7 +15,13 @@
  */
 package com.exoreaction.xorcery.reactivestreams.providers;
 
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -27,29 +33,36 @@ import java.lang.reflect.Type;
 
 public class JsonNodeMessageReaderFactory
         implements MessageReader.Factory {
-    private final ObjectReader objectReader;
+    private final ObjectMapper jsonMapper;
 
     public JsonNodeMessageReaderFactory() {
-        this.objectReader = new JsonMapper().reader();
+        jsonMapper = new JsonMapper()
+                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
         if (JsonNode.class.isAssignableFrom(type))
-            return (MessageReader<T>) new MessageWriterImplementation();
+            return (MessageReader<T>) new JsonNodeMessageReader();
         else
             return null;
     }
 
-    class MessageWriterImplementation
+    class JsonNodeMessageReader
             implements MessageReader<JsonNode> {
+
+        public JsonNode readFrom(byte[] bytes, int offset, int len)
+                throws IOException {
+            try (JsonParser jp = jsonMapper.createParser(bytes, offset, len)) {
+                return jp.readValueAsTree();
+            }
+        }
 
         @Override
         public JsonNode readFrom(InputStream entityStream) throws IOException {
-            try {
-                return objectReader.readTree(entityStream);
-            } catch (Throwable e) {
-                throw new IOException(e);
+            try (JsonParser jp = jsonMapper.createParser(entityStream)) {
+                return jp.readValueAsTree();
             }
         }
     }

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,15 +35,13 @@ import java.util.function.Supplier;
 public class WithMetadataMessageReaderFactory
         implements MessageReader.Factory {
 
-    private final ObjectMapper objectMapper;
-    private final JsonFactory jsonFactory;
+    private final ObjectMapper jsonMapper;
     private Supplier<MessageWorkers> messageWorkers;
 
     public WithMetadataMessageReaderFactory(Supplier<MessageWorkers> messageWorkers) {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        jsonFactory = new JsonFactory(objectMapper);
+        jsonMapper = new JsonMapper()
+                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.messageWorkers = messageWorkers;
     }
 
@@ -70,9 +69,21 @@ public class WithMetadataMessageReaderFactory
         }
 
         @Override
+        public WithMetadata<T> readFrom(byte[] bytes, int offset, int len) throws IOException {
+            try (JsonParser jp = jsonMapper.createParser(bytes, offset, len))
+            {
+                Metadata metadata = jp.readValueAs(Metadata.class);
+                int metadataOffset = (int)jp.getCurrentLocation().getByteOffset();
+
+                Object event = eventReader.readFrom(bytes, offset+metadataOffset, len-metadataOffset);
+                return (WithMetadata<T>) new WithMetadata<>(metadata, event);
+            }
+        }
+
+        @Override
         public WithMetadata<T> readFrom(InputStream entityStream) throws IOException {
             entityStream.mark(entityStream.available());
-            try (JsonParser jp = jsonFactory.createParser(entityStream))
+            try (JsonParser jp = jsonMapper.createParser(entityStream))
             {
                 Metadata metadata = jp.readValueAs(Metadata.class);
                 long offset = jp.getCurrentLocation().getByteOffset();

@@ -15,6 +15,10 @@
  */
 package com.exoreaction.xorcery.reactivestreams.spi;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 
@@ -22,6 +26,12 @@ public interface MessageReader<T> {
 
     interface Factory {
         <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType);
+    }
+
+    default T readFrom(byte[] bytes, int offset, int len)
+            throws IOException
+    {
+        return readFrom(new ByteArrayInputStream(bytes, offset, len));
     }
 
     T readFrom(InputStream in) throws java.io.IOException;
