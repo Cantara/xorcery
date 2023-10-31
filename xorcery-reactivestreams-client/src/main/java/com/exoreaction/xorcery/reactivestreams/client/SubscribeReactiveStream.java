@@ -65,7 +65,7 @@ public class SubscribeReactiveStream
     private final URI serverUri;
     private final String streamName;
 
-    private ClientConfiguration subscriberConfiguration;
+    private final ClientConfiguration subscriberConfiguration;
     private Iterator<URI> uriIterator;
     private long retryDelay;
     private final DnsLookup dnsLookup;
@@ -74,10 +74,6 @@ public class SubscribeReactiveStream
 
     protected final Subscriber<Object> subscriber;
     protected final MessageReader<Object> eventReader;
-
-    protected final ByteBufferPool byteBufferPool;
-    protected final ByteBufferAccumulator byteBufferAccumulator;
-    private final AtomicBoolean isFirstBinary = new AtomicBoolean();
 
     protected final Marker marker;
     protected final Logger logger;
@@ -89,7 +85,6 @@ public class SubscribeReactiveStream
     protected final AtomicBoolean isComplete = new AtomicBoolean(); // true if onComplete or onError has been called
     protected final AtomicBoolean isRetrying = new AtomicBoolean(); // true if we're in the process of retrying/reconnecting
 
-    private long firstRequest;
     private long sendRequestsThreshold = 0;
     private final AtomicLong requests = new AtomicLong();
     private final AtomicLong outstandingRequests = new AtomicLong();
@@ -113,7 +108,6 @@ public class SubscribeReactiveStream
                                    Subscriber<Object> subscriber,
                                    MessageReader<Object> eventReader,
                                    Supplier<Configuration> publisherConfiguration,
-                                   ByteBufferPool pool,
                                    MetricRegistry metricRegistry,
                                    Logger logger,
                                    ActiveSubscriptions activeSubscriptions,
@@ -128,8 +122,6 @@ public class SubscribeReactiveStream
         this.subscriber = subscriber;
         this.publisherConfiguration = publisherConfiguration;
 
-        this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
-        this.byteBufferPool = pool;
         this.marker = MarkerManager.getMarker(this.serverUri.getAuthority() + "/" + streamName);
         this.logger = logger;
         this.activeSubscriptions = activeSubscriptions;
@@ -337,36 +329,6 @@ public class SubscribeReactiveStream
         callback.future().handle((v, t) -> result.completeExceptionally(finalThrowable));
     }
 
-/*
-    @Override
-    public void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
-*/
-/*
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketPartialBinary {} {}", Charset.defaultCharset().decode(payload.asReadOnlyBuffer()).toString(), fin);
-        }
-*//*
-
-        if (isFirstBinary.get()) {
-            if (fin) {
-                onWebSocketBinary(payload);
-            } else {
-                isFirstBinary.set(false);
-                byteBufferAccumulator.copyBuffer(payload);
-            }
-        } else {
-            if (fin) {
-                byteBufferAccumulator.copyBuffer(payload);
-                onWebSocketBinary(byteBufferAccumulator.takeByteBuffer());
-                byteBufferAccumulator.close();
-                isFirstBinary.set(true);
-            } else {
-                byteBufferAccumulator.copyBuffer(payload);
-            }
-        }
-    }
-*/
-
     @Override
     public void onWebSocketBinary(byte[] payload, int offset, int len) {
         try {
@@ -465,7 +427,6 @@ public class SubscribeReactiveStream
                     rn = requests.get();
 
                     if (sendRequestsThreshold == 0) {
-                        firstRequest = rn;
                         sendRequestsThreshold = Math.min((rn * 3) / 4, 2048);
                     } else {
                         if (rn < sendRequestsThreshold) {

@@ -181,7 +181,7 @@ public class ReactiveStreamsClientService
                     metricRegistry,
                     activePublisherSubscriptions,
                     result
-                    );
+            );
         }
         return result;
     }
@@ -272,7 +272,6 @@ public class ReactiveStreamsClientService
                     futureProcessor,
                     (MessageReader<Object>) messageReader,
                     publisherConfiguration,
-                    byteBufferPool,
                     metricRegistry,
                     LogManager.getLogger(SubscribeReactiveStream.class),
                     activeSubscriberSubscriptions,

@@ -28,6 +28,7 @@ import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractSer
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.StatusCode;
@@ -51,6 +52,8 @@ public class SubscribeWithResultReactiveStream
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final MessageWriter<Object> resultWriter;
     boolean isFlushPending = false;
+    private final ByteBufferPool byteBufferPool;
+    private ByteBufferAccumulator byteBufferAccumulator;
     private ByteBufferOutputStream2 resultOutputStream;
 
     protected final Meter resultsSent;
@@ -69,12 +72,14 @@ public class SubscribeWithResultReactiveStream
                                              Logger logger,
                                              ActiveSubscriptions activeSubscriptions,
                                              CompletableFuture<Void> result) {
-        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, pool, metricRegistry, logger, activeSubscriptions, result);
+        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, metricRegistry, logger, activeSubscriptions, result);
 
         this.resultsSent = metricRegistry.meter("subscribe." + streamName + ".results");
 
         this.resultWriter = resultWriter;
-        resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
+        this.byteBufferPool = pool;
+        this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
+        this.resultOutputStream = new ByteBufferOutputStream2(pool, true);
     }
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
