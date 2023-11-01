@@ -50,9 +50,9 @@ public class JwtAuthenticationTest {
                 issuers:
                   authentication.xorcery.test:
                     keys:
-                      - alg: "ES256"
-                        kid: "{{SYSTEM.kid}}"
-                        key: "secret:{{SYSTEM.key}}"                        
+                      - kid: "{{SYSTEM.kid}}"
+                        alg: "ES256"
+                        publicKey: "secret:{{SYSTEM.key}}"                        
             """;
 
     @Inject
