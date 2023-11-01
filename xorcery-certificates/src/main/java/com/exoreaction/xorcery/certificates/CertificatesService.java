@@ -117,12 +117,13 @@ public class CertificatesService
         // Check domain names and IPs
         try {
             Set<String> wantedNames = new HashSet<>();
+            wantedNames.add(certificatesConfiguration.getSubject().toLowerCase());
             wantedNames.addAll(certificatesConfiguration.getDnsNames());
             wantedNames.addAll(certificatesConfiguration.getIpAddresses());
 
             Collection<List<?>> subjectAlternativeNames = certificate.getSubjectAlternativeNames();
             if (subjectAlternativeNames == null)
-                return !wantedNames.isEmpty();
+                return true;
 
             Set<String> existingNames = new HashSet<>();
             for (List<?> subjectAlternativeName : subjectAlternativeNames) {
@@ -153,14 +154,12 @@ public class CertificatesService
                 ));
 
         List<GeneralName> subAtlNamesList = new ArrayList<>();
+        subAtlNamesList.add(new GeneralName(GeneralName.dNSName, certificatesConfiguration.getSubject().toLowerCase()));
         certificatesConfiguration.getIpAddresses().forEach(ipAddress -> subAtlNamesList.add(new GeneralName(GeneralName.iPAddress, ipAddress)));
         certificatesConfiguration.getDnsNames().forEach(dnsName -> subAtlNamesList.add(new GeneralName(GeneralName.dNSName, dnsName)));
         GeneralNames subAtlNames = new GeneralNames(subAtlNamesList.toArray(new GeneralName[0]));
-        if (!subAtlNamesList.isEmpty())
-        {
-            extensionsGenerator.addExtension(
-                    Extension.subjectAlternativeName, true, subAtlNames);
-        }
+        extensionsGenerator.addExtension(
+                Extension.subjectAlternativeName, true, subAtlNames);
 
         PKCS10CertificationRequestBuilder csrBuilder = new JcaPKCS10CertificationRequestBuilder(issuedCertSubject, issuedCertKeyPair.getPublic())
                 .addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extensionsGenerator.generate());
