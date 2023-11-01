@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.domainevents.api;
 
+import com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel.*;
 import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
 
 public record JsonDomainEvent(ObjectNode json)
@@ -44,13 +46,13 @@ public record JsonDomainEvent(ObjectNode json)
 
         public Builder(String eventName) {
             this(JsonNodeFactory.instance.objectNode());
-            builder.set("event", builder.textNode(eventName));
+            builder.set(event.name(), builder.textNode(eventName));
         }
 
-        public StateBuilder created(String type, String id) {
-            builder.set("created", builder.objectNode()
-                    .<ObjectNode>set("type", builder.textNode(type))
-                    .set("id", builder.textNode(id)));
+        public StateBuilder created(String entityType, String entityId) {
+            builder.set(created.name(), builder.objectNode()
+                    .<ObjectNode>set(type.name(), builder.textNode(entityType))
+                    .set(id.name(), builder.textNode(entityId)));
 
             return new StateBuilder(builder);
         }
@@ -59,10 +61,10 @@ public record JsonDomainEvent(ObjectNode json)
             return created(type.name(), id);
         }
 
-        public StateBuilder updated(String type, String id) {
-            builder.set("updated", builder.objectNode()
-                    .<ObjectNode>set("type", builder.textNode(type))
-                    .set("id", builder.textNode(id)));
+        public StateBuilder updated(String entityType, String entityId) {
+            builder.set(updated.name(), builder.objectNode()
+                    .<ObjectNode>set(type.name(), builder.textNode(entityType))
+                    .set(id.name(), builder.textNode(entityId)));
 
             return new StateBuilder(builder);
         }
@@ -71,10 +73,10 @@ public record JsonDomainEvent(ObjectNode json)
             return updated(type.name(), id);
         }
 
-        public JsonDomainEvent deleted(String type, String id) {
-            builder.set("deleted", builder.objectNode()
-                    .<ObjectNode>set("type", builder.textNode(type))
-                    .set("id", builder.textNode(id)));
+        public JsonDomainEvent deleted(String entityType, String entityId) {
+            builder.set(deleted.name(), builder.objectNode()
+                    .<ObjectNode>set(type.name(), builder.textNode(entityType))
+                    .set(id.name(), builder.textNode(entityId)));
 
             return new JsonDomainEvent(builder);
         }
@@ -92,10 +94,10 @@ public record JsonDomainEvent(ObjectNode json)
                 );
 
         public StateBuilder attribute(String name, JsonNode value) {
-            JsonNode attributes = builder.get("attributes");
+            JsonNode attributes = builder.get(JsonDomainEventModel.attributes.name());
             if (attributes == null) {
                 attributes = builder.objectNode();
-                builder.set("attributes", attributes);
+                builder.set(JsonDomainEventModel.attributes.name(), attributes);
             }
 
             ObjectNode objectNode = (ObjectNode) attributes;
@@ -124,24 +126,24 @@ public record JsonDomainEvent(ObjectNode json)
             return attribute(name.name(), value);
         }
 
-        public StateBuilder updatedRelationship(String relationship, String type, String id, ObjectNode attributes) {
+        public StateBuilder updatedRelationship(String relationship, String entityType, String entityId, ObjectNode attributes) {
 
-            if (id == null)
+            if (entityId == null)
                 return this;
 
-            JsonNode relationships = builder.get("updatedrelationships");
+            JsonNode relationships = builder.get(updatedrelationships.name());
             if (relationships == null) {
                 relationships = builder.arrayNode();
-                builder.set("updatedrelationships", relationships);
+                builder.set(updatedrelationships.name(), relationships);
             }
 
             ArrayNode arrayNode = (ArrayNode) relationships;
             ObjectNode relationshipNode = arrayNode.objectNode()
-                    .<ObjectNode>set("type", arrayNode.textNode(type))
-                    .<ObjectNode>set("id", arrayNode.textNode(id))
-                    .set("relationship", arrayNode.textNode(relationship));
+                    .<ObjectNode>set(type.name(), arrayNode.textNode(entityType))
+                    .<ObjectNode>set(id.name(), arrayNode.textNode(entityId))
+                    .set(JsonDomainEventModel.relationship.name(), arrayNode.textNode(relationship));
             if (attributes != null) {
-                relationshipNode.set("attributes", attributes);
+                relationshipNode.set(JsonDomainEventModel.attributes.name(), attributes);
             }
             arrayNode.add(relationshipNode);
 
@@ -160,22 +162,22 @@ public record JsonDomainEvent(ObjectNode json)
             return updatedRelationship(relationship.name(), type.name(), id, null);
         }
 
-        public StateBuilder addedRelationship(String relationship, String type, String id) {
+        public StateBuilder addedRelationship(String relationship, String entityType, String entityId) {
 
-            if (id == null)
+            if (entityId == null)
                 return this;
 
-            JsonNode relationships = builder.get("addedrelationships");
+            JsonNode relationships = builder.get(addedrelationships.name());
             if (relationships == null) {
                 relationships = builder.arrayNode();
-                builder.set("addedrelationships", relationships);
+                builder.set(addedrelationships.name(), relationships);
             }
 
             ArrayNode arrayNode = (ArrayNode) relationships;
             JsonNode relationshipNode = arrayNode.objectNode()
-                    .<ObjectNode>set("type", arrayNode.textNode(type))
-                    .<ObjectNode>set("id", arrayNode.textNode(id))
-                    .set("relationship", arrayNode.textNode(relationship));
+                    .<ObjectNode>set(type.name(), arrayNode.textNode(entityType))
+                    .<ObjectNode>set(id.name(), arrayNode.textNode(entityId))
+                    .set(JsonDomainEventModel.relationship.name(), arrayNode.textNode(relationship));
             arrayNode.add(relationshipNode);
 
             return this;
@@ -185,19 +187,19 @@ public record JsonDomainEvent(ObjectNode json)
             return addedRelationship(relationship.name(), type.name(), id);
         }
 
-        public StateBuilder removedRelationship(String relationship, String type, String id) {
+        public StateBuilder removedRelationship(String relationship, String entityType, String entityId) {
 
-            JsonNode relationships = builder.get("removedrelationships");
+            JsonNode relationships = builder.get(removedrelationships.name());
             if (relationships == null) {
                 relationships = builder.arrayNode();
-                builder.set("removedrelationships", relationships);
+                builder.set(removedrelationships.name(), relationships);
             }
 
             ArrayNode arrayNode = (ArrayNode) relationships;
             JsonNode relationshipNode = arrayNode.objectNode()
-                    .<ObjectNode>set("type", arrayNode.textNode(type))
-                    .<ObjectNode>set("id", id == null ? arrayNode.nullNode() : arrayNode.textNode(id))
-                    .set("relationship", arrayNode.textNode(relationship));
+                    .<ObjectNode>set(type.name(), arrayNode.textNode(entityType))
+                    .<ObjectNode>set(id.name(), entityId == null ? arrayNode.nullNode() : arrayNode.textNode(entityId))
+                    .set(JsonDomainEventModel.relationship.name(), arrayNode.textNode(relationship));
             arrayNode.add(relationshipNode);
 
             return this;
@@ -209,10 +211,10 @@ public record JsonDomainEvent(ObjectNode json)
 
         public StateBuilder addMetadata(String key, JsonNode value) {
 
-            ObjectNode metadata = (ObjectNode) builder.get("metadata");
+            ObjectNode metadata = (ObjectNode) builder.get(JsonDomainEventModel.metadata.name());
             if (metadata == null) {
                 metadata = builder.objectNode();
-                builder.set("metadata", metadata);
+                builder.set(JsonDomainEventModel.metadata.name(), metadata);
             }
 
             metadata.set(key, value);
@@ -270,21 +272,21 @@ public record JsonDomainEvent(ObjectNode json)
     }
 
     public boolean isCreatedOrUpdated() {
-        return json.has("created") || json.has("updated");
+        return json.has(created.name()) || json.has(updated.name());
     }
 
     public JsonEntity getCreated() {
-        ObjectNode created = (ObjectNode) json.get("created");
+        ObjectNode created = (ObjectNode) json.get(JsonDomainEventModel.created.name());
         return created == null ? null : new JsonEntity(created);
     }
 
     public JsonEntity getUpdated() {
-        ObjectNode updated = (ObjectNode) json.get("updated");
+        ObjectNode updated = (ObjectNode) json.get(JsonDomainEventModel.updated.name());
         return updated == null ? null : new JsonEntity(updated);
     }
 
     public JsonEntity getDeleted() {
-        ObjectNode deleted = (ObjectNode) json.get("deleted");
+        ObjectNode deleted = (ObjectNode) json.get(JsonDomainEventModel.deleted.name());
         return deleted == null ? null : new JsonEntity(deleted);
     }
 
@@ -299,7 +301,7 @@ public record JsonDomainEvent(ObjectNode json)
     }
 
     public Map<String, JsonNode> getAttributes() {
-        ObjectNode attrs = (ObjectNode) json.get("attributes");
+        ObjectNode attrs = (ObjectNode) json.get(attributes.name());
         if (attrs == null)
             return Collections.emptyMap();
         else
@@ -307,36 +309,36 @@ public record JsonDomainEvent(ObjectNode json)
     }
 
     public List<JsonRelationship> getUpdatedRelationships() {
-        return getListAs("updatedrelationships", json -> new JsonRelationship((ObjectNode) json))
+        return getListAs(updatedrelationships.name(), json -> new JsonRelationship((ObjectNode) json))
                 .orElse(Collections.emptyList());
     }
 
     public List<JsonRelationship> getAddedRelationships() {
-        return getListAs("addedrelationships", json -> new JsonRelationship((ObjectNode) json))
+        return getListAs(addedrelationships.name(), json -> new JsonRelationship((ObjectNode) json))
                 .orElse(Collections.emptyList());
     }
 
     public List<JsonRelationship> getRemovedRelationships() {
-        return getListAs("removedrelationships", json -> new JsonRelationship((ObjectNode) json))
+        return getListAs(removedrelationships.name(), json -> new JsonRelationship((ObjectNode) json))
                 .orElse(Collections.emptyList());
     }
 
     public Optional<Metadata> getMetadata() {
-        ObjectNode attrs = (ObjectNode) json.get("metadata");
-        if (attrs == null)
+        ObjectNode metadata = (ObjectNode) json.get(JsonDomainEventModel.metadata.name());
+        if (metadata == null)
             return Optional.empty();
         else
-            return Optional.of(new Metadata(attrs));
+            return Optional.of(new Metadata(metadata));
     }
 
     public record JsonEntity(ObjectNode json)
             implements JsonElement {
         public String getType() {
-            return getString("type").orElse(null);
+            return getString(type.name()).orElse(null);
         }
 
         public String getId() {
-            return getString("id").orElse(null);
+            return getString(id.name()).orElse(null);
         }
     }
 
@@ -347,7 +349,7 @@ public record JsonDomainEvent(ObjectNode json)
         }
 
         public String getRelationship() {
-            return getString("relationship").orElseThrow();
+            return getString(relationship.name()).orElseThrow();
         }
     }
 }
