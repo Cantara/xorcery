@@ -20,19 +20,20 @@ public record IssuerConfiguration(Configuration configuration) {
     }
 
     public record JwtKey(Configuration configuration) {
+        public Optional<String> getKid()
+        {
+            return configuration.getString("kid");
+        }
+
         public String getAlg()
         {
             return configuration.getString("alg").orElseThrow(missing("alg"));
         }
 
-        public String getKey()
+        public String getPublicKey()
         {
-            return configuration.getString("key").orElseThrow(missing("key"));
+            return configuration.getString("publicKey").orElseThrow(missing("publicKey"));
         }
 
-        public Optional<String> getKid()
-        {
-            return configuration.getString("kid");
-        }
     }
 }

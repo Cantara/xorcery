@@ -70,7 +70,7 @@ public class Auth0JwtAuthenticator
                 String defaultKid = "default";
                 int defaultKidNr = 2;
                 for (IssuerConfiguration.JwtKey key : config.getKeys()) {
-                    byte[] publicKeyBase64 = secrets.getSecretBytes(key.getKey());
+                    byte[] publicKeyBase64 = secrets.getSecretBytes(key.getPublicKey());
                     byte[] keyBytes = Base64.getDecoder().decode(publicKeyBase64);
                     X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
 

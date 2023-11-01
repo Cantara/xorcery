@@ -53,9 +53,9 @@ jetty:
         issuers:
           default:
             keys: []
-      #    someissuer:
-      #       keys:
-      #         - alg: RSA256
-      #           kid: 1234
-      #           key: MII...
-      #
+     #    someissuer:
+     #       keys:
+     #         - kid: 1234
+     #           alg: ES256
+     #           publicKey: MII...
+     #

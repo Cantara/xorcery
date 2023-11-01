@@ -49,7 +49,7 @@ public record JwtServerConfiguration(Configuration configuration) {
         }
 
         public String getKeyId() {
-            return configuration.getString("keyId").orElseThrow(missing("keyId"));
+            return configuration.getString("kid").orElseThrow(missing("kid"));
         }
 
         public String getPublicKey() {
