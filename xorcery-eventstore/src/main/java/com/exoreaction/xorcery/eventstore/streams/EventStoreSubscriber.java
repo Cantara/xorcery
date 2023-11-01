@@ -42,7 +42,7 @@ public class EventStoreSubscriber
     @Override
     public void onSubscribe(Subscription subscription) {
         disruptor = new Disruptor<>(WithMetadata::new, 512, new NamedThreadFactory("EventStoreSubscriber-"),
-                ProducerType.SINGLE,
+                ProducerType.MULTI,
                 new BlockingWaitStrategy());
         disruptor.handleEventsWith(new EventStoreSubscriberEventHandler(client, subscription, cfg.getString("stream")));
         disruptor.start();

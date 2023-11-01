@@ -55,7 +55,7 @@ public class ProjectionSubscriber
     @Override
     public void onSubscribe(Subscription subscription) {
         disruptor = new Disruptor<>(WithMetadata::new, disruptorConfiguration.getSize(), new NamedThreadFactory("Neo4jProjection-"),
-                ProducerType.SINGLE,
+                ProducerType.MULTI,
                 new BlockingWaitStrategy());
 
         EventHandlerGroup<WithMetadata<ArrayNode>> eventHandlerGroup = null;
