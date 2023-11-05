@@ -21,7 +21,7 @@
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <jackson.version>2.15.3</jackson.version>
-        <metrics.version>4.2.21</metrics.version>
+        <metrics.version>4.2.22</metrics.version>
         <asm.version>9.6</asm.version>
         <projectreactor.version>2022.0.12</projectreactor.version>
 
