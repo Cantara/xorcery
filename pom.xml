@@ -25,7 +25,7 @@
         <asm.version>9.6</asm.version>
         <projectreactor.version>2022.0.12</projectreactor.version>
 
-        <junit.version>5.10.0</junit.version>
+        <junit.version>5.10.1</junit.version>
         <junit.platform.version>1.10.0</junit.platform.version>
     </properties>
 
