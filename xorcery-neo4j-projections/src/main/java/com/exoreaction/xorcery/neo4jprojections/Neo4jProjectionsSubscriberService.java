@@ -22,10 +22,7 @@ import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.api.WaitForProjectionCommit;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
-import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionCommitPublisher;
-import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionEventHandler;
-import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionSubscriber;
-import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionWithResultSubscriber;
+import com.exoreaction.xorcery.neo4jprojections.streams.*;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
@@ -79,7 +76,8 @@ public class Neo4jProjectionsSubscriberService {
                                     projectionList,
                                     metricRegistry),
                                     neo4jEventProjectionPreProcessors,
-                                    new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))),
+                                    new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard")),
+                                    ProjectionExceptionHandler::new),
                             waitForProjectionCommit);
                 },
                 ProjectionSubscriber.class);

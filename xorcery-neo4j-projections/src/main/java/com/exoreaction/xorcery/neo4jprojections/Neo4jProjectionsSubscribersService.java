@@ -23,6 +23,7 @@ import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
 import com.exoreaction.xorcery.neo4jprojections.streams.Neo4jProjectionEventHandler;
+import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionExceptionHandler;
 import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionSubscriber;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
@@ -49,7 +50,6 @@ import java.util.Optional;
 public class Neo4jProjectionsSubscribersService {
 
     private final Logger logger = LogManager.getLogger(getClass());
-    private final GraphDatabase graphDatabase;
 
     @Inject
     public Neo4jProjectionsSubscribersService(Neo4jProjectionsService neo4jProjectionsService,
@@ -59,7 +59,6 @@ public class Neo4jProjectionsSubscribersService {
                                               IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
                                               IterableProvider<Neo4jEventProjectionPreProcessor> neo4jEventProjectionPreProcessors,
                                               MetricRegistry metricRegistry) {
-        this.graphDatabase = graphDatabase;
         Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
 
         // This service can subscribe to external publishers
@@ -91,7 +90,8 @@ public class Neo4jProjectionsSubscribersService {
                                         projectionList,
                                         metricRegistry),
                                 neo4jEventProjectionPreProcessors,
-                                new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard"))),
+                                new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard")),
+                                ProjectionExceptionHandler::new),
                         ProjectionSubscriber.class, ClientConfiguration.defaults());
             }
         });

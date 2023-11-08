@@ -22,7 +22,6 @@ import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.ExceptionHandler;
-import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.TimeoutException;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.EventHandlerGroup;
@@ -32,7 +31,6 @@ import org.glassfish.hk2.api.IterableProvider;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -40,16 +38,19 @@ public class ProjectionSubscriber
         implements Subscriber<WithMetadata<ArrayNode>> {
 
     private final Function<Subscription, Neo4jProjectionEventHandler> handlerFactory;
+    private final Function<Subscription, ExceptionHandler<WithMetadata<ArrayNode>>> exceptionHandlerFactory;
     private Disruptor<WithMetadata<ArrayNode>> disruptor;
     private final IterableProvider<Neo4jEventProjectionPreProcessor> preProcessors;
     private final DisruptorConfiguration disruptorConfiguration;
 
     public ProjectionSubscriber(Function<Subscription, Neo4jProjectionEventHandler> handlerFactory,
                                 IterableProvider<Neo4jEventProjectionPreProcessor> preProcessors,
-                                DisruptorConfiguration disruptorConfiguration) {
+                                DisruptorConfiguration disruptorConfiguration,
+                                Function<Subscription, ExceptionHandler<WithMetadata<ArrayNode>>> exceptionHandlerFactory) {
         this.preProcessors = preProcessors;
         this.disruptorConfiguration = disruptorConfiguration;
         this.handlerFactory = handlerFactory;
+        this.exceptionHandlerFactory = exceptionHandlerFactory;
     }
 
     @Override
@@ -74,7 +75,7 @@ public class ProjectionSubscriber
             eventHandlerGroup.handleEventsWith(neo4jProjectionEventHandler);
         }
 
-        disruptor.setDefaultExceptionHandler(new ProjectionExceptionHandler(subscription));
+        disruptor.setDefaultExceptionHandler(exceptionHandlerFactory.apply(subscription));
         disruptor.start();
         subscription.request(disruptor.getBufferSize());
     }
@@ -110,29 +111,4 @@ public class ProjectionSubscriber
         }
     }
 
-    private static class ProjectionExceptionHandler implements ExceptionHandler<WithMetadata<ArrayNode>> {
-        private final Subscription subscription;
-
-        public ProjectionExceptionHandler(Subscription subscription) {
-            this.subscription = subscription;
-        }
-
-        @Override
-        public void handleEventException(Throwable ex, long sequence, WithMetadata<ArrayNode> event) {
-            subscription.cancel();
-            LogManager.getLogger(getClass()).error("Cancelled subscription", ex);
-        }
-
-        @Override
-        public void handleOnStartException(Throwable ex) {
-            subscription.cancel();
-            LogManager.getLogger(getClass()).warn("Cancelled subscription", ex);
-        }
-
-        @Override
-        public void handleOnShutdownException(Throwable ex) {
-            subscription.cancel();
-            LogManager.getLogger(getClass()).warn("Cancelled subscription", ex);
-        }
-    }
 }
