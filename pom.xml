@@ -622,7 +622,7 @@
             <dependency>
                 <groupId>dnsjava</groupId>
                 <artifactId>dnsjava</artifactId>
-                <version>3.5.2</version>
+                <version>3.5.3</version>
             </dependency>
             <dependency>
                 <groupId>org.jmdns</groupId>
