@@ -36,10 +36,18 @@ public interface Model {
         type,
         id,
         attributes,
+        addedattributes,
+        removedattributes,
         updatedrelationships,
         addedrelationships,
         removedrelationships,
         relationship,
         metadata
+    }
+
+    enum ValueModel
+    {
+        attributes,
+        relationships
     }
 }

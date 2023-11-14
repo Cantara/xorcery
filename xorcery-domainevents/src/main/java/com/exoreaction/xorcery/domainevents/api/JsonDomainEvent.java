@@ -275,6 +275,10 @@ public record JsonDomainEvent(ObjectNode json)
         return json.has(created.name()) || json.has(updated.name());
     }
 
+    public boolean isDeleted() {
+        return json.has(deleted.name());
+    }
+
     public JsonEntity getCreated() {
         ObjectNode created = (ObjectNode) json.get(JsonDomainEventModel.created.name());
         return created == null ? null : new JsonEntity(created);
