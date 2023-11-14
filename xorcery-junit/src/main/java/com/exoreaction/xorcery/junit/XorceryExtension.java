@@ -188,6 +188,6 @@ public class XorceryExtension
     }
 
     public Configuration getConfiguration() {
-        return xorcery.getServiceLocator().getService(Configuration.class);
+        return configuration;
     }
 }
