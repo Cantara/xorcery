@@ -20,9 +20,7 @@ import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.ExceptionHandler;
-import com.lmax.disruptor.TimeoutException;
+import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.EventHandlerGroup;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -67,12 +65,13 @@ public class ProjectionSubscriber
         }
 
         Neo4jProjectionEventHandler neo4jProjectionEventHandler = handlerFactory.apply(subscription);
+        BatchRewindStrategy rewindStrategy = new EventuallyGiveUpBatchRewindStrategy(10);
         if (eventHandlerGroup == null)
         {
-            disruptor.handleEventsWith(neo4jProjectionEventHandler);
+            disruptor.handleEventsWith(rewindStrategy, neo4jProjectionEventHandler);
         } else
         {
-            eventHandlerGroup.handleEventsWith(neo4jProjectionEventHandler);
+            eventHandlerGroup.handleEventsWith(rewindStrategy, neo4jProjectionEventHandler);
         }
 
         disruptor.setDefaultExceptionHandler(exceptionHandlerFactory.apply(subscription));

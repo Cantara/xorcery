@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.ExceptionHandler;
 import org.apache.logging.log4j.LogManager;
+import org.neo4j.exceptions.EntityNotFoundException;
 import org.reactivestreams.Subscription;
 
 public class ProjectionExceptionHandler implements ExceptionHandler<WithMetadata<ArrayNode>> {
@@ -17,12 +18,14 @@ public class ProjectionExceptionHandler implements ExceptionHandler<WithMetadata
     public void handleEventException(Throwable ex, long sequence, WithMetadata<ArrayNode> event) {
         subscription.cancel();
         LogManager.getLogger(getClass()).error("Cancelled subscription", ex);
+        throw new RuntimeException("Projection cancelled", ex);
     }
 
     @Override
     public void handleOnStartException(Throwable ex) {
         subscription.cancel();
         LogManager.getLogger(getClass()).warn("Cancelled subscription", ex);
+        throw new RuntimeException("Projection cancelled", ex);
     }
 
     @Override
