@@ -26,6 +26,8 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 
+import static com.exoreaction.xorcery.configuration.Configuration.missing;
+
 /**
  * Configuration wrapper for instance configuration
  *
@@ -96,6 +98,6 @@ public record InstanceConfiguration(Configuration configuration) {
     }
 
     public URI getURI() {
-        return configuration.getURI("uri").orElseThrow();
+        return configuration.getURI("uri").orElseThrow(missing("uri"));
     }
 }
