@@ -22,6 +22,8 @@ import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.metadata.RequestMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import static com.exoreaction.xorcery.metadata.Metadata.missing;
+
 public record DomainEventMetadata(Metadata context)
     implements CommonMetadata, RequestMetadata, DeploymentMetadata
 {
@@ -93,17 +95,17 @@ public record DomainEventMetadata(Metadata context)
 
     public String getAggregateType()
     {
-        return context.getString("aggregateType").orElseThrow();
+        return context.getString("aggregateType").orElseThrow(missing("aggregateType"));
     }
 
     public String getAggregateId()
     {
-        return context.getString("aggregateId").orElseThrow();
+        return context.getString("aggregateId").orElseThrow(missing("aggregateId"));
     }
 
     public String getCommandType()
     {
-        return context.getString("commandType").orElseThrow();
+        return context.getString("commandType").orElseThrow(missing("commandType"));
     }
 
 }
