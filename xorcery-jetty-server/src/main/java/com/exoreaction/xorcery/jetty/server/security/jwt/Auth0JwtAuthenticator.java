@@ -181,7 +181,7 @@ public class Auth0JwtAuthenticator
                 userPrincipal.configureSubject(subject);
                 subject.setReadOnly();
 
-                List<String> roles = (List<String>)decodedJwt.getClaim("claims").asMap().get("roles");
+                List<String> roles = decodedJwt.getClaim("roles").asList(String.class);
                 if (roles == null)
                     roles = Collections.emptyList();
                 UserIdentity userIdentity = new DefaultUserIdentity(subject, userPrincipal, roles.toArray(new String[0]));

@@ -48,6 +48,7 @@ import static com.exoreaction.xorcery.jsonapi.MediaTypes.APPLICATION_JSON_API;
 import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_HTML_YAML;
 
 @Path("api/login")
+@Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
 public class JwtLoginResource
         extends JsonApiResource
         implements JsonSchemaMixin, CommandsJsonSchemaMixin {
@@ -62,9 +63,8 @@ public class JwtLoginResource
     }
 
     @GET
-    @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
-    public CompletionStage<ResourceDocument> get(@QueryParam("rel") String rel) {
-        return CompletableFuture.completedStage(new ResourceDocument.Builder()
+    public ResourceDocument get() {
+        return new ResourceDocument.Builder()
                 .links(new Links.Builder()
                         .link(self, getUriInfo().getRequestUri().toASCIIString())
                         .link(describedby, getAbsolutePathBuilder().path(".schema").toTemplate())
@@ -76,7 +76,7 @@ public class JwtLoginResource
                             a.attribute("username", "");
                             a.attribute("password", "");
                         })).build())
-                .build());
+                .build();
     }
 
     @POST

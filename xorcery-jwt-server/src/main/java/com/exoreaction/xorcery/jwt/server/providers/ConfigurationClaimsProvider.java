@@ -28,7 +28,7 @@ public class ConfigurationClaimsProvider
     public Map<String, ?> getClaims(String userName) {
         return users.getJson(userName).map(node -> {
             try {
-                return objectMapper.treeToValue(node, Map.class);
+                return objectMapper.treeToValue(node.path("claims"), Map.class);
             } catch (JsonProcessingException e) {
                 throw new UncheckedIOException(e);
             }

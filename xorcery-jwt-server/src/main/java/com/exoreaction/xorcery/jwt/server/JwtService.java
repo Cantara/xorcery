@@ -118,12 +118,16 @@ public class JwtService {
             claims.putAll(providerUserClaims);
         }
 
+        String sub = (String)claims.remove("sub"); // Check if claims contains sub
+        if (sub == null)
+            sub = userName; // Otherwise use username
+
         String token = JWT.create()
                 .withPayload(claims)
                 .withIssuer(jwtServerConfiguration.getTokenIssuer())
                 .withIssuedAt(now)
                 .withExpiresAt(expiresAt)
-                .withSubject(userName)
+                .withSubject(sub)
                 .withKeyId(keyId)
                 .withJWTId(UUIDs.newId())
                 .sign(algorithm);
