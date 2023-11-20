@@ -16,7 +16,6 @@
 package com.exoreaction.xorcery.domainevents.helpers.entity;
 
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
-import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
 
 import java.lang.reflect.InvocationTargetException;
@@ -35,11 +34,15 @@ public abstract class Entity<SNAPSHOT extends EntitySnapshot> {
     private final List<DomainEvent> changes = new ArrayList<>();
 
     protected DomainEventMetadata metadata;
+    protected SNAPSHOT snapshot;
 
-    public abstract SNAPSHOT getSnapshot();
+    public SNAPSHOT getSnapshot()
+    {
+        return snapshot;
+    }
 
     protected void setSnapshot(SNAPSHOT snapshot) {
-        throw new IllegalArgumentException("Unknown snapshot");
+        this.snapshot = snapshot;
     }
 
     protected void before(Command command)
@@ -52,7 +55,7 @@ public abstract class Entity<SNAPSHOT extends EntitySnapshot> {
     {
     }
 
-    public DomainEvents handle(DomainEventMetadata metadata, SNAPSHOT snapshot, Command command)
+    public List<DomainEvent> handle(DomainEventMetadata metadata, SNAPSHOT snapshot, Command command)
             throws Throwable {
         this.metadata = metadata;
         setSnapshot(snapshot);
@@ -90,7 +93,7 @@ public abstract class Entity<SNAPSHOT extends EntitySnapshot> {
             throw new IllegalArgumentException(e);
         }
 
-        return new DomainEvents(changes);
+        return changes;
     }
 
     protected void add(DomainEvent event) {

@@ -36,6 +36,10 @@ public record Metadata(ObjectNode json)
         return () -> new IllegalArgumentException("Missing metadata '" + name + "'");
     }
 
+    public static Supplier<RuntimeException> missing(Enum<?> name) {
+        return missing(name.name());
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder> {
 

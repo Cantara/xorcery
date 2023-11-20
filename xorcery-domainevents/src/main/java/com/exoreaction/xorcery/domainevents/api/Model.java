@@ -21,6 +21,8 @@ public interface Model {
         correlationId, // id of request (optional)
         domain, // Group of events this belongs to (optional)
         reason, // User specified reason for change (optional)
+        aggregateId, // Id for aggregate of these events
+        aggregateType, // Type of aggregate of these events
 
         // Identification related
         userId, // Id of user, identifies the user actually creating the events

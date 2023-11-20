@@ -16,7 +16,6 @@
 package com.exoreaction.xorcery.domainevents.publisher;
 
 import com.exoreaction.xorcery.domainevents.api.CommandEvents;
-import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.metadata.Metadata;
 
 import java.util.concurrent.CompletableFuture;
