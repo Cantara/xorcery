@@ -17,8 +17,13 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
+import com.exoreaction.xorcery.domainevents.api.CommandEvents;
+import com.exoreaction.xorcery.domainevents.api.DomainEvent;
+import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.*;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -29,6 +34,8 @@ import org.glassfish.hk2.api.IterableProvider;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -36,28 +43,33 @@ public class ProjectionSubscriber
         implements Subscriber<WithMetadata<ArrayNode>> {
 
     private final Function<Subscription, Neo4jProjectionEventHandler> handlerFactory;
-    private final Function<Subscription, ExceptionHandler<WithMetadata<ArrayNode>>> exceptionHandlerFactory;
-    private Disruptor<WithMetadata<ArrayNode>> disruptor;
+    private final Function<Subscription, ExceptionHandler<CommandEvents>> exceptionHandlerFactory;
+    private final ObjectReader domainEventsReader;
+    private Disruptor<CommandEvents> disruptor;
     private final IterableProvider<Neo4jEventProjectionPreProcessor> preProcessors;
     private final DisruptorConfiguration disruptorConfiguration;
+    private Subscription subscription;
 
     public ProjectionSubscriber(Function<Subscription, Neo4jProjectionEventHandler> handlerFactory,
                                 IterableProvider<Neo4jEventProjectionPreProcessor> preProcessors,
                                 DisruptorConfiguration disruptorConfiguration,
-                                Function<Subscription, ExceptionHandler<WithMetadata<ArrayNode>>> exceptionHandlerFactory) {
+                                Function<Subscription, ExceptionHandler<CommandEvents>> exceptionHandlerFactory) {
         this.preProcessors = preProcessors;
         this.disruptorConfiguration = disruptorConfiguration;
         this.handlerFactory = handlerFactory;
         this.exceptionHandlerFactory = exceptionHandlerFactory;
+        JsonMapper mapper = new JsonMapper();
+        domainEventsReader = mapper.readerFor(List.class);
     }
 
     @Override
     public void onSubscribe(Subscription subscription) {
-        disruptor = new Disruptor<>(WithMetadata::new, disruptorConfiguration.getSize(), new NamedThreadFactory("Neo4jProjection-"),
+        this.subscription = subscription;
+        disruptor = new Disruptor<>(CommandEvents::new, disruptorConfiguration.getSize(), new NamedThreadFactory("Neo4jProjection-"),
                 ProducerType.MULTI,
                 new BlockingWaitStrategy());
 
-        EventHandlerGroup<WithMetadata<ArrayNode>> eventHandlerGroup = null;
+        EventHandlerGroup<CommandEvents> eventHandlerGroup = null;
         for (Neo4jEventProjectionPreProcessor preProcessor : preProcessors) {
             eventHandlerGroup = (eventHandlerGroup == null) ?
                     disruptor.handleEventsWith(new PreProcessorEventHandler(preProcessor)):
@@ -82,10 +94,17 @@ public class ProjectionSubscriber
     @Override
     public void onNext(WithMetadata<ArrayNode> item) {
 
-        disruptor.publishEvent((e, seq, event) ->
-        {
-            e.set(event);
-        }, item);
+        try {
+            List<DomainEvent> domainEvents = domainEventsReader.readValue(item.event());
+
+            disruptor.publishEvent((e, seq, md, events) ->
+            {
+                e.set(md, events);
+            }, item.metadata(), domainEvents);
+        } catch (IOException e) {
+            LogManager.getLogger().error("Projection failed", e);
+            subscription.cancel();
+        }
     }
 
     @Override
@@ -109,5 +128,4 @@ public class ProjectionSubscriber
             LogManager.getLogger(getClass()).warn("Could not shutdown disruptor within timeout", e);
         }
     }
-
 }

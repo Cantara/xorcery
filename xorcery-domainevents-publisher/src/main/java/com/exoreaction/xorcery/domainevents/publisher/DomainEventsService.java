@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.domainevents.publisher;
 import com.exoreaction.xorcery.concurrent.CloseableSemaphore;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.domainevents.api.CommandEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
@@ -99,12 +100,12 @@ public class DomainEventsService
         });
     }
 
-    public CompletableFuture<Metadata> publish(Metadata metadata, DomainEvents events) {
+    public CompletableFuture<Metadata> publish(CommandEvents commandEvents) {
         try {
             requests.tryAcquire(10, TimeUnit.SECONDS);
             CompletableFuture<Metadata> future = new CompletableFuture<>();
-            ArrayNode json = objectMapper.valueToTree(events);
-            subscriber.onNext(new WithResult<>(new WithMetadata<>(metadata.toBuilder().add(deploymentMetadata.context()).build(), json), future));
+            ArrayNode json = objectMapper.valueToTree(commandEvents.getEvents());
+            subscriber.onNext(new WithResult<>(new WithMetadata<>(commandEvents.getMetadata().toBuilder().add(deploymentMetadata.context()).build(), json), future));
             return future;
         } catch (InterruptedException e) {
             return CompletableFuture.failedFuture(e);

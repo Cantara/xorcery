@@ -15,6 +15,9 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.streams;
 
+import com.exoreaction.xorcery.domainevents.api.CommandEvents;
+import com.exoreaction.xorcery.domainevents.api.DomainEvent;
+import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
@@ -47,26 +50,29 @@ public class CypherEventProjection
     private final Map<String, List<String>> cachedEventCypher = new HashMap<>();
 
     @Override
-    public void write(WithMetadata<ArrayNode> events, Transaction transaction) throws Throwable {
+    public void write(CommandEvents events, Transaction transaction) throws Throwable {
         Map<String, Object> metadataMap = null;
 
-        for (JsonNode jsonNode : events.event()) {
-            ObjectNode eventJson = (ObjectNode) jsonNode;
+        for (DomainEvent event : events.getEvents()) {
+            if (event instanceof JsonDomainEvent jsonDomainEvent)
+            {
+                ObjectNode eventJson = jsonDomainEvent.json();
 
-            String type = eventJson.path("@class").textValue();
-            List<String> statement = getCypher(type);
-            if (statement == null)
-                return;
+                String eventName = jsonDomainEvent.getName();
+                List<String> statement = getCypher(eventName);
+                if (statement == null)
+                    return;
 
-            // Only do this if any of the events are actually projected
-            if (metadataMap == null)
-                metadataMap = Cypher.toMap(events.metadata().metadata());
+                // Only do this if any of the events are actually projected
+                if (metadataMap == null)
+                    metadataMap = Cypher.toMap(events.getMetadata().metadata());
 
-            Map<String, Object> parameters = Cypher.toMap(eventJson);
-            parameters.put("metadata", metadataMap);
+                Map<String, Object> parameters = Cypher.toMap(eventJson);
+                parameters.put("metadata", metadataMap);
 
-            for (String stmt : statement) {
-                transaction.execute(stmt, parameters);
+                for (String stmt : statement) {
+                    transaction.execute(stmt, parameters);
+                }
             }
         }
     }

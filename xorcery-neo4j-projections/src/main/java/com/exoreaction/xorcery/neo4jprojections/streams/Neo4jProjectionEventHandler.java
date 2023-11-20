@@ -18,6 +18,9 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.exoreaction.xorcery.domainevents.api.CommandEvents;
+import com.exoreaction.xorcery.domainevents.api.DomainEvent;
+import com.exoreaction.xorcery.domainevents.api.DomainEvents;
 import com.exoreaction.xorcery.lang.Enums;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
@@ -27,6 +30,8 @@ import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.RewindableEventHandler;
 import com.lmax.disruptor.RewindableException;
@@ -49,7 +54,7 @@ import java.util.function.Consumer;
  */
 
 public class Neo4jProjectionEventHandler
-        implements RewindableEventHandler<WithMetadata<ArrayNode>> {
+        implements RewindableEventHandler<CommandEvents> {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
@@ -109,20 +114,20 @@ public class Neo4jProjectionEventHandler
     }
 
     @Override
-    public void onEvent(WithMetadata<ArrayNode> event, long sequence, boolean endOfBatch) throws RewindableException, Exception {
+    public void onEvent(CommandEvents event, long sequence, boolean endOfBatch) throws RewindableException, Exception {
         if (tx == null) {
             tx = graphDatabaseService.beginTx();
         }
 
-        event.metadata().getLong("timestamp").ifPresent(value ->
+        event.getMetadata().getLong("timestamp").ifPresent(value ->
         {
             lastTimestamp = Math.max(lastTimestamp, value);
         });
 
-        Map<String, Object> metadataMap = Cypher.toMap(event.metadata().metadata());
+        Map<String, Object> metadataMap = Cypher.toMap(event.getMetadata().metadata());
         // Preprocessor may have removed all the events, so check for this
-        ArrayNode eventsJson = event.event();
-        if (!eventsJson.isEmpty()) {
+        List<DomainEvent> domainEvents = event.getEvents();
+        if (!domainEvents.isEmpty()) {
 
             try {
                 for (Neo4jEventProjection projection : projections) {
@@ -134,10 +139,10 @@ public class Neo4jProjectionEventHandler
                 tx = null;
 
                 if (t instanceof EntityNotFoundException) {
-                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, eventsJson.toPrettyString()), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, domainEvents), t);
                     throw new RewindableException(t);
                 } else {
-                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, eventsJson.toPrettyString()), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, domainEvents), t);
 
                     if (t instanceof Exception e)
                         throw e;
@@ -148,7 +153,7 @@ public class Neo4jProjectionEventHandler
         }
 
         version++;
-        eventBatchCount += event.event().size();
+        eventBatchCount += event.getEvents().size();
 
         if (endOfBatch || eventBatchCount >= eventBatchSize) {
             try {

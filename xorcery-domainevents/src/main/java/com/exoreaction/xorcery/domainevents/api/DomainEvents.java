@@ -41,4 +41,8 @@ public record DomainEvents(List<DomainEvent> events) {
     public List<DomainEvent> events() {
         return events;
     }
+
+    public boolean isEmpty() {
+        return events.isEmpty();
+    }
 }

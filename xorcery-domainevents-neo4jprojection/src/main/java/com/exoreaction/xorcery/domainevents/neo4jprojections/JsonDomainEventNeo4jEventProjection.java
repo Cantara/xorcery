@@ -15,10 +15,11 @@
  */
 package com.exoreaction.xorcery.domainevents.neo4jprojections;
 
+import com.exoreaction.xorcery.domainevents.api.CommandEvents;
+import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 import org.apache.logging.log4j.LogManager;
@@ -26,7 +27,6 @@ import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 import org.neo4j.graphdb.*;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -39,22 +39,20 @@ public class JsonDomainEventNeo4jEventProjection
     public static final Label AGGREGATE_LABEL = Label.label("Aggregate");
 
     @Override
-    public void write(WithMetadata<ArrayNode> events, Transaction transaction) throws Throwable {
-        Map<String, Object> metadataMap = Cypher.toMap(events.metadata().metadata());
+    public void write(CommandEvents events, Transaction transaction) throws Throwable {
+        Map<String, Object> metadataMap = Cypher.toMap(events.getMetadata().metadata());
 
-        for (JsonNode jsonNode : events.event()) {
-            ObjectNode eventJson = (ObjectNode) jsonNode;
-            String type = eventJson.path("@class").textValue();
-            if (!type.equals(JsonDomainEvent.class.getName()))
-                continue;
+        for (DomainEvent domainEvent : events.getEvents()) {
+            if (domainEvent instanceof JsonDomainEvent jsonDomainEvent)
+            {
 
-            Neo4jJsonDomainEvent neo4jJsonDomainEvent = new Neo4jJsonDomainEvent(new JsonDomainEvent(eventJson));
+            Neo4jJsonDomainEvent neo4jJsonDomainEvent = new Neo4jJsonDomainEvent(jsonDomainEvent);
             Object timestamp = metadataMap.get("timestamp");
             Object aggregateId = metadataMap.get("aggregateId");
             String aggregateType = metadataMap.get("aggregateType").toString();
-            if (eventJson.has("created")) {
-                ObjectNode created = (ObjectNode) eventJson.path("created");
-                Node node = transaction.createNode(Label.label(created.get("type").textValue()), ENTITY_LABEL);
+            if (jsonDomainEvent.isCreated()) {
+                JsonDomainEvent.JsonEntity entity = jsonDomainEvent.getEntity();
+                Node node = transaction.createNode(Label.label(entity.getType()), ENTITY_LABEL);
 
                 for (String label : neo4jJsonDomainEvent.labels()) {
                     node.addLabel(Label.label(label));
@@ -62,15 +60,15 @@ public class JsonDomainEventNeo4jEventProjection
 
                 node.setProperty("created_on", timestamp);
                 node.setProperty("last_updated_on", timestamp);
-                String id = created.get("id").textValue();
+                String id = entity.getId();
                 node.setProperty("id", id);
                 if (aggregateId != null) {
                     node.setProperty("aggregate_id", aggregateId);
                 }
 
-                attributes(eventJson, node);
-                addedRelationships(eventJson, transaction, node);
-                removedRelationships(eventJson, node);
+                attributes(jsonDomainEvent.json(), node);
+                addedRelationships(jsonDomainEvent.json(), transaction, node);
+                removedRelationships(jsonDomainEvent.json(), node);
 
                 // Create/update aggregate node
                 if (aggregateType != null && aggregateId != null) {
@@ -86,9 +84,9 @@ public class JsonDomainEventNeo4jEventProjection
                     }
                     aggregateNode.setProperty("last_updated_on", timestamp);
                 }
-            } else if (eventJson.has("updated")) {
-                ObjectNode updated = (ObjectNode) eventJson.path("updated");
-                Node node = transaction.findNode(ENTITY_LABEL, "id", updated.get("id").textValue());
+            } else if (jsonDomainEvent.isUpdated()) {
+                JsonDomainEvent.JsonEntity entity = jsonDomainEvent.getEntity();
+                Node node = transaction.findNode(ENTITY_LABEL, "id", entity.getId());
 
                 for (String label : neo4jJsonDomainEvent.labels()) {
                     Label labelUpdate = Label.label(label);
@@ -100,9 +98,9 @@ public class JsonDomainEventNeo4jEventProjection
                 if (node != null) {
                     node.setProperty("last_updated_on", timestamp);
 
-                    attributes(eventJson, node);
-                    addedRelationships(eventJson, transaction, node);
-                    removedRelationships(eventJson, node);
+                    attributes(jsonDomainEvent.json(), node);
+                    addedRelationships(jsonDomainEvent.json(), transaction, node);
+                    removedRelationships(jsonDomainEvent.json(), node);
 
                     // Update aggregate node
                     if (aggregateType != null && aggregateId != null) {
@@ -110,11 +108,10 @@ public class JsonDomainEventNeo4jEventProjection
                         aggregateNode.setProperty("last_updated_on", timestamp);
                     }
                 }
-            } else if (eventJson.has("deleted")) {
-                ObjectNode deleted = (ObjectNode) eventJson.path("deleted");
-                String id = deleted.get("id").textValue();
+            } else if (jsonDomainEvent.isDeleted()) {
+                JsonDomainEvent.JsonEntity entity = jsonDomainEvent.getEntity();
 
-                if (id.equals(aggregateId)) {
+                if (entity.getId().equals(aggregateId)) {
                     try (ResourceIterator<Node> entityNodes = transaction.findNodes(ENTITY_LABEL, "aggregate_id", aggregateId)) {
                         while (entityNodes.hasNext()) {
                             Node entityNode = entityNodes.next();
@@ -125,7 +122,7 @@ public class JsonDomainEventNeo4jEventProjection
                     Node aggregateNode = transaction.findNode(AGGREGATE_LABEL, "aggregate_id", aggregateId);
                     aggregateNode.delete();
                 } else {
-                    Node node = transaction.findNode(ENTITY_LABEL, "id", id);
+                    Node node = transaction.findNode(ENTITY_LABEL, "id", entity.getId());
                     detachDelete(node);
 
                     // Update aggregate node
@@ -134,6 +131,7 @@ public class JsonDomainEventNeo4jEventProjection
                         aggregateNode.setProperty("last_updated_on", timestamp);
                     }
                 }
+            }
             }
         }
     }

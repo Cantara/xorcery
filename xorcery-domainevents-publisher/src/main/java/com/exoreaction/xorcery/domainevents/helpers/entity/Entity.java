@@ -32,7 +32,7 @@ public abstract class Entity<SNAPSHOT extends EntitySnapshot> {
     private static final Map<Class<?>, Map<Class<?>, Method>> handleMethods = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Map<Class<?>, Method>> applyMethods = new ConcurrentHashMap<>();
 
-    private final List<com.exoreaction.xorcery.domainevents.api.DomainEvent> changes = new ArrayList<>();
+    private final List<DomainEvent> changes = new ArrayList<>();
 
     protected DomainEventMetadata metadata;
 

@@ -35,6 +35,9 @@ import java.util.function.Function;
 import static com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel.*;
 import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
 
+/**
+ * These events signify changes to state in a domain model
+ */
 public record JsonDomainEvent(ObjectNode json)
         implements JsonElement, DomainEvent {
 
@@ -271,12 +274,19 @@ public record JsonDomainEvent(ObjectNode json)
         return json.path("event").asText();
     }
 
-    public boolean isCreatedOrUpdated() {
-        return json.has(created.name()) || json.has(updated.name());
+    public boolean isCreated() {
+        return json.has(created.name());
+    }
+
+    public boolean isUpdated() {
+        return json.has(updated.name());
     }
 
     public boolean isDeleted() {
         return json.has(deleted.name());
+    }
+    public boolean isCreatedOrUpdated() {
+        return isUpdated() || isCreated();
     }
 
     public JsonEntity getCreated() {
