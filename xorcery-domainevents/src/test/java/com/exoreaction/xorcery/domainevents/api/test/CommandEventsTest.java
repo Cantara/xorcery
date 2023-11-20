@@ -3,7 +3,9 @@ package com.exoreaction.xorcery.domainevents.api.test;
 import com.exoreaction.xorcery.domainevents.api.*;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -35,18 +37,23 @@ public class CommandEventsTest {
             CommandEvents deserializedCommandEvents = mapper.readerFor(CommandEvents.class).readValue(serializedJson);
 
             System.out.println(deserializedCommandEvents);
+            for (DomainEvent deserializedEvent : deserializedCommandEvents.getEvents()) {
+                System.out.println(deserializedEvent);
+            }
         }
 
         {
             // Serialize events only
-            String serializedJson = mapper.writerFor(List.class).writeValueAsString(commandEvents.getEvents());
+            String serializedJson = mapper.writerFor(mapper.getTypeFactory().constructCollectionType(List.class, DomainEvent.class)).writeValueAsString(commandEvents.getEvents());
 
             System.out.println(serializedJson);
 
             // Deserialize it
-            List<DomainEvent> deserializedEvents = mapper.readerFor(List.class).readValue(serializedJson);
+            List<DomainEvent> deserializedEvents = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, DomainEvent.class)).readValue(serializedJson);
 
-            System.out.println(deserializedEvents);
+            for (DomainEvent deserializedEvent : deserializedEvents) {
+                System.out.println(deserializedEvent);
+            }
         }
     }
 }

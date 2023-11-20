@@ -58,7 +58,7 @@ public class ProjectionSubscriber
         this.handlerFactory = handlerFactory;
         this.exceptionHandlerFactory = exceptionHandlerFactory;
         JsonMapper mapper = new JsonMapper();
-        domainEventsReader = mapper.readerFor(List.class);
+        domainEventsReader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, DomainEvent.class));
     }
 
     @Override
