@@ -32,5 +32,5 @@ open module xorcery.coordinator {
     requires transitive xorcery.status.server;
 
     requires org.apache.logging.log4j.core;
-    requires log4j.layout.template.json;
+    requires org.apache.logging.log4j.layout.template.json;
 }

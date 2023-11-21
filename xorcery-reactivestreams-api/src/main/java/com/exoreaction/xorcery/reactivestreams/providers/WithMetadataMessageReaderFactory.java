@@ -49,10 +49,21 @@ public class WithMetadataMessageReaderFactory
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
 
         if (type.equals(WithMetadata.class)) {
-            Class<?> eventType = (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
-            MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, mediaType);
-            if (eventReader != null) {
-                return (MessageReader<T>) new WithMetadataMessageReader<>(eventReader);
+            if (((ParameterizedType) genericType).getActualTypeArguments()[0] instanceof Class<?> eventType)
+            {
+                MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, mediaType);
+                if (eventReader != null) {
+                    return (MessageReader<T>) new WithMetadataMessageReader<>(eventReader);
+                }
+            } else if (((ParameterizedType) genericType).getActualTypeArguments()[0] instanceof ParameterizedType parameterizedEventType)
+            {
+                if (parameterizedEventType.getRawType() instanceof Class<?> eventType)
+                {
+                    MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, mediaType);
+                    if (eventReader != null) {
+                        return (MessageReader<T>) new WithMetadataMessageReader<>(eventReader);
+                    }
+                }
             }
         }
         return null;

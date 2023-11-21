@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.reactivestreams.providers;
 
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -47,10 +48,21 @@ public class WithMetadataMessageWriterFactory
     @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
         if (type.equals(WithMetadata.class)) {
-            Class<?> eventType = (Class<?>) ((ParameterizedType) genericType).getActualTypeArguments()[0];
-            MessageWriter<?> eventWriter = messageWorkers.get().newWriter(eventType, eventType, mediaType);
-            if (eventWriter != null) {
-                return (MessageWriter<T>) new WithMetadataMessageWriter<>(eventWriter);
+            if (((ParameterizedType) genericType).getActualTypeArguments()[0] instanceof Class<?> eventType)
+            {
+                MessageWriter<?> eventWriter = messageWorkers.get().newWriter(eventType, eventType, mediaType);
+                if (eventWriter != null) {
+                    return (MessageWriter<T>) new WithMetadataMessageWriter<>(eventWriter);
+                }
+            } else if (((ParameterizedType) genericType).getActualTypeArguments()[0] instanceof ParameterizedType parameterizedEventType)
+            {
+                if (parameterizedEventType.getRawType() instanceof Class<?> eventType)
+                {
+                    MessageWriter<?> eventWriter = messageWorkers.get().newWriter(eventType, eventType, mediaType);
+                    if (eventWriter != null) {
+                        return (MessageWriter<T>) new WithMetadataMessageWriter<>(eventWriter);
+                    }
+                }
             }
         }
         return null;

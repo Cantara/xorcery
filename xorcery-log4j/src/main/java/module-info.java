@@ -31,7 +31,7 @@ open module xorcery.log4j {
     requires transitive org.apache.logging.log4j.core;
     requires jakarta.inject;
     requires com.fasterxml.jackson.databind;
-    requires log4j.layout.template.json;
+    requires org.apache.logging.log4j.layout.template.json;
     requires static org.jctools.core;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
