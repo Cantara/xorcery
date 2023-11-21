@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.domainevents.api.CommandEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
+import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -58,6 +59,7 @@ public class ProjectionSubscriber
         this.handlerFactory = handlerFactory;
         this.exceptionHandlerFactory = exceptionHandlerFactory;
         JsonMapper mapper = new JsonMapper();
+        mapper.getSubtypeResolver().registerSubtypes(JsonDomainEvent.class);
         domainEventsReader = mapper.readerFor(mapper.getTypeFactory().constructCollectionType(List.class, DomainEvent.class));
     }
 
