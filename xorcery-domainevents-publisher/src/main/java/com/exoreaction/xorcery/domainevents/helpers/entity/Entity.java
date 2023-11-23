@@ -36,15 +36,6 @@ public abstract class Entity<SNAPSHOT extends EntitySnapshot> {
     protected DomainEventMetadata metadata;
     protected SNAPSHOT snapshot;
 
-    public SNAPSHOT getSnapshot()
-    {
-        return snapshot;
-    }
-
-    protected void setSnapshot(SNAPSHOT snapshot) {
-        this.snapshot = snapshot;
-    }
-
     protected void before(Command command)
             throws Exception
     {
@@ -58,7 +49,7 @@ public abstract class Entity<SNAPSHOT extends EntitySnapshot> {
     public List<DomainEvent> handle(DomainEventMetadata metadata, SNAPSHOT snapshot, Command command)
             throws Throwable {
         this.metadata = metadata;
-        setSnapshot(snapshot);
+        this.snapshot = snapshot;
 
         Method handleMethod = handleMethods.computeIfAbsent(getClass(), clazz ->
         {

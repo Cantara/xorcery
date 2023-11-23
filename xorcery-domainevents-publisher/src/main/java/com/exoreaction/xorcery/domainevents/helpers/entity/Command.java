@@ -25,6 +25,11 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonIgnoreProperties({"create", "update", "delete"})
 public interface Command {
 
+    default String id()
+    {
+        return null;
+    }
+
     static String getName(Command command)
     {
         return command.getClass().getSimpleName();

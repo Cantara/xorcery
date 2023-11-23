@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jsonapi.server.resources;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -106,5 +107,7 @@ public interface ResourceContext {
     default ObjectMapper objectMapper() {
         return objectMapper;
     }
-    ObjectMapper objectMapper = new ObjectMapper();
+
+    ObjectMapper objectMapper = new ObjectMapper()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 }
