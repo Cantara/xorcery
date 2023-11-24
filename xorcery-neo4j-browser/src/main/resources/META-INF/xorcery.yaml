@@ -9,14 +9,14 @@ neo4jdatabase:
     server:
       bolt:
         enabled: "{{ neo4jbrowser.enabled }}"
-        tls_level: "{{ certificates.enabled ? \"REQUIRED\" | \"OPTIONAL\" }}"
+        tls_level: "{{ neo4jbrowser.ssl.enabled ? \"REQUIRED\" | \"OPTIONAL\" }}"
         listen_address: ":7687"
         advertised_address: ":7687:"
     dbms:
       ssl:
         policy:
           bolt:
-            enabled: "{{ neo4jbrowser.enabled }}"
+            enabled: "{{ neo4jbrowser.ssl.enabled }}"
             base_directory: "certificates/bolt"
             private_key: "private.key"
             public_certificate: "public.crt"

@@ -103,9 +103,8 @@ public class Neo4jService
         SemanticVersion currentDatabaseVersion = getExistingDomainVersion(graphDb);
         if (currentDatabaseVersion == null) {
             logger.info("Domain schema version of database does not exist.");
-            currentDatabaseVersion = new SemanticVersion(-1, 0, 0); // force a breaking change
-        }
-        if (targetVersion.isBreakingChange(currentDatabaseVersion)) {
+            updateDomainVersionInDatabase(graphDb, targetVersion);
+        } else if (targetVersion.isBreakingChange(currentDatabaseVersion)) {
             logger.info("Attempting to update domain schema version of database from {} to {}, this is a breaking change.", currentDatabaseVersion, targetVersion);
             if (wipeOnBreakingChanges) {
                 logger.warn("WIPING all data in neo4j projection.");
