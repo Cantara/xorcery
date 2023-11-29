@@ -29,7 +29,7 @@ public class PreProcessorEventHandler
             preProcessor.preProcess(event);
         } catch (EarlyReleaseException e) {
             // Release processed events
-            sequenceCallback.set(sequence);
+            sequenceCallback.set(sequence-1);
             // Try again
             preProcessor.preProcess(event);
         }
