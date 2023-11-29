@@ -5,8 +5,6 @@ import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.domainevents.api.Model;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -32,7 +30,7 @@ public class CommandEventsTest {
                 .build();
         List<DomainEvent> domainEvents = List.of(JsonDomainEvent.event("TestEvent")
                 .created("MyEntity", "someid")
-                .attribute("foo", "bar")
+                .updatedAttribute("foo", "bar")
                 .addMetadata(Model.Metadata.reason, "Because reasons")
                 .build());
         CommandEvents commandEvents = new CommandEvents(metadata, domainEvents);

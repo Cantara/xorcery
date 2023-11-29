@@ -15,44 +15,68 @@
  */
 package com.exoreaction.xorcery.domainevents.api;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 
 import static com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel.*;
+import static com.exoreaction.xorcery.lang.Strings.capitalize;
 import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
+import static java.util.Objects.requireNonNull;
 
 /**
  * These events signify changes to state in a domain model
  */
 public record JsonDomainEvent(ObjectNode json)
         implements JsonElement, DomainEvent {
+    static final Map<Class<?>, Function<Object, JsonNode>> TO_JSON =
+            Map.of(
+                    String.class, v -> JsonNodeFactory.instance.textNode(v.toString()),
+                    Double.class, v -> JsonNodeFactory.instance.numberNode((Double) v),
+                    Float.class, v -> JsonNodeFactory.instance.numberNode((Float) v),
+                    Boolean.class, v -> JsonNodeFactory.instance.booleanNode((Boolean) v),
+                    Long.class, v -> JsonNodeFactory.instance.numberNode((Long) v),
+                    Integer.class, v -> JsonNodeFactory.instance.numberNode((Integer) v),
+                    Enum.class, v -> JsonNodeFactory.instance.textNode(((Enum<?>) v).name())
+            );
+    static final ObjectMapper mapper = JsonMapper.builder()
+            .findAndAddModules()
+            .build();
 
     public static Builder event(String eventName) {
         return new JsonDomainEvent.Builder(eventName);
     }
 
-    public record Builder(ObjectNode builder) {
+    public static Builder event(String eventNamePrefix, Enum<?> eventNameSuffix) {
+        return event(eventNamePrefix + capitalize(eventNameSuffix.name()));
+    }
 
+    public record Builder(ObjectNode builder)
+        implements With<Builder>
+    {
         public Builder(String eventName) {
             this(JsonNodeFactory.instance.objectNode());
+            requireNonNull(eventName);
+            builder.set("@class", builder.textNode("com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"));
             builder.set(event.name(), builder.textNode(eventName));
         }
 
         public StateBuilder created(String entityType, String entityId) {
+            requireNonNull(type);
+            requireNonNull(id);
             builder.set(created.name(), builder.objectNode()
                     .<ObjectNode>set(type.name(), builder.textNode(entityType))
                     .set(id.name(), builder.textNode(entityId)));
@@ -65,6 +89,8 @@ public record JsonDomainEvent(ObjectNode json)
         }
 
         public StateBuilder updated(String entityType, String entityId) {
+            requireNonNull(type);
+            requireNonNull(id);
             builder.set(updated.name(), builder.objectNode()
                     .<ObjectNode>set(type.name(), builder.textNode(entityType))
                     .set(id.name(), builder.textNode(entityId)));
@@ -77,6 +103,8 @@ public record JsonDomainEvent(ObjectNode json)
         }
 
         public JsonDomainEvent deleted(String entityType, String entityId) {
+            requireNonNull(type);
+            requireNonNull(id);
             builder.set(deleted.name(), builder.objectNode()
                     .<ObjectNode>set(type.name(), builder.textNode(entityType))
                     .set(id.name(), builder.textNode(entityId)));
@@ -90,13 +118,8 @@ public record JsonDomainEvent(ObjectNode json)
     }
 
     public record StateBuilder(ObjectNode builder) {
-        private static final Map<Class<?>, Function<Object, JsonNode>> TO_JSON =
-                Map.of(
-                        String.class, v -> JsonNodeFactory.instance.textNode(v.toString()),
-                        Integer.class, v -> JsonNodeFactory.instance.numberNode((Integer) v)
-                );
-
-        public StateBuilder attribute(String name, JsonNode value) {
+        public StateBuilder updatedAttribute(String name, JsonNode value) {
+            requireNonNull(name);
             JsonNode attributes = builder.get(JsonDomainEventModel.attributes.name());
             if (attributes == null) {
                 attributes = builder.objectNode();
@@ -109,27 +132,136 @@ public record JsonDomainEvent(ObjectNode json)
             return this;
         }
 
-        public StateBuilder attribute(Enum<?> name, JsonNode value) {
-            return attribute(name.name(), value);
+        public StateBuilder updatedAttribute(Enum<?> name, JsonNode value) {
+            return updatedAttribute(name.name(), value);
         }
 
-        public StateBuilder attribute(String name, Object value) {
+        public StateBuilder updatedAttribute(String name, Object value) {
             if (value == null) {
-                attribute(name, NullNode.getInstance());
+                updatedAttribute(name, NullNode.getInstance());
             } else {
-                attribute(name, TO_JSON
-                        .getOrDefault(value.getClass(), (v) -> JsonNodeFactory.instance.textNode(v.toString()))
+                updatedAttribute(name, TO_JSON
+                        .getOrDefault(value.getClass(), (v) -> mapper.canSerialize(value.getClass()) ? mapper.valueToTree(value) : JsonNodeFactory.instance.textNode(v.toString()))
                         .apply(value));
             }
 
             return this;
         }
 
-        public StateBuilder attribute(Enum<?> name, Object value) {
-            return attribute(name.name(), value);
+        public StateBuilder updatedAttribute(Enum<?> name, Object value) {
+            return updatedAttribute(name.name(), value);
         }
 
+        // Collection attributes
+
+        /**
+         * Add a value to a list attribute.
+         *
+         * @param name  of attribute
+         * @param index to insert value at, or -1 to insert at the end
+         * @param value of attribute
+         * @return the builder
+         */
+        public StateBuilder addedAttribute(String name, int index, JsonNode value) {
+            requireNonNull(name);
+
+            if (value == null || value.isNull() || value.isMissingNode())
+                return this;
+
+            JsonNode attributes = builder.get("addedattributes");
+            if (attributes == null) {
+                attributes = builder.arrayNode();
+                builder.set("addedattributes", attributes);
+            }
+
+            ArrayNode arrayNode = (ArrayNode) attributes;
+            ObjectNode attributeNode = arrayNode.objectNode()
+                    .<ObjectNode>set("name", arrayNode.textNode(name))
+                    .set("value", value);
+            if (index >= 0) {
+                attributeNode.set("index", arrayNode.numberNode(index));
+            }
+            arrayNode.add(attributeNode);
+
+            return this;
+        }
+
+        public StateBuilder addedAttribute(String name, int index, Object value) {
+            if (value == null) {
+                return this;
+            } else {
+                addedAttribute(name, index, TO_JSON
+                        .getOrDefault(value.getClass(), (v) -> mapper.canSerialize(value.getClass()) ? mapper.valueToTree(value) : JsonNodeFactory.instance.textNode(v.toString()))
+                        .apply(value));
+            }
+
+            return this;
+        }
+
+        public StateBuilder addedAttribute(Enum<?> name, int index, Object value) {
+            return addedAttribute(name.name(), index, value);
+        }
+
+        public StateBuilder addedAttribute(String name, JsonNode value) {
+            return addedAttribute(name, -1, value);
+        }
+
+        public StateBuilder addedAttribute(String name, Object value) {
+            return addedAttribute(name, -1, value);
+        }
+
+        public StateBuilder addedAttribute(Enum<?> name, Object value) {
+            return addedAttribute(name.name(), -1, value);
+        }
+
+        /**
+         * Remove a value from a list attribute
+         *
+         * @param name  of attribute
+         * @param value of attribute
+         * @return the builder
+         */
+        public StateBuilder removedAttribute(String name, JsonNode value) {
+            requireNonNull(name);
+
+            if (value == null || value.isNull() || value.isMissingNode())
+                return this;
+
+            JsonNode attributes = builder.get("removedattributes");
+            if (attributes == null) {
+                attributes = builder.arrayNode();
+                builder.set("removedattributes", attributes);
+            }
+
+            ArrayNode arrayNode = (ArrayNode) attributes;
+            ObjectNode attributeNode = arrayNode.objectNode()
+                    .<ObjectNode>set("name", arrayNode.textNode(name))
+                    .set("value", value);
+            arrayNode.add(attributeNode);
+
+            return this;
+        }
+
+        public StateBuilder removedAttribute(String name, Object value) {
+            if (value == null) {
+                return this;
+            } else {
+                removedAttribute(name, TO_JSON
+                        .getOrDefault(value.getClass(), (v) -> mapper.canSerialize(value.getClass()) ? mapper.valueToTree(value) : JsonNodeFactory.instance.textNode(v.toString()))
+                        .apply(value));
+            }
+
+            return this;
+        }
+
+        public StateBuilder removedAttribute(Enum<?> name, Object value) {
+            return removedAttribute(name.name(), value);
+        }
+
+        // Relationships
         public StateBuilder updatedRelationship(String relationship, String entityType, String entityId, ObjectNode attributes) {
+            requireNonNull(relationship);
+            requireNonNull(type);
 
             if (entityId == null)
                 return this;
@@ -166,6 +298,8 @@ public record JsonDomainEvent(ObjectNode json)
         }
 
         public StateBuilder addedRelationship(String relationship, String entityType, String entityId) {
+            requireNonNull(relationship);
+            requireNonNull(type);
 
             if (entityId == null)
                 return this;
@@ -191,6 +325,8 @@ public record JsonDomainEvent(ObjectNode json)
         }
 
         public StateBuilder removedRelationship(String relationship, String entityType, String entityId) {
+            requireNonNull(relationship);
+            requireNonNull(type);
 
             JsonNode relationships = builder.get(removedrelationships.name());
             if (relationships == null) {
@@ -226,11 +362,12 @@ public record JsonDomainEvent(ObjectNode json)
         }
 
         public StateBuilder addMetadata(String name, Object value) {
+            requireNonNull(name);
             if (value == null) {
                 addMetadata(name, NullNode.getInstance());
             } else {
                 addMetadata(name, TO_JSON
-                        .getOrDefault(value.getClass(), (v) -> JsonNodeFactory.instance.textNode(v.toString()))
+                        .getOrDefault(value.getClass(), (v) -> mapper.canSerialize(value.getClass()) ? mapper.valueToTree(value) : JsonNodeFactory.instance.textNode(v.toString()))
                         .apply(value));
             }
 
@@ -285,6 +422,7 @@ public record JsonDomainEvent(ObjectNode json)
     public boolean isDeleted() {
         return json.has(deleted.name());
     }
+
     public boolean isCreatedOrUpdated() {
         return isUpdated() || isCreated();
     }
@@ -320,6 +458,34 @@ public record JsonDomainEvent(ObjectNode json)
             return Collections.emptyMap();
         else
             return JsonElement.asMap(attrs);
+    }
+
+    public List<NameValue> getAddedAttributes() {
+        ArrayNode attrs = (ArrayNode) json.get(addedattributes.name());
+        if (attrs == null)
+            return Collections.emptyList();
+        else
+        {
+            List<NameValue> nameValueList = new ArrayList<>(attrs.size());
+            for (JsonNode attr : attrs) {
+                nameValueList.add(new NameValue(attr.path("name").textValue(), attr.get("value")));
+            }
+            return nameValueList;
+        }
+    }
+
+    public List<NameValue> getRemovedAttributes() {
+        ArrayNode attrs = (ArrayNode) json.get(removedattributes.name());
+        if (attrs == null)
+            return Collections.emptyList();
+        else
+        {
+            List<NameValue> nameValueList = new ArrayList<>(attrs.size());
+            for (JsonNode attr : attrs) {
+                nameValueList.add(new NameValue(attr.path("name").textValue(), attr.get("value")));
+            }
+            return nameValueList;
+        }
     }
 
     public List<JsonRelationship> getUpdatedRelationships() {
@@ -366,4 +532,5 @@ public record JsonDomainEvent(ObjectNode json)
             return getString(relationship.name()).orElseThrow();
         }
     }
+
 }
