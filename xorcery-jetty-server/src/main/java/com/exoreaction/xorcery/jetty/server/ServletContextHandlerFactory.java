@@ -51,6 +51,7 @@ public class ServletContextHandlerFactory
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
         servletContextHandler.setContextPath("/");
+        servletContextHandler.setBaseResource(new ResourcesResource(""));
 
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
 
