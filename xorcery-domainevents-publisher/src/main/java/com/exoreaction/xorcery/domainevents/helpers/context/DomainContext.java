@@ -21,23 +21,28 @@ import jakarta.ws.rs.NotFoundException;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public interface DomainContext {
 
     class Empty
-        implements DomainContext
-    {
+            implements DomainContext {
     }
 
-    default List<Command> commands()
-    {
+    default List<Command> commands() {
         return Collections.emptyList();
     }
 
-    default CompletionStage<Metadata> handle(Metadata metadata, Command command)
-    {
+    default <T extends Command> Optional<T> command(Class<T> commandClass) {
+        return commands().stream()
+                .filter(commandClass::isInstance)
+                .map(commandClass::cast)
+                .findFirst();
+    }
+
+    default CompletionStage<Metadata> handle(Metadata metadata, Command command) {
         return CompletableFuture.failedStage(new NotFoundException());
     }
 }
