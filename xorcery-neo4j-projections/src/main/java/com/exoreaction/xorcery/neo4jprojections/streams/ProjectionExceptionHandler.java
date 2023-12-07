@@ -17,21 +17,33 @@ public class ProjectionExceptionHandler implements ExceptionHandler<CommandEvent
 
     @Override
     public void handleEventException(Throwable ex, long sequence, CommandEvents event) {
-        subscription.cancel();
         LogManager.getLogger(getClass()).error("Cancelled subscription", ex);
+        try {
+            subscription.cancel();
+        } catch (Exception e) {
+            LogManager.getLogger(getClass()).error("Failed to cancel subscription", ex);
+        }
         throw new RuntimeException("Projection cancelled", ex);
     }
 
     @Override
     public void handleOnStartException(Throwable ex) {
-        subscription.cancel();
         LogManager.getLogger(getClass()).warn("Cancelled subscription", ex);
+        try {
+            subscription.cancel();
+        } catch (Exception e) {
+            LogManager.getLogger(getClass()).error("Failed to cancel subscription", ex);
+        }
         throw new RuntimeException("Projection cancelled", ex);
     }
 
     @Override
     public void handleOnShutdownException(Throwable ex) {
-        subscription.cancel();
         LogManager.getLogger(getClass()).warn("Cancelled subscription", ex);
+        try {
+            subscription.cancel();
+        } catch (Exception e) {
+            LogManager.getLogger(getClass()).error("Failed to cancel subscription", ex);
+        }
     }
 }
