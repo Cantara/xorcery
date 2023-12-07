@@ -42,7 +42,6 @@ import java.util.concurrent.*;
 
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cancelStream;
 
-@Disabled("tends to hand in Jenkins, need to figure out why")
 public class SubscribePublisherTest {
 
     private String clientConf = """

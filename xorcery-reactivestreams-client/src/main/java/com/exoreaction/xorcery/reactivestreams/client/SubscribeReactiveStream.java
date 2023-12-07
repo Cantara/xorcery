@@ -416,9 +416,9 @@ public class SubscribeReactiveStream
 
     // Send requests
     protected void sendRequests() {
-        sendLock.lock();
-        isSendingRequests.set(true);
         try {
+            sendLock.lock();
+            isSendingRequests.set(true);
             try {
                 long rn;
                 if (isCancelled.get()) {
@@ -430,10 +430,10 @@ public class SubscribeReactiveStream
                         sendRequestsThreshold = Math.min((rn * 3) / 4, 2048);
                     } else {
                         if (rn < sendRequestsThreshold) {
-/*
-                            if (logger.isTraceEnabled())
-                                logger.trace(marker, "sendRequest not yet {}", rn);
-*/
+    /*
+                                if (logger.isTraceEnabled())
+                                    logger.trace(marker, "sendRequest not yet {}", rn);
+    */
                             return; // Wait until we have more requests lined up
                         }
                     }
@@ -447,15 +447,12 @@ public class SubscribeReactiveStream
                 session.getRemote().sendString(Long.toString(rn), sendWriteCallback);
                 if (logger.isTraceEnabled())
                     logger.trace(marker, "sendRequest {}", rn);
-
-            } catch (Throwable t) {
-                logger.error(marker, "Error sending requests", t);
             } finally {
+                isSendingRequests.set(false);
                 sendLock.unlock();
             }
-        } finally {
-            isSendingRequests.set(false);
-            sendLock.unlock();
+        } catch (Throwable t) {
+            logger.error(marker, "Error sending requests", t);
         }
     }
 
