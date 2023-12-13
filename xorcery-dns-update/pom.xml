@@ -22,11 +22,11 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-project</artifactId>
-        <version>0.80.4-SNAPSHOT</version>
+        <version>0.81.0</version>
     </parent>
 
     <artifactId>xorcery-dns-update</artifactId>
-    <version>0.80.4-SNAPSHOT</version>
+    <version>0.81.0</version>
     <packaging>jar</packaging>
 
     <dependencies>
