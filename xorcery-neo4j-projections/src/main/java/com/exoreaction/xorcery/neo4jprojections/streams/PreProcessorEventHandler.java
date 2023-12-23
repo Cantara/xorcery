@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.Sequence;
+import org.apache.logging.log4j.LogManager;
 
 public class PreProcessorEventHandler
     implements EventHandler<CommandEvents>
@@ -28,10 +29,18 @@ public class PreProcessorEventHandler
         try {
             preProcessor.preProcess(event);
         } catch (EarlyReleaseException e) {
-            // Release processed events
-            sequenceCallback.set(sequence-1);
-            // Try again
-            preProcessor.preProcess(event);
+            try {
+                // Release processed events
+                sequenceCallback.set(sequence-1);
+                // Try again
+                preProcessor.preProcess(event);
+
+                // Remove the flag
+                event.getMetadata().json().remove("earlyrelease");
+            } catch (EarlyReleaseException ex) {
+                LogManager.getLogger().error("Event migration threw EarlyReleastException again:\n{}", event);
+                throw ex;
+            }
         }
     }
 }
