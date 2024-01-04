@@ -33,17 +33,17 @@ public class LabelAccessMode
     }
 
     @Override
-    public boolean allowsTraverseAllNodesWithLabel(long label) {
+    public boolean allowsTraverseAllNodesWithLabel(int label) {
         return label == requiredLabelId;
     }
 
     @Override
-    public boolean disallowsTraverseLabel(long label) {
+    public boolean disallowsTraverseLabel(int label) {
         return label != requiredLabelId;
     }
 
     @Override
-    public boolean allowsTraverseNode(long... labels) {
+    public boolean allowsTraverseNode(int... labels) {
         for (long label : labels) {
             if (label == requiredLabelId)
                 return true;
