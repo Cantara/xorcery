@@ -12,7 +12,7 @@ import org.neo4j.kernel.impl.api.security.OverriddenAccessMode;
  */
 public class LabelAccessMode
         extends OverriddenAccessMode {
-    private final long requiredLabelId;
+    private final int requiredLabelId;
 
     public static LoginContext getLoginContextForLabel(String labelName) {
         return new LoginContext(AuthSubject.AUTH_DISABLED, ClientConnectionInfo.EMBEDDED_CONNECTION) {
