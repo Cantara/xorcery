@@ -16,14 +16,13 @@
 package com.exoreaction.xorcery.reactivestreams.server;
 
 import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
-import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,10 +35,9 @@ import org.eclipse.jetty.websocket.api.*;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -142,6 +140,8 @@ public class SubscriberSubscriptionReactiveStream
             logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
 
         this.session = session;
+
+        Optional.ofNullable(session.getUpgradeRequest().getParameterMap().get("configuration")).map(l -> l.get(0)).ifPresent(this::applyConfiguration);
     }
 
     @Override
@@ -154,28 +154,32 @@ public class SubscriberSubscriptionReactiveStream
 
             if (fin) {
                 // Read JSON parameters
-                try {
-                    ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(configurationMessage);
-                    subscriberConfiguration = new Configuration.Builder(configurationJson)
-                            .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
-                            .build();
-                } catch (JsonProcessingException e) {
-                    logger.error("Could not parse subscriber configuration", e);
-                    session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
-                }
-
-                try {
-                    subscriber = subscriberFactory.apply(subscriberConfiguration);
-                    activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), subscriberConfiguration);
-                    activeSubscriptions.addSubscription(activeSubscription);
-
-                    subscriber.onSubscribe(this);
-
-                    logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
-                } catch (Throwable e) {
-                    // TODO Send exception here
-                }
+                applyConfiguration(configurationMessage);
             }
+        }
+    }
+
+    private void applyConfiguration(String configuration) {
+        try {
+            ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(configuration);
+            subscriberConfiguration = new Configuration.Builder(configurationJson)
+                    .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
+                    .build();
+        } catch (JsonProcessingException e) {
+            logger.error("Could not parse subscriber configuration", e);
+            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+        }
+
+        try {
+            subscriber = subscriberFactory.apply(subscriberConfiguration);
+            activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), subscriberConfiguration);
+            activeSubscriptions.addSubscription(activeSubscription);
+
+            subscriber.onSubscribe(this);
+
+            logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
+        } catch (Throwable e) {
+            // TODO Send exception here
         }
     }
 
@@ -184,20 +188,16 @@ public class SubscriberSubscriptionReactiveStream
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketPartialBinary {} {}", fin, payload.limit());
 
-        if (fin)
-        {
-            if (isFirstBinary.get())
-            {
+        if (fin) {
+            if (isFirstBinary.get()) {
                 onWebSocketBinary(payload);
-            } else
-            {
+            } else {
                 byteBufferAccumulator.copyBuffer(payload);
                 onWebSocketBinary(byteBufferAccumulator.takeByteBuffer());
                 byteBufferAccumulator.close();
                 isFirstBinary.set(true);
             }
-        } else
-        {
+        } else {
             isFirstBinary.set(false);
             byteBufferAccumulator.copyBuffer(payload);
         }
@@ -284,8 +284,7 @@ public class SubscriberSubscriptionReactiveStream
                         firstRequest = rn;
                         sendRequestsThreshold = (rn * 3) / 4;
                     } else {
-                        if (rn < sendRequestsThreshold)
-                        {
+                        if (rn < sendRequestsThreshold) {
 /*
                             if (logger.isTraceEnabled())
                                 logger.trace(marker, "sendRequest not yet {}", rn);

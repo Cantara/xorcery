@@ -29,8 +29,6 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.eclipse.jetty.io.ByteBufferAccumulator;
-import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -41,6 +39,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -170,7 +169,8 @@ public class SubscribeReactiveStream
                 logger.trace(marker, "connect {}", publisherWebsocketUri);
             }
 
-            URI effectivePublisherWebsocketUri = URI.create(publisherWebsocketUri.getScheme() + "://" + publisherWebsocketUri.getAuthority() + "/streams/publishers/" + streamName);
+            String queryParameters = "?configuration=" + URLEncoder.encode(publisherConfiguration.get().json().toString(), StandardCharsets.UTF_8);
+            URI effectivePublisherWebsocketUri = URI.create(publisherWebsocketUri.getScheme() + "://" + publisherWebsocketUri.getAuthority() + "/streams/publishers/" + streamName+queryParameters);
             logger.debug(marker, "Trying " + effectivePublisherWebsocketUri);
             try {
                 ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
@@ -274,10 +274,23 @@ public class SubscribeReactiveStream
         this.session = session;
         this.retryDelay = Duration.parse("PT" + subscriberConfiguration.getRetryDelay()).toMillis();
 
-        // First send parameters, if available
         Configuration configuration = publisherConfiguration.get();
         activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), configuration);
         activeSubscriptions.addSubscription(activeSubscription);
+
+        logger.debug(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
+        if (isRetrying.get()) {
+            isRetrying.set(false);
+            long retryRequests = requests.get() + outstandingRequests.get();
+            outstandingRequests.set(0);
+            requests.set(0);
+            request(retryRequests);
+        } else {
+            subscriber.onSubscribe(this);
+        }
+
+        // First send parameters, if available
+/*
         String parameterString = configuration.json().toPrettyString();
         session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture().with(f ->
                 f.future().thenAcceptAsync(Void ->
@@ -300,6 +313,7 @@ public class SubscribeReactiveStream
                     return null;
                 })
         ));
+*/
     }
 
     @Override

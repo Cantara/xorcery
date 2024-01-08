@@ -84,7 +84,12 @@ public class PublishWithResultReactiveStream
     @Override
     public void retry(Throwable cause) {
         if (resultQueue != null)
+        {
+            for (CompletableFuture<Object> resultFuture : resultQueue) {
+                resultFuture.completeExceptionally(cause);
+            }
             resultQueue.clear();
+        }
         super.retry(cause);
     }
 

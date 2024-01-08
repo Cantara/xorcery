@@ -191,6 +191,8 @@ public class PublisherSubscriptionReactiveStream
 
         this.session = session;
         session.getRemote().setBatchMode(BatchMode.ON);
+
+        Optional.ofNullable(session.getUpgradeRequest().getParameterMap().get("configuration")).map(l -> l.get(0)).ifPresent(this::applyConfiguration);
     }
 
     @Override
@@ -199,23 +201,8 @@ public class PublisherSubscriptionReactiveStream
             logger.trace(marker, "onWebSocketText {}", message);
 
         if (publisherConfiguration == null) {
-            // Read JSON parameters
-            try {
-                ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(message);
-                publisherConfiguration = new Configuration.Builder(configurationJson)
-                        .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
-                        .build();
-                Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
-                publisher.subscribe(this);
-
-                activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
-                activeSubscriptions.addSubscription(activeSubscription);
-                metricRegistry.gauge("publisher." + streamName + "." + session.getLocalAddress() + ".requests",
-                        () -> (Gauge<Long>) () -> activeSubscription.requested().get());
-                return;
-            } catch (JsonProcessingException e) {
-                session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
-            }
+            applyConfiguration(message);
+            return;
         }
 
         long requestAmount = Long.parseLong(message);
@@ -236,6 +223,31 @@ public class PublisherSubscriptionReactiveStream
             }
         } else {
             outstandingRequestAmount += requestAmount;
+        }
+    }
+
+    private void applyConfiguration(String configuration) {
+        try {
+            ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(configuration);
+            publisherConfiguration = new Configuration.Builder(configurationJson)
+                    .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
+                    .build();
+        } catch (JsonProcessingException e) {
+            logger.error("Could not parse publisher configuration", e);
+            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+        }
+
+        try {
+            Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
+            publisher.subscribe(this);
+            activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
+            activeSubscriptions.addSubscription(activeSubscription);
+
+            logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
+            metricRegistry.gauge("publisher." + streamName + "." + session.getLocalAddress() + ".requests",
+                    () -> (Gauge<Long>) () -> activeSubscription.requested().get());
+        } catch (Throwable e) {
+            onError(e);
         }
     }
 

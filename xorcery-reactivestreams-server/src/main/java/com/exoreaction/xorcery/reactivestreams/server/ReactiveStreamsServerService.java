@@ -124,16 +124,11 @@ public class ReactiveStreamsServerService
 
             CompletableFuture<Void> subscriptionResult = new CompletableFuture<>();
             FutureProcessor<Object> futureProcessor = new FutureProcessor<>(subscriptionResult);
-            subscriptionResult.whenComplete((r, t) ->
-                    {
-                        activeSubscriptions.remove(futureProcessor);
-                    }
-            );
-
             publisher.subscribe(futureProcessor);
             activeSubscriptions.add(futureProcessor);
             // Cancel this subscription when the publisher itself cancels
             result.whenComplete(CompletableFutures.transfer(subscriptionResult));
+            subscriptionResult.whenComplete((r, t) ->activeSubscriptions.remove(futureProcessor));
             return futureProcessor;
         };
 
@@ -189,7 +184,7 @@ public class ReactiveStreamsServerService
             activeSubscriptions.add(futureProcessor);
             // Cancel this subscription when the subscriber itself cancels
             result.whenComplete(CompletableFutures.transfer(subscriptionResult));
-            result.whenComplete((r, t) -> activeSubscriptions.remove(futureProcessor));
+            subscriptionResult.whenComplete((r, t) -> activeSubscriptions.remove(futureProcessor));
             return futureProcessor;
         };
 

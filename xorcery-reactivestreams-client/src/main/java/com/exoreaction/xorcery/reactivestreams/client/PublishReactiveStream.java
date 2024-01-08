@@ -16,7 +16,6 @@
 package com.exoreaction.xorcery.reactivestreams.client;
 
 import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
@@ -36,17 +35,20 @@ import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.glassfish.hk2.api.AOPProxyCtl;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -179,7 +181,9 @@ public class PublishReactiveStream
                 logger.trace(marker, "connect {}", subscriberWebsocketUri);
             }
 
-            URI effectiveSubscriberWebsocketUri = URI.create(subscriberWebsocketUri.getScheme() + "://" + subscriberWebsocketUri.getAuthority() + "/streams/subscribers/" + streamName);
+            String queryParameters = "?configuration=" + URLEncoder.encode(subscriberConfiguration.get().json().toString(), StandardCharsets.UTF_8);
+            URI effectiveSubscriberWebsocketUri = URI.create(subscriberWebsocketUri.getScheme() + "://" + subscriberWebsocketUri.getAuthority() + "/streams/subscribers/" + streamName + queryParameters);
+
             logger.debug(marker, "Trying " + effectiveSubscriberWebsocketUri);
             try {
                 ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
@@ -231,8 +235,18 @@ public class PublishReactiveStream
 //            logger.trace(marker, "onNext {}", item.toString());
         }
 
-        if (!sendQueue.offer(item))
+        while (isReconnecting.get())
         {
+            if (isComplete.get())
+                return; // Give up
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                return; // Give up
+            }
+        }
+
+        if (!sendQueue.offer(item)) {
             logger.error(marker, "Could not put item on queue {}/{}", sendQueue.getCapacity(), sendQueue.getMaxCapacity());
         }
 
@@ -337,10 +351,12 @@ public class PublishReactiveStream
         session.getRemote().setBatchMode(BatchMode.ON);
         this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
 
-        // First send parameters, if available
         Configuration configuration = subscriberConfiguration.get();
         activeSubscription = new ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), configuration);
         activeSubscriptions.addSubscription(activeSubscription);
+
+        // First send parameters, if available
+/*
         String parameterString = configuration.json().toPrettyString();
 
         try {
@@ -351,6 +367,7 @@ public class PublishReactiveStream
             session.close(StatusCode.SERVER_ERROR, t.getMessage());
             logger.error(marker, "Parameter handshake failed", t);
         }
+*/
     }
 
     @Override
@@ -421,34 +438,35 @@ public class PublishReactiveStream
         drainLock.lock();
         isDraining.set(true);
         try {
-            logger.trace(marker, "Start drain");
-            int count;
-            int itemsSent = 0;
-            List<Object> items = new ArrayList<>(sendQueue.size());
-            while ((count = sendQueue.drainTo(items)) > 0) {
-                for (Object item : items) {
-                    send(item);
+            if (activeSubscription != null) {
+                logger.trace(marker, "Start drain");
+                int count;
+                int itemsSent = 0;
+                List<Object> items = new ArrayList<>(sendQueue.size());
+                while ((count = sendQueue.drainTo(items)) > 0) {
+                    for (Object item : items) {
+                        send(item);
 
-                    itemsSent++;
-                    if (itemsSent == 1024) {
-                        if (logger.isTraceEnabled())
-                            logger.trace(marker, "flush {}", itemsSent);
-                        session.getRemote().flush();
-                        flushHistogram.update(itemsSent);
-                        itemsSent = 0;
+                        itemsSent++;
+                        if (itemsSent == 1024) {
+                            if (logger.isTraceEnabled())
+                                logger.trace(marker, "flush {}", itemsSent);
+                            session.getRemote().flush();
+                            flushHistogram.update(itemsSent);
+                            itemsSent = 0;
+                        }
                     }
+                    activeSubscription.received().addAndGet(count);
+                    items.clear();
                 }
-                activeSubscription.received().addAndGet(count);
-                items.clear();
-            }
 
-            if (itemsSent > 0) {
-                if (logger.isTraceEnabled())
-                    logger.trace(marker, "flush {}", itemsSent);
-                session.getRemote().flush();
-                flushHistogram.update(itemsSent);
+                if (itemsSent > 0) {
+                    if (logger.isTraceEnabled())
+                        logger.trace(marker, "flush {}", itemsSent);
+                    session.getRemote().flush();
+                    flushHistogram.update(itemsSent);
+                }
             }
-
         } catch (Throwable t) {
             logger.error(marker, "Could not send event", t);
             if (session.isOpen()) {

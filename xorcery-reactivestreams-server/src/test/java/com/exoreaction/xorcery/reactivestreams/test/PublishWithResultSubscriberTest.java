@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.reactivestreams.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
@@ -26,6 +27,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
@@ -35,26 +37,29 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cancelStream;
 
-public class ReactiveStreamsWithResultTest {
+public class PublishWithResultSubscriberTest {
+
+    Logger logger = LogManager.getLogger();
 
     @Test
     public void testServerProducesResult() throws Exception {
 
         // Given
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", Sockets.nextFreePort())
-                .build();
-        System.out.println(configuration);
+        Configuration configuration = new ConfigurationBuilder()
+                .addTestDefaults()
+                .addYaml(String.format("""
+                jetty.server.http.port: %d
+                jetty.server.ssl.port: %d
+                """,Sockets.nextFreePort(), Sockets.nextFreePort())).build();
+        logger.debug(configuration);
 
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -68,7 +73,6 @@ public class ReactiveStreamsWithResultTest {
             CompletableFuture<Void> stream = reactiveStreamsClient.publish(conf.getURI(), "numbers",
                     Configuration::empty, publisher, ClientIntegerWithResultPublisher.class, ClientConfiguration.defaults());
 
-            Logger logger = LogManager.getLogger();
 
             AtomicInteger result = new AtomicInteger(0);
             for (int i = 0; i < 100; i++) {
@@ -94,19 +98,18 @@ public class ReactiveStreamsWithResultTest {
                     .toCompletableFuture().join();
         }
     }
-/*
+
     @Test
     public void testServerTimesOut() throws Exception {
 
         // Given
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", Sockets.nextFreePort())
-                .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        Configuration configuration = new ConfigurationBuilder().addTestDefaults().addYaml(String.format("""
+                reactivestreams.server.idleTimeout: "5s"
+                jetty.server.http.port: %d
+                jetty.server.ssl.port: %d
+                """,Sockets.nextFreePort(), Sockets.nextFreePort())).build();
+        logger.debug(configuration);
 
-        StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -117,12 +120,12 @@ public class ReactiveStreamsWithResultTest {
             CompletableFuture<Integer> result = new CompletableFuture<>();
             ClientIntegerSubscriber subscriber = new ClientIntegerSubscriber(result);
             CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "numbers",
-                    Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
+                    Configuration::empty, subscriber, ClientIntegerSubscriber.class, ClientConfiguration.defaults());
 
             // Then
             Assertions.assertThrows(CompletionException.class, () ->
             {
-                result.orTimeout(5, TimeUnit.SECONDS)
+                result.orTimeout(20, TimeUnit.SECONDS)
                         .exceptionallyCompose(cancelStream(stream))
                         .whenComplete(this::report)
                         .toCompletableFuture().join();
@@ -134,14 +137,14 @@ public class ReactiveStreamsWithResultTest {
     public void testServerException() throws Exception {
 
         // Given
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", Sockets.nextFreePort())
-                .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        Configuration configuration = new ConfigurationBuilder()
+                .addTestDefaults()
+                .addYaml(String.format("""
+                jetty.server.http.port: %d
+                jetty.server.ssl.port: %d
+                """,Sockets.nextFreePort(), Sockets.nextFreePort())).build();
+        logger.debug(configuration);
 
-        StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -155,7 +158,7 @@ public class ReactiveStreamsWithResultTest {
             CompletableFuture<Integer> result = new CompletableFuture<>();
             ClientIntegerSubscriber subscriber = new ClientIntegerSubscriber(result);
             CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "numbers",
-                    Configuration::empty, subscriber, ClientIntegerSubscriber.class, Configuration.empty());
+                    Configuration::empty, subscriber, ClientIntegerSubscriber.class, ClientConfiguration.defaults());
 
             // Then
             Assertions.assertThrows(NotAuthorizedException.class, () ->
@@ -176,14 +179,14 @@ public class ReactiveStreamsWithResultTest {
     public void testServerWithConfiguration()
             throws Exception {
         // Given
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.port", Sockets.nextFreePort())
-                .build();
-        System.out.println(StandardConfigurationBuilder.toYaml(configuration));
+        Configuration configuration = new ConfigurationBuilder()
+                .addTestDefaults()
+                .addYaml(String.format("""
+                jetty.server.http.port: %d
+                jetty.server.ssl.port: %d
+                """,Sockets.nextFreePort(), Sockets.nextFreePort())).build();
+        logger.debug(configuration);
 
-        StandardConfiguration standardConfiguration = () -> configuration;
         try (Xorcery xorcery = new Xorcery(configuration)) {
             ReactiveStreamsServer reactiveStreamsServer = xorcery.getServiceLocator().getService(ReactiveStreamsServer.class);
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
@@ -193,9 +196,9 @@ public class ReactiveStreamsWithResultTest {
 
             // When
             CompletableFuture<Configuration> result = new CompletableFuture<>();
-            ClientConfigurationSubscriber subscriber = new ClientConfigurationSubscriber(result);
+            SubscribePublisherTest.ClientConfigurationSubscriber subscriber = new SubscribePublisherTest.ClientConfigurationSubscriber(result);
             CompletableFuture<Void> stream = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "numbers",
-                    () -> new Configuration.Builder().add(HttpHeaders.AUTHORIZATION, "Bearer:abc").build(), subscriber, ClientConfigurationSubscriber.class, Configuration.empty());
+                    () -> new Configuration.Builder().add(HttpHeaders.AUTHORIZATION, "Bearer:abc").build(), subscriber, SubscribePublisherTest.ClientConfigurationSubscriber.class, ClientConfiguration.defaults());
 
             // Then
             try {
@@ -212,7 +215,7 @@ public class ReactiveStreamsWithResultTest {
             }
         }
 
-    }*/
+    }
 
     private void report(Integer total, Throwable throwable) {
         Logger logger = LogManager.getLogger(getClass());

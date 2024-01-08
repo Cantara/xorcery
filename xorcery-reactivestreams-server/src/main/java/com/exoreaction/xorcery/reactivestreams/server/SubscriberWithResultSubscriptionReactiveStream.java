@@ -36,6 +36,7 @@ import org.reactivestreams.Subscriber;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.charset.Charset;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -113,9 +114,13 @@ public class SubscriberWithResultSubscriptionReactiveStream
                     ByteBuffer data = resultOutputStream.takeByteBuffer();
                     session.getRemote().sendBytes(data, new WriteCallback() {
                         @Override
-                        public void writeFailed(Throwable x) {
-                            logger.error(marker, "Could not send result", x);
+                        public void writeFailed(Throwable t) {
                             byteBufferPool.release(data);
+
+                            if (t instanceof ClosedChannelException)
+                                return;
+
+                            logger.error(marker, "Could not send result", t);
                         }
 
                         @Override
