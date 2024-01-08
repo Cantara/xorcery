@@ -53,7 +53,6 @@ public class SubscribePublisherBenchmarks {
                         
             jetty.client.enabled: true
             jetty.client.ssl.enabled: true
-            jetty.client.http2.enabled: true
             reactivestreams.client.enabled: true
 
             metrics.enabled: false
