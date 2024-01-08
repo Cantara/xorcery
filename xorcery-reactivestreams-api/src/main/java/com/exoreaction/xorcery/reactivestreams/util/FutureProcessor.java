@@ -132,7 +132,7 @@ public class FutureProcessor<T>
     // Closeable
     @Override
     public void close() {
-        if (subscriber != null)
+        if (subscriber != null && subscription != null)
         {
             Subscriber<? super T> sub = subscriber;
             subscriber = null;
