@@ -633,7 +633,7 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>grpc-jpms-shaded</artifactId>
-                <version>1.60.1.0</version>
+                <version>1.60.1.1</version>
             </dependency>
 
             <!-- DNS -->
