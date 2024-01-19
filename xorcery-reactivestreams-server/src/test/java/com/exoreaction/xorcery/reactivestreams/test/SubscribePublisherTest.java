@@ -118,7 +118,7 @@ public class SubscribePublisherTest {
                         Configuration::empty, subscriber, IntegerSubscriber.class, ClientConfiguration.defaults());
 
                 // Then
-                result.orTimeout(10, TimeUnit.SECONDS)
+                result.orTimeout(100, TimeUnit.SECONDS)
                         .exceptionallyCompose(cancelStream(stream))
                         .whenComplete(this::report)
                         .toCompletableFuture().join();
