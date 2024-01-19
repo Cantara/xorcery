@@ -34,7 +34,7 @@ public class EventStoreService {
     public EventStoreService(Configuration configuration) throws ConnectionStringParsingException {
 
         EventStoreConfiguration eventStoreConfiguration = new EventStoreConfiguration(configuration.getConfiguration("eventstore"));
-        settings = EventStoreDBConnectionString.parse(eventStoreConfiguration.getURI());
+        settings = EventStoreDBConnectionString.parseOrThrow(eventStoreConfiguration.getURI());
         client = EventStoreDBClient.create(settings);
 
         // Test connection

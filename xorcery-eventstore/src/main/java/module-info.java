@@ -35,5 +35,4 @@ open module xorcery.eventstore {
     requires jersey.common;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
-    requires grpc.shaded.jpms;
 }

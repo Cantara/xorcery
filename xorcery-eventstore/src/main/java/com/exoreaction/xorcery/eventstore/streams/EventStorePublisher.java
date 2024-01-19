@@ -117,14 +117,15 @@ public class EventStorePublisher
         }
 
         @Override
-        public void onError(com.eventstore.dbclient.Subscription subscription, Throwable throwable) {
-            subscription.stop();
-            subscriber.onError(throwable);
-        }
-
-        @Override
-        public void onCancelled(com.eventstore.dbclient.Subscription subscription) {
-            subscriber.onComplete();
+        public void onCancelled(com.eventstore.dbclient.Subscription subscription, Throwable exception) {
+            if (exception == null)
+            {
+                subscriber.onError(exception);
+            } else
+            {
+                subscriber.onComplete();
+            }
+            super.onCancelled(subscription, exception);
         }
     }
 }
