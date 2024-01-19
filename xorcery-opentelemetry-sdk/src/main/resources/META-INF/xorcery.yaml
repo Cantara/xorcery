@@ -1,0 +1,37 @@
+opentelemetry:
+  enabled: "{{ defaults.enabled }}"
+  resource:
+    service.namespace: "{{ instance.environment }}"
+    service.name: "{{ application.name }}"
+    service.version: "{{ application.version }}"
+    service.instance.id: "{{ instance.id }}"
+    host.name: "{{ instance.fqdn }}"
+    host.ip: "{{ CALCULATED.ipv4Addresses }}"
+    process.runtime.name: "{{ SYSTEM.java_runtime_name }}"
+    process.runtime.version: "{{ SYSTEM.java_runtime_version }}"
+    process.runtime.description: "{{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}"
+  exporters:
+    logging:
+      enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}"
+      interval: 10s
+    otlp:
+      endpoint: null
+      http:
+        enabled: "{{ opentelemetry.exporters.otlp.endpoint ? true | false }}"
+        port: 4318
+        compression: "gzip"
+        headers: {}
+        # Metrics
+        interval: 5s
+        # Logging
+        scheduleDelay: "5s"
+        exporterTimeout: "60s"
+        maxExportBatchSize: 1000
+        maxQueueSize: 10000
+        logsEndpoint: "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs"
+        tracesEndpoint: "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces"
+        metricsEndpoint: "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics"
+  instrumentations: {}
+
+system:
+  io.opentelemetry.exporter.internal.http.HttpSenderProvider: com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider

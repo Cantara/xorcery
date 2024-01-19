@@ -33,4 +33,5 @@ open module xorcery.coordinator {
 
     requires org.apache.logging.log4j.core;
     requires org.apache.logging.log4j.layout.template.json;
+    requires java.net.http;
 }

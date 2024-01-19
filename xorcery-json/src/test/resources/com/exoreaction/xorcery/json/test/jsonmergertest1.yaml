@@ -18,6 +18,8 @@ object:
 newobject:
   enabled: true
 
+namespace:
+  emptyobject: {}
 
 jersey:
   server:

@@ -1,37 +1,38 @@
-{
-  "some" : "newvalue",
-  "foo" : "bar",
-  "array" : [ 1, 2, 3, 4, 5, 6 ],
-  "objectarray" : [ {
-    "id" : "blah",
-    "type" : "xyzzy"
-  }, {
-    "id" : "asd",
-    "type" : "xyzzy2"
-  }, {
-    "id" : "blah2",
-    "type" : "xyzzy2"
-  }, {
-    "id" : "asd2",
-    "type" : "xyzzy2"
-  } ],
-  "object" : {
-    "value1" : "newvalue1",
-    "value2" : "newvalue2",
-    "value3" : {
-      "bar" : "foo",
-      "foo" : "newvalue3foo"
-    },
-    "value5.value5" : "test",
-    "value4" : "newvalue4"
-  },
-  "newobject" : {
-    "enabled" : true
-  },
-  "jersey" : {
-    "server" : {
-      "register" : [ "foobar", "blah" ]
-    }
-  },
-  "foo.some.bar" : "xyzzy"
-}
+---
+some: "newvalue"
+foo: "bar"
+array:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+objectarray:
+  - id: "blah"
+    type: "xyzzy"
+  - id: "asd"
+    type: "xyzzy2"
+  - id: "blah2"
+    type: "xyzzy2"
+  - id: "asd2"
+    type: "xyzzy2"
+object:
+  value1: "newvalue1"
+  value2: "newvalue2"
+  value3:
+    bar: "foo"
+    foo: "newvalue3foo"
+  value5.value5: "test"
+  value4: "newvalue4"
+newobject:
+  enabled: true
+namespace:
+  emptyobject:
+    foo: "bar"
+jersey:
+  server:
+    register:
+      - "foobar"
+      - "blah"
+foo.some.bar: "xyzzy"

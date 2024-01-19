@@ -34,12 +34,12 @@ class JsonMergerTest {
         ObjectNode test2 = (ObjectNode)objectMapper.readTree(getClass().getResource("jsonmergertest2.yaml"));
         ObjectNode merged = new JsonMerger().apply(test1, test2);
 
-        String result = merged.toPrettyString();
+        String result = objectMapper.writeValueAsString( merged );
 
-        String expectedResult = new String(getClass().getResourceAsStream("jsonmergertestresult.yaml").readAllBytes());
+        ObjectNode expectedResult = (ObjectNode)objectMapper.readTree(getClass().getResource("jsonmergertestresult.yaml"));
 
         System.out.println(result);
-        assertThat(result, equalTo(expectedResult));
+        assertThat(result, equalTo(objectMapper.writeValueAsString( expectedResult)));
     }
 
     @Test

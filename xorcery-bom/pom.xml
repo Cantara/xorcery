@@ -243,6 +243,31 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-sdk</artifactId>
+                <version>0.86.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-api</artifactId>
+                <version>0.86.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-log4j</artifactId>
+                <version>0.86.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-jersey-server</artifactId>
+                <version>0.86.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-jvm</artifactId>
+                <version>0.86.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-keystores</artifactId>
                 <version>0.86.1-SNAPSHOT</version>
             </dependency>

@@ -18,22 +18,21 @@ package com.exoreaction.xorcery.jsonapi.server.resources;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.jsonapi.*;
-import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
-@Path( "/" )
-public class ServerResource
+@Path( "/api" )
+public class ApiResource
         extends JsonApiResource
 {
     private ServiceResourceObjects serviceResourceObjects;
     private Configuration configuration;
 
     @Inject
-    public ServerResource(ServiceResourceObjects serviceResourceObjects, Configuration configuration)
+    public ApiResource(ServiceResourceObjects serviceResourceObjects, Configuration configuration)
     {
         this.serviceResourceObjects = serviceResourceObjects;
         this.configuration = configuration;

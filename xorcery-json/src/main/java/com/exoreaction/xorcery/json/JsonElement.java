@@ -218,6 +218,48 @@ public interface JsonElement {
         };
     }
 
+    static Map<String, Object> toMap(ObjectNode json) {
+        Iterator<Map.Entry<String, JsonNode>> fields = json.fields();
+        Map<String, Object> map = new HashMap<>(json.size());
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> next = fields.next();
+
+            map.put(next.getKey(), switch (next.getValue().getNodeType()) {
+                case ARRAY -> toList((ArrayNode) next.getValue());
+                case OBJECT -> toMap((ObjectNode) next.getValue());
+                case STRING -> next.getValue().textValue();
+                case NUMBER -> next.getValue().numberValue();
+                case BINARY -> null;
+                case BOOLEAN -> next.getValue().booleanValue();
+                case MISSING -> null;
+                case NULL -> null;
+                case POJO -> null;
+            });
+        }
+        return map;
+    }
+
+    static List<Object> toList(ArrayNode json) {
+        Iterator<JsonNode> fields = json.elements();
+        List<Object> list = new ArrayList<>(json.size());
+        while (fields.hasNext()) {
+            JsonNode next = fields.next();
+
+            list.add(switch (next.getNodeType()) {
+                case ARRAY -> toList((ArrayNode) next);
+                case OBJECT -> toMap((ObjectNode) next);
+                case STRING -> next.textValue();
+                case NUMBER -> next.numberValue();
+                case BINARY -> null;
+                case BOOLEAN -> Boolean.TRUE;
+                case MISSING -> null;
+                case NULL -> null;
+                case POJO -> null;
+            });
+        }
+        return list;
+    }
+
     static <T> Map<String, T> toFlatMap(ObjectNode object, Function<JsonNode, T> mapper) {
         Map<String, T> result = new LinkedHashMap<>(object.size());
         toFlatMap(result, "", object, mapper);

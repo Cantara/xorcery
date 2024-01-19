@@ -1,0 +1,19 @@
+opentelemetry:
+  instrumentations:
+    log4j:
+      enabled: "{{ defaults.enabled }}"
+
+log4j2:
+  Configuration:
+    packages: "io.opentelemetry.instrumentation.log4j.appender.v2_17"
+    appenders:
+      OpenTelemetry:
+        name: OpenTelemetryAppender
+        captureMapMessageAttributes: true
+        captureMarkerAttribute: true
+        captureContextDataAttributes: true
+
+    Loggers:
+      Root:
+        AppenderRef:
+          - ref: "{{ opentelemetry.instrumentations.log4j.enabled ? \"OpenTelemetryAppender\"}}"

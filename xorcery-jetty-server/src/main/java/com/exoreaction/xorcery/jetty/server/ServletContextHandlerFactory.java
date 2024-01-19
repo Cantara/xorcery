@@ -16,22 +16,17 @@
 package com.exoreaction.xorcery.jetty.server;
 
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
-import io.dropwizard.metrics.jetty11.InstrumentedHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-import jakarta.validation.Constraint;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
@@ -46,8 +41,7 @@ public class ServletContextHandlerFactory
     public ServletContextHandlerFactory(Server server,
                                         Configuration configuration,
                                         ServiceLocator serviceLocator,
-                                        Provider<ConstraintSecurityHandler> securityHandlerProvider,
-                                        MetricRegistry metricRegistry) {
+                                        Provider<ConstraintSecurityHandler> securityHandlerProvider) {
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
         servletContextHandler.setContextPath("/");
@@ -61,11 +55,6 @@ public class ServletContextHandlerFactory
             securityHandler.setHandler(handler);
             handler = securityHandler;
         }
-
-        // Metrics
-        InstrumentedHandler instrumentedHandler = new InstrumentedHandler(metricRegistry, "");
-        instrumentedHandler.setHandler(handler);
-        handler = instrumentedHandler;
 
         // Log4j2 ThreadContext handler
         Log4j2TheadContextHandler log4j2TheadContextHandler = new Log4j2TheadContextHandler(configuration);

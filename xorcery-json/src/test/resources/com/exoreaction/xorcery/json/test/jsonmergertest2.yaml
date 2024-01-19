@@ -24,6 +24,10 @@ object.value3.foo: newvalue3foo
 
 newobject.enabled: true
 
+namespace:
+  emptyobject:
+    foo: bar
+
 jersey.server.register:
   - blah
 

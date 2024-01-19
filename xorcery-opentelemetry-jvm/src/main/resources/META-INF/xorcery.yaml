@@ -1,0 +1,14 @@
+opentelemetry:
+  instrumentations:
+    jvm:
+      enabled: "{{ defaults.enabled }}"
+      attributes:
+        jvm.memory.used: jvm.memory.used
+        jvm.memory.committed: jvm.memory.committed
+        jvm.memory.limit: jvm.memory.limit
+        jvm.memory.used_after_last_gc: jvm.memory.used_after_last_gc
+        jvm.gc.duration: jvm.gc.duration
+        jvm.thread.count: jvm.thread.count
+        jvm.cpu.time: jvm.cpu.time
+        jvm.cpu.count: jvm.cpu.count
+        jvm.cpu.recent_utilization: jvm.cpu.recent_utilization
