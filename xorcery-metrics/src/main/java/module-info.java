@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 open module xorcery.metrics {
+    exports com.exoreaction.xorcery.metrics.providers;
+
     requires xorcery.metadata;
     requires xorcery.reactivestreams.api;
     requires xorcery.status.spi;
