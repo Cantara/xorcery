@@ -188,16 +188,6 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-jmxconnector</artifactId>
-                <version>0.90.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-jmxmetrics</artifactId>
-                <version>0.90.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-json</artifactId>
                 <version>0.90.1-SNAPSHOT</version>
             </dependency>
@@ -273,17 +263,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-log4j</artifactId>
-                <version>0.90.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-metadata</artifactId>
-                <version>0.90.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-metricregistry</artifactId>
                 <version>0.90.1-SNAPSHOT</version>
             </dependency>
             <dependency>
