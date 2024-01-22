@@ -34,8 +34,8 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Function;
 
-@Service(name = "metrics.status")
-public class MetricsStatusProvider
+@Service(name = "jmx.status")
+public class JmxMetricsStatusProvider
         implements StatusProvider {
 
     private final Logger logger;
@@ -44,14 +44,14 @@ public class MetricsStatusProvider
     private final Map<ObjectName, Map<String, Function<Object, JsonNode>>> valueConverters = new HashMap<>();
 
     @Inject
-    public MetricsStatusProvider(Logger logger) {
+    public JmxMetricsStatusProvider(Logger logger) {
         this.logger = logger;
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
     }
 
     @Override
     public String getId() {
-        return "metrics";
+        return "jmx";
     }
 
     @Override

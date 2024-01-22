@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.metrics {
+open module xorcery.jmx.status {
     exports com.exoreaction.xorcery.metrics.providers;
 
     requires xorcery.metadata;

@@ -1,0 +1,3 @@
+jmx:
+  status:
+    enabled: "{{ defaults.enabled }}"

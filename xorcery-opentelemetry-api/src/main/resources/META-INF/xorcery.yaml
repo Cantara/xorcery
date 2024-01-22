@@ -1,3 +1,3 @@
 opentelemetry:
-  noop:
+  global:
     enabled: "{{ opentelemetry.enabled ? false | true }}"

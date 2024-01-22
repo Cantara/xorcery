@@ -33,6 +33,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-runner</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-admin-server</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
@@ -90,7 +94,7 @@
         <!-- Metrics -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-metrics</artifactId>
+            <artifactId>xorcery-jmx-status</artifactId>
         </dependency>
 
         <!-- OpenTelemetry -->

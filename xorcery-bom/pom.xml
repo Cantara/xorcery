@@ -268,7 +268,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-metrics</artifactId>
+                <artifactId>xorcery-jmx-status</artifactId>
                 <version>0.91.1-SNAPSHOT</version>
             </dependency>
             <dependency>

@@ -101,7 +101,10 @@ public class Neo4jProjectionEventHandler
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .build();
         attributes = Attributes.builder().put("projectionId", projectionId).build();
-        meter.gaugeBuilder("neo4j.projection.revision").setUnit("{revision}").buildWithCallback(m -> m.record(revision, attributes));
+        meter.gaugeBuilder("neo4j.projection.revision")
+                .ofLongs().setUnit("{revision}").buildWithCallback(m -> {
+            if (revision != null) m.record(revision, attributes);
+        });
         eventCounter = meter.counterBuilder("neo4j.projection.events").setUnit("{event}").build();
         batchSize = meter.histogramBuilder("neo4j.projection.batchsize").setUnit("{count}").ofLongs().build();
         commitSize = meter.histogramBuilder("neo4j.projection.commitsize").setUnit("{count}").ofLongs().build();

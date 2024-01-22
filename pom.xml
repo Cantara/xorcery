@@ -111,7 +111,7 @@
         <module>xorcery-jersey-server</module>
         <module>xorcery-reactivestreams-api</module>
         <module>xorcery-reactivestreams-client</module>
-        <module>xorcery-metrics</module>
+        <module>xorcery-jmx-status</module>
         <module>xorcery-reactivestreams-server</module>
         <module>xorcery-reactivestreams-server-extra</module>
 
@@ -385,7 +385,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-metrics</artifactId>
+                <artifactId>xorcery-jmx-status</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
