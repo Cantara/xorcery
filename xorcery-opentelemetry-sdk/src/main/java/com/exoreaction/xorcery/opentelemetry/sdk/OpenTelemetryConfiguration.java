@@ -19,6 +19,11 @@ public record OpenTelemetryConfiguration(Configuration context)
         return new OpenTelemetryConfiguration(configuration.getConfiguration("opentelemetry"));
     }
 
+    public boolean isInstall()
+    {
+        return context.getBoolean("install").orElse(false);
+    }
+
     public Map<AttributeKey<Object>, Object> getResource() {
         return context.getJson("resource")
                 .map(ObjectNode.class::cast)

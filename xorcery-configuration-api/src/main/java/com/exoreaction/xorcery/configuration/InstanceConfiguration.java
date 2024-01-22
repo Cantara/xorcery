@@ -100,4 +100,8 @@ public record InstanceConfiguration(Configuration configuration) {
     public URI getURI() {
         return configuration.getURI("uri").orElseThrow(missing("uri"));
     }
+
+    public URI getAPI() {
+        return configuration.getURI("api").orElseThrow(missing("api"));
+    }
 }

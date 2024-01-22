@@ -1,4 +1,4 @@
 certificates:
   client:
     enabled: "{{ defaults.enabled }}"
-    uri: "srv://_certificates._sub._https._tcp"
+    uri: "srv://_certificates._sub._https._tcp/api"

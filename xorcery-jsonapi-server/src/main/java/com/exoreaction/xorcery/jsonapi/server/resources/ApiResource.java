@@ -41,14 +41,14 @@ public class ApiResource
     @GET
     public ResourceDocument get()
     {
-        InstanceConfiguration standardConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
+        InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
 
         ResourceObjects.Builder builder = new ResourceObjects.Builder();
         for (ServiceResourceObject serviceResource : serviceResourceObjects.getServiceResources()) {
             builder.resource(serviceResource.resourceObject());
         }
         ResourceDocument serverDocument = new ResourceDocument.Builder()
-                .links(new Links.Builder().link(JsonApiRels.self, standardConfiguration.getURI()).build())
+                .links(new Links.Builder().link(JsonApiRels.self, instanceConfiguration.getAPI()).build())
                 .meta(new Meta.Builder()
                         .meta("timestamp", System.currentTimeMillis())
                         .build())

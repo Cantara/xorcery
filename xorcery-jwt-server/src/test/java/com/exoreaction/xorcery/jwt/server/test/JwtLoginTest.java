@@ -67,7 +67,7 @@ public class JwtLoginTest {
                     .register(JsonElementMessageBodyWriter.class)
                     .build()) {
                 JsonApiClient jsonApiClient = new JsonApiClient(client);
-                jsonApiClient.get(new Link("login", cfg.getURI().resolve("api/login").toASCIIString()))
+                jsonApiClient.get(new Link("login", cfg.getAPI().resolve("login").toASCIIString()))
                         .thenCompose(rd -> rd.getResource().map(ro ->
                                 jsonApiClient.submit(rd.getLinks().getSelf().orElseThrow(), new ResourceObject.Builder(ro)
                                         .attributes(new Attributes.Builder(ro.getAttributes().json())

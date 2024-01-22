@@ -1,5 +1,6 @@
 opentelemetry:
   enabled: "{{ defaults.enabled }}"
+  install: true
   resource:
     service.namespace: "{{ instance.environment }}"
     service.name: "{{ application.name }}"

@@ -10,6 +10,7 @@ instance:
   home: "{{ SYSTEM.user_dir }}"
   resources: "{{ instance.home }}"
   uri: "{{ jetty.server.uri | \"http://localhost\"}}"
+  api: "{{ instance.uri }}/api"
 
 application:
   name: genericserver

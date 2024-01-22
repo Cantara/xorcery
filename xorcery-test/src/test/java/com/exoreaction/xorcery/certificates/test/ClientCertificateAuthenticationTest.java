@@ -89,7 +89,7 @@ public class ClientCertificateAuthenticationTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 InstanceConfiguration cfg = new InstanceConfiguration(serverConfiguration.getConfiguration("instance"));
-                ResourceDocument doc = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getURI().resolve("api/subject")).toCompletableFuture().join();
+                ResourceDocument doc = client.getServiceLocator().getService(ClientTester.class).getResourceDocument(cfg.getAPI().resolve("subject")).toCompletableFuture().join();
                 Assertions.assertEquals(List.of("CN=Test Service", "localhost", "server.xorcery.test", "127.0.0.1"), doc.getResource().get().getAttributes().getListAs("names", JsonNode::textValue).orElse(Collections.emptyList()));
             }
         }
