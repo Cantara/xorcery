@@ -19,6 +19,14 @@ import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.sun.management.HotSpotDiagnosticMXBean;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 public interface ServerMXBean {
 
@@ -39,6 +47,22 @@ public interface ServerMXBean {
             xorcery.close();
             System.exit(0);
         }
+
+        @Override
+        public String heapDump() throws IOException {
+            HotSpotDiagnosticMXBean mxBean = ManagementFactory.newPlatformMXBeanProxy(ManagementFactory.getPlatformMBeanServer(),
+                    "com.sun.management:type=HotSpotDiagnostic", HotSpotDiagnosticMXBean.class);
+
+            String dateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd_hh-mm-ss").format(Instant.now().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            File heapDumpFile = new File(new File(InstanceConfiguration.get(configuration).getHome()), "heapdump-"+dateTime+".hprof");
+            try {
+                mxBean.dumpHeap(heapDumpFile.getAbsolutePath(), true);
+                return "Heap dumped to:"+heapDumpFile;
+            } catch (IOException e) {
+                heapDumpFile.delete();
+                throw e;
+            }
+        }
     }
 
     String getId();
@@ -46,4 +70,6 @@ public interface ServerMXBean {
     String getName();
 
     void shutdown();
+
+    String heapDump() throws IOException;
 }
