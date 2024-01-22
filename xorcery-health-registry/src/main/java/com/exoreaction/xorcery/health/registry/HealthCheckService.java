@@ -23,6 +23,4 @@ import java.util.SortedMap;
 public interface HealthCheckService extends HealthCheckRegistry {
 
     SortedMap<String, HealthCheckResult> runHealthChecks();
-
-    com.codahale.metrics.health.HealthCheckRegistry codahaleRegistry();
 }

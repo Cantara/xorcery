@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.reactivestreams.client;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
@@ -23,6 +22,7 @@ import com.exoreaction.xorcery.reactivestreams.common.ActivePublisherSubscriptio
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriberSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
+import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.apache.logging.log4j.Logger;
@@ -46,7 +46,7 @@ public class ReactiveStreamsClientServiceHK2 extends ReactiveStreamsClientServic
                                            MessageWorkers messageWorkers,
                                            HttpClient httpClient,
                                            DnsLookupService dnsLookup,
-                                           MetricRegistry metricRegistry,
+                                           OpenTelemetry openTelemetry,
                                            Provider<LocalStreamFactories> localStreamFactoriesProvider,
                                            Logger logger,
                                            ActivePublisherSubscriptions activePublisherSubscriptions,
@@ -57,7 +57,7 @@ public class ReactiveStreamsClientServiceHK2 extends ReactiveStreamsClientServic
                 messageWorkers,
                 httpClient,
                 dnsLookup,
-                metricRegistry,
+                openTelemetry,
                 localStreamFactoriesProvider::get,
                 logger,
                 activePublisherSubscriptions,

@@ -15,19 +15,19 @@
  */
 package com.exoreaction.xorcery.reactivestreams.server;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.concurrent.CompletableFutures;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
+import com.exoreaction.xorcery.reactivestreams.common.ActivePublisherSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriberSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.reactivestreams.common.ActivePublisherSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriberSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.util.FutureProcessor;
+import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
@@ -66,7 +66,7 @@ public class ReactiveStreamsServerService
     private final Map<String, Supplier<Object>> subscriberEndpointFactories = new ConcurrentHashMap<>();
     private final Map<String, WrappedSubscriberFactory> subscriberLocalFactories = new ConcurrentHashMap<>();
 
-    private final MetricRegistry metricRegistry;
+    private final OpenTelemetry openTelemetry;
 
     // Currently active subscriptions
     // These need to cancel on shutdown
@@ -78,7 +78,7 @@ public class ReactiveStreamsServerService
 
     @Inject
     public ReactiveStreamsServerService(Configuration configuration,
-                                        MetricRegistry metricRegistry,
+                                        OpenTelemetry openTelemetry,
                                         MessageWorkers messageWorkers,
                                         ServletContextHandler servletContextHandler,
                                         Logger logger,
@@ -86,7 +86,7 @@ public class ReactiveStreamsServerService
                                         ActivePublisherSubscriptions activePublisherSubscriptions,
                                         ActiveSubscriberSubscriptions activeSubscriberSubscriptions) {
         super(messageWorkers, logger);
-        this.metricRegistry = metricRegistry;
+        this.openTelemetry = openTelemetry;
 
         ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
         this.loggerContext = loggerContext;
@@ -142,7 +142,7 @@ public class ReactiveStreamsServerService
                                 byteBufferPool,
                                 loggerContext.getLogger(PublisherSubscriptionReactiveStream.class),
                                 activePublisherSubscriptions,
-                                metricRegistry) :
+                                openTelemetry) :
                         new PublisherWithResultSubscriptionReactiveStream(
                                 streamName,
                                 wrappedPublisherFactory,
@@ -152,7 +152,7 @@ public class ReactiveStreamsServerService
                                 byteBufferPool,
                                 loggerContext.getLogger(PublisherWithResultSubscriptionReactiveStream.class),
                                 activePublisherSubscriptions,
-                                metricRegistry));
+                                openTelemetry));
         publisherLocalFactories.put(streamName, new WrappedPublisherFactory(wrappedPublisherFactory, publisherType));
         result.whenComplete((r, t) ->
         {
@@ -195,7 +195,7 @@ public class ReactiveStreamsServerService
                         eventReader,
                         objectMapper,
                         byteBufferPool,
-                        metricRegistry,
+                        openTelemetry,
                         loggerContext.getLogger(SubscriberSubscriptionReactiveStream.class),
                         activeSubscriberSubscriptions) :
                         new SubscriberWithResultSubscriptionReactiveStream(
@@ -205,7 +205,7 @@ public class ReactiveStreamsServerService
                                 resultWriter,
                                 objectMapper,
                                 byteBufferPool,
-                                metricRegistry,
+                                openTelemetry,
                                 loggerContext.getLogger(SubscriberWithResultSubscriptionReactiveStream.class),
                                 activeSubscriberSubscriptions));
         subscriberLocalFactories.put(streamName, new WrappedSubscriberFactory(wrappedSubscriberFactory, subscriberType));

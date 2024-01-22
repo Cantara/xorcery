@@ -15,16 +15,20 @@
  */
 package com.exoreaction.xorcery.reactivestreams.client;
 
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions.ActiveSubscription;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -101,9 +105,10 @@ public class PublishReactiveStream
     private long retryDelay;
     private ActiveSubscription activeSubscription;
 
-    protected final Histogram sentBytes;
-    protected final Histogram requestsHistogram;
-    protected final Histogram flushHistogram;
+    protected final Attributes attributes;
+    protected final LongHistogram sentBytes;
+    protected final LongHistogram requestsHistogram;
+    protected final LongHistogram flushHistogram;
 
     public PublishReactiveStream(URI serverUri,
                                  String streamName,
@@ -114,7 +119,7 @@ public class PublishReactiveStream
                                  MessageWriter<Object> eventWriter,
                                  Supplier<Configuration> subscriberConfiguration,
                                  ByteBufferPool pool,
-                                 MetricRegistry metricRegistry,
+                                 OpenTelemetry openTelemetry,
                                  ActiveSubscriptions activeSubscriptions,
                                  CompletableFuture<Void> result) {
         this.serverUri = serverUri;
@@ -132,9 +137,20 @@ public class PublishReactiveStream
         this.marker = MarkerManager.getMarker(serverUri.getAuthority() + "/" + streamName);
         this.outputStream = new ByteBufferOutputStream2(pool, false);
 
-        this.sentBytes = metricRegistry.histogram("publish." + streamName + ".sent.bytes");
-        this.requestsHistogram = metricRegistry.histogram("publish." + streamName + ".requests");
-        this.flushHistogram = metricRegistry.histogram("publish." + streamName + ".flush.size");
+        Meter meter = openTelemetry.meterBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
+        this.attributes = Attributes.builder()
+                .put("reactivestream.name", streamName)
+                .put(SemanticAttributes.URL_FULL, serverUri.toASCIIString())
+                .build();
+        this.sentBytes = meter.histogramBuilder("reactivestream.publish.io")
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.requestsHistogram = meter.histogramBuilder("reactivestream.publish.requests")
+                .setUnit("{request}").ofLongs().build();
+        this.flushHistogram = meter.histogramBuilder("reactivestream.publish.flush.count")
+                .setUnit("{item}").ofLongs().build();
 
         // Client completed
         result.whenComplete(this::resultComplete);
@@ -389,7 +405,7 @@ public class PublishReactiveStream
                 publisher.subscribe(this);
             }
 
-            requestsHistogram.update(requestAmount);
+            requestsHistogram.record(requestAmount, attributes);
             activeSubscription.requested().addAndGet(requestAmount);
             subscription.request(requestAmount);
         }
@@ -452,7 +468,7 @@ public class PublishReactiveStream
                             if (logger.isTraceEnabled())
                                 logger.trace(marker, "flush {}", itemsSent);
                             session.getRemote().flush();
-                            flushHistogram.update(itemsSent);
+                            flushHistogram.record(itemsSent, attributes);
                             itemsSent = 0;
                         }
                     }
@@ -464,7 +480,7 @@ public class PublishReactiveStream
                     if (logger.isTraceEnabled())
                         logger.trace(marker, "flush {}", itemsSent);
                     session.getRemote().flush();
-                    flushHistogram.update(itemsSent);
+                    flushHistogram.record(itemsSent, attributes);
                 }
             }
         } catch (Throwable t) {
@@ -488,7 +504,7 @@ public class PublishReactiveStream
         // Write event data
         writeItem(eventWriter, item, outputStream);
         ByteBuffer eventBuffer = outputStream.takeByteBuffer();
-        sentBytes.update(eventBuffer.limit());
+        sentBytes.record(eventBuffer.limit(), attributes);
         session.getRemote().sendBytes(eventBuffer);
         pool.release(eventBuffer);
     }

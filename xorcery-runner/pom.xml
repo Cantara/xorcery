@@ -35,11 +35,6 @@
             <artifactId>xorcery-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-metricregistry</artifactId>
-        </dependency>
-
         <!-- CLI -->
         <dependency>
             <groupId>info.picocli</groupId>

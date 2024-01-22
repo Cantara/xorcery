@@ -60,7 +60,6 @@ public class DefaultHealthCheckService implements HealthCheckService {
     private final AtomicBoolean shouldRun = new AtomicBoolean(true);
     private final long minUpdateInterval;
     private final AtomicLong healthComputeTimeMs = new AtomicLong(-1);
-    private final com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry;
     private final List<HealthProbe> healthProbes = new CopyOnWriteArrayList<>();
 
     /*
@@ -70,9 +69,8 @@ public class DefaultHealthCheckService implements HealthCheckService {
     private long lastUpdatedEpoch = 0;
     ObjectNode currentHealth;
 
-    public DefaultHealthCheckService(Configuration configuration, com.codahale.metrics.health.HealthCheckRegistry healthCheckRegistry) {
+    public DefaultHealthCheckService(Configuration configuration) {
         this.minUpdateInterval = Duration.parse("PT"+configuration.getString("health.updater.interval").orElse("1S")).toMillis();
-        this.healthCheckRegistry = healthCheckRegistry;
         InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
         ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
         try {
@@ -94,20 +92,8 @@ public class DefaultHealthCheckService implements HealthCheckService {
     }
 
     @Override
-    public com.codahale.metrics.health.HealthCheckRegistry codahaleRegistry() {
-        return healthCheckRegistry;
-    }
-
-    public DefaultHealthCheckService registerHealthCheck(String key, com.codahale.metrics.health.HealthCheck healthCheck) {
-        healthCheckRegistry.register(key, healthCheck);
-        healthCheckByComponentName.put(key, new WrappedHealthCheck(mapper, healthCheck));
-        return this;
-    }
-
-    @Override
     public DefaultHealthCheckService register(String componentName, HealthCheck healthCheck) {
         healthCheckByComponentName.put(componentName, healthCheck);
-        healthCheckRegistry.register(componentName, new HealthCheckAdapter(healthCheck));
         return this;
     }
 

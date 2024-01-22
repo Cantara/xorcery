@@ -1,8 +1,0 @@
-log4jpublisher:
-  enabled: "{{ defaults.enabled }}"
-  subscriber:
-    uri: "server.xorcery.test"
-    stream: "logs"
-    configuration: {}
-  publisher:
-    configuration: {}

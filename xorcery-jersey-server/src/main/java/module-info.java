@@ -18,7 +18,6 @@ open module xorcery.jersey.server {
     exports com.exoreaction.xorcery.jersey.server.resources;
 
     requires transitive xorcery.configuration.api;
-    requires transitive xorcery.metricregistry;
     requires xorcery.jsonapi;
     requires xorcery.service.api;
 
@@ -32,6 +31,4 @@ open module xorcery.jersey.server {
     requires org.glassfish.hk2.runlevel;
 
     requires org.apache.logging.log4j;
-    requires com.codahale.metrics.jersey3;
-    requires com.codahale.metrics;
 }

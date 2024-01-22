@@ -90,23 +90,10 @@
         <!-- Metrics -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-jmxmetrics</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-metrics</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-jmxconnector</artifactId>
-        </dependency>
 
-        <!-- Logging -->
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-log4j</artifactId>
-        </dependency>
-
+        <!-- OpenTelemetry -->
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-opentelemetry-sdk</artifactId>

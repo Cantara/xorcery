@@ -15,10 +15,9 @@
  */
 package com.exoreaction.xorcery.reactivestreams.server;
 
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
+import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
@@ -26,6 +25,11 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -86,15 +90,15 @@ public class SubscriberSubscriptionReactiveStream
     private final ActiveSubscriptions activeSubscriptions;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
-    protected final Histogram receivedBytes;
-    protected final Histogram requestsHistogram;
+    protected final LongHistogram receivedBytes;
+    protected final LongHistogram requestsHistogram;
 
     public SubscriberSubscriptionReactiveStream(String streamName,
                                                 Function<Configuration, Subscriber<Object>> subscriberFactory,
                                                 MessageReader<Object> eventReader,
                                                 ObjectMapper objectMapper,
                                                 ByteBufferPool byteBufferPool,
-                                                MetricRegistry metricRegistry,
+                                                OpenTelemetry openTelemetry,
                                                 Logger logger,
                                                 ActiveSubscriptions activeSubscriptions) {
         this.streamName = streamName;
@@ -108,8 +112,17 @@ public class SubscriberSubscriptionReactiveStream
         this.logger = logger;
         this.activeSubscriptions = activeSubscriptions;
 
-        this.receivedBytes = metricRegistry.histogram("subscriber." + streamName + ".received.bytes");
-        this.requestsHistogram = metricRegistry.histogram("subscriber." + streamName + ".requests");
+        Meter meter = openTelemetry.meterBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
+        this.attributes = Attributes.builder()
+                .put("reactivestream.name", streamName)
+                .build();
+        this.receivedBytes = meter.histogramBuilder("reactivestream.subscriber.io")
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.requestsHistogram = meter.histogramBuilder("reactivestream.subscriber.requests")
+                .setUnit("{request}").ofLongs().build();
     }
 
     // Subscription
@@ -210,7 +223,7 @@ public class SubscriberSubscriptionReactiveStream
             }
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
-            receivedBytes.update(byteBuffer.position());
+            receivedBytes.record(byteBuffer.position(), attributes);
             subscriber.onNext(event);
             activeSubscription.requested().decrementAndGet();
             activeSubscription.received().incrementAndGet();
@@ -296,7 +309,7 @@ public class SubscriberSubscriptionReactiveStream
                     requests.set(0);
                     outstandingRequests.addAndGet(rn);
                     activeSubscription.requested().addAndGet(rn);
-                    requestsHistogram.update(rn);
+                    requestsHistogram.record(rn, attributes);
                 }
 
                 session.getRemote().sendString(Long.toString(rn), sendWriteCallback);

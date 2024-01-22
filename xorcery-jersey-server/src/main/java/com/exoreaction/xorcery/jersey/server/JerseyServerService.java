@@ -15,13 +15,11 @@
  */
 package com.exoreaction.xorcery.jersey.server;
 
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.jersey3.MetricsFeature;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.jersey.server.resources.ServerApplication;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -45,7 +43,7 @@ public class JerseyServerService
     @Inject
     public JerseyServerService(Configuration configuration,
                                ServiceResourceObjects sro,
-                               Provider<ServletContextHandler> ctxProvider, MetricRegistry metricRegistry) throws Exception {
+                               Provider<ServletContextHandler> ctxProvider) throws Exception {
 
         ServerApplication app = new ServerApplication(configuration);
 
@@ -61,10 +59,6 @@ public class JerseyServerService
                 }
             }
         });
-
-        if (metricRegistry != null) {
-            app.register(new MetricsFeature(metricRegistry));
-        }
 
         servletContainer = new JerseyServletContainer(app);
         ServletHolder servletHolder = new ServletHolder("jersey", servletContainer);

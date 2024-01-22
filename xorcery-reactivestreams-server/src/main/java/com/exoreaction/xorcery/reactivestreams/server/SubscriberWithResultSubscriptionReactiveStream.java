@@ -15,17 +15,19 @@
  */
 package com.exoreaction.xorcery.reactivestreams.server;
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
@@ -50,7 +52,7 @@ public class SubscriberWithResultSubscriptionReactiveStream
     boolean isFlushPending = false;
     private final ByteBufferOutputStream2 resultOutputStream;
 
-    protected final Meter resultsSent;
+    protected final LongCounter resultsSent;
 
     public SubscriberWithResultSubscriptionReactiveStream(String streamName,
                                                           Function<Configuration, Subscriber<Object>> subscriberFactory,
@@ -58,12 +60,17 @@ public class SubscriberWithResultSubscriptionReactiveStream
                                                           MessageWriter<Object> resultWriter,
                                                           ObjectMapper objectMapper,
                                                           ByteBufferPool byteBufferPool,
-                                                          MetricRegistry metricRegistry,
+                                                          OpenTelemetry openTelemetry,
                                                           Logger logger,
                                                           ActiveSubscriptions activeSubscriptions) {
-        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, metricRegistry, logger, activeSubscriptions);
+        super(streamName, subscriberFactory, eventReader, objectMapper, byteBufferPool, openTelemetry, logger, activeSubscriptions);
 
-        this.resultsSent = metricRegistry.meter("subscriber." + streamName + ".results");
+        Meter meter = openTelemetry.meterBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
+        this.resultsSent = meter.counterBuilder("reactivestream.subscriber.results")
+                .setUnit("{item}").build();
 
         this.resultWriter = resultWriter;
         resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
@@ -77,7 +84,7 @@ public class SubscriberWithResultSubscriptionReactiveStream
 
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
-            receivedBytes.update(byteBuffer.position());
+            receivedBytes.record(byteBuffer.position(), attributes);
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
             CompletableFuture<Object> resultFuture = new CompletableFuture<>();
@@ -126,7 +133,7 @@ public class SubscriberWithResultSubscriptionReactiveStream
                         @Override
                         public void writeSuccess() {
                             byteBufferPool.release(data);
-                            resultsSent.mark();
+                            resultsSent.add(1, attributes);
                             logger.trace("Sent result: {}", r);
                             isFlushPending = true;
                         }

@@ -19,11 +19,14 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.opentelemetry.api.common.Attributes;
 import org.eclipse.jetty.websocket.api.UpgradeRequest;
 
 import java.util.function.Consumer;
 
 public abstract class ServerReactiveStream {
+
+    protected Attributes attributes;
 
     protected Consumer<Configuration.Builder> addUpgradeRequestConfiguration(UpgradeRequest upgradeRequest)
     {

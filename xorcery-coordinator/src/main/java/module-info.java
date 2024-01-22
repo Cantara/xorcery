@@ -18,7 +18,6 @@ open module xorcery.coordinator {
 
     requires info.picocli;
     requires transitive xorcery.runner;
-    requires transitive xorcery.log4j;
     requires transitive xorcery.reactivestreams.server;
     requires transitive xorcery.jersey.server;
     requires transitive xorcery.jersey.client;
@@ -32,6 +31,5 @@ open module xorcery.coordinator {
     requires transitive xorcery.status.server;
 
     requires org.apache.logging.log4j.core;
-    requires org.apache.logging.log4j.layout.template.json;
     requires java.net.http;
 }

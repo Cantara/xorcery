@@ -31,7 +31,7 @@ implements PreDestroy
 
     @Inject
     public DefaultHealthCheckServiceHK2(Configuration configuration) {
-        super(configuration, new com.codahale.metrics.health.HealthCheckRegistry());
+        super(configuration);
     }
 
     @Override

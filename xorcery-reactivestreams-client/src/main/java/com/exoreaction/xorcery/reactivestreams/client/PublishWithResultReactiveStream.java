@@ -15,8 +15,6 @@
  */
 package com.exoreaction.xorcery.reactivestreams.client;
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
@@ -25,6 +23,10 @@ import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
@@ -39,7 +41,8 @@ import java.io.ObjectInputStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
 public class PublishWithResultReactiveStream
@@ -48,7 +51,7 @@ public class PublishWithResultReactiveStream
     private final MessageReader<Object> resultReader;
 
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
-    private final Meter received;
+    private final LongCounter received;
 
     public PublishWithResultReactiveStream(URI serverUri,
                                            String streamName,
@@ -60,7 +63,7 @@ public class PublishWithResultReactiveStream
                                            MessageReader<Object> resultReader,
                                            Supplier<Configuration> subscriberConfiguration,
                                            ByteBufferPool pool,
-                                           MetricRegistry metricRegistry,
+                                           OpenTelemetry openTelemetry,
                                            ActiveSubscriptions activeSubscriptions,
                                            CompletableFuture<Void> result) {
         super(
@@ -73,12 +76,17 @@ public class PublishWithResultReactiveStream
                 eventWriter,
                 subscriberConfiguration,
                 pool,
-                metricRegistry,
+                openTelemetry,
                 activeSubscriptions,
                 result
         );
         this.resultReader = resultReader;
-        this.received = metricRegistry.meter("publish." + streamName + ".received");
+        Meter meter = openTelemetry.meterBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
+        this.received = meter.counterBuilder("reactivestream.publish.received")
+                .setUnit("{item}").build();
     }
 
     @Override
@@ -126,7 +134,7 @@ public class PublishWithResultReactiveStream
                 Object result = resultReader.readFrom(bin);
 
                 logger.trace(marker, "Deserialized result: {}", result);
-                received.mark();
+                received.add(1, attributes);
                 resultQueue.remove().complete(result);
             }
         } catch (Throwable e) {

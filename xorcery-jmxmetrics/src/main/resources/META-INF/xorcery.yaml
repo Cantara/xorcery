@@ -1,2 +1,0 @@
-jmxmetrics:
-  enabled: "{{ defaults.enabled }}"

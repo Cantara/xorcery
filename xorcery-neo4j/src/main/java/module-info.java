@@ -33,6 +33,7 @@ open module xorcery.neo4j {
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
     requires com.fasterxml.jackson.dataformat.yaml;
-    requires com.codahale.metrics;
+    requires io.opentelemetry.api;
+    requires io.opentelemetry.semconv;
     requires org.glassfish.hk2.runlevel;
 }

@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.reactivestreams.client;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
@@ -28,6 +27,7 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.reactivestreams.util.FutureProcessor;
+import io.opentelemetry.api.OpenTelemetry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -53,7 +53,7 @@ public class ReactiveStreamsClientService
     private final ActiveSubscriptions activePublisherSubscriptions;
     private final ActiveSubscriptions activeSubscriberSubscriptions;
     private DnsLookup dnsLookup;
-    private MetricRegistry metricRegistry;
+    private OpenTelemetry openTelemetry;
     private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
     private final WebSocketClient webSocketClient;
 
@@ -63,14 +63,14 @@ public class ReactiveStreamsClientService
                                         MessageWorkers messageWorkers,
                                         HttpClient httpClient,
                                         DnsLookupService dnsLookup,
-                                        MetricRegistry metricRegistry,
+                                        OpenTelemetry openTelemetry,
                                         Supplier<LocalStreamFactories> localStreamFactoriesProvider,
                                         Logger logger,
                                         ActiveSubscriptions activePublisherSubscriptions,
                                         ActiveSubscriptions activeSubscriberSubscriptions) throws Exception {
         super(messageWorkers, logger);
         this.dnsLookup = dnsLookup;
-        this.metricRegistry = metricRegistry;
+        this.openTelemetry = openTelemetry;
         this.reactiveStreamsServerServiceProvider = localStreamFactoriesProvider;
         this.activePublisherSubscriptions = activePublisherSubscriptions;
         this.activeSubscriberSubscriptions = activeSubscriberSubscriptions;
@@ -165,7 +165,7 @@ public class ReactiveStreamsClientService
                     (MessageReader<Object>) messageReader,
                     subscriberServerConfiguration,
                     byteBufferPool,
-                    metricRegistry,
+                    openTelemetry,
                     activePublisherSubscriptions,
                     result);
         } else {
@@ -178,7 +178,7 @@ public class ReactiveStreamsClientService
                     (MessageWriter<Object>) messageWriter,
                     subscriberServerConfiguration,
                     byteBufferPool,
-                    metricRegistry,
+                    openTelemetry,
                     activePublisherSubscriptions,
                     result
             );
@@ -258,7 +258,7 @@ public class ReactiveStreamsClientService
                     (MessageWriter<Object>) messageWriter,
                     publisherConfiguration,
                     byteBufferPool,
-                    metricRegistry,
+                    openTelemetry,
                     LogManager.getLogger(SubscribeReactiveStream.class),
                     activeSubscriberSubscriptions,
                     result);
@@ -272,7 +272,7 @@ public class ReactiveStreamsClientService
                     futureProcessor,
                     (MessageReader<Object>) messageReader,
                     publisherConfiguration,
-                    metricRegistry,
+                    openTelemetry,
                     LogManager.getLogger(SubscribeReactiveStream.class),
                     activeSubscriberSubscriptions,
                     result);

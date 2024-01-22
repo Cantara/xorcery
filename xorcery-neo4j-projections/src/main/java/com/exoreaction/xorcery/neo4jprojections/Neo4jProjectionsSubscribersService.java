@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.neo4jprojections;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.json.JsonElement;
@@ -28,6 +27,7 @@ import com.exoreaction.xorcery.neo4jprojections.streams.ProjectionSubscriber;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.fasterxml.jackson.databind.node.ContainerNode;
+import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,7 +58,7 @@ public class Neo4jProjectionsSubscribersService {
                                               GraphDatabase graphDatabase,
                                               IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
                                               IterableProvider<Neo4jEventProjectionPreProcessor> neo4jEventProjectionPreProcessors,
-                                              MetricRegistry metricRegistry) {
+                                              OpenTelemetry openTelemetry) {
         Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
 
         // This service can subscribe to external publishers
@@ -88,7 +88,7 @@ public class Neo4jProjectionsSubscribersService {
                                         publisher.getProjection(),
                                         neo4jProjectionsService.getNeo4jProjectionCommitPublisher(),
                                         projectionList,
-                                        metricRegistry),
+                                        openTelemetry),
                                 neo4jEventProjectionPreProcessors,
                                 new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard")),
                                 ProjectionExceptionHandler::new),

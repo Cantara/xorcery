@@ -15,8 +15,6 @@
  */
 package com.exoreaction.xorcery.reactivestreams.client;
 
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
@@ -27,6 +25,10 @@ import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStrea
 import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
@@ -56,7 +58,7 @@ public class SubscribeWithResultReactiveStream
     private ByteBufferAccumulator byteBufferAccumulator;
     private ByteBufferOutputStream2 resultOutputStream;
 
-    protected final Meter resultsSent;
+    protected final LongCounter resultsSent;
 
     public SubscribeWithResultReactiveStream(URI serverUri,
                                              String streamName,
@@ -68,13 +70,17 @@ public class SubscribeWithResultReactiveStream
                                              MessageWriter<Object> resultWriter,
                                              Supplier<Configuration> publisherConfiguration,
                                              ByteBufferPool pool,
-                                             MetricRegistry metricRegistry,
+                                             OpenTelemetry openTelemetry,
                                              Logger logger,
                                              ActiveSubscriptions activeSubscriptions,
                                              CompletableFuture<Void> result) {
-        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, metricRegistry, logger, activeSubscriptions, result);
+        super(serverUri, streamName, subscriberConfiguration, dnsLookup, webSocketClient, subscriber, eventReader, publisherConfiguration, openTelemetry, logger, activeSubscriptions, result);
 
-        this.resultsSent = metricRegistry.meter("subscribe." + streamName + ".results");
+        Meter meter = openTelemetry.meterBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
+        this.resultsSent = meter.counterBuilder("reactivestream.subscribe.results").setUnit("{item}").build();
 
         this.resultWriter = resultWriter;
         this.byteBufferPool = pool;
@@ -89,7 +95,7 @@ public class SubscribeWithResultReactiveStream
         try {
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
-            receivedBytes.update(byteBuffer.position());
+            receivedBytes.record(byteBuffer.position(), attributes);
             byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
             CompletableFuture<Object> resultFuture = new CompletableFuture<>();

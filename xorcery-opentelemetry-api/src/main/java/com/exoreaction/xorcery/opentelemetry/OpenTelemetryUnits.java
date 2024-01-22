@@ -13,18 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.jmxconnector {
-    exports com.exoreaction.xorcery.jmxconnector;
+package com.exoreaction.xorcery.opentelemetry;
 
-    requires xorcery.configuration.api;
-    requires xorcery.secrets;
-
-    requires jakarta.inject;
-    requires org.apache.logging.log4j;
-    requires org.glassfish.hk2.api;
-    requires org.glassfish.hk2.runlevel;
-
-    requires java.management;
-    requires java.rmi;
-    requires java.management.rmi;
+public interface OpenTelemetryUnits {
+    String BYTES = "By";
 }

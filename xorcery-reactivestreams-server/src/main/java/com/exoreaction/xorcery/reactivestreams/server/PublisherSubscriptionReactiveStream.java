@@ -15,18 +15,20 @@
  */
 package com.exoreaction.xorcery.reactivestreams.server;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
+import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -34,7 +36,10 @@ import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.util.BlockingArrayQueue;
-import org.eclipse.jetty.websocket.api.*;
+import org.eclipse.jetty.websocket.api.BatchMode;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -45,7 +50,10 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -63,7 +71,6 @@ public class PublisherSubscriptionReactiveStream
 
     protected final Logger logger;
     private final ActiveSubscriptions activeSubscriptions;
-    private final MetricRegistry metricRegistry;
 
     private final String streamName;
     protected volatile Session session;
@@ -91,9 +98,9 @@ public class PublisherSubscriptionReactiveStream
     private long outstandingRequestAmount;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
-    private final Histogram sentBytes;
-    private final Histogram requestsHistogram;
-    private final Histogram flushHistogram;
+    private final LongHistogram sentBytes;
+    private final LongHistogram requestsHistogram;
+    private final LongHistogram flushHistogram;
 
     public PublisherSubscriptionReactiveStream(String streamName,
                                                Function<Configuration, Publisher<Object>> publisherFactory,
@@ -102,7 +109,7 @@ public class PublisherSubscriptionReactiveStream
                                                ByteBufferPool pool,
                                                Logger logger,
                                                ActiveSubscriptions activeSubscriptions,
-                                               MetricRegistry metricRegistry) {
+                                               OpenTelemetry openTelemetry) {
         this.streamName = streamName;
         this.publisherFactory = publisherFactory;
         this.messageWriter = messageWriter;
@@ -113,11 +120,20 @@ public class PublisherSubscriptionReactiveStream
         outputStream = new ByteBufferOutputStream2(pool, false);
         this.logger = logger;
         this.activeSubscriptions = activeSubscriptions;
-        this.metricRegistry = metricRegistry;
 
-        this.sentBytes = metricRegistry.histogram("publisher." + streamName + ".sent.bytes");
-        this.requestsHistogram = metricRegistry.histogram("publisher." + streamName + ".requests");
-        this.flushHistogram = metricRegistry.histogram("publisher." + streamName + ".flush.size");
+        Meter meter = openTelemetry.meterBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
+        this.attributes = Attributes.builder()
+                .put("reactivestream.name", streamName)
+                .build();
+        this.sentBytes = meter.histogramBuilder("reactivestream.publisher.io")
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.requestsHistogram = meter.histogramBuilder("reactivestream.publisher.requests")
+                .setUnit("{request}").ofLongs().build();
+        this.flushHistogram = meter.histogramBuilder("reactivestream.publisher.flush.count")
+                .setUnit("{item}").ofLongs().build();
     }
 
     // Subscriber
@@ -216,7 +232,7 @@ public class PublisherSubscriptionReactiveStream
                     logger.trace(marker, "Received request:" + requestAmount);
 
                 if (requestAmount > 0) {
-                    requestsHistogram.update(requestAmount);
+                    requestsHistogram.record(requestAmount, attributes);
                     activeSubscription.requested().addAndGet(requestAmount);
                     subscription.request(requestAmount);
                 }
@@ -244,8 +260,6 @@ public class PublisherSubscriptionReactiveStream
             activeSubscriptions.addSubscription(activeSubscription);
 
             logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
-            metricRegistry.gauge("publisher." + streamName + "." + session.getLocalAddress() + ".requests",
-                    () -> (Gauge<Long>) () -> activeSubscription.requested().get());
         } catch (Throwable e) {
             onError(e);
         }
@@ -286,7 +300,6 @@ public class PublisherSubscriptionReactiveStream
             subscription.cancel();
             subscription = null;
             activeSubscriptions.removeSubscription(activeSubscription);
-            metricRegistry.remove("publisher." + streamName + "." + session.getLocalAddress() + ".requests");
         }
     }
 
@@ -307,7 +320,7 @@ public class PublisherSubscriptionReactiveStream
                         if (logger.isTraceEnabled())
                             logger.trace(marker, "flush {}", itemsSent);
                         session.getRemote().flush();
-                        flushHistogram.update(itemsSent);
+                        flushHistogram.record(itemsSent, attributes);
                         itemsSent = 0;
                     }
                 }
@@ -319,7 +332,7 @@ public class PublisherSubscriptionReactiveStream
                 if (logger.isTraceEnabled())
                     logger.trace(marker, "flush {}", itemsSent);
                 session.getRemote().flush();
-                flushHistogram.update(itemsSent);
+                flushHistogram.record(itemsSent, attributes);
             }
 
         } catch (Throwable t) {
@@ -345,7 +358,7 @@ public class PublisherSubscriptionReactiveStream
         // Write event data
         writeItem(messageWriter, item, outputStream);
         ByteBuffer eventBuffer = outputStream.takeByteBuffer();
-        sentBytes.update(eventBuffer.limit());
+        sentBytes.record(eventBuffer.limit(), attributes);
         session.getRemote().sendBytes(eventBuffer);
         pool.release(eventBuffer);
     }

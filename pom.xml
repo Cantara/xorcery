@@ -42,7 +42,6 @@
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <jackson.version>2.16.1</jackson.version>
-        <metrics.version>4.2.23</metrics.version>
         <asm.version>9.6</asm.version>
         <projectreactor.version>2023.0.2</projectreactor.version>
 
@@ -94,8 +93,6 @@
         <module>xorcery-junit</module>
         <module>xorcery-runner</module>
 
-        <module>xorcery-metricregistry</module>
-
         <module>xorcery-secrets</module>
         <module>xorcery-keystores</module>
 
@@ -143,9 +140,6 @@
 
         <module>xorcery-opensearch</module>
 
-        <module>xorcery-log4j</module>
-        <module>xorcery-jmxconnector</module>
-        <module>xorcery-jmxmetrics</module>
         <module>xorcery-opentelemetry-sdk</module>
         <module>xorcery-opentelemetry-log4j</module>
         <module>xorcery-opentelemetry-jvm</module>
@@ -310,16 +304,6 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-jmxconnector</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-jmxmetrics</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -396,17 +380,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-log4j</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-metadata</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-metricregistry</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -525,13 +499,6 @@
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-bom</artifactId>
                 <version>${asm.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.dropwizard.metrics</groupId>
-                <artifactId>metrics-bom</artifactId>
-                <version>${metrics.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -744,20 +711,6 @@
                 <groupId>com.auth0</groupId>
                 <artifactId>java-jwt</artifactId>
                 <version>4.4.0</version>
-            </dependency>
-
-            <!-- Metrics dependencies -->
-            <dependency>
-                <groupId>io.dropwizard.metrics</groupId>
-                <artifactId>metrics-jetty11</artifactId>
-                <version>${metrics.version}</version>
-                <exclusions>
-                    <!-- Conflicts with (and overrides) version pulled in directly from this pom, exclude here to avoid that -->
-                    <exclusion>
-                        <groupId>org.eclipse.jetty</groupId>
-                        <artifactId>jetty-http</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <!-- Tests -->

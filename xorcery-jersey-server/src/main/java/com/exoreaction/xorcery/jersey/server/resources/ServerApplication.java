@@ -27,7 +27,7 @@ import java.util.List;
 
 public class ServerApplication
         extends ResourceConfig {
-    public ServerApplication(Configuration configuration) throws IOException {
+    public ServerApplication(Configuration configuration) {
         property(ServerProperties.WADL_FEATURE_DISABLE, Boolean.TRUE);
         property(ServerProperties.UNWRAP_COMPLETION_STAGE_IN_WRITER_ENABLE, Boolean.TRUE);
 

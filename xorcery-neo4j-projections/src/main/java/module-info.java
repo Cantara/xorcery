@@ -31,10 +31,10 @@ open module xorcery.neo4j.projections {
 
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
-    requires com.codahale.metrics;
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.runlevel;
-    requires xorcery.metricregistry;
+    requires io.opentelemetry.api;
+    requires io.opentelemetry.semconv;
     requires xorcery.domainevents;
 
     provides Neo4jEventProjection with CypherEventProjection;

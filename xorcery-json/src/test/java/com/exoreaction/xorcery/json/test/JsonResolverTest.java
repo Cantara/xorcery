@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.json.test;
 
 import com.exoreaction.xorcery.json.JsonResolver;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 
 class JsonResolverTest {
@@ -55,7 +57,7 @@ class JsonResolverTest {
             defaultnumber: "{{ somenumber | 5 }}"
             resolvemissing: some {{level1.level3.missing | foo}} value            
             resolvemissingwithdefault: some {{level1.level3.missing | level1.level3.missing | "test"}} value
-            
+                        
             trueflag: true
             falseflag: false
             sometrueconditional: "{{ trueflag ? foo | \\"abc\\"}}"
@@ -63,85 +65,97 @@ class JsonResolverTest {
             somefalseconditionalwithliteraldefault: "{{ falseflag ? 3 | \\"foo\\"}}"
             somedefaultsconditional: "{{ falseflag ? 3 | falseflag ? 7 | number}}"
             somedefaultsconditional2: "{{ falseflag ? 3 | trueflag ? 7 | number}}"
-            
+                        
             somedefaultsconditionaltree: "{{ falseflag ? level1 | trueflag ? lvl1 | importedhierarchy}}"
-            
+                        
             nullfalsy: "{{ falseflag ? 1 }}"
-            
+                        
             nullfalsyarray:
                 - "1"
                 - "{{ falseflag ? 1 }}"
-                - "3"                
+                - "3"    
+                
+            namespace:
+              missing:
+                enabled: "{{ namespace.enabled ? false | true }}"
                         """;
+
+    private static ObjectMapper objectMapper;
 
     @BeforeAll
     public static void setup() throws IOException {
 
-        ObjectNode objectNode = (ObjectNode) new ObjectMapper(new YAMLFactory()).readTree(testYaml);
+        objectMapper = new ObjectMapper(new YAMLFactory());
+        ObjectNode objectNode = (ObjectNode) objectMapper.readTree(testYaml);
         result = new JsonResolver().apply(objectNode, objectNode);
     }
 
     @Test
     public void testResolveTextValue() {
-        assertThat(result.get("resolve").asText(), Matchers.equalTo("bar"));
+        assertThat(result.get("resolve").asText(), equalTo("bar"));
     }
 
     @Test
     public void testResolvePartialTextValue() {
-        assertThat(result.get("partial1").asText(), Matchers.equalTo("bar-abc"));
-        assertThat(result.get("partial2").asText(), Matchers.equalTo("abc-bar-abc"));
-        assertThat(result.get("partial3").asText(), Matchers.equalTo("abc-bar"));
+        assertThat(result.get("partial1").asText(), equalTo("bar-abc"));
+        assertThat(result.get("partial2").asText(), equalTo("abc-bar-abc"));
+        assertThat(result.get("partial3").asText(), equalTo("abc-bar"));
     }
 
     @Test
     public void testResolveNumber() {
-        assertThat(result.get("resolvenumber").asInt(), Matchers.equalTo(5));
+        assertThat(result.get("resolvenumber").asInt(), equalTo(5));
     }
 
     @Test
     public void testResolveHierarchicalName() throws
             IOException {
-        assertThat(result.get("hierarchy").asText(), Matchers.equalTo("some abc value"));
+        assertThat(result.get("hierarchy").asText(), equalTo("some abc value"));
     }
 
     @Test
     public void testResolveHierarchicalNameWithDefault() throws IOException {
-        assertThat(result.get("missing").asText(), Matchers.equalTo("some defaultvalue value"));
-        assertThat(result.get("resolvemissing").asText(), Matchers.equalTo("some bar value"));
-        assertThat(result.get("resolvemissingwithdefault").asText(), Matchers.equalTo("some test value"));
+        assertThat(result.get("missing").asText(), equalTo("some defaultvalue value"));
+        assertThat(result.get("resolvemissing").asText(), equalTo("some bar value"));
+        assertThat(result.get("resolvemissingwithdefault").asText(), equalTo("some test value"));
     }
 
     @Test
     public void testResolveImportedHierarchicalName() throws IOException {
-        assertThat(result.get("importedhierarchy").asText(), Matchers.equalTo("abc"));
+        assertThat(result.get("importedhierarchy").asText(), equalTo("abc"));
     }
 
     @Test
     public void testResolveRecursive() throws IOException {
         String resolverecursive = result.get("resolverecursive").asText();
-        assertThat(resolverecursive, Matchers.equalTo("bar"));
+        assertThat(resolverecursive, equalTo("bar"));
 
         String resolverecursive2 = result.get("resolverecursive2").asText();
-        assertThat(resolverecursive2, Matchers.equalTo("bar/test/abc-bar"));
+        assertThat(resolverecursive2, equalTo("bar/test/abc-bar"));
     }
 
     @Test
     public void testResolveNumberWithDefault() throws IOException {
-        assertThat(result.get("defaultnumber").asInt(), Matchers.equalTo(5));
+        assertThat(result.get("defaultnumber").asInt(), equalTo(5));
     }
 
     @Test
     public void testResolveConditionalWithDefault() throws IOException {
-        assertThat(result.get("sometrueconditional").asText(), Matchers.equalTo("bar"));
-        assertThat(result.get("somefalseconditional").asInt(), Matchers.equalTo(5));
-        assertThat(result.get("somefalseconditionalwithliteraldefault").asText(), Matchers.equalTo("foo"));
-        assertThat(result.get("somedefaultsconditional").asInt(), Matchers.equalTo(5));
-        assertThat(result.get("somedefaultsconditional2").asInt(), Matchers.equalTo(7));
-        assertThat(result.get("somedefaultsconditionaltree").toString(), Matchers.equalTo("{\"lvl2\":{\"level3\":\"abc\"}}"));
+        assertThat(result.get("sometrueconditional").asText(), equalTo("bar"));
+        assertThat(result.get("somefalseconditional").asInt(), equalTo(5));
+        assertThat(result.get("somefalseconditionalwithliteraldefault").asText(), equalTo("foo"));
+        assertThat(result.get("somedefaultsconditional").asInt(), equalTo(5));
+        assertThat(result.get("somedefaultsconditional2").asInt(), equalTo(7));
+        assertThat(result.get("somedefaultsconditionaltree").toString(), equalTo("{\"lvl2\":{\"level3\":\"abc\"}}"));
     }
 
     @Test
     public void testFalsyWithNull() {
         assertThat(result.get("nullfalsy"), nullValue());
+    }
+
+    @Test
+    public void testConditionalWithMissing() {
+        assertThat(result.get("namespace").get("missing").get("enabled").asBoolean(), equalTo(true));
     }
 }

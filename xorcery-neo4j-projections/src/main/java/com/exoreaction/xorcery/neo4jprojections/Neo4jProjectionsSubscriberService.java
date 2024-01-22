@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.neo4jprojections;
 
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
@@ -24,6 +23,7 @@ import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
 import com.exoreaction.xorcery.neo4jprojections.streams.*;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
+import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,7 +52,7 @@ public class Neo4jProjectionsSubscriberService {
                                              GraphDatabase graphDatabase,
                                              IterableProvider<Neo4jEventProjection> neo4jEventProjectionList,
                                              IterableProvider<Neo4jEventProjectionPreProcessor> neo4jEventProjectionPreProcessors,
-                                             MetricRegistry metricRegistry) {
+                                             OpenTelemetry openTelemetry) {
 
         Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
 
@@ -74,7 +74,7 @@ public class Neo4jProjectionsSubscriberService {
                                     cfg.getString("projection").orElseThrow(),
                                     neo4jProjectionCommitPublisher,
                                     projectionList,
-                                    metricRegistry),
+                                    openTelemetry),
                                     neo4jEventProjectionPreProcessors,
                                     new DisruptorConfiguration(configuration.getConfiguration("disruptor.standard")),
                                     ProjectionExceptionHandler::new),

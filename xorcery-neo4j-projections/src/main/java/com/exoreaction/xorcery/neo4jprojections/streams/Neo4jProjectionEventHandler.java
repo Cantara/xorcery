@@ -15,9 +15,6 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.streams;
 
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
 import com.exoreaction.xorcery.domainevents.api.CommandEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.lang.Enums;
@@ -31,6 +28,12 @@ import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.RewindableEventHandler;
 import com.lmax.disruptor.RewindableException;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.neo4j.exceptions.EntityNotFoundException;
@@ -73,10 +76,10 @@ public class Neo4jProjectionEventHandler
     private long currentBatchSize;
     private int eventBatchCount;
 
-    private final Meter revisionCounter;
-    private final Meter eventCounter;
-    private final Histogram batchSize;
-    private final Histogram commitSize;
+    private final LongCounter eventCounter;
+    private final LongHistogram batchSize;
+    private final LongHistogram commitSize;
+    private final Attributes attributes;
 
     public Neo4jProjectionEventHandler(GraphDatabaseService graphDatabaseService,
                                        Neo4jProjectionsConfiguration configuration,
@@ -85,7 +88,7 @@ public class Neo4jProjectionEventHandler
                                        String projectionId,
                                        Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,
                                        List<Neo4jEventProjection> projections,
-                                       MetricRegistry metrics) {
+                                       OpenTelemetry openTelemetry) {
         this.eventBatchSize = configuration.eventBatchSize();
         this.projectionCommitPublisher = projectionCommitPublisher;
         this.projectionId = projectionId;
@@ -93,10 +96,15 @@ public class Neo4jProjectionEventHandler
         this.graphDatabaseService = graphDatabaseService;
         this.subscription = subscription;
         this.projections = projections;
-        revisionCounter = metrics.meter("neo4j.projections." + projectionId + ".revision");
-        eventCounter = metrics.meter("neo4j.projections." + projectionId + ".events");
-        batchSize = metrics.histogram("neo4j.projections." + projectionId + ".batchsize");
-        commitSize = metrics.histogram("neo4j.projections." + projectionId + ".commitsize");
+        Meter meter = openTelemetry.meterBuilder(getClass().getName())
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .build();
+        attributes = Attributes.builder().put("projectionId", projectionId).build();
+        meter.gaugeBuilder("neo4j.projection.revision").setUnit("{revision}").buildWithCallback(m -> m.record(revision, attributes));
+        eventCounter = meter.counterBuilder("neo4j.projection.events").setUnit("{event}").build();
+        batchSize = meter.histogramBuilder("neo4j.projection.batchsize").setUnit("{count}").ofLongs().build();
+        commitSize = meter.histogramBuilder("neo4j.projection.commitsize").setUnit("{count}").ofLongs().build();
 
         projectionModel.ifPresent(pm ->
         {
@@ -166,9 +174,8 @@ public class Neo4jProjectionEventHandler
                 tx.commit();
                 logger.trace("Updated projection " + projectionId + " to revision " + revision);
 
-                revisionCounter.mark(revision - previousRevision);
-                eventCounter.mark(eventBatchCount);
-                commitSize.update(eventBatchCount);
+                eventCounter.add(eventBatchCount, attributes);
+                commitSize.record(eventBatchCount, attributes);
                 previousRevision = revision;
 
                 // Always send commit notification, even if no changes were made
@@ -202,7 +209,7 @@ public class Neo4jProjectionEventHandler
     @Override
     public void onBatchStart(long batchSize, long queueDepth) {
         this.currentBatchSize = batchSize;
-        this.batchSize.update(batchSize);
+        this.batchSize.record(batchSize, attributes);
     }
 
     @Override

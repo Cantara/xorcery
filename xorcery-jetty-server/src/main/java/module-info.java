@@ -20,7 +20,6 @@ open module xorcery.jetty.server {
     exports com.exoreaction.xorcery.jetty.server.security.clientcert;
 
     requires transitive xorcery.configuration.api;
-    requires transitive xorcery.metricregistry;
     requires xorcery.secrets;
     requires xorcery.keystores;
     requires xorcery.health.api;
@@ -34,16 +33,14 @@ open module xorcery.jetty.server {
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
 
-    requires io.dropwizard.metrics.jetty11;
-
     requires transitive org.eclipse.jetty.server;
     requires org.eclipse.jetty.alpn.java.server;
     requires org.eclipse.jetty.http2.server;
     requires org.eclipse.jetty.servlet;
     requires org.eclipse.jetty.websocket.jetty.server;
+    requires org.eclipse.jetty.util;
 
     requires org.apache.logging.log4j;
-    requires com.codahale.metrics;
 
     requires com.auth0.jwt;
     requires org.bouncycastle.provider;

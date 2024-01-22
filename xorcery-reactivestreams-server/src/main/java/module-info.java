@@ -35,5 +35,7 @@ open module xorcery.reactivestreams.server {
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires org.apache.logging.log4j;
-    requires com.codahale.metrics;
+    requires io.opentelemetry.api;
+    requires io.opentelemetry.semconv;
+    requires xorcery.opentelemetry.api;
 }
