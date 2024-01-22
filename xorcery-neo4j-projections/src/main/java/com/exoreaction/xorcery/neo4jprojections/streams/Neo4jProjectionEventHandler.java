@@ -17,6 +17,8 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 
 import com.exoreaction.xorcery.domainevents.api.CommandEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
+import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
+import com.exoreaction.xorcery.domainevents.api.Model;
 import com.exoreaction.xorcery.lang.Enums;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
@@ -145,11 +147,27 @@ public class Neo4jProjectionEventHandler
                 tx.close();
                 tx = null;
 
+                // Strip away attributes and relationships for security reasons
+                List<DomainEvent> cleanedDomainEvents = event.getEvents();
+                for (DomainEvent domainEvent : domainEvents) {
+                    if (domainEvent instanceof JsonDomainEvent jde)
+                    {
+                        JsonDomainEvent jsonDomainEvent = new JsonDomainEvent(((JsonDomainEvent) domainEvent).json().deepCopy());
+                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.attributes.name());
+                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.addedattributes.name());
+                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.removedattributes.name());
+                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.updatedrelationships.name());
+                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.addedrelationships.name());
+                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.removedrelationships.name());
+                        cleanedDomainEvents.add(jsonDomainEvent);
+                    }
+                }
+
                 if (t instanceof EntityNotFoundException) {
-                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, domainEvents), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, cleanedDomainEvents), t);
                     throw new RewindableException(t);
                 } else {
-                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, domainEvents), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, cleanedDomainEvents), t);
 
                     if (t instanceof Exception e)
                         throw e;
