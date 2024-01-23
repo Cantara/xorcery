@@ -258,6 +258,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-jmx</artifactId>
+                <version>0.91.4-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-keystores</artifactId>
                 <version>0.91.4-SNAPSHOT</version>
             </dependency>

@@ -144,6 +144,7 @@
         <module>xorcery-opentelemetry-log4j</module>
         <module>xorcery-opentelemetry-jvm</module>
         <module>xorcery-opentelemetry-jersey-server</module>
+        <module>xorcery-opentelemetry-jmx</module>
 
         <module>xorcery-coordinator</module>
 
@@ -371,6 +372,11 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jersey-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-jmx</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

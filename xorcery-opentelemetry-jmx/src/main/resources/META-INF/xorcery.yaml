@@ -1,0 +1,22 @@
+opentelemetry:
+  instrumentations:
+    jmx:
+      attributes:
+        classloading.loadedClasses:
+          description: "Nr of loaded classes"
+          objectName: java.lang:type=ClassLoading
+          attribute: LoadedClassCount
+          unit: "{count}"
+          type: Gauge
+        system.memory.limit:
+          description: "Total memory size"
+          objectName: java.lang:type=OperatingSystem
+          attribute: TotalMemorySize
+          unit: "By"
+          type: Gauge
+        system.cpu.utilization:
+          description: "Process CPU utilization"
+          objectName: java.lang:type=OperatingSystem
+          attribute: ProcessCpuLoad
+          unit: "1"
+          type: Gauge
