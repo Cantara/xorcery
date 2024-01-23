@@ -22,6 +22,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jvnet.hk2.annotations.Service;
 
+import java.util.concurrent.CompletableFuture;
+
 @Service(name="eventstore")
 public class EventStoreService {
 
@@ -31,7 +33,7 @@ public class EventStoreService {
     private final EventStoreDBClientSettings settings;
 
     @Inject
-    public EventStoreService(Configuration configuration) throws ConnectionStringParsingException {
+    public EventStoreService(Configuration configuration) {
 
         EventStoreConfiguration eventStoreConfiguration = new EventStoreConfiguration(configuration.getConfiguration("eventstore"));
         settings = EventStoreDBConnectionString.parseOrThrow(eventStoreConfiguration.getURI());
@@ -39,7 +41,9 @@ public class EventStoreService {
 
         // Test connection
         logger.info("Testing connection");
-        StreamMetadata metadata = client.getStreamMetadata("$all").join();
+        ConnectionTestProcess connectionTestProcess = new ConnectionTestProcess(client, new CompletableFuture<>());
+        connectionTestProcess.start();
+        StreamMetadata metadata = connectionTestProcess.result().join();
         logger.info("Connection ok");
     }
 
