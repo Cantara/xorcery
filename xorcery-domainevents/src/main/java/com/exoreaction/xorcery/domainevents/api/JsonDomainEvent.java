@@ -511,6 +511,18 @@ public record JsonDomainEvent(ObjectNode json)
             return Optional.of(new Metadata(metadata));
     }
 
+    public JsonDomainEvent cloneWithoutState()
+    {
+        ObjectNode cloned = json.deepCopy();
+        cloned.remove(Model.JsonDomainEventModel.attributes.name());
+        cloned.remove(Model.JsonDomainEventModel.addedattributes.name());
+        cloned.remove(Model.JsonDomainEventModel.removedattributes.name());
+        cloned.remove(Model.JsonDomainEventModel.updatedrelationships.name());
+        cloned.remove(Model.JsonDomainEventModel.addedrelationships.name());
+        cloned.remove(Model.JsonDomainEventModel.removedrelationships.name());
+        return new JsonDomainEvent(cloned);
+    }
+
     public record JsonEntity(ObjectNode json)
             implements JsonElement {
         public String getType() {

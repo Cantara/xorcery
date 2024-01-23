@@ -147,27 +147,12 @@ public class Neo4jProjectionEventHandler
                 tx.close();
                 tx = null;
 
-                // Strip away attributes and relationships for security reasons
-                List<DomainEvent> cleanedDomainEvents = event.getEvents();
-                for (DomainEvent domainEvent : domainEvents) {
-                    if (domainEvent instanceof JsonDomainEvent jde)
-                    {
-                        JsonDomainEvent jsonDomainEvent = new JsonDomainEvent(((JsonDomainEvent) domainEvent).json().deepCopy());
-                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.attributes.name());
-                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.addedattributes.name());
-                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.removedattributes.name());
-                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.updatedrelationships.name());
-                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.addedrelationships.name());
-                        jsonDomainEvent.json().remove(Model.JsonDomainEventModel.removedrelationships.name());
-                        cleanedDomainEvents.add(jsonDomainEvent);
-                    }
-                }
-
+                CommandEvents cleanedCommandEvents = event.cloneWithoutState();
                 if (t instanceof EntityNotFoundException) {
-                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, cleanedDomainEvents), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, cleanedCommandEvents.getEvents()), t);
                     throw new RewindableException(t);
                 } else {
-                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, cleanedDomainEvents), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, cleanedCommandEvents.getEvents()), t);
 
                     if (t instanceof Exception e)
                         throw e;
