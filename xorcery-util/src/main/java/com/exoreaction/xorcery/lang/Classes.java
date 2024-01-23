@@ -17,11 +17,17 @@ package com.exoreaction.xorcery.lang;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.function.Function;
 
 public final class Classes {
 
     public static Class<Object> getClass(Type type)
     {
         return (Class<Object>)(type instanceof ParameterizedType pt ? pt.getRawType() : type);
+    }
+
+    public static <I,O> Function<I,O> cast(Class<O> clazz)
+    {
+        return clazz::cast;
     }
 }

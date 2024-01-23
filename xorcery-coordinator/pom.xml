@@ -112,6 +112,14 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-opentelemetry-jmx</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-opentelemetry-system</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-opentelemetry-jersey-server</artifactId>
         </dependency>
 

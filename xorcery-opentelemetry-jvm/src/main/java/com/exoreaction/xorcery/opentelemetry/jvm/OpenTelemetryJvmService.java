@@ -12,6 +12,7 @@ import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
@@ -39,7 +40,7 @@ public class OpenTelemetryJvmService
     private final Map<MemoryPoolMXBean, Attributes> memoryPoolAttributes;
 
     @Inject
-    public OpenTelemetryJvmService(Configuration configuration, OpenTelemetry openTelemetry) throws InstanceNotFoundException {
+    public OpenTelemetryJvmService(Configuration configuration, OpenTelemetry openTelemetry, Logger logger) throws InstanceNotFoundException {
 
         OpenTelemetryJvmConfiguration jvmConfiguration = OpenTelemetryJvmConfiguration.get(configuration);
 
@@ -98,6 +99,8 @@ public class OpenTelemetryJvmService
                 case "jvm.cpu.time" -> meter.counterBuilder(attribute.getKey()).setUnit("s").ofDoubles().buildWithCallback(this::jvmCpuTime);
                 case "jvm.cpu.count" -> meter.upDownCounterBuilder(attribute.getKey()).setUnit("{cpu}").build().add(Runtime.getRuntime().availableProcessors());
                 case "jvm.cpu.recent_utilization" -> meter.gaugeBuilder(attribute.getKey()).setUnit("1").buildWithCallback(this::jvmCpuRecentUtilization);
+
+                default -> logger.warn("Unknown attribute {}", attribute.getValue());
             }
         }
     }

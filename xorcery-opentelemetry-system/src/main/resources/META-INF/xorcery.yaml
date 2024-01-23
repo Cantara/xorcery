@@ -1,0 +1,6 @@
+opentelemetry:
+  instrumentations:
+    system:
+      enabled: "{{ defaults.enabled }}"
+      attributes:
+        system.filesystem.usage: system.filesystem.usage
