@@ -14,6 +14,7 @@ import org.jvnet.hk2.annotations.Service;
 import java.io.IOException;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystems;
+import java.util.Collection;
 import java.util.Map;
 
 @Service(name = "opentelemetry.instrumentations.system")
@@ -54,13 +55,13 @@ public class OpenTelemetrySystemService {
 
                 observableLongMeasurement.record(free,
                         Attributes.of(
-                                SemanticAttributes.SYSTEM_DEVICE, fileStore.name(),
+                                SemanticAttributes.SYSTEM_DEVICE, fileStore.toString(),
                                 SemanticAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
                                 SemanticAttributes.SYSTEM_FILESYSTEM_STATE, SemanticAttributes.SystemFilesystemStateValues.FREE)
                 );
                 observableLongMeasurement.record(used,
                         Attributes.of(
-                                SemanticAttributes.SYSTEM_DEVICE, fileStore.name(),
+                                SemanticAttributes.SYSTEM_DEVICE, fileStore.toString(),
                                 SemanticAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
                                 SemanticAttributes.SYSTEM_FILESYSTEM_STATE, SemanticAttributes.SystemFilesystemStateValues.USED)
                 );
