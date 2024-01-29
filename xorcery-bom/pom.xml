@@ -353,6 +353,16 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-thymeleaf</artifactId>
+                <version>0.91.8-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-thymeleaf-jsonapi</artifactId>
+                <version>0.91.8-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-util</artifactId>
                 <version>0.91.8-SNAPSHOT</version>
             </dependency>

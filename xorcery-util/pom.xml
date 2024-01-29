@@ -26,6 +26,4 @@
     </parent>
 
     <artifactId>xorcery-util</artifactId>
-    <version>0.91.8-SNAPSHOT</version>
-    <packaging>jar</packaging>
 </project>
