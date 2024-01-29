@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+<html xmlns:th="https://www.thymeleaf.org" lang="en">
+<head>
+    <style>
+        table
+        {
+            border:2px solid;
+        }
+
+        td
+        {
+            border: 1px solid gray;
+        }
+    </style>
+    <title th:text="${title}">Title</title>
+</head>
+<body>
+
+<h3 th:text="${title}">Title</h3>
+
+<!--
+Test:
+<div th:text="${json.resources.get}"></div>
+-->
+
+<div class="resourcedocument">
+    <div th:insert="~{jsonapi/fragment/resource :: errors (${json.errors})}"></div>
+
+    <div th:insert="~{jsonapi/fragment/resource :: links(${json.links})}"></div>
+
+    <div th:if="${json.resources.isPresent}">
+        <div>Resources</div>
+        <div th:each="resource: ${json.resources.get}">
+            <div th:insert="~{jsonapi/fragment/resource :: resourceobject(${resource})}"></div>
+        </div>
+    </div>
+
+    <div th:if="${json.resource.isPresent}">
+        <div>Resource</div>
+        <!--
+                <div th:insert="~{jsonapi/fragment/resource :: resourceobject(${json.resource.get})}"></div>
+        -->
+    </div>
+
+    <!--
+        <div th:with="included=${included.included}">
+            <div>Included</div>
+            <div th:each="resource: ${included}" th:replace="~{jsonapi/fragment/resource :: resourceobject(${resource})}">Resource</div>
+        </div>
+    -->
+</body>
+</html>

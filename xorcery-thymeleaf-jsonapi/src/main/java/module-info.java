@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.metricregistry {
+open module xorcery.thymeleaf.jsonapi {
+    exports com.exoreaction.xorcery.thymeleaf.jsonapi.resources;
+    exports com.exoreaction.xorcery.thymeleaf.jsonapi.providers;
 
-    exports com.exoreaction.xorcery.metricregistry;
+    requires xorcery.configuration.api;
+    requires xorcery.jsonapi.server;
+    requires xorcery.jsonapi.client;
+    requires xorcery.jsonapi.jaxrs;
 
-    requires com.codahale.metrics;
-    requires com.codahale.metrics.jmx;
-    requires com.codahale.metrics.jvm;
-    requires org.glassfish.hk2.api;
+    requires thymeleaf;
+    requires org.eclipse.jetty.servlet;
+    requires jakarta.ws.rs;
+    requires jersey.server;
+    requires jersey.common;
+
     requires jakarta.inject;
-    requires org.glassfish.hk2.runlevel;
-    requires java.management;
-    requires jdk.management;
+    requires org.glassfish.hk2.api;
+    requires org.apache.logging.log4j;
 }
