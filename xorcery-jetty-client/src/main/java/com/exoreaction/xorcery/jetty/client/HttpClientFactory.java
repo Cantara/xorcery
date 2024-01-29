@@ -41,9 +41,12 @@ public class HttpClientFactory {
     private final Logger logger = LogManager.getLogger(getClass());
     private HttpClient client;
 
-    public HttpClientFactory(Configuration configuration, Supplier<DnsLookupService> dnsLookup, Supplier<SslContextFactory.Client> clientSslContextFactoryProvider) throws Exception {
-
-        JettyClientConfiguration jettyClientConfiguration = new JettyClientConfiguration(configuration.getConfiguration("jetty.client"));
+    public HttpClientFactory(
+            JettyClientConfiguration jettyClientConfiguration,
+            ApplicationConfiguration applicationConfiguration,
+            Supplier<DnsLookupService> dnsLookup,
+            Supplier<SslContextFactory.Client> clientSslContextFactoryProvider
+    ) throws Exception {
 
         // Client setup
         ClientConnector connector = new ClientConnector();
@@ -54,7 +57,7 @@ public class HttpClientFactory {
 
         ClientConnectionFactoryOverHTTP2.HTTP2 http2 = null;
 
-        JettyHttp2Configuration http2Configuration = new JettyHttp2Configuration(configuration.getConfiguration("jetty.client.http2"));
+        JettyHttp2Configuration http2Configuration = jettyClientConfiguration.getHTTP2Configuration();
         if (http2Configuration.isEnabled()) {
             // HTTP/2
             HTTP2Client http2Client = new HTTP2Client(connector);
@@ -64,7 +67,7 @@ public class HttpClientFactory {
         }
 
         HttpClientTransportDynamic transport = null;
-        JettyClientSslConfiguration jettyClientSslConfiguration = new JettyClientSslConfiguration(configuration.getConfiguration("jetty.client.ssl"));
+        JettyClientSslConfiguration jettyClientSslConfiguration = jettyClientConfiguration.getSSLConfiguration();
         if (jettyClientSslConfiguration.isEnabled()) {
             SslContextFactory.Client sslClientContextFactory = clientSslContextFactoryProvider.get();
             connector.setSslContextFactory(sslClientContextFactory);
@@ -80,7 +83,6 @@ public class HttpClientFactory {
         client = new HttpClient(transport);
         client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
         QueuedThreadPool executor = new QueuedThreadPool();
-        ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
         executor.setName(applicationConfiguration.getName());
         client.setExecutor(executor);
         client.setScheduler(new ScheduledExecutorScheduler(applicationConfiguration.getName() + "-scheduler", false));

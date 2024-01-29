@@ -1,6 +1,22 @@
+/*
+ * Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.exoreaction.xorcery.opentelemetry.jvm;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.lang.AutoCloseables;
 import com.sun.management.GarbageCollectionNotificationInfo;
 import com.sun.management.OperatingSystemMXBean;
 import io.opentelemetry.api.OpenTelemetry;
@@ -38,9 +54,12 @@ public class OpenTelemetryJvmService
 
     private final NotificationListener gcNotificationListener;
     private final Map<MemoryPoolMXBean, Attributes> memoryPoolAttributes;
+    private final AutoCloseables closeables = new AutoCloseables();
+    private final Logger logger;
 
     @Inject
     public OpenTelemetryJvmService(Configuration configuration, OpenTelemetry openTelemetry, Logger logger) throws InstanceNotFoundException {
+        this.logger = logger;
 
         OpenTelemetryJvmConfiguration jvmConfiguration = OpenTelemetryJvmConfiguration.get(configuration);
 
@@ -75,14 +94,16 @@ public class OpenTelemetryJvmService
         };
 
         for (Map.Entry<String, String> attribute : jvmConfiguration.getAttributes().entrySet()) {
-            switch (attribute.getValue())
-            {
-                case "jvm.memory.used" -> meter.upDownCounterBuilder(attribute.getKey()).setUnit("By").buildWithCallback(this::jvmMemoryUsed);
-                case "jvm.memory.committed"->meter.upDownCounterBuilder(attribute.getKey()).setUnit("By").buildWithCallback(this::jvmMemoryCommitted);
-                case "jvm.memory.limit"-> meter.upDownCounterBuilder(attribute.getKey()).setUnit("By").buildWithCallback(this::jvmMemoryLimit);
-                case "jvm.memory.used_after_last_gc" -> meter.upDownCounterBuilder(attribute.getKey()).setUnit("By").buildWithCallback(this::jvmMemoryUserAfterLastGC);
-                case "jvm.gc.duration" ->
-                {
+            switch (attribute.getValue()) {
+                case "jvm.memory.used" ->
+                        closeables.add(meter.upDownCounterBuilder(attribute.getKey()).setUnit("By").buildWithCallback(this::jvmMemoryUsed));
+                case "jvm.memory.committed" ->
+                        closeables.add(meter.upDownCounterBuilder(attribute.getKey()).setUnit("By").buildWithCallback(this::jvmMemoryCommitted));
+                case "jvm.memory.limit" ->
+                        closeables.add(meter.upDownCounterBuilder(attribute.getKey()).setUnit("By").buildWithCallback(this::jvmMemoryLimit));
+                case "jvm.memory.used_after_last_gc" ->
+                        closeables.add(meter.upDownCounterBuilder(attribute.getKey()).setUnit("By").buildWithCallback(this::jvmMemoryUserAfterLastGC));
+                case "jvm.gc.duration" -> {
                     for (GarbageCollectorMXBean garbageCollectorMXBean : ManagementFactory.getGarbageCollectorMXBeans()) {
                         DoubleHistogram gcHistogram = meter.histogramBuilder(attribute.getKey())
                                 .setUnit("s")
@@ -93,12 +114,16 @@ public class OpenTelemetryJvmService
                 }
 
                 // Threads
-                case "jvm.thread.count" -> meter.upDownCounterBuilder(attribute.getKey()).setUnit("{thread}").buildWithCallback(this::jvmThreadCount);
+                case "jvm.thread.count" ->
+                        closeables.add(meter.upDownCounterBuilder(attribute.getKey()).setUnit("{thread}").buildWithCallback(this::jvmThreadCount));
 
                 // CPU
-                case "jvm.cpu.time" -> meter.counterBuilder(attribute.getKey()).setUnit("s").ofDoubles().buildWithCallback(this::jvmCpuTime);
-                case "jvm.cpu.count" -> meter.upDownCounterBuilder(attribute.getKey()).setUnit("{cpu}").build().add(Runtime.getRuntime().availableProcessors());
-                case "jvm.cpu.recent_utilization" -> meter.gaugeBuilder(attribute.getKey()).setUnit("1").buildWithCallback(this::jvmCpuRecentUtilization);
+                case "jvm.cpu.time" ->
+                        closeables.add(meter.counterBuilder(attribute.getKey()).setUnit("s").ofDoubles().buildWithCallback(this::jvmCpuTime));
+                case "jvm.cpu.count" ->
+                        meter.upDownCounterBuilder(attribute.getKey()).setUnit("{cpu}").build().add(Runtime.getRuntime().availableProcessors());
+                case "jvm.cpu.recent_utilization" ->
+                        closeables.add(meter.gaugeBuilder(attribute.getKey()).setUnit("1").buildWithCallback(this::jvmCpuRecentUtilization));
 
                 default -> logger.warn("Unknown attribute {}", attribute.getValue());
             }
@@ -112,9 +137,15 @@ public class OpenTelemetryJvmService
                 ManagementFactory.getPlatformMBeanServer().removeNotificationListener(garbageCollectorMXBean.getObjectName(), gcNotificationListener);
             } catch (ListenerNotFoundException e) {
                 // Ok!
-            }catch (Throwable e) {
+            } catch (Throwable e) {
                 LogManager.getLogger().error("Could not remove notification listener", e);
             }
+        }
+
+        try {
+            closeables.close();
+        } catch (Exception e) {
+            logger.warn("Could not close metrics", e);
         }
     }
 

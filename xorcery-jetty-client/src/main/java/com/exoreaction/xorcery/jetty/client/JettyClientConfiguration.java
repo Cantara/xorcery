@@ -21,8 +21,7 @@ import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 import java.time.Duration;
 
 public record JettyClientConfiguration(Configuration context)
-    implements ServiceConfiguration
-{
+        implements ServiceConfiguration {
     public Duration getIdleTimeout() {
         return Duration.parse("PT" + context().getString("idleTimeout").orElse("-1s"));
     }
@@ -31,4 +30,11 @@ public record JettyClientConfiguration(Configuration context)
         return Duration.parse("PT" + context().getString("connectTimeout").orElse("5s"));
     }
 
+    public JettyHttp2Configuration getHTTP2Configuration() {
+        return new JettyHttp2Configuration(context.getConfiguration("http2"));
+    }
+
+    public JettyClientSslConfiguration getSSLConfiguration() {
+        return new JettyClientSslConfiguration(context.getConfiguration("ssl"));
+    }
 }

@@ -35,6 +35,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableLongGauge;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,6 +82,7 @@ public class Neo4jProjectionEventHandler
     private final LongCounter eventCounter;
     private final LongHistogram batchSize;
     private final LongHistogram commitSize;
+    private final ObservableLongGauge revisionGauge;
     private final Attributes attributes;
 
     public Neo4jProjectionEventHandler(GraphDatabaseService graphDatabaseService,
@@ -103,7 +105,7 @@ public class Neo4jProjectionEventHandler
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .build();
         attributes = Attributes.builder().put("projectionId", projectionId).build();
-        meter.gaugeBuilder("neo4j.projection.revision")
+        revisionGauge = meter.gaugeBuilder("neo4j.projection.revision")
                 .ofLongs().setUnit("{revision}").buildWithCallback(m -> {
             if (revision != null) m.record(revision, attributes);
         });
@@ -224,5 +226,7 @@ public class Neo4jProjectionEventHandler
             tx.rollback();
             tx.close();
         }
+
+        revisionGauge.close();
     }
 }

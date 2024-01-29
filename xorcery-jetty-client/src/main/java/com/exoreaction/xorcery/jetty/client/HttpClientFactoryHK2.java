@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jetty.client;
 
+import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import jakarta.inject.Inject;
@@ -32,7 +33,12 @@ public class HttpClientFactoryHK2 extends HttpClientFactory
 
     @Inject
     public HttpClientFactoryHK2(Configuration configuration, Provider<DnsLookupService> dnsLookup, Provider<SslContextFactory.Client> clientSslContextFactoryProvider) throws Exception {
-        super(configuration, dnsLookup::get, clientSslContextFactoryProvider::get);
+        super(
+                new JettyClientConfiguration(configuration.getConfiguration("jetty.client")),
+                ApplicationConfiguration.get(configuration),
+                dnsLookup::get,
+                clientSslContextFactoryProvider::get
+        );
     }
 
     @Override

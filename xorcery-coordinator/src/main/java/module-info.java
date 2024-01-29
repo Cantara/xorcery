@@ -21,7 +21,7 @@ open module xorcery.coordinator {
     requires transitive xorcery.reactivestreams.server;
     requires transitive xorcery.jersey.server;
     requires transitive xorcery.jersey.client;
-    requires transitive xorcery.handlebars;
+    requires transitive xorcery.thymeleaf;
     requires transitive xorcery.dns.server;
     requires transitive xorcery.dns.registration;
     requires transitive xorcery.certificates.server;
