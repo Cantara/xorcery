@@ -1,0 +1,6 @@
+thymeleaf:
+  enabled: "{{ defaults.enabled }}"
+  development: "{{ defaults.development }}"
+
+jersey.server.register:
+  - com.exoreaction.xorcery.thymeleaf.providers.ThymeleafHtmlMessageBodyWriter
