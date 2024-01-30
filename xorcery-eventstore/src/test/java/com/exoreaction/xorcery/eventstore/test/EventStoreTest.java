@@ -38,6 +38,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,7 +63,8 @@ public class EventStoreTest {
     public static DockerComposeContainer environment =
             new DockerComposeContainer(new File("src/test/resources/compose-test.yaml"))
                     .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreTest.class)))
-                    .withExposedService("eventstore", 2115);
+                    .withExposedService("eventstore", 2115)
+                    .withStartupTimeout(Duration.ofSeconds(30));
 
     @BeforeAll
     public static void setup() throws Exception {
