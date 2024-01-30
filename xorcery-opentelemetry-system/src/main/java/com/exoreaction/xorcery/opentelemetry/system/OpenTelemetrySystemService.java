@@ -29,7 +29,8 @@ import org.jvnet.hk2.annotations.Service;
 import java.io.IOException;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystems;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service(name = "opentelemetry.instrumentations.system")
@@ -37,12 +38,15 @@ import java.util.Map;
 public class OpenTelemetrySystemService {
 
     private final Logger logger;
+    private final List<FileStore> fileStores;
 
     @Inject
     public OpenTelemetrySystemService(Configuration configuration, OpenTelemetry openTelemetry, Logger logger) {
         this.logger = logger;
 
         OpenTelemetrySystemConfiguration systemConfiguration = OpenTelemetrySystemConfiguration.get(configuration);
+
+        this.fileStores = getValidFileStores();
 
         Meter meter = openTelemetry.meterBuilder(getClass().getName())
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
@@ -60,10 +64,24 @@ public class OpenTelemetrySystemService {
         }
     }
 
-    private void fileSystemUsage(ObservableLongMeasurement observableLongMeasurement) {
+    private List<FileStore> getValidFileStores() {
+        List<FileStore> fileStores = new ArrayList<>();
+        for (FileStore fileStore : FileSystems.getDefault().getFileStores()) {
+            try {
+                long free = fileStore.getUnallocatedSpace();
+                if (free > 0) {
+                    fileStores.add(fileStore);
+                }
+            } catch (IOException e) {
+                // Ignore file store
+            }
+        }
+        return fileStores;
+    }
 
-        try {
-            for (FileStore fileStore : FileSystems.getDefault().getFileStores()) {
+    private void fileSystemUsage(ObservableLongMeasurement observableLongMeasurement) {
+        for (FileStore fileStore : fileStores) {
+            try {
                 long total = fileStore.getTotalSpace();
                 long free = fileStore.getUnallocatedSpace();
                 long used = total - free;
@@ -80,9 +98,9 @@ public class OpenTelemetrySystemService {
                                 SemanticAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
                                 SemanticAttributes.SYSTEM_FILESYSTEM_STATE, SemanticAttributes.SystemFilesystemStateValues.USED)
                 );
+            } catch (IOException e) {
+                logger.error("Could not record filesystem stats for "+fileStore, e);
             }
-        } catch (IOException e) {
-            logger.error("Could not record filesystem stats", e);
         }
     }
 }
