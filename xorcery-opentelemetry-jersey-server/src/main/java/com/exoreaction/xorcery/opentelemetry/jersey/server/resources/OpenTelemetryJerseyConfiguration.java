@@ -17,6 +17,10 @@ package com.exoreaction.xorcery.opentelemetry.jersey.server.resources;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryElement;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author rickardoberg
@@ -29,5 +33,10 @@ public record OpenTelemetryJerseyConfiguration(Configuration context)
     public static OpenTelemetryJerseyConfiguration get(Configuration configuration)
     {
         return new OpenTelemetryJerseyConfiguration(configuration.getConfiguration("opentelemetry.instrumentations.jersey"));
+    }
+
+    public List<String> getExcludes()
+    {
+        return context.getListAs("excludes", JsonNode::asText).orElse(Collections.emptyList());
     }
 }

@@ -2,6 +2,7 @@ opentelemetry:
   instrumentations:
     jersey:
       enabled: "{{ defaults.enabled }}"
+      excludes: []
       attributes:
         http.request.method: http.request.method
         http.route: http.route
