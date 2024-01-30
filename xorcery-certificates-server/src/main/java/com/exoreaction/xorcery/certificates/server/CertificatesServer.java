@@ -32,6 +32,7 @@ public class CertificatesServer {
                               Configuration configuration
     ) {
         serviceResourceObjects.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "certificates")
+                .version(getClass().getPackage().getImplementationVersion())
                 .with(b ->
                 {
                     b.api("request", "api/certificates/request");

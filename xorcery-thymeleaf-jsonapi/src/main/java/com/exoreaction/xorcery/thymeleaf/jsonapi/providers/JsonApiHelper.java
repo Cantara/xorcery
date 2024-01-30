@@ -18,9 +18,19 @@ package com.exoreaction.xorcery.thymeleaf.jsonapi.providers;
 import com.exoreaction.xorcery.jsonapi.Link;
 import org.glassfish.jersey.uri.UriTemplate;
 
+import java.io.IOException;
+import java.util.List;
+
 public class JsonApiHelper {
 
     public boolean isTemplate(Link link) {
         return !new UriTemplate(link.getHref()).getTemplateVariables().isEmpty();
+    }
+
+    public List<String> parameters(Link link) throws IOException {
+        if (link == null)
+            return null;
+        else
+            return new UriTemplate(link.getHref()).getTemplateVariables();
     }
 }

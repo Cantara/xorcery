@@ -51,7 +51,8 @@ public class Neo4jBrowser {
         servletContextHandler.setInitParameter(DefaultServlet.CONTEXT_INIT + "pathInfoOnly", Boolean.TRUE.toString());
         servletContextHandler.addServlet(servletHolder, "/api/neo4j/browser/*");
 
-        serviceResourceObjects.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "neo4jbrowser")
+        serviceResourceObjects.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "neo4jbrowser")
+                .version(getClass().getPackage().getImplementationVersion())
                 .api("browser", "api/neo4j/browser/")
                 .build());
     }

@@ -56,7 +56,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-thymeleaf</artifactId>
+            <artifactId>xorcery-thymeleaf-jsonapi</artifactId>
         </dependency>
 
         <!-- DNS -->

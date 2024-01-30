@@ -55,7 +55,8 @@ public class Neo4jProjectionsService {
 
         Neo4jProjectionsConfiguration neo4jProjectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
 
-        this.sro = new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
+        this.sro = new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), SERVICE_TYPE)
+                .version(getClass().getPackage().getImplementationVersion())
                 .with(b -> {
                     if (neo4jProjectionsConfiguration.isEventSubscriberEnabled())
                         b.subscriber(Neo4jProjectionStreams.EVENT_SUBSCRIBER);

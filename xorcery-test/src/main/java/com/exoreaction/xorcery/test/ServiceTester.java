@@ -30,7 +30,8 @@ public class ServiceTester {
     @Inject
     public ServiceTester(Configuration configuration,
                          ServiceResourceObjects sro) {
-        sro.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "servicetest")
+        sro.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "servicetest")
+                .version(getClass().getPackage().getImplementationVersion())
                 .attribute("foo", "bar")
                 .api("self", "api/service")
                 .build());

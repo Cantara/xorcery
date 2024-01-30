@@ -66,8 +66,8 @@ public class JerseyServerService
         ServletContextHandler servletContextHandler = ctxProvider.get();
         servletContextHandler.addServlet(servletHolder, "/*");
 
-        sro.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "server")
-                .attribute("jetty.version", Jetty.VERSION) // TODO is this supposed to be jetty version here?
+        sro.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "server")
+                .attribute("jetty.version", Jetty.VERSION)
                 .build());
 
         logger.info("Jersey started");

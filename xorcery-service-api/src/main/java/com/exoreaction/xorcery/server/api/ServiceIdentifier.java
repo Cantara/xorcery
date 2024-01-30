@@ -19,6 +19,11 @@ import com.exoreaction.xorcery.jsonapi.ResourceObjectIdentifier;
 
 public record ServiceIdentifier(ResourceObjectIdentifier resourceObjectIdentifier)
 {
+    public static ServiceIdentifier serviceId(String id)
+    {
+        return new ServiceIdentifier("service", id);
+    }
+
     public ServiceIdentifier(String type, String id)
     {
         this(new ResourceObjectIdentifier.Builder(type, id).build());

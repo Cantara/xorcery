@@ -24,6 +24,7 @@ import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.server.api.ServerResourceDocument;
+import com.exoreaction.xorcery.server.api.ServiceIdentifier;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -77,8 +78,9 @@ public class ClientCertificatesProvider
     }
 
     private Optional<Link> getCertificatesRequest(ServerResourceDocument certificatesHostApi) {
-        return certificatesHostApi.getServiceByType("certificates").flatMap(sro ->
-                sro.getLinkByRel("request"));
+        return certificatesHostApi.getServiceByType("certificates")
+                .or(() -> certificatesHostApi.getServiceByIdentifier(ServiceIdentifier.serviceId("certificates")))
+                .flatMap(sro -> sro.getLinkByRel("request"));
     }
 
     private Function<Optional<Link>, CompletionStage<ServiceResourceObject>> sendCertificateRequest(PKCS10CertificationRequest csr) {

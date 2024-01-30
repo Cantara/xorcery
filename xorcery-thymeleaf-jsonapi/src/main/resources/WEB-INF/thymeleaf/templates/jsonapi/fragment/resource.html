@@ -8,35 +8,44 @@
 </div>
 
 <!-- Resource object -->
-<div th:fragment="resourceobject (resource)" class="resource">
-    <div>
-        <span th:text="${resource.type}" class="resource_type">Type</span>:
-        <span th:text="${resource.id}" class="resource_id">Id</span>
+<div th:fragment="resourceobject (resource)" class="resource card bg-light mb-1">
+    <h5 class="card-title">
+        <span th:text="${resource.type}">Type</span>:<span th:text="${resource.id}">Id</span>
+    </h5>
+
+    <div class="card-body">
+        <div th:replace="~{::links(${resource.links})}"></div>
+
+        <th:block th:switch="true">
+            <div th:case="${schema}" th:with="type=${schema.links.links.type}" th:if="${type}" th:switch="true">
+                <div th:case="${type.submissionSchema.isPresent}" th:replace="~{::post(${resource})}"></div>
+                <div th:case="${type.targetSchema.isPresent}" th:replace="~{::patch(${resource})}"></div>
+                <div th:case="*" th:replace="~{::attributes(${resource})}"></div>
+            </div>
+            <div th:case="not ${schema}" th:replace="~{::attributes(${resource})}"></div>
+        </th:block>
+
+        <div th:replace="~{::relationships(${resource})}"></div>
     </div>
-
-    <div th:insert="~{::links(${resource.links})}"></div>
-
-    <th:block th:switch="true">
-        <div th:case="${schema}" th:with="type=${schema.links.links.type}" th:if="${type}" th:switch="true">
-            <div th:case="${type.submissionSchema.isPresent}" th:insert="~{::post(${resource})}"></div>
-            <div th:case="${type.targetSchema.isPresent}" th:insert="~{::patch(${resource})}"></div>
-            <div th:case="*" th:insert="~{::attributes(${resource})}"></div>
-        </div>
-        <div th:case="not ${schema}" th:insert="~{::attributes(${resource})}"></div>
-    </th:block>
-
-    <div th:insert="~{::relationships(${resource})}"></div>
 </div>
 
 <!-- Attributes -->
 <div th:fragment="post (resource)" class="attributes">
     <tbody class="form">
     <form action="" METHOD="POST">
-        <tr><td>id</td><td><input type="text" name="id" value="{{../../id}}"/></td></tr>
+        <tr>
+            <td>id</td>
+            <td><input type="text" name="id" value="{{../../id}}"/></td>
+        </tr>
         {{#each attributes.toMap.entrySet}}
-        <tr><td>{{key}}</td><td><input type="text" name="{{key}}" value="{{stripquotes value}}"/></td></tr>
+        <tr>
+            <td>{{key}}</td>
+            <td><input type="text" name="{{key}}" value="{{stripquotes value}}"/></td>
+        </tr>
         {{/each}}
-        <tr><td colspan="2"><input type="submit" value="POST"></td></tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="POST"></td>
+        </tr>
     </form>
     </tbody>
 </div>
@@ -46,102 +55,123 @@
     <form action="" METHOD="POST">
         <input type="hidden" name="id" value="{{../../id}}"/>
         {{#each attributes.toMap.entrySet}}
-        <tr><td>{{key}}</td><td><input type="text" name="{{key}}" value="{{stripquotes value}}"/></td></tr>
+        <tr>
+            <td>{{key}}</td>
+            <td><input type="text" name="{{key}}" value="{{stripquotes value}}"/></td>
+        </tr>
         {{/each}}
-        <tr><td colspan="2"><input type="submit" value="PATCH"></td></tr>
+        <tr>
+            <td colspan="2"><input type="submit" value="PATCH"></td>
+        </tr>
     </form>
     </tbody>
 </div>
-<div th:fragment="attributes (resource)" class="attributes">
-    <div>Attributes</div>
-    <div th:each="attribute: ${resource.attributes.toMap.entrySet}">
-        <div th:text="${attribute.key}">Name</div>
-        <div><span th:text="${attribute.value}" style="white-space: pre-wrap">Value</span></div>
-    </div>
-</div>
-<div th:fragment="relationships (resource)" class="relationships">
-    Relationships
+
+<div th:fragment="attributes (resource)" class="attributes container">
+    <th:block th:each="attribute: ${resource.attributes.toMap}" class="row">
+        <h6 th:if="${attributeStat.first}">Attributes</h6>
+        <div th:class="${attributeStat.odd}? 'row bg-light' : 'row bg-white'">
+            <div th:text="${attribute.key}" class="col-2">Name</div>
+            <div class="col"><span th:text="${attribute.value}" style="white-space: pre-wrap">Value</span></div>
+        </div>
+    </th:block>
 </div>
 
 <!-- Relationships -->
-<tbody class="relationships">
-<tr><th colspan="2">Relationships</th></tr>
-{{#each this.relationships.entrySet}}
+<div th:fragment="relationships (relationships)" class="relationships row">
 
-{{#if value.included}}
-<tr><td>{{key}}</td><td>
-    {{#each value.links.links}}
-    <a href="{{{href}}}">{{{href}}}</a><br/>
-    {{/each}}
+    <th:block th:each="relationship: ${resource.relationships.relationships}" class="row">
+        <h6 th:if="${relationshipStat.first}">Relationships</h6>
+        <div th:text="${relationship.key}" class="col">Name</div>
+        <div class="col">
+            <div th:each="link: ${relationship.value.links.links}">
+                <a th:href="${link.href}" th:text="${link.rel}">Rel</a>
+            </div>
 
-    {{#optional value.resourceObjectIdentifier}}
-    <a href="#{{id}}_{{type}}">{{id}}</a>
-    {{/optional}}
+            <th:block th:if="${relationship.included}">
+                <th:block th:if="${relationship.value.resourceObjectIdentifier.isPresent"
+                          th:with="roi=${relationship.value.resourceObjectIdentifier.get}">
+                    <a th:href="${'#'+roi.id+'_'+roi.type}" th:text="${roi.id}">Id</a>
+                </th:block>
 
-    {{#optional value.resourceObjectIdentifiers}}
-    <ol>
-        {{#each resources}}
-        <li><a href="#{{id}}_{{type}}">{{id}}</a></li>
-        {{/each}}
-    </ol>
-    {{/optional}}
-</td></tr>
-{{^}}
-{{#each value.links.links}}
-<tr><td>{{key}}</td><td> <a href="{{{href}}}">{{{href}}}</a> </td></tr>
-{{/each}}
-{{/if}}
-{{/each}}
-</tbody>
+                <th:block th:if="${relationship.value.resourceObjectIdentifiers.isPresent"
+                          th:with="rois=${relationship.value.resourceObjectIdentifiers.get}">
+                    <ol>
+                        <th:block th:each="${rois}">
+                            <li><a th:href="${'#'+roi.id+'_'+roi.type}" th:text="${roi.id}">Id</a></li>
+                        </th:block>
+                    </ol>
+                </th:block>
+            </th:block>
+        </div>
+    </th:block>
+</div>
 
 <!-- Links -->
-<div th:fragment="links (links)" class="links">
-    <div>
-        Links
-    </div>
-    <div th:each="link: ${links.getLinks}">
-        <div th:text="${link.rel}">Rel</div>
-        <div th:switch="true">
-            <div th:case="${jsonapi.isTemplate(link)}">
-                <code>{{{href}}}</code><br/>
-                <form action="/api/thymeleaf/uritemplate" method="get" name="{{rel}}">
-                    <input type="hidden" name="uritemplate" value="{{{href}}}"/>
-                    <table>
+<div th:fragment="links (links)" class="links row">
+    <th:block th:each="link: ${links.getLinks}">
+        <h6 th:if="${linkStat.first}">Links</h6>
+        <div th:switch="true" class="card">
+            <div th:case="${jsonapi.isTemplate(link)}" class="card-body">
+                <div class="card-title"><span th:text="${link.rel}">Rel</span> <code th:text="${link.href}"
+                                                                                     class="card-title">href</code>
+                </div>
+                <form action="/api/thymeleaf/uritemplate"
+                      method="get"
+                      th:name="${link.rel}"
+                >
+                    <!--
+                                        <div th:text="${schema}"></div>
+                    -->
+                    <input type="hidden" name="uritemplate" value="" th:value="${link.href}"/>
+                    <th:block th:with="schemaLink=${schema.links.links[link.rel]}">
+                        <th:block th:if="${schemaLink}" th:with="hrefSchema=${schemaLink.hrefSchema}">
+                            <div th:if="hrefSchema.isPresent" class="container">
+                                <div th:each="parameter: ${jsonapi.parameters(link)}" class="row">
+                                    <div class="col-2"><code th:text="${parameter}">Parameter</code></div>
+                                    <input type="text" th:name="${parameter}" class="col" value="">
+                                    <div th:with="property=${hrefSchema.get.properties.properties[parameter]}"
+                                         class="col-5">
+                                        <span th:text="${property.title.orElse('')}"></span><span
+                                            th:text="'('+${property.description.orElse('')}+')'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </th:block>
+                    </th:block>
+                    <!--                    {{#with (lookup schema.links.links rel)}}
+                                        {{#optional hrefSchema}}
+                                        {{#parameters ../../..}}
+                                        <tr>
+                                            <td></td>
+                                            <td><input type="text" name="{{.}}"/></td>
 
-                        {{#with (lookup schema.links.links rel)}}
-                        {{#optional hrefSchema}}
-                        {{#parameters ../../..}}
-                        <tr>
-                            <td><code>{{.}}</code></td>
-                            <td><input type="text" name="{{.}}"/></td>
+                                            {{#with (lookup ../properties.properties .)}}
+                                            <td>{{optional title}} ({{optional description}})</td>
+                                            {{/with}}
+                                        </tr>
+                                        {{/parameters}}
+                                        {{^}}
+                                        {{#parameters ../..}}
+                                        <tr>
+                                            <td><code>{{.}}</code></td>
+                                            <td colspan="2"><input type="text" name="{{.}}"/></td>
+                                        </tr>
+                                        {{/parameters}}
+                                        {{/optional}}
+                                        {{^}}
+                                        #{{.}}#{{..}}#{{../..}}#{{../../..}}
 
-                            {{#with (lookup ../properties.properties .)}}
-                            <td>{{optional title}} ({{optional description}})</td>
-                            {{/with}}
-                        </tr>
-                        {{/parameters}}
-                        {{^}}
-                        {{#parameters ../..}}
-                        <tr>
-                            <td><code>{{.}}</code></td>
-                            <td colspan="2"><input type="text" name="{{.}}"/></td>
-                        </tr>
-                        {{/parameters}}
-                        {{/optional}}
-                        {{^}}
-                        #{{.}}#{{..}}#{{../..}}#{{../../..}}
-
-                        {{#parameters ..}}
-                        <tr>
-                            <td><code>{{.}}</code></td>
-                            <td colspan="2"><input type="text" name="{{.}}"/></td>
-                        </tr>
-                        {{/parameters}}
-                        {{/with}}
-                        <tr>
-                            <td colspan="3"><input type="submit" value="GET"/></td>
-                        </tr>
-                    </table>
+                                        {{#parameters ..}}
+                                        <tr>
+                                            <td><code>{{.}}</code></td>
+                                            <td colspan="2"><input type="text" name="{{.}}"/></td>
+                                        </tr>
+                                        {{/parameters}}
+                                        {{/with}}-->
+                    <tr>
+                        <td colspan="3"><input type="submit" value="GET"/></td>
+                    </tr>
                 </form>
             </div>
             <div th:case="${link.isWebSocket}">
@@ -166,15 +196,16 @@
                 </table>
             </div>
             <div th:case="*">
-                <a th:text="${link.href}" th:attr="href=${link.href}">{{{href}}}</a>
+                <div th:text="${link.rel}" class="col">Rel</div>
+                <div class="col"><a th:text="${link.href}" th:href="${link.href}" class="card-link">Href</a></div>
             </div>
         </div>
-    </div>
+    </th:block>
 </div>
 
 <!-- Errors -->
 <div th:fragment="errors (errors)" th:if="${errors.hasErrors}" class="errors">
-    <h3>Errors</h3>
+    <h5>Errors</h5>
     <div th:each="error: ${errors.errors}">
         <div th:text="${error.title}">Title</div>
         <div><span th:text="${error.detail}" style="white-space: pre-wrap">Detail</span></div>

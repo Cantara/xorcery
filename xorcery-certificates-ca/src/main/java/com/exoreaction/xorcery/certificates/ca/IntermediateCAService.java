@@ -30,6 +30,7 @@ public class IntermediateCAService {
     @Inject
     public IntermediateCAService(ServiceResourceObjects sro, Configuration configuration) {
         sro.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "intermediateca")
+                .version(getClass().getPackage().getImplementationVersion())
                 .with(b ->
                 {
                     b.api("certificate", "api/ca/rootca.cer");

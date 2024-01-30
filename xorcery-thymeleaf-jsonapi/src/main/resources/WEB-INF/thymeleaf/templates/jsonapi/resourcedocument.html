@@ -2,20 +2,16 @@
 
 <html xmlns:th="https://www.thymeleaf.org" lang="en">
 <head>
-    <style>
-        table
-        {
-            border:2px solid;
-        }
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
-        td
-        {
-            border: 1px solid gray;
-        }
+    <style>
+
     </style>
+
     <title th:text="${title}">Title</title>
 </head>
-<body>
+<body class="bg-secondary">
 
 <h3 th:text="${title}">Title</h3>
 
@@ -24,23 +20,21 @@ Test:
 <div th:text="${json.resources.get}"></div>
 -->
 
-<div class="resourcedocument">
+<div class="resourcedocument container mt-3">
     <div th:insert="~{jsonapi/fragment/resource :: errors (${json.errors})}"></div>
 
     <div th:insert="~{jsonapi/fragment/resource :: links(${json.links})}"></div>
 
     <div th:if="${json.resources.isPresent}">
-        <div>Resources</div>
+        <h3>Resources</h3>
         <div th:each="resource: ${json.resources.get}">
-            <div th:insert="~{jsonapi/fragment/resource :: resourceobject(${resource})}"></div>
+            <div th:replace="~{jsonapi/fragment/resource :: resourceobject(${resource})}"></div>
         </div>
     </div>
 
     <div th:if="${json.resource.isPresent}">
-        <div>Resource</div>
-        <!--
-                <div th:insert="~{jsonapi/fragment/resource :: resourceobject(${json.resource.get})}"></div>
-        -->
+        <h3>Resource</h3>
+        <div th:replace="~{jsonapi/fragment/resource :: resourceobject(${json.resource.get})}"></div>
     </div>
 
     <!--

@@ -34,11 +34,14 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
             implements With<Builder> {
 
         public Builder(InstanceConfiguration configuration, String serviceType) {
-            this(new ResourceObject.Builder(serviceType, configuration.getId()), new Links.Builder(), new Attributes.Builder(), configuration.getURI());
+            this(new ResourceObject.Builder("service", serviceType), new Links.Builder(), new Attributes.Builder(), configuration.getURI());
         }
 
         public Builder version(String v) {
-            attributes.attribute("version", v);
+            if (v != null)
+            {
+                attributes.attribute("version", v);
+            }
             return this;
         }
 

@@ -68,7 +68,8 @@ public class OpenSearchService
                              Configuration configuration,
                              ClientBuilder clientBuilder) {
 
-        ServiceResourceObject sro = new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
+        ServiceResourceObject sro = new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), SERVICE_TYPE)
+                .version(getClass().getPackage().getImplementationVersion())
                 .subscriber("opensearch")
                 .publisher("opensearchcommits")
                 .build();

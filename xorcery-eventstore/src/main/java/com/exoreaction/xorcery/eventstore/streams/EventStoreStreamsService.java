@@ -43,7 +43,8 @@ public class EventStoreStreamsService {
                 .findAndRegisterModules()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
-        ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "eventstore")
+        ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "eventstore")
+                .version(getClass().getPackage().getImplementationVersion())
                 .api(EventStoreRels.eventstore.name(), "api/eventstore");
 
         EventStoreDBClient client = eventStoreService.getClient();

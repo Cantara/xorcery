@@ -178,7 +178,8 @@ public class Neo4jService
 
         logger.info("Neo4j started");
 
-        serviceResourceObjects.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), SERVICE_TYPE)
+        serviceResourceObjects.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), SERVICE_TYPE)
+                .version(getClass().getPackage().getImplementationVersion())
                 .api("neo4j", "api/neo4j")
                 .build());
     }

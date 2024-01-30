@@ -98,7 +98,8 @@ public class JwtService {
             throw new IllegalArgumentException("Unknown algorithm:" + firstKey.getAlg());
         }
 
-        serviceResourceObjects.add(new ServiceResourceObject.Builder(new InstanceConfiguration(configuration.getConfiguration("instance")), "login")
+        serviceResourceObjects.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "login")
+                .version(getClass().getPackage().getImplementationVersion())
                 .with(b ->
                 {
                     b.api("login", "api/login");
