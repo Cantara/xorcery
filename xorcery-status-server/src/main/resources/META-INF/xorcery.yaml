@@ -3,7 +3,7 @@ status:
 
 jetty.server.security.mappings:
   - path: "/api/status"
-    constraint: admin
+    constraint: "{{ defaults.development ? null | \"admin\"}}"
 
 jersey.server.register:
   - com.exoreaction.xorcery.status.api.StatusResource
