@@ -22,8 +22,11 @@ opentelemetry:
         port: 4318
         compression: "gzip"
         headers: {}
+        connectTimeout: "{{ defaults.connectTimeout }}"
+        timeout: "10s"
         # Metrics
-        interval: 5s
+        interval: 10s
+        aggregationTemporality: alwaysCumulative
         # Logging
         scheduleDelay: "5s"
         exporterTimeout: "60s"

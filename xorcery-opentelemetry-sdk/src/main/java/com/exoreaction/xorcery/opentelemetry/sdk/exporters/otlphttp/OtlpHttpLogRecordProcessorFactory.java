@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.secrets.Secrets;
 import io.opentelemetry.exporter.otlp.http.logs.OtlpHttpLogRecordExporter;
 import io.opentelemetry.exporter.otlp.http.logs.OtlpHttpLogRecordExporterBuilder;
+import io.opentelemetry.sdk.common.export.RetryPolicy;
 import io.opentelemetry.sdk.logs.LogRecordProcessor;
 import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
@@ -42,6 +43,9 @@ public class OtlpHttpLogRecordProcessorFactory
 
         OtlpHttpLogRecordExporterBuilder builder = OtlpHttpLogRecordExporter.builder();
         builder.setEndpoint(otHttpConfiguration.getLogsEndpoint());
+        builder.setConnectTimeout(otHttpConfiguration.getConnectTimeout());
+        builder.setTimeout(otHttpConfiguration.getTimeout());
+        builder.setRetryPolicy(RetryPolicy.getDefault());
         otHttpConfiguration.getHeaders(secrets).forEach(builder::addHeader);
         otHttpConfiguration.getCompression().ifPresent(builder::setCompression);
         builder.setMeterProvider(meterProvider);

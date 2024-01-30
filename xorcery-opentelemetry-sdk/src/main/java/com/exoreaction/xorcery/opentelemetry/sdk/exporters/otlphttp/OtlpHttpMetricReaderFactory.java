@@ -19,6 +19,8 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.secrets.Secrets;
 import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter;
 import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporterBuilder;
+import io.opentelemetry.sdk.common.export.RetryPolicy;
+import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
@@ -39,6 +41,14 @@ public class OtlpHttpMetricReaderFactory
 
         OtlpHttpMetricExporterBuilder builder = OtlpHttpMetricExporter.builder();
         builder.setEndpoint(otHttpConfiguration.getMetricsEndpoint());
+        builder.setAggregationTemporalitySelector(switch (otHttpConfiguration.getAggregationTemporality()) {
+            case alwaysCumulative -> AggregationTemporalitySelector.alwaysCumulative();
+            case deltaPreferred -> AggregationTemporalitySelector.deltaPreferred();
+            case lowMemory -> AggregationTemporalitySelector.lowMemory();
+        });
+        builder.setConnectTimeout(otHttpConfiguration.getConnectTimeout());
+        builder.setTimeout(otHttpConfiguration.getTimeout());
+        builder.setRetryPolicy(RetryPolicy.getDefault());
         otHttpConfiguration.getHeaders(secrets).forEach(builder::addHeader);
         otHttpConfiguration.getCompression().ifPresent(builder::setCompression);
         MetricExporter metricExporter = builder.build();

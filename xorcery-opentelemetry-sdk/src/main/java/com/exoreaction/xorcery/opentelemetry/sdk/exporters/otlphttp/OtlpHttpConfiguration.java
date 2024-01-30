@@ -18,6 +18,8 @@ package com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.secrets.Secrets;
+import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
+import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -29,6 +31,14 @@ public record OtlpHttpConfiguration(Configuration configuration) {
     public static OtlpHttpConfiguration get(Configuration configuration)
     {
         return new OtlpHttpConfiguration(configuration.getConfiguration("opentelemetry.exporters.otlp.http"));
+    }
+
+    public Duration getConnectTimeout() {
+        return Duration.parse("PT" + configuration.getString("connectTimeout").orElse("5s"));
+    }
+
+    public Duration getTimeout() {
+        return Duration.parse("PT" + configuration.getString("timeout").orElse("10s"));
     }
 
     public Optional<String> getCompression()
@@ -44,6 +54,10 @@ public record OtlpHttpConfiguration(Configuration configuration) {
     // Metrics
     public Duration getInterval() {
         return Duration.parse("PT" + configuration.getString("interval").orElse("30s"));
+    }
+
+    public AggregationTemporalities getAggregationTemporality() {
+        return configuration.getEnum("aggregationTemporality", AggregationTemporalities.class).orElse(AggregationTemporalities.alwaysCumulative);
     }
 
     // Logs
@@ -77,4 +91,10 @@ public record OtlpHttpConfiguration(Configuration configuration) {
         return configuration.getString("metricsEndpoint").orElse("http://localhost:4318/v1/metrics");
     }
 
+    public enum AggregationTemporalities
+    {
+        alwaysCumulative,
+        deltaPreferred,
+        lowMemory
+    }
 }

@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.secrets.Secrets;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
+import io.opentelemetry.sdk.common.export.RetryPolicy;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
@@ -41,6 +42,9 @@ public class OtlpHttpSpanProcessorFactory
 
         OtlpHttpSpanExporterBuilder builder = OtlpHttpSpanExporter.builder();
         builder.setEndpoint(otHttpConfiguration.getTracesEndpoint());
+        builder.setConnectTimeout(otHttpConfiguration.getConnectTimeout());
+        builder.setTimeout(otHttpConfiguration.getTimeout());
+        builder.setRetryPolicy(RetryPolicy.getDefault());
         otHttpConfiguration.getHeaders(secrets).forEach(builder::addHeader);
         otHttpConfiguration.getCompression().ifPresent(builder::setCompression);
         builder.setMeterProvider(meterProvider);
