@@ -5,3 +5,6 @@ serveradmin:
 
 jersey.server.register:
   - com.exoreaction.xorcery.admin.api.VisualeHealthResource
+
+opentelemetry.instrumentations.jersey.excludes:
+  - /health
