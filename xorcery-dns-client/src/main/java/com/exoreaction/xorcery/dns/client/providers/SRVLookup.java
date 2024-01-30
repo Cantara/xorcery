@@ -71,15 +71,18 @@ public class SRVLookup
                 List<ServerEntry> servers = new ArrayList<>();
                 List<URI> serverURIs = new ArrayList<>();
 
-                // Get TXT record and extract path
-                LookupResult txtResult = lookupSession.lookupAsync(srvName, Type.TXT).toCompletableFuture().join();
                 String path = uri.getPath();
-                for (Record record : txtResult.getRecords()) {
-                    if (record instanceof TXTRecord txtRecord) {
-                        for (String txtRecordString : txtRecord.getStrings()) {
-                            if (txtRecordString.startsWith("self=")) {
-                                path = txtRecordString.substring("self=".length());
-                                break;
+                if (path.equals("/"))
+                {
+                    // Get TXT record and extract self path
+                    LookupResult txtResult = lookupSession.lookupAsync(srvName, Type.TXT).toCompletableFuture().join();
+                    for (Record record : txtResult.getRecords()) {
+                        if (record instanceof TXTRecord txtRecord) {
+                            for (String txtRecordString : txtRecord.getStrings()) {
+                                if (txtRecordString.startsWith("self=")) {
+                                    path = txtRecordString.substring("self=".length());
+                                    break;
+                                }
                             }
                         }
                     }

@@ -88,24 +88,28 @@ public class DnsRecords {
         int priority = configuration.getInteger("jetty.server.srv.priority").orElse(1);
         if (httpPort.isPresent()) {
             records.add(new SRVRecord(serverName, DClass.IN, ttl, priority, weight, httpPort.get(), target));
+            TXTRecord serverTxtRecord = new TXTRecord(serverName, DClass.IN, ttl, List.of("self=/api"));
+            records.add(serverTxtRecord);
         }
         if (httpsPort.isPresent()) {
             String serverHttpsType = "_https._tcp." + zone.toString(false);
             Name httpsServerName = Name.fromString(serverHttpsType);
             SRVRecord httpsSrvRecord = new SRVRecord(httpsServerName, DClass.IN, ttl, priority, weight, httpsPort.get(), target);
             records.add(httpsSrvRecord);
+            TXTRecord serverTxtRecord = new TXTRecord(httpsServerName, DClass.IN, ttl, List.of("self=/api"));
+            records.add(serverTxtRecord);
         }
 
         for (ServiceResourceObject serviceResource : serviceResourceObjects.getServiceResources()) {
 
             // HTTP(S) SRV records
-            String type = serviceResource.getServiceIdentifier().resourceObjectIdentifier().getType();
-            weight = configuration.getInteger(type + ".srv.weight").orElseGet(() -> configuration.getInteger("jetty.server.srv.weight").orElse(100));
-            priority = configuration.getInteger(type + ".srv.priority").orElseGet(() -> configuration.getInteger("jetty.server.srv.priority").orElse(2));
-            int srvTtl = configuration.getInteger(type + ".srv.ttl").orElse(ttl);
+            String name = serviceResource.getServiceIdentifier().resourceObjectIdentifier().getId();
+            weight = configuration.getInteger(name + ".srv.weight").orElseGet(() -> configuration.getInteger("jetty.server.srv.weight").orElse(100));
+            priority = configuration.getInteger(name + ".srv.priority").orElseGet(() -> configuration.getInteger("jetty.server.srv.priority").orElse(2));
+            int srvTtl = configuration.getInteger(name + ".srv.ttl").orElse(ttl);
 
             {
-                String serviceHttpType = "_" + type + "._sub._http._tcp." + zone.toString(false);
+                String serviceHttpType = "_" + name + "._sub._http._tcp." + zone.toString(false);
                 Name serviceName = Name.fromString(serviceHttpType);
 
                 List<String> props = new ArrayList<>();
@@ -130,7 +134,7 @@ public class DnsRecords {
                     }
 
                     if (httpsPort.isPresent()) {
-                        String serviceHttpsType = "_" + type + "._sub._https._tcp." + zone.toString(false);
+                        String serviceHttpsType = "_" + name + "._sub._https._tcp." + zone.toString(false);
                         Name httpsServiceName = Name.fromString(serviceHttpsType);
                         SRVRecord httpsSrvRecord = new SRVRecord(httpsServiceName, DClass.IN, srvTtl, priority, weight, httpsPort.get(), target);
                         records.add(httpsSrvRecord);
@@ -142,7 +146,7 @@ public class DnsRecords {
             }
 
             {
-                String serviceWsType = "_" + type + "._sub._ws._tcp." + zone.toString(false);
+                String serviceWsType = "_" + name + "._sub._ws._tcp." + zone.toString(false);
                 Name serviceName = Name.fromString(serviceWsType);
 
                 List<String> props = new ArrayList<>();
@@ -167,7 +171,7 @@ public class DnsRecords {
                     }
 
                     if (httpsPort.isPresent()) {
-                        String serviceWssType = "_" + type + "._sub._wss._tcp." + zone.toString(false);
+                        String serviceWssType = "_" + name + "._sub._wss._tcp." + zone.toString(false);
                         Name wssServiceName = Name.fromString(serviceWssType);
                         SRVRecord wssSrvRecord = new SRVRecord(wssServiceName, DClass.IN, srvTtl, priority, weight, httpsPort.get(), target);
                         records.add(wssSrvRecord);
