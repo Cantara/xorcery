@@ -28,7 +28,7 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.WebApplicationTemplateResolver;
 import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
-@Service(name = "thymeleaf")
+@Service
 public class TemplateEngineFactory
         implements Factory<ITemplateEngine> {
 
