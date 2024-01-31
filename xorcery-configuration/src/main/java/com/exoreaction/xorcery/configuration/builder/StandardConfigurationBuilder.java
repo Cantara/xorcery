@@ -16,9 +16,6 @@
 package com.exoreaction.xorcery.configuration.builder;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider;
-import com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider;
-import com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigurationProvider;
 import com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
 import com.exoreaction.xorcery.json.JsonMerger;
 import com.exoreaction.xorcery.util.Resources;
@@ -26,9 +23,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.status.StatusLogger;
 
 import java.io.*;
 import java.net.URL;
@@ -49,7 +43,8 @@ public class StandardConfigurationBuilder {
             throws UncheckedIOException {
 
         addXorceryDefaults(builder);
-        addExtensions(builder);
+        addModules(builder);
+        addModuleOverrides(builder);
         addApplication(builder);
 
         addHome(builder);
@@ -64,12 +59,13 @@ public class StandardConfigurationBuilder {
 
         // First add the standard configuration
         addXorceryDefaults(builder);
-        addExtensions(builder);
+        addModules(builder);
+        addModuleOverrides(builder);
         addApplication(builder);
 
         // Then add the test configuration on top
         addXorceryTestDefaults(builder);
-        addExtensionsTest(builder);
+        addModulesTest(builder);
         addApplicationTest(builder);
 
         addConfigurationProviders(builder);
@@ -106,21 +102,35 @@ public class StandardConfigurationBuilder {
         }
     }
 
-    public void addExtensions(Configuration.Builder builder) throws UncheckedIOException {
-        // Load extensions
+    public void addModules(Configuration.Builder builder) throws UncheckedIOException {
+        // Load modules
         for (URL resource : Resources.getResources("META-INF/xorcery.yaml")) {
             try (InputStream configurationStream = resource.openStream()) {
                 addYaml(configurationStream).accept(builder);
                 logger.log("Loaded " + resource);
             } catch (IOException ex) {
-                throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex);
+                throw new UncheckedIOException("Error loading module configuration file:" + resource.toExternalForm(), ex);
             } catch (UncheckedIOException ex) {
-                throw new UncheckedIOException("Error loading configuration file:" + resource.toExternalForm(), ex.getCause());
+                throw new UncheckedIOException("Error loading module configuration file:" + resource.toExternalForm(), ex.getCause());
             }
         }
     }
 
-    public void addExtensionsTest(Configuration.Builder builder) throws UncheckedIOException {
+    public void addModuleOverrides(Configuration.Builder builder) throws UncheckedIOException {
+        // Load module overrides, to allow modules to change defaults from other modules
+        for (URL resource : Resources.getResources("META-INF/xorcery-override.yaml")) {
+            try (InputStream configurationStream = resource.openStream()) {
+                addYaml(configurationStream).accept(builder);
+                logger.log("Loaded " + resource);
+            } catch (IOException ex) {
+                throw new UncheckedIOException("Error loading module override configuration file:" + resource.toExternalForm(), ex);
+            } catch (UncheckedIOException ex) {
+                throw new UncheckedIOException("Error loading module override configuration file:" + resource.toExternalForm(), ex.getCause());
+            }
+        }
+    }
+
+    public void addModulesTest(Configuration.Builder builder) throws UncheckedIOException {
         // Load extensions
         try {
             for (URL resource : Resources.getResources("META-INF/xorcery-test.yaml")) {

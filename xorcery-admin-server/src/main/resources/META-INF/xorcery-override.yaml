@@ -1,0 +1,5 @@
+jersey.server.register:
+  - com.exoreaction.xorcery.admin.api.VisualeHealthResource
+
+opentelemetry.sampler.excludes:
+  - name: "GET /health"
