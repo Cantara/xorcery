@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.opentelemetry.sdk.exporters;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
@@ -31,13 +32,19 @@ public class TracerProviderFactory
 
     @Inject
     public TracerProviderFactory(Resource resource,
+                                 RuleBasedSampler ruleBasedSampler,
                                  IterableProvider<SpanProcessor> spanProcessors) {
         var sdkTracerProviderBuilder = SdkTracerProvider.builder()
                 .setResource(resource);
         for (SpanProcessor spanProcessor : spanProcessors) {
             sdkTracerProviderBuilder.addSpanProcessor(spanProcessor);
         }
-        sdkTracerProvider = sdkTracerProviderBuilder.build();
+
+        Sampler sampler = Sampler.parentBasedBuilder(ruleBasedSampler)
+                .build();
+        sdkTracerProvider = sdkTracerProviderBuilder
+                .setSampler(sampler)
+                .build();
     }
 
     @Override

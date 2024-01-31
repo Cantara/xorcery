@@ -34,9 +34,4 @@ public record OpenTelemetryJerseyConfiguration(Configuration context)
     {
         return new OpenTelemetryJerseyConfiguration(configuration.getConfiguration("opentelemetry.instrumentations.jersey"));
     }
-
-    public List<String> getExcludes()
-    {
-        return context.getListAs("excludes", JsonNode::asText).orElse(Collections.emptyList());
-    }
 }

@@ -22,6 +22,8 @@ import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
 import io.opentelemetry.sdk.common.export.RetryPolicy;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessorBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -51,7 +53,14 @@ public class OtlpHttpSpanProcessorFactory
 
         OtlpHttpSpanExporter spanExporter = builder.build();
 
-        spanProcessor = SimpleSpanProcessor.create(spanExporter);
+        spanProcessor = BatchSpanProcessor.builder(spanExporter)
+                .setMeterProvider(meterProvider)
+                .setExporterTimeout(otHttpConfiguration.getExporterTimeout())
+                .setMaxExportBatchSize(otHttpConfiguration.getMaxExportBatchSize())
+                .setMaxQueueSize(otHttpConfiguration.getMaxQueueSize())
+                .setScheduleDelay(otHttpConfiguration.getScheduleDelay())
+                .setExportUnsampledSpans(false)
+                .build();
     }
 
     @Override

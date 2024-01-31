@@ -80,7 +80,6 @@ public class OpenTelemetryTracerFilter
     private final Tracer tracer;
 
     private final Map<String, String> attributes;
-    private final Set<String> excludes;
 
     @Inject
     public OpenTelemetryTracerFilter(OpenTelemetry openTelemetry, Server server, Configuration configuration) {
@@ -93,7 +92,6 @@ public class OpenTelemetryTracerFilter
         textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
 
         attributes = jerseyConfiguration.getAttributes();
-        excludes = Set.copyOf(jerseyConfiguration.getExcludes());
 
         server.setRequestLog(new OpenTelemetryRequestLog());
     }
@@ -103,8 +101,6 @@ public class OpenTelemetryTracerFilter
         Context context = textMapPropagator.extract(Context.current(), requestContext, jerseyGetter);
         var uriInfo = requestContext.getUriInfo();
         String route = getHttpRoute(uriInfo);
-        if (excludes.contains(route))
-            return;
 
         Span span = tracer.spanBuilder(requestContext.getMethod() + (route != null ? " " + route : ""))
                 .setParent(context)
@@ -120,8 +116,6 @@ public class OpenTelemetryTracerFilter
         var uriInfo = requestContext.getUriInfo();
         String route = getHttpRoute(uriInfo);
         if (span == null) {
-            if (route != null && excludes.contains(route))
-                return;
             Context context = textMapPropagator.extract(Context.current(), requestContext, jerseyGetter);
             span = tracer.spanBuilder(requestContext.getMethod() + (route != null ? " " + route : ""))
                     .setParent(context)
@@ -177,8 +171,6 @@ public class OpenTelemetryTracerFilter
             Span span = (Span) request.getAttribute("opentelemetry.span");
             if (span == null) {
                 // Jetty request
-                if (excludes.contains(request.getPathInfo()))
-                    return;
 
                 Context context = textMapPropagator.extract(Context.current(), request, jettyGetter);
                 span = tracer.spanBuilder(request.getMethod())
