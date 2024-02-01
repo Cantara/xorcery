@@ -24,10 +24,18 @@ import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions.ActiveSubscription;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,6 +69,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
+import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
+
 /**
  * @author rickardoberg
  */
@@ -70,6 +80,8 @@ public class PublishReactiveStream
         Subscriber<Object> {
 
     private final static Logger logger = LogManager.getLogger(PublishReactiveStream.class);
+    private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
+            (carrier, key, value) -> carrier.setHeader(key, value);
 
     private final WebSocketClient webSocketClient;
     private final DnsLookup dnsLookup;
@@ -81,6 +93,9 @@ public class PublishReactiveStream
     private final ActiveSubscriptions activeSubscriptions;
     protected final CompletableFuture<Void> result;
     protected final Marker marker;
+    protected final Span span;
+    private final Tracer tracer;
+    private final TextMapPropagator textMapPropagator;
 
     private boolean redundancyNotificationIssued = false;
 
@@ -141,25 +156,39 @@ public class PublishReactiveStream
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
+        tracer = openTelemetry.tracerBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
         this.attributes = Attributes.builder()
-                .put("reactivestream.name", streamName)
+                .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, streamName)
+                .put(SemanticAttributes.MESSAGING_SYSTEM, ReactiveStreamsOpenTelemetry.XORCERY_MESSAGING_SYSTEM)
                 .put(SemanticAttributes.URL_FULL, serverUri.toASCIIString())
                 .build();
-        this.sentBytes = meter.histogramBuilder("reactivestream.publish.io")
+        this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.requestsHistogram = meter.histogramBuilder("reactivestream.publish.requests")
+        this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
-        this.flushHistogram = meter.histogramBuilder("reactivestream.publish.flush.count")
+        this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
+
+        textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
 
         // Client completed
         result.whenComplete(this::resultComplete);
 
-        start();
+        span = tracer.spanBuilder(streamName + " publisher")
+                .setSpanKind(SpanKind.PRODUCER)
+                .setAllAttributes(attributes)
+                .startSpan();
+        try (Scope scope = span.makeCurrent()) {
+            start();
+        }
     }
 
     private void resultComplete(Void result, Throwable throwable) {
         isComplete.set(true);
+        span.end();
     }
 
     // Connection process
@@ -201,12 +230,17 @@ public class PublishReactiveStream
             URI effectiveSubscriberWebsocketUri = URI.create(subscriberWebsocketUri.getScheme() + "://" + subscriberWebsocketUri.getAuthority() + "/streams/subscribers/" + streamName + queryParameters);
 
             logger.debug(marker, "Trying " + effectiveSubscriberWebsocketUri);
-            try {
+            Span connectSpan = tracer.spanBuilder(streamName + " connect")
+                    .setSpanKind(SpanKind.PRODUCER)
+                    .startSpan();
+            try (Scope scope = connectSpan.makeCurrent()) {
                 ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
+                textMapPropagator.inject(Context.current(), clientUpgradeRequest, jettySetter);
                 publisherConfiguration.getExtensions().forEach(clientUpgradeRequest::addExtensions);
                 webSocketClient.connect(this, effectiveSubscriberWebsocketUri, clientUpgradeRequest)
                         .thenAccept(this::connected)
-                        .exceptionally(this::connectException);
+                        .exceptionally(this::connectException)
+                        .thenRun(connectSpan::end);
             } catch (Throwable e) {
                 logger.error(marker, "Could not subscribe to " + effectiveSubscriberWebsocketUri.toASCIIString(), e);
                 retry(e);
@@ -251,8 +285,7 @@ public class PublishReactiveStream
 //            logger.trace(marker, "onNext {}", item.toString());
         }
 
-        while (isReconnecting.get())
-        {
+        while (isReconnecting.get()) {
             if (isComplete.get())
                 return; // Give up
             try {
@@ -491,9 +524,17 @@ public class PublishReactiveStream
         } finally {
             logger.trace(marker, "Stop drain");
 
-            checkDone();
             isDraining.set(false);
             drainLock.unlock();
+        }
+
+        if (!sendQueue.isEmpty())
+        {
+            // Race conditions suck. Need to figure out a better way to handle this...
+            drainJob();
+        } else
+        {
+            checkDone();
         }
     }
 
@@ -519,8 +560,9 @@ public class PublishReactiveStream
                 logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
                 session.close(StatusCode.NORMAL, "complete");
 
-                if (!result.isDone())
+                if (!result.isDone()) {
                     result.complete(null);
+                }
             }
         }
     }

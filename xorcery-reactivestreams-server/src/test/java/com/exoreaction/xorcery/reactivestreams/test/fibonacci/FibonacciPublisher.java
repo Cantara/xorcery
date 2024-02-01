@@ -22,14 +22,14 @@ import org.reactivestreams.Subscription;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class FibonacciPublisher implements Publisher<Long> {
 
     private final int maxNumbersInFibonacciSequence;
-
-    private final List<MySubscription> subscriptions = new ArrayList<>();
 
     public FibonacciPublisher(int maxNumbersInFibonacciSequence) {
         this.maxNumbersInFibonacciSequence = maxNumbersInFibonacciSequence;
@@ -39,66 +39,21 @@ public class FibonacciPublisher implements Publisher<Long> {
     public void subscribe(Subscriber<? super Long> subscriber) {
         MySubscription subscription = new MySubscription(subscriber);
         subscriber.onSubscribe(subscription);
-        subscription.start();
-        subscriptions.add(subscription);
     }
 
-    private class MySubscription implements Subscription, Runnable {
+    private class MySubscription implements Subscription {
 
         private static final AtomicInteger nextId = new AtomicInteger(1);
         private final int id;
         private final Subscriber<? super Long> subscriber;
-        private final AtomicLong budget = new AtomicLong(0);
 
         private final Iterator<Long> fibonacciSequence;
-        private final Thread thread;
-
-        private volatile boolean cancelled = false;
-
-        private final Object sync = new Object();
 
         private MySubscription(Subscriber<? super Long> subscriber) {
             this.id = nextId.getAndIncrement();
             FibonacciSequence fibonacciSequence = new FibonacciSequence(maxNumbersInFibonacciSequence);
             this.fibonacciSequence = fibonacciSequence.iterator();
             this.subscriber = subscriber;
-            this.thread = new Thread(this);
-        }
-
-        private void start() {
-            thread.start();
-        }
-
-        private void stop() {
-            cancelled = true;
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                thread.interrupt(); // reset interrupt status and ignore
-            }
-        }
-
-        @Override
-        public void run() {
-            try {
-                while (fibonacciSequence.hasNext()) {
-                    if (cancelled) {
-                        return;
-                    }
-                    if (budget.get() > 0) {
-                        subscriber.onNext(fibonacciSequence.next());
-                        budget.decrementAndGet();
-                    }
-                    synchronized (sync) {
-                        sync.wait(100);
-                    }
-                }
-                subscriber.onComplete();
-            } catch (Throwable t) {
-                throw new RuntimeException(t);
-            } finally {
-                subscriptions.remove(this);
-            }
         }
 
         @Override
@@ -106,15 +61,22 @@ public class FibonacciPublisher implements Publisher<Long> {
             if (n <= 0) {
                 return;
             }
-            budget.addAndGet(n);
-            synchronized (sync) {
-                sync.notify();
+            System.out.println("Request "+n+" "+fibonacciSequence.hasNext());
+            for (long i = 0; i < n; i++) {
+                if (fibonacciSequence.hasNext())
+                {
+                    subscriber.onNext(fibonacciSequence.next());
+                } else
+                {
+                    subscriber.onComplete();
+                    return;
+                }
             }
         }
 
         @Override
         public void cancel() {
-            cancelled = true;
+            subscriber.onComplete();
         }
 
         @Override

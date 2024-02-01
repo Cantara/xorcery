@@ -20,11 +20,26 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import org.eclipse.jetty.websocket.api.UpgradeRequest;
 
 import java.util.function.Consumer;
 
 public abstract class ServerReactiveStream {
+
+    protected static final TextMapGetter<UpgradeRequest> jettyGetter =
+            new TextMapGetter<>() {
+                @Override
+                public Iterable<String> keys(UpgradeRequest context) {
+                    return context.getHeaders().keySet();
+                }
+
+                @Override
+                public String get(UpgradeRequest context, String key) {
+                    return context.getHeader(key);
+                }
+            };
+
 
     protected Attributes attributes;
 

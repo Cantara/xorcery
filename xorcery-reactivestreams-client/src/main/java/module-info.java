@@ -33,4 +33,5 @@ open module xorcery.reactivestreams.client {
     requires io.opentelemetry.api;
     requires io.opentelemetry.semconv;
     requires xorcery.opentelemetry.api;
+    requires io.opentelemetry.context;
 }

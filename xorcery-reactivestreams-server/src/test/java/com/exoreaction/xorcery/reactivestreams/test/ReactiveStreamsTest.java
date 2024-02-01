@@ -25,6 +25,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.net.Sockets;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Tests designed to cover all variants of publisher and subscriber web socket endpoint classes and their serialization
  * when event-readers and writers are present or not.
  */
+
 public class ReactiveStreamsTest {
 
     @Test
@@ -52,7 +55,7 @@ public class ReactiveStreamsTest {
         thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(12, 3);
     }
 
-    private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int numbersInFibonacciSequence, final int numberOfSubscribers) throws Exception {
+    private void thatClientSubscribersGetsAllExpectedServerPublishedFibonacciNumbers(final int maxNumbers, final int numberOfSubscribers) throws Exception {
         Configuration configuration = new Configuration.Builder()
                 .with(new StandardConfigurationBuilder()::addTestDefaults)
                 .add("jetty.server.http.port", Sockets.nextFreePort())
@@ -64,7 +67,7 @@ public class ReactiveStreamsTest {
             ReactiveStreamsClient reactiveStreamsClient = xorcery.getServiceLocator().getService(ReactiveStreamsClient.class);
 
             // server publishes
-            CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("fibonacci", config -> new FibonacciPublisher(numbersInFibonacciSequence), FibonacciPublisher.class);
+            CompletableFuture<Void> publisherComplete = reactiveStreamsServer.publisher("numbers", config -> new NumberPublisher(maxNumbers), NumberPublisher.class);
             publisherComplete.thenAccept(v -> {
                 // TODO figure out why this never happens!
                 System.out.printf("publisher completed!%n");
@@ -74,18 +77,22 @@ public class ReactiveStreamsTest {
             CompletableFuture<Void>[] subscriberCompleteArray = new CompletableFuture[numberOfSubscribers];
             for (int i = 0; i < numberOfSubscribers; i++) {
                 FibonacciSubscriber subscriber = new FibonacciSubscriber();
-                CompletableFuture<Void> future = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "fibonacci",
+                CompletableFuture<Void> future = reactiveStreamsClient.subscribe(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "numbers",
                                 Configuration::empty, subscriber, FibonacciSubscriber.class, ClientConfiguration.defaults())
                         .thenAccept(v -> {
-                            ArrayList<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
-                            if (!new ArrayList<>(FibonacciSequence.sequenceOf(numbersInFibonacciSequence)).equals(allReceivedNumbers)) {
-                                throw new RuntimeException("Bad list!");
+                            List<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers().orTimeout(30, TimeUnit.SECONDS).join();
+                            List<Long> expectedNumbers = new ArrayList<>();
+                            for (long j = 1; j < maxNumbers; j++) {
+                                expectedNumbers.add(j);
+                            }
+                            if (!expectedNumbers.equals(allReceivedNumbers)) {
+                                throw new RuntimeException(String.format("Bad list, expected: %s, received: %s", expectedNumbers, allReceivedNumbers));
                             }
                         });
                 subscriberCompleteArray[i] = future;
             }
             CompletableFuture.allOf(subscriberCompleteArray)
-                    .join();
+                    .orTimeout(30, TimeUnit.SECONDS).join();
             System.out.printf("subscriber completed!%n");
 
             Thread.sleep(100);
@@ -111,10 +118,6 @@ public class ReactiveStreamsTest {
             // server subscribes
             FibonacciSubscriber subscriber = new FibonacciSubscriber();
             CompletableFuture<Void> subscriberComplete = reactiveStreamsServer.subscriber("fibonacci", config -> subscriber, FibonacciSubscriber.class);
-            subscriberComplete.thenAccept(v -> {
-                // TODO figure out why this never happens!
-                System.out.printf("subscriber completed!%n");
-            });
 
             // client publishes
             CompletableFuture<Void> publisherComplete = reactiveStreamsClient.publish(ReactiveStreamsServerConfiguration.get(configuration).getURI(), "fibonacci",
@@ -123,7 +126,7 @@ public class ReactiveStreamsTest {
 
             System.out.printf("publisher completed!%n");
 
-            List<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers();
+            List<Long> allReceivedNumbers = subscriber.getAllReceivedNumbers().orTimeout(30, TimeUnit.SECONDS).join();
             assertEquals(FibonacciSequence.sequenceOf(NUMBERS_IN_FIBONACCI_SEQUENCE), allReceivedNumbers);
 
             Thread.sleep(100);

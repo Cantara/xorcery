@@ -17,6 +17,8 @@ package com.exoreaction.xorcery.reactivestreams.spi;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class MessageWorkers {
 
@@ -24,8 +26,8 @@ public class MessageWorkers {
     private final Iterable<MessageReader.Factory> readers;
 
     public MessageWorkers(Iterable<MessageWriter.Factory> writers, Iterable<MessageReader.Factory> readers) {
-        this.writers = writers;
-        this.readers = readers;
+        this.writers = StreamSupport.stream(writers.spliterator(), false).collect(Collectors.toList());
+        this.readers = StreamSupport.stream(readers.spliterator(), false).collect(Collectors.toList());
     }
 
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {

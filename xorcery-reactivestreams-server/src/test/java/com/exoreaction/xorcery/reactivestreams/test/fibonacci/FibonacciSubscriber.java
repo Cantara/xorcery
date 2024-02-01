@@ -21,15 +21,15 @@ import org.reactivestreams.Subscription;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class FibonacciSubscriber implements Subscriber<Long> {
+
     private Subscription subscription;
-
-    private final List<Long> receivedNumbers = new Vector<>();
-
-    private final CountDownLatch terminatedLatch = new CountDownLatch(1);
+    private final List<Long> receivedNumbers = new ArrayList<>();
+    private final CompletableFuture<List<Long>> result = new CompletableFuture<>();
 
     @Override
     public void onSubscribe(Subscription subscription) {
@@ -47,28 +47,15 @@ public class FibonacciSubscriber implements Subscriber<Long> {
 
     @Override
     public void onError(Throwable throwable) {
-        System.out.printf("onError%n");
-        throwable.printStackTrace();
-        terminatedLatch.countDown();
+        result.completeExceptionally(throwable);
     }
 
     @Override
     public void onComplete() {
-        System.out.printf("onComplete!%n");
-        terminatedLatch.countDown();
+        result.complete(receivedNumbers);
     }
 
-    public ArrayList<Long> getAllReceivedNumbers() {
-        return new ArrayList<>(receivedNumbers);
-    }
-
-    /**
-     * @param timeout
-     * @param unit
-     * @return true if the subscription has terminated and false if the waiting time elapsed before the subscriber terminated
-     * @throws InterruptedException
-     */
-    public boolean waitForTermination(long timeout, TimeUnit unit) throws InterruptedException {
-        return terminatedLatch.await(timeout, unit);
+    public CompletableFuture<List<Long>> getAllReceivedNumbers() {
+        return result;
     }
 }

@@ -22,6 +22,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientShutdownStreamEx
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
+import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -29,6 +30,11 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -42,11 +48,15 @@ import org.reactivestreams.Subscription;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+
+import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.SUBSCRIBER_IO;
+import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.SUBSCRIBER_REQUESTS;
 
 /**
  * @author rickardoberg
@@ -80,7 +90,6 @@ public class SubscriberSubscriptionReactiveStream
     // Subscription
     private final AtomicBoolean isCancelled = new AtomicBoolean();
 
-    private long firstRequest; // This was the first request which sets the benchmark for total outstanding requests
     private long sendRequestsThreshold = 0; // Don't send requests unless we have this many
     private final AtomicLong requests = new AtomicLong();
     private final AtomicLong outstandingRequests = new AtomicLong();
@@ -90,6 +99,9 @@ public class SubscriberSubscriptionReactiveStream
     private final ActiveSubscriptions activeSubscriptions;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
+    private final Tracer tracer;
+    private final TextMapPropagator textMapPropagator;
+    private Span span;
     protected final LongHistogram receivedBytes;
     protected final LongHistogram requestsHistogram;
 
@@ -116,13 +128,20 @@ public class SubscriberSubscriptionReactiveStream
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        this.attributes = Attributes.builder()
-                .put("reactivestream.name", streamName)
+        tracer = openTelemetry.tracerBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        this.receivedBytes = meter.histogramBuilder("reactivestream.subscriber.io")
+        this.attributes = Attributes.builder()
+                .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, streamName)
+                .put(SemanticAttributes.MESSAGING_SYSTEM, ReactiveStreamsOpenTelemetry.XORCERY_MESSAGING_SYSTEM)
+                .build();
+        this.receivedBytes = meter.histogramBuilder(SUBSCRIBER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.requestsHistogram = meter.histogramBuilder("reactivestream.subscriber.requests")
+        this.requestsHistogram = meter.histogramBuilder(SUBSCRIBER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
+
+        textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
     }
 
     // Subscription
@@ -133,8 +152,7 @@ public class SubscriberSubscriptionReactiveStream
             logger.trace(marker, "request {}", n);
 */
 
-        requests.addAndGet(n);
-        sendRequests();
+        sendRequests(n);
     }
 
     @Override
@@ -143,7 +161,7 @@ public class SubscriberSubscriptionReactiveStream
             logger.trace(marker, "cancel");
 
         isCancelled.set(true);
-        sendRequests();
+        sendRequests(0);
     }
 
     // WebSocket
@@ -155,6 +173,14 @@ public class SubscriberSubscriptionReactiveStream
         this.session = session;
 
         Optional.ofNullable(session.getUpgradeRequest().getParameterMap().get("configuration")).map(l -> l.get(0)).ifPresent(this::applyConfiguration);
+
+        Context context = textMapPropagator.extract(Context.current(), session.getUpgradeRequest(), jettyGetter);
+
+        span = tracer.spanBuilder(streamName + " subscriber")
+                .setParent(context)
+                .setSpanKind(SpanKind.PRODUCER)
+                .setAllAttributes(attributes)
+                .startSpan();
     }
 
     @Override
@@ -277,50 +303,52 @@ public class SubscriberSubscriptionReactiveStream
                 }
             }
             activeSubscriptions.removeSubscription(activeSubscription);
+            span.end();
         } catch (Exception e) {
             logger.warn(marker, "Could not close subscription sink", e);
         }
     }
 
     // Send requests
-    protected void sendRequests() {
+    protected void sendRequests(long n) {
 
-        if (sendLock.tryLock()) {
-            try {
-                long rn;
-                if (isCancelled.get()) {
-                    rn = Long.MIN_VALUE;
+        sendLock.lock();
+        try {
+            long rn;
+            if (isCancelled.get()) {
+                rn = Long.MIN_VALUE;
+            } else {
+                rn = requests.addAndGet(n);
+
+                if (sendRequestsThreshold == 0) {
+                    sendRequestsThreshold = Math.min((rn * 3) / 4, 2048);
                 } else {
-                    rn = requests.get();
-
-                    if (sendRequestsThreshold == 0) {
-                        firstRequest = rn;
-                        sendRequestsThreshold = (rn * 3) / 4;
-                    } else {
-                        if (rn < sendRequestsThreshold) {
+                    if (rn < sendRequestsThreshold) {
 /*
                             if (logger.isTraceEnabled())
                                 logger.trace(marker, "sendRequest not yet {}", rn);
 */
-                            return; // Wait until we have more requests lined up
-                        }
+                        return; // Wait until we have more requests lined up
                     }
-
-                    requests.set(0);
-                    outstandingRequests.addAndGet(rn);
-                    activeSubscription.requested().addAndGet(rn);
-                    requestsHistogram.record(rn, attributes);
                 }
 
-                session.getRemote().sendString(Long.toString(rn), sendWriteCallback);
-                if (logger.isTraceEnabled())
-                    logger.trace(marker, "sendRequest {}", rn);
-
-            } catch (Throwable t) {
-                logger.error(marker, "Error sending requests", t);
-            } finally {
-                sendLock.unlock();
+                requests.set(0);
+                outstandingRequests.addAndGet(rn);
+                activeSubscription.requested().addAndGet(rn);
+                requestsHistogram.record(rn, attributes);
             }
+
+            String requestString = Long.toString(rn);
+            CompletableFuture.runAsync(() ->
+            {
+                session.getRemote().sendString(requestString, sendWriteCallback);
+            });
+
+            if (logger.isTraceEnabled())
+                logger.trace(marker, "sendRequest {}", rn);
+
+        } finally {
+            sendLock.unlock();
         }
     }
 

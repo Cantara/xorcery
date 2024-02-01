@@ -25,10 +25,18 @@ import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
+import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -55,15 +63,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
+import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.SUBSCRIBER_IO;
+import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.SUBSCRIBER_REQUESTS;
 
 public class SubscribeReactiveStream
         implements WebSocketListener,
         WebSocketConnectionListener,
         Subscription {
+
+    private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
+            (carrier, key, value) -> carrier.setHeader(key, value);
 
     private final URI serverUri;
     private final String streamName;
@@ -92,13 +107,15 @@ public class SubscribeReactiveStream
     private final AtomicLong requests = new AtomicLong();
     private final AtomicLong outstandingRequests = new AtomicLong();
 
-    private final AtomicBoolean isSendingRequests = new AtomicBoolean();
     private final Lock sendLock = new ReentrantLock();
     private final SendWriteCallback sendWriteCallback = new SendWriteCallback();
 
     private final ActiveSubscriptions activeSubscriptions;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
+    private final Tracer tracer;
+    private final TextMapPropagator textMapPropagator;
+    private final Span span;
     protected final Attributes attributes;
     protected final LongHistogram receivedBytes;
     protected final LongHistogram requestsHistogram;
@@ -134,18 +151,36 @@ public class SubscribeReactiveStream
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
+        tracer = openTelemetry.tracerBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
         this.attributes = Attributes.builder()
-                .put("reactivestream.name", streamName)
+                .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, streamName)
+                .put(SemanticAttributes.MESSAGING_SYSTEM, ReactiveStreamsOpenTelemetry.XORCERY_MESSAGING_SYSTEM)
                 .put(SemanticAttributes.URL_FULL, serverUri.toASCIIString())
                 .build();
-        this.receivedBytes = meter.histogramBuilder("reactivestream.subscribe.io")
+        this.receivedBytes = meter.histogramBuilder(SUBSCRIBER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.requestsHistogram = meter.histogramBuilder("reactivestream.subscribe.requests")
+        this.requestsHistogram = meter.histogramBuilder(SUBSCRIBER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
 
         this.result = result;
+        result.whenComplete(this::resultComplete);
 
-        start();
+        textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
+
+        span = tracer.spanBuilder(streamName + " subscriber")
+                .setSpanKind(SpanKind.CONSUMER)
+                .setAllAttributes(attributes)
+                .startSpan();
+        try (Scope scope = span.makeCurrent()) {
+            start();
+        }
+    }
+
+    private void resultComplete(Void result, Throwable throwable) {
+        span.end();
     }
 
     // Connection process
@@ -185,14 +220,19 @@ public class SubscribeReactiveStream
             }
 
             String queryParameters = "?configuration=" + URLEncoder.encode(publisherConfiguration.get().json().toString(), StandardCharsets.UTF_8);
-            URI effectivePublisherWebsocketUri = URI.create(publisherWebsocketUri.getScheme() + "://" + publisherWebsocketUri.getAuthority() + "/streams/publishers/" + streamName+queryParameters);
+            URI effectivePublisherWebsocketUri = URI.create(publisherWebsocketUri.getScheme() + "://" + publisherWebsocketUri.getAuthority() + "/streams/publishers/" + streamName + queryParameters);
             logger.debug(marker, "Trying " + effectivePublisherWebsocketUri);
-            try {
+            Span connectSpan = tracer.spanBuilder(streamName + " connect")
+                    .setSpanKind(SpanKind.CONSUMER)
+                    .startSpan();
+            try (Scope scope = connectSpan.makeCurrent()) {
                 ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
                 clientUpgradeRequest.addExtensions("permessage-deflate");
+                textMapPropagator.inject(Context.current(), clientUpgradeRequest, jettySetter);
                 webSocketClient.connect(this, effectivePublisherWebsocketUri, clientUpgradeRequest)
                         .thenAccept(this::connected)
-                        .exceptionally(this::connectException);
+                        .exceptionally(this::connectException)
+                        .thenRun(connectSpan::end);
             } catch (Throwable e) {
                 logger.error(marker, "Could not subscribe to " + effectivePublisherWebsocketUri.toASCIIString(), e);
                 retry(e);
@@ -264,10 +304,7 @@ public class SubscribeReactiveStream
             logger.trace(marker, "request {}", n);
         }
 
-        requests.addAndGet(n);
-        if (!isSendingRequests.get()) {
-            CompletableFuture.runAsync(this::sendRequests);
-        }
+        sendRequests(n);
     }
 
     @Override
@@ -277,7 +314,7 @@ public class SubscribeReactiveStream
         }
 
         isCancelled.set(true);
-        sendRequests();
+        sendRequests(0);
     }
 
     // Websocket
@@ -444,44 +481,43 @@ public class SubscribeReactiveStream
     }
 
     // Send requests
-    protected void sendRequests() {
+    protected void sendRequests(long n) {
+        sendLock.lock();
         try {
-            sendLock.lock();
-            isSendingRequests.set(true);
-            try {
-                long rn;
-                if (isCancelled.get()) {
-                    rn = Long.MIN_VALUE;
-                } else {
-                    rn = requests.get();
+            long rn;
+            if (isCancelled.get()) {
+                rn = Long.MIN_VALUE;
+            } else {
+                rn = requests.addAndGet(n);
 
-                    if (sendRequestsThreshold == 0) {
-                        sendRequestsThreshold = Math.min((rn * 3) / 4, 2048);
-                    } else {
-                        if (rn < sendRequestsThreshold) {
+                if (sendRequestsThreshold == 0) {
+                    sendRequestsThreshold = Math.min((rn * 3) / 4, 2048);
+                } else {
+                    if (rn < sendRequestsThreshold) {
     /*
                                 if (logger.isTraceEnabled())
                                     logger.trace(marker, "sendRequest not yet {}", rn);
     */
-                            return; // Wait until we have more requests lined up
-                        }
+                        return; // Wait until we have more requests lined up
                     }
-
-                    requests.set(0);
-                    outstandingRequests.addAndGet(rn);
-                    activeSubscription.requested().addAndGet(rn);
-                    requestsHistogram.record(rn, attributes);
                 }
 
-                session.getRemote().sendString(Long.toString(rn), sendWriteCallback);
-                if (logger.isTraceEnabled())
-                    logger.trace(marker, "sendRequest {}", rn);
-            } finally {
-                isSendingRequests.set(false);
-                sendLock.unlock();
+                requests.set(0);
+                outstandingRequests.addAndGet(rn);
+                activeSubscription.requested().addAndGet(rn);
+                requestsHistogram.record(rn, attributes);
             }
-        } catch (Throwable t) {
-            logger.error(marker, "Error sending requests", t);
+
+            String requestString = Long.toString(rn);
+            CompletableFuture.runAsync(() ->
+            {
+                session.getRemote().sendString(requestString, sendWriteCallback);
+            });
+
+            if (logger.isTraceEnabled())
+                logger.trace(marker, "sendRequest {}", rn);
+        } finally {
+            sendLock.unlock();
         }
     }
 

@@ -28,6 +28,13 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -35,11 +42,9 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.util.BlockingArrayQueue;
-import org.eclipse.jetty.websocket.api.BatchMode;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -60,6 +65,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+
+import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
 
 /**
  * @author rickardoberg
@@ -98,9 +105,12 @@ public class PublisherSubscriptionReactiveStream
     private long outstandingRequestAmount;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
+    private final Tracer tracer;
+    private final TextMapPropagator textMapPropagator;
     private final LongHistogram sentBytes;
     private final LongHistogram requestsHistogram;
     private final LongHistogram flushHistogram;
+    private Span span;
 
     public PublisherSubscriptionReactiveStream(String streamName,
                                                Function<Configuration, Publisher<Object>> publisherFactory,
@@ -125,15 +135,21 @@ public class PublisherSubscriptionReactiveStream
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        this.attributes = Attributes.builder()
-                .put("reactivestream.name", streamName)
+        tracer = openTelemetry.tracerBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        this.sentBytes = meter.histogramBuilder("reactivestream.publisher.io")
+        this.attributes = Attributes.builder()
+                .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, streamName)
+                .put(SemanticAttributes.MESSAGING_SYSTEM, XORCERY_MESSAGING_SYSTEM)
+                .build();
+        this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.requestsHistogram = meter.histogramBuilder("reactivestream.publisher.requests")
+        this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
-        this.flushHistogram = meter.histogramBuilder("reactivestream.publisher.flush.count")
+        this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
+        textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
     }
 
     // Subscriber
@@ -153,8 +169,10 @@ public class PublisherSubscriptionReactiveStream
 
     @Override
     public void onNext(Object item) {
-//        if (logger.isTraceEnabled())
-//            logger.trace(marker, "onNext {}", item.toString());
+        if (logger.isTraceEnabled())
+        {
+            logger.trace(marker, "onNext {}", item.toString());
+        }
 
         if (!sendQueue.offer(item)) {
             logger.error(marker, "Could not put item on queue {}/{}", sendQueue.getCapacity(), sendQueue.getMaxCapacity());
@@ -209,6 +227,13 @@ public class PublisherSubscriptionReactiveStream
         session.getRemote().setBatchMode(BatchMode.ON);
 
         Optional.ofNullable(session.getUpgradeRequest().getParameterMap().get("configuration")).map(l -> l.get(0)).ifPresent(this::applyConfiguration);
+        Context context = textMapPropagator.extract(Context.current(), session.getUpgradeRequest(), jettyGetter);
+
+        span = tracer.spanBuilder(streamName + " publisher")
+                .setParent(context)
+                .setSpanKind(SpanKind.PRODUCER)
+                .setAllAttributes(attributes)
+                .startSpan();
     }
 
     @Override
@@ -300,18 +325,27 @@ public class PublisherSubscriptionReactiveStream
             subscription.cancel();
             subscription = null;
             activeSubscriptions.removeSubscription(activeSubscription);
+            span.end();
         }
     }
 
     private void drainJob() {
         drainLock.lock();
         isDraining.set(true);
-        try {
+
+        try (Scope scope = span.makeCurrent()) {
             logger.trace(marker, "Start drain");
             int count;
             int itemsSent = 0;
             List<Object> items = new ArrayList<>(sendQueue.size());
+            int totalSent = 0;
+            Span sentSpan = null;
             while ((count = sendQueue.drainTo(items)) > 0) {
+
+                sentSpan = tracer.spanBuilder(streamName + " publish")
+                        .setSpanKind(SpanKind.PRODUCER)
+                        .startSpan();
+
                 for (Object item : items) {
                     send(item);
 
@@ -325,7 +359,9 @@ public class PublisherSubscriptionReactiveStream
                     }
                 }
                 activeSubscription.received().addAndGet(count);
+
                 items.clear();
+                totalSent += count;
             }
 
             if (itemsSent > 0) {
@@ -333,6 +369,9 @@ public class PublisherSubscriptionReactiveStream
                     logger.trace(marker, "flush {}", itemsSent);
                 session.getRemote().flush();
                 flushHistogram.record(itemsSent, attributes);
+
+                sentSpan.setAttribute(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, totalSent);
+                sentSpan.end();
             }
 
         } catch (Throwable t) {
@@ -343,11 +382,19 @@ public class PublisherSubscriptionReactiveStream
         } finally {
             logger.trace(marker, "Stop drain");
 
+            isDraining.set(false);
+            drainLock.unlock();
+        }
+
+        if (!sendQueue.isEmpty())
+        {
+            // Race conditions suck. Need to figure out a better way to handle this...
+            drainJob();
+        } else
+        {
             if (isComplete.get() && session.isOpen()) {
                 session.close(StatusCode.NORMAL, "complete");
             }
-            isDraining.set(false);
-            drainLock.unlock();
         }
     }
 
