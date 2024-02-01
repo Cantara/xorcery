@@ -28,4 +28,7 @@ open module xorcery.jetty.client {
     requires org.eclipse.jetty.http2.http.client.transport;
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
+    requires io.opentelemetry.api;
+    requires io.opentelemetry.context;
+    requires io.opentelemetry.semconv;
 }

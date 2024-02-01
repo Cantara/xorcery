@@ -16,9 +16,9 @@
 package com.exoreaction.xorcery.jetty.client;
 
 import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.jetty.client.providers.DnsLookupSocketAddressResolver;
+import io.opentelemetry.api.OpenTelemetry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
@@ -45,7 +45,8 @@ public class HttpClientFactory {
             JettyClientConfiguration jettyClientConfiguration,
             ApplicationConfiguration applicationConfiguration,
             Supplier<DnsLookupService> dnsLookup,
-            Supplier<SslContextFactory.Client> clientSslContextFactoryProvider
+            Supplier<SslContextFactory.Client> clientSslContextFactoryProvider,
+            OpenTelemetry openTelemetry
     ) throws Exception {
 
         // Client setup
@@ -81,8 +82,9 @@ public class HttpClientFactory {
         }
 
         client = new HttpClient(transport);
+        client.getRequestListeners().add(new OpenTelemetryRequestListener(openTelemetry));
         client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
-        QueuedThreadPool executor = new QueuedThreadPool();
+        QueuedThreadPool executor = new JettyClientConnectorThreadPool();
         executor.setName(applicationConfiguration.getName());
         client.setExecutor(executor);
         client.setScheduler(new ScheduledExecutorScheduler(applicationConfiguration.getName() + "-scheduler", false));

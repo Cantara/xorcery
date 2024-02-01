@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.jetty.client;
 import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
+import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
@@ -32,12 +33,17 @@ public class HttpClientFactoryHK2 extends HttpClientFactory
         implements Factory<HttpClient>, PreDestroy {
 
     @Inject
-    public HttpClientFactoryHK2(Configuration configuration, Provider<DnsLookupService> dnsLookup, Provider<SslContextFactory.Client> clientSslContextFactoryProvider) throws Exception {
+    public HttpClientFactoryHK2(
+            Configuration configuration,
+            Provider<DnsLookupService> dnsLookup,
+            Provider<SslContextFactory.Client> clientSslContextFactoryProvider,
+            OpenTelemetry openTelemetry) throws Exception {
         super(
                 new JettyClientConfiguration(configuration.getConfiguration("jetty.client")),
                 ApplicationConfiguration.get(configuration),
                 dnsLookup::get,
-                clientSslContextFactoryProvider::get
+                clientSslContextFactoryProvider::get,
+                openTelemetry
         );
     }
 

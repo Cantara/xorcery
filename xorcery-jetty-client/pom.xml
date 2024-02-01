@@ -36,6 +36,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-keystores</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-opentelemetry-api</artifactId>
+        </dependency>
 
         <!-- Jetty -->
         <dependency>
