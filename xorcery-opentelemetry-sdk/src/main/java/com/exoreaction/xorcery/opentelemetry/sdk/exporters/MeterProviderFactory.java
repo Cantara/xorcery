@@ -25,7 +25,7 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.IterableProvider;
 import org.jvnet.hk2.annotations.Service;
 
-@Service(name = "opentelemetry.exporters")
+@Service(name = "opentelemetry")
 public class MeterProviderFactory
         implements Factory<SdkMeterProvider> {
     private final SdkMeterProvider sdkMeterProvider;
