@@ -19,13 +19,10 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openjdk.jmh.annotations.*;
@@ -35,6 +32,8 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
 
 @State(Scope.Benchmark)
@@ -107,12 +106,12 @@ public class PublishSubscriberBenchmarks {
         Logger logger = LogManager.getLogger(getClass());
 
         // Server subscriber
-        ServerSubscriber<WithMetadata<JsonNode>> serverSubscriber = new ServerSubscriber<>() {
+        ServerSubscriber<ByteBuffer> serverSubscriber = new ServerSubscriber<>() {
 
             int i = 0;
 
             @Override
-            public void onNext(WithMetadata<JsonNode> item) {
+            public void onNext(ByteBuffer item) {
                 i++;
                 subscription.request(1);
             }
@@ -122,9 +121,7 @@ public class PublishSubscriberBenchmarks {
 
         // Client publisher
         Configuration configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(clientConfig).build();
-        // Use the configuration as payload
-//        payload = configuration.json();
-        payload = JsonNodeFactory.instance.textNode("foo");
+        byteBufferPayload = ByteBuffer.wrap("foo".getBytes(StandardCharsets.UTF_8));
 
         client = new Xorcery(configuration);
         clientPublisher = new ClientPublisher();
@@ -148,14 +145,15 @@ public class PublishSubscriberBenchmarks {
         LogManager.getLogger().info("Teardown done");
     }
 
-    private JsonNode payload;
+    Metadata metadata = new Metadata.Builder()
+            .add("foo", "bar")
+            .build();
+    private ByteBuffer byteBufferPayload;
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public void writes() throws ExecutionException, InterruptedException, TimeoutException {
-        clientPublisher.publish(new WithMetadata<>(new Metadata.Builder()
-                .add("foo", "bar")
-                .build(), payload));
+        clientPublisher.publish(byteBufferPayload);
     }
 
     public static abstract class ServerSubscriber<T>
@@ -166,7 +164,7 @@ public class PublishSubscriberBenchmarks {
         @Override
         public void onSubscribe(Subscription subscription) {
             this.subscription = subscription;
-            subscription.request(8192);
+            subscription.request(1024);
         }
 
         @Override
@@ -181,13 +179,13 @@ public class PublishSubscriberBenchmarks {
     }
 
     public static class ClientPublisher
-            implements Publisher<WithMetadata<JsonNode>> {
+            implements Publisher<java.nio.ByteBuffer> {
 
         private final CompletableFuture<Void> done = new CompletableFuture<>();
         private final Semaphore semaphore = new Semaphore(0);
-        private Subscriber<? super WithMetadata<JsonNode>> subscriber;
+        private Subscriber<? super ByteBuffer> subscriber;
 
-        public void publish(WithMetadata<JsonNode> item) throws InterruptedException {
+        public void publish(ByteBuffer item) throws InterruptedException {
             while (!semaphore.tryAcquire(5, TimeUnit.SECONDS)) {
                 // Try again
                 LogManager.getLogger().warn("Waiting for requests:" + semaphore.availablePermits());
@@ -200,7 +198,7 @@ public class PublishSubscriberBenchmarks {
         }
 
         @Override
-        public void subscribe(Subscriber<? super WithMetadata<JsonNode>> subscriber) {
+        public void subscribe(Subscriber<? super ByteBuffer> subscriber) {
             this.subscriber = subscriber;
             subscriber.onSubscribe(new Subscription() {
                 @Override
