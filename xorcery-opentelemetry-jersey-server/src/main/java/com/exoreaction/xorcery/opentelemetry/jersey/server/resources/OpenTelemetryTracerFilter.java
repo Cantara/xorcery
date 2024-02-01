@@ -99,6 +99,7 @@ public class OpenTelemetryTracerFilter
     @Override
     public void filter(ContainerRequestContext requestContext) {
         Context context = textMapPropagator.extract(Context.current(), requestContext, jerseyGetter);
+        context.makeCurrent();
         var uriInfo = requestContext.getUriInfo();
         String route = getHttpRoute(uriInfo);
 
