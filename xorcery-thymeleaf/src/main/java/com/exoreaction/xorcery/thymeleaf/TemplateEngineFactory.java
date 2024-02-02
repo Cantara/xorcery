@@ -41,8 +41,7 @@ public class TemplateEngineFactory
         final WebApplicationTemplateResolver templateResolver =
                 new WebApplicationTemplateResolver(JakartaServletWebApplication.buildApplication(servletContextHandler.getServletContext()));
 */
-        final ClassLoaderTemplateResolver templateResolver =
-                new ClassLoaderTemplateResolver(ClassLoader.getSystemClassLoader());
+        final ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
 
         // HTML is the default mode, but we will set it anyway for better understanding of code
         templateResolver.setTemplateMode(TemplateMode.HTML);
@@ -62,7 +61,7 @@ public class TemplateEngineFactory
 
     @Override
     @Singleton
-    public ITemplateEngine provide()  {
+    public ITemplateEngine provide() {
         return templateEngine;
     }
 
