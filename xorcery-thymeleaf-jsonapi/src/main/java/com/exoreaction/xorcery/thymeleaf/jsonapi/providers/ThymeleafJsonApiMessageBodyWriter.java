@@ -128,7 +128,8 @@ public class ThymeleafJsonApiMessageBodyWriter
         String path = "jsonapi" + calculateTemplate(requestContext.get().getUriInfo());
 
         for (ITemplateResolver templateResolver : templateEngine.getConfiguration().getTemplateResolvers()) {
-            if (templateResolver.resolveTemplate(templateEngine.getConfiguration(), null, path, null).getTemplateResource().exists())
+            TemplateResolution templateResolution = templateResolver.resolveTemplate(templateEngine.getConfiguration(), null, path, null);
+            if (templateResolution != null && templateResolution.getTemplateResource().exists())
             {
                 templateEngine.process(path, context, writer);
                 writer.close();

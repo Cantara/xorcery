@@ -1,5 +1,51 @@
 thymeleaf:
+  enabled: "{{ defaults.enabled }}"
   development: "{{ defaults.development }}"
+
+  classloader:
+    enabled: "{{ thymeleaf.enabled }}"
+    templateMode: HTML
+    encoding: UTF8
+    prefix: "WEB-INF/thymeleaf/templates/"
+    suffix: ".html"
+    checkExistence: true
+    cacheable: "{{ thymeleaf.development ? false : true }}"
+    cacheTTL: 1h
+    cacheablePatterns: []
+    nonCacheablePatterns: []
+    resolvablePatterns: []
+    decoupledLogic: false
+    aliases: {}
+
+  webapplication:
+    enabled: false
+    templateMode: HTML
+    encoding: UTF8
+    prefix: "WEB-INF/thymeleaf/templates/"
+    suffix: ".html"
+    checkExistence: true
+    cacheable: "{{ thymeleaf.development ? false : true }}"
+    cacheTTL: 1h
+    cacheablePatterns: []
+    nonCacheablePatterns: []
+    resolvablePatterns: []
+    decoupledLogic: false
+    aliases: {}
+
+  file:
+    enabled: false
+    templateMode: HTML
+    encoding: UTF8
+    prefix: ""
+    suffix: ".html"
+    checkExistence: true
+    cacheable: "{{ thymeleaf.development ? false : true }}"
+    cacheTTL: 1h
+    cacheablePatterns: []
+    nonCacheablePatterns: []
+    resolvablePatterns: []
+    decoupledLogic: false
+    aliases: {}
 
 jersey.server.register:
   - com.exoreaction.xorcery.thymeleaf.providers.ThymeleafHtmlMessageBodyWriter
