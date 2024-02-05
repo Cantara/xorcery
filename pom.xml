@@ -130,7 +130,6 @@
 
         <module>xorcery-eventstore</module>
         <module>xorcery-reactivestreams-persistentsubscriber</module>
-        <module>xorcery-handlebars</module>
         <module>xorcery-thymeleaf</module>
         <module>xorcery-thymeleaf-jsonapi</module>
 
@@ -269,11 +268,6 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-handlebars</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

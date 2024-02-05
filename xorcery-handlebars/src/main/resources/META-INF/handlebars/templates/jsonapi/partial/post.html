@@ -1,9 +1,0 @@
-<tbody class="form">
-<form action="" METHOD="POST">
-    <tr><td>id</td><td><input type="text" name="id" value="{{../../id}}"/></td></tr>
-    {{#each attributes.toMap.entrySet}}
-        <tr><td>{{key}}</td><td><input type="text" name="{{key}}" value="{{stripquotes value}}"/></td></tr>
-    {{/each}}
-    <tr><td colspan="2"><input type="submit" value="POST"></td></tr>
-</form>
-</tbody>

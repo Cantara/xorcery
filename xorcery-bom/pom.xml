@@ -153,11 +153,6 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-handlebars</artifactId>
-                <version>0.94.2-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-health-api</artifactId>
                 <version>0.94.2-SNAPSHOT</version>
             </dependency>

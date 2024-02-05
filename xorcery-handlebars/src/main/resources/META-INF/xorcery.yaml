@@ -1,5 +1,0 @@
-jersey.server.register:
-  - com.exoreaction.xorcery.handlebars.resources.UriTemplateResource
-  - com.exoreaction.xorcery.handlebars.providers.HandlebarsHtmlMessageBodyWriter
-  - com.exoreaction.xorcery.handlebars.providers.HandlebarsJsonApiMessageBodyWriter
-  - com.exoreaction.xorcery.handlebars.providers.ResourceObjectFormProvider
