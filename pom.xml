@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright © 2022-2024 eXOReaction AS (rickard@exoreaction.com)
+    Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.94.5-SNAPSHOT</version>
+    <version>0.94.5</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -65,7 +65,7 @@
         <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
         <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
         <url>https://github.com/Cantara/xorcery</url>
-        <tag>HEAD</tag>
+        <tag>xorcery-project-0.94.5</tag>
     </scm>
 
     <modules>
