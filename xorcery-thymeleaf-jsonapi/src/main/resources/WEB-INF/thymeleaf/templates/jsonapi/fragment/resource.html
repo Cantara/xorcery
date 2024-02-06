@@ -15,15 +15,27 @@
 
     <div class="card-body">
         <div th:replace="~{::links(${resource.links})}"></div>
-
-        <th:block th:switch="true">
-            <div th:case="${schema}" th:with="type=${schema.links.links.type}" th:if="${type}" th:switch="true">
-                <div th:case="${type.submissionSchema.isPresent}" th:replace="~{::post(${resource})}"></div>
-                <div th:case="${type.targetSchema.isPresent}" th:replace="~{::patch(${resource})}"></div>
-                <div th:case="*" th:replace="~{::attributes(${resource})}"></div>
-            </div>
-            <div th:case="not ${schema}" th:replace="~{::attributes(${resource})}"></div>
-        </th:block>
+            <th:block th:if="${schema}" th:with="link=${schema.links.links[resource.type]}">
+                <th:block th:if="${link}" >
+                    <th:block th:switch="true">
+                        <th:block th:case="${link.submissionSchema.isPresent}">
+                            <div th:replace="~{::post(${resource})}"></div>
+                        </th:block>
+                        <th:block th:case="${link.targetSchema.isPresent}">
+                            <div th:replace="~{::patch(${resource})}"></div>
+                        </th:block>
+                        <th:block th:case="*">
+                            <div th:replace="~{::attributes(${resource})}"></div>
+                        </th:block>
+                    </th:block>
+                </th:block>
+                <th:block th:if="not ${link}">
+                    <div th:replace="~{::attributes(${resource})}"></div>
+                </th:block>
+            </th:block>
+            <th:block th:if="not ${schema}">
+                <div th:replace="~{::attributes(${resource})}"></div>
+            </th:block>
 
         <div th:replace="~{::relationships(${resource})}"></div>
     </div>
@@ -31,40 +43,38 @@
 
 <!-- Attributes -->
 <div th:fragment="post (resource)" class="attributes">
-    <tbody class="form">
+
     <form action="" METHOD="POST">
-        <tr>
-            <td>id</td>
-            <td><input type="text" name="id" value="{{../../id}}"/></td>
-        </tr>
-        {{#each attributes.toMap.entrySet}}
-        <tr>
-            <td>{{key}}</td>
-            <td><input type="text" name="{{key}}" value="{{stripquotes value}}"/></td>
-        </tr>
-        {{/each}}
-        <tr>
-            <td colspan="2"><input type="submit" value="POST"></td>
-        </tr>
+        <div class="mb-3">
+            <label for="id" class="form-label">id</label>
+            <input type="text" id="id" name="id" th:value="${resource.id}" class="form-control"/>
+        </div>
+        <th:block th:each="attribute: ${resource.attributes.toMap}">
+            <div th:class="${attributeStat.odd}? 'mb-3 bg-light' : 'mb-3 bg-white'">
+                <label th:for="${attribute.key}" th:text="${attribute.key}" class="form-label">Attribute</label>
+                <input type="text" th:id="${attribute.key}" th:name="${attribute.key}" th:value="${attribute.value}" class="form-control"/>
+            </div>
+        </th:block>
+
+        <button type="submit" class="btn btn-primary">POST</button>
     </form>
-    </tbody>
 </div>
 
 <div th:fragment="patch (resource)" class="attributes">
-    <tbody class="form">
     <form action="" METHOD="POST">
-        <input type="hidden" name="id" value="{{../../id}}"/>
-        {{#each attributes.toMap.entrySet}}
-        <tr>
-            <td>{{key}}</td>
-            <td><input type="text" name="{{key}}" value="{{stripquotes value}}"/></td>
-        </tr>
-        {{/each}}
-        <tr>
-            <td colspan="2"><input type="submit" value="PATCH"></td>
-        </tr>
+        <div class="mb-3">
+            <label for="id" class="form-label">id</label>
+            <input type="text" id="id" th:value="${resource.id}" class="form-control"/>
+        </div>
+        <th:block th:each="attribute: ${resource.attributes.toMap}">
+            <div th:class="${attributeStat.odd}? 'mb-3 bg-light' : 'mb-3 bg-white'">
+                <label th:for="${attribute.key}" th:text="${attribute.key}" class="form-label">Attribute</label>
+                <input type="text" th:id="${attribute.key}" th:value="${attribute.value}" class="form-control"/>
+            </div>
+        </th:block>
+
+        <button type="submit" class="btn btn-primary">PATCH</button>
     </form>
-    </tbody>
 </div>
 
 <div th:fragment="attributes (resource)" class="attributes container">
@@ -87,22 +97,25 @@
             <div th:each="link: ${relationship.value.links.links}">
                 <a th:href="${link.href}" th:text="${link.rel}">Rel</a>
             </div>
+            <span th:text="${relationship.value.included}">Test</span>xxx
 
-            <th:block th:if="${relationship.included}">
-                <th:block th:if="${relationship.value.resourceObjectIdentifier.isPresent"
-                          th:with="roi=${relationship.value.resourceObjectIdentifier.get}">
+            <th:block th:if="${relationship.value.included}" th:with="rel=${relationship.value}">
+                <th:block th:if="${rel.resourceObjectIdentifier.isPresent}"
+                          th:with="roi=${rel.resourceObjectIdentifier.get}">
                     <a th:href="${'#'+roi.id+'_'+roi.type}" th:text="${roi.id}">Id</a>
                 </th:block>
 
-                <th:block th:if="${relationship.value.resourceObjectIdentifiers.isPresent"
-                          th:with="rois=${relationship.value.resourceObjectIdentifiers.get}">
+                <th:block th:if="${rel.resourceObjectIdentifiers.isPresent}"
+                          th:with="rois=${rel.resourceObjectIdentifiers.get}">
                     <ol>
-                        <th:block th:each="${rois}">
+                        <th:block th:each="roi: ${rois.resources}">
                             <li><a th:href="${'#'+roi.id+'_'+roi.type}" th:text="${roi.id}">Id</a></li>
                         </th:block>
                     </ol>
                 </th:block>
+
             </th:block>
+
         </div>
     </th:block>
 </div>

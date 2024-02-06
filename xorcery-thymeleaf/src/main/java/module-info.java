@@ -16,10 +16,11 @@
 open module xorcery.thymeleaf {
     exports com.exoreaction.xorcery.thymeleaf;
     exports com.exoreaction.xorcery.thymeleaf.providers;
+    exports com.exoreaction.xorcery.thymeleaf.resources;
 
     requires xorcery.configuration.api;
 
-    requires thymeleaf;
+    requires transitive thymeleaf;
     requires org.eclipse.jetty.servlet;
     requires jersey.server;
     requires jersey.common;

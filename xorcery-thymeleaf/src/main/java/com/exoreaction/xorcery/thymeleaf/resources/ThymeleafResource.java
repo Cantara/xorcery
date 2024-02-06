@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.thymeleaf.resources;
 
 import jakarta.inject.Inject;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.OPTIONS;
@@ -25,9 +26,12 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.thymeleaf.ITemplateEngine;
+import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.servlet.IServletWebApplication;
 import org.thymeleaf.web.servlet.IServletWebExchange;
 import org.thymeleaf.web.servlet.JakartaServletWebApplication;
+
+import java.util.Map;
 
 import static jakarta.ws.rs.core.MediaType.TEXT_HTML;
 
@@ -35,20 +39,31 @@ import static jakarta.ws.rs.core.MediaType.TEXT_HTML;
 public abstract class ThymeleafResource
     implements ResourceContext
 {
+
     @Inject
+    private void bind(
+            ServiceLocator serviceLocator,
+            ITemplateEngine templateEngine,
+            ContainerRequestContext containerRequestContext,
+            HttpServletRequest httpServletRequest,
+            HttpServletResponse httpServletResponse,
+            ServletContext servletContext
+    )
+    {
+        this.serviceLocator = serviceLocator;
+        this.templateEngine = templateEngine;
+        this.containerRequestContext = containerRequestContext;
+        this.httpServletRequest = httpServletRequest;
+        this.httpServletResponse = httpServletResponse;
+        this.servletContext = servletContext;
+    }
+
     private ServiceLocator serviceLocator;
-
-    @Inject
     private ITemplateEngine templateEngine;
-
-    @Context
     private ContainerRequestContext containerRequestContext;
-
-    @Context
     private HttpServletRequest httpServletRequest;
-
-    @Context
     private HttpServletResponse httpServletResponse;
+    private ServletContext servletContext;
 
     private JakartaServletWebApplication webApplication;
 
@@ -73,7 +88,7 @@ public abstract class ThymeleafResource
     {
         if (webApplication == null)
         {
-            webApplication = JakartaServletWebApplication.buildApplication(getHttpServletRequest().getServletContext());
+            webApplication = JakartaServletWebApplication.buildApplication(servletContext);
         }
         return webApplication;
     }
@@ -81,6 +96,16 @@ public abstract class ThymeleafResource
     public IServletWebExchange getWebExchange()
     {
         return ((JakartaServletWebApplication)getWebApplication()).buildExchange(httpServletRequest, httpServletResponse);
+    }
+
+    public WebContext newWebContext()
+    {
+        return new WebContext(getWebExchange(), httpServletRequest.getLocale());
+    }
+
+    public WebContext newWebContext(Map<String, Object> variables)
+    {
+        return new WebContext(getWebExchange(), httpServletRequest.getLocale(), variables);
     }
 
     public ITemplateEngine getTemplateEngine() {

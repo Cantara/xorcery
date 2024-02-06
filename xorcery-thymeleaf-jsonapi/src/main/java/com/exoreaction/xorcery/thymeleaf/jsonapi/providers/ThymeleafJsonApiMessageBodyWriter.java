@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
@@ -43,12 +42,9 @@ import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriTemplate;
 import org.thymeleaf.ITemplateEngine;
-import org.thymeleaf.context.WebContext;
-import org.thymeleaf.exceptions.TemplateInputException;
+import org.thymeleaf.context.Context;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 import org.thymeleaf.templateresolver.TemplateResolution;
-import org.thymeleaf.web.IWebExchange;
-import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -60,8 +56,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
-import static com.exoreaction.xorcery.jsonapi.JsonApiRels.describedby;
-
 @Singleton
 @Provider
 @Produces(MediaType.TEXT_HTML)
@@ -69,7 +63,10 @@ public class ThymeleafJsonApiMessageBodyWriter
         implements MessageBodyWriter<JsonElement> {
 
     private final jakarta.inject.Provider<HttpServletRequest> servletRequestProvider;
+/*
     private final jakarta.inject.Provider<HttpServletResponse> servletResponseProvider;
+    private final jakarta.inject.Provider<ServletContext> servletContextProvider;
+*/
     private final Logger logger;
 
     private final Client client;
@@ -81,13 +78,19 @@ public class ThymeleafJsonApiMessageBodyWriter
     public ThymeleafJsonApiMessageBodyWriter(ITemplateEngine templateEngine,
                                              jakarta.inject.Provider<ContainerRequestContext> requestContext,
                                              jakarta.inject.Provider<HttpServletRequest> servletRequestProvider,
+/*
                                              jakarta.inject.Provider<HttpServletResponse> servletResponseProvider,
+                                             jakarta.inject.Provider<ServletContext> servletContextProvider,
+*/
                                              ClientBuilder clientBuilder,
                                              Configuration configuration,
                                              Logger logger) {
         this.templateEngine = templateEngine;
         this.servletRequestProvider = servletRequestProvider;
+/*
         this.servletResponseProvider = servletResponseProvider;
+        this.servletContextProvider = servletContextProvider;
+*/
         this.logger = logger;
         this.requestContext = requestContext;
         InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
@@ -108,11 +111,12 @@ public class ThymeleafJsonApiMessageBodyWriter
                         OutputStream entityStream) throws IOException, WebApplicationException {
 
         HttpServletRequest httpServletRequest = servletRequestProvider.get();
+/* Wait for https://github.com/eclipse-ee4j/jersey/issues/5527 to be resolved
         HttpServletResponse httpServletResponse = servletResponseProvider.get();
-        JakartaServletWebApplication webApplication = JakartaServletWebApplication.buildApplication(httpServletRequest.getServletContext());
+        JakartaServletWebApplication webApplication = JakartaServletWebApplication.buildApplication(servletContextProvider.get());
         IWebExchange webExchange = webApplication.buildExchange(httpServletRequest, httpServletResponse);
-        WebContext context = new WebContext(webExchange);
-        context.setVariable("json", jsonElement);
+*/
+        Context context = new Context(httpServletRequest.getLocale());
 
         // Check if we have a JSON Schema
         getSchema(jsonElement, httpHeaders).ifPresent(link ->
@@ -122,6 +126,7 @@ public class ThymeleafJsonApiMessageBodyWriter
         });
 
         context.setVariable("title", title);
+        context.setVariable("json", jsonElement);
         context.setVariable("jsonapi", new JsonApiHelper());
 
         OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8);
@@ -132,7 +137,7 @@ public class ThymeleafJsonApiMessageBodyWriter
             if (templateResolution != null && templateResolution.getTemplateResource().exists())
             {
                 templateEngine.process(path, context, writer);
-                writer.close();
+                writer.flush();
                 return;
             }
         }
@@ -140,6 +145,7 @@ public class ThymeleafJsonApiMessageBodyWriter
         // Fallback to generic rendering
         String templateName = jsonElement.getClass().getSimpleName().toLowerCase();
         templateEngine.process("jsonapi/" + templateName, context, writer);
+        writer.flush();
     }
 
     private Optional<Link> getSchema(JsonElement jsonElement, MultivaluedMap<String, Object> httpHeaders) {

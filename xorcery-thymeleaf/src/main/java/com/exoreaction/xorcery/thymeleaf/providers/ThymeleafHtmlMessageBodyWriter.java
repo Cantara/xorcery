@@ -16,13 +16,17 @@
 package com.exoreaction.xorcery.thymeleaf.providers;
 
 import jakarta.inject.Inject;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.Provider;
+import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.uri.UriTemplate;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.WebContext;
 
@@ -32,6 +36,7 @@ import java.io.OutputStreamWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Provider
 @Produces(MediaType.TEXT_HTML)
@@ -57,9 +62,39 @@ public class ThymeleafHtmlMessageBodyWriter
     @Override
     public void writeTo(WebContext context, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream)
             throws IOException, WebApplicationException {
-        String path = requestContextProvider.get().getUriInfo().getPath();
+        String path = calculateTemplate(requestContextProvider.get().getUriInfo());
+
         OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8);
         templateEngine.process(path, context, writer);
         writer.close();
     }
+
+    protected String calculateTemplate(UriInfo uriInfo) {
+        if (uriInfo instanceof ExtendedUriInfo) {
+            ExtendedUriInfo extendedUriInfo = (ExtendedUriInfo) uriInfo;
+            return calculateTemplateFromExtendedUriInfo(extendedUriInfo);
+        } else {
+            throw new InternalServerErrorException("Can't calculate template");
+        }
+    }
+
+    private String calculateTemplateFromExtendedUriInfo(ExtendedUriInfo extendedUriInfo) {
+        String htmlTemplate = "";
+        List<UriTemplate> matchedTemplates = extendedUriInfo.getMatchedTemplates();
+
+        if (matchedTemplates == null || matchedTemplates.size() == 0) {
+            return htmlTemplate;
+        }
+
+        for (int i = matchedTemplates.size() - 1; i >= 0; i--) {
+            String uriTemplate = matchedTemplates.get(i).getTemplate();
+            htmlTemplate += uriTemplate.replaceAll("\\{|\\}", "");
+        }
+
+        if (htmlTemplate.charAt(0) != '/') {
+            htmlTemplate = "/".concat(htmlTemplate);
+        }
+        return htmlTemplate;
+    }
+
 }
