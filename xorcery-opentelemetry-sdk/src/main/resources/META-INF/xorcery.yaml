@@ -36,6 +36,7 @@ opentelemetry:
         tracesEndpoint: "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces"
         metricsEndpoint: "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics"
   sampler:
+    enabled: "{{ opentelemetry.enabled }}"
     # By default, all spans are included. They can be excluded by an exclude rule, and that can then be overridden by an include rule
     # Example:
     # excludes:

@@ -20,9 +20,11 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.IterableProvider;
+import org.jvnet.hk2.annotations.Optional;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "opentelemetry")
@@ -32,7 +34,7 @@ public class TracerProviderFactory
 
     @Inject
     public TracerProviderFactory(Resource resource,
-                                 RuleBasedSampler ruleBasedSampler,
+                                 @Optional Sampler parentSampler,
                                  IterableProvider<SpanProcessor> spanProcessors) {
         var sdkTracerProviderBuilder = SdkTracerProvider.builder()
                 .setResource(resource);
@@ -40,8 +42,12 @@ public class TracerProviderFactory
             sdkTracerProviderBuilder.addSpanProcessor(spanProcessor);
         }
 
-        Sampler sampler = Sampler.parentBasedBuilder(ruleBasedSampler)
-                .build();
+        Sampler sampler = parentSampler != null
+                ? Sampler.parentBasedBuilder(parentSampler)
+                .setLocalParentSampled(parentSampler)
+                .setRemoteParentSampled(parentSampler)
+                .build()
+                : Sampler.alwaysOn();
         sdkTracerProvider = sdkTracerProviderBuilder
                 .setSampler(sampler)
                 .build();

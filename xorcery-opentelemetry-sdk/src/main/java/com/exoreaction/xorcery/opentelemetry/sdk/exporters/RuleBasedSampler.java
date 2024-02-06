@@ -9,14 +9,27 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import jakarta.inject.Inject;
+import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.util.List;
 
+/**
+ * Uses declarative rules to decide sampling result.
+ *
+ * All spans are included by default. Exclude rules then modifies this. Then if a span is excluded by a rule an include rule can override it.
+ *
+ * Example to only include API request log:
+ * excludes:
+ *   - name: GET
+ * includes:
+ *   - name: GET /api
+ *
+ */
 @Service
+@ContractsProvided({Sampler.class})
 public class RuleBasedSampler
-    implements Sampler
-{
+        implements Sampler {
     private final List<SampleRule> excludeRules;
     private final List<SampleRule> includeRules;
 
@@ -31,11 +44,9 @@ public class RuleBasedSampler
     @Override
     public SamplingResult shouldSample(Context parentContext, String traceId, String name, SpanKind spanKind, Attributes attributes, List<LinkData> parentLinks) {
         for (SampleRule excludeRule : excludeRules) {
-            if (excludeRule.matches(name, spanKind, attributes, parentLinks))
-            {
+            if (excludeRule.matches(name, spanKind, attributes, parentLinks)) {
                 for (SampleRule includeRule : includeRules) {
-                    if (includeRule.matches(name, spanKind, attributes, parentLinks))
-                    {
+                    if (includeRule.matches(name, spanKind, attributes, parentLinks)) {
                         return SamplingResult.recordAndSample();
                     }
                 }
