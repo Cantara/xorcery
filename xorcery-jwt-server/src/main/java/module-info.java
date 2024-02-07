@@ -34,4 +34,5 @@ open module xorcery.jwt.server {
     requires org.bouncycastle.provider;
     requires org.bouncycastle.pkix;
     requires xorcery.secrets;
+    requires xorcery.jaxrs.server;
 }

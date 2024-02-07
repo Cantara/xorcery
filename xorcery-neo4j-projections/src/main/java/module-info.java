@@ -25,7 +25,6 @@ open module xorcery.neo4j.projections {
     requires xorcery.service.api;
     requires xorcery.neo4j;
     requires xorcery.neo4j.shaded;
-    requires xorcery.jsonapi.server;
     requires xorcery.reactivestreams.api;
     requires xorcery.disruptor;
 

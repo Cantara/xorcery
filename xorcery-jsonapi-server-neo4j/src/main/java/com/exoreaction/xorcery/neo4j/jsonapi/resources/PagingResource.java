@@ -15,15 +15,15 @@
  */
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
+import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
 import com.exoreaction.xorcery.jsonapi.Links;
-import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
 import jakarta.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.uri.UriComponent;
 
 import java.util.function.Supplier;
 
-public interface PagingMixin
-    extends ResourceContext
+public interface PagingResource
+    extends ContextResource
 {
     // Pagination
     int DEFAULT_LIMIT = 24;

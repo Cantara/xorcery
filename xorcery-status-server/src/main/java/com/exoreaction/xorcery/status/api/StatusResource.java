@@ -16,11 +16,12 @@
 package com.exoreaction.xorcery.status.api;
 
 import com.exoreaction.xorcery.hyperschema.Link;
+import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
 import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonschema.JsonSchema;
-import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaMixin;
+import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaResource;
 import com.exoreaction.xorcery.status.StatusProviders;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -32,8 +33,8 @@ import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
 @Path("api/status")
 public class StatusResource
-        extends JsonApiResource
-        implements JsonSchemaMixin {
+        extends AbstractResource
+        implements JsonApiResource, JsonSchemaResource {
 
     private final StatusProviders statusProviders;
 

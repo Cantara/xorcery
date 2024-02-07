@@ -15,10 +15,10 @@
  */
 package com.exoreaction.xorcery.service.resources;
 
+import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
-import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.ws.rs.GET;
@@ -29,7 +29,7 @@ import java.security.Principal;
 
 @Path("api/subject")
 public class SubjectResource
-        extends JsonApiResource {
+        extends AbstractResource {
 
     @GET
     public ResourceDocument get() {

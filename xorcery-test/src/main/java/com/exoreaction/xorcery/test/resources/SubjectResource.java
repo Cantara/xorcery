@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.test.resources;
 
+import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
@@ -29,7 +30,8 @@ import java.security.Principal;
 
 @Path("api/subject")
 public class SubjectResource
-        extends JsonApiResource {
+        extends AbstractResource
+        implements JsonApiResource {
 
     @GET
     public ResourceDocument get() {

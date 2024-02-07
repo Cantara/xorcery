@@ -15,14 +15,14 @@
  */
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
-import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
+import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
 import com.exoreaction.xorcery.neo4j.client.GraphQuery;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.function.Consumer;
 
-public interface SortingMixin
-        extends ResourceContext {
+public interface SortingResource
+        extends ContextResource {
     default <T extends Enum<T>> Consumer<GraphQuery> sort(Class<T> enumType) {
         return query ->
         {

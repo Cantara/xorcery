@@ -15,14 +15,15 @@
  */
 package com.exoreaction.xorcery.jsonapi.server.resources;
 
+import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public interface IncludesMixin
-    extends ResourceContext
+public interface IncludesResource
+    extends ContextResource
 {
     default boolean shouldInclude( Enum<?> type )
     {

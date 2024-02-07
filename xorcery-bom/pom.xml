@@ -163,6 +163,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-jaxrs-server</artifactId>
+                <version>0.95.2-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jersey-client</artifactId>
                 <version>0.95.2-SNAPSHOT</version>
             </dependency>

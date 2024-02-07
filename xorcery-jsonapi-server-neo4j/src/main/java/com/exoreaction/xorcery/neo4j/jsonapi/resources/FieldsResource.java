@@ -15,15 +15,15 @@
  */
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
-import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
+import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
 import com.exoreaction.xorcery.neo4j.client.GraphQuery;
 
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public interface FieldsMixin
-    extends ResourceContext
+public interface FieldsResource
+    extends ContextResource
 {
     // Field selection
     default Predicate<String> getFieldSelection(String type )

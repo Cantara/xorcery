@@ -40,14 +40,8 @@ public record ProjectionSubscriberFactory(
                     if (exception != null && !(exception.getCause() instanceof NotFoundException)) {
                         LogManager.getLogger(getClass()).error("Error looking up existing projection stream revision", exception);
                     }
-
                     Configuration config = publisherConfiguration.map(cfg -> new Configuration(cfg.object().deepCopy())).orElseGet(Configuration::empty);
-
-                    if (position != null) {
-                        config.json().set("from", config.json().numberNode(position));
-//                        neo4jProjectionCommitPublisher.accept();
-                    }
-
+                    position.ifPresent(p -> config.json().set("from", config.json().numberNode(p)));
                     return config;
                 }).toCompletableFuture().join();
     }

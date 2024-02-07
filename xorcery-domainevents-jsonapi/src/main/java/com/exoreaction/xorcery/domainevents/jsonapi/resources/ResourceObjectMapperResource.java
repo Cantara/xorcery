@@ -20,8 +20,8 @@ import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
 import com.exoreaction.xorcery.domainevents.helpers.model.EntityModel;
 import com.exoreaction.xorcery.domainevents.helpers.model.Model;
 import com.exoreaction.xorcery.jsonapi.*;
-import com.exoreaction.xorcery.jsonapi.server.resources.IncludesMixin;
-import com.exoreaction.xorcery.jsonapi.server.resources.RelationshipsMixin;
+import com.exoreaction.xorcery.jsonapi.server.resources.IncludesResource;
+import com.exoreaction.xorcery.jsonapi.server.resources.RelationshipsResource;
 import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;
@@ -32,8 +32,8 @@ import java.util.function.Predicate;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.related;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
-public interface ResourceObjectMapperMixin
-    extends IncludesMixin, RelationshipsMixin
+public interface ResourceObjectMapperResource
+    extends IncludesResource, RelationshipsResource
 {
     default <T extends Model> ResourceObjectMapperBuilder<T> resourceObjectMapper(Function<T, ResourceObject.Builder> mapper, Included.Builder included)
     {

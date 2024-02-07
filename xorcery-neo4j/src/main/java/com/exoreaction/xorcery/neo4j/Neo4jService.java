@@ -16,12 +16,9 @@
 package com.exoreaction.xorcery.neo4j;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4j.spi.Neo4jProvider;
-import com.exoreaction.xorcery.server.api.ServiceResourceObject;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.util.Resources;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -69,8 +66,7 @@ public class Neo4jService
     private final LoggerContext loggerContext;
 
     @Inject
-    public Neo4jService(ServiceResourceObjects serviceResourceObjects,
-                        ServiceLocator serviceLocator,
+    public Neo4jService(ServiceLocator serviceLocator,
                         Configuration configuration,
                         LoggerContext loggerContext
     ) throws IOException {
@@ -177,11 +173,6 @@ public class Neo4jService
         this.managementService = managementService;
 
         logger.info("Neo4j started");
-
-        serviceResourceObjects.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), SERVICE_TYPE)
-                .version(getClass().getPackage().getImplementationVersion())
-                .api("neo4j", "api/neo4j")
-                .build());
     }
 
     private DatabaseManagementService createDatabaseManagementService(Path home, Path tmpConfigFile) {

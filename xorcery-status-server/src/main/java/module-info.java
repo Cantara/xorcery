@@ -27,4 +27,5 @@ open module xorcery.status.server {
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
     requires java.management;
+    requires xorcery.jaxrs.server;
 }

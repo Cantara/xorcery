@@ -23,6 +23,7 @@ open module xorcery.domainevents.jsonapi {
     requires xorcery.domainevents.publisher;
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;
+    requires xorcery.jaxrs.server;
 
     requires org.apache.logging.log4j;
     requires com.fasterxml.jackson.annotation;

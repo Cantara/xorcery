@@ -21,6 +21,7 @@ open module xorcery.jsonapi.server {
 
     requires transitive xorcery.jsonapi;
     requires xorcery.service.api;
+    requires xorcery.jaxrs.server;
 
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.api;

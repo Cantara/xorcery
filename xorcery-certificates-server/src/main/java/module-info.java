@@ -32,4 +32,5 @@ open module xorcery.certificates.server {
 
     requires org.bouncycastle.provider;
     requires org.bouncycastle.pkix;
+    requires xorcery.jaxrs.server;
 }

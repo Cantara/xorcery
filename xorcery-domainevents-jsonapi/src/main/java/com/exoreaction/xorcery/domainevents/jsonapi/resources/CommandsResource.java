@@ -41,8 +41,10 @@ import java.util.function.Predicate;
 
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
-public interface CommandsMixin
-        extends CommandsJsonSchemaMixin {
+public interface CommandsResource
+        extends CommandsJsonSchemaResource {
+
+    ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     default Consumer<Links.Builder> schemaLink() {
         return links -> {
@@ -113,7 +115,7 @@ public interface CommandsMixin
         Command command = context.commands().stream().filter(isCommandByName(rel))
                 .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new);
 
-        ObjectNode result = objectMapper().valueToTree(command);
+        ObjectNode result = objectMapper.valueToTree(command);
         result.remove("@class");
         JsonNode jsonId = result.remove("id");
         if (jsonId != null && jsonId.isTextual())
@@ -143,7 +145,6 @@ public interface CommandsMixin
         {
             Class<? extends Command> commandClass = c.getClass();
             try {
-                ObjectMapper objectMapper = objectMapper();
                 ObjectNode json = resourceObject.getAttributes().json();
                 json.set("@class", json.textNode(commandClass.getName()));
                 if (resourceObject.getId() != null)

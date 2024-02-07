@@ -15,15 +15,15 @@
  */
 package com.exoreaction.xorcery.jwt.server.api;
 
-import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsJsonSchemaMixin;
+import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsJsonSchemaResource;
+import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
 import com.exoreaction.xorcery.jsonapi.*;
-import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonapischema.ResourceObjectSchema;
 import com.exoreaction.xorcery.jsonschema.JsonSchema;
 import com.exoreaction.xorcery.jsonschema.Properties;
 import com.exoreaction.xorcery.jsonschema.Types;
-import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaMixin;
+import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaResource;
 import com.exoreaction.xorcery.jwt.server.JwtConfigurationLoginService;
 import com.exoreaction.xorcery.jwt.server.JwtServerConfiguration;
 import com.exoreaction.xorcery.jwt.server.JwtService;
@@ -39,8 +39,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.describedby;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
@@ -50,8 +48,8 @@ import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_
 @Path("api/login")
 @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
 public class JwtLoginResource
-        extends JsonApiResource
-        implements JsonSchemaMixin, CommandsJsonSchemaMixin {
+        extends AbstractResource
+        implements JsonSchemaResource, CommandsJsonSchemaResource {
 
     private final JwtService jwtService;
     private final LoginService loginService;

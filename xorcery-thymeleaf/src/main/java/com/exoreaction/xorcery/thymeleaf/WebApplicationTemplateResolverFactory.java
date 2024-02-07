@@ -5,7 +5,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.jvnet.hk2.annotations.Service;
-import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 import org.thymeleaf.templateresolver.WebApplicationTemplateResolver;
 import org.thymeleaf.web.servlet.JakartaServletWebApplication;

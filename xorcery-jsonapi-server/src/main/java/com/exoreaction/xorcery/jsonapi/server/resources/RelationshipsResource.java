@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jsonapi.server.resources;
 
+import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
 import com.exoreaction.xorcery.jsonapi.Links;
 import com.exoreaction.xorcery.jsonapi.Relationship;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
@@ -23,8 +24,9 @@ import jakarta.ws.rs.core.UriBuilder;
 
 import java.net.URI;
 
-public interface RelationshipsMixin
-        extends ResourceContext {
+public interface RelationshipsResource
+        extends ContextResource {
+
     default Relationship relationship(ResourceObject resource) {
         return new Relationship.Builder().resourceIdentifier(resource).build();
     }

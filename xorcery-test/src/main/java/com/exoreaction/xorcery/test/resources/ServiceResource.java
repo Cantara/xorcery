@@ -15,22 +15,19 @@
  */
 package com.exoreaction.xorcery.test.resources;
 
+import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.Links;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
-import javax.security.auth.Subject;
-import java.security.Principal;
-
 @Path("api/service")
 public class ServiceResource
-        extends JsonApiResource {
+        extends AbstractResource
+        implements JsonApiResource {
 
     @GET
     public ResourceDocument get() {

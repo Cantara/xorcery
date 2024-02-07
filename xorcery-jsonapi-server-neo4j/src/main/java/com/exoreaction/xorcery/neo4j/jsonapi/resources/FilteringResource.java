@@ -15,9 +15,9 @@
  */
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
-import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
-import com.exoreaction.xorcery.neo4j.client.GraphQuery;
+import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
 import com.exoreaction.xorcery.lang.Enums;
+import com.exoreaction.xorcery.neo4j.client.GraphQuery;
 import jakarta.ws.rs.core.MultivaluedMap;
 import org.apache.commons.lang3.StringUtils;
 
@@ -27,8 +27,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public interface FilteringMixin
-        extends ResourceContext {
+public interface FilteringResource
+        extends ContextResource {
     // Filters
     default Filters filters() {
         return new Filters(getUriInfo().getQueryParameters());

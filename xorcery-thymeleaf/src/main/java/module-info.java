@@ -19,6 +19,7 @@ open module xorcery.thymeleaf {
     exports com.exoreaction.xorcery.thymeleaf.resources;
 
     requires xorcery.configuration.api;
+    requires xorcery.jaxrs.server;
 
     requires transitive thymeleaf;
     requires org.eclipse.jetty.servlet;

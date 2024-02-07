@@ -15,17 +15,17 @@
  */
 package com.exoreaction.xorcery.neo4j.jsonapi.resources;
 
-import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsMixin;
-import com.exoreaction.xorcery.jsonapi.server.resources.IncludesMixin;
-import com.exoreaction.xorcery.jsonapi.server.resources.RelationshipsMixin;
-import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaMixin;
+import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsResource;
+import com.exoreaction.xorcery.jsonapi.server.resources.IncludesResource;
+import com.exoreaction.xorcery.jsonapi.server.resources.RelationshipsResource;
+import com.exoreaction.xorcery.jsonschema.server.resources.JsonSchemaResource;
 
 /**
  * Helper methods for JSON:API resource implementations backed by Neo4j
  */
 public interface JsonApiNeo4jResourceMixin
-    extends ModelsMixin, RelationshipsMixin, CommandsMixin,
-        FilteringMixin, FieldsMixin, IncludesMixin, SortingMixin, PagingMixin,
-        JsonSchemaMixin
+    extends ModelsResource, RelationshipsResource, CommandsResource,
+        FilteringResource, FieldsResource, IncludesResource, SortingResource, PagingResource,
+        JsonSchemaResource
 {
 }

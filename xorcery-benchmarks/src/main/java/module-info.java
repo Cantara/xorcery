@@ -17,20 +17,22 @@ open module xorcery.benchmarks {
     exports com.exoreaction.xorcery.benchmarks.reactivestreams;
     exports com.exoreaction.xorcery.benchmarks.reactivestreams.jmh_generated;
 
+    requires xorcery.configuration;
+    requires xorcery.configuration.api;
+    requires xorcery.core;
+    requires xorcery.service.api;
+    requires xorcery.jaxrs.server;
+    requires xorcery.jsonapi.client;
+    requires xorcery.jsonapi.jaxrs;
+    requires xorcery.keystores;
+    requires xorcery.metadata;
+    requires xorcery.reactivestreams.api;
+    requires xorcery.jsonapi.server;
+    requires xorcery.reactivestreams.server;
+
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
-    requires xorcery.configuration.api;
-    requires xorcery.service.api;
-    requires xorcery.jsonapi.client;
-    requires xorcery.keystores;
-    requires xorcery.jsonapi.jaxrs;
-    requires xorcery.configuration;
-    requires xorcery.core;
-    requires xorcery.metadata;
-    requires xorcery.reactivestreams.api;
     requires jmh.core;
-    requires xorcery.jsonapi.server;
     requires jdk.unsupported;
-    requires xorcery.reactivestreams.server;
 }

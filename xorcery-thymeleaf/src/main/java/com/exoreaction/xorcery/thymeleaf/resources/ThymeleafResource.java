@@ -15,16 +15,10 @@
  */
 package com.exoreaction.xorcery.thymeleaf.resources;
 
-import jakarta.inject.Inject;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
 import jakarta.ws.rs.OPTIONS;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
-import org.glassfish.hk2.api.ServiceLocator;
 import org.thymeleaf.ITemplateEngine;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.web.servlet.IServletWebApplication;
@@ -36,84 +30,35 @@ import java.util.Map;
 import static jakarta.ws.rs.core.MediaType.TEXT_HTML;
 
 @Produces(TEXT_HTML)
-public abstract class ThymeleafResource
-    implements ResourceContext
+public interface ThymeleafResource
+    extends ContextResource
 {
-
-    @Inject
-    private void bind(
-            ServiceLocator serviceLocator,
-            ITemplateEngine templateEngine,
-            ContainerRequestContext containerRequestContext,
-            HttpServletRequest httpServletRequest,
-            HttpServletResponse httpServletResponse,
-            ServletContext servletContext
-    )
+    default IServletWebApplication getWebApplication()
     {
-        this.serviceLocator = serviceLocator;
-        this.templateEngine = templateEngine;
-        this.containerRequestContext = containerRequestContext;
-        this.httpServletRequest = httpServletRequest;
-        this.httpServletResponse = httpServletResponse;
-        this.servletContext = servletContext;
+            return JakartaServletWebApplication.buildApplication(getHttpServletRequest().getServletContext());
     }
 
-    private ServiceLocator serviceLocator;
-    private ITemplateEngine templateEngine;
-    private ContainerRequestContext containerRequestContext;
-    private HttpServletRequest httpServletRequest;
-    private HttpServletResponse httpServletResponse;
-    private ServletContext servletContext;
-
-    private JakartaServletWebApplication webApplication;
-
-    public ServiceLocator getServiceLocator() {
-        return serviceLocator;
-    }
-
-    public ContainerRequestContext getContainerRequestContext() {
-        return containerRequestContext;
-    }
-
-    public HttpServletRequest getHttpServletRequest()
+    default IServletWebExchange getWebExchange()
     {
-        return httpServletRequest;
+        return ((JakartaServletWebApplication)getWebApplication()).buildExchange(getHttpServletRequest(), getHttpServletResponse());
     }
 
-    public HttpServletResponse getHttpServletResponse() {
-        return httpServletResponse;
-    }
-
-    public IServletWebApplication getWebApplication()
+    default WebContext newWebContext()
     {
-        if (webApplication == null)
-        {
-            webApplication = JakartaServletWebApplication.buildApplication(servletContext);
-        }
-        return webApplication;
+        return new WebContext(getWebExchange(), getHttpServletRequest().getLocale());
     }
 
-    public IServletWebExchange getWebExchange()
+    default WebContext newWebContext(Map<String, Object> variables)
     {
-        return ((JakartaServletWebApplication)getWebApplication()).buildExchange(httpServletRequest, httpServletResponse);
+        return new WebContext(getWebExchange(), getHttpServletRequest().getLocale(), variables);
     }
 
-    public WebContext newWebContext()
-    {
-        return new WebContext(getWebExchange(), httpServletRequest.getLocale());
-    }
-
-    public WebContext newWebContext(Map<String, Object> variables)
-    {
-        return new WebContext(getWebExchange(), httpServletRequest.getLocale(), variables);
-    }
-
-    public ITemplateEngine getTemplateEngine() {
-        return templateEngine;
+    default ITemplateEngine getTemplateEngine() {
+        return getServiceLocator().getService(ITemplateEngine.class);
     }
 
     @OPTIONS
-    public Response options() {
+    default Response options() {
         return Response.ok()
                 .header("Access-Control-Allow-Origin", "*")
                 .header("Access-Control-Allow-Methods", "POST, GET, PATCH, OPTIONS")

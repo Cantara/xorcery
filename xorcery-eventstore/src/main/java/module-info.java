@@ -24,6 +24,7 @@ open module xorcery.eventstore {
     requires xorcery.configuration.api;
     requires xorcery.service.api;
     requires xorcery.jsonapi.server;
+    requires xorcery.jaxrs.server;
     requires xorcery.util;
 
     requires jakarta.inject;

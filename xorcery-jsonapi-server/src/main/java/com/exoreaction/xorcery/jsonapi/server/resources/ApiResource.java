@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.jsonapi.server.resources;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
 import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
@@ -24,23 +25,20 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
-@Path( "/api" )
+@Path("/api")
 public class ApiResource
-        extends JsonApiResource
-{
+        extends AbstractResource {
     private ServiceResourceObjects serviceResourceObjects;
     private Configuration configuration;
 
     @Inject
-    public ApiResource(ServiceResourceObjects serviceResourceObjects, Configuration configuration)
-    {
+    public ApiResource(ServiceResourceObjects serviceResourceObjects, Configuration configuration) {
         this.serviceResourceObjects = serviceResourceObjects;
         this.configuration = configuration;
     }
 
     @GET
-    public ResourceDocument get()
-    {
+    public ResourceDocument get() {
         InstanceConfiguration instanceConfiguration = new InstanceConfiguration(configuration.getConfiguration("instance"));
 
         ResourceObjects.Builder builder = new ResourceObjects.Builder();

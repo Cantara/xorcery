@@ -18,11 +18,9 @@ package com.exoreaction.xorcery.neo4j.client;
 import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.function.FallbackFunction;
 import com.exoreaction.xorcery.lang.Enums;
-import jakarta.ws.rs.NotFoundException;
 import org.neo4j.graphdb.Result;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicLong;
@@ -220,8 +218,8 @@ public class GraphQuery
         });
     }
 
-    public <T> CompletionStage<T> first(Function<RowModel, T> mapper) {
-        return applyQuery.apply(this).thenCompose(gr ->
+    public <T> CompletionStage<Optional<T>> first(Function<RowModel, T> mapper) {
+        return applyQuery.apply(this).thenApply(gr ->
         {
             List<T> results = new ArrayList<>();
 
@@ -231,8 +229,7 @@ public class GraphQuery
                         results.add(mapper.apply(new RowModel(row)));
                         return false;
                     });
-                    return results.stream().findFirst().map(CompletableFuture::completedStage)
-                            .orElseGet(()-> CompletableFuture.failedStage(new NotFoundException()));
+                    return results.stream().findFirst();
                 }
             } catch (Exception e) {
                 throw new CompletionException(e);

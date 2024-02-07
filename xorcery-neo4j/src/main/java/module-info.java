@@ -24,8 +24,6 @@ open module xorcery.neo4j {
     exports com.exoreaction.xorcery.neo4j.spi;
 
     requires xorcery.configuration.api;
-    requires xorcery.service.api;
-    requires xorcery.jsonapi.server;
 
     requires xorcery.neo4j.shaded;
     requires jdk.unsupported;

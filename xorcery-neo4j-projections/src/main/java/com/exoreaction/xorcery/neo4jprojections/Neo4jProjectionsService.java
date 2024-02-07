@@ -76,11 +76,11 @@ public class Neo4jProjectionsService {
                 .results(Projection.version, Projection.revision)
                 .first(row -> row.toModel(ProjectionModel::new, Projection.version, Projection.revision)).handle((model, exception) ->
                 {
-                    if (exception != null && !(exception.getCause() instanceof NotFoundException)) {
+                    if (exception != null) {
                         logger.error("Error looking up existing projection details", exception);
                         return Optional.<ProjectionModel>empty();
                     }
-                    return Optional.ofNullable(model);
+                    return model;
                 }).toCompletableFuture().join();
     }
 

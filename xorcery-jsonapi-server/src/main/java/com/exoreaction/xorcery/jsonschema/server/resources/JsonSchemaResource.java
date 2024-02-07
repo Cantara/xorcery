@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.jsonschema.server.resources;
 
 import com.exoreaction.xorcery.hyperschema.Link;
 import com.exoreaction.xorcery.hyperschema.Links;
-import com.exoreaction.xorcery.jsonapi.server.resources.ResourceContext;
+import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonschema.JsonSchema;
 import com.exoreaction.xorcery.jsonschema.Properties;
@@ -29,6 +29,7 @@ import com.exoreaction.xorcery.lang.Enums;
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitable;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
@@ -44,8 +45,10 @@ import static com.exoreaction.xorcery.jsonapi.MediaTypes.APPLICATION_JSON_API;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.describedby;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
-public interface JsonSchemaMixin
-        extends ResourceContext {
+public interface JsonSchemaResource
+        extends ContextResource {
+
+    ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     default Link selfLink() {
         return Link.Builder.link("Self", "Self link", self, APPLICATION_JSON_API);
@@ -127,7 +130,7 @@ public interface JsonSchemaMixin
         {
             final List<BeanProperty> commandProperties = new ArrayList<>();
             try {
-                objectMapper().acceptJsonFormatVisitor(parameterClass, new JsonFormatVisitorWrapper.Base() {
+                objectMapper.acceptJsonFormatVisitor(parameterClass, new JsonFormatVisitorWrapper.Base() {
                     @Override
                     public JsonObjectFormatVisitor expectObjectFormat(JavaType type) throws JsonMappingException {
                         return new JsonObjectFormatVisitor.Base() {
