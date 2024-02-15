@@ -1,0 +1,4 @@
+$defs.instance.properties.environment.enum:
+  - development
+  - qa
+  - production

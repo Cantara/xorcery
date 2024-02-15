@@ -1,0 +1,12 @@
+# $schema: ./schema.json
+instance:
+  id : "xyz"
+  environment:
+  ip: ""
+  host: "asdsda"
+
+defaults:
+  connectTimeout: xxx5s
+
+hk2:
+  threadCount: 0

@@ -83,6 +83,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
+                <version>0.96.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration-api</artifactId>
                 <version>0.96.1-SNAPSHOT</version>
             </dependency>

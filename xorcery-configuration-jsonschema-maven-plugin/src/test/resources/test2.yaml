@@ -1,0 +1,3 @@
+# $schema: ./test.json
+instance:
+  environment: production
