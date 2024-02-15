@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jsonschema;
 
+import com.exoreaction.xorcery.builders.With;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,22 +24,21 @@ import java.util.Iterator;
 import java.util.Map;
 
 public record Vocabularies(ObjectNode json)
-    implements Iterable<Map.Entry<String, Boolean>>
-{
+        implements Iterable<Map.Entry<String, Boolean>> {
 
-    public record Builder(ObjectNode builder) {
+    public record Builder(ObjectNode builder)
+            implements With<JsonSchema.Builder> {
+
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        Builder vocabulary(String url, boolean value)
-        {
+        Builder vocabulary(String url, boolean value) {
             builder.set(url, builder.booleanNode(value));
             return this;
         }
 
-        public Vocabularies build()
-        {
+        public Vocabularies build() {
             return new Vocabularies(builder);
         }
     }

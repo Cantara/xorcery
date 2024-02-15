@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jsonschema;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.lang.Strings;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -32,12 +33,13 @@ import java.util.Optional;
 public record JsonSchema(ObjectNode json)
         implements JsonElement {
     public static final String DRAFT_7 = "http://json-schema.org/draft-07/schema#";
+    public static final String SCHEMA_2020_12 = "https://json-schema.org/draft/2020-12/schema";
     public static final String HYPER_SCHEMA_DRAFT_7 = "http://json-schema.org/draft-07/hyper-schema#";
 
-    public record Builder(ObjectNode builder) {
+    public record Builder(ObjectNode builder)
+            implements With<Builder> {
 
-        public Builder()
-        {
+        public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
 
@@ -139,7 +141,7 @@ public record JsonSchema(ObjectNode json)
         }
 
         public Builder definitions(Definitions value) {
-            builder.set("definitions", value.json());
+            builder.set("$defs", value.json());
             return this;
         }
 
@@ -156,6 +158,7 @@ public record JsonSchema(ObjectNode json)
     public Optional<String> getId() {
         return getString("$id");
     }
+
     public Optional<String> getRef() {
         return getString("$ref");
     }
@@ -164,8 +167,7 @@ public record JsonSchema(ObjectNode json)
         return getString("$schema");
     }
 
-    public Optional<Vocabularies> getVocabularies()
-    {
+    public Optional<Vocabularies> getVocabularies() {
         return Optional.ofNullable(json.get("$vocabulary")).map(ObjectNode.class::cast).map(Vocabularies::new);
     }
 

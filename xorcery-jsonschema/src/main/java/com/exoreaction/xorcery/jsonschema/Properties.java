@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jsonschema;
 
+import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -29,7 +30,8 @@ import java.util.function.Function;
  */
 public record Properties(ObjectNode json)
         implements JsonElement {
-    public record Builder(ObjectNode builder) {
+    public record Builder(ObjectNode builder)
+            implements With<JsonSchema.Builder> {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
         }
