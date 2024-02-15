@@ -16,9 +16,7 @@
 package com.exoreaction.xorcery.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.MissingNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.*;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -91,13 +89,11 @@ public class JsonMerger
             } else if (currentValue instanceof ArrayNode currentArray) {
                 addingarray.forEach(addingValue ->
                 {
-                    if (addingValue instanceof ObjectNode addingObject)
-                    {
+                    if (addingValue instanceof ObjectNode addingObject) {
                         // Check if object with this identity exists in array
                         boolean updatedObject = false;
                         for (JsonNode jsonNode : currentArray) {
-                            if (jsonNode instanceof ObjectNode currentArrayObject)
-                            {
+                            if (jsonNode instanceof ObjectNode currentArrayObject) {
                                 // Merge it
                                 Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
                                 Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
@@ -108,15 +104,19 @@ public class JsonMerger
                                 }
                             }
                         }
-                        if (!updatedObject)
-                        {
+                        if (!updatedObject) {
                             currentArray.add(addingValue);
                         }
-                    } else
-                    {
+                    } else {
                         currentArray.add(addingValue);
                     }
                 });
+            } else if (currentValue instanceof TextNode ||
+                    currentValue instanceof NumericNode ||
+                    currentValue instanceof BooleanNode) {
+                ArrayNode arrayCopy = addingarray.deepCopy();
+                arrayCopy.add(currentValue);
+                currentObject.set(key, arrayCopy);
             }
         } else {
             currentObject.set(key, value);
