@@ -227,7 +227,7 @@ public class SubscribeReactiveStream
                     .startSpan();
             try (Scope scope = connectSpan.makeCurrent()) {
                 ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
-                clientUpgradeRequest.addExtensions("permessage-deflate");
+                subscriberConfiguration.getExtensions().forEach(clientUpgradeRequest::addExtensions);
                 textMapPropagator.inject(Context.current(), clientUpgradeRequest, jettySetter);
                 webSocketClient.connect(this, effectivePublisherWebsocketUri, clientUpgradeRequest)
                         .thenAccept(this::connected)
