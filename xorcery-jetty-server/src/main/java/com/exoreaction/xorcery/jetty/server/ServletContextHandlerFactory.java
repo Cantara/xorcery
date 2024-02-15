@@ -24,6 +24,7 @@ import jakarta.inject.Singleton;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
@@ -50,6 +51,11 @@ public class ServletContextHandlerFactory
         JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
 
         Handler handler = servletContextHandler;
+
+        GzipHandler gzipHandler = new GzipHandler();
+        gzipHandler.setHandler(handler);
+        handler = gzipHandler;
+
         ConstraintSecurityHandler securityHandler = securityHandlerProvider.get();
         if (securityHandler != null) {
             securityHandler.setHandler(handler);
@@ -57,8 +63,8 @@ public class ServletContextHandlerFactory
         }
 
         // Log4j2 ThreadContext handler
-        Log4j2TheadContextHandler log4j2TheadContextHandler = new Log4j2TheadContextHandler(configuration);
-        log4j2TheadContextHandler.setHandler(handler);
+        Log4j2ThreadContextHandler log4J2ThreadContextHandler = new Log4j2ThreadContextHandler(configuration);
+        log4J2ThreadContextHandler.setHandler(handler);
 
         server.setHandler(handler);
     }

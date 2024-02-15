@@ -29,12 +29,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Log4j2TheadContextHandler
+public class Log4j2ThreadContextHandler
     extends HandlerWrapper
 {
     private final Map<String, String> context;
 
-    public Log4j2TheadContextHandler(Configuration configuration) {
+    public Log4j2ThreadContextHandler(Configuration configuration) {
         context = new HashMap<>();
         InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
         ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
