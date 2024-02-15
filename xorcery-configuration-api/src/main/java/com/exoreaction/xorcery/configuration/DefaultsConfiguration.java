@@ -25,7 +25,16 @@ public record DefaultsConfiguration(Configuration configuration) {
         return configuration.getBoolean("enabled").orElse(false);
     }
 
+    public Duration getConnectTimeout() {
+        return Duration.parse("PT" + configuration.getString("idleTimeout").orElse("-1s"));
+    }
+
     public Duration getIdleTimeout() {
         return Duration.parse("PT" + configuration.getString("idleTimeout").orElse("-1s"));
+    }
+
+    public boolean isDevelopment()
+    {
+        return configuration.getBoolean("development").orElse(false);
     }
 }
