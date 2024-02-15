@@ -1,0 +1,33 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-dns-update:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-dns-update configuration JSON Schema",
+  "properties" : {
+    "dns" : {
+      "$ref" : "#/$defs/dns"
+    }
+  },
+  "$defs" : {
+    "dns" : {
+      "type" : "object",
+      "properties" : {
+        "dyndns" : {
+          "type" : "object",
+          "properties" : {
+            "timeout" : {
+              "type" : "string",
+              "default" : "30s",
+              "description" : "Default: 30s"
+            },
+            "ttl" : {
+              "type" : "string",
+              "default" : "60s",
+              "description" : "Default: 60s"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-benchmarks:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-benchmarks configuration JSON Schema",
+  "properties" : {
+    "defaults" : {
+      "$ref" : "#/$defs/defaults"
+    },
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
+    }
+  },
+  "$defs" : {
+    "defaults" : {
+      "type" : "object",
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        }
+      }
+    },
+    "log4j2" : {
+      "type" : "object",
+      "properties" : {
+        "Configuration" : {
+          "type" : "object",
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "Xorcery benchmarks",
+              "description" : "Default: Xorcery benchmarks"
+            },
+            "status" : {
+              "type" : "string",
+              "default" : "warn",
+              "description" : "Default: warn"
+            },
+            "thresholdFilter" : {
+              "type" : "object",
+              "properties" : {
+                "level" : {
+                  "type" : "string",
+                  "default" : "trace",
+                  "description" : "Default: trace"
+                }
+              }
+            },
+            "appenders" : {
+              "type" : "object",
+              "properties" : {
+                "Console" : {
+                  "type" : "object",
+                  "properties" : {
+                    "name" : {
+                      "type" : "string",
+                      "default" : "STDOUT",
+                      "description" : "Default: STDOUT"
+                    },
+                    "target" : {
+                      "type" : "string",
+                      "default" : "SYSTEM_OUT",
+                      "description" : "Default: SYSTEM_OUT"
+                    },
+                    "PatternLayout" : {
+                      "type" : "object",
+                      "properties" : {
+                        "Pattern" : {
+                          "type" : "string",
+                          "default" : "%d [%t] %-5level %marker %c{1.}: %msg%n%throwable",
+                          "description" : "Default: %d [%t] %-5level %marker %c{1.}: %msg%n%throwable"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "Loggers" : {
+              "type" : "object",
+              "properties" : {
+                "Root" : {
+                  "type" : "object",
+                  "properties" : {
+                    "level" : {
+                      "type" : "string",
+                      "default" : "info",
+                      "description" : "Default: info"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

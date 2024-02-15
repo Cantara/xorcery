@@ -1,0 +1,73 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-jwt-server:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-jwt-server configuration JSON Schema",
+  "properties" : {
+    "jwt" : {
+      "$ref" : "#/$defs/jwt"
+    },
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    }
+  },
+  "$defs" : {
+    "jwt" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "token" : {
+              "type" : "object",
+              "properties" : {
+                "duration" : {
+                  "type" : "string",
+                  "default" : "P7D",
+                  "description" : "Default: P7D"
+                }
+              }
+            },
+            "cookie" : {
+              "type" : "object",
+              "properties" : {
+                "duration" : {
+                  "type" : "string",
+                  "default" : "P7D",
+                  "description" : "Default: P7D"
+                },
+                "name" : {
+                  "type" : "string",
+                  "default" : "token",
+                  "description" : "Default: token"
+                },
+                "path" : {
+                  "type" : "string",
+                  "default" : "/",
+                  "description" : "Default: /"
+                }
+              }
+            }
+          }
+        },
+        "configuration" : {
+          "type" : "object",
+          "properties" : { }
+        },
+        "users" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    },
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-health-registry:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-health-registry configuration JSON Schema",
+  "properties" : {
+    "health" : {
+      "$ref" : "#/$defs/health"
+    }
+  },
+  "$defs" : {
+    "health" : {
+      "type" : "object",
+      "properties" : {
+        "updater" : {
+          "type" : "object",
+          "properties" : {
+            "interval" : {
+              "type" : "string",
+              "default" : "1S",
+              "description" : "Default: 1S"
+            }
+          }
+        }
+      }
+    }
+  }
+}

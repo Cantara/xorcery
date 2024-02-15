@@ -1,0 +1,41 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-dns-client:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-dns-client configuration JSON Schema",
+  "properties" : {
+    "dns" : {
+      "$ref" : "#/$defs/dns"
+    }
+  },
+  "$defs" : {
+    "dns" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "hosts" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "timeout" : {
+              "type" : "string",
+              "default" : "10s",
+              "description" : "Default: 10s"
+            },
+            "forceTcp" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "discovery" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    }
+  }
+}

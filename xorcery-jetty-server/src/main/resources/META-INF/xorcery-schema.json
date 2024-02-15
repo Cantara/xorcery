@@ -1,0 +1,155 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-jetty-server:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-jetty-server configuration JSON Schema",
+  "properties" : {
+    "jetty" : {
+      "$ref" : "#/$defs/jetty"
+    }
+  },
+  "$defs" : {
+    "jetty" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "scheme" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}"
+            },
+            "port" : {
+              "type" : [ "number", "string" ],
+              "default" : "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}"
+            },
+            "uri" : {
+              "type" : "string",
+              "default" : "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/",
+              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/"
+            },
+            "minThreads" : {
+              "type" : [ "number", "string" ],
+              "default" : 10,
+              "description" : "Default: 10"
+            },
+            "maxThreads" : {
+              "type" : [ "number", "string" ],
+              "default" : 150,
+              "description" : "Default: 150"
+            },
+            "outputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 32768,
+              "description" : "Default: 32768"
+            },
+            "requestHeaderSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 16384,
+              "description" : "Default: 16384"
+            },
+            "http" : {
+              "type" : "object",
+              "properties" : {
+                "port" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 80,
+                  "description" : "Default: 80"
+                }
+              }
+            },
+            "http2" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "ssl" : {
+              "type" : "object",
+              "properties" : {
+                "port" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 443,
+                  "description" : "Default: 443"
+                },
+                "trustAll" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "needClientAuth" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "wantClientAuth" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "sniRequired" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "sniHostCheck" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "alias" : {
+                  "type" : "string",
+                  "default" : "self",
+                  "description" : "Default: self"
+                }
+              }
+            },
+            "srv" : {
+              "type" : "object",
+              "properties" : {
+                "priority" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 2,
+                  "description" : "Default: 2"
+                },
+                "weight" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 100,
+                  "description" : "Default: 100"
+                }
+              }
+            },
+            "security" : {
+              "type" : "object",
+              "properties" : {
+                "method" : {
+                  "type" : "string",
+                  "default" : "jwt",
+                  "description" : "Default: jwt"
+                },
+                "certificate" : {
+                  "type" : "object",
+                  "properties" : { }
+                },
+                "jwt" : {
+                  "type" : "object",
+                  "properties" : {
+                    "issuers" : {
+                      "type" : "object",
+                      "properties" : {
+                        "default" : {
+                          "type" : "object",
+                          "properties" : { }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

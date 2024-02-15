@@ -1,0 +1,61 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-keystores:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-keystores configuration JSON Schema",
+  "properties" : {
+    "keystores" : {
+      "$ref" : "#/$defs/keystores"
+    },
+    "secrets" : {
+      "$ref" : "#/$defs/secrets"
+    }
+  },
+  "$defs" : {
+    "keystores" : {
+      "type" : "object",
+      "properties" : {
+        "defaultPassword" : {
+          "type" : "string",
+          "default" : "secret:password",
+          "description" : "Default: secret:password"
+        },
+        "secrets" : {
+          "type" : "object",
+          "properties" : {
+            "template" : {
+              "type" : "string",
+              "default" : "META-INF/secrets.p12",
+              "description" : "Default: META-INF/secrets.p12"
+            },
+            "path" : {
+              "type" : "string",
+              "default" : "{{ instance.home }}/secrets.p12",
+              "description" : "Default: {{ instance.home }}/secrets.p12"
+            },
+            "password" : {
+              "type" : "string",
+              "default" : "{{ keystores.defaultPassword }}",
+              "description" : "Default: {{ keystores.defaultPassword }}"
+            }
+          }
+        }
+      }
+    },
+    "secrets" : {
+      "type" : "object",
+      "properties" : {
+        "keystore" : {
+          "type" : "object",
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "secrets",
+              "description" : "Default: secrets"
+            }
+          }
+        }
+      }
+    }
+  }
+}

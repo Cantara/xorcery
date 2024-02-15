@@ -1,0 +1,53 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-reactivestreams-client:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-reactivestreams-client configuration JSON Schema",
+  "properties" : {
+    "reactivestreams" : {
+      "$ref" : "#/$defs/reactivestreams"
+    }
+  },
+  "$defs" : {
+    "reactivestreams" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "autoFragment" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "maxTextMessageSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1048576,
+              "description" : "Default: 1048576"
+            },
+            "maxBinaryMessageSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1048576,
+              "description" : "Default: 1048576"
+            },
+            "maxFrameSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 65536,
+              "description" : "Default: 65536"
+            },
+            "inputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            },
+            "outputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-reactivestreams-server:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-reactivestreams-server configuration JSON Schema",
+  "properties" : {
+    "reactivestreams" : {
+      "$ref" : "#/$defs/reactivestreams"
+    }
+  },
+  "$defs" : {
+    "reactivestreams" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "scheme" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}"
+            },
+            "uri" : {
+              "type" : "string",
+              "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}",
+              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}"
+            },
+            "maxTextMessageSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1048576,
+              "description" : "Default: 1048576"
+            }
+          }
+        }
+      }
+    }
+  }
+}

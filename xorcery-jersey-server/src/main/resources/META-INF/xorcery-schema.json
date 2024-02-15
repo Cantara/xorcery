@@ -1,0 +1,53 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-jersey-server:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-jersey-server configuration JSON Schema",
+  "properties" : {
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    }
+  },
+  "$defs" : {
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "mediaTypes" : {
+              "type" : "object",
+              "properties" : {
+                "html" : {
+                  "type" : "string",
+                  "default" : "text/html",
+                  "description" : "Default: text/html"
+                },
+                "txt" : {
+                  "type" : "string",
+                  "default" : "text/plain",
+                  "description" : "Default: text/plain"
+                },
+                "json" : {
+                  "type" : "string",
+                  "default" : "application/json",
+                  "description" : "Default: application/json"
+                },
+                "yaml" : {
+                  "type" : "string",
+                  "default" : "application/yaml",
+                  "description" : "Default: application/yaml"
+                },
+                "schema" : {
+                  "type" : "string",
+                  "default" : "application/schema+json",
+                  "description" : "Default: application/schema+json"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

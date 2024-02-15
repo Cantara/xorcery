@@ -1,0 +1,129 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-certificates:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-certificates configuration JSON Schema",
+  "properties" : {
+    "certificates" : {
+      "$ref" : "#/$defs/certificates"
+    },
+    "keystores" : {
+      "$ref" : "#/$defs/keystores"
+    },
+    "jetty" : {
+      "$ref" : "#/$defs/jetty"
+    }
+  },
+  "$defs" : {
+    "certificates" : {
+      "type" : "object",
+      "properties" : {
+        "keystore" : {
+          "type" : "string",
+          "default" : "ssl",
+          "description" : "Default: ssl"
+        },
+        "renewOnStartup" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        },
+        "alias" : {
+          "type" : "string",
+          "default" : "{{ server.ssl.alias | client.ssl.alias | \"self\"}}",
+          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}}"
+        },
+        "subject" : {
+          "type" : "string",
+          "default" : "{{ instance.fqdn | \"server\"}}",
+          "description" : "Default: {{ instance.fqdn | \"server\"}}"
+        }
+      }
+    },
+    "keystores" : {
+      "type" : "object",
+      "properties" : {
+        "ssl" : {
+          "type" : "object",
+          "properties" : {
+            "template" : {
+              "type" : "string",
+              "default" : "META-INF/ssl.p12",
+              "description" : "Default: META-INF/ssl.p12"
+            },
+            "path" : {
+              "type" : "string",
+              "default" : "{{ instance.home }}/ssl.p12",
+              "description" : "Default: {{ instance.home }}/ssl.p12"
+            }
+          }
+        },
+        "truststore" : {
+          "type" : "object",
+          "properties" : {
+            "template" : {
+              "type" : "string",
+              "default" : "META-INF/truststore.p12",
+              "description" : "Default: META-INF/truststore.p12"
+            },
+            "path" : {
+              "type" : "string",
+              "default" : "{{ instance.home }}/truststore.p12",
+              "description" : "Default: {{ instance.home }}/truststore.p12"
+            },
+            "addRootCa" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        }
+      }
+    },
+    "jetty" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "ssl" : {
+              "type" : "object",
+              "properties" : {
+                "keystore" : {
+                  "type" : "string",
+                  "default" : "ssl",
+                  "description" : "Default: ssl"
+                },
+                "truststore" : {
+                  "type" : "string",
+                  "default" : "truststore",
+                  "description" : "Default: truststore"
+                }
+              }
+            }
+          }
+        },
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "ssl" : {
+              "type" : "object",
+              "properties" : {
+                "keystore" : {
+                  "type" : "string",
+                  "default" : "ssl",
+                  "description" : "Default: ssl"
+                },
+                "truststore" : {
+                  "type" : "string",
+                  "default" : "truststore",
+                  "description" : "Default: truststore"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

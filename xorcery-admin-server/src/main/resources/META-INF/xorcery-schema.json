@@ -1,0 +1,24 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-admin-server:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-admin-server configuration JSON Schema",
+  "properties" : {
+    "adminservlet" : {
+      "$ref" : "#/$defs/adminservlet"
+    },
+    "serveradmin" : {
+      "$ref" : "#/$defs/serveradmin"
+    }
+  },
+  "$defs" : {
+    "adminservlet" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "serveradmin" : {
+      "type" : "object",
+      "properties" : { }
+    }
+  }
+}

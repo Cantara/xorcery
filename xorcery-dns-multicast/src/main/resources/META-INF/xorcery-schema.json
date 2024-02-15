@@ -1,0 +1,31 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-dns-multicast:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-dns-multicast configuration JSON Schema",
+  "properties" : {
+    "dns" : {
+      "$ref" : "#/$defs/dns"
+    }
+  },
+  "$defs" : {
+    "dns" : {
+      "type" : "object",
+      "properties" : {
+        "multicast" : {
+          "type" : "object",
+          "properties" : {
+            "discovery" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "announce" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    }
+  }
+}

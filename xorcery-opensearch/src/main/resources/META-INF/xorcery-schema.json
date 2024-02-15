@@ -1,0 +1,36 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-opensearch:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-opensearch configuration JSON Schema",
+  "properties" : {
+    "opensearch" : {
+      "$ref" : "#/$defs/opensearch"
+    }
+  },
+  "$defs" : {
+    "opensearch" : {
+      "type" : "object",
+      "properties" : {
+        "uri" : {
+          "type" : "string",
+          "default" : "http://localhost:9200",
+          "description" : "Default: http://localhost:9200"
+        },
+        "componentTemplates" : {
+          "type" : "object",
+          "properties" : { }
+        },
+        "indexTemplates" : {
+          "type" : "object",
+          "properties" : { }
+        },
+        "deleteOnExit" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-jetty-client:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-jetty-client configuration JSON Schema",
+  "properties" : {
+    "jetty" : {
+      "$ref" : "#/$defs/jetty"
+    }
+  },
+  "$defs" : {
+    "jetty" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "connectTimeout" : {
+              "type" : "string",
+              "default" : "5s",
+              "description" : "Default: 5s"
+            },
+            "http2" : {
+              "type" : "object",
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                }
+              }
+            },
+            "ssl" : {
+              "type" : "object",
+              "properties" : {
+                "alias" : {
+                  "type" : "string",
+                  "default" : "self",
+                  "description" : "Default: self"
+                },
+                "endpointIdentificationAlgorithm" : {
+                  "type" : "string",
+                  "default" : "HTTPS",
+                  "description" : "Default: HTTPS"
+                },
+                "trustAll" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

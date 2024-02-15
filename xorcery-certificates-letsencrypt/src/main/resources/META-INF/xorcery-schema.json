@@ -1,0 +1,63 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-certificates-letsencrypt:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-certificates-letsencrypt configuration JSON Schema",
+  "properties" : {
+    "letsencrypt" : {
+      "$ref" : "#/$defs/letsencrypt"
+    },
+    "keystores" : {
+      "$ref" : "#/$defs/keystores"
+    },
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    }
+  },
+  "$defs" : {
+    "letsencrypt" : {
+      "type" : "object",
+      "properties" : {
+        "url" : {
+          "type" : "string",
+          "default" : "acme://letsencrypt.org",
+          "description" : "Default: acme://letsencrypt.org"
+        },
+        "keystore" : {
+          "type" : "string",
+          "default" : "letsencrypt",
+          "description" : "Default: letsencrypt"
+        }
+      }
+    },
+    "keystores" : {
+      "type" : "object",
+      "properties" : {
+        "letsencrypt" : {
+          "type" : "object",
+          "properties" : {
+            "template" : {
+              "type" : "string",
+              "default" : "META-INF/letsencrypt.p12",
+              "description" : "Default: META-INF/letsencrypt.p12"
+            },
+            "path" : {
+              "type" : "string",
+              "default" : "{{ instance.home }}/letsencrypt.p12",
+              "description" : "Default: {{ instance.home }}/letsencrypt.p12"
+            }
+          }
+        }
+      }
+    },
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-opentelemetry-jvm:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-opentelemetry-jvm configuration JSON Schema",
+  "properties" : {
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    }
+  },
+  "$defs" : {
+    "opentelemetry" : {
+      "type" : "object",
+      "properties" : {
+        "instrumentations" : {
+          "type" : "object",
+          "properties" : {
+            "jvm" : {
+              "type" : "object",
+              "properties" : {
+                "attributes" : {
+                  "type" : "object",
+                  "properties" : {
+                    "jvm.memory.used" : {
+                      "type" : "string",
+                      "default" : "jvm.memory.used",
+                      "description" : "Default: jvm.memory.used"
+                    },
+                    "jvm.memory.committed" : {
+                      "type" : "string",
+                      "default" : "jvm.memory.committed",
+                      "description" : "Default: jvm.memory.committed"
+                    },
+                    "jvm.memory.limit" : {
+                      "type" : "string",
+                      "default" : "jvm.memory.limit",
+                      "description" : "Default: jvm.memory.limit"
+                    },
+                    "jvm.memory.used_after_last_gc" : {
+                      "type" : "string",
+                      "default" : "jvm.memory.used_after_last_gc",
+                      "description" : "Default: jvm.memory.used_after_last_gc"
+                    },
+                    "jvm.gc.duration" : {
+                      "type" : "string",
+                      "default" : "jvm.gc.duration",
+                      "description" : "Default: jvm.gc.duration"
+                    },
+                    "jvm.thread.count" : {
+                      "type" : "string",
+                      "default" : "jvm.thread.count",
+                      "description" : "Default: jvm.thread.count"
+                    },
+                    "jvm.cpu.time" : {
+                      "type" : "string",
+                      "default" : "jvm.cpu.time",
+                      "description" : "Default: jvm.cpu.time"
+                    },
+                    "jvm.cpu.count" : {
+                      "type" : "string",
+                      "default" : "jvm.cpu.count",
+                      "description" : "Default: jvm.cpu.count"
+                    },
+                    "jvm.cpu.recent_utilization" : {
+                      "type" : "string",
+                      "default" : "jvm.cpu.recent_utilization",
+                      "description" : "Default: jvm.cpu.recent_utilization"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

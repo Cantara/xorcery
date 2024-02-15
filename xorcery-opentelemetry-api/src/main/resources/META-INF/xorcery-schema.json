@@ -1,0 +1,28 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-opentelemetry-api:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-opentelemetry-api configuration JSON Schema",
+  "properties" : {
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    }
+  },
+  "$defs" : {
+    "opentelemetry" : {
+      "type" : "object",
+      "properties" : {
+        "global" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ opentelemetry.enabled ? false | true }}",
+              "description" : "Default: false"
+            }
+          }
+        }
+      }
+    }
+  }
+}

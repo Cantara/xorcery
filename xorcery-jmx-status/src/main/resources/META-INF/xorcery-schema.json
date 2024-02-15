@@ -1,0 +1,22 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-jmx-status:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-jmx-status configuration JSON Schema",
+  "properties" : {
+    "jmx" : {
+      "$ref" : "#/$defs/jmx"
+    }
+  },
+  "$defs" : {
+    "jmx" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

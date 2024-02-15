@@ -1,0 +1,28 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-reactivestreams-persistentsubscriber:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-reactivestreams-persistentsubscriber configuration JSON Schema",
+  "properties" : {
+    "persistentsubscribers" : {
+      "$ref" : "#/$defs/persistentsubscribers"
+    }
+  },
+  "$defs" : {
+    "persistentsubscribers" : {
+      "type" : "object",
+      "properties" : {
+        "defaultCheckpointProvider" : {
+          "type" : "string",
+          "default" : "file",
+          "description" : "Default: file"
+        },
+        "defaultErrorLogProvider" : {
+          "type" : "string",
+          "default" : "file",
+          "description" : "Default: file"
+        }
+      }
+    }
+  }
+}

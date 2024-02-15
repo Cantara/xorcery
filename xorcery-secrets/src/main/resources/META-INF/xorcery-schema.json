@@ -1,0 +1,27 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-secrets:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-secrets configuration JSON Schema",
+  "properties" : {
+    "secrets" : {
+      "$ref" : "#/$defs/secrets"
+    }
+  },
+  "$defs" : {
+    "secrets" : {
+      "type" : "object",
+      "properties" : {
+        "default" : {
+          "type" : "string",
+          "default" : "secret",
+          "description" : "Default: secret"
+        },
+        "env" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

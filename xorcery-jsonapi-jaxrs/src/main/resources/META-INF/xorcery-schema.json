@@ -1,0 +1,22 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-jsonapi-jaxrs:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-jsonapi-jaxrs configuration JSON Schema",
+  "properties" : {
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    }
+  },
+  "$defs" : {
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

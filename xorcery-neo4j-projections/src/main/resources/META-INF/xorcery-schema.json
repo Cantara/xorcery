@@ -1,0 +1,31 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-neo4j-projections:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-neo4j-projections configuration JSON Schema",
+  "properties" : {
+    "neo4jprojections" : {
+      "$ref" : "#/$defs/neo4jprojections"
+    }
+  },
+  "$defs" : {
+    "neo4jprojections" : {
+      "type" : "object",
+      "properties" : {
+        "eventBatchSize" : {
+          "type" : [ "number", "string" ],
+          "default" : 1024,
+          "description" : "Default: 1024"
+        },
+        "commitpublisher" : {
+          "type" : "object",
+          "properties" : { }
+        },
+        "eventsubscriber" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

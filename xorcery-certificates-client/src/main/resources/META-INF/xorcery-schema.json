@@ -1,0 +1,28 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-certificates-client:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-certificates-client configuration JSON Schema",
+  "properties" : {
+    "certificates" : {
+      "$ref" : "#/$defs/certificates"
+    }
+  },
+  "$defs" : {
+    "certificates" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "uri" : {
+              "type" : "string",
+              "default" : "srv://_certificates._sub._https._tcp/api",
+              "description" : "Default: srv://_certificates._sub._https._tcp/api"
+            }
+          }
+        }
+      }
+    }
+  }
+}

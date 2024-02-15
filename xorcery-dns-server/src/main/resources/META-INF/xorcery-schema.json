@@ -1,0 +1,36 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-dns-server:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-dns-server configuration JSON Schema",
+  "properties" : {
+    "dns" : {
+      "$ref" : "#/$defs/dns"
+    }
+  },
+  "$defs" : {
+    "dns" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "port" : {
+              "type" : [ "number", "string" ],
+              "default" : 53,
+              "description" : "Default: 53"
+            },
+            "tcp" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "udp" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    }
+  }
+}

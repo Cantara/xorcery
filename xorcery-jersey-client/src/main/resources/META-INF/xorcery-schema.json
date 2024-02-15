@@ -1,0 +1,27 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-jersey-client:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-jersey-client configuration JSON Schema",
+  "properties" : {
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    }
+  },
+  "$defs" : {
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "properties" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    }
+  }
+}

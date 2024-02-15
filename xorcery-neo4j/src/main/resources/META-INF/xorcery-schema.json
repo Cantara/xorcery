@@ -1,0 +1,62 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-neo4j:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-neo4j configuration JSON Schema",
+  "properties" : {
+    "neo4jdatabase" : {
+      "$ref" : "#/$defs/neo4jdatabase"
+    }
+  },
+  "$defs" : {
+    "neo4jdatabase" : {
+      "type" : "object",
+      "properties" : {
+        "path" : {
+          "type" : "string",
+          "default" : "{{ instance.home }}/neo4j",
+          "description" : "Default: {{ instance.home }}/neo4j"
+        },
+        "domain" : {
+          "type" : "object",
+          "properties" : {
+            "version" : {
+              "type" : "string",
+              "default" : "1.0.0",
+              "description" : "Default: 1.0.0"
+            },
+            "wipeOnBreakingChange" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        },
+        "settings" : {
+          "type" : "object",
+          "properties" : {
+            "server" : {
+              "type" : "object",
+              "properties" : {
+                "directories" : {
+                  "type" : "object",
+                  "properties" : {
+                    "data" : {
+                      "type" : "string",
+                      "default" : "{{ neo4jdatabase.path }}/data",
+                      "description" : "Default: {{ neo4jdatabase.path }}/data"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "metrics" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

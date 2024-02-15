@@ -1,0 +1,38 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-domainevents-jsonapi:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-domainevents-jsonapi configuration JSON Schema",
+  "properties" : {
+    "domainevents" : {
+      "$ref" : "#/$defs/domainevents"
+    }
+  },
+  "$defs" : {
+    "domainevents" : {
+      "type" : "object",
+      "properties" : {
+        "subscriber" : {
+          "type" : "object",
+          "properties" : {
+            "stream" : {
+              "type" : "string",
+              "default" : "neo4jprojections",
+              "description" : "Default: neo4jprojections"
+            },
+            "configuration" : {
+              "type" : "object",
+              "properties" : {
+                "projection" : {
+                  "type" : "string",
+                  "default" : "domainprojection",
+                  "description" : "Default: domainprojection"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -919,6 +919,11 @@
                         <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter" />
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>com.exoreaction.xorcery</groupId>
+                    <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
+                    <version>0.97.0</version>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -949,7 +954,16 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.6.1</version>
             </plugin>
-
+            <plugin>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>module-configuration-jsonschema</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -1019,6 +1033,19 @@
             <url>https://mvnrepo.cantara.no/content/repositories/snapshots/</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>cantara-releases</id>
+            <name>Cantara Release Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
     <distributionManagement>
         <repository>

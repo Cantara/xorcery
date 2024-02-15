@@ -1,0 +1,123 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-opentelemetry-jmx:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-opentelemetry-jmx configuration JSON Schema",
+  "properties" : {
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    }
+  },
+  "$defs" : {
+    "opentelemetry" : {
+      "type" : "object",
+      "properties" : {
+        "instrumentations" : {
+          "type" : "object",
+          "properties" : {
+            "jmx" : {
+              "type" : "object",
+              "properties" : {
+                "attributes" : {
+                  "type" : "object",
+                  "properties" : {
+                    "classloading.loadedClasses" : {
+                      "type" : "object",
+                      "properties" : {
+                        "description" : {
+                          "type" : "string",
+                          "default" : "Nr of loaded classes",
+                          "description" : "Default: Nr of loaded classes"
+                        },
+                        "objectName" : {
+                          "type" : "string",
+                          "default" : "java.lang:type=ClassLoading",
+                          "description" : "Default: java.lang:type=ClassLoading"
+                        },
+                        "attribute" : {
+                          "type" : "string",
+                          "default" : "LoadedClassCount",
+                          "description" : "Default: LoadedClassCount"
+                        },
+                        "unit" : {
+                          "type" : "string",
+                          "default" : "{count}",
+                          "description" : "Default: {count}"
+                        },
+                        "type" : {
+                          "type" : "string",
+                          "default" : "Gauge",
+                          "description" : "Default: Gauge"
+                        }
+                      }
+                    },
+                    "system.memory.limit" : {
+                      "type" : "object",
+                      "properties" : {
+                        "description" : {
+                          "type" : "string",
+                          "default" : "Total memory size",
+                          "description" : "Default: Total memory size"
+                        },
+                        "objectName" : {
+                          "type" : "string",
+                          "default" : "java.lang:type=OperatingSystem",
+                          "description" : "Default: java.lang:type=OperatingSystem"
+                        },
+                        "attribute" : {
+                          "type" : "string",
+                          "default" : "TotalMemorySize",
+                          "description" : "Default: TotalMemorySize"
+                        },
+                        "unit" : {
+                          "type" : "string",
+                          "default" : "By",
+                          "description" : "Default: By"
+                        },
+                        "type" : {
+                          "type" : "string",
+                          "default" : "Gauge",
+                          "description" : "Default: Gauge"
+                        }
+                      }
+                    },
+                    "system.cpu.utilization" : {
+                      "type" : "object",
+                      "properties" : {
+                        "description" : {
+                          "type" : "string",
+                          "default" : "Process CPU utilization",
+                          "description" : "Default: Process CPU utilization"
+                        },
+                        "objectName" : {
+                          "type" : "string",
+                          "default" : "java.lang:type=OperatingSystem",
+                          "description" : "Default: java.lang:type=OperatingSystem"
+                        },
+                        "attribute" : {
+                          "type" : "string",
+                          "default" : "ProcessCpuLoad",
+                          "description" : "Default: ProcessCpuLoad"
+                        },
+                        "unit" : {
+                          "type" : "string",
+                          "default" : "1",
+                          "description" : "Default: 1"
+                        },
+                        "type" : {
+                          "type" : "string",
+                          "default" : "Gauge",
+                          "description" : "Default: Gauge"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-neo4j-browser:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-neo4j-browser configuration JSON Schema",
+  "properties" : {
+    "neo4jbrowser" : {
+      "$ref" : "#/$defs/neo4jbrowser"
+    },
+    "neo4jdatabase" : {
+      "$ref" : "#/$defs/neo4jdatabase"
+    }
+  },
+  "$defs" : {
+    "neo4jbrowser" : {
+      "type" : "object",
+      "properties" : {
+        "ssl" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ neo4jbrowser.enabled ? certificates.enabled | false }}",
+              "description" : "Default: false"
+            }
+          }
+        }
+      }
+    },
+    "neo4jdatabase" : {
+      "type" : "object",
+      "properties" : {
+        "settings" : {
+          "type" : "object",
+          "properties" : {
+            "server" : {
+              "type" : "object",
+              "properties" : {
+                "bolt" : {
+                  "type" : "object",
+                  "properties" : {
+                    "tls_level" : {
+                      "type" : "string",
+                      "default" : "{{ neo4jbrowser.ssl.enabled ? \"REQUIRED\" | \"OPTIONAL\" }}",
+                      "description" : "Default: {{ neo4jbrowser.ssl.enabled ? \"REQUIRED\" | \"OPTIONAL\" }}"
+                    },
+                    "listen_address" : {
+                      "type" : "string",
+                      "default" : ":7687",
+                      "description" : "Default: :7687"
+                    },
+                    "advertised_address" : {
+                      "type" : "string",
+                      "default" : ":7687:",
+                      "description" : "Default: :7687:"
+                    }
+                  }
+                }
+              }
+            },
+            "dbms" : {
+              "type" : "object",
+              "properties" : {
+                "ssl" : {
+                  "type" : "object",
+                  "properties" : {
+                    "policy" : {
+                      "type" : "object",
+                      "properties" : {
+                        "bolt" : {
+                          "type" : "object",
+                          "properties" : {
+                            "enabled" : {
+                              "type" : [ "boolean", "string" ],
+                              "default" : "{{ neo4jbrowser.ssl.enabled }}",
+                              "description" : "Default: false"
+                            },
+                            "base_directory" : {
+                              "type" : "string",
+                              "default" : "certificates/bolt",
+                              "description" : "Default: certificates/bolt"
+                            },
+                            "private_key" : {
+                              "type" : "string",
+                              "default" : "private.key",
+                              "description" : "Default: private.key"
+                            },
+                            "public_certificate" : {
+                              "type" : "string",
+                              "default" : "public.crt",
+                              "description" : "Default: public.crt"
+                            },
+                            "client_auth" : {
+                              "type" : "string",
+                              "default" : "NONE",
+                              "description" : "Default: NONE"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/com.exoreaction.xorcery:xorcery-dns-registration:jar:0.96.1-SNAPSHOT/schema",
+  "title" : "xorcery-dns-registration configuration JSON Schema",
+  "properties" : {
+    "dns" : {
+      "$ref" : "#/$defs/dns"
+    }
+  },
+  "$defs" : {
+    "dns" : {
+      "type" : "object",
+      "properties" : {
+        "registration" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}
