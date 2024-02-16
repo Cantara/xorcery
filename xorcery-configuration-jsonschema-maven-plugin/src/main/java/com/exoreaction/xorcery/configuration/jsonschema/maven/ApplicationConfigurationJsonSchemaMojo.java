@@ -88,7 +88,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends AbstractMojo {
             List<File> artifactJars = getDependencyJarFiles();
 
             JsonSchema schema = new JsonSchema.Builder()
-                    .id("http://xorcery.exoreaction.com/modules/" + project.getGroupId() + "/" + project.getArtifact() + "/schema")
+                    .id("http://xorcery.exoreaction.com/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
                     .title(project.getArtifactId() + " configuration JSON Schema")
                     .build();
 
@@ -129,9 +129,18 @@ public class ApplicationConfigurationJsonSchemaMojo extends AbstractMojo {
             }
 
             File xorceryConfigJsonSchemaFile = new File(generatedSchemaFile);
-            getLog().info("xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(" + xorceryConfigJsonSchemaFile.exists() + ")");
+            getLog().debug("xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(" + xorceryConfigJsonSchemaFile.exists() + ")");
+
+            // Read existing schema and see if it has changed
+            if (xorceryConfigJsonSchemaFile.exists())
+            {
+                JsonNode existingSchema = jsonMapper.readTree(xorceryConfigJsonSchemaFile);
+                if (existingSchema.equals(uberSchema))
+                    return;
+            }
 
             jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, uberSchema);
+            getLog().info("Updated application configuration JSON Schema definition: "+xorceryConfigJsonSchemaFile);
         } catch (Throwable e) {
             throw new MojoFailureException("Could not create JSON Schema for xorcery.yaml configuration", e);
         }
@@ -153,7 +162,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends AbstractMojo {
                 request.setArtifact(dependencyNode.getArtifact());
                 ArtifactResolutionResult result = repositorySystem.resolve(request);
                 for (Artifact artifact : result.getArtifacts()) {
-                    getLog().info(artifact.getArtifactId() + ":" + artifact.getFile());
+                    getLog().debug("Using JSON Schema from:"+artifact.getArtifactId() + ":" + artifact.getFile());
                     if (artifact.getFile() != null) {
                         artifactJars.add(artifact.getFile());
                     }

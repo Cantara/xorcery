@@ -50,9 +50,9 @@ public class ModuleConfigurationJsonSchemaMojo extends AbstractMojo {
             }
 
             File xorceryConfigJsonSchemaFile = new File(generatedSchemaFile);
-            getLog().info("META-INF/xorcery.yaml: " + xorceryConfigFile + "(" + xorceryConfigFile.exists() + ")");
-            getLog().info("META-INF/xorcery-schema.yaml: " + xorceryConfigJsonSchemaExtensionFile + "(exists:" + xorceryConfigJsonSchemaExtensionFile.exists() + ")");
-            getLog().info("META-INF/xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(exists:" + xorceryConfigJsonSchemaFile.exists() + ")");
+            getLog().debug("META-INF/xorcery.yaml: " + xorceryConfigFile + "(" + xorceryConfigFile.exists() + ")");
+            getLog().debug("META-INF/xorcery-schema.yaml: " + xorceryConfigJsonSchemaExtensionFile + "(exists:" + xorceryConfigJsonSchemaExtensionFile.exists() + ")");
+            getLog().debug("META-INF/xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(exists:" + xorceryConfigJsonSchemaFile.exists() + ")");
 
             Configuration.Builder builder = new Configuration.Builder();
             StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
@@ -61,7 +61,7 @@ public class ModuleConfigurationJsonSchemaMojo extends AbstractMojo {
                 standardConfigurationBuilder.addFile(xorceryConfigFile).accept(builder);
 
             JsonSchema schema = new ConfigurationSchemaBuilder()
-                    .id("http://xorcery.exoreaction.com/modules/"+project.getGroupId()+"/"+project.getArtifact()+"/schema")
+                    .id("http://xorcery.exoreaction.com/modules/"+project.getGroupId()+"/"+project.getArtifactId()+"/schema")
                     .title(project.getArtifactId()+" configuration JSON Schema")
                     .generateJsonSchema(builder.builder(), builder.build().json());
 
@@ -76,7 +76,17 @@ public class ModuleConfigurationJsonSchemaMojo extends AbstractMojo {
             }
 
             JsonMapper jsonMapper = new JsonMapper();
+
+            // Read existing schema and see if it has changed
+            if (xorceryConfigJsonSchemaFile.exists())
+            {
+                JsonNode existingSchema = jsonMapper.readTree(xorceryConfigJsonSchemaFile);
+                if (existingSchema.equals(schemaJson))
+                    return;
+            }
+
             jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, schemaJson);
+            getLog().info("Updated module configuration JSON Schema definition: "+xorceryConfigJsonSchemaFile);
         } catch (IOException e) {
             throw new MojoFailureException("Could not create JSON Schema for xorcery.yaml configuration", e);
         }
