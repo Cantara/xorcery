@@ -61,7 +61,7 @@ public class CypherEventProjection
                 String eventName = jsonDomainEvent.getName();
                 List<String> statement = getCypher(eventName);
                 if (statement == null)
-                    return;
+                    continue;
 
                 // Only do this if any of the events are actually projected
                 if (metadataMap == null)
