@@ -175,6 +175,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends AbstractMojo {
                 return true;
             }
         });
+        artifactJars.sort(File::compareTo);
         return artifactJars;
     }
 }
