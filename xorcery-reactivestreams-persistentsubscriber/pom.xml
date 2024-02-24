@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-project</artifactId>
-        <version>0.97.6-SNAPSHOT</version>
+        <version>0.98.0</version>
     </parent>
 
     <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
