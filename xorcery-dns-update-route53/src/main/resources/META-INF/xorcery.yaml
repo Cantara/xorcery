@@ -1,0 +1,5 @@
+dns:
+  route53:
+    region: "aws-global"
+    accessKeyId: "env:ACCESSKEYID"
+    secretAccessKey: "env:SECRETACCESSKEY"

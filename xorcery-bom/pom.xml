@@ -53,6 +53,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-aws-auth</artifactId>
+                <version>0.97.5-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-certificates</artifactId>
                 <version>0.97.6-SNAPSHOT</version>
             </dependency>
@@ -130,6 +135,11 @@
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-dns-update</artifactId>
                 <version>0.97.6-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-dns-update-route53</artifactId>
+                <version>0.97.5-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>

@@ -1,0 +1,43 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-aws-auth/schema",
+  "title" : "xorcery-aws-auth configuration JSON Schema",
+  "properties" : {
+    "aws" : {
+      "$ref" : "#/$defs/aws"
+    }
+  },
+  "$defs" : {
+    "aws" : {
+      "type" : "object",
+      "properties" : {
+        "auth" : {
+          "type" : "object",
+          "properties" : {
+            "type" : {
+              "type" : "string",
+              "default" : "accessKey",
+              "description" : "Default: accessKey"
+            },
+            "accessKeyId" : {
+              "type" : "string",
+              "default" : "env:aws.accessKeyId",
+              "description" : "Default: env:aws.accessKeyId"
+            },
+            "secretAccessKey" : {
+              "type" : "string",
+              "default" : "env:aws.secretAccessKey",
+              "description" : "Default: env:aws.secretAccessKey"
+            },
+            "sessionToken" : {
+              "type" : "string",
+              "default" : "env:aws.sessionToken",
+              "description" : "Default: env:aws.sessionToken"
+            }
+          }
+        }
+      }
+    }
+  }
+}

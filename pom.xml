@@ -44,6 +44,7 @@
         <jackson.version>2.16.1</jackson.version>
         <asm.version>9.6</asm.version>
         <projectreactor.version>2023.0.3</projectreactor.version>
+        <aws.java.sdk.version>2.20.43</aws.java.sdk.version>
 
         <junit.version>5.10.2</junit.version>
         <junit.platform.version>1.10.0</junit.platform.version>
@@ -102,10 +103,13 @@
         <module>xorcery-jetty-client</module>
         <module>xorcery-certificates</module>
 
+        <module>xorcery-aws-auth</module>
+
         <module>xorcery-jetty-server</module>
         <module>xorcery-dns-server</module>
 
         <module>xorcery-dns-update</module>
+        <module>xorcery-dns-update-route53</module>
         <module>xorcery-dns-registration</module>
         <module>xorcery-dns-multicast</module>
 
@@ -165,6 +169,11 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-admin-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-aws-auth</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -240,6 +249,11 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-dns-update</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-dns-update-route53</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -541,6 +555,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.java.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Jackson -->
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>

@@ -42,7 +42,7 @@ public class DnsRecords {
     private final ServiceResourceObjects serviceResourceObjects;
 
     @Inject
-    public DnsRecords(Configuration configuration, ServiceResourceObjects serviceResourceObjects) throws TextParseException {
+    public DnsRecords(Configuration configuration, ServiceResourceObjects serviceResourceObjects) {
         this.configuration = configuration;
         this.serviceResourceObjects = serviceResourceObjects;
     }
@@ -183,16 +183,16 @@ public class DnsRecords {
             }
         }
 
-        // Service A Records
+        // Service CNAME Records
         for (ServiceResourceObject serviceResource : serviceResourceObjects.getServiceResources()) {
 
-            String type = serviceResource.getServiceIdentifier().resourceObjectIdentifier().getType();
+            String id = serviceResource.getServiceIdentifier().resourceObjectIdentifier().getId();
 
-            String name = type + "." + zone.toString(false);
+            String name = id + "." + zone.toString(false);
 
             Name aName = Name.fromString(name);
-            ARecord aRecord = new ARecord(aName, DClass.IN, ttl, targetIp);
-            records.add(aRecord);
+            CNAMERecord cNameRecord = new CNAMERecord(aName, DClass.IN, ttl, target);
+            records.add(cNameRecord);
         }
 
         return records;

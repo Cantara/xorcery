@@ -1,0 +1,7 @@
+aws:
+  region: "{{ ENV:aws.region }}"
+  auth:
+    type: accessKey
+    accessKeyId: "env:aws.accessKeyId"
+    secretAccessKey: "env:aws.secretAccessKey"
+    sessionToken: "env:aws.sessionToken"

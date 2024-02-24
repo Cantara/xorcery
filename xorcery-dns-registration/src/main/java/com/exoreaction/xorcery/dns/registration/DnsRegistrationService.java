@@ -61,7 +61,7 @@ public class DnsRegistrationService
         // Remove DNS records for this server
         List<Record> deleteRecords = new ArrayList<>();
         for (Record registeredRecord : records) {
-            deleteRecords.add(Record.newRecord(registeredRecord.getName(), registeredRecord.getType(), DClass.NONE, 0, registeredRecord.rdataToWireCanonical()));
+            deleteRecords.add(Record.newRecord(registeredRecord.getName(), registeredRecord.getType(), DClass.NONE, registeredRecord.getTTL(), registeredRecord.rdataToWireCanonical()));
         }
 
         try {

@@ -68,6 +68,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-dns-registration</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-dns-update-route53</artifactId>
+        </dependency>
 
         <!-- Certificates -->
         <dependency>
