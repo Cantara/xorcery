@@ -9,21 +9,25 @@
         <version>0.97.6-SNAPSHOT</version>
     </parent>
 
-    <artifactId>xorcery-dns-update-route53</artifactId>
+    <artifactId>xorcery-secrets-aws</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-dns-update</artifactId>
+            <artifactId>xorcery-secrets</artifactId>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-aws-auth</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-junit</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
-            <artifactId>route53</artifactId>
+            <artifactId>secretsmanager</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -104,6 +104,7 @@
         <module>xorcery-certificates</module>
 
         <module>xorcery-aws-auth</module>
+        <module>xorcery-secrets-aws</module>
 
         <module>xorcery-jetty-server</module>
         <module>xorcery-dns-server</module>
@@ -465,6 +466,11 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-secrets</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-secrets-aws</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

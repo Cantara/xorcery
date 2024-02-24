@@ -1,0 +1,4 @@
+secrets:
+  aws:
+    enabled: "{{ aws.auth.enabled }}"
+    region: "{{ aws.region }}"

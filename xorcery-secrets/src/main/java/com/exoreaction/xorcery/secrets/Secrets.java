@@ -17,7 +17,6 @@ package com.exoreaction.xorcery.secrets;
 
 import com.exoreaction.xorcery.secrets.spi.SecretsProvider;
 
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,8 +51,7 @@ public class Secrets {
         return getSecretsProvider(name, SecretsProvider::getSecretBytes);
     }
 
-    public void refreshSecret(String name)
-            throws IOException {
+    public void refreshSecret(String name) {
         getSecretsProvider(name, (provider, n) ->
         {
             provider.refreshSecret(n);

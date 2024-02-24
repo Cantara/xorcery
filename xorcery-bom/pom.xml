@@ -353,6 +353,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-secrets-aws</artifactId>
+                <version>0.97.6-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-service-api</artifactId>
                 <version>0.97.6-SNAPSHOT</version>
             </dependency>
