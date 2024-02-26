@@ -504,7 +504,10 @@ public class SubscribeReactiveStream
 
                 requests.set(0);
                 outstandingRequests.addAndGet(rn);
-                activeSubscription.requested().addAndGet(rn);
+                if (activeSubscription != null)
+                {
+                    activeSubscription.requested().addAndGet(rn);
+                }
                 requestsHistogram.record(rn, attributes);
             }
 
