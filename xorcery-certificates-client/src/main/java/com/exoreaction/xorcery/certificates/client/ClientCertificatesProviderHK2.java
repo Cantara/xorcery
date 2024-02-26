@@ -15,18 +15,14 @@
  */
 package com.exoreaction.xorcery.certificates.client;
 
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
-import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
+import com.exoreaction.xorcery.configuration.Configuration;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.ClientBuilder;
-import org.eclipse.jetty.client.HttpClient;
-import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "certificates.client")
-@RunLevel(value = 2)
 @ContractsProvided(CertificatesProvider.class)
 public class ClientCertificatesProviderHK2
         extends ClientCertificatesProvider {
