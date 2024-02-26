@@ -1,0 +1,22 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-secrets-aws/schema",
+  "title" : "xorcery-secrets-aws configuration JSON Schema",
+  "properties" : {
+    "secrets" : {
+      "$ref" : "#/$defs/secrets"
+    }
+  },
+  "$defs" : {
+    "secrets" : {
+      "type" : "object",
+      "properties" : {
+        "aws" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

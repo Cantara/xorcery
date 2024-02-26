@@ -31,7 +31,7 @@ public class AwsSecretsProvider
     public AwsSecretsProvider(AwsCredentialsProvider awsCredentialsProvider, Configuration configuration) {
         secretsClient = SecretsManagerClient.builder()
                 .credentialsProvider(awsCredentialsProvider)
-                .region(Region.of(configuration.getString("aws.region").orElseThrow(missing("aws.region"))))
+                .region(Region.of(configuration.getString("secrets.aws.region").orElseThrow(missing("secrets.aws.region"))))
                 .build();
     }
 
