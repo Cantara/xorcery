@@ -19,7 +19,6 @@ open module xorcery.certificates {
 
     requires xorcery.configuration.api;
     requires xorcery.keystores;
-    requires xorcery.dns.client;
     requires xorcery.secrets;
 
     requires org.apache.logging.log4j;

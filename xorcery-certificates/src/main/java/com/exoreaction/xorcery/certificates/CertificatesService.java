@@ -92,7 +92,7 @@ public class CertificatesService
             requestCertificateProcess.start();
             try {
                 requestCertificateProcess.result()
-                        .whenComplete(this::updateCertificates).orTimeout(10, TimeUnit.SECONDS).join();
+                        .whenComplete(this::updateCertificates).orTimeout(100, TimeUnit.SECONDS).join();
             } catch (Exception e) {
                 if (unwrap(e) instanceof ConnectException) {
                     if (certificate != null) {
