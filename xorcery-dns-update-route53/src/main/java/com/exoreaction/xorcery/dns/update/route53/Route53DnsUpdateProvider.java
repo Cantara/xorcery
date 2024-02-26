@@ -75,7 +75,7 @@ public class Route53DnsUpdateProvider
     private static Change recordChanges(Record record) {
         return Change.builder()
                 .action(record.getDClass() == DClass.IN ? ChangeAction.UPSERT : ChangeAction.DELETE)
-                .resourceRecordSet(builder -> builder.name(record.getName().toString(true))
+                .resourceRecordSet(builder -> builder.name(record.getName().toString())
                         .type(RRType.fromValue(Type.string(record.getType())))
                         .ttl(record.getTTL())
                         .resourceRecords(resourceRecord ->
@@ -83,7 +83,7 @@ public class Route53DnsUpdateProvider
                             switch (record.getType()) {
                                 case Type.A -> resourceRecord.value(((ARecord) record).getAddress().getHostAddress());
                                 case Type.CNAME ->
-                                        resourceRecord.value(((CNAMERecord) record).getTarget().toString(true));
+                                        resourceRecord.value(((CNAMERecord) record).getTarget().toString());
                                 case Type.TXT -> resourceRecord.value(((TXTRecord) record).getStrings().stream()
                                         .map(str -> '\"' + str + '\"')
                                         .reduce((str1, str2) -> str1 + " " + str2).orElse(""));
@@ -93,7 +93,7 @@ public class Route53DnsUpdateProvider
                                             srvRecord.getPriority(),
                                             srvRecord.getWeight(),
                                             srvRecord.getPort(),
-                                            srvRecord.getTarget().toString(true)));
+                                            srvRecord.getTarget().toString()));
                                 }
                             }
                         })).build();
