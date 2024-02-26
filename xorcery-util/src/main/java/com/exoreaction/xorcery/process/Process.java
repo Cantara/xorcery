@@ -17,9 +17,10 @@ package com.exoreaction.xorcery.process;
 
 import com.exoreaction.xorcery.lang.Exceptions;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,38 +34,50 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public interface Process<T> {
 
-    Map<Process<?>, AtomicLong> failures = new ConcurrentHashMap<>();
+    Map<Process<?>, AtomicLong> failures = Collections.synchronizedMap(new WeakHashMap<>());
+
+    CompletableFuture<T> result();
 
     void start();
 
     default void stop() {
-        result().toCompletableFuture().cancel(true);
+        done();
+        result().cancel(true);
     }
 
-    default void succeeded() {
+    default void done() {
         failures.remove(this);
     }
 
     default void retry() {
 
-        if (result().toCompletableFuture().isCancelled())
+        if (result().isCancelled())
+        {
+            done();
             return;
+        }
 
         AtomicLong nrOfFailures = failures.getOrDefault(this, new AtomicLong(0L));
         long delay = getFailureDelay(nrOfFailures.getAndIncrement());
+        if (delay == 0) {
+            debug("Retrying");
+        } else {
+            debug(String.format("Retrying in %ds", delay));
+        }
 
-
-        CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS).execute(()->
+        CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS).execute(() ->
         {
-            if (result().toCompletableFuture().isCancelled())
+            if (result().isCancelled())
+            {
+                done();
                 return;
+            }
 
             start();
         });
     }
 
-    default long getFailureDelay(long failureCount)
-    {
+    default long getFailureDelay(long failureCount) {
         return Math.min(failureCount * 10L, 60L);
     }
 
@@ -74,20 +87,30 @@ public interface Process<T> {
 
     default void complete(T value, Throwable t) {
 
-        if (result().toCompletableFuture().isCancelled())
+        if (result().isCancelled()) {
+            done();
             return;
+        }
 
         if (t != null) {
             t = Exceptions.unwrap(t);
+            error(t);
             if (isRetryable(t)) {
                 retry();
             } else {
-                result().toCompletableFuture().completeExceptionally(t);
+                done();
+                result().completeExceptionally(t);
             }
         } else {
-            result().toCompletableFuture().complete(value);
+            done();
+            result().complete(value);
         }
     }
 
-    CompletionStage<T> result();
+    // Logging
+    default void error(Throwable throwable) {
+    }
+
+    default void debug(String message) {
+    }
 }
