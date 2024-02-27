@@ -37,7 +37,7 @@
         <jersey.version>3.1.5</jersey.version>
         <opentelemetry.version>1.35.0</opentelemetry.version>
         <eventstore.version>5.3.0</eventstore.version>
-        <grpc.version>1.61.1</grpc.version>
+        <grpc.version>1.62.2</grpc.version>
         <hk2.version>3.0.6</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
