@@ -57,7 +57,7 @@ public interface Process<T> {
             return;
         }
 
-        AtomicLong nrOfFailures = failures.getOrDefault(this, new AtomicLong(0L));
+        AtomicLong nrOfFailures = failures.computeIfAbsent(this, k -> new AtomicLong(0L));
         long delay = getFailureDelay(nrOfFailures.getAndIncrement());
         if (delay == 0) {
             debug("Retrying");
