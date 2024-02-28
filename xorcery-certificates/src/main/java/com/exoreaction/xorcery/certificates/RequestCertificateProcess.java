@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.glassfish.hk2.api.IterableProvider;
 
+import java.net.ConnectException;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public record RequestCertificateProcess(PKCS10CertificationRequest csr,
                 }
             }
             if (certs != null) {
-                certs.whenComplete(CompletableFutures.transfer(result));
+                certs.whenComplete(this::complete);
             } else {
                 logger.warn("No certificate providers found");
                 result.completeExceptionally(new IllegalStateException("No certificate providers found"));
@@ -83,5 +84,20 @@ public record RequestCertificateProcess(PKCS10CertificationRequest csr,
             logger.warn("Could not create CSR", e);
             result.completeExceptionally(e);
         }
+    }
+
+    @Override
+    public boolean isRetryable(Throwable t) {
+        return t instanceof ConnectException;
+    }
+
+    @Override
+    public void error(Throwable throwable) {
+        logger.error("Could not renew certificate", throwable);
+    }
+
+    @Override
+    public void debug(String message) {
+        logger.debug(message);
     }
 }
