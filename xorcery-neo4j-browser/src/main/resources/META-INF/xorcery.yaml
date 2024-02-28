@@ -9,7 +9,7 @@ neo4jdatabase:
     server:
       bolt:
         enabled: "{{ neo4jbrowser.enabled }}"
-        tls_level: "{{ neo4jbrowser.ssl.enabled ? \"REQUIRED\" | \"OPTIONAL\" }}"
+        tls_level: "{{ neo4jbrowser.ssl.enabled ? \"OPTIONAL\" | \"DISABLED\" }}"
         listen_address: ":7687"
         advertised_address: ":7687:"
     dbms:
