@@ -29,7 +29,6 @@ import java.util.Map;
 
 import static jakarta.ws.rs.core.MediaType.TEXT_HTML;
 
-@Produces(TEXT_HTML)
 public interface ThymeleafResource
     extends ContextResource
 {

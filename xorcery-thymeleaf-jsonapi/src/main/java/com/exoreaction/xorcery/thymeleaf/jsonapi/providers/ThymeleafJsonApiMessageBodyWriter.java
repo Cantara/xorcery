@@ -186,6 +186,8 @@ public class ThymeleafJsonApiMessageBodyWriter
 
         for (int i = matchedTemplates.size() - 1; i >= 0; i--) {
             String uriTemplate = matchedTemplates.get(i).getTemplate();
+            if (uriTemplate.equals("/"))
+                continue;
             htmlTemplate += uriTemplate.replaceAll("\\{|\\}", "");
         }
 
