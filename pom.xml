@@ -162,7 +162,7 @@
 
         <module>xorcery-docs</module>
         <module>xorcery-bom</module>
-        <module>xorcery-pipelines</module>
+     <!--   <module>xorcery-pipelines</module>  -->
     </modules>
 
     <dependencyManagement>
