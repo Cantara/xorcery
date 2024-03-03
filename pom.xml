@@ -121,6 +121,9 @@
         <module>xorcery-jmx-status</module>
         <module>xorcery-reactivestreams-server</module>
         <module>xorcery-reactivestreams-server-extra</module>
+<!--
+        <module>xorcery-pipelines</module>
+-->
 
         <module>xorcery-admin-server</module>
 
@@ -162,7 +165,6 @@
 
         <module>xorcery-docs</module>
         <module>xorcery-bom</module>
-     <!--   <module>xorcery-pipelines</module>  -->
     </modules>
 
     <dependencyManagement>
