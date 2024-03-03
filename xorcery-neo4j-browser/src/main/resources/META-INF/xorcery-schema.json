@@ -41,8 +41,8 @@
                   "properties" : {
                     "tls_level" : {
                       "type" : "string",
-                      "default" : "{{ neo4jbrowser.ssl.enabled ? \"REQUIRED\" | \"OPTIONAL\" }}",
-                      "description" : "Default: {{ neo4jbrowser.ssl.enabled ? \"REQUIRED\" | \"OPTIONAL\" }}"
+                      "default" : "{{ neo4jbrowser.ssl.enabled ? \"OPTIONAL\" | \"DISABLED\" }}",
+                      "description" : "Default: {{ neo4jbrowser.ssl.enabled ? \"OPTIONAL\" | \"DISABLED\" }}"
                     },
                     "listen_address" : {
                       "type" : "string",
