@@ -20,12 +20,16 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientBadPayloadStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
+import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.TextNode;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
@@ -63,9 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
@@ -80,6 +82,8 @@ public class SubscribeReactiveStream
     private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
             (carrier, key, value) -> carrier.setHeader(key, value);
 
+    private static JsonMapper jsonMapper = new JsonMapper();
+
     private final URI serverUri;
     private final String streamName;
 
@@ -88,7 +92,7 @@ public class SubscribeReactiveStream
     private long retryDelay;
     private final DnsLookup dnsLookup;
     private final WebSocketClient webSocketClient;
-    private final Supplier<Configuration> publisherConfiguration;
+    private final Supplier<Configuration> publisherConfigurationSupplier;
 
     protected final Subscriber<Object> subscriber;
     protected final MessageReader<Object> eventReader;
@@ -98,6 +102,7 @@ public class SubscribeReactiveStream
     protected final CompletableFuture<Void> result;
 
     protected Session session;
+    protected Configuration publisherConfiguration;
 
     private final AtomicBoolean isCancelled = new AtomicBoolean(); // true if cancel() has been called or the result has been completed
     protected final AtomicBoolean isComplete = new AtomicBoolean(); // true if onComplete or onError has been called
@@ -128,7 +133,7 @@ public class SubscribeReactiveStream
                                    WebSocketClient webSocketClient,
                                    Subscriber<Object> subscriber,
                                    MessageReader<Object> eventReader,
-                                   Supplier<Configuration> publisherConfiguration,
+                                   Supplier<Configuration> publisherConfigurationSupplier,
                                    OpenTelemetry openTelemetry,
                                    Logger logger,
                                    ActiveSubscriptions activeSubscriptions,
@@ -141,7 +146,7 @@ public class SubscribeReactiveStream
         this.dnsLookup = dnsLookup;
         this.webSocketClient = webSocketClient;
         this.subscriber = subscriber;
-        this.publisherConfiguration = publisherConfiguration;
+        this.publisherConfigurationSupplier = publisherConfigurationSupplier;
 
         this.marker = MarkerManager.getMarker(this.serverUri.getAuthority() + "/" + streamName);
         this.logger = logger;
@@ -219,7 +224,8 @@ public class SubscribeReactiveStream
                 logger.trace(marker, "connect {}", publisherWebsocketUri);
             }
 
-            String queryParameters = "?configuration=" + URLEncoder.encode(publisherConfiguration.get().json().toString(), StandardCharsets.UTF_8);
+            publisherConfiguration = publisherConfigurationSupplier.get();
+            String queryParameters = "?configuration=" + URLEncoder.encode(publisherConfiguration.json().toString(), StandardCharsets.UTF_8);
             URI effectivePublisherWebsocketUri = URI.create(publisherWebsocketUri.getScheme() + "://" + publisherWebsocketUri.getAuthority() + "/streams/publishers/" + streamName + queryParameters);
             logger.debug(marker, "Trying " + effectivePublisherWebsocketUri);
             Span connectSpan = tracer.spanBuilder(streamName + " connect")
@@ -326,8 +332,7 @@ public class SubscribeReactiveStream
         this.session = session;
         this.retryDelay = Duration.parse("PT" + subscriberConfiguration.getRetryDelay()).toMillis();
 
-        Configuration configuration = publisherConfiguration.get();
-        activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), configuration);
+        activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
         activeSubscriptions.addSubscription(activeSubscription);
 
         logger.debug(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
@@ -371,14 +376,32 @@ public class SubscribeReactiveStream
     @Override
     public void onWebSocketText(String payload) {
         if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketPartialText {} {}", payload);
+            logger.trace(marker, "onWebSocketPartialText {}", payload);
         }
 
         Throwable throwable;
         try {
-            ByteArrayInputStream bin = new ByteArrayInputStream(Base64.getDecoder().decode(payload));
-            ObjectInputStream oin = new ObjectInputStream(bin);
-            throwable = (Throwable) oin.readObject();
+            JsonNode errorJson = jsonMapper.readTree(payload);
+            if (errorJson instanceof TextNode)
+            {
+                ByteArrayInputStream bin = new ByteArrayInputStream(Base64.getDecoder().decode(payload));
+                ObjectInputStream oin = new ObjectInputStream(bin);
+                throwable = (Throwable) oin.readObject();
+            } else
+            {
+                String message = errorJson.path("reason").asText();
+
+                Exception serverException = errorJson.has("exception")
+                        ? new Exception(errorJson.path("exception").asText())
+                        : null;
+
+                throwable = switch (errorJson.get("status").asInt())
+                {
+                    case 401 -> new NotAuthorizedStreamException(message, serverException);
+
+                    default -> new ServerStreamException(message, serverException);
+                };
+            }
         } catch (Throwable e) {
             throwable = e;
         }

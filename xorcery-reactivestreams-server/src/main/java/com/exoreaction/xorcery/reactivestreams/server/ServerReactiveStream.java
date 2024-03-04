@@ -16,13 +16,17 @@
 package com.exoreaction.xorcery.reactivestreams.server;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.websocket.api.UpgradeRequest;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.function.Consumer;
 
 public abstract class ServerReactiveStream {
@@ -63,5 +67,24 @@ public abstract class ServerReactiveStream {
 
             builder.add("session", sessionJson);
         };
+    }
+
+    protected ObjectNode getError(Throwable throwable) {
+        ObjectNode errorJson = JsonNodeFactory.instance.objectNode();
+
+        if (throwable instanceof NotAuthorizedStreamException) {
+            errorJson.set("status", errorJson.numberNode(HttpStatus.UNAUTHORIZED_401));
+        } else {
+            errorJson.set("status", errorJson.numberNode(HttpStatus.INTERNAL_SERVER_ERROR_500));
+        }
+
+        errorJson.set("reason", errorJson.textNode(throwable.getMessage()));
+
+        StringWriter exceptionWriter = new StringWriter();
+        try (PrintWriter out = new PrintWriter(exceptionWriter)) {
+            throwable.printStackTrace(out);
+        }
+        errorJson.set("exception", errorJson.textNode(exceptionWriter.toString()));
+        return errorJson;
     }
 }

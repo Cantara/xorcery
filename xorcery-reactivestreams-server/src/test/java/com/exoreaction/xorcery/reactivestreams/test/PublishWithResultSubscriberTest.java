@@ -24,6 +24,7 @@ import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import jakarta.ws.rs.NotAuthorizedException;
@@ -161,7 +162,7 @@ public class PublishWithResultSubscriberTest {
                     Configuration::empty, subscriber, ClientIntegerSubscriber.class, ClientConfiguration.defaults());
 
             // Then
-            Assertions.assertThrows(NotAuthorizedException.class, () ->
+            Assertions.assertThrows(NotAuthorizedStreamException.class, () ->
             {
                 try {
                     result.orTimeout(10, TimeUnit.SECONDS)
@@ -339,7 +340,7 @@ public class PublishWithResultSubscriberTest {
 
         @Override
         public void subscribe(Subscriber<? super Integer> subscriber) {
-            subscriber.onError(new NotAuthorizedException("Not authorized"));
+            subscriber.onError(new NotAuthorizedStreamException("Not authorized"));
         }
     }
 

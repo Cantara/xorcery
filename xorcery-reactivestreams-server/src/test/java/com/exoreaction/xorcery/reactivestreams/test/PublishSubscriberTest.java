@@ -296,34 +296,6 @@ public class PublishSubscriberTest {
         }
     }
 
-    public static class ServerIntegerPublisher
-            implements Publisher<Integer> {
-
-        @Override
-        public void subscribe(Subscriber<? super Integer> subscriber) {
-            subscriber.onSubscribe(new Subscription() {
-
-                int current = 0;
-                int max = 100;
-
-                @Override
-                public void request(long n) {
-
-                    for (long i = 0; i < n && current < max; i++) {
-                        subscriber.onNext(current++);
-                    }
-
-                    if (current == 100)
-                        subscriber.onComplete();
-                }
-
-                @Override
-                public void cancel() {
-                }
-            });
-        }
-    }
-
     public static class IntegerNoopPublisher
             implements Publisher<Integer> {
 
@@ -351,18 +323,6 @@ public class PublishSubscriberTest {
             return subscriber;
         }
     }
-
-    public static class ServerIntegerExceptionPublisher
-            implements Publisher<Integer> {
-
-        Logger logger = LogManager.getLogger(getClass());
-
-        @Override
-        public void subscribe(Subscriber<? super Integer> subscriber) {
-            subscriber.onError(new NotAuthorizedException("Not authorized"));
-        }
-    }
-
 
     public static class ClientPublisher
             implements Publisher<Integer>, AutoCloseable {

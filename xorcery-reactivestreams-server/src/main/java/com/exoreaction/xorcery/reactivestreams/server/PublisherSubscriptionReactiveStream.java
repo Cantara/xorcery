@@ -19,7 +19,6 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.common.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +32,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
@@ -42,21 +40,20 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
-import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.util.BlockingArrayQueue;
-import org.eclipse.jetty.websocket.api.*;
+import org.eclipse.jetty.websocket.api.BatchMode;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -169,8 +166,7 @@ public class PublisherSubscriptionReactiveStream
 
     @Override
     public void onNext(Object item) {
-        if (logger.isTraceEnabled())
-        {
+        if (logger.isTraceEnabled()) {
             logger.trace(marker, "onNext {}", item.toString());
         }
 
@@ -191,15 +187,11 @@ public class PublisherSubscriptionReactiveStream
         if (throwable instanceof ServerShutdownStreamException) {
             session.close(StatusCode.SHUTDOWN, throwable.getMessage());
         } else {
-            // Send exception
-            // Client should receive exception and close session
+            // Send error
+            // Client should receive error and close session
             try {
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                ObjectOutputStream out = new ExceptionObjectOutputStream(bout);
-                out.writeObject(throwable);
-                out.close();
-                String base64Throwable = Base64.getEncoder().encodeToString(bout.toByteArray());
-                session.getRemote().sendString(base64Throwable);
+                ObjectNode errorJson = getError(throwable);
+                session.getRemote().sendString(errorJson.toPrettyString());
                 session.getRemote().flush();
             } catch (IOException e) {
                 logger.error(marker, "Could not send exception", e);
@@ -386,12 +378,10 @@ public class PublisherSubscriptionReactiveStream
             drainLock.unlock();
         }
 
-        if (!sendQueue.isEmpty())
-        {
+        if (!sendQueue.isEmpty()) {
             // Race conditions suck. Need to figure out a better way to handle this...
             drainJob();
-        } else
-        {
+        } else {
             if (isComplete.get() && session.isOpen()) {
                 session.close(StatusCode.NORMAL, "complete");
             }
