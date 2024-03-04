@@ -15,16 +15,14 @@
  */
 package com.exoreaction.xorcery.eventstore.test;
 
-import com.eventstore.dbclient.EventData;
-import com.eventstore.dbclient.ReadResult;
-import com.eventstore.dbclient.ReadStreamOptions;
-import com.eventstore.dbclient.WriteResult;
+import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.eventstore.EventStoreService;
 import com.exoreaction.xorcery.net.Sockets;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
@@ -35,11 +33,14 @@ import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.shaded.org.bouncycastle.asn1.cms.Time;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Testcontainers(disabledWithoutDocker = true)
@@ -85,20 +86,27 @@ public class EventStoreTest {
 
     @Test
     public void testWriteAndReadEvents() throws IOException {
+        JsonMapper mapper = new JsonMapper();
         EventStoreService eventStoreService = xorcery.getServiceLocator().getService(EventStoreService.class);
-        WriteResult result = eventStoreService.getClient().appendToStream("stream1",
-                EventData.builderAsJson("someEventType", new EventRecord(1, "foobar")).build(),
-                EventData.builderAsJson("someEventType", new EventRecord(2, "foobar")).build(),
-                EventData.builderAsJson("someEventType", new EventRecord(3, "foobar")).build()
-        ).join();
+        EventStoreDBClient client = eventStoreService.getClient();
+        try {
+            WriteResult result = client.appendToStream("stream1",
+                    EventData.builderAsJson(UUID.randomUUID(), "someEventType", mapper.writeValueAsBytes(new EventRecord(1, "foobar"))).build(),
+                    EventData.builderAsJson(UUID.randomUUID(),"someEventType", mapper.writeValueAsBytes(new EventRecord(2, "foobar"))).build(),
+                    EventData.builderAsJson(UUID.randomUUID(),"someEventType", mapper.writeValueAsBytes(new EventRecord(3, "foobar"))).build()
+            ).orTimeout(10, TimeUnit.SECONDS).join();
 
-        LogManager.getLogger().info("Write complete");
+            LogManager.getLogger().info("Write complete");
+        } catch (Exception e) {
+            LogManager.getLogger().error("Write failed", e);
+        }
 
-        ReadResult readResult = eventStoreService.getClient().readStream("stream1", ReadStreamOptions.get().fromStart().forwards()).join();
+        ReadResult readResult = client.readStream("stream1", ReadStreamOptions.get().fromStart().forwards())
+                .orTimeout(10, TimeUnit.SECONDS).join();
 
         List<EventRecord> events = readResult.getEvents().stream().map(re -> {
             try {
-                return re.getEvent().getEventDataAs(EventRecord.class);
+                return mapper.readValue(re.getEvent().getEventData(), EventRecord.class);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
