@@ -16,15 +16,14 @@
 package com.exoreaction.xorcery.eventstore.test;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.eventstore.EventStoreService;
 import com.exoreaction.xorcery.net.Sockets;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -33,7 +32,6 @@ import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.shaded.org.bouncycastle.asn1.cms.Time;
 
 import java.io.File;
 import java.io.IOException;
