@@ -31,6 +31,7 @@ import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.Provider;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.RequestLog;
 import org.eclipse.jetty.server.Response;
@@ -41,7 +42,6 @@ import org.glassfish.jersey.uri.UriTemplate;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -80,9 +80,11 @@ public class OpenTelemetryTracerFilter
     private final Tracer tracer;
 
     private final Map<String, String> attributes;
+    private final Logger logger;
 
     @Inject
-    public OpenTelemetryTracerFilter(OpenTelemetry openTelemetry, Server server, Configuration configuration) {
+    public OpenTelemetryTracerFilter(OpenTelemetry openTelemetry, Server server, Configuration configuration, Logger logger) {
+        this.logger = logger;
         OpenTelemetryJerseyConfiguration jerseyConfiguration = OpenTelemetryJerseyConfiguration.get(configuration);
 
         this.tracer = openTelemetry.tracerBuilder(getClass().getName())
@@ -98,50 +100,57 @@ public class OpenTelemetryTracerFilter
 
     @Override
     public void filter(ContainerRequestContext requestContext) {
-        Context context = textMapPropagator.extract(Context.current(), requestContext, jerseyGetter);
-        context.makeCurrent();
-        var uriInfo = requestContext.getUriInfo();
-        String route = getHttpRoute(uriInfo);
+        try {
+            Context context = textMapPropagator.extract(Context.current(), requestContext, jerseyGetter);
+            context.makeCurrent();
+            var uriInfo = requestContext.getUriInfo();
+            String route = getHttpRoute(uriInfo);
 
-        Span span = tracer.spanBuilder(requestContext.getMethod() + (route != null ? " " + route : ""))
-                .setParent(context)
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan();
-        requestContext.setProperty("opentelemetry.span", span);
+            Span span = tracer.spanBuilder(requestContext.getMethod() + (route != null ? " " + route : ""))
+                    .setParent(context)
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan();
+            requestContext.setProperty("opentelemetry.span", span);
+        } catch (Throwable e) {
+            logger.error("Could not create span", e);
+        }
     }
 
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-        Span span = (Span) requestContext.getProperty("opentelemetry.span");
-        var uriInfo = requestContext.getUriInfo();
-        String route = getHttpRoute(uriInfo);
-        if (span == null) {
-            Context context = textMapPropagator.extract(Context.current(), requestContext, jerseyGetter);
-            span = tracer.spanBuilder(requestContext.getMethod() + (route != null ? " " + route : ""))
-                    .setParent(context)
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan();
-            requestContext.setProperty("opentelemetry.span", span);
+        try {
+            Span span = (Span) requestContext.getProperty("opentelemetry.span");
+            var uriInfo = requestContext.getUriInfo();
+            String route = getHttpRoute(uriInfo);
+            if (span == null) {
+                Context context = textMapPropagator.extract(Context.current(), requestContext, jerseyGetter);
+                span = tracer.spanBuilder(requestContext.getMethod() + (route != null ? " " + route : ""))
+                        .setParent(context)
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan();
+                requestContext.setProperty("opentelemetry.span", span);
 
-        }
-        for (Map.Entry<String, String> attribute : attributes.entrySet()) {
-            switch (attribute.getValue()) {
-                case "http.request.method" -> span.setAttribute(attribute.getKey(), requestContext.getMethod());
-                case "url.full" -> span.setAttribute(attribute.getKey(), uriInfo.getRequestUri().toASCIIString());
-                case "http.route" ->
-                {
-                    if (route != null)
-                        span.setAttribute(attribute.getKey(), route);
-                }
-                case "http.response.status_code" ->
-                        span.setAttribute(attribute.getKey(), responseContext.getStatus());
-                case "enduser.id" -> {
-                    Principal p = requestContext.getSecurityContext().getUserPrincipal();
-                    if (p != null)
-                        span.setAttribute(attribute.getKey(), p.getName());
+            }
+            for (Map.Entry<String, String> attribute : attributes.entrySet()) {
+                switch (attribute.getValue()) {
+                    case "http.request.method" -> span.setAttribute(attribute.getKey(), requestContext.getMethod());
+                    case "url.full" -> span.setAttribute(attribute.getKey(), uriInfo.getRequestUri().toASCIIString());
+                    case "http.route" -> {
+                        if (route != null)
+                            span.setAttribute(attribute.getKey(), route);
+                    }
+                    case "http.response.status_code" ->
+                            span.setAttribute(attribute.getKey(), responseContext.getStatus());
+                    case "enduser.id" -> {
+                        Principal p = requestContext.getSecurityContext().getUserPrincipal();
+                        if (p != null)
+                            span.setAttribute(attribute.getKey(), p.getName());
+                    }
                 }
             }
+        } catch (Throwable e) {
+            logger.error("Could not create span", e);
         }
     }
 
@@ -169,35 +178,38 @@ public class OpenTelemetryTracerFilter
 
         @Override
         public void log(Request request, Response response) {
-            Span span = (Span) request.getAttribute("opentelemetry.span");
-            if (span == null) {
-                // Jetty request
+            try {
+                Span span = (Span) request.getAttribute("opentelemetry.span");
+                if (span == null) {
+                    // Jetty request
 
-                Context context = textMapPropagator.extract(Context.current(), request, jettyGetter);
-                span = tracer.spanBuilder(request.getMethod())
-                        .setParent(context)
-                        .setStartTimestamp(request.getBeginNanoTime(), TimeUnit.NANOSECONDS)
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan();
+                    Context context = textMapPropagator.extract(Context.current(), request, jettyGetter);
+                    span = tracer.spanBuilder(request.getMethod())
+                            .setParent(context)
+                            .setStartTimestamp(request.getBeginNanoTime(), TimeUnit.NANOSECONDS)
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan();
 
-                for (Map.Entry<String, String> attribute : attributes.entrySet()) {
-                    switch (attribute.getValue()) {
-                        case "http.request.method" -> span.setAttribute(attribute.getKey(), request.getMethod());
-                        case "url.full" -> span.setAttribute(attribute.getKey(), request.getRequestURI());
-                        case "http.response.status_code" ->
-                                span.setAttribute(attribute.getKey(), response.getStatus());
+                    for (Map.Entry<String, String> attribute : attributes.entrySet()) {
+                        switch (attribute.getValue()) {
+                            case "http.request.method" -> span.setAttribute(attribute.getKey(), request.getMethod());
+                            case "url.full" -> span.setAttribute(attribute.getKey(), request.getRequestURI());
+                            case "http.response.status_code" -> span.setAttribute(attribute.getKey(), response.getStatus());
+                        }
                     }
                 }
-            }
 
-            for (Map.Entry<String, String> attribute : attributes.entrySet()) {
-                if (attribute.getValue().equals("http.response.body.size")) {
-                    var length = response.getContentCount();
-                    if (length != -1)
-                        span.setAttribute(attribute.getKey(), length);
+                for (Map.Entry<String, String> attribute : attributes.entrySet()) {
+                    if (attribute.getValue().equals("http.response.body.size")) {
+                        var length = response.getContentCount();
+                        if (length != -1)
+                            span.setAttribute(attribute.getKey(), length);
+                    }
                 }
+                span.end();
+            } catch (Throwable e) {
+                logger.error("Could not create span", e);
             }
-            span.end();
         }
     }
 }

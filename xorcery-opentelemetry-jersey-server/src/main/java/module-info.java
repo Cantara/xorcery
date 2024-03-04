@@ -31,5 +31,6 @@ module xorcery.opentelemetry.jersey.server {
     requires jersey.server;
     requires jersey.common;
     requires xorcery.opentelemetry.api;
+    requires org.apache.logging.log4j;
 
 }
