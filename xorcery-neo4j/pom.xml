@@ -72,6 +72,12 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>neo4j-shaded</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.neo4j.app</groupId>
+                    <artifactId>neo4j-server</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
