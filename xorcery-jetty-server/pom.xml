@@ -99,6 +99,14 @@
             <artifactId>http2-server</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.jetty.http2</groupId>
+            <artifactId>http2-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.http2</groupId>
+            <artifactId>http2-hpack</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-alpn-java-server</artifactId>
         </dependency>
