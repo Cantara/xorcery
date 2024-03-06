@@ -3,7 +3,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-bom</artifactId>
-    <version>0.98.9-SNAPSHOT</version>
+    <version>0.99.0</version>
     <name>Xorcery BOM</name>
     <description>Xorcery BOM artifact</description>
     <packaging>pom</packaging>
@@ -49,7 +49,7 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-admin-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
@@ -59,82 +59,82 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-certificates</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-certificates-ca</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-certificates-client</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-certificates-letsencrypt</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-certificates-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration-api</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-coordinator</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-core</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-disruptor</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-dns-client</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-dns-multicast</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-dns-registration</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-dns-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-dns-update</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
@@ -144,247 +144,247 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-domainevents</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-domainevents-jsonapi</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-domainevents-neo4jprojection</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-domainevents-publisher</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-eventstore</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-health-api</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-health-registry</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jaxrs-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jersey-client</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jersey-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jetty-client</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jetty-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-json</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jsonapi</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-client</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-jaxrs</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-server-neo4j</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jsonschema</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-junit</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jwt-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-sdk</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-api</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-log4j</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jersey-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jvm</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jmx</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-system</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-keystores</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-metadata</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jmx-status</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-neo4j</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-neo4j-projections</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-neo4j-browser</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opensearch</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-api</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-client</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-server-extra</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-runner</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-secrets</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-secrets-aws</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-service-api</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-status-spi</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-status-server</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-thymeleaf</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-thymeleaf-jsonapi</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-util</artifactId>
-                <version>0.98.9-SNAPSHOT</version>
+                <version>0.99.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
