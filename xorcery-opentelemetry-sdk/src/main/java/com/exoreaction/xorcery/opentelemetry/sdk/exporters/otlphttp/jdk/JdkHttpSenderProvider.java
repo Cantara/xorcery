@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk;
 import io.opentelemetry.exporter.internal.auth.Authenticator;
 import io.opentelemetry.exporter.internal.compression.Compressor;
 import io.opentelemetry.exporter.internal.http.HttpSender;
+import io.opentelemetry.sdk.common.export.ProxyOptions;
 import io.opentelemetry.sdk.common.export.RetryPolicy;
 import jakarta.annotation.Nullable;
 
@@ -59,5 +60,11 @@ public class JdkHttpSenderProvider
                 headerSupplier,
                 retryPolicy,
                 sslContext);
+    }
+
+    @Override
+    public HttpSender createSender(String s, Compressor compressor, boolean b, String s1, long l, long l1, Supplier<Map<String, List<String>>> supplier, ProxyOptions proxyOptions, Authenticator authenticator, RetryPolicy retryPolicy, SSLContext sslContext, X509TrustManager x509TrustManager) {
+        // TODO implements this or route it
+        return null;
     }
 }
