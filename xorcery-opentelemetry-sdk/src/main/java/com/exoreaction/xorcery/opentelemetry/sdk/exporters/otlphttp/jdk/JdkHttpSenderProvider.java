@@ -46,6 +46,7 @@ public class JdkHttpSenderProvider
             long timeoutNanos,
             long connectTimeout,
             Supplier<Map<String, List<String>>> headerSupplier,
+            ProxyOptions proxyOptions,
             @Nullable Authenticator authenticator,
             @Nullable RetryPolicy retryPolicy,
             @Nullable SSLContext sslContext,
@@ -60,11 +61,5 @@ public class JdkHttpSenderProvider
                 headerSupplier,
                 retryPolicy,
                 sslContext);
-    }
-
-    @Override
-    public HttpSender createSender(String s, Compressor compressor, boolean b, String s1, long l, long l1, Supplier<Map<String, List<String>>> supplier, ProxyOptions proxyOptions, Authenticator authenticator, RetryPolicy retryPolicy, SSLContext sslContext, X509TrustManager x509TrustManager) {
-        // TODO implements this or route it
-        return null;
     }
 }
