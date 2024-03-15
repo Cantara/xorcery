@@ -40,7 +40,7 @@ public class JsonNodeMessageWriterFactory
 
     @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (!mediaType.equals("application/json")) return null;
+        if (!mediaType.equals("application/json") && !mediaType.equals("*/*")) return null;
         if (JsonNode.class.isAssignableFrom(type))
             return (MessageWriter<T>) new JsonNodeMessageWriter();
         else

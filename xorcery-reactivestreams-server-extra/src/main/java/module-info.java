@@ -21,4 +21,6 @@ open module xorcery.reactivestreams.server.extra {
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
     requires org.apache.logging.log4j;
+
+    requires xorcery.reactivestreams.client;
 }

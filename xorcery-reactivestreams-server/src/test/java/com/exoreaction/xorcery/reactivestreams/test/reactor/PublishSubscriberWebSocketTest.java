@@ -104,7 +104,7 @@ public class PublishSubscriberWebSocketTest {
                 // When
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
                 websocketStreamsClient.publish(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
                                 MediaType.APPLICATION_JSON,
                                 Integer.class,
                                 WebSocketClientOptions.empty(),
@@ -229,7 +229,7 @@ public class PublishSubscriberWebSocketTest {
                 };
 
                 String config = websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
+                                websocketStreamsServerConfiguration.getURI().resolve("/numbers/bar?param1=value1"),
                                 MediaType.APPLICATION_JSON,
                                 String.class,
                                 String.class,

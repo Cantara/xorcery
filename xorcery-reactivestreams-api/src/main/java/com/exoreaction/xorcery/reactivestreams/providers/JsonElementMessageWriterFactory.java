@@ -38,7 +38,7 @@ public class JsonElementMessageWriterFactory
 
     @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (!mediaType.equals("application/json")) return null;
+        if (!mediaType.equals("application/json") && !mediaType.equals("*/*")) return null;
         if (JsonElement.class.isAssignableFrom(type))
             return (MessageWriter<T>) new JsonElementMessageWriter();
         else

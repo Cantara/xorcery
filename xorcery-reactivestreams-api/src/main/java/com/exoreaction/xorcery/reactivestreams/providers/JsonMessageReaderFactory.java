@@ -38,7 +38,7 @@ public class JsonMessageReaderFactory implements MessageReader.Factory {
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
-        if (!mediaType.equals("application/json")) return null;
+        if (!mediaType.equals("application/json") && !mediaType.equals("*/*")) return null;
         if (jsonMapper.canDeserialize(jsonMapper.constructType(type)) && !JsonNode.class.isAssignableFrom(type) && !WithMetadata.class.isAssignableFrom(type))
             return (MessageReader<T>) new JsonMessageReader((Class<Object>) type);
         else return null;

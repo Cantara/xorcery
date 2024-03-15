@@ -3,7 +3,9 @@ yamlfilepublisher:
     - stream: "testevents"
       file: "{{ instance.home }}/../test-classes/testevents.yaml"
 
-#log4j2.Configuration.thresholdFilter.level: trace
-#log4j2.Configuration.Loggers.logger:
-#  - name: "com.exoreaction.xorcery.reactivestreams"
-#    level: "trace"
+log4j2.Configuration.thresholdFilter.level: trace
+log4j2.Configuration.Loggers.logger:
+  - name: "com.exoreaction.xorcery.core"
+    level: "trace"
+  - name: "com.exoreaction.xorcery.reactivestreams"
+    level: "trace"

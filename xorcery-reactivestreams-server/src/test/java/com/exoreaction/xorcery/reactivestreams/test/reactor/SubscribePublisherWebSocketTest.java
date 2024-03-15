@@ -141,7 +141,7 @@ public class SubscribePublisherWebSocketTest {
 
                 // When
                 List<Integer> result = websocketStreamsClient.subscribe(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
                                 MediaType.APPLICATION_JSON, Integer.class, WebSocketClientOptions.empty())
                         .map(v ->
                         {
@@ -225,7 +225,7 @@ public class SubscribePublisherWebSocketTest {
 
                 // When
                 Flux<Integer> numbers = websocketStreamsClient.subscribe(
-                        websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                        websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
                         MediaType.APPLICATION_JSON,
                         Integer.class, WebSocketClientOptions.empty());
                 RetrySpec defaultRetrySpec = Retry.max(5);
@@ -256,7 +256,7 @@ public class SubscribePublisherWebSocketTest {
                 // When
                 try {
                     int value = websocketStreamsClient.subscribe(
-                                    websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                    websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
                                     MediaType.APPLICATION_JSON,
                                     Integer.class,
                                     WebSocketClientOptions.empty())
@@ -289,7 +289,7 @@ public class SubscribePublisherWebSocketTest {
 
                 // When
                 Configuration result = websocketStreamsClient.subscribe(
-                                websocketStreamsServerConfiguration.getURI().resolve("configuration"),
+                                websocketStreamsServerConfiguration.getURI().resolve("/configuration"),
                                 MediaType.APPLICATION_JSON,
                                 Configuration.class,
                                 WebSocketClientOptions.empty())

@@ -109,7 +109,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
                 List<Integer> result = websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
                                 MediaType.APPLICATION_JSON,
                                 Integer.class,
                                 Integer.class,
@@ -153,7 +153,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
                 Flux<Integer> destination = websocketStreamsClient.publishWithResult(
-                        websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                        websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
                         MediaType.APPLICATION_JSON,
                         Integer.class,
                         Integer.class,
@@ -161,7 +161,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                         Flux.fromIterable(source));
 
                 // Then
-                Assertions.assertThrows(CompletionException.class, () ->
+                Assertions.assertThrows(ServerStreamException.class, () ->
                 {
                     destination.toStream().toList();
                 });
@@ -199,7 +199,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
                 Flux<Integer> destination = websocketStreamsClient.publishWithResult(
-                        websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                        websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
                         MediaType.APPLICATION_JSON,
                         Integer.class,
                         Integer.class,
@@ -251,7 +251,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 };
 
                 String config = websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
+                                websocketStreamsServerConfiguration.getURI().resolve("/numbers/bar?param1=value1"),
                                 MediaType.APPLICATION_JSON,
                                 String.class,
                                 String.class,
