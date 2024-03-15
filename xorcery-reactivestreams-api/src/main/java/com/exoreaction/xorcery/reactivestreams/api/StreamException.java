@@ -15,13 +15,11 @@
  */
 package com.exoreaction.xorcery.reactivestreams.api;
 
-import java.io.IOException;
-
 /**
  * All exceptions reported to subscribers will be wrapped in a subclass of this exception.
  */
 public class StreamException
-    extends IOException
+    extends RuntimeException
 {
     public StreamException(String message, Throwable cause) {
         super(message, cause);

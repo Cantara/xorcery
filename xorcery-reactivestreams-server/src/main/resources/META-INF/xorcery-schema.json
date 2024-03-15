@@ -29,6 +29,10 @@
               "type" : [ "number", "string" ],
               "default" : 1048576,
               "description" : "Default: 1048576"
+            },
+            "reactor" : {
+              "type" : "object",
+              "properties" : { }
             }
           }
         }

@@ -29,28 +29,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 
-public class JsonMessageReaderFactory
-        implements MessageReader.Factory {
+public class JsonMessageReaderFactory implements MessageReader.Factory {
     private final ObjectMapper jsonMapper;
 
     public JsonMessageReaderFactory() {
-        jsonMapper = new JsonMapper()
-                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        jsonMapper = new JsonMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
-        if (jsonMapper.canDeserialize(jsonMapper.constructType(type))
-                && !JsonNode.class.isAssignableFrom(type)
-                && !WithMetadata.class.isAssignableFrom(type))
+        if (!mediaType.equals("application/json")) return null;
+        if (jsonMapper.canDeserialize(jsonMapper.constructType(type)) && !JsonNode.class.isAssignableFrom(type) && !WithMetadata.class.isAssignableFrom(type))
             return (MessageReader<T>) new JsonMessageReader((Class<Object>) type);
-        else
-            return null;
+        else return null;
     }
 
-    class JsonMessageReader
-            implements MessageReader<Object> {
+    class JsonMessageReader implements MessageReader<Object> {
 
         private Class<Object> type;
 

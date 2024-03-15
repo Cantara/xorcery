@@ -10,3 +10,6 @@ reactivestreams:
     maxFrameSize: 65536
     inputBufferSize: 4096
     outputBufferSize: 4096
+
+    reactor:
+      enabled: "{{ reactivestreams.client.enabled }}"

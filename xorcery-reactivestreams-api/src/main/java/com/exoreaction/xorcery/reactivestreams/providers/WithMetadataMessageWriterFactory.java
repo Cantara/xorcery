@@ -35,7 +35,7 @@ public class WithMetadataMessageWriterFactory
 
     private final ObjectMapper objectMapper;
     private final ObjectWriter objectWriter;
-    private Supplier<MessageWorkers> messageWorkers;
+    private final Supplier<MessageWorkers> messageWorkers;
 
     public WithMetadataMessageWriterFactory(Supplier<MessageWorkers> messageWorkers) {
         objectMapper = new ObjectMapper();

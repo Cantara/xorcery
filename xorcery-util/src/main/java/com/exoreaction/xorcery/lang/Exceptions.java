@@ -24,4 +24,18 @@ public interface Exceptions {
         }
         return throwable;
     }
+
+    @SafeVarargs
+    static boolean isCausedBy(Throwable throwable, Class<? extends Throwable>... exceptionClasses)
+    {
+        do
+        {
+            for (Class<? extends Throwable> exceptionClass : exceptionClasses) {
+                if (exceptionClass.isInstance(throwable))
+                    return true;
+            }
+            throwable = throwable.getCause();
+        } while (throwable != null);
+        return false;
+    }
 }

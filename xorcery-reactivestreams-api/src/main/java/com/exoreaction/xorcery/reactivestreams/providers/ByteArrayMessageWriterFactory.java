@@ -32,7 +32,7 @@ public class ByteArrayMessageWriterFactory
             return null;
     }
 
-    class MessageWriterImplementation
+    static class MessageWriterImplementation
             implements MessageWriter<byte[]> {
         @Override
         public void writeTo(byte[] instance, OutputStream out) throws IOException {

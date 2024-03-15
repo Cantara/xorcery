@@ -43,6 +43,7 @@ public class JsonNodeMessageReaderFactory
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
+        if (!mediaType.equals("application/json")) return null;
         if (JsonNode.class.isAssignableFrom(type))
             return (MessageReader<T>) new JsonNodeMessageReader();
         else

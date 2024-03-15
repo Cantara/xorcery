@@ -15,8 +15,11 @@
  */
 package com.exoreaction.xorcery.reactivestreams.util;
 
+import reactor.core.Disposable;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public interface ReactiveStreams {
@@ -25,6 +28,15 @@ public interface ReactiveStreams {
         {
             streamFuture.cancel(true);
             return CompletableFuture.failedStage(t);
+        };
+    }
+
+    static <T> BiConsumer<T, Throwable> onErrorDispose(Disposable disposable) {
+        return (v, t) ->
+        {
+            if (t != null) {
+                disposable.dispose();
+            }
         };
     }
 }

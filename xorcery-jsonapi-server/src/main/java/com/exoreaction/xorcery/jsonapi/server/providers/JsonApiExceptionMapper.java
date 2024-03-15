@@ -58,7 +58,9 @@ public class JsonApiExceptionMapper
                                     .title(e.getMessage())
                                     .detail(e.toString())
                                     .build())
-                            .build()).build()).build();
+                            .build()).build())
+                    .type(APPLICATION_JSON_API)
+                    .build();
         }
     }
 }

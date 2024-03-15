@@ -44,6 +44,10 @@
               "type" : [ "number", "string" ],
               "default" : 4096,
               "description" : "Default: 4096"
+            },
+            "reactor" : {
+              "type" : "object",
+              "properties" : { }
             }
           }
         }

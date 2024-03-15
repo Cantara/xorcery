@@ -21,9 +21,8 @@ import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions.ActiveSubscription;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
@@ -118,7 +117,7 @@ public class PublishReactiveStream
     protected AtomicBoolean isReconnecting = new AtomicBoolean();
     protected AtomicBoolean isRetrying = new AtomicBoolean();
     private long retryDelay;
-    private ActiveSubscription activeSubscription;
+    private ActiveSubscriptions.ActiveSubscription activeSubscription;
 
     protected final Attributes attributes;
     protected final LongHistogram sentBytes;
@@ -401,7 +400,7 @@ public class PublishReactiveStream
         this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
 
         Configuration configuration = subscriberConfiguration.get();
-        activeSubscription = new ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), configuration);
+        activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), configuration);
         activeSubscriptions.addSubscription(activeSubscription);
 
         // First send parameters, if available

@@ -1,89 +1,68 @@
-/*
- * Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.exoreaction.xorcery.reactivestreams.server;
+package com.exoreaction.xorcery.reactivestreams.server.reactor;
 
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
+import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.util.BlockingArrayQueue;
-import org.eclipse.jetty.websocket.api.BatchMode;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.CoreSubscriber;
+import reactor.util.context.Context;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
+import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.PUBLISHER_FLUSH_COUNT;
 
-/**
- * @author rickardoberg
- * @since 13/04/2022
- */
-public class PublisherSubscriptionReactiveStream
-        extends ServerReactiveStream
-        implements WebSocketListener, Subscriber<Object> {
+public class PublisherSubscriptionWebSocketStream
+    implements CoreSubscriber<Object>, WebSocketListener
+{
+    private final String path;
+    private final Publisher<Object> publisher;
+    private final Map<String, String> publisherConfiguration;
+    private final MessageWriter<Object> messageWriter;
 
-    protected final Logger logger;
-    private final ActiveSubscriptions activeSubscriptions;
+    private final ByteBufferPool byteBufferPool;
+    private final Logger logger;
+    private final Marker marker;
 
-    private final String streamName;
+    private volatile long outstandingRequestAmount;
+    protected volatile Subscription subscription;
     protected volatile Session session;
 
-    private final Function<Configuration, Publisher<Object>> publisherFactory;
-    private Configuration publisherConfiguration;
-    protected Subscription subscription;
-
     private AtomicBoolean isComplete = new AtomicBoolean();
+    private volatile boolean redundancyNotificationIssued = false;
 
     private final BlockingArrayQueue<Object> sendQueue = new BlockingArrayQueue<>(4096, 1024);
     private final AtomicBoolean isDraining = new AtomicBoolean();
@@ -91,53 +70,37 @@ public class PublisherSubscriptionReactiveStream
 
     private final ByteBufferOutputStream2 outputStream;
 
-    protected final MessageWriter<Object> messageWriter;
-
-    private final ObjectMapper objectMapper;
-    protected final ByteBufferPool pool;
-    protected final Marker marker;
-
-    private boolean redundancyNotificationIssued = false;
-
-    private long outstandingRequestAmount;
-    private ActiveSubscriptions.ActiveSubscription activeSubscription;
-
     private final Tracer tracer;
-    private final TextMapPropagator textMapPropagator;
+    private final Attributes attributes;
     private final LongHistogram sentBytes;
     private final LongHistogram requestsHistogram;
     private final LongHistogram flushHistogram;
-    private Span span;
+    private final io.opentelemetry.context.Context context;
+    private volatile Span span;
 
-    public PublisherSubscriptionReactiveStream(String streamName,
-                                               Function<Configuration, Publisher<Object>> publisherFactory,
-                                               MessageWriter<Object> messageWriter,
-                                               ObjectMapper objectMapper,
-                                               ByteBufferPool pool,
-                                               Logger logger,
-                                               ActiveSubscriptions activeSubscriptions,
-                                               OpenTelemetry openTelemetry) {
-        this.streamName = streamName;
-        this.publisherFactory = publisherFactory;
+    public PublisherSubscriptionWebSocketStream(
+            String path,
+            Publisher<Object> publisher,
+            Map<String, String> publisherConfiguration,
+            MessageWriter<Object> messageWriter,
+            ByteBufferPool byteBufferPool,
+            Logger logger,
+            Tracer tracer,
+            Meter meter,
+            io.opentelemetry.context.Context context) {
+        this.path = path;
+        this.publisher = publisher;
+        this.publisherConfiguration = publisherConfiguration;
         this.messageWriter = messageWriter;
-        this.objectMapper = objectMapper;
-        this.pool = pool;
-        marker = MarkerManager.getMarker(streamName);
-
-        outputStream = new ByteBufferOutputStream2(pool, false);
+        this.byteBufferPool = byteBufferPool;
+        this.tracer = tracer;
         this.logger = logger;
-        this.activeSubscriptions = activeSubscriptions;
+        this.marker = MarkerManager.getMarker(path);
 
-        Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
-                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
-                .build();
-        tracer = openTelemetry.tracerBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
-                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
-                .build();
+        this.outputStream = new ByteBufferOutputStream2(byteBufferPool, false);
+
         this.attributes = Attributes.builder()
-                .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, streamName)
+                .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, path)
                 .put(SemanticAttributes.MESSAGING_SYSTEM, XORCERY_MESSAGING_SYSTEM)
                 .build();
         this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
@@ -146,13 +109,18 @@ public class PublisherSubscriptionReactiveStream
                 .setUnit("{request}").ofLongs().build();
         this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
-        textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
+
+        this.context = context;
     }
 
     // Subscriber
     @Override
-    public void onSubscribe(Subscription subscription) {
+    public Context currentContext() {
+        return Context.of(publisherConfiguration);
+    }
 
+    @Override
+    public void onSubscribe(Subscription subscription) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onSubscribe");
 
@@ -177,9 +145,9 @@ public class PublisherSubscriptionReactiveStream
         if (!isDraining.get()) {
             CompletableFuture.runAsync(this::drainJob);
         }
-        activeSubscription.requested().decrementAndGet();
     }
 
+    @Override
     public void onError(Throwable throwable) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onError", throwable);
@@ -199,6 +167,7 @@ public class PublisherSubscriptionReactiveStream
         }
     }
 
+    @Override
     public void onComplete() {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onComplete");
@@ -209,7 +178,7 @@ public class PublisherSubscriptionReactiveStream
         }
     }
 
-    // WebSocket
+    // WebSocketListener
     @Override
     public void onWebSocketConnect(Session session) {
         if (logger.isTraceEnabled())
@@ -218,14 +187,18 @@ public class PublisherSubscriptionReactiveStream
         this.session = session;
         session.getRemote().setBatchMode(BatchMode.ON);
 
-        Optional.ofNullable(session.getUpgradeRequest().getParameterMap().get("configuration")).map(l -> l.get(0)).ifPresent(this::applyConfiguration);
-        Context context = textMapPropagator.extract(Context.current(), session.getUpgradeRequest(), jettyGetter);
-
-        span = tracer.spanBuilder(streamName + " publisher")
+        span = tracer.spanBuilder( path+ " publisher")
                 .setParent(context)
                 .setSpanKind(SpanKind.PRODUCER)
                 .setAllAttributes(attributes)
                 .startSpan();
+
+        try {
+            publisher.subscribe(this);
+            logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
+        } catch (Throwable e) {
+            onError(e);
+        }
     }
 
     @Override
@@ -233,16 +206,11 @@ public class PublisherSubscriptionReactiveStream
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketText {}", message);
 
-        if (publisherConfiguration == null) {
-            applyConfiguration(message);
-            return;
-        }
-
         long requestAmount = Long.parseLong(message);
 
         if (subscription != null) {
             if (requestAmount == Long.MIN_VALUE) {
-                logger.info(marker, "Received cancel on websocket " + streamName);
+                logger.info(marker, "Received cancel on websocket " + path);
                 session.close(StatusCode.NORMAL, "cancelled");
             } else {
                 if (logger.isTraceEnabled())
@@ -250,35 +218,11 @@ public class PublisherSubscriptionReactiveStream
 
                 if (requestAmount > 0) {
                     requestsHistogram.record(requestAmount, attributes);
-                    activeSubscription.requested().addAndGet(requestAmount);
                     subscription.request(requestAmount);
                 }
             }
         } else {
             outstandingRequestAmount += requestAmount;
-        }
-    }
-
-    private void applyConfiguration(String configuration) {
-        try {
-            ObjectNode configurationJson = (ObjectNode) objectMapper.readTree(configuration);
-            publisherConfiguration = new Configuration.Builder(configurationJson)
-                    .with(addUpgradeRequestConfiguration(session.getUpgradeRequest()))
-                    .build();
-        } catch (JsonProcessingException e) {
-            logger.error("Could not parse publisher configuration", e);
-            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
-        }
-
-        try {
-            Publisher<Object> publisher = publisherFactory.apply(publisherConfiguration);
-            publisher.subscribe(this);
-            activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
-            activeSubscriptions.addSubscription(activeSubscription);
-
-            logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
-        } catch (Throwable e) {
-            onError(e);
         }
     }
 
@@ -306,6 +250,7 @@ public class PublisherSubscriptionReactiveStream
         } else {
             logger.error(marker, "Publisher websocket error", cause);
         }
+
     }
 
     @Override
@@ -316,7 +261,6 @@ public class PublisherSubscriptionReactiveStream
         if (subscription != null) {
             subscription.cancel();
             subscription = null;
-            activeSubscriptions.removeSubscription(activeSubscription);
             span.end();
         }
     }
@@ -334,7 +278,7 @@ public class PublisherSubscriptionReactiveStream
             Span sentSpan = null;
             while ((count = sendQueue.drainTo(items)) > 0) {
 
-                sentSpan = tracer.spanBuilder(streamName + " publish")
+                sentSpan = tracer.spanBuilder(path + " publish")
                         .setSpanKind(SpanKind.PRODUCER)
                         .startSpan();
 
@@ -350,7 +294,6 @@ public class PublisherSubscriptionReactiveStream
                         itemsSent = 0;
                     }
                 }
-                activeSubscription.received().addAndGet(count);
 
                 items.clear();
                 totalSent += count;
@@ -397,10 +340,30 @@ public class PublisherSubscriptionReactiveStream
         ByteBuffer eventBuffer = outputStream.takeByteBuffer();
         sentBytes.record(eventBuffer.limit(), attributes);
         session.getRemote().sendBytes(eventBuffer);
-        pool.release(eventBuffer);
+        byteBufferPool.release(eventBuffer);
     }
 
     protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
         messageWriter.writeTo(item, outputStream);
     }
+
+    protected ObjectNode getError(Throwable throwable) {
+        ObjectNode errorJson = JsonNodeFactory.instance.objectNode();
+
+        if (throwable instanceof NotAuthorizedStreamException) {
+            errorJson.set("status", errorJson.numberNode(HttpStatus.UNAUTHORIZED_401));
+        } else {
+            errorJson.set("status", errorJson.numberNode(HttpStatus.INTERNAL_SERVER_ERROR_500));
+        }
+
+        errorJson.set("reason", errorJson.textNode(throwable.getMessage()));
+
+        StringWriter exceptionWriter = new StringWriter();
+        try (PrintWriter out = new PrintWriter(exceptionWriter)) {
+            throwable.printStackTrace(out);
+        }
+        errorJson.set("exception", errorJson.textNode(exceptionWriter.toString()));
+        return errorJson;
+    }
+
 }

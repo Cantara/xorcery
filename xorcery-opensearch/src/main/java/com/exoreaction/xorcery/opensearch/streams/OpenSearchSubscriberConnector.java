@@ -16,6 +16,8 @@
 package com.exoreaction.xorcery.opensearch.streams;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.lang.Classes;
+import com.exoreaction.xorcery.opensearch.OpenSearchService;
 import com.exoreaction.xorcery.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.opensearch.client.search.SearchQuery;
@@ -23,11 +25,19 @@ import com.exoreaction.xorcery.opensearch.client.search.SearchRequest;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.reactivestreams.Subscriber;
+import reactor.util.retry.Retry;
 
+import java.lang.reflect.Type;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -35,17 +45,17 @@ public class OpenSearchSubscriberConnector {
 
     private static final Logger logger = LogManager.getLogger(OpenSearchSubscriberConnector.class);
 
-    private ReactiveStreamsClient reactiveStreams;
+    private WebSocketStreamsClient reactiveStreams;
     private Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher;
     private OpenSearchClient client;
 
-    public OpenSearchSubscriberConnector(OpenSearchClient client, ReactiveStreamsClient reactiveStreams, Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher) {
+    public OpenSearchSubscriberConnector(OpenSearchClient client, WebSocketStreamsClient reactiveStreams, Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher) {
         this.client = client;
         this.reactiveStreams = reactiveStreams;
         this.openSearchCommitPublisher = openSearchCommitPublisher;
     }
 
-    public void connect(URI serverUri, String streamName, final Configuration publisherConfiguration, Configuration subscriberConfiguration) {
+    public void connect(URI serverUri, final Configuration publisherConfiguration, Configuration subscriberConfiguration) {
 
         String indexOrAliasName = subscriberConfiguration.getString("alias")
                 .orElseGet(() -> subscriberConfiguration.getString("index").orElseThrow());
@@ -70,13 +80,12 @@ public class OpenSearchSubscriberConnector {
             return builder.build();
         }).whenComplete((updatedConfiguration, throwable) ->
         {
-            if (throwable != null) {
-                reactiveStreams.subscribe(serverUri, streamName,
-                        () -> publisherConfiguration, new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration), OpenSearchSubscriber.class, ClientConfiguration.defaults());
-            } else {
-                reactiveStreams.subscribe(serverUri, streamName,
-                        () -> updatedConfiguration, new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration), OpenSearchSubscriber.class, ClientConfiguration.defaults());
-            }
+            OpenSearchSubscriber subscriber = throwable == null
+                    ? new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration, updatedConfiguration)
+                    : new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration, publisherConfiguration);
+            reactiveStreams.<WithMetadata<JsonNode>>subscribe(serverUri, MediaType.APPLICATION_JSON, (Class)WithMetadata.class, WebSocketClientOptions.empty())
+                    .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(5)))
+                    .subscribe(subscriber);
         });
     }
 }

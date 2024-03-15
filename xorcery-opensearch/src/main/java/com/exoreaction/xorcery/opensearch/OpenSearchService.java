@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.opensearch;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.lang.Classes;
 import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.opensearch.client.index.AcknowledgedResponse;
 import com.exoreaction.xorcery.opensearch.client.index.CreateComponentTemplateRequest;
@@ -25,6 +26,9 @@ import com.exoreaction.xorcery.opensearch.client.index.IndexTemplate;
 import com.exoreaction.xorcery.opensearch.streams.OpenSearchCommitPublisher;
 import com.exoreaction.xorcery.opensearch.streams.OpenSearchSubscriber;
 import com.exoreaction.xorcery.opensearch.streams.OpenSearchSubscriberConnector;
+import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
@@ -36,13 +40,17 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.Service;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,31 +58,22 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Service
-@Named(OpenSearchService.SERVICE_TYPE)
+@Service(name="opensearch")
 public class OpenSearchService
         implements PreDestroy {
-    private static Logger logger = LogManager.getLogger(OpenSearchService.class);
 
-    public static final String SERVICE_TYPE = "opensearch";
     private final OpenSearchClient client;
     private final ObjectMapper objectMapper;
     private final OpenSearchConfiguration openSearchConfiguration;
+    private final Logger logger;
 
     @Inject
-    public OpenSearchService(ServiceResourceObjects serviceResourceObjects,
-                             ReactiveStreamsServer reactiveStreamsServer,
-                             ReactiveStreamsClient reactiveStreamsClient,
-                             Configuration configuration,
-                             ClientBuilder clientBuilder) {
-
-        ServiceResourceObject sro = new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), SERVICE_TYPE)
-                .version(getClass().getPackage().getImplementationVersion())
-                .subscriber("opensearch")
-                .publisher("opensearchcommits")
-                .build();
+    public OpenSearchService(Configuration configuration,
+                             ClientBuilder clientBuilder,
+                             Logger logger) {
 
         this.openSearchConfiguration = new OpenSearchConfiguration(configuration.getConfiguration("opensearch"));
+        this.logger = logger;
         this.objectMapper = new ObjectMapper(new YAMLFactory());
 
         URI host = openSearchConfiguration.getURI();
@@ -89,24 +88,32 @@ public class OpenSearchService
                 logger.info("Index template:" + templateName);
             }
 
-            OpenSearchCommitPublisher openSearchCommitPublisher = new OpenSearchCommitPublisher();
+            /** None of this makes sense. This service should only handle the client, not the streams
+             OpenSearchCommitPublisher openSearchCommitPublisher = new OpenSearchCommitPublisher();
 
-            reactiveStreamsServer.subscriber("opensearch", cfg -> new OpenSearchSubscriber(client, openSearchCommitPublisher, cfg), OpenSearchSubscriber.class);
-            reactiveStreamsServer.publisher("opensearchcommits", cfg -> openSearchCommitPublisher, OpenSearchCommitPublisher.class);
+             reactiveStreamsServer.<WithMetadata<JsonNode>>subscriber("opensearch", MediaType.APPLICATION_JSON, (Class)WithMetadata.class, flux->
+             {
+             flux.publish().autoConnect().subscribe(new OpenSearchSubscriber(client, openSearchCommitPublisher, new Configuration.Builder().build(), new Configuration.Builder().build()));
+             return flux;
+             });
+             Type publisherItemType = Classes.resolveActualTypeArgs(OpenSearchCommitPublisher.class, Publisher.class)[0];
+             reactiveStreamsServer.publisher("opensearchcommits", MediaType.APPLICATION_JSON, publisherItemType, openSearchCommitPublisher);
 
-            OpenSearchSubscriberConnector connector = new OpenSearchSubscriberConnector(client, reactiveStreamsClient, openSearchCommitPublisher);
-            openSearchConfiguration.getPublishers().ifPresent(publishers ->
-            {
-                for (OpenSearchConfiguration.Publisher publisher : publishers) {
-                    connector.connect(publisher.getURI().orElse(null), publisher.getStream(), publisher.getServerConfiguration().orElseGet(Configuration::empty), publisher.getClientConfiguration().orElseGet(Configuration::empty));
-                }
-            });
-
+             OpenSearchSubscriberConnector connector = new OpenSearchSubscriberConnector(client, reactiveStreamsClient, openSearchCommitPublisher);
+             openSearchConfiguration.getPublishers().ifPresent(publishers ->
+             {
+             for (OpenSearchConfiguration.Publisher publisher : publishers) {
+             connector.connect(publisher.getURI().orElse(null), publisher.getServerConfiguration().orElseGet(Configuration::empty), publisher.getClientConfiguration().orElseGet(Configuration::empty));
+             }
+             });
+             **/
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+    }
 
-        serviceResourceObjects.add(sro);
+    public OpenSearchClient getClient() {
+        return client;
     }
 
     private void loadComponentTemplates() {

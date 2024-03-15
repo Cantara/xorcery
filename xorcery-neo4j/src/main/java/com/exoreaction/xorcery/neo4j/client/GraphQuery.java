@@ -38,7 +38,6 @@ public class GraphQuery
     }
 
     private String name = "default"; // Name of the query. Useful for analytics
-    private String database = "default"; // Name of the database/schema. Useful for multi tenancy cases.
 
     private int skip = -1;
     private int limit = -1;
@@ -65,11 +64,6 @@ public class GraphQuery
 
     public GraphQuery name(String name) {
         this.name = name;
-        return this;
-    }
-
-    public GraphQuery database(String name) {
-        this.database = name;
         return this;
     }
 
@@ -149,10 +143,6 @@ public class GraphQuery
 
     public String getName() {
         return name;
-    }
-
-    public String getDatabase() {
-        return database;
     }
 
     public int getTimeout() {

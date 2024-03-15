@@ -21,6 +21,7 @@ open module xorcery.reactivestreams.api {
     exports com.exoreaction.xorcery.reactivestreams.providers;
     exports com.exoreaction.xorcery.reactivestreams.util;
 
+    requires transitive reactor.core;
     requires transitive org.reactivestreams;
     requires transitive xorcery.metadata;
     requires org.glassfish.hk2.api;

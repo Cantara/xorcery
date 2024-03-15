@@ -8,3 +8,6 @@ reactivestreams:
 
     idleTimeout: "{{ defaults.idleTimeout }}"
     maxTextMessageSize: 1048576
+
+    reactor:
+      enabled: "{{ reactivestreams.server.enabled }}"

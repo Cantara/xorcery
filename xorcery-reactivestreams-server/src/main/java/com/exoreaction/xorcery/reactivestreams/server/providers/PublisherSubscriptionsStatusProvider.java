@@ -16,8 +16,8 @@
 package com.exoreaction.xorcery.reactivestreams.server.providers;
 
 import com.exoreaction.xorcery.jsonapi.Attributes;
-import com.exoreaction.xorcery.reactivestreams.common.ActivePublisherSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.util.ActivePublisherSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
 import com.exoreaction.xorcery.status.spi.StatusProvider;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;

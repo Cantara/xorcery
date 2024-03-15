@@ -33,7 +33,7 @@ public class ByteBufferMessageWriterFactory
             return null;
     }
 
-    class MessageWriterImplementation
+    static class MessageWriterImplementation
             implements MessageWriter<ByteBuffer> {
         @Override
         public void writeTo(ByteBuffer instance, OutputStream out) throws IOException {

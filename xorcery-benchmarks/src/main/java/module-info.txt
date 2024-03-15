@@ -35,4 +35,5 @@ open module xorcery.benchmarks {
     requires jakarta.inject;
     requires jmh.core;
     requires jdk.unsupported;
+    requires org.eclipse.jetty.websocket.core.common;
 }

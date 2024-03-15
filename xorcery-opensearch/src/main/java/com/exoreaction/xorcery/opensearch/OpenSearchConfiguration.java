@@ -54,10 +54,6 @@ public record OpenSearchConfiguration(Configuration context)
             return JsonElement.super.getURI("server.uri");
         }
 
-        String getStream() {
-            return getString("server.stream").orElseThrow(missing("server.stream"));
-        }
-
         Optional<Configuration> getServerConfiguration() {
             return getObjectAs("server.configuration", Configuration::new);
         }

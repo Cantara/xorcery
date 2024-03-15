@@ -15,10 +15,10 @@
  */
 open module xorcery.reactivestreams.server {
     exports com.exoreaction.xorcery.reactivestreams.server;
+    exports com.exoreaction.xorcery.reactivestreams.server.reactor;
 
     requires transitive xorcery.reactivestreams.api;
 
-    requires xorcery.reactivestreams.client;
     requires xorcery.dns.client;
 
     requires xorcery.service.api;
@@ -28,6 +28,7 @@ open module xorcery.reactivestreams.server {
 
     requires static xorcery.status.spi;
 
+    requires reactor.core;
     requires org.eclipse.jetty.websocket.jetty.server;
     requires org.eclipse.jetty.servlet;
     requires org.eclipse.jetty.server;

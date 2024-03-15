@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.reactivestreams.common;
+package com.exoreaction.xorcery.reactivestreams.util;
 
 import com.exoreaction.xorcery.lang.Classes;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
@@ -21,9 +21,6 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.io.ArrayByteBufferPool;
-import org.eclipse.jetty.io.ByteBufferPool;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -36,15 +33,11 @@ public abstract class ReactiveStreamsAbstractService {
     public static final byte[] XOR = "XOR".getBytes(StandardCharsets.UTF_8);
 
     protected final MessageWorkers messageWorkers;
-    protected final Logger logger;
     protected final ObjectMapper objectMapper;
-    protected final ByteBufferPool byteBufferPool;
 
-    public ReactiveStreamsAbstractService(MessageWorkers messageWorkers, Logger logger) {
+    public ReactiveStreamsAbstractService(MessageWorkers messageWorkers) {
         this.messageWorkers = messageWorkers;
-        this.logger = logger;
         this.objectMapper = new ObjectMapper();
-        this.byteBufferPool = new ArrayByteBufferPool();
     }
 
     protected Type getEventType(Type type) {

@@ -30,7 +30,7 @@ import java.lang.reflect.Type;
 
 public class JsonNodeMessageWriterFactory
         implements MessageWriter.Factory {
-    private ObjectMapper jsonMapper;
+    private final ObjectMapper jsonMapper;
 
     public JsonNodeMessageWriterFactory() {
         jsonMapper = new JsonMapper()
@@ -40,6 +40,7 @@ public class JsonNodeMessageWriterFactory
 
     @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
+        if (!mediaType.equals("application/json")) return null;
         if (JsonNode.class.isAssignableFrom(type))
             return (MessageWriter<T>) new JsonNodeMessageWriter();
         else

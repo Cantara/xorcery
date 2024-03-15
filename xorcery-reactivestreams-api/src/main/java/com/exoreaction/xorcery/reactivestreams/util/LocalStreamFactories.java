@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.reactivestreams.common;
+package com.exoreaction.xorcery.reactivestreams.util;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import org.reactivestreams.Publisher;

@@ -19,10 +19,10 @@ import com.exoreaction.xorcery.concurrent.CompletableFutures;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
-import com.exoreaction.xorcery.reactivestreams.common.ActivePublisherSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriberSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
-import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
+import com.exoreaction.xorcery.reactivestreams.util.LocalStreamFactories;
+import com.exoreaction.xorcery.reactivestreams.util.ActivePublisherSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriberSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -31,6 +31,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
+import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
@@ -57,9 +58,11 @@ public class ReactiveStreamsServerService
         implements ReactiveStreamsServer,
         ProgressStartedListener,
         LocalStreamFactories {
+    private final Logger logger;
     private final LoggerContext loggerContext;
     private final ActivePublisherSubscriptions activePublisherSubscriptions;
     private final ActiveSubscriberSubscriptions activeSubscriberSubscriptions;
+    private final ArrayByteBufferPool byteBufferPool;
 
     private final Map<String, Supplier<Object>> publisherEndpointFactories = new ConcurrentHashMap<>();
     private final Map<String, WrappedPublisherFactory> publisherLocalFactories = new ConcurrentHashMap<>();
@@ -85,8 +88,10 @@ public class ReactiveStreamsServerService
                                         LoggerContext loggerContext,
                                         ActivePublisherSubscriptions activePublisherSubscriptions,
                                         ActiveSubscriberSubscriptions activeSubscriberSubscriptions) {
-        super(messageWorkers, logger);
+        super(messageWorkers);
         this.openTelemetry = openTelemetry;
+        this.logger = logger;
+        this.byteBufferPool = new ArrayByteBufferPool();
 
         ReactiveStreamsServerConfiguration reactiveStreamsServerConfiguration = new ReactiveStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
         this.loggerContext = loggerContext;

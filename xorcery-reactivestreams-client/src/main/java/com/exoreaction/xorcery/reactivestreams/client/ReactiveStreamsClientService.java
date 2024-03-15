@@ -20,9 +20,9 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.common.LocalStreamFactories;
-import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
+import com.exoreaction.xorcery.reactivestreams.util.LocalStreamFactories;
+import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -31,6 +31,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.io.ArrayByteBufferPool;
+import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -56,6 +58,8 @@ public class ReactiveStreamsClientService
     private OpenTelemetry openTelemetry;
     private final Supplier<LocalStreamFactories> reactiveStreamsServerServiceProvider;
     private final WebSocketClient webSocketClient;
+    private final Logger logger;
+    private final ByteBufferPool byteBufferPool;
 
     private final List<FutureProcessor<Object>> activeSubscriptions = new CopyOnWriteArrayList<>();
 
@@ -68,12 +72,15 @@ public class ReactiveStreamsClientService
                                         Logger logger,
                                         ActiveSubscriptions activePublisherSubscriptions,
                                         ActiveSubscriptions activeSubscriberSubscriptions) throws Exception {
-        super(messageWorkers, logger);
+        super(messageWorkers);
         this.dnsLookup = dnsLookup;
         this.openTelemetry = openTelemetry;
         this.reactiveStreamsServerServiceProvider = localStreamFactoriesProvider;
+        this.logger = logger;
         this.activePublisherSubscriptions = activePublisherSubscriptions;
         this.activeSubscriberSubscriptions = activeSubscriberSubscriptions;
+
+        this.byteBufferPool = new ArrayByteBufferPool();
 
         clientConfiguration = new ReactiveStreamsClientConfiguration(configuration.getConfiguration("reactivestreams.client"));
 

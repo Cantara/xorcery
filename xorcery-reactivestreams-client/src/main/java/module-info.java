@@ -15,14 +15,16 @@
  */
 open module xorcery.reactivestreams.client {
     exports com.exoreaction.xorcery.reactivestreams.client;
-    exports com.exoreaction.xorcery.reactivestreams.common;
+    exports com.exoreaction.xorcery.reactivestreams.client.reactor;
 
     requires transitive xorcery.reactivestreams.api;
     requires xorcery.util;
     requires xorcery.metadata;
     requires xorcery.dns.client;
+    requires xorcery.opentelemetry.api;
 
     requires org.reactivestreams;
+    requires reactor.core;
     requires org.apache.logging.log4j;
     requires org.eclipse.jetty.io;
     requires org.eclipse.jetty.websocket.jetty.api;
@@ -32,6 +34,5 @@ open module xorcery.reactivestreams.client {
     requires jakarta.inject;
     requires io.opentelemetry.api;
     requires io.opentelemetry.semconv;
-    requires xorcery.opentelemetry.api;
     requires io.opentelemetry.context;
 }

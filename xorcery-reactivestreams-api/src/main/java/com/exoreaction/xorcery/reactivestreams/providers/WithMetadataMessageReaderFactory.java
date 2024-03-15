@@ -36,7 +36,7 @@ public class WithMetadataMessageReaderFactory
         implements MessageReader.Factory {
 
     private final ObjectMapper jsonMapper;
-    private Supplier<MessageWorkers> messageWorkers;
+    private final Supplier<MessageWorkers> messageWorkers;
 
     public WithMetadataMessageReaderFactory(Supplier<MessageWorkers> messageWorkers) {
         jsonMapper = new JsonMapper()
@@ -72,7 +72,7 @@ public class WithMetadataMessageReaderFactory
     class WithMetadataMessageReader<T>
             implements MessageReader<WithMetadata<T>> {
 
-        private MessageReader<?> eventReader;
+        private final MessageReader<?> eventReader;
 
         public WithMetadataMessageReader(MessageReader<?> eventReader) {
 

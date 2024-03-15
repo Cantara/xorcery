@@ -40,6 +40,7 @@ public class JsonMessageWriterFactory
 
     @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
+        if (!mediaType.equals("application/json")) return null;
         if (jsonMapper.canSerialize(type)
                 && !JsonNode.class.isAssignableFrom(type)
                 && !WithMetadata.class.isAssignableFrom(type)) {

@@ -17,8 +17,8 @@ package com.exoreaction.xorcery.reactivestreams.server;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
-import com.exoreaction.xorcery.reactivestreams.common.ActiveSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.common.ReactiveStreamsAbstractService;
+import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
