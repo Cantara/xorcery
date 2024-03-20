@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.reactivestreams.util;
 import org.jvnet.hk2.annotations.Service;
 
 @Service
+@Deprecated
 public class ActiveSubscriberSubscriptions
     extends ActiveSubscriptions
 {

@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.reactivestreams.util;
 
 import java.io.*;
 
+@Deprecated
 public class ExceptionObjectOutputStream
     extends ObjectOutputStream
 {

@@ -23,11 +23,11 @@ import com.exoreaction.xorcery.reactivestreams.api.StreamException;
 public class ClientStreamException
     extends StreamException
 {
-    public ClientStreamException(String message, Throwable cause) {
-        super(message, cause);
+    public ClientStreamException(int status, String message, Throwable cause) {
+        super(status, message, cause);
     }
 
-    public ClientStreamException(String message) {
-        super(message);
+    public ClientStreamException(int status, String message) {
+        super(status, message);
     }
 }

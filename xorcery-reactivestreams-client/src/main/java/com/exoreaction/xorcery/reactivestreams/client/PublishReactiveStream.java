@@ -431,7 +431,7 @@ public class PublishReactiveStream
             session.close(StatusCode.NORMAL, "cancel");
 
             // Maybe try another subscriber
-            retry(new ServerShutdownStreamException("cancel"));
+            retry(new ServerShutdownStreamException(1001, "cancel"));
         } else {
             if (subscription == null) {
                 publisher.subscribe(this);
@@ -478,7 +478,7 @@ public class PublishReactiveStream
             result.complete(null);
         } else if (statusCode == StatusCode.SHUTDOWN || statusCode == StatusCode.NO_CLOSE) {
             logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
-            retry(new ServerShutdownStreamException(reason));
+            retry(new ServerShutdownStreamException(statusCode, reason));
         }
     }
 

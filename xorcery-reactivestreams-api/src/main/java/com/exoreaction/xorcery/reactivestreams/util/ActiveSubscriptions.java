@@ -24,7 +24,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This tracks active subscriptions to publishers or from subscribers exposed by this server
+ *
+ * TODO: This should be moved to a separate module and added as a Flux operator
  */
+@Deprecated
 public class ActiveSubscriptions {
 
     private final Set<ActiveSubscription> activeSubscriptions = new CopyOnWriteArraySet<>();

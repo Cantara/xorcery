@@ -23,10 +23,10 @@ public class ServerTimeoutStreamException
     extends ServerShutdownStreamException
 {
     public ServerTimeoutStreamException(String message, Throwable cause) {
-        super(message, cause);
+        super(1001, message, cause);
     }
 
     public ServerTimeoutStreamException(String message) {
-        super(message);
+        super(1001, message);
     }
 }

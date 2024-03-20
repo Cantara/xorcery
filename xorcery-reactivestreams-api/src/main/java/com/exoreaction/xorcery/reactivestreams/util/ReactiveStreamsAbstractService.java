@@ -28,6 +28,7 @@ import java.lang.reflect.TypeVariable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+@Deprecated
 public abstract class ReactiveStreamsAbstractService {
     // Magic bytes for sending exceptions
     public static final byte[] XOR = "XOR".getBytes(StandardCharsets.UTF_8);

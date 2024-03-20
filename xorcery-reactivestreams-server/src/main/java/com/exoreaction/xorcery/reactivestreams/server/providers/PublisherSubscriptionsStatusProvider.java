@@ -28,6 +28,9 @@ import org.jvnet.hk2.annotations.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * TODO: This should be moved to a separate module and added as a Flux operator
+ */
 @Service(name = "reactivestreams.server.status.publishers")
 public class PublisherSubscriptionsStatusProvider
         implements StatusProvider {

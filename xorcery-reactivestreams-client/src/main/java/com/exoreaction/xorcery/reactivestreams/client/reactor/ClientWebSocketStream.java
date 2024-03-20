@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.reactivestreams.client.reactor;
 
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
+import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
@@ -44,12 +45,14 @@ import reactor.core.publisher.FluxSink;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -67,12 +70,16 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
     private final static JsonMapper jsonMapper = new JsonMapper();
 
+    private final static long CANCEL = Long.MIN_VALUE;
+    private final static long COMPLETE = -1L;
+    private final static long SEND_BUFFERED_REQUESTS = 0;
+
     private final URI serverUri;
     private final String contentType;
 
-    private final MessageWriter<OUTPUT> writer;
-    private final MessageReader<INPUT> reader;
-    private final Publisher<OUTPUT> publisher;
+    private final MessageWriter<OUTPUT> writer; // if null -> subscribe
+    private final MessageReader<INPUT> reader; // if null -> publish
+    private final Publisher<OUTPUT> publisher; // if null -> subscribe
     private final FluxSink<INPUT> sink;
 
     private final WebSocketClientOptions options;
@@ -100,7 +107,9 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private final Lock sendLock = new ReentrantLock();
     private volatile long sendRequestsThreshold = 0;
     private final AtomicLong requests = new AtomicLong(0);
+    private final AtomicLong upstreamRequests = new AtomicLong(0);
     private final AtomicLong outstandingRequests = new AtomicLong(0);
+    private volatile Throwable error; // Upstream error we are saving for when server closes the websocket
 
     private final Attributes attributes;
     private final LongHistogram sentBytes;
@@ -113,7 +122,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             MessageWriter<OUTPUT> writer,
             MessageReader<INPUT> reader,
             Publisher<OUTPUT> publisher,
-            FluxSink<INPUT> sink,
+            FluxSink<INPUT> downstreamSink,
 
             WebSocketClientOptions options,
             DnsLookup dnsLookup,
@@ -128,7 +137,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         this.contentType = contentType;
         this.reader = reader;
         this.publisher = publisher;
-        this.sink = sink;
+        this.sink = downstreamSink;
         this.options = options;
         this.dnsLookup = dnsLookup;
         this.webSocketClient = webSocketClient;
@@ -154,20 +163,23 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 .setAllAttributes(attributes)
                 .startSpan();
 
-        sink.onCancel(this::subscriptionCancel);
-        sink.onDispose(this::subscriptionCancel);
+        downstreamSink.onCancel(this::upstreamCancel);
+// TODO Should we handle this callback? downstreamSink.onDispose(someCallback);
 
         try (Scope scope = span.makeCurrent()) {
             start();
+        } catch (CompletionException e)
+        {
+            if (e.getCause() instanceof RuntimeException re)
+                throw re;
+            else if (e.getCause() instanceof IOException ioe)
+            {
+                throw new UncheckedIOException(ioe);
+            } else
+            {
+                throw e;
+            }
         }
-    }
-
-    private void subscriptionRequest(long requested) {
-        sendRequests(requested);
-    }
-
-    private void subscriptionCancel() {
-        sendRequests(Long.MIN_VALUE);
     }
 
     // Connection process
@@ -202,7 +214,6 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 logger.trace(marker, "connect {}", subscriberWebsocketUri);
             }
 
-            logger.debug(marker, "Trying " + subscriberWebsocketUri);
             Span connectSpan = tracer.spanBuilder(subscriberWebsocketUri.toASCIIString() + " connect")
                     .setSpanKind(SpanKind.PRODUCER)
                     .startSpan();
@@ -210,7 +221,13 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
                 clientUpgradeRequest.setHeaders(options.headers());
                 clientUpgradeRequest.setCookies(options.cookies());
-                clientUpgradeRequest.setSubProtocols(options.subProtocols());
+                if (writer == null) {
+                    clientUpgradeRequest.setSubProtocols("publisher");
+                } else if (reader == null) {
+                    clientUpgradeRequest.setSubProtocols("subscriber");
+                } else {
+                    clientUpgradeRequest.setSubProtocols("subscriberWithResult");
+                }
                 clientUpgradeRequest.setExtensions(options.extensions().stream().map(ExtensionConfig::parse).toList());
                 clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), contentType);
                 textMapPropagator.inject(Context.current(), clientUpgradeRequest, jettySetter);
@@ -228,7 +245,6 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         }
     }
 
-
     // Subscriber
     @Override
     public reactor.util.context.Context currentContext() {
@@ -237,7 +253,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
     @Override
     protected void hookOnSubscribe(Subscription subscription) {
-        // No-op
+        subscription.request(upstreamRequests.getAndSet(0));
     }
 
     @Override
@@ -249,40 +265,47 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             byteBufferPool.release(eventBuffer);
 
             sentBytes.record(eventBuffer.limit(), attributes);
+
+            // publish without result, tell downstream subscriber the item has been handled
+            if (reader == null) {
+                sink.next((INPUT) item);
+            }
         } catch (IOException e) {
 
-            if (isCausedBy(e, EofException.class, ClosedChannelException.class))
-            {
+            if (isCausedBy(e, EofException.class, ClosedChannelException.class)) {
                 // Shutting down, ignore this
                 return;
             }
 
-            sink.error(e);
-        }
+            // Tell server we have a problem
+            onError(e);
 
-        if (reader == null) {
-            sink.next((INPUT) item);
+            // Save it for when websocket is closed so that we can report it accurately
+            this.error = e;
         }
     }
 
     @Override
     protected void hookOnComplete() {
         if (session.isOpen()) {
-            sendRequests(-1);
+            sendRequests(COMPLETE);
         }
     }
 
     @Override
     protected void hookOnError(Throwable throwable) {
         if (session.isOpen()) {
-            sink.error(throwable);
-            session.close(StatusCode.SHUTDOWN, "error");
+            session.close(StatusCode.NORMAL, getError(throwable).toPrettyString());
+
+            // Save it for when websocket is closed so that we can report it accurately
+            this.error = throwable;
         }
     }
 
     @Override
     protected void hookOnCancel() {
-        sendRequests(Long.MIN_VALUE);
+        upstreamCancel();
+        session.close(StatusCode.NORMAL, null);
     }
 
     // WebSocketListener
@@ -315,10 +338,10 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             session.getRemote().sendString(contextJsonString);
             logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
 
-            sink.onRequest(this::subscriptionRequest);
+            sink.onRequest(this::sendRequests);
         } catch (Throwable e) {
-            sink.error(e);
-            session.close(StatusCode.SERVER_ERROR, getError(e).toPrettyString());
+            error = e;
+            session.close(StatusCode.NORMAL, getError(e).toPrettyString());
         }
     }
 
@@ -332,15 +355,14 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             JsonNode json = jsonMapper.readTree(message);
             if (json instanceof NumericNode numericNode) {
                 long requests = numericNode.asLong();
-                if (requests == Long.MIN_VALUE) {
+                if (requests == CANCEL) {
                     upstream().cancel();
-                    sink.complete();
-                    session.close(StatusCode.NORMAL, "cancel");
+                    session.close(StatusCode.NORMAL, null);
                 } else {
                     if (upstream() != null)
                         upstream().request(requests);
                     else
-                        logger.warn("Not subscribed to upstream yet!");
+                        upstreamRequests.addAndGet(requests);
                 }
             } else if (json instanceof ObjectNode objectNode) {
                 Map<String, Object> contextMap = new HashMap<>();
@@ -353,6 +375,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                                 contextMap.put(property.getKey(), value.isIntegralNumber() ? value.asLong() : value.asDouble());
                     }
                 }
+                contextMap.put("request", session.getUpgradeRequest());
+                contextMap.put("response", session.getUpgradeResponse());
                 context = reactor.util.context.Context.of(contextMap);
                 publisher.subscribe(this);
             }
@@ -363,7 +387,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
             upstream().cancel();
             sink.error(e);
-            session.close(StatusCode.SERVER_ERROR, getError(e).toPrettyString());
+            session.close(StatusCode.NORMAL, getError(e).toPrettyString());
         }
     }
 
@@ -385,10 +409,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 outstandingRequests.decrementAndGet();
                 sendRequests(0);
             } catch (IOException e) {
-                logger.error("Could not receive value", e);
-                upstream().cancel();
-                sink.error(e);
-                session.close(StatusCode.BAD_PAYLOAD, getError(e).toPrettyString());
+                error = e;
+                session.close(StatusCode.NORMAL, getError(e).toPrettyString());
             }
         }
     }
@@ -403,10 +425,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         if (logger.isDebugEnabled()) {
             logger.debug(marker, "onWebSocketError", throwable);
         }
-        if (upstream() != null)
-            upstream().cancel();
-        if (sink != null)
-            sink.error(throwable);
+        if (error == null)
+            error = throwable;
     }
 
     @Override
@@ -417,42 +437,52 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
         if (statusCode == StatusCode.NORMAL) {
             logger.debug(marker, "Session closed:{} {}", statusCode, reason);
-            if (reason == null)
-            {
-                if (upstream() != null)
-                    upstream().cancel();
-                if (sink != null)
-                    sink.complete();
-            } else
-            {
+            if (reason == null) {
+                sink.complete();
+            } else {
                 try {
                     JsonNode reasonJson = jsonMapper.readTree(reason);
                     if (reasonJson instanceof ObjectNode objectNode) {
                         Throwable throwable;
                         String message = objectNode.path("reason").asText();
 
-                        throwable = switch (reasonJson.get("status").asInt()) {
-                            case 401 -> new NotAuthorizedStreamException(message);
+                        int status = reasonJson.get("status").asInt();
+                        throwable = switch (status) {
+                            case 401 -> new NotAuthorizedStreamException(message, error);
 
-                            default -> new ServerStreamException(message);
+                            default -> new ServerStreamException(status, message, error);
                         };
 
                         sink.error(throwable);
                     } else {
-                        sink.error(new ServerStreamException(reason));
+                        sink.error(new ServerStreamException(statusCode, reason, error));
                     }
                 } catch (JsonProcessingException e) {
-                    sink.error(new ServerStreamException(reason));
+                    sink.error(new ServerStreamException(statusCode, reason, error));
                 }
             }
-        } else if (statusCode == StatusCode.SHUTDOWN || statusCode == StatusCode.NO_CLOSE) {
+        } else {
             logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
-            sink.error(new ServerStreamException(reason));
+            if (reason.equals("Connection Idle Timeout"))
+            {
+                sink.error(new IdleTimeoutStreamException());
+            } else
+            {
+                sink.error(new ServerStreamException(statusCode, reason, error));
+            }
         }
         span.end();
     }
 
-    protected ObjectNode getError(Throwable throwable) {
+    private void upstreamCancel() {
+        if (upstream() != null)
+        {
+            upstream().cancel();
+        }
+        session.close(StatusCode.NORMAL, null);
+    }
+
+    private ObjectNode getError(Throwable throwable) {
         ObjectNode errorJson = JsonNodeFactory.instance.objectNode();
 
         if (throwable instanceof NotAuthorizedStreamException) {
@@ -472,14 +502,14 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     }
 
     // Send requests
-    protected void sendRequests(long n) {
+    private void sendRequests(long n) {
         if (session == null || !session.isOpen())
             return;
 
         sendLock.lock();
         try {
             long rn = n;
-            if (n == 0) {
+            if (n == SEND_BUFFERED_REQUESTS) {
                 rn = requests.get();
                 if (rn >= sendRequestsThreshold && outstandingRequests.get() < sendRequestsThreshold) {
                     requests.addAndGet(-sendRequestsThreshold);
@@ -488,9 +518,13 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 } else {
                     return;
                 }
-            } else if (n == -1) {
-                // Complete
-            } else if (n != Long.MIN_VALUE) {
+            } else if (n == COMPLETE) {
+                if (requests.getAndSet(COMPLETE) == COMPLETE)
+                {
+                    // Already completed
+                    return;
+                }
+            } else if (n != CANCEL) {
                 rn = requests.addAndGet(n);
 
                 if (sendRequestsThreshold == 0) {
@@ -510,15 +544,17 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 outstandingRequests.addAndGet(rn);
             }
 
-            if (rn == 0)
-            {
+            if (rn == 0) {
                 return;
             }
             String requestString = Long.toString(rn);
             session.getRemote().sendString(requestString);
 
             if (logger.isTraceEnabled())
-                logger.trace(marker, "sendRequest {}", rn);
+                logger.trace(marker, "sendRequest {}",
+                        rn == CANCEL ? "CANCEL"
+                                : rn == COMPLETE ? "COMPLETE"
+                                : rn);
         } catch (ClosedChannelException e) {
             // Ignore
         } catch (IOException e) {
@@ -527,12 +563,9 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 return;
 
             logger.error("Could not send requests", e);
-            if (upstream() != null)
-                upstream().cancel();
-            if (sink != null)
-                sink.error(e);
+            error = e;
             if (session.isOpen())
-                session.close(StatusCode.SERVER_ERROR, e.getMessage());
+                session.close(StatusCode.NORMAL, getError(e).toPrettyString());
         } finally {
             sendLock.unlock();
         }

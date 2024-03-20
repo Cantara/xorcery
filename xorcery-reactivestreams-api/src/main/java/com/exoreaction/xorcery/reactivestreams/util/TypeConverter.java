@@ -13,59 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.reactivestreams.client;
+package com.exoreaction.xorcery.reactivestreams.util;
 
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.publisher.SynchronousSink;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
-class SubscriberConverter implements Subscriber<Object> {
-    private final Subscriber<Object> subscriber;
-    private MessageWriter<Object> writer;
-    private MessageReader<Object> reader;
-    private Subscription subscription;
+/**
+ * Flux.handle() consumer that converts items from one type to another using specified MessageWriter/MessageReader.
+ *
+ * @param <INPUT>
+ * @param <OUTPUT>
+ */
+public class TypeConverter<INPUT, OUTPUT>
+        implements BiConsumer<INPUT, SynchronousSink<OUTPUT>> {
 
-    public SubscriberConverter(Subscriber<Object> subscriber, MessageWriter<Object> writer, MessageReader<Object> reader) {
-        this.subscriber = subscriber;
+    private final MessageWriter<INPUT> writer;
+    private final MessageReader<OUTPUT> reader;
+
+    public TypeConverter(MessageWriter<INPUT> writer, MessageReader<OUTPUT> reader) {
         this.writer = writer;
         this.reader = reader;
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
-        this.subscription = subscription;
-        subscriber.onSubscribe(subscription);
-    }
-
-    @Override
-    public void onNext(Object item) {
-
-        // Convert item to correct type
+    public void accept(INPUT input, SynchronousSink<OUTPUT> sink) {
         try {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            writer.writeTo(item, bout);
+            writer.writeTo(input, bout);
             ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-            item = reader.readFrom(bin);
+            OUTPUT newItem = reader.readFrom(bin);
+            sink.next(newItem);
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            sink.error(e);
         }
-
-        subscriber.onNext(item);
-    }
-
-    @Override
-    public void onError(Throwable throwable) {
-        subscriber.onError(throwable);
-    }
-
-    @Override
-    public void onComplete() {
-        subscriber.onComplete();
     }
 }

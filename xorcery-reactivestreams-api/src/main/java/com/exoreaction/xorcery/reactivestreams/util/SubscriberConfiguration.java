@@ -20,6 +20,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import java.net.URI;
 import java.util.Optional;
 
+@Deprecated
 public record SubscriberConfiguration(Configuration configuration) {
 
     public Optional<URI> getUri() {

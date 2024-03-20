@@ -4,21 +4,22 @@ import java.net.HttpCookie;
 import java.util.*;
 
 public record WebSocketClientOptions(Map<String, List<String>> headers, List<String> extensions,
-                                     List<HttpCookie> cookies, List<String> subProtocols) {
+                                     List<HttpCookie> cookies) {
+
+    private static final WebSocketClientOptions INSTANCE = new Builder().build();
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public static WebSocketClientOptions empty() {
-        return new WebSocketClientOptions(Collections.emptyMap(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+    public static WebSocketClientOptions instance() {
+        return INSTANCE;
     }
 
     public static class Builder {
         protected final Map<String, List<String>> headers = new HashMap<>();
         protected final List<String> extensions = new ArrayList<>();
         protected final List<HttpCookie> cookies = new ArrayList<>();
-        protected final List<String> subProtocols = new ArrayList<>();
 
         private Builder() {
         }
@@ -38,14 +39,8 @@ public record WebSocketClientOptions(Map<String, List<String>> headers, List<Str
             return this;
         }
 
-        public Builder subProtocol(String subProtocol) {
-            subProtocols.add(subProtocol);
-            return this;
-        }
-
-        public WebSocketClientOptions build()
-        {
-            return new WebSocketClientOptions(headers, extensions, cookies, subProtocols);
+        public WebSocketClientOptions build() {
+            return new WebSocketClientOptions(headers, extensions, cookies);
         }
     }
 }

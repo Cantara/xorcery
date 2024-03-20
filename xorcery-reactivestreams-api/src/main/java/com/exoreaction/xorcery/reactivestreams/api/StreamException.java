@@ -21,11 +21,19 @@ package com.exoreaction.xorcery.reactivestreams.api;
 public class StreamException
     extends RuntimeException
 {
-    public StreamException(String message, Throwable cause) {
+    private final int status;
+
+    public StreamException(int status, String message, Throwable cause) {
         super(message, cause);
+        this.status = status;
     }
 
-    public StreamException(String message) {
+    public StreamException(int status, String message) {
         super(message);
+        this.status = status;
+    }
+
+    public int getStatus() {
+        return status;
     }
 }

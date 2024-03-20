@@ -19,16 +19,12 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
-import com.exoreaction.xorcery.reactivestreams.api.WithResult;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
-import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
-import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import com.exoreaction.xorcery.reactivestreams.server.reactor.WebSocketStreamsServerConfiguration;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
@@ -37,21 +33,21 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
-
-import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cancelStream;
 
 public class PublishWithResultSubscriberWebSocketTest {
 
@@ -82,11 +78,11 @@ public class PublishWithResultSubscriberWebSocketTest {
         System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
         clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
-        websocketStreamsServerConfiguration = new WebSocketStreamsServerConfiguration(serverConfiguration.getConfiguration("reactivestreams.server"));
+        websocketStreamsServerConfiguration = WebSocketStreamsServerConfiguration.get(serverConfiguration);
     }
 
     @Test
-    public void testPublishWithResultSubscriber() throws Exception {
+    public void complete() throws Exception {
 
         // Given
         try (Xorcery server = new Xorcery(serverConfiguration)) {
@@ -100,11 +96,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                         MediaType.APPLICATION_JSON,
                         Integer.class,
                         Integer.class,
-                        upstream -> upstream.map(v -> {
-                                    logger.info("Received value " + v);
-                                    return v;
-                                }
-                        ));
+                        upstream -> upstream.map(v -> v));
 
                 // When
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
@@ -113,7 +105,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                                 MediaType.APPLICATION_JSON,
                                 Integer.class,
                                 Integer.class,
-                                WebSocketClientOptions.empty(),
+                                WebSocketClientOptions.instance(),
                                 Flux.fromIterable(source))
                         .toStream().toList();
 
@@ -124,15 +116,105 @@ public class PublishWithResultSubscriberWebSocketTest {
     }
 
     @Test
-    public void testServerTimesOut() throws Exception {
+    public void cancel() throws Exception {
 
         // Given
-        Configuration configuration = new ConfigurationBuilder().addTestDefaults().addYaml(String.format("""
-                reactivestreams.server.idleTimeout: "5s"
-                jetty.server.http.port: %d
-                jetty.server.ssl.port: %d
-                """, Sockets.nextFreePort(), Sockets.nextFreePort())).build();
-        logger.debug(configuration);
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
+                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+
+                CountDownLatch cancelled = new CountDownLatch(1);
+                CountDownLatch latch = new CountDownLatch(1);
+                websocketStreamsServer.subscriberWithResult(
+                        "numbers",
+                        MediaType.APPLICATION_JSON,
+                        Integer.class,
+                        Integer.class,
+                        upstream -> upstream
+                                .doOnCancel(cancelled::countDown));
+
+                // When
+                Sinks.Many<Integer> publisher = Sinks.many().unicast().onBackpressureBuffer(new ArrayBlockingQueue<>(1024));
+                List<Integer> result = new ArrayList<>();
+                Disposable subscription = websocketStreamsClient.publishWithResult(
+                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                MediaType.APPLICATION_JSON,
+                                Integer.class,
+                                Integer.class,
+                                WebSocketClientOptions.instance(),
+                                publisher.asFlux())
+                        .doOnError(e -> logger.error("ERROR", e))
+                        .doOnNext(result::add)
+                        .doOnNext(v -> latch.countDown())
+                        .subscribe();
+
+                logger.info("Emitted: " + publisher.tryEmitNext(42));
+                latch.await(10, TimeUnit.SECONDS);
+                subscription.dispose();
+                logger.info("Disposed");
+                cancelled.await(10, TimeUnit.SECONDS);
+
+                // Then
+                Assertions.assertEquals(List.of(42), result);
+            }
+        }
+    }
+
+    @Test
+    public void subscriberException() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
+                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+
+                websocketStreamsServer.subscriberWithResult(
+                        "numbers",
+                        MediaType.APPLICATION_JSON,
+                        Integer.class,
+                        Integer.class,
+                        upstream -> upstream.handle((v, s) ->
+                        {
+                            if (v == 10)
+                                s.error(new IllegalArgumentException("Break"));
+                            else
+                                s.next(v);
+                        }));
+
+                // Then
+                try {
+                    List<Integer> source = IntStream.range(0, 100).boxed().toList();
+                    websocketStreamsClient.publishWithResult(
+                                    websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                    MediaType.APPLICATION_JSON,
+                                    Integer.class,
+                                    Integer.class,
+                                    WebSocketClientOptions.instance(),
+                                    Flux.fromIterable(source))
+                            .toStream().toList();
+                    Assertions.fail();
+                } catch (ServerStreamException e) {
+                    Assertions.assertEquals(500, e.getStatus());
+                    Assertions.assertEquals("Break", e.getMessage());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void serverIdleTimeout() throws Exception {
+
+        // Given
+        serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf)
+                .addYaml("""
+                        reactivestreams.server.idleTimeout: "2s"
+                        """)
+                .build();
+        logger.info(serverConfiguration);
 
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
@@ -145,41 +227,37 @@ public class PublishWithResultSubscriberWebSocketTest {
                         MediaType.APPLICATION_JSON,
                         Integer.class,
                         Integer.class,
-                        upstream -> upstream.flatMap(v -> Mono.create(sink -> {
-                                })
-                        ));
-
+                        upstream -> upstream.doOnNext(System.out::println));
 
                 // When
-                List<Integer> source = IntStream.range(0, 100).boxed().toList();
-                Flux<Integer> destination = websocketStreamsClient.publishWithResult(
-                        websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
-                        MediaType.APPLICATION_JSON,
-                        Integer.class,
-                        Integer.class,
-                        WebSocketClientOptions.empty(),
-                        Flux.fromIterable(source));
 
                 // Then
-                Assertions.assertThrows(ServerStreamException.class, () ->
+                Assertions.assertThrows(IdleTimeoutStreamException.class, () ->
                 {
-                    destination.toStream().toList();
+                    Sinks.Many<Integer> sink = Sinks.many().unicast().onBackpressureBuffer();
+                    List<Integer> result = websocketStreamsClient.publishWithResult(
+                                    websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                    MediaType.APPLICATION_JSON,
+                                    Integer.class,
+                                    Integer.class,
+                                    WebSocketClientOptions.instance(),
+                                    sink.asFlux().doOnNext(System.out::println))
+                            .toStream().toList();
                 });
             }
         }
     }
 
     @Test
-    public void testServerException() throws Exception {
+    public void clientIdleTimeout() throws Exception {
 
         // Given
-        Configuration configuration = new ConfigurationBuilder()
-                .addTestDefaults()
-                .addYaml(String.format("""
-                        jetty.server.http.port: %d
-                        jetty.server.ssl.port: %d
-                        """, Sockets.nextFreePort(), Sockets.nextFreePort())).build();
-        logger.debug(configuration);
+        clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf)
+                .addYaml("""
+                        reactivestreams.client.idleTimeout: "2s"
+                        """)
+                .build();
+        logger.info(serverConfiguration);
 
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
@@ -192,31 +270,88 @@ public class PublishWithResultSubscriberWebSocketTest {
                         MediaType.APPLICATION_JSON,
                         Integer.class,
                         Integer.class,
-                        upstream -> upstream.handle((v, sink)-> sink.error(new NotAuthorizedStreamException("Not allowed")))
-                );
-
+                        upstream -> upstream.doOnNext(System.out::println));
 
                 // When
-                List<Integer> source = IntStream.range(0, 100).boxed().toList();
-                Flux<Integer> destination = websocketStreamsClient.publishWithResult(
-                        websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
-                        MediaType.APPLICATION_JSON,
-                        Integer.class,
-                        Integer.class,
-                        WebSocketClientOptions.empty(),
-                        Flux.fromIterable(source));
 
                 // Then
-                Assertions.assertThrows(NotAuthorizedStreamException.class, () ->
+                Assertions.assertThrows(IdleTimeoutStreamException.class, () ->
                 {
-                    destination.toStream().toList();
+                    Sinks.Many<Integer> sink = Sinks.many().unicast().onBackpressureBuffer();
+                    List<Integer> result = websocketStreamsClient.publishWithResult(
+                                    websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                    MediaType.APPLICATION_JSON,
+                                    Integer.class,
+                                    Integer.class,
+                                    WebSocketClientOptions.instance(),
+                                    sink.asFlux())
+                            .toStream().toList();
                 });
             }
         }
     }
 
     @Test
-    public void testServerWithContext()
+    public void clientIdleTimeoutWithRetry() throws Exception {
+
+        // Given
+        clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf)
+                .addYaml("""
+                        reactivestreams.client.idleTimeout: "1s"
+                        """)
+                .build();
+        logger.info(serverConfiguration);
+
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
+                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+
+                List<Integer> result = new ArrayList<>();
+                CountDownLatch latch = new CountDownLatch(1);
+                websocketStreamsServer.subscriberWithResult(
+                        "numbers",
+                        MediaType.APPLICATION_JSON,
+                        Integer.class,
+                        Integer.class,
+                        upstream -> upstream);
+
+                // When
+                Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
+                websocketStreamsClient.publishWithResult(
+                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
+                                MediaType.APPLICATION_JSON,
+                                Integer.class,
+                                Integer.class,
+                                WebSocketClientOptions.instance(),
+                                sink.asFlux())
+                        .retry()
+                        .doOnNext(result::add)
+                        .doOnComplete(latch::countDown)
+                        .subscribe();
+
+                IntStream.range(0, 5).boxed().forEach(v ->
+                {
+                    try {
+                        sink.tryEmitNext(v);
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+                sink.tryEmitComplete();
+
+                latch.await(20, TimeUnit.SECONDS);
+
+                // Then
+                Assertions.assertEquals(List.of(0,1,2,3,4), result);
+            }
+        }
+    }
+
+    @Test
+    public void withContext()
             throws Exception {
         // Given
         try (Xorcery server = new Xorcery(serverConfiguration)) {
@@ -235,7 +370,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 Publisher<String> configPublisher = s -> {
                     if (s instanceof CoreSubscriber<? super String> subscriber) {
-                        String val = subscriber.currentContext().stream().toList().toString();
+                        String val = subscriber.currentContext().stream().filter(e -> !(e.getKey().equals("request")||e.getKey().equals("response"))).toList().toString();
                         s.onSubscribe(new Subscription() {
                             @Override
                             public void request(long n) {
@@ -255,7 +390,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                                 MediaType.APPLICATION_JSON,
                                 String.class,
                                 String.class,
-                                WebSocketClientOptions.empty(),
+                                WebSocketClientOptions.instance(),
                                 configPublisher)
                         .contextWrite(Context.of("client", "abc"))
                         .take(1).blockFirst();

@@ -395,11 +395,12 @@ public class SubscribeReactiveStream
                         ? new Exception(errorJson.path("exception").asText())
                         : null;
 
-                throwable = switch (errorJson.get("status").asInt())
+                int statusCode = errorJson.get("status").asInt();
+                throwable = switch (statusCode)
                 {
                     case 401 -> new NotAuthorizedStreamException(message, serverException);
 
-                    default -> new ServerStreamException(message, serverException);
+                    default -> new ServerStreamException(statusCode, message, serverException);
                 };
             }
         } catch (Throwable e) {
@@ -495,11 +496,11 @@ public class SubscribeReactiveStream
                 retry(new ServerTimeoutStreamException("Server closed due to timeout"));
             } else {
                 logger.warn(marker, "Server is shutting down:{} {}", statusCode, reason);
-                retry(new ServerShutdownStreamException("Server is shutting down"));
+                retry(new ServerShutdownStreamException(statusCode, "Server is shutting down"));
             }
         } else {
             logger.warn(marker, "Websocket failed, retrying:{} {}", statusCode, reason);
-            retry(new ServerStreamException("Websocket failed:" + reason));
+            retry(new ServerStreamException(statusCode, "Websocket failed:" + reason));
         }
     }
 

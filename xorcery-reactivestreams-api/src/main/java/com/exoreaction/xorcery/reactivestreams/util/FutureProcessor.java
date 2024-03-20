@@ -27,8 +27,10 @@ import java.util.concurrent.CompletableFuture;
  * <p>
  * Can either be triggered by the future, or complete the future itself.
  *
+ *
  * @param <T>
  */
+@Deprecated
 public class FutureProcessor<T>
         implements Processor<T, T>, Subscription, AutoCloseable {
     private final CompletableFuture<Void> result;
@@ -137,7 +139,7 @@ public class FutureProcessor<T>
             Subscriber<? super T> sub = subscriber;
             subscriber = null;
             cancel();
-            ServerShutdownStreamException exception = new ServerShutdownStreamException("shutdown");
+            ServerShutdownStreamException exception = new ServerShutdownStreamException(1001, "shutdown");
             sub.onError(exception);
         }
 //        cancel();

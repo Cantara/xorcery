@@ -1,5 +1,9 @@
 package com.exoreaction.xorcery.reactivestreams.util;
 
+/**
+ * TODO: This should be moved to a separate module and added as an operator
+ */
+@Deprecated()
 public interface ReactiveStreamsOpenTelemetry {
 
     String NAMESPACE = "xorcery.reactivestreams.";

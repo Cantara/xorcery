@@ -24,6 +24,7 @@ import java.util.function.Function;
 /**
  * This is used by the reactive stream client to get access to local stream factories, i.e. when authority is set to null.
  */
+@Deprecated
 public interface LocalStreamFactories {
 
     WrappedSubscriberFactory getSubscriberFactory(String streamName);

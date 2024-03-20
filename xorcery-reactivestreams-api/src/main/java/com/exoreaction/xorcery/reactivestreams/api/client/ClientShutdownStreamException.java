@@ -23,10 +23,10 @@ public class ClientShutdownStreamException
     extends ClientStreamException
 {
     public ClientShutdownStreamException(String message, Throwable cause) {
-        super(message, cause);
+        super(1001, message, cause);
     }
 
     public ClientShutdownStreamException(String message) {
-        super(message);
+        super(1001, message);
     }
 }

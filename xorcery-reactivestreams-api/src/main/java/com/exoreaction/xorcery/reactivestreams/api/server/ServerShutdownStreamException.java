@@ -22,11 +22,11 @@ package com.exoreaction.xorcery.reactivestreams.api.server;
 public class ServerShutdownStreamException
     extends ServerStreamException
 {
-    public ServerShutdownStreamException(String message, Throwable cause) {
-        super(message, cause);
+    public ServerShutdownStreamException(int status, String message, Throwable cause) {
+        super(status, message, cause);
     }
 
-    public ServerShutdownStreamException(String message) {
-        super(message);
+    public ServerShutdownStreamException(int status, String message) {
+        super(status, message);
     }
 }

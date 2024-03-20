@@ -1,12 +1,9 @@
 package com.exoreaction.xorcery.reactivestreams.api.client;
 
 import org.reactivestreams.Publisher;
-import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.SynchronousSink;
 
 import java.net.URI;
-import java.util.function.Function;
 
 public interface WebSocketStreamsClient {
 

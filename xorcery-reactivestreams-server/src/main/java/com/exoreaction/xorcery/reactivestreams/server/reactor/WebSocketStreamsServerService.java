@@ -1,7 +1,8 @@
 package com.exoreaction.xorcery.reactivestreams.server.reactor;
 
 
-import com.exoreaction.xorcery.lang.Classes;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketServerOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
@@ -15,6 +16,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
@@ -26,6 +28,8 @@ import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
 import org.eclipse.jetty.websocket.server.JettyWebSocketCreator;
 import org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer;
+import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
@@ -37,11 +41,14 @@ import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 
 @Service(name = "reactivestreams.server.reactor")
 @ContractsProvided({WebSocketStreamsServer.class})
+@RunLevel(4)
 public class WebSocketStreamsServerService
         implements WebSocketStreamsServer {
 
@@ -60,35 +67,43 @@ public class WebSocketStreamsServerService
 
 
     private final MessageWorkers messageWorkers;
-    private final JettyWebSocketServerContainer container;
+    private final LoggerContext loggerContext;
     private final Logger logger;
+    private JettyWebSocketServerContainer container;
 
     protected final ByteBufferPool byteBufferPool;
 
 
-    // Path -> Content type -> publisher
-    private final Map<String, Map<String, SocketPublisher>> publishers = new ConcurrentHashMap<>();
+    // Subprotocol -> Path -> Content type -> handler
+    private final Map<String, Map<String, Map<String, WebSocketHandler>>> handlers = new ConcurrentHashMap<>();
 
-    // Path -> Content type -> subscriber
-    private final Map<String, Map<String, SocketSubscriber>> subscribers = new ConcurrentHashMap<>();
+    private final Set<String> mappedPaths = new CopyOnWriteArraySet<>();
 
     private final TextMapPropagator textMapPropagator;
     private final Meter meter;
     private final Tracer tracer;
 
-    private final JettyWebSocketCreator publisherWebSocketCreator = new PublisherWebSocketCreator();
-    private final JettyWebSocketCreator subscriberWebSocketCreator = new SubscriberWebSocketCreator();
+    private final StreamWebSocketCreator webSocketCreator = new StreamWebSocketCreator();
 
     @Inject
     public WebSocketStreamsServerService(
+            Configuration configuration,
             MessageWorkers messageWorkers,
             ServletContextHandler servletContextHandler,
             OpenTelemetry openTelemetry,
-            Logger logger) {
+            LoggerContext loggerContext) {
         this.messageWorkers = messageWorkers;
+        this.loggerContext = loggerContext;
 
-        container = JettyWebSocketServerContainer.getContainer(servletContextHandler.getServletContext());
-        this.logger = logger;
+        WebSocketStreamsServerConfiguration serverConfiguration = WebSocketStreamsServerConfiguration.get(configuration);
+
+        JettyWebSocketServletContainerInitializer.configure(servletContextHandler, (servletContext, container) ->
+        {
+            serverConfiguration.apply(container);
+            WebSocketStreamsServerService.this.container = container;
+        });
+
+        this.logger = loggerContext.getLogger(getClass());
 
         this.byteBufferPool = new ArrayByteBufferPool();
         textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
@@ -102,203 +117,132 @@ public class WebSocketStreamsServerService
                 .build();
     }
 
+    public JettyWebSocketServerContainer getContainer() {
+        return container;
+    }
+
     @Override
     public <PUBLISH> Disposable publisher(String path, String contentType, Class<PUBLISH> publishType, Publisher<PUBLISH> publisher) throws IllegalArgumentException {
-
-        if (!path.contains("|") && !path.startsWith("/")) {
-            path = "/" + path;
-        }
-
         MessageWriter<Object> itemWriter = Optional.ofNullable(messageWorkers.newWriter(publishType, publishType, contentType))
                 .orElseThrow(() -> new IllegalStateException("Could not find MessageWriter for " + publishType.getTypeName() + "(" + contentType + ")"));
 
-        Map<String, SocketPublisher> contentTypePublishers = publishers.get(path);
-        if (contentTypePublishers == null) {
-            container.addMapping(path, publisherWebSocketCreator);
-            contentTypePublishers = new ConcurrentHashMap<>();
-            publishers.put(path, contentTypePublishers);
-        }
-
-        if (contentTypePublishers.containsKey(contentType))
-            throw new IllegalArgumentException("Publisher for " + path + " and content type " + contentType + " already exists");
-        contentTypePublishers.put(contentType, new SocketPublisher(null, itemWriter, flux -> Flux.from(publisher)));
-
-        String finalPath = path;
-        return () -> publishers.get(finalPath).remove(contentType);
+        return registerHandler("publisher", path, contentType, null, itemWriter, flux -> Flux.from(publisher));
     }
 
     @Override
     public <SUBSCRIBE> Disposable subscriber(String path, String contentType, Class<SUBSCRIBE> subscribeType, Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> appendSubscriber) throws IllegalArgumentException {
-        if (!path.contains("|") && !path.startsWith("/")) {
-            path = "/" + path;
-        }
-
         MessageReader<SUBSCRIBE> itemReader = Optional.ofNullable(messageWorkers.<SUBSCRIBE>newReader(subscribeType, subscribeType, contentType))
                 .orElseThrow(() -> new IllegalStateException("Could not find MessageReader for " + subscribeType.getTypeName() + "(" + contentType + ")"));
 
-        Map<String, SocketSubscriber> contentTypeSubscribers = subscribers.get(path);
-        if (contentTypeSubscribers == null) {
-            container.addMapping(path, subscriberWebSocketCreator);
-            contentTypeSubscribers = new ConcurrentHashMap<>();
-            subscribers.put(path, contentTypeSubscribers);
-        }
-
-        if (contentTypeSubscribers.containsKey(contentType))
-            throw new IllegalArgumentException("Subscriber for " + path + " and content type " + contentType + " already exists");
-        contentTypeSubscribers.put(contentType, new SocketSubscriber(itemReader, null, (Function) appendSubscriber));
-
-        String finalPath = path;
-        return () -> publishers.get(finalPath).remove(contentType);
+        return registerHandler("subscriber", path, contentType, itemReader, null, appendSubscriber);
     }
 
     @Override
     public <SUBSCRIBE, RESULT> Disposable subscriberWithResult(String path, String contentType, Class<SUBSCRIBE> subscribeType, Class<RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult) throws IllegalArgumentException {
-        if (!path.contains("|") && !path.startsWith("/")) {
-            path = "/" + path;
-        }
 
         MessageReader<SUBSCRIBE> itemReader = Optional.ofNullable(messageWorkers.<SUBSCRIBE>newReader(subscribeType, subscribeType, contentType))
                 .orElseThrow(() -> new IllegalStateException("Could not find MessageReader for " + subscribeType.getTypeName() + "(" + contentType + ")"));
         MessageWriter<RESULT> itemWriter = Optional.ofNullable(messageWorkers.<RESULT>newWriter(resultType, resultType, contentType))
                 .orElseThrow(() -> new IllegalStateException("Could not find MessageWriter for " + resultType.getTypeName() + "(" + contentType + ")"));
 
-        Map<String, SocketSubscriber> contentTypeSubscribers = subscribers.get(path);
-        if (contentTypeSubscribers == null) {
-            container.addMapping(path, subscriberWebSocketCreator);
-            contentTypeSubscribers = new ConcurrentHashMap<>();
-            subscribers.put(path, contentTypeSubscribers);
+        return registerHandler("subscriberWithResult", path, contentType, itemReader, itemWriter, subscribeAndReturnResult);
+    }
+
+    private <INPUT, OUTPUT> Disposable registerHandler(String subProtocol, String path, String contentType, MessageReader<INPUT> reader, MessageWriter<OUTPUT> writer, Function<Flux<INPUT>, Publisher<OUTPUT>> handler) {
+
+        if (!path.contains("|") && !path.startsWith("/")) {
+            path = "/" + path;
         }
 
-        if (contentTypeSubscribers.containsKey(contentType))
+        Map<String, WebSocketHandler> contentTypeHandlers = handlers
+                .computeIfAbsent(subProtocol, p -> new ConcurrentHashMap<>())
+                .computeIfAbsent(path, p ->
+                {
+                    if (mappedPaths.add(p)) {
+                        container.addMapping(p, webSocketCreator);
+                    }
+                    return new ConcurrentHashMap<>();
+                });
+
+        if (contentTypeHandlers.containsKey(contentType))
             throw new IllegalArgumentException("Subscriber for " + path + " and content type " + contentType + " already exists");
-        contentTypeSubscribers.put(contentType, new SocketSubscriber(itemReader, itemWriter, (Function) subscribeAndReturnResult));
+        contentTypeHandlers.put(contentType, new WebSocketHandler(reader, writer, (Function) handler));
 
-        String finalPath = path;
-        return () -> publishers.get(finalPath).remove(contentType);
-
+        return () -> contentTypeHandlers.remove(contentType);
     }
 
-    record SocketPublisher(MessageReader<?> itemReader, MessageWriter<?> itemWriter,
-                           Function<Flux<Object>, Publisher<Object>> appendPublisher) {
+    record WebSocketHandler(MessageReader<?> reader, MessageWriter<?> writer,
+                            Function<Flux<Object>, Publisher<Object>> handler) {
     }
 
-    record SocketSubscriber(MessageReader<?> itemReader, MessageWriter<?> itemWriter,
-                            Function<Flux<Object>, Publisher<Object>> appendSubscriber) {
-    }
-
-    class PublisherWebSocketCreator
+    class StreamWebSocketCreator
             implements JettyWebSocketCreator {
+
         @Override
         public Object createWebSocket(JettyServerUpgradeRequest jettyServerUpgradeRequest, JettyServerUpgradeResponse jettyServerUpgradeResponse) {
             try {
-                String path = jettyServerUpgradeRequest.getRequestPath();
-                String contentType = jettyServerUpgradeRequest.getHeader(HttpHeader.CONTENT_TYPE.asString());
+                for (String requestSubProtocol : jettyServerUpgradeRequest.getSubProtocols()) {
+                    Map<String, Map<String, WebSocketHandler>> pathHandlers = handlers.get(requestSubProtocol);
+                    if (pathHandlers == null)
+                        continue;
 
-                Map<String, WebSocketStreamsServerService.SocketPublisher> contentTypePublishers = publishers.get(path);
-                if (contentTypePublishers == null) {
-                    jettyServerUpgradeResponse.sendError(HttpStatus.NOT_FOUND_404, "Not found");
-                    return null;
-                }
-
-                WebSocketStreamsServerService.SocketPublisher publisherFactory;
-                if (contentType == null) {
-                    if (contentTypePublishers.size() == 1) {
-                        publisherFactory = contentTypePublishers.get(contentType);
+                    String path = jettyServerUpgradeRequest.getRequestPath();
+                    Map<String, WebSocketHandler> contentTypeHandlers;
+                    if (jettyServerUpgradeRequest.getServletAttribute("org.eclipse.jetty.http.pathmap.PathSpec") instanceof UriTemplatePathSpec pathSpec) {
+                        String factoryPath = "uri-template|" + pathSpec.getDeclaration();
+                        contentTypeHandlers = pathHandlers.get(factoryPath);
                     } else {
-                        publisherFactory = null;
-                        jettyServerUpgradeResponse.sendError(HttpStatus.UNSUPPORTED_MEDIA_TYPE_415, "Media type not specified");
+                        contentTypeHandlers = pathHandlers.get(path);
+                    }
+
+                    if (contentTypeHandlers == null) {
+                        jettyServerUpgradeResponse.sendError(HttpStatus.NOT_FOUND_404, "Not found");
                         return null;
                     }
-                } else {
 
-                    publisherFactory = contentTypePublishers.get(contentType);
-                    if (publisherFactory == null) {
-                        jettyServerUpgradeResponse.sendError(HttpStatus.UNSUPPORTED_MEDIA_TYPE_415, "Media type " + contentType + " not supported");
-                        return null;
+                    String contentType = jettyServerUpgradeRequest.getHeader(HttpHeader.CONTENT_TYPE.asString());
+                    WebSocketHandler webSocketHandler;
+                    if (contentType == null) {
+                        if (contentTypeHandlers.size() == 1) {
+                            webSocketHandler = contentTypeHandlers.values().iterator().next();
+                        } else {
+                            jettyServerUpgradeResponse.sendError(HttpStatus.NOT_ACCEPTABLE_406, "Media type not specified");
+                            return null;
+                        }
+                    } else {
+                        webSocketHandler = contentTypeHandlers.get(contentType);
+                        if (webSocketHandler == null) {
+                            jettyServerUpgradeResponse.sendError(HttpStatus.NOT_ACCEPTABLE_406, "Media type " + contentType + " not supported");
+                            return null;
+                        }
                     }
+
+                    Context context = textMapPropagator.extract(Context.current(), jettyServerUpgradeRequest, jettyGetter);
+
+                    Function<Flux<Object>, Publisher<Object>> handler = webSocketHandler.handler();
+
+                    jettyServerUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol);
+
+                    return new ServerWebSocketStream<>(
+                            path,
+                            WebSocketServerOptions.instance(),
+                            (MessageWriter<Object>) webSocketHandler.writer(),
+                            (MessageReader<Object>) webSocketHandler.reader(),
+                            handler,
+                            byteBufferPool,
+                            loggerContext.getLogger(ServerWebSocketStream.class),
+                            tracer,
+                            meter,
+                            context
+                    );
                 }
 
-                Map<String, String> publisherParameters = new HashMap<>();
-                jettyServerUpgradeRequest.getParameterMap().forEach((k, v) -> publisherParameters.put(k, v.get(0)));
-                if (jettyServerUpgradeRequest.getServletAttribute("org.eclipse.jetty.http.pathmap.PathSpec") instanceof UriTemplatePathSpec pathSpec) {
-                    Map<String, String> pathParams = pathSpec.getPathParams(jettyServerUpgradeRequest.getRequestPath());
-                    publisherParameters.putAll(pathParams);
-                }
-
-                Context context = textMapPropagator.extract(Context.current(), jettyServerUpgradeRequest, jettyGetter);
-
-                Function<Flux<Object>, Publisher<Object>> appendPublisher = publisherFactory.appendPublisher();
-
-                return new ServerWebSocketStream<>(
-                        path,
-                        publisherParameters,
-                        (MessageWriter<Object>) publisherFactory.itemWriter(),
-                        (MessageReader<Object>) publisherFactory.itemReader(),
-                        appendPublisher,
-                        byteBufferPool,
-                        logger,
-                        tracer,
-                        meter,
-                        context
-                );
+                // No protocols or handlers found matching this request
+                jettyServerUpgradeResponse.sendError(HttpStatus.NOT_FOUND_404, "Not found");
+                return null;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         }
     }
-
-    class SubscriberWebSocketCreator
-            implements JettyWebSocketCreator {
-        @Override
-        public Object createWebSocket(JettyServerUpgradeRequest jettyServerUpgradeRequest, JettyServerUpgradeResponse jettyServerUpgradeResponse) {
-            try {
-                Map<String, String> subscriberParameters = new HashMap<>();
-
-                Map<String, WebSocketStreamsServerService.SocketSubscriber> contentTypeSubscriberFactories;
-                String path = jettyServerUpgradeRequest.getRequestPath();
-                if (jettyServerUpgradeRequest.getServletAttribute("org.eclipse.jetty.http.pathmap.PathSpec") instanceof UriTemplatePathSpec pathSpec) {
-                    String factoryPath = "uri-template|" + pathSpec.getDeclaration();
-                    contentTypeSubscriberFactories = subscribers.get(factoryPath);
-                    Map<String, String> pathParams = pathSpec.getPathParams(path);
-                    subscriberParameters.putAll(pathParams);
-                } else {
-                    contentTypeSubscriberFactories = subscribers.get(path);
-                }
-
-                if (contentTypeSubscriberFactories == null) {
-                    jettyServerUpgradeResponse.sendError(HttpStatus.NOT_FOUND_404, "Not found");
-                    return null;
-                }
-
-                String contentType = jettyServerUpgradeRequest.getHeader(HttpHeader.CONTENT_TYPE.asString());
-                WebSocketStreamsServerService.SocketSubscriber subscriberFactory = contentTypeSubscriberFactories.get(contentType);
-                if (subscriberFactory == null) {
-                    jettyServerUpgradeResponse.sendError(HttpStatus.UNSUPPORTED_MEDIA_TYPE_415, "Media type " + contentType + " not supported");
-                    return null;
-                }
-
-                jettyServerUpgradeRequest.getParameterMap().forEach((k, v) -> subscriberParameters.put(k, v.get(0)));
-
-                Context context = textMapPropagator.extract(Context.current(), jettyServerUpgradeRequest, jettyGetter);
-
-                // TODO Replace with subscriber version
-                Function<Flux<Object>, Publisher<Object>> appendSubscriber = subscriberFactory.appendSubscriber();
-                return new ServerWebSocketStream<>(
-                        path,
-                        subscriberParameters,
-                        (MessageWriter<Object>) subscriberFactory.itemWriter(),
-                        (MessageReader<Object>) subscriberFactory.itemReader(),
-                        appendSubscriber,
-                        byteBufferPool,
-                        logger,
-                        tracer,
-                        meter,
-                        context
-                );
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-    }
-
 }

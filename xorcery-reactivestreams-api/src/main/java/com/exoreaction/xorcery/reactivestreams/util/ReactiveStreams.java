@@ -23,6 +23,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public interface ReactiveStreams {
+    @Deprecated
     static <T> Function<Throwable, CompletionStage<T>> cancelStream(CompletableFuture<Void> streamFuture) {
         return t ->
         {

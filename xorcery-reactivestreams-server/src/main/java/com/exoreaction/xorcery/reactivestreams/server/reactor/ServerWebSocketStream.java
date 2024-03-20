@@ -2,8 +2,10 @@ package com.exoreaction.xorcery.reactivestreams.server.reactor;
 
 import com.exoreaction.xorcery.lang.Exceptions;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
+import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
+import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketServerOptions;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,17 +26,20 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.api.BatchMode;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -55,13 +60,17 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
     private final static JsonMapper jsonMapper = new JsonMapper();
 
-    private final String path;
-    private final Map<String, String> publisherParameters;
+    private final static long CANCEL = Long.MIN_VALUE;
+    private final static long COMPLETE = -1L;
+    private final static long SEND_BUFFERED_REQUESTS = 0;
 
+    private final String path;
+
+    private final WebSocketServerOptions options;
     private final MessageWriter<OUTPUT> writer;
     private final MessageReader<INPUT> reader;
     private final Publisher<OUTPUT> publisher;
-    private FluxSink<INPUT> sink;
+    private FluxSink<INPUT> downstreamSink;
 
     private final Logger logger;
     private final Marker marker;
@@ -90,7 +99,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
     public ServerWebSocketStream(
             String path,
-            Map<String, String> publisherParameters,
+            WebSocketServerOptions options,
 
             MessageWriter<OUTPUT> writer,
             MessageReader<INPUT> reader,
@@ -102,7 +111,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             Meter meter,
             io.opentelemetry.context.Context requestContext) {
         this.path = path;
-        this.publisherParameters = publisherParameters;
+        this.options = options;
         this.writer = writer;
         this.reader = reader;
         this.byteBufferPool = byteBufferPool;
@@ -113,13 +122,10 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         this.outputStream = new ByteBufferOutputStream2(byteBufferPool, false);
 
         Flux<INPUT> source = Flux.<INPUT>create(sink -> {
-            ServerWebSocketStream.this.sink = sink;
-//            sink.onCancel(this::cancel);
-//            sink.onDispose(this::cancel);
-        }).doOnError(throwable ->
-        {
-            System.out.println(throwable);
-        });
+            ServerWebSocketStream.this.downstreamSink = sink;
+            sink.onCancel(this::upstreamCancel);
+// TODO Do we need to handle this? sink.onDispose(someCallback);
+        }).publishOn(Schedulers.boundedElastic(), 2048); // TODO This needs to be configurable
         this.publisher = customizer.apply(source);
 
         this.attributes = Attributes.builder()
@@ -139,8 +145,12 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 .startSpan();
     }
 
+    private void upstreamCancel() {
+        sendRequests(Long.MIN_VALUE);
+    }
+
     private void subscriberRequested(long requested) {
-        if (reader != null) {
+        if (reader != null && requested > 0) {
             sendRequests(requested);
         }
     }
@@ -158,8 +168,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
     @Override
     protected void hookOnNext(OUTPUT item) {
-        if (writer != null)
-        {
+        if (writer != null) {
             try {
                 writer.writeTo(item, outputStream);
                 ByteBuffer eventBuffer = outputStream.takeByteBuffer();
@@ -170,8 +179,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             } catch (IOException e) {
                 session.close(StatusCode.NORMAL, getError(e).toPrettyString());
             }
-        } else
-        {
+        } else {
             upstream().request(1);
         }
     }
@@ -188,11 +196,6 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         if (session.isOpen()) {
             session.close(StatusCode.NORMAL, getError(throwable).toPrettyString());
         }
-    }
-
-    @Override
-    protected void hookOnCancel() {
-        sendRequests(Long.MIN_VALUE);
     }
 
     // WebSocketListener
@@ -214,20 +217,19 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         try {
             JsonNode json = jsonMapper.readTree(message);
             if (json instanceof NumericNode numericNode) {
-                if (upstream() == null) {
-                    // Subscribe upstream
-                    publisher.subscribe(this);
-                }
                 long requests = numericNode.asLong();
-                if (requests == Long.MIN_VALUE) {
-                    upstream().cancel();
-                } else if (requests == -1) {
-                    if (sink != null)
-                        sink.complete();
+                if (requests == COMPLETE) {
+                    if (downstreamSink != null)
+                        downstreamSink.complete();
                 } else {
+                    if (upstream() == null) {
+                        // Subscribe upstream
+                        publisher.subscribe(this);
+                    }
                     upstream().request(requests);
                 }
             } else if (json instanceof ObjectNode objectNode) {
+                // Add downstream context
                 Map<String, Object> contextMap = new HashMap<>();
                 for (Map.Entry<String, JsonNode> property : objectNode.properties()) {
                     JsonNode value = property.getValue();
@@ -238,7 +240,19 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                                 contextMap.put(property.getKey(), value.isIntegralNumber() ? value.asLong() : value.asDouble());
                     }
                 }
-                contextMap.putAll(publisherParameters);
+
+                // Add path parameters
+                if (session.getUpgradeRequest() instanceof JettyServerUpgradeRequest request &&
+                        request.getServletAttribute("org.eclipse.jetty.http.pathmap.PathSpec") instanceof UriTemplatePathSpec pathSpec) {
+                    Map<String, String> pathParams = pathSpec.getPathParams(path);
+                    contextMap.putAll(pathParams);
+                }
+                // Add query parameters
+                session.getUpgradeRequest().getParameterMap().forEach((k,v)-> contextMap.put(k, v.get(0)));
+
+                // Add request/response objects
+                contextMap.put("request", session.getUpgradeRequest());
+                contextMap.put("response", session.getUpgradeResponse());
                 context = reactor.util.context.Context.of(contextMap);
 
                 // Subscribe upstream
@@ -246,7 +260,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
                 if (reader != null) {
                     // Send complete context back to client
-                    sink.contextView().forEach((k, v) ->
+                    downstreamSink.contextView().forEach((k, v) ->
                     {
                         if (v instanceof String str) {
                             objectNode.set(k.toString(), objectNode.textNode(str));
@@ -263,14 +277,14 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                     session.getRemote().sendString(contextJsonString);
                     logger.debug(marker, "Sent context {}: {}", session.getRemote().getRemoteAddress().toString(), contextJsonString);
 
-                    context = reactor.util.context.Context.of(sink.contextView());
+                    context = reactor.util.context.Context.of(downstreamSink.contextView());
 
-                    sink.onRequest(this::subscriberRequested);
+                    downstreamSink.onRequest(this::subscriberRequested);
                 }
             }
         } catch (Throwable e) {
-            if (sink != null)
-                sink.error(e);
+            if (downstreamSink != null)
+                downstreamSink.error(e);
         }
     }
 
@@ -287,15 +301,15 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                     logger.trace(marker, "onWebSocketBinary {}", new String(payload, offset, len, StandardCharsets.UTF_8));
                 }
                 INPUT event = reader.readFrom(payload, offset, len);
-                sink.next(event);
+                downstreamSink.next(event);
                 outstandingRequests.decrementAndGet();
-                sendRequests(0);
+                sendRequests(SEND_BUFFERED_REQUESTS);
             } catch (Throwable e) {
                 logger.error("Could not receive value", e);
                 if (upstream() != null)
                     upstream().cancel();
-                if (sink != null)
-                    sink.error(e);
+                if (downstreamSink != null)
+                    downstreamSink.error(e);
             }
         }
     }
@@ -309,39 +323,48 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
     @Override
     public void onWebSocketClose(int statusCode, String reason) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
-        }
-
-        if (statusCode == StatusCode.NORMAL) {
-            logger.debug(marker, "Session closed:{} {}", statusCode, reason);
-            upstream().cancel();
-            if (sink != null)
-                sink.complete();
-        } else if (statusCode == StatusCode.SHUTDOWN || statusCode == StatusCode.NO_CLOSE) {
-
-            try {
-                JsonNode reasonJson = jsonMapper.readTree(reason);
-                if (reasonJson instanceof ObjectNode objectNode) {
-                    Throwable throwable;
-                    String message = objectNode.path("reason").asText();
-
-                    throwable = switch (reasonJson.get("status").asInt()) {
-                        case 401 -> new NotAuthorizedStreamException(message);
-
-                        default -> new ServerStreamException(message);
-                    };
-
-                    sink.error(throwable);
-                } else {
-                    sink.error(new ServerStreamException(reason));
-                }
-            } catch (JsonProcessingException e) {
-                sink.error(new ServerStreamException(reason));
+        try {
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
             }
-            logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
+
+            if (statusCode == StatusCode.NORMAL) {
+                logger.debug(marker, "Session closed:{} {}", statusCode, reason);
+                if (upstream() != null)
+                    upstream().cancel();
+            } else {
+                if (downstreamSink == null)
+                    return;
+                if (reason.equals("Connection Idle Timeout")) {
+                    downstreamSink.error(new IdleTimeoutStreamException());
+                    return;
+                }
+
+                try {
+                    JsonNode reasonJson = jsonMapper.readTree(reason);
+                    if (reasonJson instanceof ObjectNode objectNode) {
+                        Throwable throwable;
+                        String message = objectNode.path("reason").asText();
+
+                        int status = reasonJson.get("status").asInt();
+                        throwable = switch (status) {
+                            case 401 -> new NotAuthorizedStreamException(message);
+
+                            default -> new ServerStreamException(status, message);
+                        };
+
+                        downstreamSink.error(throwable);
+                    } else {
+                        downstreamSink.error(new ServerStreamException(statusCode, reason));
+                    }
+                } catch (JsonProcessingException e) {
+                    downstreamSink.error(new ServerStreamException(statusCode, reason));
+                }
+                logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
+            }
+        } finally {
+            span.end();
         }
-        span.end();
     }
 
     protected ObjectNode getError(Throwable throwable) {
@@ -366,8 +389,9 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         sendLock.lock();
         try {
             long rn = n;
-            if (n == 0) {
+            if (n == SEND_BUFFERED_REQUESTS) {
                 rn = requests.get();
+                // TODO: There is something wrong with the logic here, need to figure out exactly what
                 if (rn >= sendRequestsThreshold && outstandingRequests.get() < sendRequestsThreshold) {
                     requests.addAndGet(-sendRequestsThreshold);
                     rn = sendRequestsThreshold;
@@ -375,7 +399,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 } else {
                     return;
                 }
-            } else if (n != Long.MIN_VALUE) {
+            } else {
                 rn = requests.addAndGet(n);
 
                 if (sendRequestsThreshold == 0) {
@@ -383,14 +407,10 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 } else {
                     if (rn < sendRequestsThreshold) {
                         return; // Wait until we have more requests lined up
+                    } else {
+                        requests.addAndGet(-sendRequestsThreshold);
+                        rn = sendRequestsThreshold;
                     }
-                }
-
-                if (rn > sendRequestsThreshold) {
-                    requests.addAndGet(-sendRequestsThreshold);
-                    rn = sendRequestsThreshold;
-                } else {
-                    requests.set(0);
                 }
                 outstandingRequests.addAndGet(rn);
             }
@@ -399,13 +419,15 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             session.getRemote().sendString(requestString);
 
             if (logger.isTraceEnabled())
-                logger.trace(marker, "sendRequest {}", rn);
+                logger.trace(marker, "sendRequest {}",
+                        rn == COMPLETE ? "COMPLETE"
+                                : rn);
         } catch (IOException e) {
             logger.error("Could not send requests", e);
             if (upstream() != null)
                 upstream().cancel();
-            if (sink != null)
-                sink.error(e);
+            if (downstreamSink != null)
+                downstreamSink.error(e);
         } finally {
             sendLock.unlock();
         }

@@ -23,10 +23,10 @@ public class NotAuthorizedStreamException
     extends ServerStreamException
 {
     public NotAuthorizedStreamException(String message, Throwable cause) {
-        super(message, cause);
+        super(1011, message, cause);
     }
 
     public NotAuthorizedStreamException(String message) {
-        super(message);
+        super(1011, message);
     }
 }

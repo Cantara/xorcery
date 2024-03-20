@@ -22,13 +22,38 @@
             },
             "uri" : {
               "type" : "string",
-              "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}",
-              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}"
+              "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
+              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/"
+            },
+            "autoFragment" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "inputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            },
+            "maxFrameSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 65536,
+              "description" : "Default: 65536"
             },
             "maxTextMessageSize" : {
               "type" : [ "number", "string" ],
-              "default" : 1048576,
-              "description" : "Default: 1048576"
+              "default" : 65536,
+              "description" : "Default: 65536"
+            },
+            "maxBinaryMessageSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 65536,
+              "description" : "Default: 65536"
+            },
+            "outputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
             },
             "reactor" : {
               "type" : "object",

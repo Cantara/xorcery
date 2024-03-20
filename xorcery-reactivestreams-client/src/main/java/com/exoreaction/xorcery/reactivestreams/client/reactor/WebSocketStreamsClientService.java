@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.reactivestreams.client.reactor;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
+import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
@@ -12,54 +12,42 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
-import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.websocket.api.ExtensionConfig;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.jvnet.hk2.annotations.ContractsProvided;
-import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
-import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
-import java.net.HttpCookie;
 import java.net.URI;
-import java.nio.ByteBuffer;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
-@Service(name = "reactivestreams.client.reactor")
-@ContractsProvided({WebSocketStreamsClient.class})
 public class WebSocketStreamsClientService
         implements WebSocketStreamsClient {
 
     private final WebSocketClient webSocketClient;
     private final MessageWorkers messageWorkers;
-    private final DnsLookupService dnsLookup;
+    private final DnsLookup dnsLookup;
     private final Logger logger;
+    private final LoggerContext loggerContext;
     private final Tracer tracer;
     private final TextMapPropagator textMapPropagator;
     private final ByteBufferPool byteBufferPool;
     private final Meter meter;
 
-    @Inject
     public WebSocketStreamsClientService(
             Configuration configuration,
             MessageWorkers messageWorkers,
             HttpClient httpClient,
-            DnsLookupService dnsLookup,
+            DnsLookup dnsLookup,
             OpenTelemetry openTelemetry,
-            Logger logger
+            LoggerContext loggerContext
     ) throws Exception {
         this.messageWorkers = messageWorkers;
         this.dnsLookup = dnsLookup;
-        this.logger = logger;
+        this.logger = loggerContext.getLogger(getClass());
+        this.loggerContext = loggerContext;
         WebSocketClient webSocketClient = new WebSocketClient(httpClient);
         WebSocketStreamClientConfiguration.get(configuration).configure(webSocketClient);
         webSocketClient.start();
@@ -81,13 +69,13 @@ public class WebSocketStreamsClientService
     public <PUBLISH> Flux<PUBLISH> publish(URI serverUri, String contentType, Class<PUBLISH> publishType, WebSocketClientOptions options, Publisher<PUBLISH> publisher) {
         validateUri(serverUri);
         MessageWriter<PUBLISH> messageWriter = messageWorkers.newWriter(publishType, publishType, contentType);
-        return Flux.<PUBLISH>push(sink -> new ClientWebSocketStream<PUBLISH, PUBLISH>(
+        return Flux.<PUBLISH>create(sink -> new ClientWebSocketStream<PUBLISH, PUBLISH>(
                 serverUri, contentType,
                 messageWriter, null,
                 publisher,
                 sink,
                 options,
-                dnsLookup, webSocketClient, byteBufferPool, meter, tracer, textMapPropagator, logger));
+                dnsLookup, webSocketClient, byteBufferPool, meter, tracer, textMapPropagator, loggerContext.getLogger(ClientWebSocketStream.class)));
     }
 
     @Override
@@ -95,13 +83,13 @@ public class WebSocketStreamsClientService
         validateUri(serverUri);
         MessageWriter<PUBLISH> messageWriter = messageWorkers.newWriter(publishType, publishType, contentType);
         MessageReader<RESULT> messageReader = messageWorkers.newReader(resultType, resultType, contentType);
-        return Flux.push(sink -> new ClientWebSocketStream<>(
+        return Flux.create(sink -> new ClientWebSocketStream<>(
                 serverUri, contentType,
                 messageWriter, messageReader,
                 publisher,
                 sink,
                 options,
-                dnsLookup, webSocketClient, byteBufferPool, meter, tracer, textMapPropagator, logger));
+                dnsLookup, webSocketClient, byteBufferPool, meter, tracer, textMapPropagator, loggerContext.getLogger(ClientWebSocketStream.class)));
     }
 
     @Override
@@ -124,7 +112,7 @@ public class WebSocketStreamsClientService
                         meter,
                         tracer,
                         textMapPropagator,
-                        logger));
+                        loggerContext.getLogger(ClientWebSocketStream.class)));
     }
 
     private void validateUri(URI serverUri)

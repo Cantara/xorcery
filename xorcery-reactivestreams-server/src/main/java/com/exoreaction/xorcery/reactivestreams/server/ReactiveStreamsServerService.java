@@ -257,7 +257,7 @@ public class ReactiveStreamsServerService
 
             // Close publisher futures
             for (CompletableFuture<Object> activePublisherAndSubscriber : activePublisherAndSubscribers) {
-                activePublisherAndSubscriber.completeExceptionally(new ServerShutdownStreamException("Shutting down server"));
+                activePublisherAndSubscriber.completeExceptionally(new ServerShutdownStreamException(1001, "Shutting down server"));
             }
         }
     }

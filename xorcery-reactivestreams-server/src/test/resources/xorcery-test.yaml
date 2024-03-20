@@ -15,3 +15,4 @@ log4j2:
 
       Root:
         level: info
+opentelemetry.enabled: false

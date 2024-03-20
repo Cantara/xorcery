@@ -22,10 +22,10 @@ public class ClientBadPayloadStreamException
     extends ClientStreamException
 {
     public ClientBadPayloadStreamException(String message, Throwable cause) {
-        super(message, cause);
+        super(1003, message, cause);
     }
 
     public ClientBadPayloadStreamException(String message) {
-        super(message);
+        super(1003, message);
     }
 }
