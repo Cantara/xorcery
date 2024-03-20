@@ -26,7 +26,6 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -48,7 +47,6 @@ public class ServletContextHandlerFactory
         servletContextHandler.setContextPath("/");
         servletContextHandler.setBaseResource(new ResourcesResource(""));
 
-        JettyWebSocketServletContainerInitializer.configure(servletContextHandler, null);
 
         Handler handler = servletContextHandler;
 

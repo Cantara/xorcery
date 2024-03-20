@@ -37,7 +37,6 @@ open module xorcery.jetty.server {
     requires org.eclipse.jetty.alpn.java.server;
     requires org.eclipse.jetty.http2.server;
     requires org.eclipse.jetty.servlet;
-    requires org.eclipse.jetty.websocket.jetty.server;
     requires org.eclipse.jetty.util;
 
     requires org.apache.logging.log4j;
