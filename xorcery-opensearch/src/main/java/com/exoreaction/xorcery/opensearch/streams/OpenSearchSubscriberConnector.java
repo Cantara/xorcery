@@ -16,14 +16,10 @@
 package com.exoreaction.xorcery.opensearch.streams;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.lang.Classes;
-import com.exoreaction.xorcery.opensearch.OpenSearchService;
 import com.exoreaction.xorcery.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.opensearch.client.search.SearchQuery;
 import com.exoreaction.xorcery.opensearch.client.search.SearchRequest;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
-import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
@@ -32,10 +28,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.reactivestreams.Subscriber;
 import reactor.util.retry.Retry;
 
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
@@ -83,7 +77,7 @@ public class OpenSearchSubscriberConnector {
             OpenSearchSubscriber subscriber = throwable == null
                     ? new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration, updatedConfiguration)
                     : new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration, publisherConfiguration);
-            reactiveStreams.<WithMetadata<JsonNode>>subscribe(serverUri, MediaType.APPLICATION_JSON, (Class)WithMetadata.class, WebSocketClientOptions.empty())
+            reactiveStreams.<WithMetadata<JsonNode>>subscribe(serverUri, MediaType.APPLICATION_JSON, (Class)WithMetadata.class, WebSocketClientOptions.instance())
                     .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(5)))
                     .subscribe(subscriber);
         });
