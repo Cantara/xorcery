@@ -159,7 +159,8 @@ public class WebSocketStreamsServerService
                 .computeIfAbsent(path, p ->
                 {
                     if (mappedPaths.add(p)) {
-                        container.addMapping(p, webSocketCreator);
+                        // Always register as URI template
+                        container.addMapping("uri-template|"+p, webSocketCreator);
                     }
                     return new ConcurrentHashMap<>();
                 });
@@ -189,7 +190,7 @@ public class WebSocketStreamsServerService
                     String path = jettyServerUpgradeRequest.getRequestPath();
                     Map<String, WebSocketHandler> contentTypeHandlers;
                     if (jettyServerUpgradeRequest.getServletAttribute("org.eclipse.jetty.http.pathmap.PathSpec") instanceof UriTemplatePathSpec pathSpec) {
-                        String factoryPath = "uri-template|" + pathSpec.getDeclaration();
+                        String factoryPath = pathSpec.getDeclaration();
                         contentTypeHandlers = pathHandlers.get(factoryPath);
                     } else {
                         contentTypeHandlers = pathHandlers.get(path);

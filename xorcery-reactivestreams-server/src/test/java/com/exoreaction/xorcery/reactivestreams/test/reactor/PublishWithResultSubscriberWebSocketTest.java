@@ -101,7 +101,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
                 List<Integer> result = websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("/numbers"),
+                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
                                 MediaType.APPLICATION_JSON,
                                 Integer.class,
                                 Integer.class,
@@ -361,7 +361,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
 
                 websocketStreamsServer.subscriberWithResult(
-                        "uri-template|/numbers/{foo}",
+                        "numbers/{foo}",
                         MediaType.APPLICATION_JSON,
                         String.class,
                         String.class,
@@ -386,7 +386,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 };
 
                 String config = websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("/numbers/bar?param1=value1"),
+                                websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
                                 MediaType.APPLICATION_JSON,
                                 String.class,
                                 String.class,

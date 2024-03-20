@@ -345,13 +345,13 @@ public class SubscribePublisherWebSocketTest {
                     }
                 };
                 websocketStreamsServer.publisher(
-                        "uri-template|/numbers/{foo}",
+                        "numbers/{foo}",
                         MediaType.APPLICATION_JSON,
                         String.class,
                         configPublisher);
 
                 String config = websocketStreamsClient.subscribe(
-                                websocketStreamsServerConfiguration.getURI().resolve("/numbers/bar?param1=value1"),
+                                websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
                                 MediaType.APPLICATION_JSON,
                                 String.class,
                                 WebSocketClientOptions.instance())

@@ -352,7 +352,7 @@ public class PublishSubscriberWebSocketTest {
                 WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
 
                 websocketStreamsServer.subscriber(
-                        "uri-template|/numbers/{foo}",
+                        "numbers/{foo}",
                         MediaType.APPLICATION_JSON,
                         String.class,
                         upstream -> upstream.contextWrite(Context.of("server", "123")));
