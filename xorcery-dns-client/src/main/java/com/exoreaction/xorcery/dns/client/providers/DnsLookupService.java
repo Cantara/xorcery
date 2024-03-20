@@ -34,6 +34,8 @@ public class DnsLookupService
 
     public DnsLookupService(Iterable<DnsLookup> dnsLookups) {
         dnsLookups.forEach(lookups::add);
+        if (lookups.isEmpty())
+            throw new IllegalStateException("No DNS lookup handlers found");
     }
 
     @Override
