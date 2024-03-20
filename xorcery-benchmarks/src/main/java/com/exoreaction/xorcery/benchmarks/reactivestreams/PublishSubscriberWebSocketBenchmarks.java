@@ -18,12 +18,8 @@ package com.exoreaction.xorcery.benchmarks.reactivestreams;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
-import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import jakarta.ws.rs.core.MediaType;
@@ -32,21 +28,18 @@ import org.apache.logging.log4j.Logger;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
-import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import reactor.core.Disposable;
-import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 @State(Scope.Benchmark)
 @Fork(value = 1, warmups = 1, jvmArgs = "-Dcom.sun.management.jmxremote=true")
-@Warmup(iterations = 1)
-@Measurement(iterations = 30)
+@Warmup(iterations = 0)
+@Measurement(iterations = 3)
 public class PublishSubscriberWebSocketBenchmarks {
 
     private static final String config = """
@@ -84,9 +77,10 @@ public class PublishSubscriberWebSocketBenchmarks {
             reactivestreams.client.enabled: false
             """;
 
-    private ClientPublisher clientPublisher;
     private Disposable clientDisposable;
     private Disposable serverDisposable;
+    private CompletableFuture<ByteBuffer> done;
+    private Configuration serverConf;
 
     public static void main(String[] args) throws Exception {
 
@@ -102,6 +96,7 @@ public class PublishSubscriberWebSocketBenchmarks {
 
     @Setup()
     public void setup() throws Exception {
+        Logger logger = LogManager.getLogger(getClass());
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
@@ -110,80 +105,69 @@ public class PublishSubscriberWebSocketBenchmarks {
             }
         });
 
-        Configuration serverConf = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(serverConfig).build();
+        serverConf = new ConfigurationBuilder()
+                .addTestDefaults().addYaml(config).addYaml(serverConfig).build();
         System.out.println(serverConf);
         server = new Xorcery(serverConf);
-        WebSocketStreamsServer server = this.server.getServiceLocator().getService(WebSocketStreamsServer.class);
-        Logger logger = LogManager.getLogger(getClass());
 
-        serverDisposable = server.subscriber("serversubscriber", MediaType.APPLICATION_JSON, ByteBuffer.class, flux -> flux);
-
-        // Client publisher
-        Configuration clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml(clientConfig).build();
-        byteBufferPayload = ByteBuffer.wrap("\"foo\"".getBytes(StandardCharsets.UTF_8));
-
+        Configuration clientConfiguration = new ConfigurationBuilder()
+                .addTestDefaults().addYaml(config).addYaml(clientConfig).build();
         client = new Xorcery(clientConfiguration);
-        clientPublisher = new ClientPublisher();
-
-        WebSocketStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
-        clientDisposable = Flux.from(reactiveStreamsClient.publish(
-                ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("serversubscriber"),
-                MediaType.APPLICATION_JSON,
-                ByteBuffer.class,
-                WebSocketClientOptions.empty(),
-                clientPublisher)).subscribe();
 
         logger.info("Setup done");
     }
 
     @TearDown
     public void teardown() throws Exception {
-        clientDisposable.dispose();
+        done.orTimeout(10, TimeUnit.SECONDS).join();
+        System.out.println("Completed");
         serverDisposable.dispose();
         client.close();
         server.close();
         LogManager.getLogger().info("Teardown done");
     }
 
-    private ByteBuffer byteBufferPayload;
+/*
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public void writes() {
+        while(clientSink.tryEmitNext(byteBufferPayload).isFailure())
+        {};
+    }
+*/
+
+    @State(Scope.Thread)
+    @AuxCounters(AuxCounters.Type.OPERATIONS)
+    public static class OpCounters {
+        public int counter;
+    }
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public void writes() throws InterruptedException {
-        clientPublisher.publish(byteBufferPayload);
-    }
+    public void writes(OpCounters counters) {
+        counters.counter = 0;
+        WebSocketStreamsServer streamsServer = this.server.getServiceLocator().getService(WebSocketStreamsServer.class);
+        done = new CompletableFuture<>();
+        serverDisposable = streamsServer.subscriber("benchmark", MediaType.APPLICATION_JSON, Integer.class,
+                flux -> flux
+                        .doOnNext(item -> counters.counter++)
+                        .doOnComplete(() ->
+                        {
+                            System.out.println("Invoke count:" + counters.counter);
+                            done.complete(null);
+                        }));
 
-    public static abstract class ServerSubscriber<T>
-            extends BaseSubscriber<T> {
-    }
+        WebSocketStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+        clientDisposable = reactiveStreamsClient.publish(
+                        ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark"),
+                        MediaType.APPLICATION_JSON,
+                        Integer.class,
+                        WebSocketClientOptions.instance(),
+                        Flux.fromStream(IntStream.range(0, 1000000).boxed()))
+                .subscribe();
 
-    public static class ClientPublisher
-            implements Publisher<ByteBuffer> {
-
-        private final Semaphore semaphore = new Semaphore(0);
-        private Subscriber<? super ByteBuffer> subscriber;
-
-        public void publish(ByteBuffer item) throws InterruptedException {
-            while (!semaphore.tryAcquire(5, TimeUnit.SECONDS)) {
-                // Try again
-                LogManager.getLogger().warn("Waiting for requests:" + semaphore.availablePermits());
-            }
-            subscriber.onNext(item);
-        }
-
-        @Override
-        public void subscribe(Subscriber<? super ByteBuffer> subscriber) {
-            this.subscriber = subscriber;
-            subscriber.onSubscribe(new Subscription() {
-                @Override
-                public void request(long n) {
-                    semaphore.release((int) n);
-                }
-
-                @Override
-                public void cancel() {
-                }
-            });
-        }
+        done.orTimeout(100, TimeUnit.SECONDS).join();
+        clientDisposable.dispose();
+        serverDisposable.dispose();
     }
 }
