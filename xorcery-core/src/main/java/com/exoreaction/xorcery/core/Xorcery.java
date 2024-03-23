@@ -22,8 +22,8 @@ import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.apache.logging.log4j.spi.LoggerContext;
 import org.apache.logging.log4j.spi.ExtendedLogger;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
 import org.glassfish.hk2.runlevel.RunLevelController;
@@ -33,9 +33,7 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Xorcery run level values:
@@ -61,7 +59,7 @@ public class Xorcery
 
     private final ServiceLocator serviceLocator;
 
-    public  Xorcery(Configuration configuration) throws Exception {
+    public Xorcery(Configuration configuration) throws Exception {
         this(configuration, null);
     }
 
@@ -71,11 +69,10 @@ public class Xorcery
         Configuration system = configuration.getConfiguration("system");
         system.json().fields().forEachRemaining(entry ->
         {
-            if (!entry.getValue().isNull())
-            {
+            if (!entry.getValue().isNull()) {
                 String key = entry.getKey();
                 String value = entry.getValue().asText();
-                ConfigurationLogger.getLogger().log("Set system property '"+key+"' to '"+value+"'");
+                ConfigurationLogger.getLogger().log("Set system property '" + key + "' to '" + value + "'");
                 System.setProperty(entry.getKey(), entry.getValue().asText());
             }
         });
@@ -110,7 +107,7 @@ public class Xorcery
         }
 
         if (createdHome)
-            logger.info(marker, "Create home directory "+homeDir);
+            logger.info(marker, "Create home directory " + homeDir);
         logger.info(marker, "Starting");
 
         Filter configurationFilter = getEnabledServicesFilter(configuration);
@@ -173,7 +170,7 @@ public class Xorcery
         Populator populator = dcs.getPopulator();
 
         try {
-            populator.populate(new ClasspathDescriptorFileFinder(ClasspathDescriptorFileFinder.class.getClassLoader(), hk2Configuration.getDescriptorNames()),
+            populator.populate(new UniqueDescriptorFileFinder(new ClasspathDescriptorFileFinder(ClassLoader.getSystemClassLoader(), hk2Configuration.getDescriptorNames())),
                     populatorPostProcessor);
         } catch (IOException e) {
             throw new MultiException(e);
@@ -189,4 +186,5 @@ public class Xorcery
             ServiceLocatorUtilities.enablePerThreadScope(serviceLocator);
         }
     }
+
 }
