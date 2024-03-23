@@ -15,15 +15,9 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.spi;
 
-import com.exoreaction.xorcery.domainevents.api.CommandEvents;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import org.neo4j.graphdb.Transaction;
 
-import java.io.IOException;
-import java.util.Map;
-
 public interface Neo4jEventProjection {
-    void write(CommandEvents events, Transaction transaction) throws Throwable;
+    void write(MetadataEvents events, Transaction transaction) throws Throwable;
 }

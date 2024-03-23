@@ -15,10 +15,7 @@
  */
 package com.exoreaction.xorcery.domainevents.api.test;
 
-import com.exoreaction.xorcery.domainevents.api.CommandEvents;
-import com.exoreaction.xorcery.domainevents.api.DomainEvent;
-import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
-import com.exoreaction.xorcery.domainevents.api.Model;
+import com.exoreaction.xorcery.domainevents.api.*;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -33,34 +30,34 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.List;
 
-public class CommandEventsTest {
+public class MetadataEventsTest {
 
     @Test
     public void testSerializationDeserialization() throws IOException {
         JsonMapper mapper = new JsonMapper();
 
         Metadata metadata = new Metadata.Builder()
-                .add(Model.Metadata.commandName, "CreateNewThing")
-                .add(Model.Metadata.timestamp, 1234)
+                .add(DomainEventMetadata.commandName, "CreateNewThing")
+                .add(DomainEventMetadata.timestamp, 1234)
                 .build();
         List<DomainEvent> domainEvents = List.of(JsonDomainEvent.event("TestEvent")
                 .created("MyEntity", "someid")
                 .updatedAttribute("foo", "bar")
-                .addMetadata(Model.Metadata.reason, "Because reasons")
+                .addMetadata(DomainEventMetadata.reason, "Because reasons")
                 .build());
-        CommandEvents commandEvents = new CommandEvents(metadata, domainEvents);
+        MetadataEvents metadataEvents = new MetadataEvents(metadata, domainEvents);
 
         {
             // Serialize it
-            String serializedJson = mapper.writerFor(CommandEvents.class).writeValueAsString(commandEvents);
+            String serializedJson = mapper.writerFor(MetadataEvents.class).writeValueAsString(metadataEvents);
 
             System.out.println(serializedJson);
 
             // Deserialize it
-            CommandEvents deserializedCommandEvents = mapper.readerFor(CommandEvents.class).readValue(serializedJson);
+            MetadataEvents deserializedMetadataEvents = mapper.readerFor(MetadataEvents.class).readValue(serializedJson);
 
-            System.out.println(deserializedCommandEvents);
-            for (DomainEvent deserializedEvent : deserializedCommandEvents.getEvents()) {
+            System.out.println(deserializedMetadataEvents);
+            for (DomainEvent deserializedEvent : deserializedMetadataEvents.getEvents()) {
                 System.out.println(deserializedEvent);
             }
         }
@@ -88,7 +85,7 @@ public class CommandEventsTest {
 
             OutputStreamWriter writer = new OutputStreamWriter(System.out);
 
-            ObjectNode node = writeObjectMapper.valueToTree(commandEvents);
+            ObjectNode node = writeObjectMapper.valueToTree(metadataEvents);
 //            System.out.println(node);
             ArrayNode singleElementArray = JsonNodeFactory.instance.arrayNode();
             singleElementArray.add(node);

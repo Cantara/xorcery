@@ -15,10 +15,8 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.streams;
 
-import com.exoreaction.xorcery.domainevents.api.CommandEvents;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
-import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
-import com.exoreaction.xorcery.domainevents.api.Model;
 import com.exoreaction.xorcery.lang.Enums;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
@@ -56,7 +54,7 @@ import java.util.function.Consumer;
  */
 
 public class Neo4jProjectionEventHandler
-        implements RewindableEventHandler<CommandEvents> {
+        implements RewindableEventHandler<MetadataEvents> {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
@@ -125,7 +123,7 @@ public class Neo4jProjectionEventHandler
     }
 
     @Override
-    public void onEvent(CommandEvents event, long sequence, boolean endOfBatch) throws RewindableException, Exception {
+    public void onEvent(MetadataEvents event, long sequence, boolean endOfBatch) throws RewindableException, Exception {
         if (tx == null) {
             tx = graphDatabaseService.beginTx();
         }
@@ -149,12 +147,12 @@ public class Neo4jProjectionEventHandler
                 tx.close();
                 tx = null;
 
-                CommandEvents cleanedCommandEvents = event.cloneWithoutState();
+                MetadataEvents cleanedMetadataEvents = event.cloneWithoutState();
                 if (t instanceof EntityNotFoundException) {
-                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, cleanedCommandEvents.getEvents()), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, cleanedMetadataEvents.getEvents()), t);
                     throw new RewindableException(t);
                 } else {
-                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, cleanedCommandEvents.getEvents()), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, cleanedMetadataEvents.getEvents()), t);
 
                     if (t instanceof Exception e)
                         throw e;

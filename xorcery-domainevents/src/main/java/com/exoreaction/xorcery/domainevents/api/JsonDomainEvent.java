@@ -523,6 +523,12 @@ public record JsonDomainEvent(ObjectNode json)
         return new JsonDomainEvent(cloned);
     }
 
+
+    @Override
+    public String toString() {
+        return json.toPrettyString();
+    }
+
     public record JsonEntity(ObjectNode json)
             implements JsonElement {
         public String getType() {

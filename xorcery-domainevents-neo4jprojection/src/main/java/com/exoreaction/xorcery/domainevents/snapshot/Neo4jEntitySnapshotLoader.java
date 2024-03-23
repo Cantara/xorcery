@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.domainevents.snapshot;
 
-import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
+import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
 import com.exoreaction.xorcery.domainevents.helpers.entity.Entity;
 import com.exoreaction.xorcery.domainevents.helpers.entity.EntitySnapshot;
 import com.exoreaction.xorcery.domainevents.helpers.model.CommonModel;
@@ -37,7 +37,6 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.ParameterizedType;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -57,7 +56,7 @@ public class Neo4jEntitySnapshotLoader {
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
     }
 
-    public <T extends EntitySnapshot> T load(DomainEventMetadata metadata, String entityId, Entity<T> entity)
+    public <T extends EntitySnapshot> T load(EventMetadata metadata, String entityId, Entity<T> entity)
             throws IOException {
 
         String cypher = cypherCache.computeIfAbsent(entity.getClass(),

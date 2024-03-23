@@ -20,14 +20,14 @@ import com.exoreaction.xorcery.metadata.Metadata;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CommandEvents {
+public class MetadataEvents {
     private Metadata metadata;
     private List<DomainEvent> events;
 
-    public CommandEvents() {
+    public MetadataEvents() {
     }
 
-    public CommandEvents(Metadata metadata, List<DomainEvent> events) {
+    public MetadataEvents(Metadata metadata, List<DomainEvent> events) {
         this.metadata = metadata;
         this.events = events;
     }
@@ -37,7 +37,7 @@ public class CommandEvents {
         this.events = events;
     }
 
-    public void set(CommandEvents other) {
+    public void set(MetadataEvents other) {
         this.metadata = other.metadata;
         this.events = other.events;
     }
@@ -51,7 +51,7 @@ public class CommandEvents {
     }
 
     // Strip away attributes and relationships for security reasons
-    public CommandEvents cloneWithoutState()
+    public MetadataEvents cloneWithoutState()
     {
         List<DomainEvent> cleanedDomainEvents = new ArrayList<>(events.size());
         for (DomainEvent domainEvent : events) {
@@ -70,6 +70,11 @@ public class CommandEvents {
                 cleanedDomainEvents.add(domainEvent);
             }
         }
-        return new CommandEvents(metadata, cleanedDomainEvents);
+        return new MetadataEvents(metadata, cleanedDomainEvents);
+    }
+
+    @Override
+    public String toString() {
+        return metadata.toString()+events.toString();
     }
 }

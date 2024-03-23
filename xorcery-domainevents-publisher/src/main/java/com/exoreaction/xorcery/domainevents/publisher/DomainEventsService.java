@@ -17,8 +17,8 @@ package com.exoreaction.xorcery.domainevents.publisher;
 
 import com.exoreaction.xorcery.concurrent.CloseableSemaphore;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.domainevents.api.CommandEvents;
-import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
+import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
@@ -36,6 +36,7 @@ import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.yaml.snakeyaml.events.Event;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -59,7 +60,7 @@ public class DomainEventsService
     public DomainEventsService(ReactiveStreamsClient reactiveStreams,
                                Configuration configuration) {
 
-        this.deploymentMetadata = new DomainEventMetadata.Builder(new Metadata.Builder())
+        this.deploymentMetadata = new EventMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
                 .build();
         DomainEventsConfiguration domainEventsConfiguration = new DomainEventsConfiguration(configuration.getConfiguration("domainevents"));
@@ -97,7 +98,7 @@ public class DomainEventsService
         });
     }
 
-    public CompletableFuture<Metadata> publish(CommandEvents commandEvents) {
+    public CompletableFuture<Metadata> publish(MetadataEvents commandEvents) {
         try {
             requests.tryAcquire(10, TimeUnit.SECONDS);
             CompletableFuture<Metadata> future = new CompletableFuture<>();

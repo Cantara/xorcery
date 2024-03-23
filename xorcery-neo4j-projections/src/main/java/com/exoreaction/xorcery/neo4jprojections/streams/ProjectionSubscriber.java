@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.disruptor.DisruptorConfiguration;
-import com.exoreaction.xorcery.domainevents.api.CommandEvents;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjectionPreProcessor;
@@ -43,9 +43,9 @@ public class ProjectionSubscriber
         implements Subscriber<WithMetadata<ArrayNode>> {
 
     private final Function<Subscription, Neo4jProjectionEventHandler> handlerFactory;
-    private final Function<Subscription, ExceptionHandler<CommandEvents>> exceptionHandlerFactory;
+    private final Function<Subscription, ExceptionHandler<MetadataEvents>> exceptionHandlerFactory;
     private final ObjectReader domainEventsReader;
-    private Disruptor<CommandEvents> disruptor;
+    private Disruptor<MetadataEvents> disruptor;
     private final IterableProvider<Neo4jEventProjectionPreProcessor> preProcessors;
     private final DisruptorConfiguration disruptorConfiguration;
     private Subscription subscription;
@@ -53,7 +53,7 @@ public class ProjectionSubscriber
     public ProjectionSubscriber(Function<Subscription, Neo4jProjectionEventHandler> handlerFactory,
                                 IterableProvider<Neo4jEventProjectionPreProcessor> preProcessors,
                                 DisruptorConfiguration disruptorConfiguration,
-                                Function<Subscription, ExceptionHandler<CommandEvents>> exceptionHandlerFactory) {
+                                Function<Subscription, ExceptionHandler<MetadataEvents>> exceptionHandlerFactory) {
         this.preProcessors = preProcessors;
         this.disruptorConfiguration = disruptorConfiguration;
         this.handlerFactory = handlerFactory;
@@ -66,11 +66,11 @@ public class ProjectionSubscriber
     @Override
     public void onSubscribe(Subscription subscription) {
         this.subscription = subscription;
-        disruptor = new Disruptor<>(CommandEvents::new, disruptorConfiguration.getSize(), new NamedThreadFactory("Neo4jProjection-"),
+        disruptor = new Disruptor<>(MetadataEvents::new, disruptorConfiguration.getSize(), new NamedThreadFactory("Neo4jProjection-"),
                 ProducerType.MULTI,
                 new BlockingWaitStrategy());
 
-        EventHandlerGroup<CommandEvents> eventHandlerGroup = null;
+        EventHandlerGroup<MetadataEvents> eventHandlerGroup = null;
         for (Neo4jEventProjectionPreProcessor preProcessor : preProcessors) {
             eventHandlerGroup = (eventHandlerGroup == null) ?
                     disruptor.handleEventsWith(new PreProcessorEventHandler(preProcessor)):

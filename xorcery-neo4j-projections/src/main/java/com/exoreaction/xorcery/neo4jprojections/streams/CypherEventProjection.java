@@ -15,15 +15,12 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.streams;
 
-import com.exoreaction.xorcery.domainevents.api.CommandEvents;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.util.Resources;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +47,7 @@ public class CypherEventProjection
     private final Map<String, List<String>> cachedEventCypher = new HashMap<>();
 
     @Override
-    public void write(CommandEvents events, Transaction transaction) throws Throwable {
+    public void write(MetadataEvents events, Transaction transaction) throws Throwable {
         Map<String, Object> metadataMap = null;
 
         for (DomainEvent event : events.getEvents()) {

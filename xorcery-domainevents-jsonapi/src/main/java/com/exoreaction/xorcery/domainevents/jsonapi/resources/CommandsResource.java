@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.domainevents.jsonapi.resources;
 
-import com.exoreaction.xorcery.domainevents.helpers.context.DomainEventMetadata;
+import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainContext;
 import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
 import com.exoreaction.xorcery.jsonapi.*;
@@ -62,7 +62,7 @@ public interface CommandsResource
     default Metadata metadata() {
         Metadata.Builder metadata = new Metadata.Builder();
 
-        DomainEventMetadata.Builder request = new DomainEventMetadata.Builder(metadata);
+        EventMetadata.Builder request = new EventMetadata.Builder(metadata);
 
         request.timestamp(System.currentTimeMillis());
 
@@ -159,7 +159,7 @@ public interface CommandsResource
         if (!metadata.has("aggregateId"))
         {
             String id = resourceObject.getId() != null ? resourceObject.getId() : UUIDs.newId();
-            DomainEventMetadata.Builder.aggregateId(id, metadata);
+            EventMetadata.Builder.aggregateId(id, metadata);
         }
 
         return context.handle(metadata, command)

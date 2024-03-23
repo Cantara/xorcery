@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.domainevents.neo4jprojections;
 
-import com.exoreaction.xorcery.domainevents.api.CommandEvents;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
@@ -39,7 +39,7 @@ public class JsonDomainEventNeo4jEventProjection
     public static final Label AGGREGATE_LABEL = Label.label("Aggregate");
 
     @Override
-    public void write(CommandEvents events, Transaction transaction) throws Throwable {
+    public void write(MetadataEvents events, Transaction transaction) throws Throwable {
         Map<String, Object> metadataMap = Cypher.toMap(events.getMetadata().metadata());
 
         for (DomainEvent domainEvent : events.getEvents()) {

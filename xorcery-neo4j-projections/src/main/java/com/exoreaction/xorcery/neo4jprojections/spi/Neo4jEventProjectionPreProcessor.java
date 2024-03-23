@@ -15,10 +15,8 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.spi;
 
-import com.exoreaction.xorcery.domainevents.api.CommandEvents;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 
 public interface Neo4jEventProjectionPreProcessor {
-    void preProcess(CommandEvents events) throws Exception;
+    void preProcess(MetadataEvents events) throws Exception;
 }

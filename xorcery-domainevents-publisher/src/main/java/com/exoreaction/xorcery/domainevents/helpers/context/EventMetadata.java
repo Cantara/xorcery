@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.domainevents.helpers.context;
 
-import com.exoreaction.xorcery.domainevents.api.Model;
 import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
 import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
@@ -25,9 +24,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static com.exoreaction.xorcery.metadata.Metadata.missing;
 
-public record DomainEventMetadata(Metadata context)
+public record EventMetadata(Metadata context)
         implements CommonMetadata, RequestMetadata, DeploymentMetadata {
-    public DomainEventMetadata(ObjectNode metadata) {
+    public EventMetadata(ObjectNode metadata) {
         this(new Metadata(metadata));
     }
 
@@ -35,15 +34,15 @@ public record DomainEventMetadata(Metadata context)
             implements CommonMetadata.Builder<Builder>,
             RequestMetadata.Builder<Builder>,
             DeploymentMetadata.Builder<Builder> {
-        public static DomainEventMetadata aggregateId(String aggregateId, Metadata metadata) {
+        public static EventMetadata aggregateId(String aggregateId, Metadata metadata) {
             return new Builder(metadata).aggregateId(aggregateId).build();
         }
 
-        public static DomainEventMetadata aggregateType(String aggregateType, Metadata metadata) {
+        public static EventMetadata aggregateType(String aggregateType, Metadata metadata) {
             return new Builder(metadata).aggregateType(aggregateType).build();
         }
 
-        public static DomainEventMetadata aggregate(String aggregateType, String aggregateId, Metadata metadata) {
+        public static EventMetadata aggregate(String aggregateType, String aggregateId, Metadata metadata) {
             return new Builder(metadata)
                     .aggregateType(aggregateType)
                     .aggregateId(aggregateId)
@@ -55,48 +54,48 @@ public record DomainEventMetadata(Metadata context)
         }
 
         public Builder domain(String value) {
-            builder.add(Model.Metadata.domain, value);
+            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.domain, value);
             return this;
         }
 
         public Builder aggregateId(String value) {
-            builder.add(Model.Metadata.aggregateId, value);
+            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId, value);
             return this;
         }
 
         public Builder aggregateType(String name) {
-            builder.add(Model.Metadata.aggregateType, name);
+            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateType, name);
             return this;
         }
 
         public Builder commandName(String commandName) {
-            builder.add(Model.Metadata.commandName, commandName);
+            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.commandName, commandName);
             return this;
         }
 
         public Builder commandName(Class<? extends Command> commandClass) {
-            builder.add(Model.Metadata.commandName, commandClass.getSimpleName());
+            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.commandName, commandClass.getSimpleName());
             return this;
         }
 
-        public DomainEventMetadata build() {
-            return new DomainEventMetadata(builder.build());
+        public EventMetadata build() {
+            return new EventMetadata(builder.build());
         }
     }
 
     public String getDomain() {
-        return context.getString(Model.Metadata.domain.name()).orElse("default");
+        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.domain.name()).orElse("default");
     }
 
     public String getAggregateType() {
-        return context.getString(Model.Metadata.aggregateType.name()).orElseThrow(missing(Model.Metadata.aggregateType));
+        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateType.name()).orElseThrow(missing(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateType));
     }
 
     public String getAggregateId() {
-        return context.getString(Model.Metadata.aggregateId.name()).orElseThrow(missing(Model.Metadata.aggregateId));
+        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId.name()).orElseThrow(missing(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId));
     }
 
     public String getCommandName() {
-        return context.getString(Model.Metadata.commandName.name()).orElseThrow(missing(Model.Metadata.commandName));
+        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.commandName.name()).orElseThrow(missing(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.commandName));
     }
 }
