@@ -29,19 +29,17 @@ import java.util.stream.Collector;
  * @author rickardoberg
  */
 public interface JsonElement {
-    ContainerNode<?> json();
+    JsonNode json();
 
     default ObjectNode object() {
-        ContainerNode<?> json = json();
-        if (json instanceof ObjectNode object)
+        if (json() instanceof ObjectNode object)
             return object;
         else
             return null;
     }
 
     default ArrayNode array() {
-        ContainerNode<?> json = json();
-        if (json instanceof ArrayNode array)
+        if (json() instanceof ArrayNode array)
             return array;
         else
             return null;

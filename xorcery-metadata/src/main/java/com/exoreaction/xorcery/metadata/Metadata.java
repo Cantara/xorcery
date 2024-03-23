@@ -107,4 +107,9 @@ public record Metadata(ObjectNode json)
     public Metadata copy() {
         return new Metadata(json.deepCopy());
     }
+
+    @Override
+    public String toString() {
+        return json.toPrettyString();
+    }
 }
