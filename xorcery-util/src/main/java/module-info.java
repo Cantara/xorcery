@@ -22,4 +22,5 @@ open module xorcery.util {
     exports com.exoreaction.xorcery.lang;
     exports com.exoreaction.xorcery.io;
     exports com.exoreaction.xorcery.net;
+    exports com.exoreaction.xorcery.collections;
 }

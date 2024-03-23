@@ -53,8 +53,7 @@ public record ConfigurationPostPopulatorProcessor(Configuration configuration, C
                 enabledFlag = "defaults.enabled";
             }
 
-            if (configuration.getFalsy(enabledFlag)
-                    .orElseGet(() -> false)) {
+            if (configuration.getFalsy(enabledFlag)) {
                 configuration.getConfiguration(name).getObjectAs("metadata", object ->
                 {
                     Map<String, List<String>> metadatas = new HashMap<>();

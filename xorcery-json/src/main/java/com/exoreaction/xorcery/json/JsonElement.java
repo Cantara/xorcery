@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.json;
 
+import com.exoreaction.xorcery.collections.Element;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
@@ -28,7 +29,9 @@ import java.util.stream.Collector;
  *
  * @author rickardoberg
  */
-public interface JsonElement {
+public interface JsonElement
+    extends Element
+{
     JsonNode json();
 
     default ObjectNode object() {
@@ -53,62 +56,6 @@ public interface JsonElement {
         return lookup(object(), name);
     }
 
-    default Optional<String> getString(String name) {
-        return getJson(name).map(JsonNode::textValue);
-    }
-
-    default Optional<URI> getURI(String name) {
-
-        return getString(name).map(s -> s.replace('\\','/').replace(' ', '+')).map(URI::create);
-    }
-
-    default Optional<Integer> getInteger(String name) {
-        return getJson(name).flatMap(value ->
-        {
-            if (value instanceof NumericNode number) {
-                return Optional.of(number.intValue());
-            }
-            try {
-                return Optional.of(Integer.valueOf(value.asText()));
-            } catch (NumberFormatException e) {
-                return Optional.empty();
-            }
-        });
-    }
-
-    default Optional<Long> getLong(String name) {
-        return getJson(name).flatMap(value ->
-        {
-            if (value instanceof NumericNode number) {
-                return Optional.of(number.longValue());
-            }
-            try {
-                return Optional.of(Long.valueOf(value.asText()));
-            } catch (NumberFormatException e) {
-                return Optional.empty();
-            }
-        });
-    }
-
-    default Optional<Boolean> getBoolean(String name) {
-        return getJson(name).map(JsonNode::asBoolean);
-    }
-
-    default Optional<Boolean> getFalsy(String name) {
-        return getJson(name).map(value ->
-                switch (value.getNodeType()) {
-                    case ARRAY -> !value.isEmpty();
-                    case BINARY -> true;
-                    case BOOLEAN -> value.booleanValue();
-                    case MISSING -> false;
-                    case NULL -> false;
-                    case NUMBER -> value.numberValue().longValue() != 0;
-                    case OBJECT -> true;
-                    case POJO -> true;
-                    case STRING -> !value.textValue().equals("");
-                });
-    }
-
     default <T> Optional<T> getObjectAs(String name, Function<ObjectNode, T> mapper) {
         return getJson(name).map(ObjectNode.class::cast).map(mapper);
     }
@@ -125,6 +72,49 @@ public interface JsonElement {
         return getJson(name).map(ArrayNode.class::cast).map(array -> getValuesAs(array, mapper));
     }
 
+    default Map<String, JsonNode> asMap()
+    {
+        if (json() instanceof ObjectNode on)
+            return toMap(on, Function.identity());
+        return Collections.emptyMap();
+    }
+
+    default String toJsonString() {
+        return json().toPrettyString();
+    }
+
+    // Element
+    @Override
+    default Optional<Object> get(String name) {
+        return lookup(object(), name).map(json ->
+                switch (json.getNodeType()) {
+                    case ARRAY -> toList((ArrayNode) json);
+                    case OBJECT -> toMap((ObjectNode) json);
+                    case STRING -> json.textValue();
+                    case NUMBER -> json.numberValue();
+                    case BINARY -> null;
+                    case BOOLEAN -> json.booleanValue();
+                    case MISSING -> null;
+                    case NULL -> null;
+                    case POJO -> null;
+                });
+    }
+
+    default Boolean getFalsy(String name) {
+        return getJson(name).map(value ->
+                switch (value.getNodeType()) {
+                    case ARRAY -> !value.isEmpty();
+                    case BINARY -> true;
+                    case BOOLEAN -> value.booleanValue();
+                    case MISSING -> false;
+                    case NULL -> false;
+                    case NUMBER -> value.numberValue().longValue() != 0;
+                    case OBJECT -> true;
+                    case POJO -> true;
+                    case STRING -> !value.textValue().equals("");
+                }).orElse(false);
+    }
+
     default <T extends Enum<T>> Optional<T> getEnum(String name, Class<T> enumClass) {
         Optional<String> value = getString(name);
 
@@ -139,17 +129,7 @@ public interface JsonElement {
         }
     }
 
-    default Map<String, JsonNode> asMap()
-    {
-        if (json() instanceof ObjectNode on)
-            return toMap(on, Function.identity());
-        return Collections.emptyMap();
-    }
-
-    default String toJsonString() {
-        return json().toPrettyString();
-    }
-
+    // Helpers
     static ArrayNode toArray(Collection<? extends JsonElement> elements) {
         ArrayNode array = JsonNodeFactory.instance.arrayNode(elements.size());
         for (JsonElement element : elements) {

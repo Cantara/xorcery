@@ -64,7 +64,7 @@ public class LoggerContextFactory
 
     @Inject
     public LoggerContextFactory(Configuration configuration) throws IOException {
-        if (configuration.getFalsy("log4j2").orElse(false)) {
+        if (configuration.getFalsy("log4j2")) {
             loggerContext = initialize(configuration);
         } else {
             loggerContext = LogManager.getContext(Xorcery.class.getClassLoader(), false);

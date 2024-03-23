@@ -29,6 +29,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-util</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
         </dependency>
