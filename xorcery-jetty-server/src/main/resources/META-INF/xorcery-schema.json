@@ -119,10 +119,18 @@
                 }
               }
             },
+            "log4j2" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "sessions" : {
+              "type" : "object",
+              "properties" : { }
+            },
             "security" : {
               "type" : "object",
               "properties" : {
-                "method" : {
+                "type" : {
                   "type" : "string",
                   "default" : "jwt",
                   "description" : "Default: jwt"
@@ -146,6 +154,49 @@
                   }
                 }
               }
+            },
+            "websockets" : {
+              "type" : "object",
+              "properties" : {
+                "autoFragment" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "inputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
+                "maxFrameSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 65536,
+                  "description" : "Default: 65536"
+                },
+                "maxTextMessageSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 65536,
+                  "description" : "Default: 65536"
+                },
+                "maxBinaryMessageSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 65536,
+                  "description" : "Default: 65536"
+                },
+                "outputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                }
+              }
+            },
+            "servlet" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "gzip" : {
+              "type" : "object",
+              "properties" : { }
             }
           }
         }

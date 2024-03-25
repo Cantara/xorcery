@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.certificates.test;
+package com.exoreaction.xorcery.test.certificates;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
@@ -35,37 +35,32 @@ import java.util.List;
 public class ClientCertificateAuthenticationTest {
 
     String config = """
-            dns.client.hosts:
-                server.xorcery.test: 127.0.0.1
-                wrongserver.xorcery.test: 127.0.0.1
             dns.server.enabled: false
             dns.registration.enabled: false
             dns.server.registration.key:
                                 name: xorcery.test
                                 secret: BD077oHTdwm6Kwm4pc5tBkrX6EW3RErIOIESKpIKP6vQHAPRYp+9ubig Fvl3gYuuib+DQ8+eCpHEe/rIy9tiIg==
-            jetty.client:
-                enabled: true
-                ssl:
-                    enabled: true
-            jetty.server.enabled: true
-            jetty.server.http.enabled: false
-            jetty.server.ssl.enabled: true
-            jetty.server.security.enabled: true    
-            jetty.server.security.method: CLIENT_CERT    
                     """;
 
     String serverConfig = """
             instance.id: "xorcery1"
             instance.host: "server"
+            jetty.server.enabled: true
+            jetty.server.security.type: CLIENT-CERT    
             jetty.server.ssl.port: "{{SYSTEM.port}}"
             jetty.server.ssl.sniRequired: true
             jetty.server.security.enabled: true
                     """;
 
     String clientConfig = """
-            jetty.server.enabled: false
-            reactivestreams.server.enabled: false
+            dns.client.hosts:
+                server.xorcery.test: 127.0.0.1
+                wrongserver.xorcery.test: 127.0.0.1
             clienttester.enabled: true
+            jetty.client:
+                enabled: true
+                ssl:
+                    enabled: true
                     """;
 
     @Test

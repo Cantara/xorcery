@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.dns.test;
+package com.exoreaction.xorcery.test.dns;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
@@ -22,6 +22,7 @@ import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
+import com.exoreaction.xorcery.net.Sockets;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -32,40 +33,44 @@ import org.junit.jupiter.api.Test;
 
 public class SRVConnectorTest {
 
-    private String config = """
-            dns.registration.enabled: true            
+    private final String config = """
+            jetty.server.enabled: true
             jetty.server.http.enabled: false
-            jetty.client.ssl.enabled: true
+            jetty.server.ssl.port: "{{ SYSTEM.port }}"
+            dns.registration.enabled: true            
             dns.dyndns.enabled: true
             """;
 
     @Test
     public void testClientSRVConnectorLoadBalancing() throws Exception {
+        System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
         Configuration server1Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""                        
                         instance.host: server1
-                        jetty.server.ssl.port: 8443
                         servicetest.srv.weight: 50
                         dns:
                             server:
                                 enabled: true
                         """).build();
+        System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
         Configuration server2Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""
                         instance.host: server2
-                        jetty.server.ssl.port: 8444
+                        jetty.client.enabled: true
                         jetty.client.ssl.trustAll: true
                         """).build();
 
-        try (Xorcery server = new Xorcery(server1Configuration)) {
-            try (Xorcery client = new Xorcery(server2Configuration)) {
-                LogManager.getLogger().info("Server 1 configuration:\n" + server1Configuration);
-                LogManager.getLogger().info("Server 2 configuration:\n" + server2Configuration);
-                ClientBuilder clientConfig = client.getServiceLocator().getService(ClientBuilder.class);
-                Client httpClient = clientConfig.register(JsonElementMessageBodyReader.class).build();
-
-                for (int i = 0; i < 10; i++) {
-                    ResourceDocument resourceDocument = httpClient.target("srv://_servicetest._sub._https._tcp/").request(MediaTypes.APPLICATION_JSON_API).get().readEntity(ResourceDocument.class);
-                    System.out.println(resourceDocument.getLinks().getByRel("self").orElse(null).getHrefAsUri());
-                    System.out.println(resourceDocument.getResource().get().getAttributes().toMap());
+        try (Xorcery server1 = new Xorcery(server1Configuration)) {
+            try (Xorcery server2 = new Xorcery(server2Configuration)) {
+//                LogManager.getLogger().info("Server 1 configuration:\n" + server1Configuration);
+//                LogManager.getLogger().info("Server 2 configuration:\n" + server2Configuration);
+                ClientBuilder clientConfig = server2.getServiceLocator().getService(ClientBuilder.class);
+                try (Client httpClient = clientConfig.register(JsonElementMessageBodyReader.class).build())
+                {
+                    for (int i = 0; i < 10; i++) {
+                        ResourceDocument resourceDocument = httpClient.target("srv://_servicetest._sub._https._tcp/")
+                                .request(MediaTypes.APPLICATION_JSON_API).get().readEntity(ResourceDocument.class);
+                        System.out.println(resourceDocument.getLinks().getByRel("self").orElse(null).getHrefAsUri());
+                        System.out.println(resourceDocument.getResource().get().getAttributes().toMap());
+                    }
                 }
             }
         }

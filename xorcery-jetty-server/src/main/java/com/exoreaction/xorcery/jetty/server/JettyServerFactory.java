@@ -31,13 +31,15 @@ import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "jetty.server")
-@RunLevel(4)
 public class JettyServerFactory
         implements Factory<Server> {
     private final Server server;
 
     @Inject
-    public JettyServerFactory(Configuration configuration, Provider<SslContextFactory.Server> sslContextFactoryProvider, Logger logger) {
+    public JettyServerFactory(
+            Configuration configuration,
+            Provider<SslContextFactory.Server> sslContextFactoryProvider,
+            Logger logger) {
 
         JettyServerConfiguration jettyConfig = new JettyServerConfiguration(configuration.getConfiguration("jetty.server"));
         JettyServerHttp2Configuration jettyHttp2Config = new JettyServerHttp2Configuration(configuration.getConfiguration("jetty.server.http2"));
@@ -55,18 +57,18 @@ public class JettyServerFactory
         // Create server
         server = new Server(jettyConnectorThreadPool);
 
-        // Setup connector
-        final HttpConfiguration httpConfig = new HttpConfiguration();
-        httpConfig.setOutputBufferSize(jettyConfig.getOutputBufferSize());
-        httpConfig.setRequestHeaderSize(jettyConfig.getRequestHeaderSize());
-
-        // Added for X-Forwarded-For support, from ALB
-        httpConfig.addCustomizer(new ForwardedRequestCustomizer());
-
         // Setup protocols
 
         // Clear-text protocols
         if (jettyConfig.isHttpEnabled()) {
+            // Setup connector
+            final HttpConfiguration httpConfig = new HttpConfiguration();
+            httpConfig.setOutputBufferSize(jettyConfig.getOutputBufferSize());
+            httpConfig.setRequestHeaderSize(jettyConfig.getRequestHeaderSize());
+
+            // Added for X-Forwarded-For support, from ALB
+            httpConfig.addCustomizer(new ForwardedRequestCustomizer());
+
             HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
             ServerConnector httpConnector;
             if (jettyHttp2Config.isEnabled()) {
@@ -130,9 +132,9 @@ public class JettyServerFactory
                 new CustomRequestLog(requestLog, "%{client}a - %u %t \"%r\" %s %O \"%{Referer}i\" \"%{User-Agent}i\""));
     }
 
-    @Override
-    @Singleton
     @Named("jetty.server")
+    @Singleton
+    @Override
     public Server provide() {
         return server;
     }

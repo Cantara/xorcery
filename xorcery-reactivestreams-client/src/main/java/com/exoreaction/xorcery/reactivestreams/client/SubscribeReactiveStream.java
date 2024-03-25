@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -75,8 +76,7 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTe
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.SUBSCRIBER_REQUESTS;
 
 public class SubscribeReactiveStream
-        implements WebSocketListener,
-        WebSocketConnectionListener,
+        implements Session.Listener.AutoDemanding,
         Subscription {
 
     private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
@@ -324,10 +324,11 @@ public class SubscribeReactiveStream
     }
 
     // Websocket
+
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress().toString());
         }
         this.session = session;
         this.retryDelay = Duration.parse("PT" + subscriberConfiguration.getRetryDelay()).toMillis();
@@ -345,32 +346,6 @@ public class SubscribeReactiveStream
         } else {
             subscriber.onSubscribe(this);
         }
-
-        // First send parameters, if available
-/*
-        String parameterString = configuration.json().toPrettyString();
-        session.getRemote().sendString(parameterString, new WriteCallbackCompletableFuture().with(f ->
-                f.future().thenAcceptAsync(Void ->
-                {
-                    logger.debug(marker, "Connected to {}", session.getUpgradeRequest().getRequestURI());
-
-                    if (isRetrying.get()) {
-                        isRetrying.set(false);
-                        long retryRequests = requests.get() + outstandingRequests.get();
-                        outstandingRequests.set(0);
-                        requests.set(0);
-                        request(retryRequests);
-                    } else {
-                        subscriber.onSubscribe(this);
-                    }
-                }).exceptionally(t ->
-                {
-                    session.close(StatusCode.SERVER_ERROR, t.getMessage());
-                    logger.error(marker, "Parameter handshake failed", t);
-                    return null;
-                })
-        ));
-*/
     }
 
     @Override
@@ -413,25 +388,26 @@ public class SubscribeReactiveStream
         }
 
         // Ack to publisher
-        WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
+        CallbackCompletableFuture callback = new CallbackCompletableFuture();
         session.close(StatusCode.NORMAL, "onError", callback);
         Throwable finalThrowable = throwable;
         callback.future().handle((v, t) -> result.completeExceptionally(finalThrowable));
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         try {
             if (logger.isTraceEnabled()) {
-                logger.trace(marker, "onWebSocketBinary {}", new String(payload, offset, len, StandardCharsets.UTF_8));
+                logger.trace(marker, "onWebSocketBinary {}", new String(payload.array(), payload.arrayOffset(), payload.limit(), StandardCharsets.UTF_8));
             }
 //            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
-            Object event = eventReader.readFrom(payload, offset, len);
+            Object event = eventReader.readFrom(payload.array(), payload.arrayOffset(), payload.limit());
             subscriber.onNext(event);
-            receivedBytes.record(len, attributes);
+            receivedBytes.record(payload.limit(), attributes);
             activeSubscription.requested().decrementAndGet();
             activeSubscription.received().incrementAndGet();
             outstandingRequests.decrementAndGet();
+            callback.succeed();
         } catch (IOException e) {
             logger.error("Could not receive value", e);
 
@@ -441,9 +417,9 @@ public class SubscribeReactiveStream
             }
 
             // These kinds of errors are not retryable, we're done
-            WriteCallbackCompletableFuture callback = new WriteCallbackCompletableFuture();
-            session.close(StatusCode.NORMAL, "onError", callback);
-            callback.future().handle((v, t) -> result.completeExceptionally(e));
+            CallbackCompletableFuture closeCallback = new CallbackCompletableFuture();
+            session.close(StatusCode.NORMAL, "onError", closeCallback);
+            closeCallback.future().handle((v, t) -> result.completeExceptionally(e));
         }
     }
 
@@ -538,7 +514,7 @@ public class SubscribeReactiveStream
             String requestString = Long.toString(rn);
             CompletableFuture.runAsync(() ->
             {
-                session.getRemote().sendString(requestString, sendWriteCallback);
+                session.sendText(requestString, sendWriteCallback);
             });
 
             if (logger.isTraceEnabled())
@@ -549,16 +525,15 @@ public class SubscribeReactiveStream
     }
 
     private class SendWriteCallback
-            implements WriteCallback {
+            implements Callback {
         @Override
-        public void writeFailed(Throwable x) {
-            logger.error(marker, "Could not send requests", x);
-        }
-
-        @Override
-        public void writeSuccess() {
+        public void succeed() {
             // Do nothing
         }
-    }
 
+        @Override
+        public void fail(Throwable x) {
+            logger.error(marker, "Could not send requests", x);
+        }
+    }
 }

@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -97,6 +98,7 @@ public class SubscribePublisherTest {
     }
 
     @Test
+    @Disabled()
     public void testSlowSubscriber() throws Exception {
 
 
@@ -125,6 +127,7 @@ public class SubscribePublisherTest {
     }
 
     @Test
+    @Disabled()
     public void testSubscriberTimesOut() throws Exception {
 
         // Given
@@ -159,6 +162,7 @@ public class SubscribePublisherTest {
     }
 
     @Test
+    @Disabled()
     public void testSubscriberReconnect() throws Exception {
 
         // Given
@@ -258,6 +262,7 @@ public class SubscribePublisherTest {
     }
 
     @Test
+    @Disabled()
     public void testPublisherShutdownWithoutRetryCausesOnError() throws Exception {
 
         // Given

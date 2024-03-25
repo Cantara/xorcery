@@ -6,12 +6,6 @@
   "properties" : {
     "certificates" : {
       "$ref" : "#/$defs/certificates"
-    },
-    "keystores" : {
-      "$ref" : "#/$defs/keystores"
-    },
-    "jetty" : {
-      "$ref" : "#/$defs/jetty"
     }
   },
   "$defs" : {
@@ -37,91 +31,6 @@
           "type" : "string",
           "default" : "{{ instance.fqdn | \"server\"}}",
           "description" : "Default: {{ instance.fqdn | \"server\"}}"
-        }
-      }
-    },
-    "keystores" : {
-      "type" : "object",
-      "properties" : {
-        "ssl" : {
-          "type" : "object",
-          "properties" : {
-            "template" : {
-              "type" : "string",
-              "default" : "META-INF/ssl.p12",
-              "description" : "Default: META-INF/ssl.p12"
-            },
-            "path" : {
-              "type" : "string",
-              "default" : "{{ instance.home }}/ssl.p12",
-              "description" : "Default: {{ instance.home }}/ssl.p12"
-            }
-          }
-        },
-        "truststore" : {
-          "type" : "object",
-          "properties" : {
-            "template" : {
-              "type" : "string",
-              "default" : "META-INF/truststore.p12",
-              "description" : "Default: META-INF/truststore.p12"
-            },
-            "path" : {
-              "type" : "string",
-              "default" : "{{ instance.home }}/truststore.p12",
-              "description" : "Default: {{ instance.home }}/truststore.p12"
-            },
-            "addRootCa" : {
-              "type" : [ "boolean", "string" ],
-              "default" : true,
-              "description" : "Default: true"
-            }
-          }
-        }
-      }
-    },
-    "jetty" : {
-      "type" : "object",
-      "properties" : {
-        "client" : {
-          "type" : "object",
-          "properties" : {
-            "ssl" : {
-              "type" : "object",
-              "properties" : {
-                "keystore" : {
-                  "type" : "string",
-                  "default" : "ssl",
-                  "description" : "Default: ssl"
-                },
-                "truststore" : {
-                  "type" : "string",
-                  "default" : "truststore",
-                  "description" : "Default: truststore"
-                }
-              }
-            }
-          }
-        },
-        "server" : {
-          "type" : "object",
-          "properties" : {
-            "ssl" : {
-              "type" : "object",
-              "properties" : {
-                "keystore" : {
-                  "type" : "string",
-                  "default" : "ssl",
-                  "description" : "Default: ssl"
-                },
-                "truststore" : {
-                  "type" : "string",
-                  "default" : "truststore",
-                  "description" : "Default: truststore"
-                }
-              }
-            }
-          }
         }
       }
     }

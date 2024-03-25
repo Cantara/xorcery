@@ -15,22 +15,19 @@
  */
 package com.exoreaction.xorcery.jetty.server.security.clientcert;
 
-import jakarta.servlet.ServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.security.AbstractLoginService;
-import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.security.RolePrincipal;
-import org.eclipse.jetty.security.UserPrincipal;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.security.*;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Session;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import javax.security.auth.Subject;
-import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 @Service(name="jetty.server.security.certificate")
 @ContractsProvided(LoginService.class)
@@ -44,8 +41,7 @@ public class CertificateLoginService
     }
 
     @Override
-    public UserIdentity login(String username, Object credentials, ServletRequest request)
-    {
+    public UserIdentity login(String username, Object credentials, Request request, Function<Boolean, Session> getOrCreateSession) {
         if (username == null)
             return null;
 

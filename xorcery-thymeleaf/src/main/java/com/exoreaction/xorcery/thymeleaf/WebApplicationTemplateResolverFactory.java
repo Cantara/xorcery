@@ -1,9 +1,12 @@
 package com.exoreaction.xorcery.thymeleaf;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.hk2.Services;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.server.Handler;
+import org.glassfish.hk2.api.IterableProvider;
 import org.jvnet.hk2.annotations.Service;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 import org.thymeleaf.templateresolver.WebApplicationTemplateResolver;
@@ -13,10 +16,10 @@ import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 public class WebApplicationTemplateResolverFactory
         extends TemplateResolverFactory {
     @Inject
-    public WebApplicationTemplateResolverFactory(Configuration configuration, ServletContextHandler servletContextHandler) {
+    public WebApplicationTemplateResolverFactory(Configuration configuration, IterableProvider<Handler> handlers) {
         super(
                 new TemplateResolverConfiguration(configuration.getConfiguration("thymeleaf.webapplication")),
-                new WebApplicationTemplateResolver(JakartaServletWebApplication.buildApplication(servletContextHandler.getServletContext()))
+                new WebApplicationTemplateResolver(JakartaServletWebApplication.buildApplication(Services.ofType(handlers, ServletContextHandler.class).get().getServletContext()))
         );
     }
 

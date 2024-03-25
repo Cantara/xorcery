@@ -6,20 +6,3 @@ certificates:
   subject: "{{ instance.fqdn | \"server\"}}"
   ipAddresses: []
   dnsNames: []
-
-keystores:
-  ssl:
-    template: "META-INF/ssl.p12"
-    path: "{{ instance.home }}/ssl.p12"
-    password: "{{ keystores.defaultPassword }}"
-  truststore:
-    template: "META-INF/truststore.p12"
-    path: "{{ instance.home }}/truststore.p12"
-    password: "{{ keystores.defaultPassword }}"
-    addRootCa: true
-
-jetty.client.ssl.keystore: "ssl"
-jetty.client.ssl.truststore: "truststore"
-
-jetty.server.ssl.keystore: "ssl"
-jetty.server.ssl.truststore: "truststore"

@@ -41,14 +41,15 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.websocket.api.*;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -64,8 +65,7 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTe
  */
 public class SubscriberSubscriptionReactiveStream
         extends ServerReactiveStream
-        implements WebSocketPartialListener,
-        WebSocketConnectionListener,
+        implements Session.Listener.AutoDemanding,
         Subscription {
     private final String streamName;
 
@@ -77,8 +77,6 @@ public class SubscriberSubscriptionReactiveStream
     protected final MessageReader<Object> eventReader;
 
     protected final ByteBufferPool byteBufferPool;
-    protected final ByteBufferAccumulator byteBufferAccumulator;
-    private final AtomicBoolean isFirstBinary = new AtomicBoolean();
 
     protected final Marker marker;
     protected final Logger logger;
@@ -94,7 +92,6 @@ public class SubscriberSubscriptionReactiveStream
     private final AtomicLong requests = new AtomicLong();
     private final AtomicLong outstandingRequests = new AtomicLong();
     private final Lock sendLock = new ReentrantLock();
-    private final SendWriteCallback sendWriteCallback = new SendWriteCallback();
 
     private final ActiveSubscriptions activeSubscriptions;
     private ActiveSubscriptions.ActiveSubscription activeSubscription;
@@ -119,7 +116,6 @@ public class SubscriberSubscriptionReactiveStream
         this.objectMapper = objectMapper;
 
         this.byteBufferPool = byteBufferPool;
-        this.byteBufferAccumulator = new ByteBufferAccumulator(byteBufferPool, false);
         this.marker = MarkerManager.getMarker(streamName);
         this.logger = logger;
         this.activeSubscriptions = activeSubscriptions;
@@ -165,10 +161,11 @@ public class SubscriberSubscriptionReactiveStream
     }
 
     // WebSocket
+
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress());
 
         this.session = session;
 
@@ -206,7 +203,7 @@ public class SubscriberSubscriptionReactiveStream
                     .build();
         } catch (JsonProcessingException e) {
             logger.error("Could not parse subscriber configuration", e);
-            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+            session.close(StatusCode.BAD_PAYLOAD, e.getMessage(), Callback.NOOP);
         }
 
         try {
@@ -216,48 +213,30 @@ public class SubscriberSubscriptionReactiveStream
 
             subscriber.onSubscribe(this);
 
-            logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
+            logger.debug(marker, "Connected to {}", session.getRemoteSocketAddress());
         } catch (Throwable e) {
             // TODO Send exception here
         }
     }
 
     @Override
-    public void onWebSocketPartialBinary(ByteBuffer payload, boolean fin) {
-        if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketPartialBinary {} {}", fin, payload.limit());
-
-        if (fin) {
-            if (isFirstBinary.get()) {
-                onWebSocketBinary(payload);
-            } else {
-                byteBufferAccumulator.copyBuffer(payload);
-                onWebSocketBinary(byteBufferAccumulator.takeByteBuffer());
-                byteBufferAccumulator.close();
-                isFirstBinary.set(true);
-            }
-        } else {
-            isFirstBinary.set(false);
-            byteBufferAccumulator.copyBuffer(payload);
-        }
-    }
-
-    protected void onWebSocketBinary(ByteBuffer byteBuffer) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         try {
             if (logger.isTraceEnabled()) {
-                logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()).toString());
+                logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(payload.asReadOnlyBuffer()).toString());
             }
-            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
+            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(payload);
             Object event = eventReader.readFrom(inputStream);
-            receivedBytes.record(byteBuffer.position(), attributes);
+            receivedBytes.record(payload.position(), attributes);
             subscriber.onNext(event);
             activeSubscription.requested().decrementAndGet();
             activeSubscription.received().incrementAndGet();
             outstandingRequests.decrementAndGet();
+            callback.succeed();
         } catch (Throwable e) {
             logger.error("Could not receive value", e);
             subscriber.onError(e);
-            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+            session.close(StatusCode.BAD_PAYLOAD, e.getMessage(), callback);
         }
     }
 
@@ -339,29 +318,13 @@ public class SubscriberSubscriptionReactiveStream
             }
 
             String requestString = Long.toString(rn);
-            CompletableFuture.runAsync(() ->
-            {
-                session.getRemote().sendString(requestString, sendWriteCallback);
-            });
+            session.sendText(requestString, Callback.NOOP);
 
             if (logger.isTraceEnabled())
                 logger.trace(marker, "sendRequest {}", rn);
 
         } finally {
             sendLock.unlock();
-        }
-    }
-
-    private class SendWriteCallback
-            implements WriteCallback {
-        @Override
-        public void writeFailed(Throwable x) {
-            logger.error(marker, "Could not send requests", x);
-        }
-
-        @Override
-        public void writeSuccess() {
-            // Do nothing
         }
     }
 }

@@ -12,29 +12,15 @@
     "domainevents" : {
       "type" : "object",
       "properties" : {
-        "subscriber" : {
-          "type" : "object",
-          "properties" : {
-            "stream" : {
-              "type" : "string",
-              "default" : "neo4jprojections",
-              "description" : "Default: neo4jprojections"
-            },
-            "configuration" : {
-              "type" : "object",
-              "properties" : {
-                "projection" : {
-                  "type" : "string",
-                  "default" : "domainprojection",
-                  "description" : "Default: domainprojection"
-                }
-              }
-            }
-          }
+        "eventstore" : {
+          "type" : "string",
+          "default" : "{{ instance.uri }}/eventstore",
+          "description" : "Default: {{ instance.uri }}/eventstore"
         },
-        "publisher" : {
-          "type" : "object",
-          "properties" : { }
+        "projections" : {
+          "type" : "string",
+          "default" : "{{ instance.uri }}/projections",
+          "description" : "Default: {{ instance.uri }}/projections"
         }
       }
     }

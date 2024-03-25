@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.certificates.server.resources;
 
 import com.exoreaction.xorcery.certificates.server.ServerCertificatesProvider;
-import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
+import com.exoreaction.xorcery.jaxrs.server.resources.BaseResource;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
 import jakarta.inject.Inject;
@@ -31,7 +31,7 @@ import java.util.concurrent.CompletionStage;
 @Path("api/certificates/request")
 @Singleton
 public class CertificateRequestResource
-        extends AbstractResource {
+        extends BaseResource {
 
     private ServerCertificatesProvider certificatesServer;
 

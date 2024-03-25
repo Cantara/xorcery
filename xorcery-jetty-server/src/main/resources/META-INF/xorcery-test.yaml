@@ -1,4 +1,3 @@
-jetty.server.http.port: 8080
-jetty.server.ssl.port: 8443
-
+jetty.server.http.port: "{{ CALCULATED.nextFreePort.http }}"
+jetty.server.ssl.port: "{{ CALCULATED.nextFreePort.ssl }}"
 jetty.server.minThreads: 3

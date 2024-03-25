@@ -41,9 +41,9 @@ import java.lang.reflect.Type;
 public class JsonElementMessageBodyWriter
         implements MessageBodyWriter<JsonElement> {
 
-    private static final MediaType APPLICATION_JSON_API_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_JSON_API);
-    private static final MediaType APPLICATION_JSON_SCHEMA_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_JSON_SCHEMA);
-    private static final MediaType APPLICATION_YAML_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_YAML);
+    static final MediaType APPLICATION_JSON_API_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_JSON_API);
+    static final MediaType APPLICATION_JSON_SCHEMA_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_JSON_SCHEMA);
+    static final MediaType APPLICATION_YAML_TYPE = MediaType.valueOf(MediaTypes.APPLICATION_YAML);
 
     private final ObjectMapper objectMapper;
     private final ObjectMapper yamlObjectMapper;
@@ -57,11 +57,13 @@ public class JsonElementMessageBodyWriter
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return JsonElement.class.isAssignableFrom(type) &&
-                (mediaType.isCompatible(APPLICATION_JSON_API_TYPE) ||
-                 mediaType.isCompatible(APPLICATION_JSON_SCHEMA_TYPE) ||
-                 mediaType.isCompatible(APPLICATION_YAML_TYPE) ||
-                 mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE));
+        return JsonElement.class.isAssignableFrom(type)
+                && (mediaType.isCompatible(APPLICATION_JSON_API_TYPE) ||
+                mediaType.isCompatible(APPLICATION_JSON_SCHEMA_TYPE) ||
+                mediaType.isCompatible(APPLICATION_YAML_TYPE) ||
+                mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE) ||
+                mediaType.isCompatible(MediaType.APPLICATION_OCTET_STREAM_TYPE) ||
+                mediaType.isWildcardType());
     }
 
     @Override

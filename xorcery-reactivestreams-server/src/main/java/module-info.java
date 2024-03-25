@@ -28,8 +28,9 @@ module xorcery.reactivestreams.server {
     requires static xorcery.status.spi;
 
     requires reactor.core;
-    requires org.eclipse.jetty.websocket.jetty.server;
-    requires org.eclipse.jetty.servlet;
+    requires org.eclipse.jetty.ee10.servlet;
+    requires org.eclipse.jetty.websocket.server;
+    requires org.eclipse.jetty.ee10.websocket.jetty.server;
     requires org.eclipse.jetty.server;
 
     requires jakarta.inject;

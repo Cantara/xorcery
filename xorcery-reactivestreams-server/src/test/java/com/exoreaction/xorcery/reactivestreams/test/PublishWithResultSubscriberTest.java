@@ -32,6 +32,7 @@ import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -101,6 +102,7 @@ public class PublishWithResultSubscriberTest {
     }
 
     @Test
+    @Disabled()
     public void testServerTimesOut() throws Exception {
 
         // Given

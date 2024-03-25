@@ -16,7 +16,6 @@
 package com.exoreaction.xorcery.jsonapi.server.resources;
 
 import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +32,7 @@ public interface IncludesResource
     default List<String> includeList()
     {
         String include = getFirstQueryParameter( "include" );
-        if ( StringUtils.isBlank( include ) )
+        if ( include.isBlank() )
         { return Collections.emptyList(); }
         return Arrays.asList( include.split( "," ) );
     }

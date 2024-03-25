@@ -27,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 @Service
 public class ServiceResourceObjects {
-    private List<ServiceResourceObject> serviceResources = new CopyOnWriteArrayList<>();
+    private final List<ServiceResourceObject> serviceResources = new CopyOnWriteArrayList<>();
 
     @Inject
     public ServiceResourceObjects() {

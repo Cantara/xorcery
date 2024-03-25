@@ -22,6 +22,7 @@ import org.eclipse.jetty.security.Authenticator;
 import org.eclipse.jetty.security.DefaultAuthenticatorFactory;
 import org.eclipse.jetty.security.IdentityService;
 import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.server.Context;
 import org.eclipse.jetty.server.Server;
 import org.glassfish.hk2.api.IterableProvider;
 import org.jvnet.hk2.annotations.ContractsProvided;
@@ -40,18 +41,18 @@ public class ProviderAuthenticatorFactory
     }
 
     @Override
-    public Authenticator getAuthenticator(Server server, ServletContext context, Authenticator.AuthConfiguration configuration, IdentityService identityService, LoginService loginService) {
+    public Authenticator getAuthenticator(Server server, Context context, Authenticator.Configuration configuration) {
 
-        String authMethod = configuration.getAuthMethod();
-        if (authMethod == null)
+        String authType = configuration.getAuthenticationType();
+        if (authType == null)
             return null;
-        Authenticator authenticator = authenticators.named(authMethod).get();
+        Authenticator authenticator = authenticators.named(authType).get();
         if (authenticator != null)
             return authenticator;
-        authenticator = authenticators.named("jetty.server.security."+authMethod).get();
+        authenticator = authenticators.named("jetty.server.security."+authType).get();
         if (authenticator != null)
             return authenticator;
 
-        return super.getAuthenticator(server, context, configuration, identityService, loginService);
+        return super.getAuthenticator(server, context, configuration);
     }
 }

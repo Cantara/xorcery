@@ -16,9 +16,7 @@
 package com.exoreaction.xorcery.jetty.server.security;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,8 +28,9 @@ public record JettySecurityConfiguration(Configuration configuration) {
         return new JettySecurityConfiguration(configuration.getConfiguration("jetty.server.security"));
     }
 
-    public Optional<String> getAuthenticationMethod() {
-        return configuration.getString("method");
+    public Optional<String> getAuthenticationType() {
+        return configuration.getString("type")
+                .or(()->configuration.getString("method")); // Deprecated
     }
 
     public List<ConstraintConfiguration> getConstraints() {

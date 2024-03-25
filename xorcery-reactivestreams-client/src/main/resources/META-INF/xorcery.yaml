@@ -1,7 +1,6 @@
 reactivestreams:
-  enabled: "{{ defaults.enabled }}"
   client:
-    enabled: "{{ reactivestreams.enabled }}"
+    enabled: "{{ jetty.client.enabled }}"
     connectTimeout: "{{ defaults.connectTimeout }}"
     idleTimeout: "{{ defaults.idleTimeout }}"
     autoFragment: true

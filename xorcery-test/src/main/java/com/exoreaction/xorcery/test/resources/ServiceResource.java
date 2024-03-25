@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.test.resources;
 
-import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
+import com.exoreaction.xorcery.jaxrs.server.resources.BaseResource;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.Links;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
@@ -26,7 +26,7 @@ import jakarta.ws.rs.Path;
 
 @Path("api/service")
 public class ServiceResource
-        extends AbstractResource
+        extends BaseResource
         implements JsonApiResource {
 
     @GET

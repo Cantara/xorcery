@@ -23,10 +23,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.RoundRobinConnectionPool;
-import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
-import org.eclipse.jetty.client.http.HttpClientConnectionFactory;
+import org.eclipse.jetty.client.transport.HttpClientConnectionFactory;
+import org.eclipse.jetty.client.transport.HttpClientTransportDynamic;
 import org.eclipse.jetty.http2.client.HTTP2Client;
-import org.eclipse.jetty.http2.client.http.ClientConnectionFactoryOverHTTP2;
+import org.eclipse.jetty.http2.client.transport.ClientConnectionFactoryOverHTTP2;
 import org.eclipse.jetty.io.ClientConnectionFactory;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.SocketAddressResolver;
@@ -71,7 +71,8 @@ public class HttpClientFactory {
         JettyClientSslConfiguration jettyClientSslConfiguration = jettyClientConfiguration.getSSLConfiguration();
         if (jettyClientSslConfiguration.isEnabled()) {
             SslContextFactory.Client sslClientContextFactory = clientSslContextFactoryProvider.get();
-            connector.setSslContextFactory(sslClientContextFactory);
+            if (sslClientContextFactory != null)
+                connector.setSslContextFactory(sslClientContextFactory);
         }
 
         // Figure out correct transport dynamics
@@ -82,7 +83,7 @@ public class HttpClientFactory {
         }
 
         client = new HttpClient(transport);
-        client.getRequestListeners().add(new OpenTelemetryRequestListener(openTelemetry));
+        client.getRequestListeners().addListener(new OpenTelemetryRequestListener(openTelemetry));
         client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
         QueuedThreadPool executor = new JettyClientConnectorThreadPool();
         executor.setName(applicationConfiguration.getName());
@@ -97,7 +98,7 @@ public class HttpClientFactory {
 
         transport.setConnectionPoolFactory(destination ->
         {
-            RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, destination);
+            RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, 10);
 //            pool.preCreateConnections(10);
             return pool;
         });

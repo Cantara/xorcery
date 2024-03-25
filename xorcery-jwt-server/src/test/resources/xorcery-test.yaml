@@ -1,3 +1,4 @@
+# $schema: ./../../main/resources/META-INF/xorcery-schema.json
 jwt:
   server:
     keys:

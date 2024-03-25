@@ -15,8 +15,10 @@
  */
 package com.exoreaction.xorcery.jsonapi.providers;
 
+import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -32,6 +34,8 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+
+import static com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter.*;
 
 @Singleton
 @Provider
@@ -49,7 +53,15 @@ public class JsonMessageBodyWriter
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return objectMapper.canSerialize(type) && mediaType.isCompatible(MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        return objectMapper.canSerialize(type)
+                && !JsonNode.class.isAssignableFrom(type)
+                && !JsonElement.class.isAssignableFrom(type)
+                && (mediaType.isCompatible(APPLICATION_JSON_API_TYPE) ||
+                mediaType.isCompatible(APPLICATION_JSON_SCHEMA_TYPE) ||
+                mediaType.isCompatible(APPLICATION_YAML_TYPE) ||
+                mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE) ||
+                mediaType.isCompatible(MediaType.APPLICATION_OCTET_STREAM_TYPE) ||
+                mediaType.isWildcardType());
     }
 
     @Override

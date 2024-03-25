@@ -22,10 +22,11 @@ open module xorcery.jetty.client {
     requires xorcery.keystores;
     requires xorcery.dns.client;
 
-    requires org.eclipse.jetty.client;
+    requires transitive org.eclipse.jetty.client;
 
     requires org.apache.logging.log4j;
-    requires org.eclipse.jetty.http2.http.client.transport;
+    requires org.eclipse.jetty.http2.client;
+    requires org.eclipse.jetty.http2.client.transport;
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
     requires io.opentelemetry.api;

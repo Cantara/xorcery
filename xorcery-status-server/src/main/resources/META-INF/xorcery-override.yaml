@@ -1,0 +1,7 @@
+jetty.server.security.mappings:
+  - path: "/api/status"
+    constraint: "{{ defaults.development ? null | \"admin\"}}"
+
+jersey.server.register:
+  - com.exoreaction.xorcery.status.api.StatusResource
+  - com.exoreaction.xorcery.status.api.StatusProviderResource

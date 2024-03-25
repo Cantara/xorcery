@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.jersey.server;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.hk2.Services;
 import com.exoreaction.xorcery.jersey.server.resources.ServerApplication;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
@@ -25,9 +26,11 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.util.Jetty;
+import org.glassfish.hk2.api.IterableProvider;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
@@ -43,7 +46,7 @@ public class JerseyServerService
     @Inject
     public JerseyServerService(Configuration configuration,
                                ServiceResourceObjects sro,
-                               Provider<ServletContextHandler> ctxProvider) throws Exception {
+                               ServletContextHandler servletContextHandler) throws Exception {
 
         ServerApplication app = new ServerApplication(configuration);
 
@@ -63,7 +66,6 @@ public class JerseyServerService
         servletContainer = new JerseyServletContainer(app);
         ServletHolder servletHolder = new ServletHolder("jersey", servletContainer);
         servletHolder.setInitOrder(1);
-        ServletContextHandler servletContextHandler = ctxProvider.get();
         servletContextHandler.addServlet(servletHolder, "/*");
 
         sro.add(new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "server")

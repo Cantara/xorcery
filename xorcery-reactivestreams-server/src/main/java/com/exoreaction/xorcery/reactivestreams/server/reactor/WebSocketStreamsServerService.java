@@ -4,6 +4,7 @@ package com.exoreaction.xorcery.reactivestreams.server.reactor;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketServerOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -17,18 +18,16 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.http.pathmap.PathSpec;
 import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.websocket.api.UpgradeRequest;
-import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
-import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
-import org.eclipse.jetty.websocket.server.JettyWebSocketCreator;
-import org.eclipse.jetty.websocket.server.JettyWebSocketServerContainer;
-import org.eclipse.jetty.websocket.server.config.JettyWebSocketServletContainerInitializer;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.websocket.server.*;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
@@ -36,12 +35,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
@@ -52,16 +46,16 @@ import java.util.function.Function;
 public class WebSocketStreamsServerService
         implements WebSocketStreamsServer {
 
-    protected static final TextMapGetter<UpgradeRequest> jettyGetter =
+    protected static final TextMapGetter<ServerUpgradeRequest> jettyGetter =
             new TextMapGetter<>() {
                 @Override
-                public Iterable<String> keys(UpgradeRequest context) {
-                    return context.getHeaders().keySet();
+                public Iterable<String> keys(ServerUpgradeRequest context) {
+                    return context.getHeaders().getFieldNamesCollection();
                 }
 
                 @Override
-                public String get(UpgradeRequest context, String key) {
-                    return context.getHeader(key);
+                public String get(ServerUpgradeRequest context, String key) {
+                    return context.getHeaders().get(key);
                 }
             };
 
@@ -69,7 +63,7 @@ public class WebSocketStreamsServerService
     private final MessageWorkers messageWorkers;
     private final LoggerContext loggerContext;
     private final Logger logger;
-    private JettyWebSocketServerContainer container;
+    private final WebSocketUpgradeHandler webSocketUpgradeHandler;
 
     protected final ByteBufferPool byteBufferPool;
 
@@ -87,21 +81,13 @@ public class WebSocketStreamsServerService
 
     @Inject
     public WebSocketStreamsServerService(
-            Configuration configuration,
             MessageWorkers messageWorkers,
-            ServletContextHandler servletContextHandler,
+            WebSocketUpgradeHandler webSocketUpgradeHandler,
             OpenTelemetry openTelemetry,
             LoggerContext loggerContext) {
         this.messageWorkers = messageWorkers;
+        this.webSocketUpgradeHandler = webSocketUpgradeHandler;
         this.loggerContext = loggerContext;
-
-        WebSocketStreamsServerConfiguration serverConfiguration = WebSocketStreamsServerConfiguration.get(configuration);
-
-        JettyWebSocketServletContainerInitializer.configure(servletContextHandler, (servletContext, container) ->
-        {
-            serverConfiguration.apply(container);
-            WebSocketStreamsServerService.this.container = container;
-        });
 
         this.logger = loggerContext.getLogger(getClass());
 
@@ -115,10 +101,6 @@ public class WebSocketStreamsServerService
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-    }
-
-    public JettyWebSocketServerContainer getContainer() {
-        return container;
     }
 
     @Override
@@ -160,7 +142,7 @@ public class WebSocketStreamsServerService
                 {
                     if (mappedPaths.add(p)) {
                         // Always register as URI template
-                        container.addMapping("uri-template|"+p, webSocketCreator);
+                        webSocketUpgradeHandler.getServerWebSocketContainer().addMapping("uri-template|" + p, webSocketCreator);
                     }
                     return new ConcurrentHashMap<>();
                 });
@@ -177,73 +159,72 @@ public class WebSocketStreamsServerService
     }
 
     class StreamWebSocketCreator
-            implements JettyWebSocketCreator {
+            implements WebSocketCreator {
 
         @Override
-        public Object createWebSocket(JettyServerUpgradeRequest jettyServerUpgradeRequest, JettyServerUpgradeResponse jettyServerUpgradeResponse) {
-            try {
-                for (String requestSubProtocol : jettyServerUpgradeRequest.getSubProtocols()) {
-                    Map<String, Map<String, WebSocketHandler>> pathHandlers = handlers.get(requestSubProtocol);
-                    if (pathHandlers == null)
-                        continue;
+        public Object createWebSocket(ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse, Callback callback) throws Exception {
+            for (String requestSubProtocol : serverUpgradeRequest.getSubProtocols()) {
+                Map<String, Map<String, WebSocketHandler>> pathHandlers = handlers.get(requestSubProtocol);
+                if (pathHandlers == null)
+                    continue;
 
-                    String path = jettyServerUpgradeRequest.getRequestPath();
-                    Map<String, WebSocketHandler> contentTypeHandlers;
-                    if (jettyServerUpgradeRequest.getServletAttribute("org.eclipse.jetty.http.pathmap.PathSpec") instanceof UriTemplatePathSpec pathSpec) {
-                        String factoryPath = pathSpec.getDeclaration();
-                        contentTypeHandlers = pathHandlers.get(factoryPath);
-                    } else {
-                        contentTypeHandlers = pathHandlers.get(path);
-                    }
-
-                    if (contentTypeHandlers == null) {
-                        jettyServerUpgradeResponse.sendError(HttpStatus.NOT_FOUND_404, "Not found");
-                        return null;
-                    }
-
-                    String contentType = jettyServerUpgradeRequest.getHeader(HttpHeader.CONTENT_TYPE.asString());
-                    WebSocketHandler webSocketHandler;
-                    if (contentType == null) {
-                        if (contentTypeHandlers.size() == 1) {
-                            webSocketHandler = contentTypeHandlers.values().iterator().next();
-                        } else {
-                            jettyServerUpgradeResponse.sendError(HttpStatus.NOT_ACCEPTABLE_406, "Media type not specified");
-                            return null;
-                        }
-                    } else {
-                        webSocketHandler = contentTypeHandlers.get(contentType);
-                        if (webSocketHandler == null) {
-                            jettyServerUpgradeResponse.sendError(HttpStatus.NOT_ACCEPTABLE_406, "Media type " + contentType + " not supported");
-                            return null;
-                        }
-                    }
-
-                    Context context = textMapPropagator.extract(Context.current(), jettyServerUpgradeRequest, jettyGetter);
-
-                    Function<Flux<Object>, Publisher<Object>> handler = webSocketHandler.handler();
-
-                    jettyServerUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol);
-
-                    return new ServerWebSocketStream<>(
-                            path,
-                            WebSocketServerOptions.instance(),
-                            (MessageWriter<Object>) webSocketHandler.writer(),
-                            (MessageReader<Object>) webSocketHandler.reader(),
-                            handler,
-                            byteBufferPool,
-                            loggerContext.getLogger(ServerWebSocketStream.class),
-                            tracer,
-                            meter,
-                            context
-                    );
+                String path = serverUpgradeRequest.getHttpURI().getPath();
+                Map<String, WebSocketHandler> contentTypeHandlers;
+                Map<String, String> pathParameters = Collections.emptyMap();
+                if (serverUpgradeRequest.getAttribute(PathSpec.class.getName()) instanceof UriTemplatePathSpec pathSpec) {
+                    pathParameters = pathSpec.getPathParams(path);
+                    String factoryPath = pathSpec.getDeclaration();
+                    contentTypeHandlers = pathHandlers.get(factoryPath);
+                } else {
+                    contentTypeHandlers = pathHandlers.get(path);
                 }
 
-                // No protocols or handlers found matching this request
-                jettyServerUpgradeResponse.sendError(HttpStatus.NOT_FOUND_404, "Not found");
-                return null;
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
+                if (contentTypeHandlers == null) {
+                    serverUpgradeResponse.setStatus(HttpStatus.NOT_FOUND_404);
+                    return null;
+                }
+
+                String contentType = serverUpgradeRequest.getHeaders().get(HttpHeader.CONTENT_TYPE);
+                WebSocketHandler webSocketHandler;
+                if (contentType == null) {
+                    if (contentTypeHandlers.size() == 1) {
+                        webSocketHandler = contentTypeHandlers.values().iterator().next();
+                    } else {
+                        serverUpgradeResponse.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+                        return null;
+                    }
+                } else {
+                    webSocketHandler = contentTypeHandlers.get(contentType);
+                    if (webSocketHandler == null) {
+                        serverUpgradeResponse.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+                        return null;
+                    }
+                }
+
+                Context context = textMapPropagator.extract(Context.current(), serverUpgradeRequest, jettyGetter);
+
+                Function<Flux<Object>, Publisher<Object>> handler = webSocketHandler.handler();
+
+                serverUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol);
+
+                return new ServerWebSocketStream<>(
+                        path,
+                        pathParameters,
+                        WebSocketServerOptions.instance(),
+                        (MessageWriter<Object>) webSocketHandler.writer(),
+                        (MessageReader<Object>) webSocketHandler.reader(),
+                        handler,
+                        byteBufferPool,
+                        loggerContext.getLogger(ServerWebSocketStream.class),
+                        tracer,
+                        meter,
+                        context
+                );
             }
+
+            // No protocols or handlers found matching this request
+            serverUpgradeResponse.setStatus(HttpStatus.NOT_FOUND_404);
+            return null;
         }
     }
 }

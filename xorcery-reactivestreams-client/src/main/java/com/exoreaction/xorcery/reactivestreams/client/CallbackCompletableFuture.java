@@ -13,12 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.function;
+package com.exoreaction.xorcery.reactivestreams.client;
 
-import java.util.concurrent.Callable;
-import java.util.function.Function;
+import com.exoreaction.xorcery.builders.With;
+import org.eclipse.jetty.websocket.api.Callback;
 
-public interface Factory<P,T>
-    extends Function<P, Callable<T>>
+import java.util.concurrent.CompletableFuture;
+
+public record CallbackCompletableFuture(CompletableFuture<Void> future)
+    implements Callback, With<CallbackCompletableFuture>
 {
+    public CallbackCompletableFuture() {
+        this(new CompletableFuture<>());
+    }
+
+    @Override
+    public void succeed() {
+        future.completeExceptionally(null);
+    }
+
+    @Override
+    public void fail(Throwable x) {
+        future.completeExceptionally(x);
+    }
 }

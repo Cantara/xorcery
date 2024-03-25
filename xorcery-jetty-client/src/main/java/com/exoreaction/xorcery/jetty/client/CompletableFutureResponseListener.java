@@ -15,14 +15,13 @@
  */
 package com.exoreaction.xorcery.jetty.client;
 
-import org.eclipse.jetty.client.HttpContentResponse;
-import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Result;
-import org.eclipse.jetty.client.util.BufferingResponseListener;
+
+import org.eclipse.jetty.client.ContentResponse;
+import org.eclipse.jetty.client.Result;
 
 import java.util.concurrent.CompletableFuture;
 
-public class CompletableFutureResponseListener extends BufferingResponseListener {
+public class CompletableFutureResponseListener extends org.eclipse.jetty.client.BufferingResponseListener {
     private CompletableFuture<ContentResponse> future;
 
     public CompletableFutureResponseListener(CompletableFuture<ContentResponse> future, int maxLength) {
@@ -36,11 +35,10 @@ public class CompletableFutureResponseListener extends BufferingResponseListener
 
     @Override
     public void onComplete(Result result) {
-
         if (result.isFailed()) {
             future.completeExceptionally(result.getFailure());
         } else {
-            future.complete(new HttpContentResponse(result.getResponse(), getContent(), getMediaType(), getEncoding()));
+            future.complete(ContentResponse.from(result.getResponse(), getContent(), getMediaType(), getEncoding()));
         }
     }
 }

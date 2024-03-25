@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
 import java.security.KeyStore;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.eclipse.jetty.util.ssl.SslContextFactory.Client.SniProvider.NON_DOMAIN_SNI_PROVIDER;
@@ -43,7 +44,7 @@ public class ClientSslContextFactoryFactory {
         {
             jettyClientSslConfiguration.getKeyStoreName().ifPresentOrElse(name ->
             {
-                factory.setKeyStore(ks.getKeyStore(name));
+                factory.setKeyStore(Objects.requireNonNull(ks.getKeyStore(name), "No such KeyStore:"+name));
                 factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration(name).getPassword().map(secrets::getSecretString).orElse(null));
                 factory.setCertAlias(jettyClientSslConfiguration.getAlias());
             }, ()->

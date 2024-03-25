@@ -4,23 +4,20 @@ dns:
     enabled: true
     nameServers:
       - 127.0.0.1:8853
-jetty.client.enabled: true
-jetty.server.enabled: true
 secrets.enabled: true
-reactivestreams.enabled: true
 keystores.enabled: true
 jersey:
-  enabled: true
   server:
     register:
       - com.exoreaction.xorcery.test.resources.SubjectResource
       - com.exoreaction.xorcery.test.resources.ServiceResource
-root.enabled: true
-jetty.enabled: true
-xorcery.enabled: true
 
 log4j2.Configuration.thresholdFilter.level: debug
 log4j2.Configuration.Loggers.logger:
+  - name: "com.exoreaction.xorcery.test"
+    level: "debug"
+  - name: "com.exoreaction.xorcery.core"
+    level: "info"
   - name: "com.exoreaction.xorcery.dns.update"
     level: "debug"
   - name: "com.exoreaction.xorcery.dns.server"

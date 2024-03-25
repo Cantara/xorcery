@@ -211,7 +211,7 @@ public class PublishWithResultSubscriberWebSocketTest {
         // Given
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf)
                 .addYaml("""
-                        reactivestreams.server.idleTimeout: "2s"
+                        jetty.server.websockets.idleTimeout: "2s"
                         """)
                 .build();
         logger.info(serverConfiguration);

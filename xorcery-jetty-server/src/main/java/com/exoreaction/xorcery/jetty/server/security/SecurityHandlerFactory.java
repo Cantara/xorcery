@@ -16,18 +16,26 @@
 package com.exoreaction.xorcery.jetty.server.security;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import jakarta.servlet.annotation.ServletSecurity;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.security.*;
+import org.eclipse.jetty.server.Handler;
 import org.glassfish.hk2.api.Factory;
-import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
-@Service(name = "jetty.server.security")
+@Service
+@Priority(4)
 public class SecurityHandlerFactory
         implements Factory<ConstraintSecurityHandler> {
 
@@ -37,7 +45,8 @@ public class SecurityHandlerFactory
     public SecurityHandlerFactory(Configuration configuration,
                                   Provider<Authenticator.Factory> authenticatorFactoryProvider,
                                   Provider<LoginService> loginServiceProvider,
-                                  Provider<IdentityService> identityServiceProvider
+                                  Provider<IdentityService> identityServiceProvider,
+                                  Logger logger
                                       ) {
 
         securityHandler = new ConstraintSecurityHandler();
@@ -47,12 +56,40 @@ public class SecurityHandlerFactory
         securityHandler.setLoginService(loginService);
         securityHandler.setIdentityService(identityService);
         securityHandler.setAuthenticatorFactory(Optional.ofNullable(authenticatorFactoryProvider.get()).orElseGet(DefaultAuthenticatorFactory::new));
-        JettySecurityConfiguration.get(configuration).getAuthenticationMethod().ifPresent(securityHandler::setAuthMethod);
+        JettySecurityConfiguration.get(configuration).getAuthenticationType().ifPresent(securityHandler::setAuthenticationType);
+
+        // Load constraints
+        JettySecurityConfiguration jettySecurityConfiguration = JettySecurityConfiguration.get(configuration);
+        Map<String, Constraint> constraints = new HashMap<>();
+        jettySecurityConfiguration.getConstraints().forEach(c -> constraints.put(c.getName(),
+                ConstraintSecurityHandler.createConstraint(c.getName(), c.getRoles().toArray(new String[0]), ServletSecurity.EmptyRoleSemantic.PERMIT, ServletSecurity.TransportGuarantee.NONE)));
+
+        // Loa path -> constraint mappings
+        jettySecurityConfiguration.getMappings().forEach(m ->
+        {
+            m.getConstraint().ifPresentOrElse(name ->
+            {
+                Constraint constraint = constraints.get(name);
+                if (constraint == null) {
+                    logger.error("Mapping for {} with constraint {} failed, constraint does not exist", m.getPath(), m.getConstraint());
+                    return;
+                }
+
+                ConstraintMapping mapping = new ConstraintMapping();
+                mapping.setConstraint(constraint);
+                mapping.setPathSpec(m.getPath());
+                securityHandler.addConstraintMapping(mapping);
+                logger.debug("Path '{}' mapped to security constraint '{}'", m.getPath(), m.getConstraint());
+            }, () ->
+            {
+                logger.debug("Skipped constraint mapping for path '{}', constraint name was not set", m.getPath());
+            });
+        });
+
     }
 
-    @Override
-    @Singleton
     @Named("jetty.server.security")
+    @Override
     public ConstraintSecurityHandler provide() {
         return securityHandler;
     }

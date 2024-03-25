@@ -13,14 +13,14 @@ jetty:
     idleTimeout: "{{ defaults.idleTimeout }}"
 
     http:
-      enabled: "{{ defaults.enabled }}"
+      enabled: "{{ jetty.server.enabled }}"
       port: 80
 
     http2:
-      enabled: "{{ defaults.enabled }}"
+      enabled: "{{ jetty.server.enabled }}"
 
     ssl:
-      enabled: "{{ defaults.enabled }}"
+      enabled: "{{ jetty.server.enabled }}"
       port: 443
 #      keystore: null
 #      truststore: null
@@ -35,14 +35,21 @@ jetty:
       priority: 2 # By default, so that other servers can use 1 or 3 for higher and lower priority
       weight: 100 # By default, so that other servers can use higher or lower weights (e.g. 10 for test rollout)
 
+    # Handlers, in rank order
+    log4j2:
+      enabled: "{{ jetty.server.enabled }}"
+
+    sessions:
+      enabled: "{{ jetty.server.enabled }}"
+
     security:
-      enabled: "{{ defaults.enabled }}"
-      method: "jwt"
+      enabled: "{{ jetty.server.enabled }}"
+      type: "jwt"
       constraints:
         - name: admin
           roles:
             - admin
-      mappings: []
+      mappings: [ ]
 
       certificate:
         enabled: "{{ jetty.server.security.enabled }}"
@@ -52,10 +59,27 @@ jetty:
           - token
         issuers:
           default:
-            keys: []
-     #    someissuer:
-     #       keys:
-     #         - kid: 1234
-     #           alg: ES256
-     #           publicKey: MII...
-     #
+            keys: [ ]
+      #    someissuer:
+      #       keys:
+      #         - kid: 1234
+      #           alg: ES256
+      #           publicKey: MII...
+      #
+
+    websockets:
+      enabled: "{{ jetty.server.enabled }}"
+      autoFragment: true
+      idleTimeout: "{{ defaults.idleTimeout }}"
+      inputBufferSize: 4096
+      maxFrameSize: 65536
+      maxTextMessageSize: 65536
+      maxBinaryMessageSize: 65536
+      outputBufferSize: 4096
+
+    servlet:
+      enabled: "{{ jetty.server.enabled }}"
+
+    gzip:
+      enabled: "{{ jetty.server.enabled }}"
+

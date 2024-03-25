@@ -1,11 +1,13 @@
 package com.exoreaction.xorcery.reactivestreams.client.reactor;
 
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
+import com.exoreaction.xorcery.reactivestreams.client.ReleaseCallback;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
@@ -34,6 +36,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
+import org.eclipse.jetty.io.RetainableByteBuffer;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -63,7 +66,7 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTe
 
 public class ClientWebSocketStream<OUTPUT, INPUT>
         extends BaseSubscriber<OUTPUT>
-        implements WebSocketListener {
+        implements Session.Listener.AutoDemanding {
 
     private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
             (carrier, key, value) -> carrier.setHeader(key, value);
@@ -168,15 +171,12 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
         try (Scope scope = span.makeCurrent()) {
             start();
-        } catch (CompletionException e)
-        {
+        } catch (CompletionException e) {
             if (e.getCause() instanceof RuntimeException re)
                 throw re;
-            else if (e.getCause() instanceof IOException ioe)
-            {
+            else if (e.getCause() instanceof IOException ioe) {
                 throw new UncheckedIOException(ioe);
-            } else
-            {
+            } else {
                 throw e;
             }
         }
@@ -260,10 +260,9 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     protected void hookOnNext(OUTPUT item) {
         try {
             writer.writeTo(item, outputStream);
-            ByteBuffer eventBuffer = outputStream.takeByteBuffer();
-            session.getRemote().sendBytes(eventBuffer);
-            byteBufferPool.release(eventBuffer);
-
+            RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
+            ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
+            session.sendBinary(eventBuffer, new ReleaseCallback(retainableByteBuffer));
             sentBytes.record(eventBuffer.limit(), attributes);
 
             // publish without result, tell downstream subscriber the item has been handled
@@ -295,7 +294,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     @Override
     protected void hookOnError(Throwable throwable) {
         if (session.isOpen()) {
-            session.close(StatusCode.NORMAL, getError(throwable).toPrettyString());
+            session.close(StatusCode.NORMAL, getError(throwable).toPrettyString(), Callback.NOOP);
 
             // Save it for when websocket is closed so that we can report it accurately
             this.error = throwable;
@@ -305,19 +304,17 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     @Override
     protected void hookOnCancel() {
         upstreamCancel();
-        session.close(StatusCode.NORMAL, null);
+        session.close(StatusCode.NORMAL, null, Callback.NOOP);
     }
 
-    // WebSocketListener
+    // Session.Listener.AutoDemanding
     @Override
-    public void onWebSocketConnect(Session session) {
-
+    public void onWebSocketOpen(Session session) {
         if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress());
         }
 
         this.session = session;
-        session.getRemote().setBatchMode(BatchMode.AUTO);
 
         ObjectNode contextJson = JsonNodeFactory.instance.objectNode();
         sink.contextView().forEach((k, v) ->
@@ -335,13 +332,13 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
         try {
             String contextJsonString = jsonMapper.writeValueAsString(contextJson);
-            session.getRemote().sendString(contextJsonString);
-            logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
+            session.sendText(contextJsonString, Callback.NOOP);
+            logger.debug(marker, "Connected to {}", session.getRemoteSocketAddress());
 
             sink.onRequest(this::sendRequests);
         } catch (Throwable e) {
             error = e;
-            session.close(StatusCode.NORMAL, getError(e).toPrettyString());
+            session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
         }
     }
 
@@ -357,7 +354,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 long requests = numericNode.asLong();
                 if (requests == CANCEL) {
                     upstream().cancel();
-                    session.close(StatusCode.NORMAL, null);
+                    session.close(StatusCode.NORMAL, null, Callback.NOOP);
                 } else {
                     if (upstream() != null)
                         upstream().request(requests);
@@ -387,30 +384,32 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
             upstream().cancel();
             sink.error(e);
-            session.close(StatusCode.NORMAL, getError(e).toPrettyString());
+            session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
         }
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
-
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         if (reader == null) {
             if (!redundancyNotificationIssued) {
                 logger.warn(marker, "Receiving redundant results from server");
                 redundancyNotificationIssued = true;
             }
+            callback.succeed();
         } else {
             try {
                 if (logger.isTraceEnabled()) {
-                    logger.trace(marker, "onWebSocketBinary {}", new String(payload, offset, len, StandardCharsets.UTF_8));
+                    logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(payload.asReadOnlyBuffer()).toString());
                 }
-                INPUT event = reader.readFrom(payload, offset, len);
+                INPUT event = reader.readFrom(new ByteBufferBackedInputStream(payload));
                 sink.next(event);
                 outstandingRequests.decrementAndGet();
                 sendRequests(0);
+                callback.succeed();
             } catch (IOException e) {
                 error = e;
-                session.close(StatusCode.NORMAL, getError(e).toPrettyString());
+                session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
+                callback.fail(e);
             }
         }
     }
@@ -463,11 +462,9 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             }
         } else {
             logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
-            if (reason.equals("Connection Idle Timeout"))
-            {
+            if (reason != null && reason.equals("Connection Idle Timeout")) {
                 sink.error(new IdleTimeoutStreamException());
-            } else
-            {
+            } else {
                 sink.error(new ServerStreamException(statusCode, reason, error));
             }
         }
@@ -475,11 +472,10 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     }
 
     private void upstreamCancel() {
-        if (upstream() != null)
-        {
+        if (upstream() != null) {
             upstream().cancel();
         }
-        session.close(StatusCode.NORMAL, null);
+        session.close(StatusCode.NORMAL, null, Callback.NOOP);
     }
 
     private ObjectNode getError(Throwable throwable) {
@@ -519,8 +515,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                     return;
                 }
             } else if (n == COMPLETE) {
-                if (requests.getAndSet(COMPLETE) == COMPLETE)
-                {
+                if (requests.getAndSet(COMPLETE) == COMPLETE) {
                     // Already completed
                     return;
                 }
@@ -548,24 +543,13 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 return;
             }
             String requestString = Long.toString(rn);
-            session.getRemote().sendString(requestString);
+            session.sendText(requestString, Callback.NOOP);
 
             if (logger.isTraceEnabled())
                 logger.trace(marker, "sendRequest {}",
                         rn == CANCEL ? "CANCEL"
                                 : rn == COMPLETE ? "COMPLETE"
                                 : rn);
-        } catch (ClosedChannelException e) {
-            // Ignore
-        } catch (IOException e) {
-
-            if (e.getCause() instanceof EofException)
-                return;
-
-            logger.error("Could not send requests", e);
-            error = e;
-            if (session.isOpen())
-                session.close(StatusCode.NORMAL, getError(e).toPrettyString());
         } finally {
             sendLock.unlock();
         }

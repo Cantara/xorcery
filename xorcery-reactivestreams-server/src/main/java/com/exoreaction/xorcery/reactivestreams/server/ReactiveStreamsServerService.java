@@ -19,21 +19,19 @@ import com.exoreaction.xorcery.concurrent.CompletableFutures;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
-import com.exoreaction.xorcery.reactivestreams.util.LocalStreamFactories;
-import com.exoreaction.xorcery.reactivestreams.util.ActivePublisherSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriberSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.exoreaction.xorcery.reactivestreams.util.FutureProcessor;
+import com.exoreaction.xorcery.reactivestreams.util.*;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.websocket.server.*;
 import org.glassfish.hk2.runlevel.ChangeableRunLevelFuture;
 import org.glassfish.hk2.runlevel.ProgressStartedListener;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -83,7 +81,7 @@ public class ReactiveStreamsServerService
     public ReactiveStreamsServerService(Configuration configuration,
                                         OpenTelemetry openTelemetry,
                                         MessageWorkers messageWorkers,
-                                        ServletContextHandler servletContextHandler,
+                                        WebSocketUpgradeHandler webSocketUpgradeHandler,
                                         Logger logger,
                                         LoggerContext loggerContext,
                                         ActivePublisherSubscriptions activePublisherSubscriptions,
@@ -98,17 +96,9 @@ public class ReactiveStreamsServerService
         this.activePublisherSubscriptions = activePublisherSubscriptions;
         this.activeSubscriberSubscriptions = activeSubscriberSubscriptions;
 
-        PublishersReactiveStreamsServlet publishersServlet = new PublishersReactiveStreamsServlet(reactiveStreamsServerConfiguration, streamName ->
-        {
-            return Optional.ofNullable(publisherEndpointFactories.get(streamName)).map(Supplier::get).orElse(null);
-        });
-        servletContextHandler.addServlet(new ServletHolder("reactivestreamspublisher", publishersServlet), "/streams/publishers/*");
-
-        SubscribersReactiveStreamsServlet subscribersServlet = new SubscribersReactiveStreamsServlet(reactiveStreamsServerConfiguration, streamName ->
-        {
-            return Optional.ofNullable(subscriberEndpointFactories.get(streamName)).map(Supplier::get).orElse(null);
-        });
-        servletContextHandler.addServlet(new ServletHolder("reactivestreamssubscriber", subscribersServlet), "/streams/subscribers/*");
+        ServerWebSocketContainer container = webSocketUpgradeHandler.getServerWebSocketContainer();
+        container.addMapping("/streams/publishers/*", new PublisherWebSocketCreator());
+        container.addMapping("/streams/subscribers/*", new SubscriberWebSocketCreator());
 
     }
 
@@ -259,6 +249,22 @@ public class ReactiveStreamsServerService
             for (CompletableFuture<Object> activePublisherAndSubscriber : activePublisherAndSubscribers) {
                 activePublisherAndSubscriber.completeExceptionally(new ServerShutdownStreamException(1001, "Shutting down server"));
             }
+        }
+    }
+
+    private class PublisherWebSocketCreator implements WebSocketCreator {
+        @Override
+        public Object createWebSocket(ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse, Callback callback) {
+            String streamName = serverUpgradeRequest.getHttpURI().getPath().substring( "/streams/publishers/".length());
+            return Optional.ofNullable(publisherEndpointFactories.get(streamName)).map(Supplier::get).orElse(null);
+        }
+    }
+
+    private class SubscriberWebSocketCreator implements WebSocketCreator {
+        @Override
+        public Object createWebSocket(ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse, Callback callback) {
+            String streamName = serverUpgradeRequest.getHttpURI().getPath().substring( "/streams/subscribers/".length());
+            return Optional.ofNullable(subscriberEndpointFactories.get(streamName)).map(Supplier::get).orElse(null);
         }
     }
 }

@@ -16,18 +16,22 @@
 package com.exoreaction.xorcery.configuration.providers;
 
 import com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
+import com.exoreaction.xorcery.net.Sockets;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CalculatedConfigurationProvider
         implements ConfigurationProvider {
+
+    private Map<String, NumericNode> nextFreePorts = new HashMap<>();
 
     @Override
     public String getNamespace() {
@@ -94,6 +98,17 @@ public class CalculatedConfigurationProvider
         } catch (SocketException e) {
             return addresses;
         }
+    }
+
+    public ContainerNode<?> nextFreePort()
+    {
+        return new ObjectNode(JsonNodeFactory.instance)
+        {
+            @Override
+            public JsonNode get(String name) {
+                return nextFreePorts.computeIfAbsent(name, n -> JsonNodeFactory.instance.numberNode(Sockets.nextFreePort()));
+            }
+        };
     }
 
     @Override

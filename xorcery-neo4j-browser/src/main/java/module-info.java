@@ -25,7 +25,8 @@ open module xorcery.neo4j.browser {
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
-    requires org.eclipse.jetty.servlet;
+    requires jakarta.servlet;
+    requires org.eclipse.jetty.ee10.servlet;
     requires neo4j.browser;
     requires org.bouncycastle.provider;
     requires org.bouncycastle.pkix;

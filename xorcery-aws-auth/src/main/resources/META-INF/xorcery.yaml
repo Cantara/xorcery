@@ -1,7 +1,8 @@
 aws:
+  enabled: "{{ defaults.enabled }}"
   region: "{{ ENV:aws.region }}"
   auth:
-    enabled: "{{ defaults.enabled }}"
+    enabled: "{{ aws.enabled }}"
     type: accessKey
     accessKeyId: "env:aws.accessKeyId"
     secretAccessKey: "env:aws.secretAccessKey"

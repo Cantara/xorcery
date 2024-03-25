@@ -20,21 +20,21 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
-import com.exoreaction.xorcery.reactivestreams.util.ExceptionObjectOutputStream;
-import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
-import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsAbstractService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
+import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
+import com.exoreaction.xorcery.reactivestreams.util.ExceptionObjectOutputStream;
+import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsAbstractService;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.io.ByteBufferAccumulator;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.io.RetainableByteBuffer;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Subscriber;
 
@@ -55,7 +55,6 @@ public class SubscribeWithResultReactiveStream
     private final MessageWriter<Object> resultWriter;
     boolean isFlushPending = false;
     private final ByteBufferPool byteBufferPool;
-    private ByteBufferAccumulator byteBufferAccumulator;
     private ByteBufferOutputStream2 resultOutputStream;
 
     protected final LongCounter resultsSent;
@@ -84,8 +83,12 @@ public class SubscribeWithResultReactiveStream
 
         this.resultWriter = resultWriter;
         this.byteBufferPool = pool;
-        this.byteBufferAccumulator = new ByteBufferAccumulator(pool, false);
         this.resultOutputStream = new ByteBufferOutputStream2(pool, true);
+    }
+
+    @Override
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
+        super.onWebSocketBinary(payload, callback);
     }
 
     protected void onWebSocketBinary(ByteBuffer byteBuffer) {
@@ -96,7 +99,6 @@ public class SubscribeWithResultReactiveStream
             ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(inputStream);
             receivedBytes.record(byteBuffer.position(), attributes);
-            byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
 
             CompletableFuture<Object> resultFuture = new CompletableFuture<>();
             resultFuture.whenComplete(this::sendResult);
@@ -107,7 +109,7 @@ public class SubscribeWithResultReactiveStream
         } catch (IOException e) {
             logger.error(marker, "Could not receive value", e);
             subscriber.onError(e);
-            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+            session.close(StatusCode.BAD_PAYLOAD, e.getMessage(), Callback.NOOP);
             result.completeExceptionally(e);
         }
     }
@@ -130,22 +132,13 @@ public class SubscribeWithResultReactiveStream
                         resultWriter.writeTo(result, resultOutputStream);
                     }
 
-                    ByteBuffer data = resultOutputStream.takeByteBuffer();
-                    session.getRemote().sendBytes(data, new WriteCallback() {
-                        @Override
-                        public void writeFailed(Throwable x) {
-                            logger.error(marker, "Could not send result", x);
-                        }
-
-                        @Override
-                        public void writeSuccess() {
-                            byteBufferPool.release(data);
-                        }
-                    });
+                    RetainableByteBuffer retainableByteBuffer = resultOutputStream.takeByteBuffer();
+                    ByteBuffer data = retainableByteBuffer.getByteBuffer();
+                    session.sendBinary(data, new ReleaseCallback(retainableByteBuffer));
                 } catch (IOException ex) {
                     logger.error(marker, "Could not send result", ex);
-                    session.close(StatusCode.SERVER_ERROR, ex.getMessage());
-                    this.result.completeExceptionally(ex); // TODO This should probably do a retry instead
+                    session.close(StatusCode.SERVER_ERROR, ex.getMessage(), Callback.NOOP);
+                    this.result.completeExceptionally(ex);
                 }
             });
         }

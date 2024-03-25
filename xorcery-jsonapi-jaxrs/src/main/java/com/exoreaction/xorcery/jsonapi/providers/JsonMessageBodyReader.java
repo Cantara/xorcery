@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.jsonapi.providers;
 
+import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -52,7 +53,9 @@ public class JsonMessageBodyReader
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return objectMapper.canDeserialize(objectMapper.constructType(type)) && !JsonNode.class.isAssignableFrom(type);
+        return objectMapper.canDeserialize(objectMapper.constructType(type))
+                && !JsonNode.class.isAssignableFrom(type)
+                && !JsonElement.class.isAssignableFrom(type);
     }
 
     @Override

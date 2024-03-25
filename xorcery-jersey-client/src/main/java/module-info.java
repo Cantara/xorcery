@@ -28,9 +28,10 @@ open module xorcery.jersey.client {
     requires jakarta.ws.rs;
     requires jakarta.inject;
     requires org.eclipse.jetty.client;
-    requires jersey.jetty11.connector;
+    requires jersey.jetty.connector;
     requires jersey.client;
     requires jersey.common;
     requires java.logging;
     requires org.dnsjava;
+    requires xorcery.secrets;
 }

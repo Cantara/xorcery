@@ -19,11 +19,15 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.jersey.client.providers.SRVConnectorProvider;
 import com.exoreaction.xorcery.jetty.client.JettyClientSslConfiguration;
+import com.exoreaction.xorcery.keystores.KeyStores;
+import com.exoreaction.xorcery.keystores.KeyStoresConfiguration;
+import com.exoreaction.xorcery.secrets.Secrets;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.ws.rs.client.ClientBuilder;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InstantiationService;
@@ -35,6 +39,8 @@ import org.glassfish.jersey.logging.LoggingFeature;
 import org.jvnet.hk2.annotations.Service;
 
 import java.util.Iterator;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class ClientBuilderFactory
@@ -44,16 +50,25 @@ public class ClientBuilderFactory
     private Configuration configuration;
     private InstantiationService instantiationService;
     private Provider<DnsLookupService> dnsLookups;
+    private final Provider<KeyStores> keyStoresProvider;
+    private final Provider<Secrets> secretsProvider;
+    private final Logger logger;
 
     @Inject
     public ClientBuilderFactory(HttpClient client,
                                 Configuration configuration,
                                 InstantiationService instantiationService,
-                                Provider<DnsLookupService> dnsLookups) {
+                                Provider<DnsLookupService> dnsLookups,
+                                Provider<KeyStores> keyStoresProvider,
+                                Provider<Secrets> secretsProvider,
+                                Logger logger) {
         this.client = client;
         this.configuration = configuration;
         this.instantiationService = instantiationService;
         this.dnsLookups = dnsLookups;
+        this.keyStoresProvider = keyStoresProvider;
+        this.secretsProvider = secretsProvider;
+        this.logger = logger;
     }
 
     @Override
@@ -88,11 +103,32 @@ public class ClientBuilderFactory
 
         JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
 
-        return ClientBuilder.newBuilder()
+        ClientBuilder builder = ClientBuilder.newBuilder()
                 .withConfig(clientConfig
                         .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, jettyConnectorProvider) : jettyConnectorProvider))
+                .connectTimeout(jerseyClientConfiguration.getConnectTimeout().toSeconds(), TimeUnit.SECONDS)
+                .readTimeout(jerseyClientConfiguration.getReadTimeout().toSeconds(), TimeUnit.SECONDS)
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
                 .register(new JettyHttpClientSupplier(client));
+
+        jerseyClientConfiguration.getKeyStoreName().ifPresentOrElse(name ->
+        {
+            KeyStoresConfiguration keyStoresConfiguration = KeyStoresConfiguration.get(configuration);
+            KeyStores ks = Objects.requireNonNull(keyStoresProvider.get(), "KeyStores service not available");
+            Secrets secrets = Objects.requireNonNull(secretsProvider.get(), "Secrets service not available");
+            String password = keyStoresConfiguration.getKeyStoreConfiguration(name).getPassword().map(secrets::getSecretString).orElse(null);
+            builder.keyStore(Objects.requireNonNull(ks.getKeyStore(name), "No such KeyStore:"+name),password );
+        }, ()->
+        {
+            logger.warn("SSL enabled but no keystore specified");
+        });
+        jerseyClientConfiguration.getTrustStoreName().ifPresent(name ->
+        {
+            KeyStores ks = Objects.requireNonNull(keyStoresProvider.get(), "KeyStores service not available");
+            builder.trustStore(Objects.requireNonNull(ks.getKeyStore(name), "No such KeyStore:"+name));
+        });
+
+        return builder;
     }
 
     @Override

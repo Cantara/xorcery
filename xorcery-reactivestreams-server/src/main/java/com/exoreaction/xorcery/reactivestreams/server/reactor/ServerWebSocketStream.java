@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.reactivestreams.server.reactor;
 
+import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.lang.Exceptions;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
@@ -29,11 +30,10 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.websocket.api.BatchMode;
+import org.eclipse.jetty.io.RetainableByteBuffer;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
-import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
@@ -56,7 +56,7 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTe
 
 public class ServerWebSocketStream<OUTPUT, INPUT>
         extends BaseSubscriber<OUTPUT>
-        implements WebSocketListener {
+        implements Session.Listener.AutoDemanding {
 
     private final static JsonMapper jsonMapper = new JsonMapper();
 
@@ -65,6 +65,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     private final static long SEND_BUFFERED_REQUESTS = 0;
 
     private final String path;
+    private final Map<String, String> pathParameters;
 
     private final WebSocketServerOptions options;
     private final MessageWriter<OUTPUT> writer;
@@ -99,6 +100,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
     public ServerWebSocketStream(
             String path,
+            Map<String, String> pathParameters,
             WebSocketServerOptions options,
 
             MessageWriter<OUTPUT> writer,
@@ -111,6 +113,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             Meter meter,
             io.opentelemetry.context.Context requestContext) {
         this.path = path;
+        this.pathParameters = pathParameters;
         this.options = options;
         this.writer = writer;
         this.reader = reader;
@@ -171,13 +174,12 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         if (writer != null) {
             try {
                 writer.writeTo(item, outputStream);
-                ByteBuffer eventBuffer = outputStream.takeByteBuffer();
-                session.getRemote().sendBytes(eventBuffer);
-                byteBufferPool.release(eventBuffer);
-
+                RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
+                ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
+                session.sendBinary(eventBuffer, new ReleaseCallback(retainableByteBuffer));
                 sentBytes.record(eventBuffer.limit(), attributes);
             } catch (IOException e) {
-                session.close(StatusCode.NORMAL, getError(e).toPrettyString());
+                session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
             }
         } else {
             upstream().request(1);
@@ -187,25 +189,25 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     @Override
     protected void hookOnComplete() {
         if (session.isOpen()) {
-            session.close(StatusCode.NORMAL, null);
+            session.close(StatusCode.NORMAL, null, Callback.NOOP);
         }
     }
 
     @Override
     protected void hookOnError(Throwable throwable) {
         if (session.isOpen()) {
-            session.close(StatusCode.NORMAL, getError(throwable).toPrettyString());
+            session.close(StatusCode.NORMAL, getError(throwable).toPrettyString(), Callback.NOOP);
         }
     }
 
-    // WebSocketListener
+    // Session.Listener.AutoDemanding
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress().toString());
 
         this.session = session;
-        session.getRemote().setBatchMode(BatchMode.AUTO);
+        session.setMaxOutgoingFrames(options.maxOutgoingFrames());
     }
 
     @Override
@@ -242,13 +244,10 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 }
 
                 // Add path parameters
-                if (session.getUpgradeRequest() instanceof JettyServerUpgradeRequest request &&
-                        request.getServletAttribute("org.eclipse.jetty.http.pathmap.PathSpec") instanceof UriTemplatePathSpec pathSpec) {
-                    Map<String, String> pathParams = pathSpec.getPathParams(path);
-                    contextMap.putAll(pathParams);
-                }
+                contextMap.putAll(pathParameters);
+
                 // Add query parameters
-                session.getUpgradeRequest().getParameterMap().forEach((k,v)-> contextMap.put(k, v.get(0)));
+                session.getUpgradeRequest().getParameterMap().forEach((k, v) -> contextMap.put(k, v.get(0)));
 
                 // Add request/response objects
                 contextMap.put("request", session.getUpgradeRequest());
@@ -274,8 +273,8 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                     });
 
                     String contextJsonString = jsonMapper.writeValueAsString(objectNode);
-                    session.getRemote().sendString(contextJsonString);
-                    logger.debug(marker, "Sent context {}: {}", session.getRemote().getRemoteAddress().toString(), contextJsonString);
+                    session.sendText(contextJsonString, Callback.NOOP);
+                    logger.debug(marker, "Sent context {}: {}", session.getRemoteSocketAddress(), contextJsonString);
 
                     context = reactor.util.context.Context.of(downstreamSink.contextView());
 
@@ -289,27 +288,30 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public void onWebSocketBinary(ByteBuffer byteBuffer, Callback callback) {
         if (reader == null) {
             if (!redundancyNotificationIssued) {
                 logger.warn(marker, "Receiving redundant results from server");
                 redundancyNotificationIssued = true;
             }
+            callback.succeed();
         } else {
             try {
                 if (logger.isTraceEnabled()) {
-                    logger.trace(marker, "onWebSocketBinary {}", new String(payload, offset, len, StandardCharsets.UTF_8));
+                    logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(byteBuffer.asReadOnlyBuffer()).toString());
                 }
-                INPUT event = reader.readFrom(payload, offset, len);
+                INPUT event = reader.readFrom(new ByteBufferBackedInputStream(byteBuffer));
                 downstreamSink.next(event);
                 outstandingRequests.decrementAndGet();
                 sendRequests(SEND_BUFFERED_REQUESTS);
+                callback.succeed();
             } catch (Throwable e) {
                 logger.error("Could not receive value", e);
                 if (upstream() != null)
                     upstream().cancel();
                 if (downstreamSink != null)
                     downstreamSink.error(e);
+                callback.fail(e);
             }
         }
     }
@@ -416,20 +418,27 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             }
 
             String requestString = Long.toString(rn);
-            session.getRemote().sendString(requestString);
+            session.sendText(requestString, Callback.NOOP);
 
             if (logger.isTraceEnabled())
                 logger.trace(marker, "sendRequest {}",
                         rn == COMPLETE ? "COMPLETE"
                                 : rn);
-        } catch (IOException e) {
-            logger.error("Could not send requests", e);
-            if (upstream() != null)
-                upstream().cancel();
-            if (downstreamSink != null)
-                downstreamSink.error(e);
         } finally {
             sendLock.unlock();
+        }
+    }
+
+    public record ReleaseCallback(RetainableByteBuffer byteBuffer)
+            implements Callback {
+        @Override
+        public void succeed() {
+            byteBuffer.release();
+        }
+
+        @Override
+        public void fail(Throwable x) {
+            byteBuffer.release();
         }
     }
 }

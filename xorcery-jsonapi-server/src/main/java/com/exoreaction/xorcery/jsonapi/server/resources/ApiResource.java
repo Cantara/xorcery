@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.jsonapi.server.resources;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
+import com.exoreaction.xorcery.jaxrs.server.resources.BaseResource;
 import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
@@ -27,7 +27,7 @@ import jakarta.ws.rs.Path;
 
 @Path("/api")
 public class ApiResource
-        extends AbstractResource {
+        extends BaseResource {
     private ServiceResourceObjects serviceResourceObjects;
     private Configuration configuration;
 

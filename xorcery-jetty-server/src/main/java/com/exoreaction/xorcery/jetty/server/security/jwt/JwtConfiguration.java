@@ -21,11 +21,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 public record JwtConfiguration(Configuration configuration) {
 
     public Map<String,IssuerConfiguration> getIssuers()
     {
         return configuration.getObjectAs("issuers",JsonElement.toMap(json -> new IssuerConfiguration(new Configuration((ObjectNode)json))) ).orElse(Collections.emptyMap());
+    }
+
+    public Optional<String> getLoginPage() {
+        return configuration.getString("loginPage");
+    }
+
+    public Optional<String> getErrorPage() {
+        return configuration.getString("errorPage");
     }
 }

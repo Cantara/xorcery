@@ -41,9 +41,7 @@ public class ClientTester {
     private final Client client;
 
     @Inject
-    public ClientTester(KeyStores keyStores,
-                        ClientBuilder clientBuilder,
-                        Configuration configuration) {
+    public ClientTester(ClientBuilder clientBuilder) {
         client = clientBuilder
                 .register(JsonElementMessageBodyReader.class)
                 .register(JsonElementMessageBodyWriter.class)

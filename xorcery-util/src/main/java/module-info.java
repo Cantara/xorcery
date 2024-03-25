@@ -23,4 +23,8 @@ open module xorcery.util {
     exports com.exoreaction.xorcery.io;
     exports com.exoreaction.xorcery.net;
     exports com.exoreaction.xorcery.collections;
+    exports com.exoreaction.xorcery.hk2;
+
+    requires org.glassfish.hk2.api;
+    requires jakarta.annotation;
 }

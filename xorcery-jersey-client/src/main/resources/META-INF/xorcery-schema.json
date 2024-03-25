@@ -15,6 +15,16 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "keystore" : {
+              "type" : "string",
+              "default" : "ssl",
+              "description" : "Default: ssl"
+            },
+            "truststore" : {
+              "type" : "string",
+              "default" : "truststore",
+              "description" : "Default: truststore"
+            },
             "properties" : {
               "type" : "object",
               "properties" : { }

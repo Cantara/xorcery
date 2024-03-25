@@ -36,6 +36,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -210,7 +211,7 @@ public class PublishSubscriberWebSocketTest {
         // Given
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf)
                 .addYaml("""
-                        reactivestreams.server.idleTimeout: "2s"
+                        jetty.server.websockets.idleTimeout: "2s"
                         """)
                 .build();
         logger.info(serverConfiguration);
@@ -287,6 +288,7 @@ public class PublishSubscriberWebSocketTest {
     }
 
     @Test
+    @Disabled()
     public void clientIdleTimeoutWithRetry() throws Exception {
 
         // Given

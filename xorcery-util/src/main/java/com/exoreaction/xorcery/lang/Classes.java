@@ -23,17 +23,36 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public interface Classes {
 
-    static Class<Object> getClass(Type type)
-    {
-        return (Class<Object>)(type instanceof ParameterizedType pt ? pt.getRawType() : type);
+    static Class<Object> getClass(Type type) {
+        return (Class<Object>) (type instanceof ParameterizedType pt ? pt.getRawType() : type);
     }
 
-    static <I,O> Function<I,O> cast(Class<O> clazz)
-    {
+    static <I, O> Function<I, O> cast(Class<O> clazz) {
         return clazz::cast;
+    }
+
+    static Stream<Class<?>> getInterfaces(Class<?> type) {
+        return Stream.of(type.getInterfaces())
+                .flatMap(interfaceType -> Stream.concat(Stream.of(interfaceType), getInterfaces(interfaceType)));
+    }
+
+    static Stream<Class<?>> getAllTypes(Class<?> type) {
+        return Stream.of(type)
+                .<Class<?>>mapMulti((t, m) ->
+                        {
+                            Class<?> clazz = t;
+                            do {
+                                m.accept(clazz);
+                                clazz = clazz.getSuperclass();
+                            } while (!clazz.equals(Object.class));
+                        }
+                )
+                .flatMap(interfaceType -> Stream.concat(Stream.of(interfaceType), getInterfaces(interfaceType)))
+                .distinct();
     }
 
     /**

@@ -79,7 +79,7 @@
         <!-- Jersey Jetty client connector -->
         <dependency>
             <groupId>org.glassfish.jersey.connectors</groupId>
-            <artifactId>jersey-jetty11-connector</artifactId>
+            <artifactId>jersey-jetty-connector</artifactId>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>

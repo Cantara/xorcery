@@ -26,4 +26,12 @@
     </parent>
 
     <artifactId>xorcery-util</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.hk2</groupId>
+            <artifactId>hk2-api</artifactId>
+        </dependency>
+
+    </dependencies>
 </project>

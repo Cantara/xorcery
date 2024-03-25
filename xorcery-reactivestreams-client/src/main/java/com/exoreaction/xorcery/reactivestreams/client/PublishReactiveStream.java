@@ -42,6 +42,7 @@ import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.io.RetainableByteBuffer;
 import org.eclipse.jetty.util.BlockingArrayQueue;
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
@@ -74,8 +75,7 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTe
  * @author rickardoberg
  */
 public class PublishReactiveStream
-        implements WebSocketListener,
-        WriteCallback,
+        implements Session.Listener.AutoDemanding,
         Subscriber<Object> {
 
     private final static Logger logger = LogManager.getLogger(PublishReactiveStream.class);
@@ -313,9 +313,9 @@ public class PublishReactiveStream
         if (!result.isDone()) {
             if (throwable instanceof ServerStreamException) {
                 // This should basically never happen
-                session.close(StatusCode.SERVER_ERROR, throwable.getMessage());
+                session.close(StatusCode.SERVER_ERROR, throwable.getMessage(), Callback.NOOP);
             } else {
-                session.close(StatusCode.NORMAL, throwable.getMessage());
+                session.close(StatusCode.NORMAL, throwable.getMessage(), Callback.NOOP);
             }
             result.completeExceptionally(throwable);
         }
@@ -330,7 +330,7 @@ public class PublishReactiveStream
         if (!isDraining.get()) {
             CompletableFuture.runAsync(this::drainJob);
         }
-        logger.debug(marker, "Waiting for outstanding events to be sent to {}", session.getRemote().getRemoteAddress());
+        logger.debug(marker, "Waiting for outstanding events to be sent to {}", session.getRemoteSocketAddress());
     }
 
     // Whoever calls this should have a synchronized on the session, if available
@@ -383,11 +383,11 @@ public class PublishReactiveStream
     }
 
     // WebSocket
-    @Override
-    public void onWebSocketConnect(Session session) {
 
+    @Override
+    public void onWebSocketOpen(Session session) {
         if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress().toString());
         }
 
         if (isRetrying.get()) {
@@ -396,7 +396,6 @@ public class PublishReactiveStream
         }
 
         this.session = session;
-        session.getRemote().setBatchMode(BatchMode.ON);
         this.retryDelay = Duration.parse("PT" + publisherConfiguration.getRetryDelay()).toMillis();
 
         Configuration configuration = subscriberConfiguration.get();
@@ -428,7 +427,7 @@ public class PublishReactiveStream
 
         if (requestAmount == Long.MIN_VALUE) {
             logger.debug(marker, "Received cancel on websocket");
-            session.close(StatusCode.NORMAL, "cancel");
+            session.close(StatusCode.NORMAL, "cancel", Callback.NOOP);
 
             // Maybe try another subscriber
             retry(new ServerShutdownStreamException(1001, "cancel"));
@@ -444,12 +443,12 @@ public class PublishReactiveStream
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
-
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         if (!redundancyNotificationIssued) {
             logger.warn(marker, "Receiving redundant results from subscriber");
             redundancyNotificationIssued = true;
         }
+        callback.succeed();
     }
 
     @Override
@@ -499,7 +498,6 @@ public class PublishReactiveStream
                         if (itemsSent == 1024) {
                             if (logger.isTraceEnabled())
                                 logger.trace(marker, "flush {}", itemsSent);
-                            session.getRemote().flush();
                             flushHistogram.record(itemsSent, attributes);
                             itemsSent = 0;
                         }
@@ -511,14 +509,13 @@ public class PublishReactiveStream
                 if (itemsSent > 0) {
                     if (logger.isTraceEnabled())
                         logger.trace(marker, "flush {}", itemsSent);
-                    session.getRemote().flush();
                     flushHistogram.record(itemsSent, attributes);
                 }
             }
         } catch (Throwable t) {
             logger.error(marker, "Could not send event", t);
             if (session.isOpen()) {
-                session.close(StatusCode.SERVER_ERROR, t.getMessage());
+                session.close(StatusCode.SERVER_ERROR, t.getMessage(), Callback.NOOP);
             }
         } finally {
             logger.trace(marker, "Stop drain");
@@ -527,12 +524,10 @@ public class PublishReactiveStream
             drainLock.unlock();
         }
 
-        if (!sendQueue.isEmpty())
-        {
+        if (!sendQueue.isEmpty()) {
             // Race conditions suck. Need to figure out a better way to handle this...
             drainJob();
-        } else
-        {
+        } else {
             checkDone();
         }
     }
@@ -543,10 +538,10 @@ public class PublishReactiveStream
 
         // Write event data
         writeItem(eventWriter, item, outputStream);
-        ByteBuffer eventBuffer = outputStream.takeByteBuffer();
+        RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
+        ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
         sentBytes.record(eventBuffer.limit(), attributes);
-        session.getRemote().sendBytes(eventBuffer);
-        pool.release(eventBuffer);
+        session.sendBinary(eventBuffer, new ReleaseCallback(retainableByteBuffer));
     }
 
     protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {
@@ -556,8 +551,8 @@ public class PublishReactiveStream
     protected void checkDone() {
         if (isComplete.get()) {
             if (session != null && session.isOpen()) {
-                logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
-                session.close(StatusCode.NORMAL, "complete");
+                logger.debug(marker, "Sending complete for session {}", session.getRemoteSocketAddress());
+                session.close(StatusCode.NORMAL, "complete", Callback.NOOP);
 
                 if (!result.isDone()) {
                     result.complete(null);
@@ -565,4 +560,5 @@ public class PublishReactiveStream
             }
         }
     }
+
 }

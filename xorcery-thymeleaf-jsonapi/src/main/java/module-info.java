@@ -23,7 +23,8 @@ open module xorcery.thymeleaf.jsonapi {
     requires xorcery.jsonapi.jaxrs;
 
     requires thymeleaf;
-    requires org.eclipse.jetty.servlet;
+    requires jakarta.servlet;
+    requires org.eclipse.jetty.ee10.servlet;
     requires jakarta.ws.rs;
     requires jersey.server;
     requires jersey.common;

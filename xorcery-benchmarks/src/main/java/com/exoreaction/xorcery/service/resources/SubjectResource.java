@@ -15,12 +15,13 @@
  */
 package com.exoreaction.xorcery.service.resources;
 
-import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
+import com.exoreaction.xorcery.jaxrs.server.resources.BaseResource;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 
@@ -29,12 +30,12 @@ import java.security.Principal;
 
 @Path("api/subject")
 public class SubjectResource
-        extends AbstractResource {
+        extends BaseResource {
 
     @GET
     public ResourceDocument get() {
 
-        Subject subject = getSubject();
+        Subject subject = getSubject().orElseThrow(ForbiddenException::new);
 
         return new ResourceDocument.Builder().data(new ResourceObject.Builder("subject").attributes(new Attributes.Builder().with(b ->
         {

@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.status.api;
 
 import com.exoreaction.xorcery.hyperschema.Link;
-import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
+import com.exoreaction.xorcery.jaxrs.server.resources.BaseResource;
 import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
@@ -33,7 +33,7 @@ import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
 @Path("api/status")
 public class StatusResource
-        extends AbstractResource
+        extends BaseResource
         implements JsonApiResource, JsonSchemaResource {
 
     private final StatusProviders statusProviders;

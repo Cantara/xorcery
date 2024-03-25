@@ -17,59 +17,33 @@ package com.exoreaction.xorcery.jetty.server;
 
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.gzip.GzipHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
-@Service(name = "jetty.server")
-@RunLevel(4)
+@Service
+@Priority(8)
 public class ServletContextHandlerFactory
         implements Factory<ServletContextHandler> {
     private final ServletContextHandler servletContextHandler;
 
     @Inject
-    public ServletContextHandlerFactory(Server server,
-                                        Configuration configuration,
-                                        ServiceLocator serviceLocator,
-                                        Provider<ConstraintSecurityHandler> securityHandlerProvider) {
+    public ServletContextHandlerFactory(Configuration configuration,
+                                        ServiceLocator serviceLocator) {
         servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
         servletContextHandler.setAttribute("jersey.config.servlet.context.serviceLocator", serviceLocator);
         servletContextHandler.setContextPath("/");
-        servletContextHandler.setBaseResource(new ResourcesResource(""));
-
-
-        Handler handler = servletContextHandler;
-
-        GzipHandler gzipHandler = new GzipHandler();
-        gzipHandler.setHandler(handler);
-        handler = gzipHandler;
-
-        ConstraintSecurityHandler securityHandler = securityHandlerProvider.get();
-        if (securityHandler != null) {
-            securityHandler.setHandler(handler);
-            handler = securityHandler;
-        }
-
-        // Log4j2 ThreadContext handler
-        Log4j2ThreadContextHandler log4J2ThreadContextHandler = new Log4j2ThreadContextHandler(configuration);
-        log4J2ThreadContextHandler.setHandler(handler);
-
-        server.setHandler(handler);
+        // TODO More configuration
     }
 
     @Override
+    @Named("jetty.server.servlet")
     @Singleton
-    @Named("jetty.server")
     public ServletContextHandler provide() {
         return servletContextHandler;
     }

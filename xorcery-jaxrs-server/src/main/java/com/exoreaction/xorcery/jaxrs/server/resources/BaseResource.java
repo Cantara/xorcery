@@ -11,7 +11,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * through the ContextResource interface. Since the injection is done using a method the constructor can inject other
  * application-specific dependencies.
  */
-public class AbstractResource
+public class BaseResource
     implements ContextResource
 {
     private ServiceLocator serviceLocator;

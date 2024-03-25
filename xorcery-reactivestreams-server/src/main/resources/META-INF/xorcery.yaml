@@ -1,18 +1,10 @@
 reactivestreams:
   enabled: "{{ defaults.enabled }}"
   server:
-    enabled: "{{ reactivestreams.enabled }}"
+    enabled: "{{ jetty.server.websockets.enabled }}"
 
     scheme: "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}"
     uri: "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/"
-
-    autoFragment: true
-    idleTimeout: "{{ defaults.idleTimeout }}"
-    inputBufferSize: 4096
-    maxFrameSize: 65536
-    maxTextMessageSize: 65536
-    maxBinaryMessageSize: 65536
-    outputBufferSize: 4096
 
     reactor:
       enabled: "{{ reactivestreams.server.enabled }}"

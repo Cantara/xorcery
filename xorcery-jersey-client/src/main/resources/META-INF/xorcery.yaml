@@ -1,4 +1,6 @@
 jersey:
   client:
     enabled: "{{ jetty.client.enabled }}"
+    keystore: "ssl"
+    truststore: "truststore"
     properties: {}

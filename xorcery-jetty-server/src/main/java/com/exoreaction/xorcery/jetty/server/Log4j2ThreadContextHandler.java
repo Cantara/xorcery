@@ -18,19 +18,17 @@ package com.exoreaction.xorcery.jetty.server;
 import com.exoreaction.xorcery.configuration.ApplicationConfiguration;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.ThreadContext;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.util.Callback;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Log4j2ThreadContextHandler
-    extends HandlerWrapper
+    extends Handler.Wrapper
 {
     private final Map<String, String> context;
 
@@ -43,12 +41,10 @@ public class Log4j2ThreadContextHandler
     }
 
     @Override
-    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-
+    public boolean handle(Request request, Response response, Callback callback) throws Exception {
         ThreadContext.putAll(context);
-
         try {
-            super.handle(target, baseRequest, request, response);
+            return super.handle(request, response, callback);
         } finally {
             ThreadContext.clearAll();
         }

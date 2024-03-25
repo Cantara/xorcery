@@ -27,12 +27,13 @@ open module xorcery.reactivestreams.client {
     requires reactor.core;
     requires org.apache.logging.log4j;
     requires org.eclipse.jetty.io;
-    requires org.eclipse.jetty.websocket.jetty.api;
-    requires org.eclipse.jetty.websocket.jetty.client;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
     requires io.opentelemetry.api;
     requires io.opentelemetry.semconv;
     requires io.opentelemetry.context;
+    requires org.eclipse.jetty.client;
+    requires org.eclipse.jetty.websocket.api;
+    requires org.eclipse.jetty.websocket.client;
 }

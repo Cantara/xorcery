@@ -9,7 +9,7 @@ jetty:
       enabled: false
       idleTimeout: "{{ jetty.client.idleTimeout }}"
     ssl:
-      enabled: "{{ defaults.enabled }}"
+      enabled: "{{ jetty.client.enabled }}"
       # Client
       alias: "self"
       #      keystore: null

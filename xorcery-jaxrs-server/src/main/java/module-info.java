@@ -3,7 +3,8 @@ module xorcery.jaxrs.server {
     opens com.exoreaction.xorcery.jaxrs.server.resources;
 
     requires jakarta.ws.rs;
-    requires jetty.servlet.api;
+    requires jakarta.servlet;
+    requires org.eclipse.jetty.ee10.servlet;
     requires org.glassfish.hk2.api;
     requires org.eclipse.jetty.server;
     requires org.eclipse.jetty.security;

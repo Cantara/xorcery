@@ -18,11 +18,11 @@ package com.exoreaction.xorcery.reactivestreams.server;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
+import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
+import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
 import com.exoreaction.xorcery.reactivestreams.util.ExceptionObjectOutputStream;
 import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsAbstractService;
-import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
-import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.LongCounter;
@@ -31,8 +31,9 @@ import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.io.RetainableByteBuffer;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WriteCallback;
 import org.reactivestreams.Subscriber;
 
 import java.io.IOException;
@@ -49,7 +50,6 @@ public class SubscriberWithResultSubscriptionReactiveStream
         extends SubscriberSubscriptionReactiveStream {
     private final Queue<CompletableFuture<Object>> resultQueue = new ConcurrentLinkedQueue<>();
     private final MessageWriter<Object> resultWriter;
-    boolean isFlushPending = false;
     private final ByteBufferOutputStream2 resultOutputStream;
 
     protected final LongCounter resultsSent;
@@ -76,34 +76,34 @@ public class SubscriberWithResultSubscriptionReactiveStream
         resultOutputStream = new ByteBufferOutputStream2(byteBufferPool, true);
     }
 
-    protected void onWebSocketBinary(ByteBuffer byteBuffer) {
+    @Override
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         try {
             if (logger.isTraceEnabled()) {
-                logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(byteBuffer.asReadOnlyBuffer()).toString());
+                logger.trace(marker, "onWebSocketBinary {}", Charset.defaultCharset().decode(payload.asReadOnlyBuffer()).toString());
             }
 
-            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
+            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(payload);
             Object event = eventReader.readFrom(inputStream);
-            receivedBytes.record(byteBuffer.position(), attributes);
-            byteBufferAccumulator.getByteBufferPool().release(byteBuffer);
-
+            receivedBytes.record(payload.position(), attributes);
             CompletableFuture<Object> resultFuture = new CompletableFuture<>();
             resultFuture.whenComplete(this::sendResult);
             resultQueue.add(resultFuture);
             event = new WithResult<>(event, resultFuture);
 
             subscriber.onNext(event);
+            callback.succeed();
         } catch (Throwable e) {
             logger.error("Could not receive value", e);
             subscriber.onError(e);
-            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+            session.close(StatusCode.BAD_PAYLOAD, e.getMessage(), Callback.NOOP);
+            callback.fail(e);
         }
     }
 
     private synchronized void sendResult(Object result, Throwable throwable) {
         // Send result back, but from the queue so that we ensure ordering
         CompletableFuture<Object> future;
-        isFlushPending = false;
         while ((future = resultQueue.peek()) != null && future.isDone()) {
             resultQueue.remove();
 
@@ -118,39 +118,26 @@ public class SubscriberWithResultSubscriptionReactiveStream
                         resultWriter.writeTo(r, resultOutputStream);
                     }
 
-                    ByteBuffer data = resultOutputStream.takeByteBuffer();
-                    session.getRemote().sendBytes(data, new WriteCallback() {
+                    RetainableByteBuffer retainableByteBuffer = resultOutputStream.takeByteBuffer();
+                    ByteBuffer data = retainableByteBuffer.getByteBuffer();
+                    session.sendBinary(data, new Callback() {
                         @Override
-                        public void writeFailed(Throwable t) {
-                            byteBufferPool.release(data);
-
-                            if (t instanceof ClosedChannelException)
-                                return;
-
-                            logger.error(marker, "Could not send result", t);
+                        public void succeed() {
+                            retainableByteBuffer.release();
+                            resultsSent.add(1, attributes);
+                            logger.trace("Sent result: {}", r);
                         }
 
                         @Override
-                        public void writeSuccess() {
-                            byteBufferPool.release(data);
-                            resultsSent.add(1, attributes);
-                            logger.trace("Sent result: {}", r);
-                            isFlushPending = true;
+                        public void fail(Throwable x) {
+                            retainableByteBuffer.release();
                         }
                     });
                 } catch (IOException ex) {
                     logger.error(marker, "Could not send result", ex);
-                    session.close(StatusCode.SERVER_ERROR, ex.getMessage());
+                    session.close(StatusCode.SERVER_ERROR, ex.getMessage(), Callback.NOOP);
                 }
             });
-        }
-        if (isFlushPending) {
-            try {
-                session.getRemote().flush();
-            } catch (IOException e) {
-                logger.error(marker, "Could not flush results", e);
-                session.close(StatusCode.SERVER_ERROR, e.getMessage());
-            }
         }
     }
 }

@@ -18,11 +18,9 @@ package com.exoreaction.xorcery.jwt.server;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
-import jakarta.servlet.ServletRequest;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.security.*;
-import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Session;
 import org.eclipse.jetty.util.security.Password;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
@@ -30,9 +28,10 @@ import org.jvnet.hk2.annotations.Service;
 import javax.security.auth.Subject;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 @Service(name = "jwt.server.configuration")
-@ContractsProvided({LoginService.class,JwtConfigurationLoginService.class})
+@ContractsProvided({LoginService.class, JwtConfigurationLoginService.class})
 public class JwtConfigurationLoginService
         extends AbstractLoginService {
     private final Configuration users;
@@ -50,7 +49,13 @@ public class JwtConfigurationLoginService
     }
 
     @Override
-    public UserIdentity login(String username, Object credentials, ServletRequest request) {
+    public UserIdentity login(String username, Object credentials, Request request, Function<Boolean, Session> getOrCreateSession) {
+
+        if (credentials instanceof String password)
+        {
+
+        }
+
         if (username == null || !users.has(username))
             return null;
 
@@ -65,7 +70,12 @@ public class JwtConfigurationLoginService
         userPrincipal.configureSubject(subject);
         subject.setReadOnly();
 
-        return new DefaultUserIdentity(subject, userPrincipal, new String[0]);
+        return UserIdentity.from(subject, userPrincipal, new String[0]);
+    }
+
+    @Override
+    public boolean validate(UserIdentity user) {
+        return super.validate(user);
     }
 
     @Override

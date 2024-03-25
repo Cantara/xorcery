@@ -28,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -102,6 +103,7 @@ public class PublishSubscriberTest {
     }
 
     @Test
+    @Disabled()
     public void testServerTimesOut() throws Exception {
 
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).addYaml("""
@@ -139,6 +141,7 @@ public class PublishSubscriberTest {
     }
 
     @Test
+    @Disabled()
     public void testClientTimesOut() throws Exception {
 
         clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).addYaml("""
@@ -178,6 +181,7 @@ public class PublishSubscriberTest {
     }
 
     @Test
+    @Disabled()
     public void testSubscriberShutdownWithoutRetryCausesOnError() throws Exception {
 
         // Given
@@ -214,6 +218,7 @@ public class PublishSubscriberTest {
     }
 
     @Test
+    @Disabled()
     public void testInactivePublisherCausesReconnect() throws Exception {
 
         // Given

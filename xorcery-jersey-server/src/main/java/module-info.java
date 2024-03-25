@@ -24,7 +24,7 @@ open module xorcery.jersey.server {
     requires jersey.common;
     requires jersey.server;
     requires jersey.container.servlet.core;
-    requires org.eclipse.jetty.servlet;
+    requires org.eclipse.jetty.ee10.servlet;
 
     requires jakarta.inject;
     requires org.glassfish.hk2.api;

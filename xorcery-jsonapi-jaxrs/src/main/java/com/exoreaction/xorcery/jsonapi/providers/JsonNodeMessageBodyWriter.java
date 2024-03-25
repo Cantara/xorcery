@@ -33,6 +33,8 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
+import static com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter.*;
+
 @Singleton
 @Provider
 @Produces(MediaType.WILDCARD)
@@ -49,8 +51,13 @@ public class JsonNodeMessageBodyWriter
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        boolean result = JsonNode.class.isAssignableFrom(type) && (mediaType.isWildcardType() || mediaType.getSubtype().endsWith("json"));
-        return result;
+        return JsonNode.class.isAssignableFrom(type)
+                && (mediaType.isCompatible(APPLICATION_JSON_API_TYPE) ||
+                mediaType.isCompatible(APPLICATION_JSON_SCHEMA_TYPE) ||
+                mediaType.isCompatible(APPLICATION_YAML_TYPE) ||
+                mediaType.isCompatible(MediaType.APPLICATION_JSON_TYPE) ||
+                mediaType.isCompatible(MediaType.APPLICATION_OCTET_STREAM_TYPE) ||
+                mediaType.isWildcardType());
     }
 
     @Override

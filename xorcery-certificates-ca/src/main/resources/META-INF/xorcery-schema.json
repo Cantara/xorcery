@@ -6,12 +6,6 @@
   "properties" : {
     "intermediateca" : {
       "$ref" : "#/$defs/intermediateca"
-    },
-    "keystores" : {
-      "$ref" : "#/$defs/keystores"
-    },
-    "jersey" : {
-      "$ref" : "#/$defs/jersey"
     }
   },
   "$defs" : {
@@ -27,40 +21,6 @@
           "type" : "string",
           "default" : "90d",
           "description" : "Default: 90d"
-        }
-      }
-    },
-    "keystores" : {
-      "type" : "object",
-      "properties" : {
-        "castore" : {
-          "type" : "object",
-          "properties" : {
-            "path" : {
-              "type" : "string",
-              "default" : "META-INF/intermediatecakeystore.p12",
-              "description" : "Default: META-INF/intermediatecakeystore.p12"
-            }
-          }
-        },
-        "rootstore" : {
-          "type" : "object",
-          "properties" : {
-            "path" : {
-              "type" : "string",
-              "default" : "{{ instance.home }}/rootcakeystore.p12",
-              "description" : "Default: {{ instance.home }}/rootcakeystore.p12"
-            }
-          }
-        }
-      }
-    },
-    "jersey" : {
-      "type" : "object",
-      "properties" : {
-        "server" : {
-          "type" : "object",
-          "properties" : { }
         }
       }
     }

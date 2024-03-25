@@ -33,7 +33,7 @@
 
         <slf4j.version>2.0.12</slf4j.version>
         <log4j.version>2.23.1</log4j.version>
-        <jetty.version>11.0.20</jetty.version>
+        <jetty.version>12.0.7</jetty.version>
         <jersey.version>3.1.5</jersey.version>
         <opentelemetry.version>1.36.0</opentelemetry.version>
         <eventstore.version>5.3.2</eventstore.version>
@@ -106,6 +106,9 @@
         <module>xorcery-aws-auth</module>
         <module>xorcery-secrets-aws</module>
 
+<!--
+        <module>xorcery-jgroups</module>
+-->
         <module>xorcery-jetty-server</module>
         <module>xorcery-dns-server</module>
 
@@ -838,6 +841,16 @@
             </dependency>
 
             <!-- Dependency version conflicts -->
+            <dependency>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-servlet</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.ee10.websocket</groupId>
+                <artifactId>jetty-ee10-websocket-jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>

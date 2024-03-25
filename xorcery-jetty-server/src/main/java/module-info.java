@@ -24,6 +24,7 @@ open module xorcery.jetty.server {
     requires xorcery.keystores;
     requires xorcery.health.api;
     requires xorcery.health.registry;
+    requires xorcery.util;
 
     requires jakarta.inject;
     requires jakarta.validation;
@@ -33,14 +34,23 @@ open module xorcery.jetty.server {
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
 
+    // Jetty
     requires transitive org.eclipse.jetty.server;
+    requires org.eclipse.jetty.ee10.servlet;
+    requires org.eclipse.jetty.util;
+
+    // HTTP/2
     requires org.eclipse.jetty.alpn.java.server;
     requires org.eclipse.jetty.http2.server;
-    requires org.eclipse.jetty.servlet;
-    requires org.eclipse.jetty.util;
+
+    // Websockets
+    requires org.eclipse.jetty.websocket.server;
+    requires org.eclipse.jetty.ee10.websocket.jetty.server;
+
+    // JWT Authenticator
+    requires com.auth0.jwt;
+    requires org.bouncycastle.provider;
 
     requires org.apache.logging.log4j;
 
-    requires com.auth0.jwt;
-    requires org.bouncycastle.provider;
 }

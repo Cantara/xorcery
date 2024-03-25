@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.reactivestreams.server;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
+import com.exoreaction.xorcery.reactivestreams.server.reactor.ServerWebSocketStream;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.reactivestreams.util.ActiveSubscriptions;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,11 +41,11 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
+import org.eclipse.jetty.io.RetainableByteBuffer;
 import org.eclipse.jetty.util.BlockingArrayQueue;
-import org.eclipse.jetty.websocket.api.BatchMode;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -71,7 +72,7 @@ import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTe
  */
 public class PublisherSubscriptionReactiveStream
         extends ServerReactiveStream
-        implements WebSocketListener, Subscriber<Object> {
+        implements Session.Listener.AutoDemanding, Subscriber<Object> {
 
     protected final Logger logger;
     private final ActiveSubscriptions activeSubscriptions;
@@ -185,17 +186,12 @@ public class PublisherSubscriptionReactiveStream
             logger.trace(marker, "onError", throwable);
 
         if (throwable instanceof ServerShutdownStreamException) {
-            session.close(StatusCode.SHUTDOWN, throwable.getMessage());
+            session.close(StatusCode.SHUTDOWN, throwable.getMessage(), Callback.NOOP);
         } else {
             // Send error
             // Client should receive error and close session
-            try {
-                ObjectNode errorJson = getError(throwable);
-                session.getRemote().sendString(errorJson.toPrettyString());
-                session.getRemote().flush();
-            } catch (IOException e) {
-                logger.error(marker, "Could not send exception", e);
-            }
+            ObjectNode errorJson = getError(throwable);
+            session.sendText(errorJson.toPrettyString(), Callback.NOOP);
         }
     }
 
@@ -210,13 +206,13 @@ public class PublisherSubscriptionReactiveStream
     }
 
     // WebSocket
+
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress());
 
         this.session = session;
-        session.getRemote().setBatchMode(BatchMode.ON);
 
         Optional.ofNullable(session.getUpgradeRequest().getParameterMap().get("configuration")).map(l -> l.get(0)).ifPresent(this::applyConfiguration);
         Context context = textMapPropagator.extract(Context.current(), session.getUpgradeRequest(), jettyGetter);
@@ -243,7 +239,7 @@ public class PublisherSubscriptionReactiveStream
         if (subscription != null) {
             if (requestAmount == Long.MIN_VALUE) {
                 logger.info(marker, "Received cancel on websocket " + streamName);
-                session.close(StatusCode.NORMAL, "cancelled");
+                session.close(StatusCode.NORMAL, "cancelled", Callback.NOOP);
             } else {
                 if (logger.isTraceEnabled())
                     logger.trace(marker, "Received request:" + requestAmount);
@@ -267,7 +263,7 @@ public class PublisherSubscriptionReactiveStream
                     .build();
         } catch (JsonProcessingException e) {
             logger.error("Could not parse publisher configuration", e);
-            session.close(StatusCode.BAD_PAYLOAD, e.getMessage());
+            session.close(StatusCode.BAD_PAYLOAD, e.getMessage(), Callback.NOOP);
         }
 
         try {
@@ -276,14 +272,14 @@ public class PublisherSubscriptionReactiveStream
             activeSubscription = new ActiveSubscriptions.ActiveSubscription(streamName, new AtomicLong(), new AtomicLong(), publisherConfiguration);
             activeSubscriptions.addSubscription(activeSubscription);
 
-            logger.debug(marker, "Connected to {}", session.getRemote().getRemoteAddress().toString());
+            logger.debug(marker, "Connected to {}", session.getRemoteSocketAddress());
         } catch (Throwable e) {
             onError(e);
         }
     }
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketBinary");
 
@@ -291,6 +287,7 @@ public class PublisherSubscriptionReactiveStream
             logger.warn(marker, "Receiving redundant results from subscriber");
             redundancyNotificationIssued = true;
         }
+        callback.succeed();
     }
 
     @Override
@@ -345,7 +342,6 @@ public class PublisherSubscriptionReactiveStream
                     if (itemsSent == 1024) {
                         if (logger.isTraceEnabled())
                             logger.trace(marker, "flush {}", itemsSent);
-                        session.getRemote().flush();
                         flushHistogram.record(itemsSent, attributes);
                         itemsSent = 0;
                     }
@@ -359,7 +355,6 @@ public class PublisherSubscriptionReactiveStream
             if (itemsSent > 0) {
                 if (logger.isTraceEnabled())
                     logger.trace(marker, "flush {}", itemsSent);
-                session.getRemote().flush();
                 flushHistogram.record(itemsSent, attributes);
 
                 sentSpan.setAttribute(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, totalSent);
@@ -369,7 +364,7 @@ public class PublisherSubscriptionReactiveStream
         } catch (Throwable t) {
             logger.error(marker, "Could not send event", t);
             if (session.isOpen()) {
-                session.close(StatusCode.SERVER_ERROR, t.getMessage());
+                session.close(StatusCode.SERVER_ERROR, t.getMessage(), Callback.NOOP);
             }
         } finally {
             logger.trace(marker, "Stop drain");
@@ -383,7 +378,7 @@ public class PublisherSubscriptionReactiveStream
             drainJob();
         } else {
             if (isComplete.get() && session.isOpen()) {
-                session.close(StatusCode.NORMAL, "complete");
+                session.close(StatusCode.NORMAL, "complete", Callback.NOOP);
             }
         }
     }
@@ -394,10 +389,10 @@ public class PublisherSubscriptionReactiveStream
 
         // Write event data
         writeItem(messageWriter, item, outputStream);
-        ByteBuffer eventBuffer = outputStream.takeByteBuffer();
+        RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
+        ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
         sentBytes.record(eventBuffer.limit(), attributes);
-        session.getRemote().sendBytes(eventBuffer);
-        pool.release(eventBuffer);
+        session.sendBinary(eventBuffer, new ServerWebSocketStream.ReleaseCallback(retainableByteBuffer));
     }
 
     protected void writeItem(MessageWriter<Object> messageWriter, Object item, ByteBufferOutputStream2 outputStream) throws IOException {

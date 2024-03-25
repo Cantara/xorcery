@@ -35,4 +35,7 @@ open module xorcery.jwt.server {
     requires org.bouncycastle.pkix;
     requires xorcery.secrets;
     requires xorcery.jaxrs.server;
+    requires jakarta.servlet;
+
+    requires org.eclipse.jetty.ee10.servlet;
 }

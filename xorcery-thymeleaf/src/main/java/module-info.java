@@ -22,7 +22,8 @@ open module xorcery.thymeleaf {
     requires xorcery.jaxrs.server;
 
     requires transitive thymeleaf;
-    requires org.eclipse.jetty.servlet;
+    requires jakarta.servlet;
+    requires org.eclipse.jetty.ee10.servlet;
     requires jersey.server;
     requires jersey.common;
 

@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.jwt.server.api;
 
 import com.exoreaction.xorcery.domainevents.jsonapi.resources.CommandsJsonSchemaResource;
-import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
+import com.exoreaction.xorcery.jaxrs.server.resources.BaseResource;
 import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonapischema.ResourceObjectSchema;
@@ -29,13 +29,14 @@ import com.exoreaction.xorcery.jwt.server.JwtServerConfiguration;
 import com.exoreaction.xorcery.jwt.server.JwtService;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.inject.Inject;
+import jakarta.servlet.ServletException;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.jetty.security.LoginService;
-import org.eclipse.jetty.server.UserIdentity;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -48,7 +49,7 @@ import static com.exoreaction.xorcery.jsonapi.MediaTypes.PRODUCES_JSON_API_TEXT_
 @Path("api/login")
 @Produces(PRODUCES_JSON_API_TEXT_HTML_YAML)
 public class JwtLoginResource
-        extends AbstractResource
+        extends BaseResource
         implements JsonSchemaResource, CommandsJsonSchemaResource {
 
     private final JwtService jwtService;
@@ -83,8 +84,9 @@ public class JwtLoginResource
 
         String username = resourceObject.getAttributes().getString("username").orElse(null);
         String password = resourceObject.getAttributes().getString("password").orElse(null);
-        UserIdentity userIdentity = loginService.login(username, password, getHttpServletRequest());
-        if (userIdentity == null) {
+        try {
+            getHttpServletRequest().login(username, password);
+        } catch (ServletException e) {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
@@ -94,15 +96,19 @@ public class JwtLoginResource
 
 
             Date expiresAt = Date.from(Instant.now().plus(jwtServerConfiguration.getCookieDuration()));
-
-            return Response.ok(new ResourceObject.Builder("jwt").attributes(new Attributes.Builder().attribute("token", token).build()).build())
-                    .cookie(new NewCookie.Builder(jwtServerConfiguration.getCookieName())
-                            .path(jwtServerConfiguration.getCookiePath())
-                            .value(token)
-                            .domain(jwtServerConfiguration.getCookieDomain())
-                            .expiry(expiresAt)
-                            .build())
+            NewCookie tokenCookie = new NewCookie.Builder(jwtServerConfiguration.getCookieName())
+                    .path(jwtServerConfiguration.getCookiePath())
+                    .value(token)
+                    .domain(jwtServerConfiguration.getCookieDomain())
+                    .expiry(expiresAt)
                     .build();
+
+            return resourceObject.getAttributes().getString("uri").map(uri ->
+                    Response.temporaryRedirect(URI.create(uri)).cookie(tokenCookie).build()).orElseGet(() ->
+                    Response.ok(new ResourceObject.Builder("jwt")
+                                    .attributes(new Attributes.Builder().attribute("token", token).build()).build())
+                            .cookie(tokenCookie)
+                            .build());
         } catch (WebApplicationException e) {
             throw e;
         } catch (IOException e) {
@@ -119,6 +125,7 @@ public class JwtLoginResource
         Properties.Builder properties = new Properties.Builder();
         properties.property("username", new JsonSchema.Builder().type(Types.String).title("Username").build());
         properties.property("password", new JsonSchema.Builder().type(Types.String).title("Password").build());
+        properties.property("uri", new JsonSchema.Builder().type(Types.String).title("Redirect URI on success").build());
 
         JsonSchema formSchema = new JsonSchema.Builder()
                 .type(Types.Object)

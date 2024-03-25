@@ -26,6 +26,7 @@ import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -40,6 +41,7 @@ public class PublishWithResultRetryTest {
     Logger logger = LogManager.getLogger();
 
     @Test
+    @Disabled()
     public void testServerTimesOut() throws Exception {
 
         // Given

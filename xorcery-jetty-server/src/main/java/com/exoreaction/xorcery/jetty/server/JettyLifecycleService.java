@@ -19,22 +19,25 @@ package com.exoreaction.xorcery.jetty.server;
 import com.exoreaction.xorcery.health.api.HealthCheckRegistry;
 import com.exoreaction.xorcery.health.api.HealthCheckResult;
 import com.exoreaction.xorcery.health.api.HealthStatus;
+import com.exoreaction.xorcery.hk2.Services;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.thread.ThreadPool;
-import org.glassfish.hk2.api.Immediate;
-import org.glassfish.hk2.api.PostConstruct;
-import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service(name = "jetty.server")
 @RunLevel(18)
@@ -45,9 +48,37 @@ public class JettyLifecycleService
     private final Server server;
 
     @Inject
-    public JettyLifecycleService(Server server, HealthCheckRegistry healthCheckRegistry, Logger logger) throws Exception {
+    public JettyLifecycleService(
+            Server server,
+            ServiceLocator serviceLocator,
+            HealthCheckRegistry healthCheckRegistry,
+            Logger logger) throws Exception {
         this.server = server;
         this.logger = logger;
+
+        // Register all handlers
+        List<ServiceHandle<Handler>> rankedHandlers = Services.allOfTypeRanked(serviceLocator, Handler.class)
+                .filter(sh -> !(sh.getService() instanceof Server))
+                .toList();
+
+        Handler chain = null;
+        for (ServiceHandle<Handler> serviceHandle : rankedHandlers) {
+            logger.info("Registering handler:" + Optional.ofNullable(serviceHandle.getActiveDescriptor().getName()).orElse(serviceHandle.getActiveDescriptor().getImplementation()));
+            Handler handler = serviceHandle.getService();
+            if (chain == null) {
+                chain = handler;
+            } else if (handler instanceof ServletContextHandler servletContextHandler &&
+                    chain instanceof Handler.Singleton singleton) {
+                servletContextHandler.insertHandler(singleton);
+                chain = servletContextHandler;
+            } else if (handler instanceof Handler.Wrapper wrapper) {
+                wrapper.setHandler(chain);
+                chain = wrapper;
+            }
+        }
+        if (chain != null)
+            server.setHandler(chain);
+
         healthCheckRegistry.register("jetty.server", this::check);
         server.start();
         logger.info("Started Jetty server");

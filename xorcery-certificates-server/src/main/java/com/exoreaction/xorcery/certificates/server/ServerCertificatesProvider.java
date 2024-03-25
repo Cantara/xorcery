@@ -60,6 +60,10 @@ public class ServerCertificatesProvider {
             if (!certificatesProviderServiceHandle.getActiveDescriptor().getImplementation().contains("ClientCertificatesProvider"))
                 certificatesProviders.add(certificatesProviderServiceHandle.getService());
         }
+        if (certificatesProviders.isEmpty())
+        {
+            throw new IllegalStateException("No certificate providers found");
+        }
     }
 
     public CompletionStage<String> requestCertificate(String csrPemEncoded) {

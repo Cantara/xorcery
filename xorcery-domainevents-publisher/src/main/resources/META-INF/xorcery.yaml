@@ -1,8 +1,4 @@
 domainevents:
   enabled: "{{ defaults.enabled }}"
-  subscriber:
-    authority: null
-    stream: "neo4jprojections"
-    configuration:
-      projection: "domainprojection"
-  publisher: {}
+  eventstore: "{{ instance.uri }}/eventstore"
+  projections: "{{ instance.uri }}/projections"

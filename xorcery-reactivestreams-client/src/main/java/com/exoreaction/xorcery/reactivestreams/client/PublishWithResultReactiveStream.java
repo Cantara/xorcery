@@ -31,6 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Publisher;
@@ -39,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -104,8 +106,8 @@ public class PublishWithResultReactiveStream
     protected void checkDone() {
         if (isComplete.get() && resultQueue.isEmpty()) {
             if (session != null && session.isOpen()) {
-                logger.debug(marker, "Sending complete for session {}", session.getRemote().getRemoteAddress());
-                session.close(StatusCode.NORMAL, "complete");
+                logger.debug(marker, "Sending complete for session {}", session.getRemoteSocketAddress());
+                session.close(StatusCode.NORMAL, "complete", Callback.NOOP);
 
                 if (!result.isDone())
                     result.complete(null);
@@ -113,23 +115,22 @@ public class PublishWithResultReactiveStream
         }
     }
 
-
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int len) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketBinary");
         }
 
         try {
             // Check if we are getting an exception back
-            if (len > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload, offset, offset + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {
-                ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset + ReactiveStreamsAbstractService.XOR.length, len - ReactiveStreamsAbstractService.XOR.length);
+            if (payload.limit() > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload.array(), payload.arrayOffset(), payload.position() + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {
+                ByteArrayInputStream bin = new ByteArrayInputStream(payload.array(), payload.arrayOffset() + ReactiveStreamsAbstractService.XOR.length, payload.limit() - ReactiveStreamsAbstractService.XOR.length);
                 ObjectInputStream oin = new ObjectInputStream(bin);
                 Throwable throwable = (Throwable) oin.readObject();
                 resultQueue.remove().completeExceptionally(throwable);
             } else {
                 // Deserialize result
-                ByteArrayInputStream bin = new ByteArrayInputStream(payload, offset, len);
+                ByteArrayInputStream bin = new ByteArrayInputStream(payload.array(), payload.arrayOffset(), payload.limit());
 
                 Object result = resultReader.readFrom(bin);
 

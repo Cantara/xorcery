@@ -19,6 +19,11 @@ import com.exoreaction.xorcery.configuration.Configuration;
 
 public record KeyStoresConfiguration(Configuration configuration) {
 
+    public static KeyStoresConfiguration get(Configuration configuration)
+    {
+        return new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
+    }
+
     public boolean isEnabled() {
         return configuration.getBoolean("enabled").orElse(false);
     }

@@ -18,9 +18,11 @@ package com.exoreaction.xorcery.jetty.server;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.hk2.Services;
 import com.exoreaction.xorcery.net.Sockets;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class JettyServerWiringTest {
 
     @Test
-    void thatServletContextCanBeWiredByHK2() throws Exception {
+    void testServerStartup() throws Exception {
 
         Configuration.Builder builder = new Configuration.Builder();
         new StandardConfigurationBuilder().addTestDefaults(builder);
@@ -46,6 +48,6 @@ public class JettyServerWiringTest {
         Xorcery xorcery = new Xorcery(configuration);
         ServiceLocator serviceLocator = xorcery.getServiceLocator();
         assertNotNull(serviceLocator.getService(Server.class));
-        assertNotNull(serviceLocator.getService(ServletContextHandler.class));
+        assertNotNull(Services.ofType(serviceLocator, ServletContextHandler.class).orElse(null));
     }
 }

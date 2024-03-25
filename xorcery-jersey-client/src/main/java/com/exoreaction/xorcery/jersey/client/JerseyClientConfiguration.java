@@ -18,10 +18,29 @@ package com.exoreaction.xorcery.jersey.client;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.time.Duration;
 import java.util.Optional;
 
 public record JerseyClientConfiguration(Configuration configuration) {
     public Optional<JsonNode> getProperties() {
         return configuration.getJson("properties");
+    }
+
+    public Duration getConnectTimeout() {
+        return Duration.parse("PT" + configuration().getString("connectTimeout").orElse("5s"));
+    }
+
+    public Duration getReadTimeout() {
+        return Duration.parse("PT" + configuration().getString("connectTimeout").orElse("5s"));
+    }
+
+    public Optional<String> getKeyStoreName()
+    {
+        return configuration.getString("keystore");
+    }
+
+    public Optional<String> getTrustStoreName()
+    {
+        return configuration.getString("truststore");
     }
 }

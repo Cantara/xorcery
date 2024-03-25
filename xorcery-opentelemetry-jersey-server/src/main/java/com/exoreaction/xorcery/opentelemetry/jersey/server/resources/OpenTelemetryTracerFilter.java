@@ -32,10 +32,8 @@ import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.RequestLog;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.http.HttpHeader;
+import org.eclipse.jetty.server.*;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriTemplate;
 
@@ -69,12 +67,12 @@ public class OpenTelemetryTracerFilter
             new TextMapGetter<>() {
                 @Override
                 public Iterable<String> keys(Request context) {
-                    return () -> context.getHeaderNames().asIterator();
+                    return context.getHeaders().getFieldNamesCollection();
                 }
 
                 @Override
                 public String get(Request context, String key) {
-                    return context.getHeader(key);
+                    return context.getHeaders().get(key);
                 }
             };
     private final Tracer tracer;
@@ -193,17 +191,23 @@ public class OpenTelemetryTracerFilter
                     for (Map.Entry<String, String> attribute : attributes.entrySet()) {
                         switch (attribute.getValue()) {
                             case "http.request.method" -> span.setAttribute(attribute.getKey(), request.getMethod());
-                            case "url.full" -> span.setAttribute(attribute.getKey(), request.getRequestURI());
-                            case "http.response.status_code" -> span.setAttribute(attribute.getKey(), response.getStatus());
+                            case "url.full" ->
+                                    span.setAttribute(attribute.getKey(), request.getHttpURI().toURI().toASCIIString());
+                            case "http.response.status_code" ->
+                                    span.setAttribute(attribute.getKey(), response.getStatus());
                         }
                     }
                 }
 
                 for (Map.Entry<String, String> attribute : attributes.entrySet()) {
                     if (attribute.getValue().equals("http.response.body.size")) {
-                        var length = response.getContentCount();
-                        if (length != -1)
-                            span.setAttribute(attribute.getKey(), length);
+                        String lengthStr = response.getHeaders().get(HttpHeader.CONTENT_LENGTH);
+                        if (lengthStr != null)
+                        {
+                            var length = Long.valueOf(lengthStr);
+                            if (length > 0)
+                                span.setAttribute(attribute.getKey(), length);
+                        }
                     }
                 }
                 span.end();

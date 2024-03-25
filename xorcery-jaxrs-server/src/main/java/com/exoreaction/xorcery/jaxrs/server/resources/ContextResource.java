@@ -7,8 +7,10 @@ import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+import org.eclipse.jetty.ee10.servlet.ServletApiRequest;
+import org.eclipse.jetty.security.AuthenticationState;
+import org.eclipse.jetty.security.authentication.LoginAuthenticator;
 import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.UserIdentity;
 import org.glassfish.hk2.api.ServiceLocator;
 
 import javax.security.auth.Subject;
@@ -86,12 +88,27 @@ public interface ContextResource {
         return getContainerRequestContext().getSecurityContext();
     }
 
-    default Cookie getUserCookie() {
-        return getContainerRequestContext().getCookies().get("token");
-    }
-
     // JAAS
-    default Subject getSubject() {
-        return Optional.ofNullable(((Request) getHttpServletRequest()).getUserIdentity()).map(UserIdentity::getSubject).orElse(null);
+    default Optional<Subject> getSubject() {
+        Optional<Subject> subject = Optional.empty();
+        if (getHttpServletRequest() instanceof ServletApiRequest servletApiRequest)
+        {
+            AuthenticationState authenticationState = servletApiRequest.getAuthentication();
+            if (authenticationState instanceof AuthenticationState.Deferred deferred)
+            {
+                AuthenticationState undeferred = deferred.authenticate(servletApiRequest.getRequest());
+                if (undeferred != null && undeferred != authenticationState)
+                {
+                    authenticationState = undeferred;
+                    AuthenticationState.setAuthenticationState(servletApiRequest.getRequest(), authenticationState);
+                }
+            }
+
+            if (authenticationState instanceof LoginAuthenticator.UserAuthenticationSucceeded userAuth)
+            {
+                subject = Optional.of(userAuth.getUserIdentity().getSubject());
+            }
+        }
+        return subject;
     }
 }
