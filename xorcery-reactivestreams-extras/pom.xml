@@ -24,18 +24,21 @@
         <version>0.100.3-SNAPSHOT</version>
     </parent>
 
-    <artifactId>xorcery-reactivestreams-server-extra</artifactId>
+    <artifactId>xorcery-reactivestreams-extras</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams-server</artifactId>
+            <artifactId>xorcery-util</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-junit</artifactId>
-            <scope>test</scope>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
         </dependency>
 
         <dependency>
@@ -44,8 +47,10 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-junit</artifactId>
+            <scope>test</scope>
         </dependency>
+
     </dependencies>
 </project>

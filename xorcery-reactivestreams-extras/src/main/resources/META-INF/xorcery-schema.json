@@ -1,8 +1,8 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-reactivestreams-server-extra/schema",
-  "title" : "xorcery-reactivestreams-server-extra configuration JSON Schema",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-reactivestreams-extras/schema",
+  "title" : "xorcery-reactivestreams-extras configuration JSON Schema",
   "properties" : {
     "yamlfilepublisher" : {
       "$ref" : "#/$defs/yamlfilepublisher"

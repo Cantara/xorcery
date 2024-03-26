@@ -123,7 +123,7 @@
         <module>xorcery-reactivestreams-client</module>
         <module>xorcery-jmx-status</module>
         <module>xorcery-reactivestreams-server</module>
-        <module>xorcery-reactivestreams-server-extra</module>
+        <module>xorcery-reactivestreams-extras</module>
 
         <module>xorcery-admin-server</module>
 
@@ -458,7 +458,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-reactivestreams-server-extra</artifactId>
+                <artifactId>xorcery-reactivestreams-extras</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

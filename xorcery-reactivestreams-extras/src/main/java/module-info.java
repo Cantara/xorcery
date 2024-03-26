@@ -15,12 +15,10 @@
  */
 open module xorcery.reactivestreams.server.extra {
 
-    requires xorcery.reactivestreams.server;
-
-    requires org.glassfish.hk2.api;
-    requires org.glassfish.hk2.runlevel;
-    requires jakarta.inject;
-    requires org.apache.logging.log4j;
-
-    requires xorcery.reactivestreams.client;
+    requires reactor.core;
+    requires com.fasterxml.jackson.dataformat.yaml;
+    requires com.fasterxml.jackson.databind;
+    requires org.reactivestreams;
+    requires org.yaml.snakeyaml;
+    requires xorcery.util;
 }
