@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.reactivestreams.client;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
+import com.exoreaction.xorcery.lang.Classes;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.util.LocalStreamFactories;
@@ -109,7 +110,7 @@ public class ReactiveStreamsClientService
         MessageReader<Object> resultReader = null;
 
         if (serverUri != null) {
-            Type type = resolveActualTypeArgs(publisherType, Publisher.class)[0];
+            Type type = Classes.resolveActualTypeArgs(publisherType, Publisher.class)[0];
             Type eventType = getEventType(type);
             Optional<Type> resultType = getResultType(type);
 
@@ -200,7 +201,7 @@ public class ReactiveStreamsClientService
         if (subscriberType == null)
             subscriberType = (Class<? extends Subscriber<?>>) subscriber.getClass();
 
-        Type type = resolveActualTypeArgs(subscriberType, Subscriber.class)[0];
+        Type type = Classes.resolveActualTypeArgs(subscriberType, Subscriber.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
 

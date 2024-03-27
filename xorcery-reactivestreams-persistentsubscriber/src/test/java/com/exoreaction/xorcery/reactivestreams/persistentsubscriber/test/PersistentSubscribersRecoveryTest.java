@@ -41,7 +41,7 @@ public class PersistentSubscribersRecoveryTest {
             tempRecoveryFile = File.createTempFile("recovery", ".yaml");
             tempRecoveryFile.deleteOnExit();
 
-            byte[] template = Resources.getResource("testevents.yaml").orElseThrow().openStream().readAllBytes();
+            byte[] template = Resources.getResource("persistentsubscribertestevents.yaml").orElseThrow().openStream().readAllBytes();
             Files.write(tempRecoveryFile.toPath(), template, StandardOpenOption.WRITE);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -51,10 +51,6 @@ public class PersistentSubscribersRecoveryTest {
     static String config = String.format("""
             jetty.server.http.port: %d
             jetty.server.ssl.enabled: false
-            yamlfilepublisher:
-                publishers:
-                    - stream: "testevents"
-                      file: "{{ instance.home }}/../test-classes/testevents.yaml"
             persistentsubscribers:
                 subscribers:
                     - name: testsubscriber
@@ -71,8 +67,8 @@ public class PersistentSubscribersRecoveryTest {
     static XorceryExtension xorcery = XorceryExtension.xorcery()
             .configuration(ConfigurationBuilder::addTestDefaults)
             .configuration(c -> c.addYaml(config))
+            .with(new FilePublisher())
             .build();
-    private static CompletableFuture<Void> result;
 
     @Test
     public void testPersistentSubscriberRecovery() throws InterruptedException {

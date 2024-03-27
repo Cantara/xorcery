@@ -15,8 +15,6 @@
  */
 package com.exoreaction.xorcery.reactivestreams.spi;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +23,16 @@ import java.lang.reflect.Type;
 public interface MessageReader<T> {
 
     interface Factory {
+        default String getContentType(Class<?> type)
+        {
+            return "application/octet-stream";
+        }
+
+        default boolean canRead(Class<?> type, String mediaType)
+        {
+            return newReader(type, type, mediaType) != null;
+        }
+
         <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType);
     }
 

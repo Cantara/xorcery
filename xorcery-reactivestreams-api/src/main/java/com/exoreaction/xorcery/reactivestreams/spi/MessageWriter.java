@@ -22,6 +22,16 @@ import java.lang.reflect.Type;
 public interface MessageWriter<T> {
 
     interface Factory {
+        default String getContentType(Class<?> type)
+        {
+            return "application/octet-stream";
+        }
+
+        default boolean canWrite(Class<?> type, String mediaType)
+        {
+            return newWriter(type, type, mediaType) != null;
+        }
+
         <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType);
     }
 

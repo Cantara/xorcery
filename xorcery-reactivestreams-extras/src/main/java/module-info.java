@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.reactivestreams.server.extra {
+module xorcery.reactivestreams.server.extra {
+    exports com.exoreaction.xorcery.reactivestreams.extras.publisher;
+    exports com.exoreaction.xorcery.reactivestreams.extras.providers;
+
+    requires xorcery.reactivestreams.api;
+    requires xorcery.util;
 
     requires reactor.core;
-    requires com.fasterxml.jackson.dataformat.yaml;
     requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.dataformat.yaml;
+    requires com.fasterxml.jackson.dataformat.smile;
     requires org.reactivestreams;
     requires org.yaml.snakeyaml;
-    requires xorcery.util;
+    requires org.glassfish.hk2.api;
 }

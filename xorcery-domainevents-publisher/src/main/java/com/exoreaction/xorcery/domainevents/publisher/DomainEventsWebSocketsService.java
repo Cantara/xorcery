@@ -72,30 +72,21 @@ public class DomainEventsWebSocketsService
             // Publish events to EventStore
             Flux<Metadata> result = webSocketStreamsClient.publishWithResult(
                     domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow(),
-                    MediaType.APPLICATION_JSON,
-                    MetadataEvents.class,
-                    Metadata.class,
-                    WebSocketClientOptions.instance(),
-                    sink.asFlux());
+                    WebSocketClientOptions.instance(), MetadataEvents.class, Metadata.class, sink.asFlux()
+            );
 
             // Then wait for projection
             return webSocketStreamsClient.publishWithResult(
                     projectionsUri.orElseThrow(),
-                    MediaType.APPLICATION_JSON,
-                    Metadata.class,
-                    Metadata.class,
-                    WebSocketClientOptions.instance(),
-                    result);
+                    WebSocketClientOptions.instance(), Metadata.class, Metadata.class, result
+            );
         }).orElseGet(() ->
         {
             // Publish events directly to projections
             return webSocketStreamsClient.publishWithResult(
                     domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow(),
-                    MediaType.APPLICATION_JSON,
-                    MetadataEvents.class,
-                    Metadata.class,
-                    WebSocketClientOptions.instance(),
-                    sink.asFlux());
+                    WebSocketClientOptions.instance(), MetadataEvents.class, Metadata.class, sink.asFlux()
+            );
         });
 
         subscribeDisposable = projections

@@ -7,7 +7,7 @@ import reactor.core.publisher.FluxSink;
 
 import java.io.IOException;
 
-class ObjectReaderStreamer<T> {
+public class ObjectReaderStreamer<T> {
     private final FluxSink<T> sink;
     private final YAMLParser parser;
     private final ObjectReader objectReader;

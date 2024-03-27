@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.reactivestreams.server;
 
 import com.exoreaction.xorcery.concurrent.CompletableFutures;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.lang.Classes;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
@@ -107,7 +108,7 @@ public class ReactiveStreamsServerService
                                              Class<? extends Publisher<?>> publisherType) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        Type type = resolveActualTypeArgs(publisherType, Publisher.class)[0];
+        Type type = Classes.resolveActualTypeArgs(publisherType, Publisher.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
         MessageWriter<Object> eventWriter = getWriter(eventType);
@@ -163,7 +164,7 @@ public class ReactiveStreamsServerService
                                               Class<? extends Subscriber<?>> subscriberType) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        Type type = resolveActualTypeArgs(subscriberType, Subscriber.class)[0];
+        Type type = Classes.resolveActualTypeArgs(subscriberType, Subscriber.class)[0];
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
         MessageReader<Object> eventReader = getReader(eventType);
@@ -224,7 +225,7 @@ public class ReactiveStreamsServerService
 
     @Override
     public void onProgressStarting(ChangeableRunLevelFuture currentJob, int currentLevel) {
-        if (currentLevel == 20 && currentJob.getProposedLevel() < currentLevel) {
+        if (currentLevel == 19 && currentJob.getProposedLevel() < currentLevel) {
             // Close existing streams
             logger.info("Cancel subscriptions on shutdown");
 

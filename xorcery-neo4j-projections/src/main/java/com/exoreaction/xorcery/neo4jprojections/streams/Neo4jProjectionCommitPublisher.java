@@ -15,31 +15,28 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.streams;
 
-import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
-import org.apache.logging.log4j.LogManager;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 import java.util.function.Consumer;
 
 public class Neo4jProjectionCommitPublisher
         implements Publisher<WithMetadata<ProjectionCommit>>, Consumer<WithMetadata<ProjectionCommit>> {
-    BroadcastEventHandler<WithMetadata<ProjectionCommit>> broadcastEventHandler = new BroadcastEventHandler<>(true);
+
+    private static final Sinks.Many<WithMetadata<ProjectionCommit>> sink = Sinks.many().multicast().onBackpressureBuffer(4096);
+    private static final Flux<WithMetadata<ProjectionCommit>> sinkPublisher = sink.asFlux();
 
     @Override
     public void subscribe(Subscriber<? super WithMetadata<ProjectionCommit>> subscriber) {
-        subscriber.onSubscribe(broadcastEventHandler.add(subscriber));
+        sinkPublisher.subscribe(subscriber);
     }
 
     @Override
     public void accept(WithMetadata<ProjectionCommit> projectionCommitWithMetadata) {
-        // TODO Replace with disruptor
-        try {
-            broadcastEventHandler.onEvent(projectionCommitWithMetadata, 0, true);
-        } catch (Exception e) {
-            LogManager.getLogger(getClass()).error("Error publishing projection commit", e);
-        }
+        sink.tryEmitNext(projectionCommitWithMetadata);
     }
 }

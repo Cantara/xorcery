@@ -45,7 +45,7 @@ public class TestSubscriber
 
     @Override
     public void handle(WithMetadata<ArrayNode> eventsWithMetadata, CompletableFuture<Void> result) {
-        System.out.println(eventsWithMetadata.metadata().json().get("revision"));
+        System.out.println(eventsWithMetadata.metadata().json().get("timestamp"));
         handled.incrementAndGet();
         result.complete(null);
     }

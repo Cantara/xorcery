@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
+import com.exoreaction.xorcery.util.Resources;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -30,10 +31,6 @@ public class PersistentSubscribersSkipUntilTest {
     static String config = String.format("""
             jetty.server.http.port: %d
             jetty.server.ssl.enabled: false
-            yamlfilepublisher:
-                publishers:
-                    - stream: "testevents"
-                      file: "{{ instance.home }}/../test-classes/testevents.yaml"
             persistentsubscribers:
                 subscribers:
                     - name: testsubscriber
@@ -53,8 +50,8 @@ public class PersistentSubscribersSkipUntilTest {
     static XorceryExtension xorcery = XorceryExtension.xorcery()
             .configuration(ConfigurationBuilder::addTestDefaults)
             .configuration(c -> c.addYaml(config))
+            .with(new FilePublisher())
             .build();
-    private static CompletableFuture<Void> result;
 
     @Test
     public void testPersistentSubscriberSkipUntil() throws InterruptedException {

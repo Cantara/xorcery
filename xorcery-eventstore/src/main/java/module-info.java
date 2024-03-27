@@ -26,6 +26,7 @@ open module xorcery.eventstore {
     requires xorcery.jsonapi.server;
     requires xorcery.jaxrs.server;
     requires xorcery.util;
+    requires xorcery.domainevents;
 
     requires jakarta.inject;
     requires jakarta.ws.rs;
@@ -33,7 +34,6 @@ open module xorcery.eventstore {
     requires com.fasterxml.jackson.databind;
     requires org.apache.logging.log4j;
     requires com.lmax.disruptor;
-    requires jersey.common;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
 }

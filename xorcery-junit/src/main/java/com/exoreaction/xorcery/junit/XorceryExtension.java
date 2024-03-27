@@ -23,8 +23,9 @@ import com.exoreaction.xorcery.core.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.io.ZipFiles;
 import com.exoreaction.xorcery.util.Resources;
-import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.ServiceLocatorFactory;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.*;
 
@@ -34,6 +35,7 @@ import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -53,6 +55,7 @@ public class XorceryExtension
         AfterAllCallback {
     public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create("xorcery");
 
+    private final List<Object> services;
     private final Configuration configuration;
     private final boolean isArchive;
     private Xorcery xorcery;
@@ -69,6 +72,7 @@ public class XorceryExtension
         private String archiveFileName;
         private String targetDir;
         private ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+        private List<Object> services = new ArrayList<>();
 
         public Builder id(String instanceId) {
             this.instanceId = instanceId;
@@ -92,6 +96,12 @@ public class XorceryExtension
 
         public Builder addYaml(String yamlConfig) {
             configurationBuilder.addYaml(yamlConfig);
+            return this;
+        }
+
+
+        public Builder with(Object service) {
+            services.add(service);
             return this;
         }
 
@@ -124,7 +134,7 @@ public class XorceryExtension
 
                 configurationBuilder.with(b -> b.add("instance.home", tempDir.getAbsolutePath()));
 
-                return new XorceryExtension(archiveFileName != null, tempDir, configurationBuilder.build());
+                return new XorceryExtension(archiveFileName != null, tempDir, services, configurationBuilder.build());
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             } catch (URISyntaxException e) {
@@ -134,9 +144,10 @@ public class XorceryExtension
         }
     }
 
-    public XorceryExtension(boolean isArchive, File tempDir, Configuration configuration) {
+    public XorceryExtension(boolean isArchive, File tempDir, List<Object> services, Configuration configuration) {
         this.isArchive = isArchive;
         this.tempDir = tempDir;
+        this.services = services;
         this.configuration = configuration;
     }
 
@@ -147,7 +158,17 @@ public class XorceryExtension
             // Log final configuration
             ConfigurationLogger.getLogger().log("Configuration:\n" + configuration);
             LoggerContextFactory.initialize(configuration);
-            xorcery = new Xorcery(configuration);
+
+            ServiceLocator serviceLocator = null;
+            if (!services.isEmpty())
+            {
+                serviceLocator = ServiceLocatorFactory.getInstance().create(null);
+                for (Object service : services) {
+                    serviceLocator.inject(service);
+                    ServiceLocatorUtilities.addOneConstant(serviceLocator, service);
+                }
+            }
+            xorcery = new Xorcery(configuration, serviceLocator);
         } catch (Exception e) {
 
             List<String> messages = ConfigurationLogger.getLogger().drain();

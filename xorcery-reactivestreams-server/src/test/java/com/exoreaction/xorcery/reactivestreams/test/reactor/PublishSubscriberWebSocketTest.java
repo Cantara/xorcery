@@ -20,16 +20,10 @@ import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
-import com.exoreaction.xorcery.reactivestreams.api.WithResult;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
-import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
-import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import com.exoreaction.xorcery.reactivestreams.server.reactor.WebSocketStreamsServerConfiguration;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
@@ -39,7 +33,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
@@ -47,14 +40,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
 
-import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
-
-import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
-import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams.cancelStream;
 
 public class PublishSubscriberWebSocketTest {
 
@@ -99,7 +88,6 @@ public class PublishSubscriberWebSocketTest {
                 List<Integer> result = new ArrayList<>();
                 websocketStreamsServer.subscriber(
                         "numbers",
-                        MediaType.APPLICATION_JSON,
                         Integer.class,
                         upstream -> upstream.doOnNext(result::add));
 
@@ -107,10 +95,8 @@ public class PublishSubscriberWebSocketTest {
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
                 websocketStreamsClient.publish(
                                 websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                MediaType.APPLICATION_JSON,
-                                Integer.class,
-                                WebSocketClientOptions.instance(),
-                                Flux.fromIterable(source))
+                                WebSocketClientOptions.instance(), Integer.class, Flux.fromIterable(source), MediaType.APPLICATION_JSON
+                        )
                         .blockLast();
 
                 // Then
@@ -133,7 +119,6 @@ public class PublishSubscriberWebSocketTest {
                 CountDownLatch latch = new CountDownLatch(1);
                 websocketStreamsServer.subscriber(
                         "numbers",
-                        MediaType.APPLICATION_JSON,
                         Integer.class,
                         upstream -> upstream
                                 .doOnNext(v -> {
@@ -145,10 +130,8 @@ public class PublishSubscriberWebSocketTest {
                 Sinks.Many<Integer> publisher = Sinks.many().unicast().onBackpressureBuffer(new ArrayBlockingQueue<>(1024));
                 Disposable subscription = websocketStreamsClient.publish(
                                 websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                MediaType.APPLICATION_JSON,
-                                Integer.class,
-                                WebSocketClientOptions.instance(),
-                                publisher.asFlux())
+                                WebSocketClientOptions.instance(), Integer.class, publisher.asFlux(), MediaType.APPLICATION_JSON
+                        )
                         .subscribe();
 
                 logger.info("Emitted: " + publisher.tryEmitNext(42));
@@ -174,7 +157,6 @@ public class PublishSubscriberWebSocketTest {
 
                 websocketStreamsServer.subscriber(
                         "numbers",
-                        MediaType.APPLICATION_JSON,
                         Integer.class,
                         upstream -> upstream.handle((v, s) ->
                         {
@@ -191,10 +173,8 @@ public class PublishSubscriberWebSocketTest {
                     List<Integer> source = IntStream.range(0, 100).boxed().toList();
                     websocketStreamsClient.publish(
                                     websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                    MediaType.APPLICATION_JSON,
-                                    Integer.class,
-                                    WebSocketClientOptions.instance(),
-                                    Flux.fromIterable(source))
+                                    WebSocketClientOptions.instance(), Integer.class, Flux.fromIterable(source), MediaType.APPLICATION_JSON
+                            )
                             .toStream().toList();
                     Assertions.fail();
                 } catch (ServerStreamException e) {
@@ -224,7 +204,6 @@ public class PublishSubscriberWebSocketTest {
 
                 websocketStreamsServer.subscriber(
                         "numbers",
-                        MediaType.APPLICATION_JSON,
                         Integer.class,
                         upstream -> upstream.doOnNext(System.out::println));
 
@@ -236,10 +215,8 @@ public class PublishSubscriberWebSocketTest {
                     Sinks.Many<Integer> sink = Sinks.many().unicast().onBackpressureBuffer();
                     List<Integer> result = websocketStreamsClient.publish(
                                     websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                    MediaType.APPLICATION_JSON,
-                                    Integer.class,
-                                    WebSocketClientOptions.instance(),
-                                    sink.asFlux().doOnNext(System.out::println))
+                                    WebSocketClientOptions.instance(), Integer.class, sink.asFlux().doOnNext(System.out::println), MediaType.APPLICATION_JSON
+                            )
                             .toStream().toList();
                 });
             }
@@ -265,7 +242,6 @@ public class PublishSubscriberWebSocketTest {
 
                 websocketStreamsServer.subscriber(
                         "numbers",
-                        MediaType.APPLICATION_JSON,
                         Integer.class,
                         upstream -> upstream.doOnNext(System.out::println));
 
@@ -277,10 +253,8 @@ public class PublishSubscriberWebSocketTest {
                     Sinks.Many<Integer> sink = Sinks.many().unicast().onBackpressureBuffer();
                     List<Integer> result = websocketStreamsClient.publish(
                                     websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                    MediaType.APPLICATION_JSON,
-                                    Integer.class,
-                                    WebSocketClientOptions.instance(),
-                                    sink.asFlux())
+                                    WebSocketClientOptions.instance(), Integer.class, sink.asFlux(), MediaType.APPLICATION_JSON
+                            )
                             .toStream().toList();
                 });
             }
@@ -309,7 +283,6 @@ public class PublishSubscriberWebSocketTest {
                 CountDownLatch latch = new CountDownLatch(1);
                 websocketStreamsServer.subscriber(
                         "numbers",
-                        MediaType.APPLICATION_JSON,
                         Integer.class,
                         upstream -> upstream.doOnNext(result::add).doOnComplete(latch::countDown));
 
@@ -317,10 +290,8 @@ public class PublishSubscriberWebSocketTest {
                 Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
                 websocketStreamsClient.publish(
                                 websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                MediaType.APPLICATION_JSON,
-                                Integer.class,
-                                WebSocketClientOptions.instance(),
-                                sink.asFlux())
+                                WebSocketClientOptions.instance(), Integer.class, sink.asFlux(), MediaType.APPLICATION_JSON
+                        )
                         .retry()
                         .subscribe();
 
@@ -355,7 +326,6 @@ public class PublishSubscriberWebSocketTest {
 
                 websocketStreamsServer.subscriber(
                         "numbers/{foo}",
-                        MediaType.APPLICATION_JSON,
                         String.class,
                         upstream -> upstream.contextWrite(Context.of("server", "123")));
 
@@ -379,10 +349,8 @@ public class PublishSubscriberWebSocketTest {
 
                 String config = websocketStreamsClient.publish(
                                 websocketStreamsServerConfiguration.getURI().resolve("/numbers/bar?param1=value1"),
-                                MediaType.APPLICATION_JSON,
-                                String.class,
-                                WebSocketClientOptions.instance(),
-                                configPublisher)
+                                WebSocketClientOptions.instance(), String.class, configPublisher, MediaType.APPLICATION_JSON
+                        )
                         .contextWrite(Context.of("client", "abc"))
                         .take(1).blockFirst();
 

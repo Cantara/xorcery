@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.reactivestreams.providers;
 
+import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -39,11 +40,22 @@ public class JsonMessageWriterFactory
     }
 
     @Override
-    public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (!mediaType.equals("application/json") && !mediaType.equals("*/*")) return null;
-        if (jsonMapper.canSerialize(type)
+    public String getContentType(Class<?> type) {
+        return "application/json";
+    }
+
+    @Override
+    public boolean canWrite(Class<?> type, String mediaType) {
+        return jsonMapper.canSerialize(type)
                 && !JsonNode.class.isAssignableFrom(type)
-                && !WithMetadata.class.isAssignableFrom(type)) {
+                && !JsonElement.class.isAssignableFrom(type)
+                && !WithMetadata.class.isAssignableFrom(type)
+                && mediaType.startsWith("application/json");
+    }
+
+    @Override
+    public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
+        if (canWrite(type, mediaType)) {
             return (MessageWriter<T>) new JsonMessageWriter();
         } else {
             return null;

@@ -20,7 +20,6 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,9 +36,18 @@ public class JsonElementMessageWriterFactory
     }
 
     @Override
+    public String getContentType(Class<?> type) {
+        return "application/json";
+    }
+
+    @Override
+    public boolean canWrite(Class<?> type, String mediaType) {
+        return JsonElement.class.isAssignableFrom(type) && mediaType.startsWith("application/json");
+    }
+
+    @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (!mediaType.equals("application/json") && !mediaType.equals("*/*")) return null;
-        if (JsonElement.class.isAssignableFrom(type))
+        if (canWrite(type, mediaType))
             return (MessageWriter<T>) new JsonElementMessageWriter();
         else
             return null;

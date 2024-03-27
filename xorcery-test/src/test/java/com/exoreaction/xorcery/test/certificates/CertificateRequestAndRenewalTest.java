@@ -15,31 +15,25 @@
  */
 package com.exoreaction.xorcery.test.certificates;
 
-import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter;
 import com.exoreaction.xorcery.junit.XorceryExtension;
-import com.exoreaction.xorcery.test.ClientTester;
 import com.exoreaction.xorcery.net.Sockets;
+import com.exoreaction.xorcery.test.ClientTester;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import java.io.InputStream;
 import java.net.URI;
 
 public class CertificateRequestAndRenewalTest {

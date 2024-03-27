@@ -113,7 +113,7 @@ public class ProjectionSubscriber
         if (disruptor != null)
         {
             try {
-                disruptor.shutdown(disruptorConfiguration.getShutdownTimeout(), TimeUnit.SECONDS);
+                disruptor.shutdown(disruptorConfiguration.getShutdownTimeout().toSeconds(), TimeUnit.SECONDS);
             } catch (TimeoutException e) {
                 LogManager.getLogger(getClass()).warn("Could not shutdown disruptor within timeout", e);
             }
@@ -124,7 +124,7 @@ public class ProjectionSubscriber
     @Override
     public void onComplete() {
         try {
-            disruptor.shutdown(disruptorConfiguration.getShutdownTimeout(), TimeUnit.SECONDS);
+            disruptor.shutdown(disruptorConfiguration.getShutdownTimeout().toSeconds(), TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             LogManager.getLogger(getClass()).warn("Could not shutdown disruptor within timeout", e);
         }

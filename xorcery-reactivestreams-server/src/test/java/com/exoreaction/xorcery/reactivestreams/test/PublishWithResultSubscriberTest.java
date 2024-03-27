@@ -27,6 +27,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
+import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreams;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.core.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
@@ -206,7 +207,10 @@ public class PublishWithResultSubscriberTest {
             // Then
             try {
                 result.orTimeout(10, TimeUnit.SECONDS)
-                        .exceptionallyCompose(cancelStream(stream))
+                        .exceptionallyCompose(t ->
+                        {
+                            return ReactiveStreams.<Configuration>cancelStream(stream).apply(t);
+                        })
                         .whenComplete((cfg, throwable) ->
                         {
                             logger.info("Configuration/throwable:" + cfg, throwable);

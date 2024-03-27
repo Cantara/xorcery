@@ -16,11 +16,10 @@
 package com.exoreaction.xorcery.eventstore.resources;
 
 import com.exoreaction.xorcery.hyperschema.Link;
-import com.exoreaction.xorcery.jaxrs.server.resources.AbstractResource;
+import com.exoreaction.xorcery.jaxrs.server.resources.BaseResource;
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.Links;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
-import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonapischema.ResourceObjectSchema;
 import com.exoreaction.xorcery.jsonschema.JsonSchema;
@@ -39,7 +38,7 @@ import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
 @Path("api/eventstore")
 public class EventStoreResource
-        extends AbstractResource
+        extends BaseResource
         implements JsonSchemaResource {
 
     @Inject

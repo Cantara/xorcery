@@ -1,4 +1,6 @@
-log4j2.Configuration.thresholdFilter.level: debug
+log4j2.Configuration.thresholdFilter.level: trace
 log4j2.Configuration.Loggers.logger:
   - name: "com.exoreaction.xorcery.core"
     level: "debug"
+  - name: "com.exoreaction.xorcery.reactivestreams"
+    level: "trace"

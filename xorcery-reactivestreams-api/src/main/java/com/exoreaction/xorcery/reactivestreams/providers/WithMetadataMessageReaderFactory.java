@@ -15,11 +15,11 @@
  */
 package com.exoreaction.xorcery.reactivestreams.providers;
 
+import com.exoreaction.xorcery.lang.Classes;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Supplier;
 
 public class WithMetadataMessageReaderFactory
@@ -46,9 +48,48 @@ public class WithMetadataMessageReaderFactory
     }
 
     @Override
+    public String getContentType(Class<?> type) {
+        if (WithMetadata.class.isAssignableFrom(type)) {
+            Type parameterType = Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>)type, WithMetadata.class)[0];
+            if (parameterType instanceof Class<?> eventType)
+            {
+                return messageWorkers.get().getAvailableReadContentTypes(eventType, Collections.emptyList())
+                        .stream().findFirst().map(ct -> ct+"+metadata").orElse(null);
+            } else if (parameterType instanceof ParameterizedType parameterizedEventType)
+            {
+                if (parameterizedEventType.getRawType() instanceof Class<?> eventType)
+                {
+                    return messageWorkers.get().getAvailableReadContentTypes(eventType, Collections.emptyList())
+                            .stream().findFirst().map(ct -> ct+"+metadata").orElse(null);
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean canRead(Class<?> type, String mediaType) {
+        if (WithMetadata.class.isAssignableFrom(type) && mediaType.endsWith("+metadata")) {
+            Type parameterType = Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>)type, WithMetadata.class)[0];
+            String envelopedMetadata = mediaType.substring(0, mediaType.length()-"+metadata".length());
+            if (parameterType instanceof Class<?> eventType)
+            {
+                return messageWorkers.get().canRead(eventType, envelopedMetadata);
+            } else if (parameterType instanceof ParameterizedType parameterizedEventType)
+            {
+                if (parameterizedEventType.getRawType() instanceof Class<?> eventType)
+                {
+                    return messageWorkers.get().canRead(eventType, envelopedMetadata);
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
 
-        if (type.equals(WithMetadata.class)) {
+        if (WithMetadata.class.isAssignableFrom(type)) {
             if (((ParameterizedType) genericType).getActualTypeArguments()[0] instanceof Class<?> eventType)
             {
                 MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, mediaType);

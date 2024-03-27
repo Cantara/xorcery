@@ -57,12 +57,12 @@ public record PersistentSubscriberProcess(
                 logger);
 
         CompletableFuture<Void> subscribeFuture = reactiveStreamsClient.subscribe(eventsUri,
-                        stream,
-                        this::publisherStreamConfiguration,
-                        subscriber,
-                        subscriber.getClass(),
-                        ClientConfiguration.defaults())
-                .whenComplete(this::complete);
+                stream,
+                this::publisherStreamConfiguration,
+                subscriber,
+                subscriber.getClass(),
+                ClientConfiguration.defaults());
+        subscribeFuture.whenComplete(this::complete);
 
         result.whenComplete((r, t) ->
         {

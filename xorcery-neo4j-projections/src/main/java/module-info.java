@@ -28,6 +28,7 @@ open module xorcery.neo4j.projections {
     requires xorcery.reactivestreams.api;
     requires xorcery.disruptor;
 
+    requires reactor.core;
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
     requires org.apache.logging.log4j;
