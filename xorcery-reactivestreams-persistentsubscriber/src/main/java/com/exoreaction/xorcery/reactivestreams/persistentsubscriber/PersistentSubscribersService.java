@@ -103,6 +103,7 @@ public class PersistentSubscribersService
 
     @Override
     public void preDestroy() {
+        logger.info("Stopping persistent subscribers");
         try {
             activeProcesses.close();
         } catch (Exception e) {

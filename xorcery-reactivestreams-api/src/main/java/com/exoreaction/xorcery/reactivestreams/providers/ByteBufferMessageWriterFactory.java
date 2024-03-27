@@ -26,8 +26,13 @@ public class ByteBufferMessageWriterFactory
         implements MessageWriter.Factory {
 
     @Override
+    public boolean canWrite(Class<?> type, String mediaType) {
+        return ByteBuffer.class.isAssignableFrom(type) &&  mediaType.equals("application/octet-stream");
+    }
+
+    @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (ByteBuffer.class.isAssignableFrom(type))
+        if (canWrite(type, mediaType))
             return (MessageWriter<T>) new MessageWriterImplementation();
         else
             return null;

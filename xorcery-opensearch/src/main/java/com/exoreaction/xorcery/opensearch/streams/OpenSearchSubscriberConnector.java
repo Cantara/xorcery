@@ -77,7 +77,7 @@ public class OpenSearchSubscriberConnector {
             OpenSearchSubscriber subscriber = throwable == null
                     ? new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration, updatedConfiguration)
                     : new OpenSearchSubscriber(client, openSearchCommitPublisher, subscriberConfiguration, publisherConfiguration);
-            reactiveStreams.<WithMetadata<JsonNode>>subscribe(serverUri, MediaType.APPLICATION_JSON, (Class)WithMetadata.class, WebSocketClientOptions.instance())
+            reactiveStreams.<WithMetadata<JsonNode>>subscribe(serverUri, WebSocketClientOptions.instance(), (Class)WithMetadata.class, MediaType.APPLICATION_JSON)
                     .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(5)))
                     .subscribe(subscriber);
         });

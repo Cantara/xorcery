@@ -25,8 +25,13 @@ public class ByteArrayMessageReaderFactory
         implements MessageReader.Factory {
 
     @Override
+    public boolean canRead(Class<?> type, String mediaType) {
+        return byte[].class.isAssignableFrom(type) && mediaType.equals("application/octet-stream");
+    }
+
+    @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
-        if (byte[].class.isAssignableFrom(type))
+        if (canRead(type, mediaType))
             return (MessageReader<T>) new MessageWriterImplementation();
         else
             return null;

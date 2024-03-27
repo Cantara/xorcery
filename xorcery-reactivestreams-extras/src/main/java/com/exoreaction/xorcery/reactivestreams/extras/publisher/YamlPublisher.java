@@ -19,7 +19,7 @@ public class YamlPublisher<T>
     private static final ObjectReader yamlReader = new YAMLMapper().reader();
     private final Flux<T> flux;
 
-    public YamlPublisher(Class<T> itemType, URL yamlResource) {
+    public YamlPublisher(Class<? super T> itemType, URL yamlResource) {
         flux = Flux.<T>push(sink -> {
             try {
                 InputStream resourceAsStream = new BufferedInputStream(yamlResource.openStream(), 32 * 1024);

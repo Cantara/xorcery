@@ -137,6 +137,6 @@ public interface Classes {
         }
 
         // we have a result if we reached the base class.
-        return offspring.equals(base) ? actualArgs : null;
+        return offspring.equals(base) ? actualArgs : new Type[0];
     }
 }

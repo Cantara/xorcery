@@ -148,7 +148,7 @@ public class PublishSubscriberWebSocketBenchmarks {
         counters.counter = 0;
         WebSocketStreamsServer streamsServer = this.server.getServiceLocator().getService(WebSocketStreamsServer.class);
         done = new CompletableFuture<>();
-        serverDisposable = streamsServer.subscriber("benchmark", MediaType.APPLICATION_JSON, Integer.class,
+        serverDisposable = streamsServer.subscriber("benchmark", Integer.class,
                 flux -> flux
                         .doOnNext(item -> counters.counter++)
                         .doOnComplete(() ->
@@ -160,10 +160,8 @@ public class PublishSubscriberWebSocketBenchmarks {
         WebSocketStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
         clientDisposable = reactiveStreamsClient.publish(
                         ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark"),
-                        MediaType.APPLICATION_JSON,
-                        Integer.class,
-                        WebSocketClientOptions.instance(),
-                        Flux.fromStream(IntStream.range(0, 1000000).boxed()))
+                        WebSocketClientOptions.instance(), Integer.class, Flux.fromStream(IntStream.range(0, 1000000).boxed()), MediaType.APPLICATION_JSON
+                )
                 .subscribe();
 
         done.orTimeout(100, TimeUnit.SECONDS).join();

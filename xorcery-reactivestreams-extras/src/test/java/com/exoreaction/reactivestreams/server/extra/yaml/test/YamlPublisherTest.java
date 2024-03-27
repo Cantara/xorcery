@@ -28,7 +28,7 @@ public class YamlPublisherTest {
     @Test
     public void testYamlPublisher() {
 
-        YamlPublisher<Map<String, Object>> filePublisher = new YamlPublisher(Map.class, Resources.getResource("testevents.yaml").orElseThrow());
+        YamlPublisher<Map<String, Object>> filePublisher = new YamlPublisher<>(Map.class, Resources.getResource("testevents.yaml").orElseThrow());
 
         List<Map<String, Object>> result = Flux
                 .from(filePublisher)

@@ -256,6 +256,9 @@ public class SubscribeReactiveStream
     }
 
     private Void connectException(Throwable throwable) {
+        if (result.isDone())
+            return null;
+
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "exceptionally", throwable);
         }
@@ -425,6 +428,9 @@ public class SubscribeReactiveStream
 
     @Override
     public void onWebSocketError(Throwable cause) {
+        if (result.isDone())
+            return;
+
         cause = unwrap(cause);
 
         if (!(cause instanceof ClosedChannelException)) {

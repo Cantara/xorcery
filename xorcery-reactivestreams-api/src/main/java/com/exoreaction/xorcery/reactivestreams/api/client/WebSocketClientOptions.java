@@ -29,6 +29,11 @@ public record WebSocketClientOptions(Map<String, List<String>> headers, List<Str
             return this;
         }
 
+        public Builder extensionPerMessageDeflate()
+        {
+            return extension("permessage-deflate");
+        }
+
         public Builder header(String name, String value) {
             headers.computeIfAbsent(name, n -> new ArrayList<>()).add(value);
             return this;

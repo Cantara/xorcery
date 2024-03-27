@@ -39,9 +39,18 @@ public class JsonNodeMessageWriterFactory
     }
 
     @Override
+    public String getContentType(Class<?> type) {
+        return "application/json";
+    }
+
+    @Override
+    public boolean canWrite(Class<?> type, String mediaType) {
+        return JsonNode.class.isAssignableFrom(type) && mediaType.startsWith("application/json");
+    }
+
+    @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (!mediaType.equals("application/json") && !mediaType.equals("*/*")) return null;
-        if (JsonNode.class.isAssignableFrom(type))
+        if (canWrite(type, mediaType))
             return (MessageWriter<T>) new JsonNodeMessageWriter();
         else
             return null;

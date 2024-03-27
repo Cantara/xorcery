@@ -1,10 +1,9 @@
 package com.exoreaction.xorcery.reactivestreams.server.reactor;
 
 
-import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketServerOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
-import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerService;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -16,16 +15,16 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
-import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.pathmap.PathSpec;
 import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
-import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.websocket.server.*;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -68,9 +67,8 @@ public class WebSocketStreamsServerService
     protected final ByteBufferPool byteBufferPool;
 
 
-    // Subprotocol -> Path -> Content type -> handler
-    private final Map<String, Map<String, Map<String, WebSocketHandler>>> handlers = new ConcurrentHashMap<>();
-
+    // Path -> Subprotocol -> handler
+    private final Map<String, Map<ReactiveStreamSubProtocol, WebSocketHandler>> pathHandlers = new ConcurrentHashMap<>();
     private final Set<String> mappedPaths = new CopyOnWriteArraySet<>();
 
     private final TextMapPropagator textMapPropagator;
@@ -104,57 +102,46 @@ public class WebSocketStreamsServerService
     }
 
     @Override
-    public <PUBLISH> Disposable publisher(String path, String contentType, Class<PUBLISH> publishType, Publisher<PUBLISH> publisher) throws IllegalArgumentException {
-        MessageWriter<Object> itemWriter = Optional.ofNullable(messageWorkers.newWriter(publishType, publishType, contentType))
-                .orElseThrow(() -> new IllegalStateException("Could not find MessageWriter for " + publishType.getTypeName() + "(" + contentType + ")"));
+    public <PUBLISH> Disposable publisher(String path, Class<PUBLISH> publishType, Publisher<PUBLISH> publisher) throws IllegalArgumentException {
 
-        return registerHandler("publisher", path, contentType, null, itemWriter, flux -> Flux.from(publisher));
+        return registerHandler(ReactiveStreamSubProtocol.publisher, path, null, publishType, flux -> Flux.from(publisher));
     }
 
     @Override
-    public <SUBSCRIBE> Disposable subscriber(String path, String contentType, Class<SUBSCRIBE> subscribeType, Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> appendSubscriber) throws IllegalArgumentException {
-        MessageReader<SUBSCRIBE> itemReader = Optional.ofNullable(messageWorkers.<SUBSCRIBE>newReader(subscribeType, subscribeType, contentType))
-                .orElseThrow(() -> new IllegalStateException("Could not find MessageReader for " + subscribeType.getTypeName() + "(" + contentType + ")"));
-
-        return registerHandler("subscriber", path, contentType, itemReader, null, appendSubscriber);
+    public <SUBSCRIBE> Disposable subscriber(String path, Class<SUBSCRIBE> subscribeType, Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> appendSubscriber) throws IllegalArgumentException {
+        return registerHandler(ReactiveStreamSubProtocol.subscriber, path, subscribeType, null, appendSubscriber);
     }
 
     @Override
-    public <SUBSCRIBE, RESULT> Disposable subscriberWithResult(String path, String contentType, Class<SUBSCRIBE> subscribeType, Class<RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult) throws IllegalArgumentException {
-
-        MessageReader<SUBSCRIBE> itemReader = Optional.ofNullable(messageWorkers.<SUBSCRIBE>newReader(subscribeType, subscribeType, contentType))
-                .orElseThrow(() -> new IllegalStateException("Could not find MessageReader for " + subscribeType.getTypeName() + "(" + contentType + ")"));
-        MessageWriter<RESULT> itemWriter = Optional.ofNullable(messageWorkers.<RESULT>newWriter(resultType, resultType, contentType))
-                .orElseThrow(() -> new IllegalStateException("Could not find MessageWriter for " + resultType.getTypeName() + "(" + contentType + ")"));
-
-        return registerHandler("subscriberWithResult", path, contentType, itemReader, itemWriter, subscribeAndReturnResult);
+    public <SUBSCRIBE, RESULT> Disposable subscriberWithResult(String path, Class<SUBSCRIBE> subscribeType, Class<RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult) throws IllegalArgumentException {
+        return registerHandler(ReactiveStreamSubProtocol.subscriberWithResult, path, subscribeType, resultType, subscribeAndReturnResult);
     }
 
-    private <INPUT, OUTPUT> Disposable registerHandler(String subProtocol, String path, String contentType, MessageReader<INPUT> reader, MessageWriter<OUTPUT> writer, Function<Flux<INPUT>, Publisher<OUTPUT>> handler) {
+    private <INPUT, OUTPUT> Disposable registerHandler(ReactiveStreamSubProtocol subProtocol, String path, Class<?> readerType, Class<?> writerType, Function<Flux<INPUT>, Publisher<OUTPUT>> handler) {
 
         if (!path.contains("|") && !path.startsWith("/")) {
             path = "/" + path;
         }
 
-        Map<String, WebSocketHandler> contentTypeHandlers = handlers
-                .computeIfAbsent(subProtocol, p -> new ConcurrentHashMap<>())
-                .computeIfAbsent(path, p ->
-                {
-                    if (mappedPaths.add(p)) {
-                        // Always register as URI template
-                        webSocketUpgradeHandler.getServerWebSocketContainer().addMapping("uri-template|" + p, webSocketCreator);
-                    }
-                    return new ConcurrentHashMap<>();
-                });
+        Map<ReactiveStreamSubProtocol, WebSocketHandler> subProtocolHandlers = pathHandlers.computeIfAbsent(path, p -> new ConcurrentHashMap<>());
 
-        if (contentTypeHandlers.containsKey(contentType))
-            throw new IllegalArgumentException("Subscriber for " + path + " and content type " + contentType + " already exists");
-        contentTypeHandlers.put(contentType, new WebSocketHandler(reader, writer, (Function) handler));
+        if (subProtocolHandlers.containsKey(subProtocol))
+            throw new IllegalArgumentException("Handler for " + path + " and subprotocol " + subProtocol + " already exists");
 
-        return () -> contentTypeHandlers.remove(contentType);
+        // Only register once for each path
+        if (mappedPaths.add(path)) {
+            // Always register as URI template
+            webSocketUpgradeHandler.getServerWebSocketContainer().addMapping("uri-template|" + path, webSocketCreator);
+        }
+
+        subProtocolHandlers.put(subProtocol, new WebSocketHandler(subProtocol, readerType, writerType, (Function) handler));
+
+        return () -> subProtocolHandlers.remove(subProtocol);
     }
 
-    record WebSocketHandler(MessageReader<?> reader, MessageWriter<?> writer,
+    record WebSocketHandler(ReactiveStreamSubProtocol subProtocol,
+                            Class<?> readerType,
+                            Class<?> writerType,
                             Function<Flux<Object>, Publisher<Object>> handler) {
     }
 
@@ -162,57 +149,69 @@ public class WebSocketStreamsServerService
             implements WebSocketCreator {
 
         @Override
-        public Object createWebSocket(ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse, Callback callback) throws Exception {
-            for (String requestSubProtocol : serverUpgradeRequest.getSubProtocols()) {
-                Map<String, Map<String, WebSocketHandler>> pathHandlers = handlers.get(requestSubProtocol);
-                if (pathHandlers == null)
-                    continue;
+        public Object createWebSocket(ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse, Callback callback) {
+            for (String requestSubProtocolString : serverUpgradeRequest.getSubProtocols()) {
 
-                String path = serverUpgradeRequest.getHttpURI().getPath();
-                Map<String, WebSocketHandler> contentTypeHandlers;
-                Map<String, String> pathParameters = Collections.emptyMap();
-                if (serverUpgradeRequest.getAttribute(PathSpec.class.getName()) instanceof UriTemplatePathSpec pathSpec) {
-                    pathParameters = pathSpec.getPathParams(path);
-                    String factoryPath = pathSpec.getDeclaration();
-                    contentTypeHandlers = pathHandlers.get(factoryPath);
-                } else {
-                    contentTypeHandlers = pathHandlers.get(path);
-                }
-
-                if (contentTypeHandlers == null) {
-                    serverUpgradeResponse.setStatus(HttpStatus.NOT_FOUND_404);
+                ReactiveStreamSubProtocol requestSubProtocol = null;
+                try {
+                    requestSubProtocol = ReactiveStreamSubProtocol.valueOf(requestSubProtocolString);
+                } catch (IllegalArgumentException e) {
+                    serverUpgradeResponse.setStatus(HttpStatus.BAD_REQUEST_400);
                     return null;
                 }
 
-                String contentType = serverUpgradeRequest.getHeaders().get(HttpHeader.CONTENT_TYPE);
-                WebSocketHandler webSocketHandler;
-                if (contentType == null) {
-                    if (contentTypeHandlers.size() == 1) {
-                        webSocketHandler = contentTypeHandlers.values().iterator().next();
-                    } else {
-                        serverUpgradeResponse.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
-                        return null;
-                    }
+                String path = serverUpgradeRequest.getHttpURI().getPath();
+
+                Map<String, String> pathParameters = Collections.emptyMap();
+                Map<ReactiveStreamSubProtocol, WebSocketHandler> subProtocolHandlers;
+                if (serverUpgradeRequest.getAttribute(PathSpec.class.getName()) instanceof UriTemplatePathSpec pathSpec) {
+                    pathParameters = pathSpec.getPathParams(path);
+                    String factoryPath = pathSpec.getDeclaration();
+                    subProtocolHandlers = pathHandlers.get(factoryPath);
                 } else {
-                    webSocketHandler = contentTypeHandlers.get(contentType);
-                    if (webSocketHandler == null) {
-                        serverUpgradeResponse.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
-                        return null;
+                    subProtocolHandlers = pathHandlers.get(path);
+                }
+                if (subProtocolHandlers == null)
+                    continue;
+                WebSocketHandler subProtocolHandler = subProtocolHandlers.get(requestSubProtocol);
+                if (subProtocolHandler == null)
+                    continue;
+
+                // Content type negotiation for both read (Content-Type header) and write (Accept header)
+                MessageReader<Object> reader = null;
+                MessageWriter<Object> writer = null;
+                switch (requestSubProtocol) {
+                    case publisher -> {
+                        writer = getWriter(subProtocolHandler.writerType(), serverUpgradeRequest, serverUpgradeResponse);
+                        if (writer == null)
+                            return null;
+                    }
+                    case subscriber -> {
+                        reader = getReader(subProtocolHandler.readerType(), serverUpgradeRequest, serverUpgradeResponse);
+                        if (reader == null)
+                            return null;
+                    }
+                    case subscriberWithResult -> {
+                        reader = getReader(subProtocolHandler.readerType(), serverUpgradeRequest, serverUpgradeResponse);
+                        if (reader == null)
+                            return null;
+                        writer = getWriter(subProtocolHandler.writerType(), serverUpgradeRequest, serverUpgradeResponse);
+                        if (writer == null)
+                            return null;
+
                     }
                 }
 
                 Context context = textMapPropagator.extract(Context.current(), serverUpgradeRequest, jettyGetter);
-
-                Function<Flux<Object>, Publisher<Object>> handler = webSocketHandler.handler();
-
-                serverUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol);
+                Function<Flux<Object>, Publisher<Object>> handler = subProtocolHandler.handler();
+                serverUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol.name());
 
                 return new ServerWebSocketStream<>(
                         path,
                         pathParameters,
                         WebSocketServerOptions.instance(),
-                        (MessageWriter<Object>) webSocketHandler.writer(),
-                        (MessageReader<Object>) webSocketHandler.reader(),
+                        writer,
+                        reader,
                         handler,
                         byteBufferPool,
                         loggerContext.getLogger(ServerWebSocketStream.class),
@@ -224,6 +223,48 @@ public class WebSocketStreamsServerService
 
             // No protocols or handlers found matching this request
             serverUpgradeResponse.setStatus(HttpStatus.NOT_FOUND_404);
+            return null;
+        }
+
+        private MessageWriter<Object> getWriter(Class<?> type, ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse) {
+            List<String> availableWriteContentTypes = Collections.emptyList();
+            HttpField acceptField = serverUpgradeRequest.getHeaders().getField(HttpHeader.ACCEPT);
+            if (acceptField != null) {
+                availableWriteContentTypes = acceptField.getValueList();
+            }
+
+            for (String contentType : availableWriteContentTypes) {
+
+                MessageWriter<Object> writer = messageWorkers.newWriter(type, type, contentType);
+                if (writer != null) {
+                    serverUpgradeResponse.getHeaders().add(HttpHeader.CONTENT_TYPE, contentType);
+                    return writer;
+                }
+            }
+
+            // No content type handlers found
+            serverUpgradeResponse.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+            return null;
+        }
+
+        private MessageReader<Object> getReader(Class<?> type, ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse) {
+            List<String> availableReadContentTypes = Collections.emptyList();
+            HttpField contentTypeField = serverUpgradeRequest.getHeaders().getField(HttpHeader.CONTENT_TYPE);
+            if (contentTypeField != null) {
+                availableReadContentTypes = contentTypeField.getValueList();
+            }
+
+            for (String contentType : availableReadContentTypes) {
+
+                MessageReader<Object> reader = messageWorkers.newReader(type, type, contentType);
+                if (reader != null) {
+                    serverUpgradeResponse.getHeaders().add(HttpHeader.ACCEPT, contentType);
+                    return reader;
+                }
+            }
+
+            // No content type handlers found
+            serverUpgradeResponse.setStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE_415);
             return null;
         }
     }

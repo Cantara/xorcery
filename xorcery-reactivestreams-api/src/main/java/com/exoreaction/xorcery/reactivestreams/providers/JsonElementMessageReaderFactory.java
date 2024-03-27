@@ -17,14 +17,11 @@ package com.exoreaction.xorcery.reactivestreams.providers;
 
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,9 +38,18 @@ public class JsonElementMessageReaderFactory
     }
 
     @Override
+    public String getContentType(Class<?> type) {
+        return "application/json";
+    }
+
+    @Override
+    public boolean canRead(Class<?> type, String mediaType) {
+        return JsonElement.class.isAssignableFrom(type) && mediaType.startsWith("application/json");
+    }
+
+    @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
-        if (!mediaType.equals("application/json") && !mediaType.equals("*/*")) return null;
-        if (JsonElement.class.isAssignableFrom(type))
+        if (canRead(type, mediaType))
             return (MessageReader<T>) new JsonElementMessageReader((Class<JsonElement>) type);
         else
             return null;

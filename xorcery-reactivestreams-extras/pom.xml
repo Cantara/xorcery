@@ -29,7 +29,7 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-util</artifactId>
+            <artifactId>xorcery-reactivestreams-api</artifactId>
         </dependency>
 
         <dependency>
@@ -39,6 +39,10 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-smile</artifactId>
         </dependency>
 
         <dependency>
@@ -50,6 +54,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-junit</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-server</artifactId>
         </dependency>
 
     </dependencies>

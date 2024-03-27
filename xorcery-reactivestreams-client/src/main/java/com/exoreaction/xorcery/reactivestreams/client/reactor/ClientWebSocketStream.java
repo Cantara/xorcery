@@ -4,11 +4,13 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
+import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.client.ReleaseCallback;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
+import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -78,10 +80,14 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private final static long SEND_BUFFERED_REQUESTS = 0;
 
     private final URI serverUri;
-    private final String contentType;
+    private final ReactiveStreamSubProtocol subProtocol;
+    private final Collection<String> outputContentTypes;
+    private final Collection<String> inputContentTypes;
+    private final Class<?> outputType;
+    private final Class<?> inputType;
+    private final MessageWorkers messageWorkers;
+//    private final String contentType;
 
-    private final MessageWriter<OUTPUT> writer; // if null -> subscribe
-    private final MessageReader<INPUT> reader; // if null -> publish
     private final Publisher<OUTPUT> publisher; // if null -> subscribe
     private final FluxSink<INPUT> sink;
 
@@ -100,6 +106,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private volatile boolean redundancyNotificationIssued = false;
 
     // All the state which requires synchronized access to session
+    private MessageWriter<OUTPUT> writer; // if null -> subscribe
+    private MessageReader<INPUT> reader; // if null -> publish
     private Iterator<URI> uriIterator;
     private volatile Session session;
     private volatile reactor.util.context.Context context = reactor.util.context.Context.empty();
@@ -120,10 +128,12 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
     public ClientWebSocketStream(
             URI serverUri,
-            String contentType,
-
-            MessageWriter<OUTPUT> writer,
-            MessageReader<INPUT> reader,
+            ReactiveStreamSubProtocol subProtocol,
+            Collection<String> outputContentTypes,
+            Collection<String> inputContentTypes,
+            Class<?> outputType,
+            Class<?> inputType,
+            MessageWorkers messageWorkers,
             Publisher<OUTPUT> publisher,
             FluxSink<INPUT> downstreamSink,
 
@@ -137,14 +147,17 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             TextMapPropagator textMapPropagator,
             Logger logger) {
         this.serverUri = serverUri;
-        this.contentType = contentType;
-        this.reader = reader;
+        this.subProtocol = subProtocol;
+        this.outputContentTypes = outputContentTypes;
+        this.inputContentTypes = inputContentTypes;
+        this.outputType = outputType;
+        this.inputType = inputType;
+        this.messageWorkers = messageWorkers;
         this.publisher = publisher;
         this.sink = downstreamSink;
         this.options = options;
         this.dnsLookup = dnsLookup;
         this.webSocketClient = webSocketClient;
-        this.writer = writer;
         this.byteBufferPool = byteBufferPool;
         this.tracer = tracer;
         this.textMapPropagator = textMapPropagator;
@@ -221,15 +234,20 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
                 clientUpgradeRequest.setHeaders(options.headers());
                 clientUpgradeRequest.setCookies(options.cookies());
-                if (writer == null) {
-                    clientUpgradeRequest.setSubProtocols("publisher");
-                } else if (reader == null) {
-                    clientUpgradeRequest.setSubProtocols("subscriber");
-                } else {
-                    clientUpgradeRequest.setSubProtocols("subscriberWithResult");
-                }
+                clientUpgradeRequest.setSubProtocols(subProtocol.name());
                 clientUpgradeRequest.setExtensions(options.extensions().stream().map(ExtensionConfig::parse).toList());
-                clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), contentType);
+                switch (subProtocol) {
+                    case publisher -> {
+                        clientUpgradeRequest.setHeader(HttpHeader.ACCEPT.asString(), List.copyOf(inputContentTypes));
+                    }
+                    case subscriber -> {
+                        clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), List.copyOf(outputContentTypes));
+                    }
+                    case subscriberWithResult -> {
+                        clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), List.copyOf(outputContentTypes));
+                        clientUpgradeRequest.setHeader(HttpHeader.ACCEPT.asString(), List.copyOf(inputContentTypes));
+                    }
+                }
                 textMapPropagator.inject(Context.current(), clientUpgradeRequest, jettySetter);
                 return webSocketClient.connect(this, subscriberWebsocketUri, clientUpgradeRequest)
                         .thenRun(connectSpan::end).toCompletableFuture();
@@ -316,6 +334,25 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
         this.session = session;
 
+        String serverContentType = session.getUpgradeResponse().getHeader(HttpHeader.CONTENT_TYPE.asString());
+        String serverAcceptType = session.getUpgradeResponse().getHeader(HttpHeader.ACCEPT.asString());
+        switch (subProtocol) {
+            case publisher -> {
+                if (!initReader(serverContentType))
+                    return;
+            }
+            case subscriber -> {
+                if (!initWriter(serverAcceptType))
+                    return;
+            }
+            case subscriberWithResult -> {
+                if (!initWriter(serverAcceptType))
+                    return;
+                if (!initReader(serverContentType))
+                    return;
+            }
+        }
+
         ObjectNode contextJson = JsonNodeFactory.instance.objectNode();
         sink.contextView().forEach((k, v) ->
         {
@@ -340,6 +377,32 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             error = e;
             session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
         }
+    }
+
+    private boolean initReader(String serverContentType) {
+        if (serverContentType == null) {
+            session.close(StatusCode.SERVER_ERROR, "publisher subprotocol requires Content-Type header", Callback.NOOP);
+            return false;
+        }
+        reader = messageWorkers.newReader(inputType, inputType, serverContentType);
+        if (reader == null) {
+            session.close(StatusCode.SERVER_ERROR, "cannot handle Content-Type:" + serverContentType, Callback.NOOP);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean initWriter(String serverAcceptType) {
+        if (serverAcceptType == null) {
+            session.close(StatusCode.SERVER_ERROR, "publisher subprotocol requires Accept header", Callback.NOOP);
+            return false;
+        }
+        writer = messageWorkers.newWriter(outputType, outputType, serverAcceptType);
+        if (writer == null) {
+            session.close(StatusCode.SERVER_ERROR, "cannot handle Accept type:" + serverAcceptType, Callback.NOOP);
+            return false;
+        }
+        return true;
     }
 
     @Override

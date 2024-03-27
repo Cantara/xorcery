@@ -15,31 +15,29 @@
  */
 package com.exoreaction.xorcery.opensearch.streams;
 
-import com.exoreaction.xorcery.disruptor.handlers.BroadcastEventHandler;
 import com.exoreaction.xorcery.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 import java.util.function.Consumer;
 
 public class OpenSearchCommitPublisher
         implements Publisher<WithMetadata<IndexCommit>>, Consumer<WithMetadata<IndexCommit>> {
-    BroadcastEventHandler<WithMetadata<IndexCommit>> broadcastEventHandler = new BroadcastEventHandler<>(true);
+
+    private static final Sinks.Many<WithMetadata<IndexCommit>> sink = Sinks.many().multicast().onBackpressureBuffer(4096);
+    private static final Flux<WithMetadata<IndexCommit>> sinkPublisher = sink.asFlux();
 
     @Override
     public void subscribe(Subscriber<? super WithMetadata<IndexCommit>> subscriber) {
-        subscriber.onSubscribe(broadcastEventHandler.add(subscriber));
+        sinkPublisher.subscribe(subscriber);
     }
 
     @Override
     public void accept(WithMetadata<IndexCommit> indexCommitWithMetadata) {
-        // TODO Replace with disruptor
-        try {
-            broadcastEventHandler.onEvent(indexCommitWithMetadata, 0, true);
-        } catch (Exception e) {
-            LogManager.getLogger(getClass()).error("Error publishing index commit", e);
-        }
+        sink.tryEmitNext(indexCommitWithMetadata);
     }
 }
