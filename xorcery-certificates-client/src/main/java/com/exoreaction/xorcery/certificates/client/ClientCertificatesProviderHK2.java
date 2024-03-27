@@ -19,16 +19,23 @@ import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
 import com.exoreaction.xorcery.configuration.Configuration;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.ClientBuilder;
+import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "certificates.client")
 @ContractsProvided(CertificatesProvider.class)
 public class ClientCertificatesProviderHK2
-        extends ClientCertificatesProvider {
+        extends ClientCertificatesProvider
+        implements PreDestroy {
     @Inject
     public ClientCertificatesProviderHK2(ClientBuilder clientBuilder,
                                          Configuration configuration) {
         super(clientBuilder, configuration);
+    }
+
+    @Override
+    public void preDestroy() {
+        close();
     }
 }

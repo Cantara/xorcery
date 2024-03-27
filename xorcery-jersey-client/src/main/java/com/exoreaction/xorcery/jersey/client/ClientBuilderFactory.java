@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 public class ClientBuilderFactory
         implements Factory<ClientBuilder> {
 
-    private HttpClient client;
+    private Provider<HttpClient> client;
     private Configuration configuration;
     private InstantiationService instantiationService;
     private Provider<DnsLookupService> dnsLookups;
@@ -55,7 +55,7 @@ public class ClientBuilderFactory
     private final Logger logger;
 
     @Inject
-    public ClientBuilderFactory(HttpClient client,
+    public ClientBuilderFactory(Provider<HttpClient> client,
                                 Configuration configuration,
                                 InstantiationService instantiationService,
                                 Provider<DnsLookupService> dnsLookups,
@@ -103,13 +103,14 @@ public class ClientBuilderFactory
 
         JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
 
+        HttpClient httpClient = client.get();
         ClientBuilder builder = ClientBuilder.newBuilder()
                 .withConfig(clientConfig
                         .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, jettyConnectorProvider) : jettyConnectorProvider))
                 .connectTimeout(jerseyClientConfiguration.getConnectTimeout().toSeconds(), TimeUnit.SECONDS)
                 .readTimeout(jerseyClientConfiguration.getReadTimeout().toSeconds(), TimeUnit.SECONDS)
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
-                .register(new JettyHttpClientSupplier(client));
+                .register(new JettyHttpClientSupplier(httpClient));
 
         jerseyClientConfiguration.getKeyStoreName().ifPresentOrElse(name ->
         {

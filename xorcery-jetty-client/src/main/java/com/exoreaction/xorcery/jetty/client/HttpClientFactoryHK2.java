@@ -25,12 +25,13 @@ import jakarta.inject.Singleton;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "jetty.client")
 public class HttpClientFactoryHK2 extends HttpClientFactory
-        implements Factory<HttpClient>, PreDestroy {
+        implements Factory<HttpClient> {
 
     @Inject
     public HttpClientFactoryHK2(
@@ -48,17 +49,18 @@ public class HttpClientFactoryHK2 extends HttpClientFactory
     }
 
     @Override
-    public void preDestroy() {
-        super.preDestroy();
-    }
-
-    @Override
-    @Singleton
+    @PerLookup
     public HttpClient provide() {
         return super.provide();
     }
 
     @Override
     public void dispose(HttpClient instance) {
+        logger.info("Stopping Jetty client");
+        try {
+            instance.stop();
+        } catch (Exception e) {
+            logger.warn("Could not stop Jetty client", e);
+        }
     }
 }

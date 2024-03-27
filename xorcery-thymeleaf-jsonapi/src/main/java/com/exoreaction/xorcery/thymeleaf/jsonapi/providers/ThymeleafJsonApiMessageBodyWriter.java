@@ -39,6 +39,7 @@ import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.ext.MessageBodyWriter;
 import jakarta.ws.rs.ext.Provider;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.UriTemplate;
 import org.thymeleaf.ITemplateEngine;
@@ -60,7 +61,7 @@ import java.util.Optional;
 @Provider
 @Produces(MediaType.TEXT_HTML)
 public class ThymeleafJsonApiMessageBodyWriter
-        implements MessageBodyWriter<JsonElement> {
+        implements MessageBodyWriter<JsonElement>, PreDestroy {
 
     private final jakarta.inject.Provider<HttpServletRequest> servletRequestProvider;
 /*
@@ -146,6 +147,11 @@ public class ThymeleafJsonApiMessageBodyWriter
         String templateName = jsonElement.getClass().getSimpleName().toLowerCase();
         templateEngine.process("jsonapi/" + templateName, context, writer);
         writer.flush();
+    }
+
+    @Override
+    public void preDestroy() {
+        client.close();
     }
 
     private Optional<Link> getSchema(JsonElement jsonElement, MultivaluedMap<String, Object> httpHeaders) {

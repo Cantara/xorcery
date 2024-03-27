@@ -30,6 +30,7 @@ import org.eclipse.jetty.http2.client.transport.ClientConnectionFactoryOverHTTP2
 import org.eclipse.jetty.io.ClientConnectionFactory;
 import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.util.SocketAddressResolver;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
@@ -38,8 +39,12 @@ import java.util.function.Supplier;
 
 public class HttpClientFactory {
 
-    private final Logger logger = LogManager.getLogger(getClass());
-    private HttpClient client;
+    protected final Logger logger = LogManager.getLogger(getClass());
+    private final JettyClientConfiguration jettyClientConfiguration;
+    private final ApplicationConfiguration applicationConfiguration;
+    private final Supplier<DnsLookupService> dnsLookup;
+    private final Supplier<SslContextFactory.Client> clientSslContextFactoryProvider;
+    private final OpenTelemetry openTelemetry;
 
     public HttpClientFactory(
             JettyClientConfiguration jettyClientConfiguration,
@@ -47,8 +52,15 @@ public class HttpClientFactory {
             Supplier<DnsLookupService> dnsLookup,
             Supplier<SslContextFactory.Client> clientSslContextFactoryProvider,
             OpenTelemetry openTelemetry
-    ) throws Exception {
+    ) {
+        this.jettyClientConfiguration = jettyClientConfiguration;
+        this.applicationConfiguration = applicationConfiguration;
+        this.dnsLookup = dnsLookup;
+        this.clientSslContextFactoryProvider = clientSslContextFactoryProvider;
+        this.openTelemetry = openTelemetry;
+    }
 
+    public HttpClient provide() {
         // Client setup
         ClientConnector connector = new ClientConnector();
         connector.setIdleTimeout(jettyClientConfiguration.getIdleTimeout());
@@ -82,7 +94,13 @@ public class HttpClientFactory {
             transport = new HttpClientTransportDynamic(connector, http1);
         }
 
-        client = new HttpClient(transport);
+        HttpClient client = new HttpClient(transport);
+        client.addEventListener(new LifeCycle.Listener() {
+            @Override
+            public void lifeCycleStopping(LifeCycle event) {
+                new Throwable().printStackTrace();
+            }
+        });
         client.getRequestListeners().addListener(new OpenTelemetryRequestListener(openTelemetry));
         client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
         QueuedThreadPool executor = new JettyClientConnectorThreadPool();
@@ -103,21 +121,14 @@ public class HttpClientFactory {
             return pool;
         });
 
-        client.start();
-
-        logger.info("Started Jetty client");
-    }
-
-    public void preDestroy() {
-        logger.info("Stopping Jetty client");
         try {
-            client.stop();
+            client.start();
+            logger.info("Started Jetty client");
         } catch (Exception e) {
+            logger.warn("Could not start Jetty client", e);
             throw new RuntimeException(e);
         }
-    }
 
-    public HttpClient provide() {
         return client;
     }
 }

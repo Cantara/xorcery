@@ -26,15 +26,19 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriBuilderException;
 import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
+import org.glassfish.hk2.api.MultiException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.net.URI;
+import java.util.concurrent.ExecutionException;
 
 public class CertificateRequestAndRenewalTest {
 
@@ -116,11 +120,17 @@ public class CertificateRequestAndRenewalTest {
     }
 
     @Test
+//    @RepeatedTest(1000)
     public void testCRL() throws Exception {
 
-        URI crlUri = InstanceConfiguration.get(caServer.getConfiguration()).getAPI().resolve("ca/intermediateca.crl");
-        Response response = server.getServiceLocator().getService(ClientTester.class).get(UriBuilder.fromUri(crlUri).build()).get();
-        Assertions.assertEquals(200, response.getStatus());
-        System.out.println(response.readEntity(String.class));
+        try {
+            URI crlUri = InstanceConfiguration.get(caServer.getConfiguration()).getAPI().resolve("ca/intermediateca.crl");
+            Response response = server.getServiceLocator().getService(ClientTester.class).get(UriBuilder.fromUri(crlUri).build()).get();
+            Assertions.assertEquals(200, response.getStatus());
+            System.out.println(response.readEntity(String.class));
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 }

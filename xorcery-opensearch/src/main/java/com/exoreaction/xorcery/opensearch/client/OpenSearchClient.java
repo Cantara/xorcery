@@ -29,12 +29,16 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.InvocationCallback;
 import jakarta.ws.rs.client.WebTarget;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 
-public record OpenSearchClient(Client client, URI host) {
+public record OpenSearchClient(Client client, URI host)
+    implements Closeable
+{
 
     public OpenSearchClient(ClientBuilder clientBuilder, URI host) {
         this(clientBuilder
@@ -65,5 +69,10 @@ public record OpenSearchClient(Client client, URI host) {
         OpenSearchRestProcess restProcess = new OpenSearchRestProcess(this::request, new CompletableFuture<>(), invocation);
         restProcess.start();
         return restProcess.result();
+    }
+
+    @Override
+    public void close() {
+        client.close();
     }
 }

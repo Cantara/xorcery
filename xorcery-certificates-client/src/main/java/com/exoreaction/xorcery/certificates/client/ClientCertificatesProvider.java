@@ -34,6 +34,8 @@ import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
 
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateFactory;
@@ -48,28 +50,29 @@ import java.util.function.Function;
 import static java.util.stream.Collectors.toList;
 
 public class ClientCertificatesProvider
-        implements CertificatesProvider {
+        implements CertificatesProvider, Closeable {
 
-    private final JsonApiClient client;
+    private final JsonApiClient jsonApiClient;
     private final CertificatesClientConfiguration certificatesClientConfiguration;
+    private final Client client;
 
     public ClientCertificatesProvider(ClientBuilder clientBuilder,
                                       Configuration configuration) {
         this.certificatesClientConfiguration = () -> configuration.getConfiguration("certificates.client");
 
-        Client client = clientBuilder
+        client = clientBuilder
                 .register(JsonElementMessageBodyReader.class)
                 .register(JsonElementMessageBodyWriter.class)
                 .build();
 
-        this.client = new JsonApiClient(client);
+        this.jsonApiClient = new JsonApiClient(client);
     }
 
     @Override
     public CompletionStage<List<X509Certificate>> requestCertificates(PKCS10CertificationRequest csr) {
 
         return certificatesClientConfiguration.getURI()
-                .map(uri -> client.get(new Link("self", uri))
+                .map(uri -> jsonApiClient.get(new Link("self", uri))
                         .thenApply(ServerResourceDocument::new)
                         .thenApply(this::getCertificatesRequest)
                         .thenCompose(sendCertificateRequest(csr))
@@ -94,7 +97,7 @@ public class ClientCertificatesProvider
                 pWrt.close();
                 String csrPem = stringWriter.toString();
 
-                return client.submit(link, new ResourceObject.Builder("certificaterequest")
+                return jsonApiClient.submit(link, new ResourceObject.Builder("certificaterequest")
                                 .attributes(new Attributes.Builder().attribute("csr", csrPem).build())
                                 .build())
                         .thenApply(ServiceResourceObject::new);
@@ -119,5 +122,10 @@ public class ClientCertificatesProvider
                         return CompletableFuture.<List<X509Certificate>>failedStage(new CompletionException("Could not parse certificate PEM", e));
                     }
                 }).orElseGet(() -> CompletableFuture.failedStage(new IllegalArgumentException("Missing PEM in response")));
+    }
+
+    @Override
+    public void close() {
+        client.close();
     }
 }
