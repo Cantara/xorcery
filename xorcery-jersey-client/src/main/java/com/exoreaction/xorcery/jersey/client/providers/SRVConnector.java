@@ -117,6 +117,7 @@ public class SRVConnector
 
     @Override
     public void close() {
+        delegate.close();
         // We actually never want to shut down the delegated Jetty connector, because it doesn't really own the HttpClient instance
     }
 }

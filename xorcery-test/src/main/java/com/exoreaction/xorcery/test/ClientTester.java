@@ -26,6 +26,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Response;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
@@ -33,9 +34,10 @@ import java.net.URI;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 
-@Service(name="clienttester")
+@Service(name = "clienttester")
 @RunLevel(6)
-public class ClientTester {
+public class ClientTester
+        implements PreDestroy {
 
     private final JsonApiClient jsonApiClient;
     private final Client client;
@@ -49,13 +51,16 @@ public class ClientTester {
         this.jsonApiClient = new JsonApiClient(client);
     }
 
-    public CompletionStage<ResourceDocument> getResourceDocument(URI resource)
-    {
+    public CompletionStage<ResourceDocument> getResourceDocument(URI resource) {
         return jsonApiClient.get(new Link("self", resource.toASCIIString()));
     }
 
-    public Future<Response> get(URI resource)
-    {
+    public Future<Response> get(URI resource) {
         return client.target(resource).request().async().get();
+    }
+
+    @Override
+    public void preDestroy() {
+        client.close();
     }
 }

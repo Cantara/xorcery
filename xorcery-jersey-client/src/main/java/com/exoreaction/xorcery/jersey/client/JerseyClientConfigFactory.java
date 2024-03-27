@@ -39,13 +39,13 @@ import java.util.Iterator;
 public class JerseyClientConfigFactory
         implements Factory<ClientConfig> {
 
-    private HttpClient client;
+    private Provider<HttpClient> client;
     private Configuration configuration;
     private InstantiationService instantiationService;
     private Provider<DnsLookupService> dnsLookups;
 
     @Inject
-    public JerseyClientConfigFactory(HttpClient client, Configuration configuration, InstantiationService instantiationService,
+    public JerseyClientConfigFactory(Provider<HttpClient> client, Configuration configuration, InstantiationService instantiationService,
                                      Provider<DnsLookupService> dnsLookups) {
         this.client = client;
         this.configuration = configuration;
@@ -84,7 +84,7 @@ public class JerseyClientConfigFactory
         JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
         return clientConfig
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
-                .register(new JettyHttpClientSupplier(client))
+                .register(new JettyHttpClientSupplier(client.get()))
                 .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, jettyConnectorProvider) : jettyConnectorProvider);
     }
 

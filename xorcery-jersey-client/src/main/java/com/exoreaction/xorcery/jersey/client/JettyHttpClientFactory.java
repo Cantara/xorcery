@@ -16,9 +16,11 @@
 package com.exoreaction.xorcery.jersey.client;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientContract;
 import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 
@@ -26,17 +28,17 @@ import org.glassfish.jersey.jetty.connector.JettyHttpClientSupplier;
 public class JettyHttpClientFactory
         implements Factory<JettyHttpClientContract> {
 
-    private HttpClient client;
+    private Provider<HttpClient> client;
 
     @Inject
-    public JettyHttpClientFactory(HttpClient client) {
+    public JettyHttpClientFactory(Provider<HttpClient> client) {
         this.client = client;
     }
 
     @Override
-    @Singleton
+    @PerLookup
     public JettyHttpClientContract provide() {
-        return new JettyHttpClientSupplier(client);
+        return new JettyHttpClientSupplier(client.get());
     }
 
     @Override
