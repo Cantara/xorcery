@@ -33,21 +33,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.StreamSupport;
 
 public record RequestCertificateProcess(PKCS10CertificationRequest csr,
                                         CompletableFuture<List<X509Certificate>> result,
                                         KeyStore keyStore,
                                         KeyStores keyStores,
                                         CertificatesConfiguration certificatesConfiguration,
-                                        IterableProvider<CertificatesProvider> providers,
+                                        List<CertificatesProvider> providers,
                                         Logger logger)
         implements Process<List<X509Certificate>> {
 
     public record Factory(KeyStores keyStores,
-                          IterableProvider<CertificatesProvider> providers,
+                          List<CertificatesProvider> providers,
                           Configuration configuration) {
         @Inject
-        public Factory {
+        public Factory(KeyStores keyStores, IterableProvider<CertificatesProvider> providers, Configuration configuration) {
+            this(keyStores, StreamSupport.stream(providers.spliterator(), false).toList(), configuration);
         }
 
         public RequestCertificateProcess create(PKCS10CertificationRequest csr) {
