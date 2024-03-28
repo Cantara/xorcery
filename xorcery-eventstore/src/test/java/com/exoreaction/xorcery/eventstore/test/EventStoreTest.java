@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -62,8 +63,8 @@ public class EventStoreTest {
     public static DockerComposeContainer environment =
             new DockerComposeContainer(new File("src/test/resources/compose-test.yaml"))
                     .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreTest.class)))
-                    .withExposedService("eventstore", 2115)
-                    .withStartupTimeout(Duration.ofSeconds(30));
+                    .withExposedService("eventstore", 2115, Wait.forListeningPorts(2115))
+                    .withStartupTimeout(Duration.ofMinutes(10));
 
     @BeforeAll
     public static void setup() throws Exception {
