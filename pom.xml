@@ -21,7 +21,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.100.3-SNAPSHOT</version>
+    <version>0.110.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -44,7 +44,7 @@
         <jackson.version>2.17.0</jackson.version>
         <asm.version>9.7</asm.version>
         <projectreactor.version>2023.0.4</projectreactor.version>
-        <aws.java.sdk.version>2.25.18</aws.java.sdk.version>
+        <aws.java.sdk.version>2.25.19</aws.java.sdk.version>
 
         <junit.version>5.10.2</junit.version>
         <junit.platform.version>1.10.0</junit.platform.version>
@@ -750,7 +750,7 @@
             <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java-util</artifactId>
-                <version>4.26.0</version>
+                <version>4.26.1</version>
             </dependency>
 
             <!-- OpenTelemetry -->
@@ -983,7 +983,7 @@
                 <plugin>
                     <groupId>com.exoreaction.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.100.2</version>
+                    <version>0.110.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>

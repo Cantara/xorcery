@@ -64,7 +64,7 @@ public class EventStoreTest {
             new DockerComposeContainer(new File("src/test/resources/compose-test.yaml"))
                     .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreTest.class)))
                     .withExposedService("eventstore", 2115, Wait.forListeningPorts(2115))
-                    .withStartupTimeout(Duration.ofSeconds(30));
+                    .withStartupTimeout(Duration.ofMinutes(10));
 
     @BeforeAll
     public static void setup() throws Exception {
