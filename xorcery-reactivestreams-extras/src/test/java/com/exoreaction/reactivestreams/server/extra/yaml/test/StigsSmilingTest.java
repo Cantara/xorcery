@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Flux;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class StigsSmilingTest {
 
     @RegisterExtension
-    static XorceryExtension consumer = createXorcery("server", "true");
+    static XorceryExtension consumer = createXorcery("consumer 1", true);
     @RegisterExtension
-    static XorceryExtension producer = createXorcery("client", "false");
+    static XorceryExtension producer = createXorcery("Producer 1", false);
     @RegisterExtension
-    static XorceryExtension consumer2 = createXorcery("server2", "true");
+    static XorceryExtension consumer2 = createXorcery("Consumer 2", true);
     @RegisterExtension
-    static XorceryExtension producer2 = createXorcery("client2", "false");
+    static XorceryExtension producer2 = createXorcery("Producer 2", false);
 
     @Test
     public void testSmileMessageReaderWriter() {
@@ -37,7 +38,10 @@ public class StigsSmilingTest {
             System.out.println("One " + stringObjectMap);
             System.out.println("Two " + stringObjectMap2);
             System.out.println("------");
-            return Map.of();
+            Map<String, Object> gots = new HashMap<>();
+            gots.putAll(stringObjectMap);
+            gots.putAll(stringObjectMap2);
+            return gots;
         });
 
         List<Map<String, Object>> listy = result.toStream().toList();
@@ -69,11 +73,11 @@ public class StigsSmilingTest {
         return fluxy;
     }
 
-    private static XorceryExtension createXorcery(String server, String isServer) {
+    private static XorceryExtension createXorcery(String id, Boolean isServer) {
         return XorceryExtension.xorcery()
-                .id(server)
+                .id(id)
                 .configuration(ConfigurationBuilder::addTestDefaults)
-                .addYaml("jetty.server.enabled: " + isServer)
+                .addYaml("jetty.server.enabled: " + (isServer?"true":"false"))
                 .build();
     }
 }
