@@ -81,6 +81,7 @@
         <module>xorcery-health-registry</module>
 
         <module>xorcery-core</module>
+        <module>xorcery-log4j</module>
         <module>xorcery-runner</module>
         <module>xorcery-junit</module>
 
@@ -312,6 +313,11 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jwt-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-log4j</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

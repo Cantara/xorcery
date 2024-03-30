@@ -19,16 +19,6 @@
               "type" : "string",
               "default" : "aws-global",
               "description" : "Default: aws-global"
-            },
-            "accessKeyId" : {
-              "type" : "string",
-              "default" : "env:ACCESSKEYID",
-              "description" : "Default: env:ACCESSKEYID"
-            },
-            "secretAccessKey" : {
-              "type" : "string",
-              "default" : "env:SECRETACCESSKEY",
-              "description" : "Default: env:SECRETACCESSKEY"
             }
           }
         }

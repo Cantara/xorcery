@@ -19,6 +19,7 @@ open module xorcery.certificates.letsencrypt {
 
     requires xorcery.certificates.spi;
     requires xorcery.keystores;
+    requires xorcery.secrets.api;
     requires xorcery.secrets.spi;
     requires xorcery.util;
     requires xorcery.configuration.api;
@@ -33,5 +34,4 @@ open module xorcery.certificates.letsencrypt {
     requires info.picocli;
     requires org.bouncycastle.pkix;
     requires java.base;
-    requires xorcery.secrets.api;
 }

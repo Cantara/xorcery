@@ -19,11 +19,12 @@ open module xorcery.dns.multicast {
 
     requires xorcery.configuration.api;
     requires xorcery.dns.update;
+    requires xorcery.dns.client;
 
     requires org.dnsjava;
     requires javax.jmdns;
+
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
     requires org.apache.logging.log4j;
-    requires xorcery.dns.client;
 }

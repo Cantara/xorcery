@@ -15,35 +15,3 @@ hk2:
 
 dns.client.hosts:
   server.xorcery.test: 127.0.0.1
-
-#system:
-#  log4j2.debug: true
-
-log4j2:
-  Configuration:
-    name: Xorcery tests
-    appenders:
-      Console:
-        name: STDOUT
-        target: SYSTEM_OUT
-        PatternLayout:
-#          Pattern: "%d [%t] %-5level %marker %c{1.}: %msg%n%throwable"
-          Pattern: "%-5level %marker %c{1.}: %msg%n%throwable"
-
-    Loggers:
-      logger:
-        - name: org.apache.logging.log4j
-          level: debug
-          additivity: false
-          AppenderRef:
-            ref: STDOUT
-
-        - name: org.apache.logging.log4j.status.StatusLogger
-          level: debug
-
-        - name: com.exoreaction.xorcery.core
-          level: debug
-
-      Root:
-        AppenderRef:
-          - ref: STDOUT

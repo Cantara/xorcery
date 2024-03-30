@@ -272,6 +272,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-log4j</artifactId>
+                <version>0.110.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-sdk</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>

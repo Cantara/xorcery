@@ -18,7 +18,7 @@ package com.exoreaction.xorcery.eventstore.client.test;
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.core.LoggerContextFactory;
+import com.exoreaction.xorcery.log4j.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.eventstore.EventStoreService;
 import com.exoreaction.xorcery.net.Sockets;

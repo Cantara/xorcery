@@ -21,9 +21,6 @@
     },
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
-    },
-    "log4j2" : {
-      "$ref" : "#/$defs/log4j2"
     }
   },
   "$defs" : {
@@ -53,8 +50,8 @@
         },
         "uri" : {
           "type" : "string",
-          "default" : "{{ jetty.server.uri | \"http://localhost/\"}}",
-          "description" : "Default: {{ jetty.server.uri | \"http://localhost/\"}}"
+          "default" : "http://{{ instance.fqdn }}/",
+          "description" : "Default: http://{{ instance.fqdn }}/"
         },
         "api" : {
           "type" : "string",
@@ -80,23 +77,7 @@
     },
     "system" : {
       "type" : "object",
-      "properties" : {
-        "java.util.logging.manager" : {
-          "type" : "string",
-          "default" : "org.apache.logging.log4j.jul.LogManager",
-          "description" : "Default: org.apache.logging.log4j.jul.LogManager"
-        },
-        "log4j2.isThreadContextMapInheritable" : {
-          "type" : [ "boolean", "string" ],
-          "default" : true,
-          "description" : "Default: true"
-        },
-        "Log4jContextSelector" : {
-          "type" : "string",
-          "default" : "org.apache.logging.log4j.core.selector.BasicContextSelector",
-          "description" : "Default: org.apache.logging.log4j.core.selector.BasicContextSelector"
-        }
-      }
+      "properties" : { }
     },
     "defaults" : {
       "type" : "object",
@@ -175,59 +156,6 @@
           "type" : [ "boolean", "string" ],
           "default" : true,
           "description" : "Default: true"
-        }
-      }
-    },
-    "log4j2" : {
-      "type" : "object",
-      "properties" : {
-        "Configuration" : {
-          "type" : "object",
-          "properties" : {
-            "name" : {
-              "type" : "string",
-              "default" : "Xorcery",
-              "description" : "Default: Xorcery"
-            },
-            "status" : {
-              "type" : "string",
-              "default" : "warn",
-              "description" : "Default: warn"
-            },
-            "properties" : {
-              "type" : "object",
-              "properties" : { }
-            },
-            "thresholdFilter" : {
-              "type" : "object",
-              "properties" : {
-                "level" : {
-                  "type" : "string",
-                  "default" : "info",
-                  "description" : "Default: info"
-                }
-              }
-            },
-            "appenders" : {
-              "type" : "object",
-              "properties" : { }
-            },
-            "Loggers" : {
-              "type" : "object",
-              "properties" : {
-                "Root" : {
-                  "type" : "object",
-                  "properties" : {
-                    "level" : {
-                      "type" : "string",
-                      "default" : "info",
-                      "description" : "Default: info"
-                    }
-                  }
-                }
-              }
-            }
-          }
         }
       }
     }

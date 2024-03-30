@@ -1,0 +1,66 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-log4j/schema",
+  "title" : "xorcery-log4j configuration JSON Schema",
+  "properties" : {
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
+    }
+  },
+  "$defs" : {
+    "log4j2" : {
+      "type" : "object",
+      "properties" : {
+        "Configuration" : {
+          "type" : "object",
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "Xorcery",
+              "description" : "Default: Xorcery"
+            },
+            "status" : {
+              "type" : "string",
+              "default" : "warn",
+              "description" : "Default: warn"
+            },
+            "properties" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "thresholdFilter" : {
+              "type" : "object",
+              "properties" : {
+                "level" : {
+                  "type" : "string",
+                  "default" : "info",
+                  "description" : "Default: info"
+                }
+              }
+            },
+            "appenders" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "Loggers" : {
+              "type" : "object",
+              "properties" : {
+                "Root" : {
+                  "type" : "object",
+                  "properties" : {
+                    "level" : {
+                      "type" : "string",
+                      "default" : "info",
+                      "description" : "Default: info"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

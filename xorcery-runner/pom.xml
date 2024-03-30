@@ -32,6 +32,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-log4j</artifactId>
+        </dependency>
 
         <!-- CLI -->
         <dependency>

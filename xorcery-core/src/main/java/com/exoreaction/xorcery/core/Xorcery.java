@@ -22,7 +22,6 @@ import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
-import org.apache.logging.log4j.spi.ExtendedLogger;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
@@ -98,7 +97,7 @@ public class Xorcery
         serviceLocator.inject(this);
         InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
         marker = MarkerManager.getMarker(instanceConfiguration.getId());
-        ExtendedLogger xorceryLogger = loggerContext.getLogger(Xorcery.class);
+        Logger xorceryLogger = loggerContext.getLogger(Xorcery.class);
         if (xorceryLogger.isDebugEnabled()) {
             for (String msg : ConfigurationLogger.getLogger().drain()) {
                 xorceryLogger.debug(msg);

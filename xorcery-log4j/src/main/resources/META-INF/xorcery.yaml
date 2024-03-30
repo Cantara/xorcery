@@ -1,0 +1,13 @@
+log4j2:
+  Configuration:
+    name: Xorcery
+    status: warn
+    properties: {}
+    thresholdFilter:
+      level: info
+    appenders: {}
+
+    Loggers:
+      Root:
+        level: info
+        AppenderRef: []

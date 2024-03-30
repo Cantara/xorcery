@@ -124,18 +124,9 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-opentelemetry-jersey-server</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j2-impl</artifactId>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-log4j</artifactId>
         </dependency>
 
         <dependency>
@@ -143,6 +134,22 @@
             <artifactId>xorcery-junit</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>module-configuration-jsonschema</goal>
+                            <goal>application-configuration-jsonschema</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

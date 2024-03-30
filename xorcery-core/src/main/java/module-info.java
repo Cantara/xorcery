@@ -20,7 +20,6 @@ open module xorcery.core {
     requires transitive jakarta.inject;
     requires transitive jakarta.annotation;
     requires transitive org.apache.logging.log4j;
-    requires static org.apache.logging.log4j.core;
 
     requires org.glassfish.hk2.api;
     requires static org.glassfish.hk2.extras;

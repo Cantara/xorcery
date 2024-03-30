@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.core;
+package com.exoreaction.xorcery.log4j;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
