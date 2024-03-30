@@ -1,0 +1,22 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-eventstore-projections/schema",
+  "title" : "xorcery-eventstore-projections configuration JSON Schema",
+  "properties" : {
+    "eventstore" : {
+      "$ref" : "#/$defs/eventstore"
+    }
+  },
+  "$defs" : {
+    "eventstore" : {
+      "type" : "object",
+      "properties" : {
+        "projections" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

@@ -17,6 +17,6 @@
 REM Copy created stores to the correct locations
 copy rootcakeystore.p12
 copy intermediatecakeystore.p12 src/main/resources/META-INF/intermediatecakeystore.p12
-copy ssl.p12 ../xorcery-certificates/src/main/resources/META-INF/ssl.p12
-copy truststore.p12 ../xorcery-certificates/src/main/resources/META-INF/truststore.p12
+copy ssl.p12 ../xorcery-certificates-provisioning/src/main/resources/META-INF/ssl.p12
+copy truststore.p12 ../xorcery-certificates-provisioning/src/main/resources/META-INF/truststore.p12
 copy test-ssl.p12 test-ssl.p12

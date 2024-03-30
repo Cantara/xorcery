@@ -1,0 +1,8 @@
+certificates:
+  enabled: "{{ defaults.enabled }}"
+  keystore: "ssl"
+  renewOnStartup: false
+  alias: "{{ server.ssl.alias | client.ssl.alias | \"self\"}}"
+  subject: "{{ instance.fqdn | \"server\"}}"
+  ipAddresses: []
+  dnsNames: []

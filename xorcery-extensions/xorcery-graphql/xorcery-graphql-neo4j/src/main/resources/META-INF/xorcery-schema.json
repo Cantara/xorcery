@@ -1,0 +1,22 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-graphql-neo4j/schema",
+  "title" : "xorcery-graphql-neo4j configuration JSON Schema",
+  "properties" : {
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    }
+  },
+  "$defs" : {
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

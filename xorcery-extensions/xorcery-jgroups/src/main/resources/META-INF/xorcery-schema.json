@@ -1,0 +1,22 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-jgroups/schema",
+  "title" : "xorcery-jgroups configuration JSON Schema",
+  "properties" : {
+    "jgroups" : {
+      "$ref" : "#/$defs/jgroups"
+    }
+  },
+  "$defs" : {
+    "jgroups" : {
+      "type" : "object",
+      "properties" : {
+        "channels" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}
