@@ -1,0 +1,3 @@
+dns:
+  route53:
+    region: "aws-global"

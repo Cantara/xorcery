@@ -1,0 +1,1525 @@
+{
+  "$id" : "http://xorcery.exoreaction.com/applications/com.exoreaction.xorcery/xorcery-coordinator/schema",
+  "title" : "xorcery-coordinator configuration JSON Schema",
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "properties" : {
+    "adminservlet" : {
+      "$ref" : "#/$defs/adminservlet"
+    },
+    "serveradmin" : {
+      "$ref" : "#/$defs/serveradmin"
+    },
+    "aws" : {
+      "$ref" : "#/$defs/aws"
+    },
+    "intermediateca" : {
+      "$ref" : "#/$defs/intermediateca"
+    },
+    "letsencrypt" : {
+      "$ref" : "#/$defs/letsencrypt"
+    },
+    "keystores" : {
+      "$ref" : "#/$defs/keystores"
+    },
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    },
+    "certificates" : {
+      "$ref" : "#/$defs/certificates"
+    },
+    "instance" : {
+      "$ref" : "#/$defs/instance"
+    },
+    "application" : {
+      "$ref" : "#/$defs/application"
+    },
+    "system" : {
+      "$ref" : "#/$defs/system"
+    },
+    "defaults" : {
+      "$ref" : "#/$defs/defaults"
+    },
+    "hk2" : {
+      "$ref" : "#/$defs/hk2"
+    },
+    "DefaultRunLevelContext" : {
+      "$ref" : "#/$defs/DefaultRunLevelContext"
+    },
+    "dns" : {
+      "$ref" : "#/$defs/dns"
+    },
+    "domainevents" : {
+      "$ref" : "#/$defs/domainevents"
+    },
+    "health" : {
+      "$ref" : "#/$defs/health"
+    },
+    "jetty" : {
+      "$ref" : "#/$defs/jetty"
+    },
+    "jwt" : {
+      "$ref" : "#/$defs/jwt"
+    },
+    "secrets" : {
+      "$ref" : "#/$defs/secrets"
+    },
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
+    },
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    },
+    "reactivestreams" : {
+      "$ref" : "#/$defs/reactivestreams"
+    },
+    "jmx" : {
+      "$ref" : "#/$defs/jmx"
+    },
+    "status" : {
+      "$ref" : "#/$defs/status"
+    },
+    "thymeleaf" : {
+      "$ref" : "#/$defs/thymeleaf"
+    }
+  },
+  "$defs" : {
+    "adminservlet" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "serveradmin" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "aws" : {
+      "type" : "object",
+      "properties" : {
+        "auth" : {
+          "type" : "object",
+          "properties" : {
+            "type" : {
+              "type" : "string",
+              "default" : "accessKey",
+              "description" : "Default: accessKey"
+            },
+            "accessKeyId" : {
+              "type" : "string",
+              "default" : "env:aws.accessKeyId",
+              "description" : "Default: env:aws.accessKeyId"
+            },
+            "secretAccessKey" : {
+              "type" : "string",
+              "default" : "env:aws.secretAccessKey",
+              "description" : "Default: env:aws.secretAccessKey"
+            },
+            "sessionToken" : {
+              "type" : "string",
+              "default" : "env:aws.sessionToken",
+              "description" : "Default: env:aws.sessionToken"
+            }
+          }
+        }
+      }
+    },
+    "intermediateca" : {
+      "type" : "object",
+      "properties" : {
+        "alias" : {
+          "type" : "string",
+          "default" : "intermediate",
+          "description" : "Default: intermediate"
+        },
+        "validity" : {
+          "type" : "string",
+          "default" : "90d",
+          "description" : "Default: 90d"
+        }
+      }
+    },
+    "letsencrypt" : {
+      "type" : "object",
+      "properties" : {
+        "url" : {
+          "type" : "string",
+          "default" : "acme://letsencrypt.org",
+          "description" : "Default: acme://letsencrypt.org"
+        },
+        "keystore" : {
+          "type" : "string",
+          "default" : "letsencrypt",
+          "description" : "Default: letsencrypt"
+        }
+      }
+    },
+    "keystores" : {
+      "type" : "object",
+      "properties" : {
+        "letsencrypt" : {
+          "type" : "object",
+          "properties" : {
+            "template" : {
+              "type" : "string",
+              "default" : "META-INF/letsencrypt.p12",
+              "description" : "Default: META-INF/letsencrypt.p12"
+            },
+            "path" : {
+              "type" : "string",
+              "default" : "{{ instance.home }}/letsencrypt.p12",
+              "description" : "Default: {{ instance.home }}/letsencrypt.p12"
+            }
+          }
+        },
+        "defaultPassword" : {
+          "type" : "string",
+          "default" : "secret:password",
+          "description" : "Default: secret:password"
+        },
+        "secrets" : {
+          "type" : "object",
+          "properties" : {
+            "template" : {
+              "type" : "string",
+              "default" : "META-INF/secrets.p12",
+              "description" : "Default: META-INF/secrets.p12"
+            },
+            "path" : {
+              "type" : "string",
+              "default" : "{{ instance.home }}/secrets.p12",
+              "description" : "Default: {{ instance.home }}/secrets.p12"
+            },
+            "password" : {
+              "type" : "string",
+              "default" : "{{ keystores.defaultPassword }}",
+              "description" : "Default: {{ keystores.defaultPassword }}"
+            }
+          }
+        }
+      }
+    },
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "mediaTypes" : {
+              "type" : "object",
+              "properties" : {
+                "html" : {
+                  "type" : "string",
+                  "default" : "text/html",
+                  "description" : "Default: text/html"
+                },
+                "txt" : {
+                  "type" : "string",
+                  "default" : "text/plain",
+                  "description" : "Default: text/plain"
+                },
+                "json" : {
+                  "type" : "string",
+                  "default" : "application/json",
+                  "description" : "Default: application/json"
+                },
+                "yaml" : {
+                  "type" : "string",
+                  "default" : "application/yaml",
+                  "description" : "Default: application/yaml"
+                },
+                "schema" : {
+                  "type" : "string",
+                  "default" : "application/schema+json",
+                  "description" : "Default: application/schema+json"
+                }
+              }
+            }
+          }
+        },
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "keystore" : {
+              "type" : "string",
+              "default" : "ssl",
+              "description" : "Default: ssl"
+            },
+            "truststore" : {
+              "type" : "string",
+              "default" : "truststore",
+              "description" : "Default: truststore"
+            },
+            "properties" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    },
+    "certificates" : {
+      "type" : "object",
+      "properties" : {
+        "keystore" : {
+          "type" : "string",
+          "default" : "ssl",
+          "description" : "Default: ssl"
+        },
+        "renewOnStartup" : {
+          "type" : [ "boolean", "string", "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        },
+        "alias" : {
+          "type" : "string",
+          "default" : "{{ server.ssl.alias | client.ssl.alias | \"self\"}}",
+          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}}"
+        },
+        "subject" : {
+          "type" : "string",
+          "default" : "{{ instance.fqdn | \"server\"}}",
+          "description" : "Default: {{ instance.fqdn | \"server\"}}"
+        },
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "authorization" : {
+              "type" : "string",
+              "default" : "none",
+              "description" : "Default: none"
+            }
+          }
+        }
+      }
+    },
+    "instance" : {
+      "type" : "object",
+      "properties" : {
+        "id" : {
+          "type" : "string",
+          "default" : "{{ instance.host}}.{{ application.name}}",
+          "description" : "Default: {{ instance.host}}.{{ application.name}}"
+        },
+        "fqdn" : {
+          "type" : "string",
+          "default" : "{{ instance.host }}.{{ instance.domain }}",
+          "description" : "Default: {{ instance.host }}.{{ instance.domain }}"
+        },
+        "domain" : {
+          "type" : "string",
+          "default" : "xorcery.test",
+          "description" : "Default: xorcery.test"
+        },
+        "environment" : {
+          "type" : "string",
+          "default" : "development",
+          "description" : "Default: development",
+          "enum" : [ "development", "qa", "production" ]
+        },
+        "uri" : {
+          "type" : "string",
+          "default" : "http://{{ instance.fqdn }}/",
+          "description" : "Default: http://{{ instance.fqdn }}/"
+        },
+        "api" : {
+          "type" : "string",
+          "default" : "{{ instance.uri }}api/",
+          "description" : "Default: {{ instance.uri }}api/"
+        }
+      }
+    },
+    "application" : {
+      "type" : "object",
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "default" : "genericserver",
+          "description" : "Default: genericserver"
+        },
+        "version" : {
+          "type" : "string",
+          "default" : "unknown",
+          "description" : "Default: unknown"
+        }
+      }
+    },
+    "system" : {
+      "type" : "object",
+      "properties" : {
+        "io.opentelemetry.exporter.internal.http.HttpSenderProvider" : {
+          "type" : "string",
+          "default" : "com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider",
+          "description" : "Default: com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider"
+        }
+      }
+    },
+    "defaults" : {
+      "type" : "object",
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        },
+        "connectTimeout" : {
+          "type" : "string",
+          "default" : "5s",
+          "description" : "Default: 5s"
+        },
+        "idleTimeout" : {
+          "type" : "string",
+          "default" : "-1s",
+          "description" : "Default: -1s"
+        },
+        "development" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        }
+      }
+    },
+    "hk2" : {
+      "type" : "object",
+      "properties" : {
+        "threadPolicy" : {
+          "type" : "string",
+          "default" : "FULLY_THREADED",
+          "description" : "Default: FULLY_THREADED"
+        },
+        "threadCount" : {
+          "type" : [ "number", "string" ],
+          "default" : 5,
+          "description" : "Default: 5"
+        },
+        "runLevel" : {
+          "type" : [ "number", "string" ],
+          "default" : 20,
+          "description" : "Default: 20"
+        },
+        "immediateScope" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "state" : {
+              "type" : "string",
+              "default" : "RUNNING",
+              "description" : "Default: RUNNING"
+            }
+          }
+        },
+        "threadScope" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        }
+      }
+    },
+    "DefaultRunLevelContext" : {
+      "type" : "object",
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        }
+      }
+    },
+    "dns" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "hosts" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "timeout" : {
+              "type" : "string",
+              "default" : "10s",
+              "description" : "Default: 10s"
+            },
+            "forceTcp" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "discovery" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        },
+        "registration" : {
+          "type" : "object",
+          "properties" : { }
+        },
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "port" : {
+              "type" : [ "number", "string" ],
+              "default" : 53,
+              "description" : "Default: 53"
+            },
+            "tcp" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "udp" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        },
+        "route53" : {
+          "type" : "object",
+          "properties" : {
+            "region" : {
+              "type" : "string",
+              "default" : "aws-global",
+              "description" : "Default: aws-global"
+            }
+          }
+        },
+        "dyndns" : {
+          "type" : "object",
+          "properties" : {
+            "timeout" : {
+              "type" : "string",
+              "default" : "30s",
+              "description" : "Default: 30s"
+            },
+            "ttl" : {
+              "type" : "string",
+              "default" : "60s",
+              "description" : "Default: 60s"
+            }
+          }
+        }
+      }
+    },
+    "domainevents" : {
+      "type" : "object",
+      "properties" : {
+        "subscriber" : {
+          "type" : "object",
+          "properties" : {
+            "stream" : {
+              "type" : "string",
+              "default" : "neo4jprojections",
+              "description" : "Default: neo4jprojections"
+            },
+            "configuration" : {
+              "type" : "object",
+              "properties" : {
+                "projection" : {
+                  "type" : "string",
+                  "default" : "domainprojection",
+                  "description" : "Default: domainprojection"
+                }
+              }
+            }
+          }
+        },
+        "eventstore" : {
+          "type" : "string",
+          "default" : "{{ instance.uri }}/eventstore",
+          "description" : "Default: {{ instance.uri }}/eventstore"
+        },
+        "projections" : {
+          "type" : "string",
+          "default" : "{{ instance.uri }}/projections",
+          "description" : "Default: {{ instance.uri }}/projections"
+        }
+      }
+    },
+    "health" : {
+      "type" : "object",
+      "properties" : {
+        "updater" : {
+          "type" : "object",
+          "properties" : {
+            "interval" : {
+              "type" : "string",
+              "default" : "1S",
+              "description" : "Default: 1S"
+            }
+          }
+        }
+      }
+    },
+    "jetty" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "connectTimeout" : {
+              "type" : "string",
+              "default" : "5s",
+              "description" : "Default: 5s"
+            },
+            "http2" : {
+              "type" : "object",
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                }
+              }
+            },
+            "ssl" : {
+              "type" : "object",
+              "properties" : {
+                "alias" : {
+                  "type" : "string",
+                  "default" : "self",
+                  "description" : "Default: self"
+                },
+                "endpointIdentificationAlgorithm" : {
+                  "type" : "string",
+                  "default" : "HTTPS",
+                  "description" : "Default: HTTPS"
+                },
+                "trustAll" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                }
+              }
+            }
+          }
+        },
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "scheme" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}"
+            },
+            "port" : {
+              "type" : [ "number", "string" ],
+              "default" : "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}"
+            },
+            "uri" : {
+              "type" : "string",
+              "default" : "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/",
+              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/"
+            },
+            "minThreads" : {
+              "type" : [ "number", "string" ],
+              "default" : 10,
+              "description" : "Default: 10"
+            },
+            "maxThreads" : {
+              "type" : [ "number", "string" ],
+              "default" : 150,
+              "description" : "Default: 150"
+            },
+            "outputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 32768,
+              "description" : "Default: 32768"
+            },
+            "requestHeaderSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 16384,
+              "description" : "Default: 16384"
+            },
+            "http" : {
+              "type" : "object",
+              "properties" : {
+                "port" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 80,
+                  "description" : "Default: 80"
+                }
+              }
+            },
+            "http2" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "ssl" : {
+              "type" : "object",
+              "properties" : {
+                "port" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 443,
+                  "description" : "Default: 443"
+                },
+                "trustAll" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "needClientAuth" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "wantClientAuth" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "sniRequired" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "sniHostCheck" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "alias" : {
+                  "type" : "string",
+                  "default" : "self",
+                  "description" : "Default: self"
+                }
+              }
+            },
+            "srv" : {
+              "type" : "object",
+              "properties" : {
+                "priority" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 2,
+                  "description" : "Default: 2"
+                },
+                "weight" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 100,
+                  "description" : "Default: 100"
+                }
+              }
+            },
+            "log4j2" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "sessions" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "security" : {
+              "type" : "object",
+              "properties" : {
+                "type" : {
+                  "type" : "string",
+                  "default" : "jwt",
+                  "description" : "Default: jwt"
+                },
+                "certificate" : {
+                  "type" : "object",
+                  "properties" : { }
+                },
+                "jwt" : {
+                  "type" : "object",
+                  "properties" : {
+                    "issuers" : {
+                      "type" : "object",
+                      "properties" : {
+                        "default" : {
+                          "type" : "object",
+                          "properties" : { }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "websockets" : {
+              "type" : "object",
+              "properties" : {
+                "autoFragment" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "inputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
+                "maxFrameSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 65536,
+                  "description" : "Default: 65536"
+                },
+                "maxTextMessageSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 65536,
+                  "description" : "Default: 65536"
+                },
+                "maxBinaryMessageSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 65536,
+                  "description" : "Default: 65536"
+                },
+                "outputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                }
+              }
+            },
+            "servlet" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "gzip" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    },
+    "jwt" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "token" : {
+              "type" : "object",
+              "properties" : {
+                "duration" : {
+                  "type" : "string",
+                  "default" : "P7D",
+                  "description" : "Default: P7D"
+                }
+              }
+            },
+            "cookie" : {
+              "type" : "object",
+              "properties" : {
+                "duration" : {
+                  "type" : "string",
+                  "default" : "P7D",
+                  "description" : "Default: P7D"
+                },
+                "name" : {
+                  "type" : "string",
+                  "default" : "token",
+                  "description" : "Default: token"
+                },
+                "path" : {
+                  "type" : "string",
+                  "default" : "/",
+                  "description" : "Default: /"
+                }
+              }
+            }
+          }
+        },
+        "configuration" : {
+          "type" : "object",
+          "properties" : { }
+        },
+        "users" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    },
+    "secrets" : {
+      "type" : "object",
+      "properties" : {
+        "keystore" : {
+          "type" : "object",
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "secrets",
+              "description" : "Default: secrets"
+            }
+          }
+        },
+        "default" : {
+          "type" : "string",
+          "default" : "secret",
+          "description" : "Default: secret"
+        },
+        "env" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    },
+    "log4j2" : {
+      "type" : "object",
+      "properties" : {
+        "Configuration" : {
+          "type" : "object",
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "Xorcery",
+              "description" : "Default: Xorcery"
+            },
+            "status" : {
+              "type" : "string",
+              "default" : "warn",
+              "description" : "Default: warn"
+            },
+            "properties" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "thresholdFilter" : {
+              "type" : "object",
+              "properties" : {
+                "level" : {
+                  "type" : "string",
+                  "default" : "info",
+                  "description" : "Default: info"
+                }
+              }
+            },
+            "appenders" : {
+              "type" : "object",
+              "properties" : {
+                "OpenTelemetry" : {
+                  "type" : "object",
+                  "properties" : {
+                    "name" : {
+                      "type" : "string",
+                      "default" : "OpenTelemetryAppender",
+                      "description" : "Default: OpenTelemetryAppender"
+                    },
+                    "captureMapMessageAttributes" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : true,
+                      "description" : "Default: true"
+                    },
+                    "captureMarkerAttribute" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : true,
+                      "description" : "Default: true"
+                    },
+                    "captureContextDataAttributes" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : true,
+                      "description" : "Default: true"
+                    }
+                  }
+                }
+              }
+            },
+            "Loggers" : {
+              "type" : "object",
+              "properties" : {
+                "Root" : {
+                  "type" : "object",
+                  "properties" : {
+                    "level" : {
+                      "type" : "string",
+                      "default" : "info",
+                      "description" : "Default: info"
+                    }
+                  }
+                }
+              }
+            },
+            "packages" : {
+              "type" : "string",
+              "default" : "io.opentelemetry.instrumentation.log4j.appender.v2_17",
+              "description" : "Default: io.opentelemetry.instrumentation.log4j.appender.v2_17"
+            }
+          }
+        }
+      }
+    },
+    "opentelemetry" : {
+      "type" : "object",
+      "properties" : {
+        "global" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ opentelemetry.enabled ? false | true }}",
+              "description" : "Default: false"
+            }
+          }
+        },
+        "instrumentations" : {
+          "type" : "object",
+          "properties" : {
+            "jersey" : {
+              "type" : "object",
+              "properties" : {
+                "attributes" : {
+                  "type" : "object",
+                  "properties" : {
+                    "http.request.method" : {
+                      "type" : "string",
+                      "default" : "http.request.method",
+                      "description" : "Default: http.request.method"
+                    },
+                    "http.route" : {
+                      "type" : "string",
+                      "default" : "http.route",
+                      "description" : "Default: http.route"
+                    },
+                    "http.response.status_code" : {
+                      "type" : "string",
+                      "default" : "http.response.status_code",
+                      "description" : "Default: http.response.status_code"
+                    },
+                    "http.response.body.size" : {
+                      "type" : "string",
+                      "default" : "http.response.body.size",
+                      "description" : "Default: http.response.body.size"
+                    },
+                    "enduser.id" : {
+                      "type" : "string",
+                      "default" : "enduser.id",
+                      "description" : "Default: enduser.id"
+                    },
+                    "url.full" : {
+                      "type" : "string",
+                      "default" : "url.full",
+                      "description" : "Default: url.full"
+                    }
+                  }
+                }
+              }
+            },
+            "jmx" : {
+              "type" : "object",
+              "properties" : {
+                "attributes" : {
+                  "type" : "object",
+                  "properties" : {
+                    "classloading.loadedClasses" : {
+                      "type" : "object",
+                      "properties" : {
+                        "description" : {
+                          "type" : "string",
+                          "default" : "Nr of loaded classes",
+                          "description" : "Default: Nr of loaded classes"
+                        },
+                        "objectName" : {
+                          "type" : "string",
+                          "default" : "java.lang:type=ClassLoading",
+                          "description" : "Default: java.lang:type=ClassLoading"
+                        },
+                        "attribute" : {
+                          "type" : "string",
+                          "default" : "LoadedClassCount",
+                          "description" : "Default: LoadedClassCount"
+                        },
+                        "unit" : {
+                          "type" : "string",
+                          "default" : "{count}",
+                          "description" : "Default: {count}"
+                        },
+                        "type" : {
+                          "type" : "string",
+                          "default" : "Gauge",
+                          "description" : "Default: Gauge"
+                        }
+                      }
+                    },
+                    "system.memory.limit" : {
+                      "type" : "object",
+                      "properties" : {
+                        "description" : {
+                          "type" : "string",
+                          "default" : "Total memory size",
+                          "description" : "Default: Total memory size"
+                        },
+                        "objectName" : {
+                          "type" : "string",
+                          "default" : "java.lang:type=OperatingSystem",
+                          "description" : "Default: java.lang:type=OperatingSystem"
+                        },
+                        "attribute" : {
+                          "type" : "string",
+                          "default" : "TotalMemorySize",
+                          "description" : "Default: TotalMemorySize"
+                        },
+                        "unit" : {
+                          "type" : "string",
+                          "default" : "By",
+                          "description" : "Default: By"
+                        },
+                        "type" : {
+                          "type" : "string",
+                          "default" : "Gauge",
+                          "description" : "Default: Gauge"
+                        }
+                      }
+                    },
+                    "system.cpu.utilization" : {
+                      "type" : "object",
+                      "properties" : {
+                        "description" : {
+                          "type" : "string",
+                          "default" : "Process CPU utilization",
+                          "description" : "Default: Process CPU utilization"
+                        },
+                        "objectName" : {
+                          "type" : "string",
+                          "default" : "java.lang:type=OperatingSystem",
+                          "description" : "Default: java.lang:type=OperatingSystem"
+                        },
+                        "attribute" : {
+                          "type" : "string",
+                          "default" : "ProcessCpuLoad",
+                          "description" : "Default: ProcessCpuLoad"
+                        },
+                        "unit" : {
+                          "type" : "string",
+                          "default" : "1",
+                          "description" : "Default: 1"
+                        },
+                        "type" : {
+                          "type" : "string",
+                          "default" : "Gauge",
+                          "description" : "Default: Gauge"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "jvm" : {
+              "type" : "object",
+              "properties" : {
+                "attributes" : {
+                  "type" : "object",
+                  "properties" : {
+                    "jvm.memory.used" : {
+                      "type" : "string",
+                      "default" : "jvm.memory.used",
+                      "description" : "Default: jvm.memory.used"
+                    },
+                    "jvm.memory.committed" : {
+                      "type" : "string",
+                      "default" : "jvm.memory.committed",
+                      "description" : "Default: jvm.memory.committed"
+                    },
+                    "jvm.memory.limit" : {
+                      "type" : "string",
+                      "default" : "jvm.memory.limit",
+                      "description" : "Default: jvm.memory.limit"
+                    },
+                    "jvm.memory.used_after_last_gc" : {
+                      "type" : "string",
+                      "default" : "jvm.memory.used_after_last_gc",
+                      "description" : "Default: jvm.memory.used_after_last_gc"
+                    },
+                    "jvm.gc.duration" : {
+                      "type" : "string",
+                      "default" : "jvm.gc.duration",
+                      "description" : "Default: jvm.gc.duration"
+                    },
+                    "jvm.thread.count" : {
+                      "type" : "string",
+                      "default" : "jvm.thread.count",
+                      "description" : "Default: jvm.thread.count"
+                    },
+                    "jvm.cpu.time" : {
+                      "type" : "string",
+                      "default" : "jvm.cpu.time",
+                      "description" : "Default: jvm.cpu.time"
+                    },
+                    "jvm.cpu.count" : {
+                      "type" : "string",
+                      "default" : "jvm.cpu.count",
+                      "description" : "Default: jvm.cpu.count"
+                    },
+                    "jvm.cpu.recent_utilization" : {
+                      "type" : "string",
+                      "default" : "jvm.cpu.recent_utilization",
+                      "description" : "Default: jvm.cpu.recent_utilization"
+                    }
+                  }
+                }
+              }
+            },
+            "log4j" : {
+              "type" : "object",
+              "properties" : { }
+            },
+            "system" : {
+              "type" : "object",
+              "properties" : {
+                "attributes" : {
+                  "type" : "object",
+                  "properties" : {
+                    "system.filesystem.usage" : {
+                      "type" : "string",
+                      "default" : "system.filesystem.usage",
+                      "description" : "Default: system.filesystem.usage"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "install" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        },
+        "resource" : {
+          "type" : "object",
+          "properties" : {
+            "process.runtime.description" : {
+              "type" : "string",
+              "default" : "{{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}",
+              "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}"
+            }
+          }
+        },
+        "exporters" : {
+          "type" : "object",
+          "properties" : {
+            "logging" : {
+              "type" : "object",
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
+                  "description" : "Default: false"
+                },
+                "interval" : {
+                  "type" : "string",
+                  "default" : "10s",
+                  "description" : "Default: 10s"
+                }
+              }
+            },
+            "otlp" : {
+              "type" : "object",
+              "properties" : {
+                "http" : {
+                  "type" : "object",
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint ? true | false }}",
+                      "description" : "Default: false"
+                    },
+                    "port" : {
+                      "type" : [ "number", "string" ],
+                      "default" : 4318,
+                      "description" : "Default: 4318"
+                    },
+                    "compression" : {
+                      "type" : "string",
+                      "default" : "gzip",
+                      "description" : "Default: gzip"
+                    },
+                    "headers" : {
+                      "type" : "object",
+                      "properties" : { }
+                    },
+                    "timeout" : {
+                      "type" : "string",
+                      "default" : "10s",
+                      "description" : "Default: 10s"
+                    },
+                    "interval" : {
+                      "type" : "string",
+                      "default" : "10s",
+                      "description" : "Default: 10s"
+                    },
+                    "aggregationTemporality" : {
+                      "type" : "string",
+                      "default" : "alwaysCumulative",
+                      "description" : "Default: alwaysCumulative"
+                    },
+                    "scheduleDelay" : {
+                      "type" : "string",
+                      "default" : "5s",
+                      "description" : "Default: 5s"
+                    },
+                    "exporterTimeout" : {
+                      "type" : "string",
+                      "default" : "60s",
+                      "description" : "Default: 60s"
+                    },
+                    "maxExportBatchSize" : {
+                      "type" : [ "number", "string" ],
+                      "default" : 1000,
+                      "description" : "Default: 1000"
+                    },
+                    "maxQueueSize" : {
+                      "type" : [ "number", "string" ],
+                      "default" : 10000,
+                      "description" : "Default: 10000"
+                    },
+                    "logsEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs"
+                    },
+                    "tracesEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces"
+                    },
+                    "metricsEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sampler" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    },
+    "reactivestreams" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "autoFragment" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "maxTextMessageSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1048576,
+              "description" : "Default: 1048576"
+            },
+            "maxBinaryMessageSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1048576,
+              "description" : "Default: 1048576"
+            },
+            "maxFrameSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 65536,
+              "description" : "Default: 65536"
+            },
+            "inputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            },
+            "outputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            },
+            "reactor" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        },
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "scheme" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}"
+            },
+            "uri" : {
+              "type" : "string",
+              "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
+              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/"
+            },
+            "reactor" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    },
+    "jmx" : {
+      "type" : "object",
+      "properties" : {
+        "status" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    },
+    "status" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "thymeleaf" : {
+      "type" : "object",
+      "properties" : {
+        "classloader" : {
+          "type" : "object",
+          "properties" : {
+            "templateMode" : {
+              "type" : "string",
+              "default" : "HTML",
+              "description" : "Default: HTML"
+            },
+            "encoding" : {
+              "type" : "string",
+              "default" : "UTF8",
+              "description" : "Default: UTF8"
+            },
+            "prefix" : {
+              "type" : "string",
+              "default" : "WEB-INF/thymeleaf/templates/",
+              "description" : "Default: WEB-INF/thymeleaf/templates/"
+            },
+            "suffix" : {
+              "type" : "string",
+              "default" : ".html",
+              "description" : "Default: .html"
+            },
+            "checkExistence" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "cacheTTL" : {
+              "type" : "string",
+              "default" : "1h",
+              "description" : "Default: 1h"
+            },
+            "decoupledLogic" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "aliases" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        },
+        "webapplication" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "templateMode" : {
+              "type" : "string",
+              "default" : "HTML",
+              "description" : "Default: HTML"
+            },
+            "encoding" : {
+              "type" : "string",
+              "default" : "UTF8",
+              "description" : "Default: UTF8"
+            },
+            "prefix" : {
+              "type" : "string",
+              "default" : "WEB-INF/thymeleaf/templates/",
+              "description" : "Default: WEB-INF/thymeleaf/templates/"
+            },
+            "suffix" : {
+              "type" : "string",
+              "default" : ".html",
+              "description" : "Default: .html"
+            },
+            "checkExistence" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "cacheTTL" : {
+              "type" : "string",
+              "default" : "1h",
+              "description" : "Default: 1h"
+            },
+            "decoupledLogic" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "aliases" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        },
+        "file" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "templateMode" : {
+              "type" : "string",
+              "default" : "HTML",
+              "description" : "Default: HTML"
+            },
+            "encoding" : {
+              "type" : "string",
+              "default" : "UTF8",
+              "description" : "Default: UTF8"
+            },
+            "prefix" : {
+              "type" : "string",
+              "default" : "",
+              "description" : "Default: "
+            },
+            "suffix" : {
+              "type" : "string",
+              "default" : ".html",
+              "description" : "Default: .html"
+            },
+            "checkExistence" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "cacheTTL" : {
+              "type" : "string",
+              "default" : "1h",
+              "description" : "Default: 1h"
+            },
+            "decoupledLogic" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "aliases" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    }
+  }
+}

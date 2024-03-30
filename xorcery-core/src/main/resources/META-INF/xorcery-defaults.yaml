@@ -9,17 +9,14 @@ instance:
   tags: []
   home: "{{ SYSTEM.user_dir }}"
   resources: "{{ instance.home }}"
-  uri: "{{ jetty.server.uri | \"http://localhost/\"}}"
+  uri: "http://{{ instance.fqdn }}/"
   api: "{{ instance.uri }}api/"
 
 application:
   name: genericserver
   version: "unknown"
 
-system:
-  "java.util.logging.manager": "org.apache.logging.log4j.jul.LogManager"
-  "log4j2.isThreadContextMapInheritable": true
-  "Log4jContextSelector": "org.apache.logging.log4j.core.selector.BasicContextSelector"
+system: {}
 
 defaults:
   enabled: true
@@ -42,17 +39,3 @@ hk2:
 
 DefaultRunLevelContext:
   enabled: true
-
-log4j2:
-  Configuration:
-    name: Xorcery
-    status: warn
-    properties: {}
-    thresholdFilter:
-      level: info
-    appenders: {}
-
-    Loggers:
-      Root:
-        level: info
-        AppenderRef: []

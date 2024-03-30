@@ -1,0 +1,4 @@
+eventstore:
+  projections:
+    enabled: "{{ eventstore.enabled }}"
+    projections: []

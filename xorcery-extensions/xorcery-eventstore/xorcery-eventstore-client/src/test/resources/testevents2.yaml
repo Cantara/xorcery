@@ -1,0 +1,249 @@
+---
+- metadata:
+    timestamp: 1
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    #Test Value as attribute
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedAddress"
+      created:
+        type: "Person"
+        id: "1234"
+      attributes:
+        address:
+          attributes:
+            street: "Somewhere 123"
+            zip: "90111"
+            city:
+              attributes:
+                name: "Lost Angels"
+                population: 1
+
+- metadata:
+    timestamp: 2
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedName"
+      updated:
+        type: "Person"
+        id: "1234"
+      attributes:
+        name: "John Smith"
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedEmail"
+      updated:
+        type: "Person"
+        id: "1234"
+      attributes:
+        email: "johnsmith@example.com"
+
+- metadata:
+    timestamp: 3
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    #Test update Value as attribute
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedAddress"
+      updated:
+        type: "Person"
+        id: "1234"
+      attributes:
+        address:
+          attributes:
+            street: "Elseweyr 27"
+            zip: "42069"
+            city:
+              attributes:
+                name: "Capital Hole"
+                population: 2
+
+- metadata:
+    timestamp: 4
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    #Test remove Value as attribute
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedAddress"
+      updated:
+        type: "Person"
+        id: "1234"
+      attributes:
+        address: null
+
+- metadata:
+    timestamp: 5
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    #Test update scalars
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedAge"
+      updated:
+        type: "Person"
+        id: "1234"
+      attributes:
+        age: 11
+        married: false
+        iq: 10.5
+
+- metadata:
+    timestamp: 6
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    #Test add Value as list attribute
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "AddedFriends"
+      updated:
+        type: "Person"
+        id: "1234"
+      addedattributes:
+        - name: friends
+          value:
+            attributes:
+              note: "Great guy"
+            relationships:
+              friend:
+                type: "Person"
+                id: "5678"
+        - name: friends
+          value:
+            attributes:
+              note: "Solid choom"
+            relationships:
+              friend:
+                type: "Person"
+                id: "9999"
+        - name: friends
+          value:
+            attributes:
+              note: "Careful with this one"
+            relationships:
+              friend:
+                type: "Person"
+                id: "4321"
+
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "AddedKnowsPerson"
+      updated:
+        type: "Person"
+        id: "1234"
+      addedrelationships:
+        - type: "Person"
+          id: "9999"
+          relationship: "Knows"
+
+- metadata:
+    timestamp: 7
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    #Test update Value as list attribute
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFriend"
+      updated:
+        type: "Person"
+        id: "1234"
+      removedattributes:
+        - name: friends
+          value:
+            relationships:
+              friend:
+                type: "Person"
+                id: "9999"
+      addedattributes:
+        - name: friends
+          index: 1
+          value:
+            attributes:
+              note: "Call when surrounded by pickle"
+            relationships:
+              friend:
+                type: "Person"
+                id: "9999"
+
+- metadata:
+    timestamp: 8
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    #Test move Value with index as list attribute
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "UpdatedFriend"
+      updated:
+        type: "Person"
+        id: "1234"
+      removedattributes:
+        - name: friends
+          value:
+            relationships:
+              friend:
+                type: "Person"
+                id: "4321"
+      addedattributes:
+        - name: friends
+          index: 1
+          value:
+            attributes:
+              note: "All good"
+            relationships:
+              friend:
+                type: "Person"
+                id: "4321"
+
+- metadata:
+    timestamp: 9
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "RedactedState"
+      updated:
+        type: "Person"
+        id: "1234"
+      addedattributes:
+        - name: "redactedAttributes"
+          value: "name"
+        - name: "redactedRelationships"
+          value: "Knows"
+
+- metadata:
+    timestamp: 10
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "RedactedState"
+      updated:
+        type: "Person"
+        id: "1234"
+      addedattributes:
+        - name: "redactedAttributes"
+          value: "email"
+
+- metadata:
+    timestamp: 11
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  events:
+    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
+      event: "DeletedPerson"
+      deleted:
+        type: "Person"
+        id: "1234"

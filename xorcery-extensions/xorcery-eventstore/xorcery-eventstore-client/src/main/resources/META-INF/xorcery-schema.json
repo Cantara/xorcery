@@ -1,0 +1,27 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-eventstore-client/schema",
+  "title" : "xorcery-eventstore-client configuration JSON Schema",
+  "properties" : {
+    "eventstore" : {
+      "$ref" : "#/$defs/eventstore"
+    }
+  },
+  "$defs" : {
+    "eventstore" : {
+      "type" : "object",
+      "properties" : {
+        "uri" : {
+          "type" : "string",
+          "default" : "esdb://localhost:2113?tls=false",
+          "description" : "Default: esdb://localhost:2113?tls=false"
+        },
+        "client" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

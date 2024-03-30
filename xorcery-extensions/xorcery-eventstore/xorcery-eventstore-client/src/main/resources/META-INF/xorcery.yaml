@@ -1,0 +1,5 @@
+eventstore:
+  enabled: "{{ defaults.enabled }}"
+  uri: "esdb://localhost:2113?tls=false"
+  client:
+    enabled: "{{ defaults.enabled }}"

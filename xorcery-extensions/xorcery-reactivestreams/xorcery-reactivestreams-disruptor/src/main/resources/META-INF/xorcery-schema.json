@@ -1,0 +1,33 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-reactivestreams-disruptor/schema",
+  "title" : "xorcery-reactivestreams-disruptor configuration JSON Schema",
+  "properties" : {
+    "disruptor" : {
+      "$ref" : "#/$defs/disruptor"
+    }
+  },
+  "$defs" : {
+    "disruptor" : {
+      "type" : "object",
+      "properties" : {
+        "standard" : {
+          "type" : "object",
+          "properties" : {
+            "size" : {
+              "type" : [ "number", "string" ],
+              "default" : 512,
+              "description" : "Default: 512"
+            },
+            "shutdownTimeout" : {
+              "type" : [ "number", "string" ],
+              "default" : 60,
+              "description" : "Default: 60"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -19,7 +19,6 @@ import com.exoreaction.xorcery.collections.Element;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
-import java.net.URI;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collector;

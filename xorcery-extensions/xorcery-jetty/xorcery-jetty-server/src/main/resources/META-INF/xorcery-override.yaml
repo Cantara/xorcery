@@ -1,0 +1,1 @@
+instance.uri: "{{ jetty.server.enabled ? jetty.server.uri | \"http://localhost/\"}}"

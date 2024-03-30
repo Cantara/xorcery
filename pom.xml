@@ -21,7 +21,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.110.1-SNAPSHOT</version>
+    <version>0.110.1</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -44,10 +44,11 @@
         <jackson.version>2.17.0</jackson.version>
         <asm.version>9.7</asm.version>
         <projectreactor.version>2023.0.4</projectreactor.version>
-        <aws.java.sdk.version>2.25.20</aws.java.sdk.version>
+        <aws.java.sdk.version>2.25.21</aws.java.sdk.version>
+        <netty.version>4.1.108.Final</netty.version>
 
         <junit.version>5.10.2</junit.version>
-        <junit.platform.version>1.10.0</junit.platform.version>
+        <junit.platform.version>1.10.2</junit.platform.version>
     </properties>
 
     <developers>
@@ -66,99 +67,25 @@
         <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
         <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
         <url>https://github.com/Cantara/xorcery</url>
-        <tag>HEAD</tag>
+        <tag>xorcery-project-0.110.1</tag>
     </scm>
 
     <modules>
         <module>xorcery-util</module>
         <module>xorcery-json</module>
-        <module>xorcery-jsonschema</module>
         <module>xorcery-configuration-api</module>
         <module>xorcery-configuration</module>
-        <module>xorcery-configuration-jsonschema-maven-plugin</module>
         <module>xorcery-metadata</module>
-        <module>xorcery-disruptor</module>
-        <module>xorcery-opentelemetry-api</module>
+        <module>xorcery-service-api</module>
         <module>xorcery-health-api</module>
         <module>xorcery-health-registry</module>
 
-        <module>xorcery-jaxrs-server</module>
-        <module>xorcery-jsonapi</module>
-        <module>xorcery-jsonapi-jaxrs</module>
-        <module>xorcery-jsonapi-client</module>
-        <module>xorcery-service-api</module>
-        <module>xorcery-jsonapi-server</module>
-
-        <module>xorcery-status-spi</module>
-        <module>xorcery-status-server</module>
-
         <module>xorcery-core</module>
-        <module>xorcery-junit</module>
+        <module>xorcery-log4j</module>
         <module>xorcery-runner</module>
+        <module>xorcery-junit</module>
 
-        <module>xorcery-secrets</module>
-        <module>xorcery-keystores</module>
-
-        <module>xorcery-dns-client</module>
-        <module>xorcery-jetty-client</module>
-        <module>xorcery-certificates</module>
-
-        <module>xorcery-aws-auth</module>
-        <module>xorcery-secrets-aws</module>
-
-<!--
-        <module>xorcery-jgroups</module>
--->
-        <module>xorcery-jetty-server</module>
-        <module>xorcery-dns-server</module>
-
-        <module>xorcery-dns-update</module>
-        <module>xorcery-dns-update-route53</module>
-        <module>xorcery-dns-registration</module>
-        <module>xorcery-dns-multicast</module>
-
-        <module>xorcery-jersey-client</module>
-        <module>xorcery-jersey-server</module>
-        <module>xorcery-reactivestreams-api</module>
-        <module>xorcery-reactivestreams-client</module>
-        <module>xorcery-jmx-status</module>
-        <module>xorcery-reactivestreams-server</module>
-        <module>xorcery-reactivestreams-extras</module>
-
-        <module>xorcery-admin-server</module>
-
-        <module>xorcery-certificates-server</module>
-        <module>xorcery-certificates-ca</module>
-        <module>xorcery-certificates-letsencrypt</module>
-        <module>xorcery-certificates-client</module>
-
-        <module>xorcery-domainevents</module>
-        <module>xorcery-domainevents-publisher</module>
-        <module>xorcery-domainevents-jsonapi</module>
-
-        <module>xorcery-jwt-server</module>
-
-        <module>xorcery-eventstore</module>
-        <module>xorcery-reactivestreams-persistentsubscriber</module>
-        <module>xorcery-thymeleaf</module>
-        <module>xorcery-thymeleaf-jsonapi</module>
-
-        <module>xorcery-neo4j</module>
-        <module>xorcery-neo4j-projections</module>
-        <module>xorcery-domainevents-neo4jprojection</module>
-        <module>xorcery-jsonapi-server-neo4j</module>
-        <module>xorcery-neo4j-browser</module>
-
-        <module>xorcery-opensearch</module>
-
-        <module>xorcery-opentelemetry-sdk</module>
-        <module>xorcery-opentelemetry-log4j</module>
-        <module>xorcery-opentelemetry-jvm</module>
-        <module>xorcery-opentelemetry-jersey-server</module>
-        <module>xorcery-opentelemetry-jmx</module>
-        <module>xorcery-opentelemetry-system</module>
-
-        <module>xorcery-coordinator</module>
+        <module>xorcery-extensions</module>
 
         <module>xorcery-test</module>
         <module>xorcery-benchmarks</module>
@@ -182,12 +109,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-certificates</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-certificates-ca</artifactId>
+                <artifactId>xorcery-certificates-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -197,12 +119,22 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-certificates-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-certificates-ca</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-certificates-letsencrypt</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-certificates-server</artifactId>
+                <artifactId>xorcery-certificates-provisioning</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -223,11 +155,6 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-disruptor</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -262,7 +189,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-domainevents</artifactId>
+                <artifactId>xorcery-domainevents-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -280,9 +207,26 @@
                 <artifactId>xorcery-domainevents-publisher</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-eventstore</artifactId>
+                <artifactId>xorcery-eventstore-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-eventstore-projections</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-eventstore-jsonapi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-reactivestreams-disruptor</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -332,7 +276,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-jsonapi</artifactId>
+                <artifactId>xorcery-jsonapi-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -369,6 +313,11 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jwt-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-log4j</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -418,12 +367,12 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-jmx-status</artifactId>
+                <artifactId>xorcery-status-jmx</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-neo4j</artifactId>
+                <artifactId>xorcery-neo4j-embedded</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -438,7 +387,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-opensearch</artifactId>
+                <artifactId>xorcery-opensearch-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -468,7 +417,12 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-secrets</artifactId>
+                <artifactId>xorcery-secrets-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-secrets-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -493,7 +447,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-thymeleaf</artifactId>
+                <artifactId>xorcery-thymeleaf-jaxrs</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -571,7 +525,12 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+            </dependency>
             <!-- Jackson -->
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -652,11 +611,6 @@
                 <groupId>jakarta.annotation</groupId>
                 <artifactId>jakarta.annotation-api</artifactId>
                 <version>2.1.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty.toolchain</groupId>
-                <artifactId>jetty-jakarta-servlet-api</artifactId>
-                <version>5.0.2</version>
             </dependency>
 
             <!-- Reactive Streams -->
@@ -798,6 +752,18 @@
             </dependency>
 
             <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-commons</artifactId>
+                <version>${junit.platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-launcher</artifactId>
+                <version>${junit.platform.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>${junit.version}</version>
@@ -855,6 +821,16 @@
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
                 <version>3.30.2-GA</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>failureaccess</artifactId>
+                <version>1.0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>url-connection-client</artifactId>
+                <version>${aws.java.sdk.version}</version>
             </dependency>
 
             <dependency>

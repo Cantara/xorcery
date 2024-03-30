@@ -23,4 +23,5 @@ open module xorcery.junit {
     requires transitive org.junit.jupiter.api;
     requires transitive org.apache.logging.log4j.core;
     requires transitive org.glassfish.hk2.api;
+    requires xorcery.log4j;
 }

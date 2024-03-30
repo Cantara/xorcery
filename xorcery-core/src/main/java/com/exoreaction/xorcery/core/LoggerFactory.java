@@ -16,6 +16,8 @@
 package com.exoreaction.xorcery.core;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
@@ -25,6 +27,7 @@ import org.glassfish.hk2.api.PerLookup;
 import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Service
 public class LoggerFactory
@@ -34,9 +37,10 @@ public class LoggerFactory
     private final LoggerContext loggerContext;
 
     @Inject
-    public LoggerFactory(InstantiationService instantiationService, LoggerContext loggerContext) throws IOException {
+    public LoggerFactory(InstantiationService instantiationService, Provider<LoggerContext> loggerContextProvider) throws IOException {
         this.instantiationService = instantiationService;
-        this.loggerContext = loggerContext;
+        this.loggerContext = Optional.ofNullable(loggerContextProvider.get())
+                .orElseGet(()->LogManager.getContext(Xorcery.class.getClassLoader(), false));
     }
 
     @Override
