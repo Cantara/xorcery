@@ -13,29 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.reactivestreams.test;
+package com.exoreaction.xorcery.certificates.spi;
 
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
+import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 
-public abstract class ServerSubscriber<T>
-        implements Subscriber<T> {
+import java.security.cert.X509Certificate;
+import java.util.List;
+import java.util.concurrent.CompletionStage;
 
-    protected Subscription subscription;
-
-    @Override
-    public void onSubscribe(Subscription subscription) {
-        this.subscription = subscription;
-        subscription.request(8192);
-    }
-
-    @Override
-    public void onError(Throwable throwable) {
-
-    }
-
-    @Override
-    public void onComplete() {
-
-    }
+public interface CertificatesProvider {
+    CompletionStage<List<X509Certificate>> requestCertificates(PKCS10CertificationRequest csr);
 }
