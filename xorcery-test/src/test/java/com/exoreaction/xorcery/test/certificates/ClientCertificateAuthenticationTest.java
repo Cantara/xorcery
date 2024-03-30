@@ -15,17 +15,14 @@
  */
 package com.exoreaction.xorcery.test.certificates;
 
-import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
-import com.exoreaction.xorcery.test.ClientTester;
 import com.exoreaction.xorcery.net.Sockets;
+import com.exoreaction.xorcery.test.ClientTester;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

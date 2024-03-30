@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-jsonapi</artifactId>
+            <artifactId>xorcery-jsonapi-api</artifactId>
         </dependency>
 
         <dependency>

@@ -1,0 +1,12 @@
+jgroups:
+  channels:
+    chat:
+      config: udp.xml
+
+
+log4j2.Configuration.thresholdFilter.level: debug
+log4j2.Configuration.Loggers.logger:
+  - name: "com.exoreaction.xorcery.core"
+    level: "debug"
+system:
+  "org.jvnet.hk2.properties.debug.descriptor.file.finder": true

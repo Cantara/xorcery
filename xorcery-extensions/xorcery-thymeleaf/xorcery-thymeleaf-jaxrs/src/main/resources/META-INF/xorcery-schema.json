@@ -1,0 +1,172 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-thymeleaf-jaxrs/schema",
+  "title" : "xorcery-thymeleaf-jaxrs configuration JSON Schema",
+  "properties" : {
+    "thymeleaf" : {
+      "$ref" : "#/$defs/thymeleaf"
+    },
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    }
+  },
+  "$defs" : {
+    "thymeleaf" : {
+      "type" : "object",
+      "properties" : {
+        "classloader" : {
+          "type" : "object",
+          "properties" : {
+            "templateMode" : {
+              "type" : "string",
+              "default" : "HTML",
+              "description" : "Default: HTML"
+            },
+            "encoding" : {
+              "type" : "string",
+              "default" : "UTF8",
+              "description" : "Default: UTF8"
+            },
+            "prefix" : {
+              "type" : "string",
+              "default" : "WEB-INF/thymeleaf/templates/",
+              "description" : "Default: WEB-INF/thymeleaf/templates/"
+            },
+            "suffix" : {
+              "type" : "string",
+              "default" : ".html",
+              "description" : "Default: .html"
+            },
+            "checkExistence" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "cacheTTL" : {
+              "type" : "string",
+              "default" : "1h",
+              "description" : "Default: 1h"
+            },
+            "decoupledLogic" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "aliases" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        },
+        "webapplication" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "templateMode" : {
+              "type" : "string",
+              "default" : "HTML",
+              "description" : "Default: HTML"
+            },
+            "encoding" : {
+              "type" : "string",
+              "default" : "UTF8",
+              "description" : "Default: UTF8"
+            },
+            "prefix" : {
+              "type" : "string",
+              "default" : "WEB-INF/thymeleaf/templates/",
+              "description" : "Default: WEB-INF/thymeleaf/templates/"
+            },
+            "suffix" : {
+              "type" : "string",
+              "default" : ".html",
+              "description" : "Default: .html"
+            },
+            "checkExistence" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "cacheTTL" : {
+              "type" : "string",
+              "default" : "1h",
+              "description" : "Default: 1h"
+            },
+            "decoupledLogic" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "aliases" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        },
+        "file" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "templateMode" : {
+              "type" : "string",
+              "default" : "HTML",
+              "description" : "Default: HTML"
+            },
+            "encoding" : {
+              "type" : "string",
+              "default" : "UTF8",
+              "description" : "Default: UTF8"
+            },
+            "prefix" : {
+              "type" : "string",
+              "default" : "",
+              "description" : "Default: "
+            },
+            "suffix" : {
+              "type" : "string",
+              "default" : ".html",
+              "description" : "Default: .html"
+            },
+            "checkExistence" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "cacheTTL" : {
+              "type" : "string",
+              "default" : "1h",
+              "description" : "Default: 1h"
+            },
+            "decoupledLogic" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "aliases" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        }
+      }
+    },
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "properties" : { }
+        }
+      }
+    }
+  }
+}

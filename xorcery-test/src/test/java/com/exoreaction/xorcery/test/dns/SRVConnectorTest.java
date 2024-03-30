@@ -15,18 +15,16 @@
  */
 package com.exoreaction.xorcery.test.dns;
 
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
-import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
+import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.net.Sockets;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

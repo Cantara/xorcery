@@ -16,11 +16,11 @@
 package com.exoreaction.xorcery.service;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.jsonapi.Link;
+import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.client.JsonApiClient;
 import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader;
 import com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter;
-import com.exoreaction.xorcery.jsonapi.Link;
-import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import com.exoreaction.xorcery.keystores.KeyStores;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.exoreaction.xorcery</groupId>
+        <artifactId>xorcery-project</artifactId>
+        <version>0.110.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>xorcery-extensions</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>xorcery-jsonschema</module>
+        <module>xorcery-aws-auth</module>
+        <module>xorcery-secrets</module>
+        <module>xorcery-keystores</module>
+        <module>xorcery-certificates</module>
+        <module>xorcery-jetty</module>
+        <module>xorcery-jersey</module>
+        <module>xorcery-thymeleaf</module>
+        <module>xorcery-jwt-server</module>
+        <module>xorcery-jgroups</module>
+        <module>xorcery-jsonapi</module>
+        <module>xorcery-jaxrs-server</module>
+        <module>xorcery-dns</module>
+        <module>xorcery-opentelemetry</module>
+        <module>xorcery-reactivestreams</module>
+        <module>xorcery-domainevents</module>
+        <module>xorcery-eventstore</module>
+        <module>xorcery-opensearch</module>
+        <module>xorcery-neo4j</module>
+        <module>xorcery-graphql</module>
+        <module>xorcery-status</module>
+        <module>xorcery-admin-server</module>
+        <module>xorcery-coordinator</module>
+        <module>xorcery-maven</module>
+    </modules>
+</project>

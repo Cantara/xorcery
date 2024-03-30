@@ -56,14 +56,10 @@
                 <artifactId>xorcery-aws-auth</artifactId>
                 <version>0.97.5-SNAPSHOT</version>
             </dependency>
+
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-certificates</artifactId>
-                <version>0.110.1-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-certificates-ca</artifactId>
+                <artifactId>xorcery-certificates-spi</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -73,14 +69,25 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-certificates-server</artifactId>
+                <version>0.110.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-certificates-ca</artifactId>
+                <version>0.110.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-certificates-letsencrypt</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-certificates-server</artifactId>
+                <artifactId>xorcery-certificates-provisioning</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
+
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration</artifactId>
@@ -108,7 +115,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-disruptor</artifactId>
+                <artifactId>xorcery-reactivestreams-disruptor</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -143,7 +150,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-domainevents</artifactId>
+                <artifactId>xorcery-domainevents-api</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -161,11 +168,28 @@
                 <artifactId>xorcery-domainevents-publisher</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
+
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-eventstore</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-eventstore-client</artifactId>
+                <version>0.110.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-eventstore-projections</artifactId>
+                <version>0.110.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-eventstore-jsonapi</artifactId>
+                <version>0.110.1-SNAPSHOT</version>
+            </dependency>
+
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-health-api</artifactId>
@@ -208,7 +232,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-jsonapi</artifactId>
+                <artifactId>xorcery-jsonapi-api</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -293,12 +317,12 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-jmx-status</artifactId>
+                <artifactId>xorcery-status-jmx</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-neo4j</artifactId>
+                <artifactId>xorcery-neo4j-embedded</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -313,7 +337,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-opensearch</artifactId>
+                <artifactId>xorcery-opensearch-client</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -348,7 +372,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-secrets</artifactId>
+                <artifactId>xorcery-secrets-api</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -373,7 +397,7 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-thymeleaf</artifactId>
+                <artifactId>xorcery-thymeleaf-jaxrs</artifactId>
                 <version>0.110.1-SNAPSHOT</version>
             </dependency>
             <dependency>
