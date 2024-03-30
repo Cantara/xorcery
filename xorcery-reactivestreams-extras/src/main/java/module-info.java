@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module xorcery.reactivestreams.server.extra {
+module xorcery.reactivestreams.extras {
     exports com.exoreaction.xorcery.reactivestreams.extras.publisher;
     exports com.exoreaction.xorcery.reactivestreams.extras.providers;
 

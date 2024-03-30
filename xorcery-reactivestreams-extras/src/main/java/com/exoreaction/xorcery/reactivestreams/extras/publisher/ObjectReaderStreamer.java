@@ -11,11 +11,20 @@ public class ObjectReaderStreamer<T> {
     private final FluxSink<T> sink;
     private final YAMLParser parser;
     private final ObjectReader objectReader;
+    private long skip;
 
     public ObjectReaderStreamer(FluxSink<T> sink, YAMLParser parser, ObjectReader objectReader) {
         this.sink = sink;
         this.parser = parser;
         this.objectReader = objectReader;
+
+        // Skip until position
+        if (sink.contextView().getOrDefault("position", null) instanceof Long pos) {
+            this.skip = pos + 1;
+        } else {
+            this.skip = 0;
+        }
+
         sink.onRequest(this::request);
     }
 
@@ -26,7 +35,12 @@ public class ObjectReaderStreamer<T> {
                 //                    System.out.println(token);
                 parser.nextToken();
                 T item = objectReader.readValue(parser);
-                sink.next(item);
+                if (skip > 0) {
+                    request++;
+                    skip--;
+                } else {
+                    sink.next(item);
+                }
             }
 
             if (token == null || token.isStructEnd()) {
