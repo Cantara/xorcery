@@ -19,7 +19,7 @@ open module xorcery.reactivestreams.persistentsubscriber.test {
     requires xorcery.reactivestreams.persistentsubscriber;
 
     requires xorcery.reactivestreams.server;
-    requires xorcery.reactivestreams.server.extra;
+    requires xorcery.reactivestreams.extras;
     requires xorcery.jetty.server;
     requires xorcery.configuration;
     requires xorcery.junit;
