@@ -18,6 +18,7 @@ open module xorcery.eventstore {
     exports com.exoreaction.xorcery.eventstore.api;
     exports com.exoreaction.xorcery.eventstore.streams;
     exports com.exoreaction.xorcery.eventstore.projections;
+    exports com.exoreaction.xorcery.eventstore.reactor;
     exports com.exoreaction.xorcery.eventstore.resources;
 
     requires xorcery.reactivestreams.api;
@@ -27,6 +28,7 @@ open module xorcery.eventstore {
     requires xorcery.jaxrs.server;
     requires xorcery.util;
     requires xorcery.domainevents;
+    requires xorcery.opentelemetry.api;
 
     requires jakarta.inject;
     requires jakarta.ws.rs;
@@ -36,4 +38,6 @@ open module xorcery.eventstore {
     requires com.lmax.disruptor;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
+    requires io.opentelemetry.semconv;
+    requires grpc.shaded.jpms;
 }

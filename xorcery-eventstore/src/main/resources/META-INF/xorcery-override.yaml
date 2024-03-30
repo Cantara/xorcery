@@ -1,0 +1,3 @@
+jersey.server.register:
+  - com.exoreaction.xorcery.eventstore.resources.EventStoreResource
+  - com.exoreaction.xorcery.eventstore.resources.StreamResource

@@ -48,6 +48,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-domainevents</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-opentelemetry-api</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
@@ -193,6 +197,11 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-extras</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

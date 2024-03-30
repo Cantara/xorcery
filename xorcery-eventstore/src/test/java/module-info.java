@@ -28,4 +28,5 @@ open module xorcery.eventstore.test {
     requires jakarta.annotation;
     requires org.glassfish.hk2.api;
     requires org.apache.commons.compress;
+    requires xorcery.reactivestreams.extras;
 }

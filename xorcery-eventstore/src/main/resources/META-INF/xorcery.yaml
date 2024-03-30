@@ -11,6 +11,5 @@ eventstore:
     subscriber:
       enabled: "{{ eventstore.streams.enabled }}"
 
-jersey.server.register:
-  - com.exoreaction.xorcery.eventstore.resources.EventStoreResource
-  - com.exoreaction.xorcery.eventstore.resources.StreamResource
+  client:
+    enabled: "{{ defaults.enabled }}"
