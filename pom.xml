@@ -47,7 +47,7 @@
         <aws.java.sdk.version>2.25.21</aws.java.sdk.version>
 
         <junit.version>5.10.2</junit.version>
-        <junit.platform.version>1.10.0</junit.platform.version>
+        <junit.platform.version>1.10.2</junit.platform.version>
     </properties>
 
     <developers>
