@@ -52,10 +52,6 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-json</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>neo4j-shaded</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

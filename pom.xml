@@ -45,6 +45,7 @@
         <asm.version>9.7</asm.version>
         <projectreactor.version>2023.0.4</projectreactor.version>
         <aws.java.sdk.version>2.25.21</aws.java.sdk.version>
+        <netty.version>4.1.108.Final</netty.version>
 
         <junit.version>5.10.2</junit.version>
         <junit.platform.version>1.10.2</junit.platform.version>
@@ -518,7 +519,12 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+            </dependency>
             <!-- Jackson -->
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -809,6 +815,16 @@
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
                 <version>3.30.2-GA</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>failureaccess</artifactId>
+                <version>1.0.2</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>url-connection-client</artifactId>
+                <version>${aws.java.sdk.version}</version>
             </dependency>
 
             <dependency>
