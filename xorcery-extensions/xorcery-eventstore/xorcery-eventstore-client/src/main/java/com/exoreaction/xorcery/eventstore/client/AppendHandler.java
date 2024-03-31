@@ -1,6 +1,9 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
+import com.exoreaction.xorcery.eventstore.client.api.AppendMetadataByteBuffers;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreCommit;
+import com.exoreaction.xorcery.eventstore.client.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryHelpers;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
@@ -29,7 +33,7 @@ public class AppendHandler
     private static final JsonMapper jsonMapper = new JsonMapper();
 
     private final EventStoreDBClient client;
-    private final AppendToStreamOptions options;
+    private final Consumer<AppendToStreamOptions> options;
 
     private final Function<Metadata, UUID> eventIdSelector;
     private final Function<Metadata, String> eventTypeSelector;
@@ -42,13 +46,14 @@ public class AppendHandler
 
     public AppendHandler(
             EventStoreDBClient client,
-            AppendToStreamOptions options,
+            Consumer<AppendToStreamOptions> options,
             Function<Metadata, UUID> eventIdSelector,
             Function<Metadata, String> eventTypeSelector,
             Logger logger,
             OpenTelemetry openTelemetry) {
         this.client = client;
-        this.options = options;
+        this.options = options != null ? options : o -> {
+        };
         this.logger = logger;
         // Metrics
         this.eventIdSelector = eventIdSelector;
@@ -59,9 +64,9 @@ public class AppendHandler
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        batchSizes = meter.histogramBuilder("eventstore.stream.writes.batchsize")
+        batchSizes = meter.histogramBuilder("eventstore.streamId.writes.batchsize")
                 .ofLongs().setUnit("{count}").build();
-        writeTimer = meter.histogramBuilder("eventstore.stream.writes.latency")
+        writeTimer = meter.histogramBuilder("eventstore.streamId.writes.latency")
                 .setUnit("s").build();
 
     }
@@ -70,7 +75,7 @@ public class AppendHandler
     public void accept(AppendMetadataByteBuffers appendMetadataByteBuffers, SynchronousSink<EventStoreCommit> sink) {
 
         try {
-            Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.stream.name"), appendMetadataByteBuffers.stream());
+            Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.streamId"), appendMetadataByteBuffers.streamId());
             OpenTelemetryHelpers.time(writeTimer, attributes, () -> {
 
                 // Prepare the data
@@ -93,14 +98,23 @@ public class AppendHandler
                 }
 
                 // Append to EventStore, and retry on timeouts
+                AppendToStreamOptions appendOptions = AppendToStreamOptions.get()
+                        .deadline(30000);
+                options.accept(appendOptions);
+                if (appendMetadataByteBuffers.expectedPosition() != null) {
+                    appendOptions.expectedRevision(appendMetadataByteBuffers.expectedPosition());
+                }
+
                 int retry = 0;
                 while (true) {
                     try {
-                        WriteResult writeResult = client.appendToStream(appendMetadataByteBuffers.stream(), options, eventBatch.iterator())
+
+                        WriteResult writeResult = client.appendToStream(appendMetadataByteBuffers.streamId(), appendOptions, eventBatch.iterator())
                                 .toCompletableFuture().join();
 
-                        long position = writeResult.getNextExpectedRevision().toRawLong();
-                        sink.next(new EventStoreCommit(appendMetadataByteBuffers.stream(), lastEventId != null ? lastEventId.toString() : null, position));
+                        long streamPosition = writeResult.getNextExpectedRevision().toRawLong();
+                        sink.next(new EventStoreCommit(appendMetadataByteBuffers.streamId(), streamPosition, lastEventId != null ? lastEventId.toString() : null));
+                        batchSizes.record(appendMetadataByteBuffers.items().size());
                         return null;
                     } catch (Throwable t) {
                         Throwable throwable = unwrap(t);

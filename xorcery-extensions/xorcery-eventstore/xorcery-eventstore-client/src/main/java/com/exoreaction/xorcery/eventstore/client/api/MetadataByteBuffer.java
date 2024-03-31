@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.eventstore.client;
+package com.exoreaction.xorcery.eventstore.client.api;
 
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
@@ -13,5 +13,10 @@ public class MetadataByteBuffer
 
     public MetadataByteBuffer(Metadata metadata, ByteBuffer event) {
         super(metadata, event);
+    }
+
+    @Override
+    public String toString() {
+        return metadata().toString();
     }
 }

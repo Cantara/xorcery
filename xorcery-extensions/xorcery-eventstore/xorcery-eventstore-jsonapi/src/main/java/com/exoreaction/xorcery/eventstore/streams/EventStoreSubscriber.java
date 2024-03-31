@@ -44,7 +44,7 @@ public class EventStoreSubscriber
         disruptor = new Disruptor<>(WithMetadata::new, 512, new NamedThreadFactory("EventStoreSubscriber-"),
                 ProducerType.MULTI,
                 new BlockingWaitStrategy());
-        disruptor.handleEventsWith(new EventStoreSubscriberEventHandler(client, subscription, cfg.getString("stream")));
+        disruptor.handleEventsWith(new EventStoreSubscriberEventHandler(client, subscription, cfg.getString("streamId")));
         disruptor.start();
         subscription.request(512);
     }
