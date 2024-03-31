@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.certificates.ca {
+module xorcery.certificates.ca {
     exports com.exoreaction.xorcery.certificates.ca;
     exports com.exoreaction.xorcery.certificates.ca.resources;
 

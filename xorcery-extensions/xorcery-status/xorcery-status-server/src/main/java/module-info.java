@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.status.server {
+module xorcery.status.server {
     exports com.exoreaction.xorcery.status;
     exports com.exoreaction.xorcery.status.api;
 

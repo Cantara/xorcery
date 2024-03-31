@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.certificates.client {
+module xorcery.certificates.client {
     exports com.exoreaction.xorcery.certificates.client;
     exports com.exoreaction.xorcery.certificates.client.resources;
 

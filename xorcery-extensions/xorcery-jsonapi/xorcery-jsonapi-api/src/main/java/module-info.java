@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.jsonapi.api {
+module xorcery.jsonapi.api {
     exports com.exoreaction.xorcery.jsonapi;
     exports com.exoreaction.xorcery.jsonapischema;
 

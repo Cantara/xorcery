@@ -18,13 +18,9 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import com.exoreaction.xorcery.net.Sockets;
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
-import com.exoreaction.xorcery.util.Resources;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import java.util.concurrent.CompletableFuture;
 
 public class PersistentSubscribersSkipUntilTest {
 
@@ -55,10 +51,16 @@ public class PersistentSubscribersSkipUntilTest {
 
     @Test
     public void testPersistentSubscriberSkipUntil() throws InterruptedException {
-        while (TestSubscriber.handled.get() < 20)
+
+        long start = System.currentTimeMillis();
+        while (TestSubscriber.handled.get() < 20 && System.currentTimeMillis() < start + 10000)
         {
             System.out.println("SLEEP "+TestSubscriber.handled.get());
             Thread.sleep(100);
         }
+
+        if (System.currentTimeMillis() >= start + 10000)
+            Assertions.fail("Timed out");
+
     }
 }

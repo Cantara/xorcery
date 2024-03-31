@@ -18,9 +18,8 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import com.exoreaction.xorcery.net.Sockets;
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
 import com.exoreaction.xorcery.util.Resources;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -29,7 +28,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.concurrent.CompletableFuture;
 
 public class PersistentSubscribersRecoveryTest {
 
@@ -73,10 +71,14 @@ public class PersistentSubscribersRecoveryTest {
     @Test
     public void testPersistentSubscriberRecovery() throws InterruptedException {
 
-        while (TestSubscriber.handled.get() < 47)
+        long start = System.currentTimeMillis();
+        while (TestSubscriber.handled.get() < 47 && System.currentTimeMillis() < start + 10000)
         {
             System.out.println("SLEEP");
             Thread.sleep(1000);
         }
+
+        if (System.currentTimeMillis() >= start + 10000)
+            Assertions.fail("Timed out");
     }
 }

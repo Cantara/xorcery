@@ -15,10 +15,10 @@
  */
 package com.exoreaction.xorcery.certificates.server.test;
 
+import com.exoreaction.xorcery.certificates.provisioning.CertificateProvisioningService;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.certificates.CertificatesService;
 import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
 import com.exoreaction.xorcery.net.Sockets;
 import org.apache.logging.log4j.LogManager;
@@ -41,7 +41,7 @@ public class TestLetsEncryptCertificatesManagementProvider {
             jetty.server.ssl.enabled: true    
             keystores.enabled: true
             dns.client.discovery.enabled: false
-            certificates.subject: \"*.exoreaction.dev\" 
+            certificates.subject: *.exoreaction.dev 
             """;
 
     @Test
@@ -55,11 +55,11 @@ public class TestLetsEncryptCertificatesManagementProvider {
                         .add("jetty.server.ssl.port", managerPort)
                         .add("certificates.server.enabled", true))
                 .build();
-        System.out.println(configuration1);
+//        System.out.println(configuration1);
         try (Xorcery xorcery = new Xorcery(configuration1)) {
 
             try {
-                CertificatesService certificatesService = xorcery.getServiceLocator().getService(CertificatesService.class);
+                CertificateProvisioningService certificatesService = xorcery.getServiceLocator().getService(CertificateProvisioningService.class);
 
                 List<X509Certificate> certificates = xorcery.getServiceLocator().getService(CertificatesProvider.class)
                         .requestCertificates(certificatesService.createRequest())

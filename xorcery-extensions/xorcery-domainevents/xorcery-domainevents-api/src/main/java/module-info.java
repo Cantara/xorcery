@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.domainevents.api {
+module xorcery.domainevents.api {
     exports com.exoreaction.xorcery.domainevents.api;
+    opens com.exoreaction.xorcery.domainevents.api;
 
     requires transitive xorcery.json;
     requires transitive xorcery.metadata;

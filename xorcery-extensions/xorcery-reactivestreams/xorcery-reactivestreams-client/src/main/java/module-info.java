@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.reactivestreams.client {
+module xorcery.reactivestreams.client {
     exports com.exoreaction.xorcery.reactivestreams.client;
     exports com.exoreaction.xorcery.reactivestreams.client.reactor;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.secrets.api {
+module xorcery.secrets.api {
     exports com.exoreaction.xorcery.secrets;
 
     requires xorcery.configuration.api;

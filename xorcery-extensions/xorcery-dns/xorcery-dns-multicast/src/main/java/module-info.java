@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.dns.multicast {
+module xorcery.dns.multicast {
     exports com.exoreaction.xorcery.dns.multicast;
     exports com.exoreaction.xorcery.dns.multicast.provider;
 

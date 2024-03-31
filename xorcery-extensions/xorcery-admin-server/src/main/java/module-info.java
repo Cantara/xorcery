@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.admin.server {
+module xorcery.admin.server {
+
+    exports com.exoreaction.xorcery.admin.api;
+    exports com.exoreaction.xorcery.admin.jmx;
 
     requires xorcery.core;
     requires xorcery.health.registry;

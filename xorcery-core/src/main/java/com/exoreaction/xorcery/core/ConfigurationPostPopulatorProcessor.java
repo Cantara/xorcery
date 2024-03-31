@@ -34,7 +34,7 @@ import java.util.function.Function;
  *
  * @param configuration
  */
-public record ConfigurationPostPopulatorProcessor(Configuration configuration, Consumer<String> monitor)
+record ConfigurationPostPopulatorProcessor(Configuration configuration, Consumer<String> monitor)
         implements PopulatorPostProcessor {
 
     @Override

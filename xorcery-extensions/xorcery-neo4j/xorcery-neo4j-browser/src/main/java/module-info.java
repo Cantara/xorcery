@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-open module xorcery.neo4j.browser {
+module xorcery.neo4j.browser {
     exports com.exoreaction.xorcery.neo4j.browser;
 
     requires xorcery.configuration.api;

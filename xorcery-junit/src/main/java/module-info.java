@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.junit {
+module xorcery.junit {
     exports com.exoreaction.xorcery.junit;
 
     requires transitive xorcery.configuration.api;

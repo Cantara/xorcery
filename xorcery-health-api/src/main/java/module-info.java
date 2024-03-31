@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.health.api {
+module xorcery.health.api {
     requires transitive com.fasterxml.jackson.databind;
 
     exports com.exoreaction.xorcery.health.api;

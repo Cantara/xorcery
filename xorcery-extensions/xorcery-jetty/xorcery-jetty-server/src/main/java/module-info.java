@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.jetty.server {
+module xorcery.jetty.server {
     exports com.exoreaction.xorcery.jetty.server;
     exports com.exoreaction.xorcery.jetty.server.security;
     exports com.exoreaction.xorcery.jetty.server.security.jwt;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.keystores {
+module xorcery.keystores {
     exports com.exoreaction.xorcery.keystores;
     exports com.exoreaction.xorcery.keystores.providers;
 

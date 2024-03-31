@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.jsonapi.server {
+module xorcery.jsonapi.server {
     exports com.exoreaction.xorcery.jsonapi.server.providers;
     exports com.exoreaction.xorcery.jsonapi.server.resources;
     exports com.exoreaction.xorcery.jsonschema.server.annotations;
