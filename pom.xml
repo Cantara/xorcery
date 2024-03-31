@@ -21,7 +21,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.110.2-SNAPSHOT</version>
+    <version>0.110.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>

@@ -149,7 +149,7 @@ public class EventStoreClientTest {
                     .<MetadataByteBuffer>handle((val, sink) ->
                     {
                         val.metadata().getString("timestamp").ifPresent(System.out::println);
-                        if (counter.incrementAndGet() == 14) {
+                        if (counter.incrementAndGet() >= 14) {
                             sink.complete();
                             latch.countDown();
                             System.out.println("DONE!");
@@ -170,17 +170,17 @@ public class EventStoreClientTest {
             List<MetadataByteBuffer> result = new ArrayList<>();
             CountDownLatch latch = new CountDownLatch(1);
             Disposable disposable = Flux.from(client.readStreamSubscription(null))
-                    .doOnNext(result::add)
                     .<MetadataByteBuffer>handle((val, sink) ->
                     {
                         val.metadata().getString("timestamp").ifPresent(System.out::println);
-                        if (counter.incrementAndGet() == 11) {
+                        if (counter.incrementAndGet() >= 14) {
                             sink.complete();
                             latch.countDown();
                             System.out.println("DONE!");
                         } else
                             sink.next(val);
                     })
+                    .doOnNext(result::add)
                     .doOnError(System.out::println)
                     .contextWrite(Context.of(EventStoreContext.streamId.name(), "test-eventstream"))
                     .subscribe();
