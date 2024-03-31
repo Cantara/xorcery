@@ -77,7 +77,7 @@ public class EventStorePublisher
 
                 subscriber.onSubscribe(this);
             } catch (Throwable e) {
-                logger.error("Could not subscribe to EventStore stream", e);
+                logger.error("Could not subscribe to EventStore streamId", e);
                 subscriber.onError(e);
             }
         }

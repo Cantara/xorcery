@@ -4,15 +4,19 @@ import com.eventstore.dbclient.EventStoreDBClient;
 import com.eventstore.dbclient.ReadResult;
 import com.eventstore.dbclient.ReadStreamOptions;
 import com.eventstore.dbclient.StreamNotFoundException;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Flux;
 import reactor.util.context.Context;
+import reactor.util.context.ContextView;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 
-public class LastPositionContext
-        implements Function<Context, Context> {
+public class LastPositionContext<T>
+        implements BiFunction<Flux<T>, ContextView, Publisher<T>> {
     private final EventStoreDBClient client;
     private final String streamName;
 
@@ -22,17 +26,24 @@ public class LastPositionContext
     }
 
     @Override
-    public Context apply(Context context) {
+    public Publisher<T> apply(Flux<T> flux, ContextView contextView) {
+
         try {
-            ReadResult readResult = client.readStream(streamName, ReadStreamOptions.get().backwards().maxCount(1))
+            String name = Optional.ofNullable(streamName).orElseGet(()->contextView.getOrDefault(EventStoreContext.streamId.name(), null));
+            if (name == null)
+                throw new IllegalArgumentException("No streamId name specified to find last streamPosition");
+            ReadResult readResult = client.readStream(name, ReadStreamOptions.get().backwards().maxCount(1))
                     .orTimeout(10, TimeUnit.SECONDS).join();
             long lastStreamPosition = readResult.getLastStreamPosition();
-            return context.put("position", lastStreamPosition);
-        } catch (Exception e) {
+            return flux.contextWrite(Context.of(EventStoreContext.streamPosition.name(), lastStreamPosition));
+        } catch (Throwable e) {
             if (unwrap(e) instanceof StreamNotFoundException snf) {
-                return context.put("position", 0);
+                // There's no existing streamId so no streamPosition to report
+                return flux;
             }
+
+            // Break
+            return Flux.error(e, true);
         }
-        return context;
     }
 }

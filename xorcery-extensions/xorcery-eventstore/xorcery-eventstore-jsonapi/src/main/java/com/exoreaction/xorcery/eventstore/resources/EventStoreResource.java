@@ -55,7 +55,7 @@ public class EventStoreResource
                 .links(new com.exoreaction.xorcery.hyperschema.Links.Builder()
                         .link(selfLink()).link(describedbyLink(getAbsolutePath().toASCIIString()))
                         .with(websocket("events", EventStoreParameters.class),
-                                l -> l.link(new Link.UriTemplateBuilder("stream")
+                                l -> l.link(new Link.UriTemplateBuilder("streamId")
                                         .parameter("id", "Stream id", "Stream id")
                                         .build()))
                         .build())
@@ -70,7 +70,7 @@ public class EventStoreResource
                 .links(new Links.Builder()
                         .link(self, getUriInfo().getRequestUri().toASCIIString())
                         .link(describedby, getAbsolutePathBuilder().path(".schema").toTemplate())
-                        .link("stream", getUriBuilderFor(StreamResource.class).toTemplate())
+                        .link("streamId", getUriBuilderFor(StreamResource.class).toTemplate())
                         .link("events", getBaseUriBuilder()
                                 .scheme(getBaseUri().getScheme().equals("https") ? "wss" : "ws")
                                 .path("ws/events")

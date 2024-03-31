@@ -68,14 +68,14 @@ public class EventStoreSubscriberEventHandler
             client.appendToStream(streamId, eventData).whenComplete((wr, t) ->
             {
                 if (t != null) {
-                    LogManager.getLogger(getClass()).error("Could not append event to stream", t);
+                    LogManager.getLogger(getClass()).error("Could not append event to streamId", t);
                     subscription.cancel();
                 } else {
                     subscription.request(1);
                 }
             });
         } catch (Throwable e) {
-            LogManager.getLogger(getClass()).error("Could not append event to stream", e);
+            LogManager.getLogger(getClass()).error("Could not append event to streamId", e);
         }
     }
 }

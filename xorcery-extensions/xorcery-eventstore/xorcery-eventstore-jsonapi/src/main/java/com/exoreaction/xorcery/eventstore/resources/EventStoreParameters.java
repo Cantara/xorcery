@@ -19,8 +19,8 @@ import com.exoreaction.xorcery.jsonschema.server.annotations.AttributeSchema;
 
 public class EventStoreParameters
 {
-        @AttributeSchema(title="Stream name", description = "Name of the stream to subscribe to", required = true)
+        @AttributeSchema(title="Stream name", description = "Name of the streamId to subscribe to", required = true)
         public String stream;
-        @AttributeSchema(title="From position", description = "Position to subscribe from. If omitted then read from beginning of stream", required = false)
+        @AttributeSchema(title="From streamPosition", description = "Position to subscribe from. If omitted then read from beginning of streamId", required = false)
         public long from;
 }

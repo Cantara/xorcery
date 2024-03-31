@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
+import com.exoreaction.xorcery.eventstore.client.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -22,15 +23,13 @@ public class ReadStream
     private static final JsonMapper jsonMapper = new JsonMapper();
 
     private final EventStoreDBClient client;
-    private final String streamName;
+    private final String streamId;
     private final Logger logger;
-    private final Marker marker;
 
-    public ReadStream(EventStoreDBClient client, String streamName, Logger logger) {
+    public ReadStream(EventStoreDBClient client, String streamId, Logger logger) {
         this.client = client;
-        this.streamName = streamName;
+        this.streamId = streamId;
         this.logger = logger;
-        this.marker = MarkerManager.getMarker(streamName);
     }
 
     @Override
@@ -41,19 +40,30 @@ public class ReadStream
     private class ReadStreamSubscription
             extends BaseSubscriber<ReadMessage>
             implements Subscription {
-        Subscriber<? super MetadataByteBuffer> subscriber;
+        private final Subscriber<? super MetadataByteBuffer> subscriber;
+        private Marker marker;
 
         public ReadStreamSubscription(Subscriber<? super MetadataByteBuffer> subscriber) {
             this.subscriber = subscriber;
 
             long position = 0;
+            String name = streamId;
             if (subscriber instanceof CoreSubscriber<? super MetadataByteBuffer> coreSubscriber) {
-                if (coreSubscriber.currentContext().getOrDefault("position", null) instanceof Long pos) {
+                if (coreSubscriber.currentContext().getOrDefault(EventStoreContext.streamPosition.name(), null) instanceof Long pos) {
                     position = pos;
+                }
+                if (coreSubscriber.currentContext().getOrDefault(EventStoreContext.streamId.name(), null) instanceof String n) {
+                    name = n;
                 }
             }
 
-            client.readStreamReactive(streamName, ReadStreamOptions.get()
+            if (name == null) {
+                subscriber.onError(new IllegalArgumentException("No streamId name specified"));
+                return;
+            }
+
+            this.marker = MarkerManager.getMarker(name);
+            client.readStreamReactive(name, ReadStreamOptions.get()
                     .fromRevision(position)
                     .deadline(30000)
                     .resolveLinkTos()
@@ -69,8 +79,7 @@ public class ReadStream
         protected void hookOnNext(ReadMessage value) {
 
             try {
-                if (!value.hasEvent())
-                {
+                if (!value.hasEvent()) {
                     request(1);
                     return;
                 }
@@ -94,10 +103,23 @@ public class ReadStream
                 Metadata.Builder metadata = new Metadata.Builder((ObjectNode) jsonMapper.readTree(userMetadata));
 
                 // Put in ES metadata
-                String streamId = resolvedEvent.getLink() != null ? resolvedEvent.getLink().getStreamId() : resolvedEvent.getEvent().getStreamId();
-                long position = resolvedEvent.getLink() != null ? resolvedEvent.getLink().getRevision() : resolvedEvent.getEvent().getRevision();
-                metadata.add("streamId", streamId);
-                metadata.add("position", position);
+                RecordedEvent linkedEvent = resolvedEvent.getLink();
+                if (linkedEvent != null)
+                {
+                    String streamId = linkedEvent.getStreamId();
+                    long position = linkedEvent.getRevision();
+                    String originalStreamId = resolvedEvent.getEvent().getStreamId();
+                    metadata.add(EventStoreContext.streamId.name(), streamId);
+                    metadata.add(EventStoreContext.streamPosition.name(), position);
+                    metadata.add(EventStoreContext.originalStreamId.name(), originalStreamId);
+                } else
+                {
+                    RecordedEvent recordedEvent = resolvedEvent.getEvent();
+                    String streamId = recordedEvent.getStreamId();
+                    long position = recordedEvent.getRevision();
+                    metadata.add(EventStoreContext.streamId.name(), streamId);
+                    metadata.add(EventStoreContext.streamPosition.name(), position);
+                }
                 subscriber.onNext(new MetadataByteBuffer(metadata.build(), ByteBuffer.wrap(event.getEventData())));
             } catch (IOException e) {
                 subscriber.onError(e);

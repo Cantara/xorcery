@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
+import com.exoreaction.xorcery.eventstore.client.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -27,15 +28,13 @@ public class ReadStreamSubscription
     private static final JsonMapper jsonMapper = new JsonMapper();
 
     private final EventStoreDBClient client;
-    private final String streamName;
+    private final String streamId;
     private final Logger logger;
-    private final Marker marker;
 
-    public ReadStreamSubscription(EventStoreDBClient client, String streamName, Logger logger) {
+    public ReadStreamSubscription(EventStoreDBClient client, String streamId, Logger logger) {
         this.client = client;
-        this.streamName = streamName;
+        this.streamId = streamId;
         this.logger = logger;
-        this.marker = MarkerManager.getMarker(streamName);
     }
 
     @Override
@@ -55,23 +54,40 @@ public class ReadStreamSubscription
         final AtomicLong position = new AtomicLong();
 
         final long maxRequests = Integer.MAX_VALUE;
+        private Marker marker;
+
+        String name;
 
         public ReadStreamSubscriptionListener(Subscriber<? super MetadataByteBuffer> subscriber) {
             this.subscriber = subscriber;
 
+            name = streamId;
             if (subscriber instanceof CoreSubscriber<? super MetadataByteBuffer> coreSubscriber) {
-                if (coreSubscriber.currentContext().getOrDefault("position", null) instanceof Long pos) {
+                if (coreSubscriber.currentContext().getOrDefault(EventStoreContext.streamId.name(), null) instanceof String n) {
+                    name = n;
+                }
+                if (name == null) {
+                    subscriber.onError(new IllegalArgumentException("No streamId name specified"));
+                    return;
+                }
+                if (coreSubscriber.currentContext().getOrDefault(EventStoreContext.streamPosition.name(), null) instanceof Long pos) {
                     position.set(pos);
                     start(StreamPosition.position(pos));
                     return;
                 }
             }
 
+            if (name == null) {
+                subscriber.onError(new IllegalArgumentException("No streamId name specified"));
+                return;
+            }
+            this.marker = MarkerManager.getMarker(name);
+
             start(StreamPosition.start());
         }
 
         public void start(StreamPosition<Long> streamPosition) {
-            subscribeFuture = client.subscribeToStream(streamName, this, SubscribeToStreamOptions.get()
+            subscribeFuture = client.subscribeToStream(name, this, SubscribeToStreamOptions.get()
                     .fromRevision(streamPosition)
                     .deadline(30000)
                     .resolveLinkTos()
@@ -86,7 +102,7 @@ public class ReadStreamSubscription
 
         @Override
         public void request(long n) {
-            outstandingRequests.release((int)Math.min(n, maxRequests));
+            outstandingRequests.release((int) Math.min(n, maxRequests));
         }
 
         @Override
@@ -128,16 +144,16 @@ public class ReadStreamSubscription
                 // Put in ES metadata
                 String streamId = resolvedEvent.getLink() != null ? resolvedEvent.getLink().getStreamId() : resolvedEvent.getEvent().getStreamId();
                 long position = resolvedEvent.getLink() != null ? resolvedEvent.getLink().getRevision() : resolvedEvent.getEvent().getRevision();
-                metadata.add("streamId", streamId);
-                metadata.add("position", position);
+                metadata.add(EventStoreContext.streamId.name(), streamId);
+                metadata.add(EventStoreContext.streamPosition.name(), position);
 
                 if (caughtUp.getAndSet(false)) {
-                    metadata.add("live", JsonNodeFactory.instance.booleanNode(true));
+                    metadata.add(EventStoreContext.streamLive.name(), JsonNodeFactory.instance.booleanNode(true));
                 } else if (fellBehind.getAndSet(false)) {
-                    metadata.add("live", JsonNodeFactory.instance.booleanNode(false));
+                    metadata.add(EventStoreContext.streamLive.name(), JsonNodeFactory.instance.booleanNode(false));
                 }
 
-                System.out.println("Position:"+position);
+                System.out.println("Position:" + position);
                 this.position.set(position);
                 subscriber.onNext(new MetadataByteBuffer(metadata.build(), ByteBuffer.wrap(event.getEventData())));
 
