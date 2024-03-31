@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.opensearch.client {
+module xorcery.opensearch.client {
     requires xorcery.service.api;
     requires xorcery.configuration.api;
     requires xorcery.reactivestreams.api;

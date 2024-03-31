@@ -92,13 +92,11 @@ public class CertificateRequestAndRenewalTest {
             .build();
 
 
+//    @RepeatedTest(1000)
     @Test
     public void testCertificateRequestAndRenewal() throws Exception {
 
-        System.out.println("Server config" + server.getConfiguration());
-
         URI service = InstanceConfiguration.get(server.getConfiguration()).getAPI().resolve("subject");
-        System.out.println("Requesting:" + service);
 
         // Use Jetty client
         ContentResponse contentResponse = server.getServiceLocator().getService(HttpClient.class).newRequest(service).send();

@@ -1,4 +1,4 @@
-open module xorcery.eventstore.client {
+module xorcery.eventstore.client {
     exports com.exoreaction.xorcery.eventstore.client;
     exports com.exoreaction.xorcery.eventstore;
 

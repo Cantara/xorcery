@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.dns.update {
+module xorcery.dns.update {
     exports com.exoreaction.xorcery.dns.update;
     exports com.exoreaction.xorcery.dns.update.spi;
     exports com.exoreaction.xorcery.dns.update.providers;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.dns.server {
+module xorcery.dns.server {
     exports com.exoreaction.xorcery.dns.server;
     exports com.exoreaction.xorcery.dns.server.tcp;
 

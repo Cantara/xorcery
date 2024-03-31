@@ -30,7 +30,8 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
+            <artifactId>xorcery-junit</artifactId>
+            <scope>compile</scope>
         </dependency>
 
         <dependency>
@@ -131,17 +132,6 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-disruptor</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest</artifactId>
-            <scope>test</scope>
         </dependency>
 
     </dependencies>

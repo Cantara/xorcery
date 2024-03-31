@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.test {
+module xorcery.test {
     exports com.exoreaction.xorcery.test;
     exports com.exoreaction.xorcery.test.resources;
 

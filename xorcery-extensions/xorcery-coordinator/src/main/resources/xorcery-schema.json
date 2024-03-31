@@ -4,12 +4,6 @@
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
-    "adminservlet" : {
-      "$ref" : "#/$defs/adminservlet"
-    },
-    "serveradmin" : {
-      "$ref" : "#/$defs/serveradmin"
-    },
     "aws" : {
       "$ref" : "#/$defs/aws"
     },
@@ -81,17 +75,15 @@
     },
     "thymeleaf" : {
       "$ref" : "#/$defs/thymeleaf"
+    },
+    "adminservlet" : {
+      "$ref" : "#/$defs/adminservlet"
+    },
+    "serveradmin" : {
+      "$ref" : "#/$defs/serveradmin"
     }
   },
   "$defs" : {
-    "adminservlet" : {
-      "type" : "object",
-      "properties" : { }
-    },
-    "serveradmin" : {
-      "type" : "object",
-      "properties" : { }
-    },
     "aws" : {
       "type" : "object",
       "properties" : {
@@ -265,7 +257,7 @@
           "description" : "Default: ssl"
         },
         "renewOnStartup" : {
-          "type" : [ "boolean", "string", "boolean", "string" ],
+          "type" : [ "boolean", "string" ],
           "default" : false,
           "description" : "Default: false"
         },
@@ -1520,6 +1512,14 @@
           }
         }
       }
+    },
+    "adminservlet" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "serveradmin" : {
+      "type" : "object",
+      "properties" : { }
     }
   }
 }

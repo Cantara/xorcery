@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.dns.registration {
+module xorcery.dns.registration {
     exports com.exoreaction.xorcery.dns.registration;
 
     requires xorcery.service.api;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.domainevents.publisher {
+module xorcery.domainevents.publisher {
     exports com.exoreaction.xorcery.domainevents.helpers.entity;
     exports com.exoreaction.xorcery.domainevents.helpers.entity.annotation;
     exports com.exoreaction.xorcery.domainevents.helpers.context;

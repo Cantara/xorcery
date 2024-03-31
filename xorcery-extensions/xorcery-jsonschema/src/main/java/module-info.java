@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.jsonschema {
+module xorcery.jsonschema {
     exports com.exoreaction.xorcery.jsonschema;
     exports com.exoreaction.xorcery.hyperschema;
 

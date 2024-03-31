@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.json {
+module xorcery.json {
     exports com.exoreaction.xorcery.json;
 
     requires transitive com.fasterxml.jackson.databind;

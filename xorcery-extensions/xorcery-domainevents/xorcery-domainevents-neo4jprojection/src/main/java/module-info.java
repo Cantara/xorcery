@@ -18,7 +18,7 @@ import com.exoreaction.xorcery.domainevents.neo4jprojections.JsonDomainEventNeo4
 import com.exoreaction.xorcery.neo4j.spi.Neo4jProvider;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 
-open module xorcery.domainevents.neo4jprojection {
+module xorcery.domainevents.neo4jprojection {
     exports com.exoreaction.xorcery.domainevents.neo4jprojections;
     exports com.exoreaction.xorcery.domainevents.snapshot;
 

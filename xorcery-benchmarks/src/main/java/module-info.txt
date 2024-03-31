@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.benchmarks {
+module xorcery.benchmarks {
     exports com.exoreaction.xorcery.benchmarks.reactivestreams;
     exports com.exoreaction.xorcery.benchmarks.reactivestreams.jmh_generated;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.thymeleaf.jsonapi {
+module xorcery.thymeleaf.jsonapi {
     exports com.exoreaction.xorcery.thymeleaf.jsonapi.resources;
     exports com.exoreaction.xorcery.thymeleaf.jsonapi.providers;
 

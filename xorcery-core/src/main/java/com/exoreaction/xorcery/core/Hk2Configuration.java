@@ -22,7 +22,7 @@ import org.glassfish.hk2.runlevel.RunLevelController;
 
 import java.util.Collections;
 
-public record Hk2Configuration(Configuration configuration) {
+record Hk2Configuration(Configuration configuration) {
 
     public RunLevelController.ThreadingPolicy getThreadingPolicy() {
         return RunLevelController.ThreadingPolicy.valueOf(configuration.getString("threadPolicy").orElse("FULLY_THREADED"));

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.util {
+module xorcery.util {
     exports com.exoreaction.xorcery.concurrent;
     exports com.exoreaction.xorcery.util;
     exports com.exoreaction.xorcery.function;

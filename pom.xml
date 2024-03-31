@@ -21,7 +21,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.110.1</version>
+    <version>0.110.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -959,7 +959,7 @@
                 <plugin>
                     <groupId>com.exoreaction.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.110.0</version>
+                    <version>0.110.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>

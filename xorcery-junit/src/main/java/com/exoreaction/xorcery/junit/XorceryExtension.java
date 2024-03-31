@@ -156,7 +156,7 @@ public class XorceryExtension
 
         try {
             // Log final configuration
-            ConfigurationLogger.getLogger().log("Configuration:\n" + configuration);
+//            ConfigurationLogger.getLogger().log("Configuration:\n" + configuration);
             LoggerContextFactory.initialize(configuration);
 
             ServiceLocator serviceLocator = null;

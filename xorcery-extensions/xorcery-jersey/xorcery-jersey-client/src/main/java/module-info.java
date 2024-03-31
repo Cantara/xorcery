@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.jersey.client {
+module xorcery.jersey.client {
     exports com.exoreaction.xorcery.jersey.client;
     exports com.exoreaction.xorcery.jersey.client.providers;
 

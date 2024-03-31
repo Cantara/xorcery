@@ -25,6 +25,7 @@ import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.*;
 import org.glassfish.hk2.extras.events.internal.DefaultTopicDistributionService;
+import org.glassfish.hk2.runlevel.CurrentlyRunningException;
 import org.glassfish.hk2.runlevel.RunLevelController;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
@@ -49,16 +50,13 @@ import java.util.Optional;
  * @author rickardoberg
  * @since 12/04/2022
  */
-public class Xorcery
+public final class Xorcery
         implements AutoCloseable {
 
-    @Inject
-    private Logger logger;
-    @Inject
-    private LoggerContext loggerContext;
-    private final Marker marker;
-
     private final ServiceLocator serviceLocator;
+
+    private final Logger logger;
+    private final Marker marker;
 
     public Xorcery(Configuration configuration) throws Exception {
         this(configuration, null);
@@ -66,71 +64,81 @@ public class Xorcery
 
     public Xorcery(Configuration configuration, ServiceLocator sl) throws Exception {
 
-        // Set configured system properties
-        Configuration system = configuration.getConfiguration("system");
-        system.json().fields().forEachRemaining(entry ->
-        {
-            if (!entry.getValue().isNull()) {
-                String key = entry.getKey();
-                String value = entry.getValue().asText();
-                ConfigurationLogger.getLogger().log("Set system property '" + key + "' to '" + value + "'");
-                System.setProperty(entry.getKey(), entry.getValue().asText());
-            }
-        });
+            // Set configured system properties
+            Configuration system = configuration.getConfiguration("system");
+            system.json().fields().forEachRemaining(entry ->
+            {
+                if (!entry.getValue().isNull()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue().asText();
+                    ConfigurationLogger.getLogger().log("Set system property '" + key + "' to '" + value + "'");
+                    System.setProperty(entry.getKey(), entry.getValue().asText());
+                }
+            });
 
-        // Ensure home directory exists
-        boolean createdHome = false;
-        File homeDir = new File(InstanceConfiguration.get(configuration).getHome());
-        if (!homeDir.exists())
-            createdHome = homeDir.mkdirs();
+            // Ensure home directory exists
+            boolean createdHome = false;
+            File homeDir = new File(InstanceConfiguration.get(configuration).getHome());
+            if (!homeDir.exists())
+                createdHome = homeDir.mkdirs();
 
-        Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
+            Hk2Configuration hk2Configuration = new Hk2Configuration(configuration.getConfiguration("hk2"));
 
-        this.serviceLocator = sl == null ? ServiceLocatorFactory.getInstance().create(null) : sl;
-
-        List<String> configurationMonitor = new ArrayList<>();
-        PopulatorPostProcessor populatorPostProcessor = new ConfigurationPostPopulatorProcessor(configuration, configurationMonitor::add);
-        populateServiceLocator(serviceLocator, configuration, hk2Configuration, populatorPostProcessor);
-        setupServiceLocator(serviceLocator, hk2Configuration);
-
-        // Instantiate all enabled services
-        serviceLocator.inject(this);
-        InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
-        marker = MarkerManager.getMarker(instanceConfiguration.getId());
-        Logger xorceryLogger = loggerContext.getLogger(Xorcery.class);
-        if (xorceryLogger.isDebugEnabled()) {
-            for (String msg : ConfigurationLogger.getLogger().drain()) {
-                xorceryLogger.debug(msg);
-            }
-            for (String msg : configurationMonitor) {
-                xorceryLogger.debug(msg);
-            }
-        }
-
-        if (createdHome)
-            logger.info(marker, "Create home directory " + homeDir);
-        logger.info(marker, "Starting");
+            this.serviceLocator = sl == null ? ServiceLocatorFactory.getInstance().create(null) : sl;
 
         Filter configurationFilter = getEnabledServicesFilter(configuration);
+        Logger xorceryLogger = null;
+        Marker xorceryMarker = null;
+        try {
+            PopulatorPostProcessor populatorPostProcessor = new ConfigurationPostPopulatorProcessor(configuration,ConfigurationLogger.getLogger()::log);
+            populateServiceLocator(serviceLocator, configuration, hk2Configuration, populatorPostProcessor);
+            setupServiceLocator(serviceLocator, hk2Configuration);
 
-        RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
-        runLevelController.setThreadingPolicy(hk2Configuration.getThreadingPolicy());
-        runLevelController.setMaximumUseableThreads(hk2Configuration.getMaximumUseableThreads());
-
-        runLevelController.proceedTo(hk2Configuration.getRunLevel());
-
-        List<ServiceHandle<?>> services = serviceLocator.getAllServiceHandles(configurationFilter);
-
-        if (logger.isDebugEnabled()) {
-            StringBuilder msg = new StringBuilder();
-            msg.append("Services:");
-            for (ServiceHandle<?> service : services) {
-                msg.append('\n').append(service.getActiveDescriptor().getImplementation());
+            // Instantiate all enabled services
+            xorceryLogger = serviceLocator.getService(LoggerContext.class).getLogger(Xorcery.class);
+            InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
+            xorceryMarker = MarkerManager.getMarker(instanceConfiguration.getId());
+            if (xorceryLogger.isDebugEnabled()) {
+                for (String msg : ConfigurationLogger.getLogger().drain()) {
+                    xorceryLogger.debug(msg);
+                }
             }
-            logger.debug(marker, msg);
-        }
 
-        logger.info(marker, "Started");
+            if (createdHome)
+                xorceryLogger.info(xorceryMarker, "Create home directory " + homeDir);
+            xorceryLogger.info(xorceryMarker, "Starting");
+
+            RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
+            runLevelController.setThreadingPolicy(hk2Configuration.getThreadingPolicy());
+            runLevelController.setMaximumUseableThreads(hk2Configuration.getMaximumUseableThreads());
+
+            runLevelController.proceedTo(hk2Configuration.getRunLevel());
+
+            if (xorceryLogger.isDebugEnabled()) {
+                StringBuilder msg = new StringBuilder();
+                List<ServiceHandle<?>> services = serviceLocator.getAllServiceHandles(configurationFilter);
+                for (ServiceHandle<?> service : services) {
+                    msg.append('\n').append(service.getActiveDescriptor().getImplementation());
+                }
+                xorceryLogger.debug(xorceryMarker, "Services:"+msg);
+            }
+
+            xorceryLogger.info(xorceryMarker, "Started");
+            this.logger = xorceryLogger;
+            this.marker = xorceryMarker;
+        } catch (MultiException e) {
+            if (xorceryLogger != null && !xorceryLogger.isDebugEnabled())
+            {
+                List<ServiceHandle<?>> services = serviceLocator.getAllServiceHandles(configurationFilter);
+                StringBuilder msg = new StringBuilder();
+                for (ServiceHandle<?> service : services) {
+                    msg.append('\n').append(service.getActiveDescriptor().getImplementation());
+                }
+
+                xorceryLogger.error(xorceryMarker, "Startup failed. Configuration:\n{}\nServices:{}", configuration, msg);
+            }
+            throw e;
+        }
     }
 
     public ServiceLocator getServiceLocator() {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.jsonapi.jaxrs {
+module xorcery.jsonapi.jaxrs {
     exports com.exoreaction.xorcery.jsonapi.providers;
 
     requires transitive xorcery.jsonapi.api;

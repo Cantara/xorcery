@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.reactivestreams.persistentsubscriber {
+module xorcery.reactivestreams.persistentsubscriber {
     exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
     exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi;
     exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers;

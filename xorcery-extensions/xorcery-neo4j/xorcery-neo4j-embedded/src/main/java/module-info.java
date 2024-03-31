@@ -16,7 +16,7 @@
 
 import com.exoreaction.xorcery.neo4j.spi.Neo4jProvider;
 
-open module xorcery.neo4j.embedded {
+module xorcery.neo4j.embedded {
     uses Neo4jProvider;
 
     exports com.exoreaction.xorcery.neo4j.client;

@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.certificates.spi {
+module xorcery.certificates.spi {
     exports com.exoreaction.xorcery.certificates.spi;
-    exports com.exoreaction.xorcery.certificates;
-
-    requires xorcery.configuration.api;
-    requires xorcery.keystores;
-    requires xorcery.secrets.api;
-
-    requires org.apache.logging.log4j;
 
     requires org.bouncycastle.pkix;
-    requires org.bouncycastle.provider;
-    requires org.bouncycastle.util;
-    requires org.glassfish.hk2.api;
-    requires org.glassfish.hk2.runlevel;
-    requires jakarta.inject;
 }

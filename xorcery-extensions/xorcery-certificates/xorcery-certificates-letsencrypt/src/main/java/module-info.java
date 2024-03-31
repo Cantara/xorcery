@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.certificates.letsencrypt {
+module xorcery.certificates.letsencrypt {
     exports com.exoreaction.xorcery.certificates.letsencrypt;
     exports com.exoreaction.xorcery.certificates.letsencrypt.resources;
 

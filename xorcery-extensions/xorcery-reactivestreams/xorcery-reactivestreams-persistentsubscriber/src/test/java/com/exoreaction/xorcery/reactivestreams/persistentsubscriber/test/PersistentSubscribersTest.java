@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import com.exoreaction.xorcery.net.Sockets;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -55,11 +56,15 @@ public class PersistentSubscribersTest {
     @Test
     public void testPersistentSubscriber() throws InterruptedException {
 
-        while (TestSubscriber.handled.get() < 47)
+        long start = System.currentTimeMillis();
+        while (TestSubscriber.handled.get() < 47 && System.currentTimeMillis() < start + 10000)
         {
 //            System.out.println("SLEEP");
             Thread.sleep(100);
         }
+
+        if (System.currentTimeMillis() >= start + 10000)
+            Assertions.fail("Timed out");
     }
 
 }
