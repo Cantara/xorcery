@@ -18,8 +18,8 @@ import java.util.Optional;
 
 /**
  * Helper methods for JAX-RS resources and resource interfaces to use. This is implemented by
- * AbstractResource which provides the injection and base objects used in the helpers. Other helper
- * interfaces can then extend this interface and use these methods without having access to AbstractResource.
+ * BaseResource which provides the injection and base objects used in the helpers. Other helper
+ * interfaces can then extend this interface and use these methods without having access to BaseResource.
  */
 public interface ContextResource {
 
