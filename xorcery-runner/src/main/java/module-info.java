@@ -15,6 +15,7 @@
  */
 module xorcery.runner {
     exports com.exoreaction.xorcery.runner;
+    opens com.exoreaction.xorcery.runner;
 
     requires transitive xorcery.core;
 

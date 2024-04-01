@@ -107,7 +107,7 @@ public class PublishSubscriberWithResultBenchmarks {
 
             @Override
             public void onNext(WithResult<WithMetadata<String>, Integer> item) {
-                item.result().complete(item.event().event().length());
+                item.result().complete(item.event().data().length());
                 i++;
                 if (i % batchSize == 0) {
                     subscription.request(batchSize);

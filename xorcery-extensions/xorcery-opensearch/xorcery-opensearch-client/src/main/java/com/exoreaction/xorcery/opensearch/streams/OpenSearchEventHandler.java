@@ -72,7 +72,7 @@ public class OpenSearchEventHandler
         ObjectNode document = event.metadata().metadata().objectNode();
         document.set("@timestamp", event.metadata().getJson("timestamp").orElse(document.numberNode(0L)));
         document.set("metadata", event.metadata().metadata());
-        document.set("data", event.event());
+        document.set("data", event.data());
 
         if (bulkRequest == null)
             bulkRequest = new IndexBulkRequest.Builder();

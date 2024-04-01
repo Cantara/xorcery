@@ -87,11 +87,11 @@ public class WaitForProjectionCommit
 
     @Override
     public void onNext(WithMetadata<ProjectionCommit> item) {
-        if (item.event().id().equals(projectionId)) {
-            logger.debug("Received projection commit: " + item.event().id()+":"+item.event().revision()+"("+item.metadata().json().toPrettyString()+")");
+        if (item.data().id().equals(projectionId)) {
+            logger.debug("Received projection commit: " + item.data().id()+":"+item.data().revision()+"("+item.metadata().json().toPrettyString()+")");
 
             currentCommit.set(item);
-            currentVersion.set(item.event().revision());
+            currentVersion.set(item.data().revision());
             item.metadata().getLong("lastTimestamp").ifPresent(currentTimestamp::set);
 
             do {

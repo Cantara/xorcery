@@ -7,9 +7,11 @@ import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.reactor.ProjectionsOperator;
 import com.exoreaction.xorcery.neo4jprojections.reactor.SkipEventsUntil;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
-import com.exoreaction.xorcery.reactivestreams.extras.publisher.YamlPublisher;
+import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
+import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Flux;
 import reactor.util.context.Context;
 
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,7 +37,7 @@ public class ReactorProjectionTest {
     @Test
     public void testProjection() {
         ProjectionsOperator projectionsOperator = xorceryExtension.getServiceLocator().getService(ProjectionsOperator.class);
-        YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class, Resources.getResource("events.yaml").orElseThrow());
+        YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
         AtomicInteger timestamp = new AtomicInteger();
         Flux.from(filePublisher)
                 .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
@@ -42,7 +45,9 @@ public class ReactorProjectionTest {
                 .map(List::of)
                 .transformDeferredContextual(projectionsOperator)
                 .doOnNext(System.out::println)
-                .contextWrite(Context.of("projection", "test"))
+                .contextWrite(Context.of(
+                        "projection", "test",
+                        ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()))
                 .blockLast();
 
         GraphDatabase service = xorceryExtension.getServiceLocator().getService(GraphDatabase.class);
@@ -68,13 +73,15 @@ public class ReactorProjectionTest {
         // Client
         WebSocketStreamsClient client = xorceryExtension.getServiceLocator().getService(WebSocketStreamsClient.class);
 
-        YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class, Resources.getResource("events.yaml").orElseThrow());
+        YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
         AtomicInteger timestamp = new AtomicInteger();
         Flux<MetadataEvents> publisher = Flux.from(filePublisher)
-                .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()));
+                .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
+                .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
-        client.publish(ReactiveStreamsServerConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/test"),
-                        WebSocketClientOptions.instance(), MetadataEvents.class, publisher, MediaType.APPLICATION_JSON)
+        URI serverUri = ReactiveStreamsServerConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/test");
+        publisher.transform(client.publish(WebSocketClientOptions.instance(), MetadataEvents.class, MediaType.APPLICATION_JSON))
+                .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(), serverUri))
                 .blockLast();
 
         // Check results

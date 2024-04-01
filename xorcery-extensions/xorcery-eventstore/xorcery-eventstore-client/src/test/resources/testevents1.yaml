@@ -4,7 +4,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test Value as attribute
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedAddress"
@@ -26,7 +26,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedName"
       updated:
@@ -47,7 +47,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test update Value as attribute
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedAddress"

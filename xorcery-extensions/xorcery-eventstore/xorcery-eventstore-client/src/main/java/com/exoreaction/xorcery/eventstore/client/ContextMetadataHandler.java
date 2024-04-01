@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.eventstore.client;
 
-import com.exoreaction.xorcery.eventstore.client.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.util.context.ContextView;

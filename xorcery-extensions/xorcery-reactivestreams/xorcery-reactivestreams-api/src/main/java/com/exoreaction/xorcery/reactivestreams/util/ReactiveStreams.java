@@ -15,14 +15,26 @@
  */
 package com.exoreaction.xorcery.reactivestreams.util;
 
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.SynchronousSink;
 
+import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public interface ReactiveStreams {
+    JsonMapper jsonMapper = new JsonMapper();
+
     @Deprecated
     static <T> Function<Throwable, CompletionStage<T>> cancelStream(CompletableFuture<Void> streamFuture) {
         return t ->
@@ -37,6 +49,23 @@ public interface ReactiveStreams {
         {
             if (t != null) {
                 disposable.dispose();
+            }
+        };
+    }
+
+    // Transformers
+    /**
+     * Converts an ObjectNode with metadata and JSON body to a MetadataByteBuffer. Use this with {@link Flux#handle(BiConsumer)}
+     */
+    static BiConsumer<ObjectNode, SynchronousSink<MetadataByteBuffer>> toMetadataByteBuffer(String metadataProperty, String jsonProperty) {
+        return (json, sink) ->
+        {
+            try {
+                Metadata metadata = new Metadata(Optional.ofNullable((ObjectNode) json.get(metadataProperty)).orElseGet(JsonNodeFactory.instance::objectNode));
+                ByteBuffer byteBuffer = ByteBuffer.wrap(jsonMapper.writeValueAsBytes(Optional.ofNullable(json.get(jsonProperty)).orElseGet(JsonNodeFactory.instance::objectNode)));
+                sink.next(new MetadataByteBuffer(metadata, byteBuffer));
+            } catch (JsonProcessingException e) {
+                sink.error(e);
             }
         };
     }

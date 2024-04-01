@@ -102,18 +102,18 @@ public class WebSocketStreamsServerService
     }
 
     @Override
-    public <PUBLISH> Disposable publisher(String path, Class<PUBLISH> publishType, Publisher<PUBLISH> publisher) throws IllegalArgumentException {
+    public <PUBLISH> Disposable publisher(String path, Class<? super PUBLISH> publishType, Publisher<PUBLISH> publisher) throws IllegalArgumentException {
 
         return registerHandler(ReactiveStreamSubProtocol.publisher, path, null, publishType, flux -> Flux.from(publisher));
     }
 
     @Override
-    public <SUBSCRIBE> Disposable subscriber(String path, Class<SUBSCRIBE> subscribeType, Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> appendSubscriber) throws IllegalArgumentException {
+    public <SUBSCRIBE> Disposable subscriber(String path, Class<? super SUBSCRIBE> subscribeType, Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> appendSubscriber) throws IllegalArgumentException {
         return registerHandler(ReactiveStreamSubProtocol.subscriber, path, subscribeType, null, appendSubscriber);
     }
 
     @Override
-    public <SUBSCRIBE, RESULT> Disposable subscriberWithResult(String path, Class<SUBSCRIBE> subscribeType, Class<RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult) throws IllegalArgumentException {
+    public <SUBSCRIBE, RESULT> Disposable subscriberWithResult(String path, Class<? super SUBSCRIBE> subscribeType, Class<? super RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult) throws IllegalArgumentException {
         return registerHandler(ReactiveStreamSubProtocol.subscriberWithResult, path, subscribeType, resultType, subscribeAndReturnResult);
     }
 

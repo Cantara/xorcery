@@ -55,11 +55,11 @@ public class EventStoreSubscriberEventHandler
         EventStoreMetadata emd = new EventStoreMetadata(event.metadata());
         UUID eventId = emd.getCorrelationId().map(UUID::fromString).orElseGet(UUID::randomUUID);
         String eventType = emd.eventType();
-        EventData eventData = EventDataBuilder.json(eventId, eventType, event.event().array())
+        EventData eventData = EventDataBuilder.json(eventId, eventType, event.data().array())
                 .metadataAsBytes(jsonMapper.writeValueAsBytes(event.metadata().metadata()))
                 .build();
 
-        event.event().clear();
+        event.data().clear();
         String streamId = this.streamId.orElseGet(emd::streamId);
 
         logger.debug("Write metadata:" + new String(eventData.getUserMetadata()) + "\nWrite data:" + new String(eventData.getEventData()));

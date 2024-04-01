@@ -9,20 +9,20 @@ import java.util.function.Function;
 public interface WebSocketStreamsServer {
     <PUBLISH> Disposable publisher(
             String path,
-            Class<PUBLISH> publishType,
+            Class<? super PUBLISH> publishType,
             Publisher<PUBLISH> publisher)
             throws IllegalArgumentException;
 
     <SUBSCRIBE> Disposable subscriber(
             String path,
-            Class<SUBSCRIBE> subscribeType,
-            Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> appendSubscriber)
+            Class<? super SUBSCRIBE> subscribeType,
+            Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> subscriberTransform)
             throws IllegalArgumentException;
 
     <SUBSCRIBE, RESULT> Disposable subscriberWithResult(
             String path,
-            Class<SUBSCRIBE> subscribeType,
-            Class<RESULT> resultType,
-            Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult)
+            Class<? super SUBSCRIBE> subscribeType,
+            Class<? super RESULT> resultType,
+            Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscriberWithResultTransform)
             throws IllegalArgumentException;
 }

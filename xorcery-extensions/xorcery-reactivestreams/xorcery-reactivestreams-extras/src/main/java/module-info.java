@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.reactivestreams.extras {
-    exports com.exoreaction.xorcery.reactivestreams.extras.publisher;
+    exports com.exoreaction.xorcery.reactivestreams.extras.publishers;
     exports com.exoreaction.xorcery.reactivestreams.extras.providers;
 
     requires xorcery.reactivestreams.api;

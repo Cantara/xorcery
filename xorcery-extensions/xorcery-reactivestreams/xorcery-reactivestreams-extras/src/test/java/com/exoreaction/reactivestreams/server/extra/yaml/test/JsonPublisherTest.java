@@ -15,10 +15,12 @@
  */
 package com.exoreaction.reactivestreams.server.extra.yaml.test;
 
-import com.exoreaction.xorcery.reactivestreams.extras.publisher.YamlPublisher;
+import com.exoreaction.xorcery.reactivestreams.extras.publishers.JsonPublisher;
+import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.util.Resources;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
+import reactor.util.context.Context;
 
 import java.util.List;
 import java.util.Map;
@@ -28,10 +30,11 @@ public class JsonPublisherTest {
     @Test
     public void testJsonPublisher() {
 
-        YamlPublisher<Map<String, Object>> filePublisher = new YamlPublisher(Map.class, Resources.getResource("testevents.json").orElseThrow());
+        JsonPublisher<Map<String, Object>> filePublisher = new JsonPublisher<>(Map.class);
 
         List<Map<String, Object>> result = Flux
                 .from(filePublisher)
+                .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("testevents.json").orElseThrow()))
                 .toStream()
                 .toList();
 

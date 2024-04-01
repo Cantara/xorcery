@@ -1,19 +1,20 @@
 package com.exoreaction.xorcery.eventstore.client.api;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.eventstore.client.AppendHandler;
-import com.exoreaction.xorcery.eventstore.client.LastPositionContext;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.eventstore.client.ReadStream;
-import com.exoreaction.xorcery.eventstore.client.ReadStreamSubscription;
+import com.exoreaction.xorcery.eventstore.client.*;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
-import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
 import java.util.UUID;
@@ -37,16 +38,22 @@ public class EventStoreClient {
         }
 
         public EventStoreClient create(EventStoreDBClientSettings settings) {
-            return new EventStoreClient(settings, loggerContext, openTelemetry);
+            return create(settings, new DisruptorConfiguration(new Configuration.Builder().build()));
+        }
+
+        public EventStoreClient create(EventStoreDBClientSettings settings, DisruptorConfiguration disruptorConfiguration) {
+            return new EventStoreClient(settings, disruptorConfiguration, loggerContext, openTelemetry);
         }
     }
 
     private final EventStoreDBClient client;
+    private final DisruptorConfiguration disruptorConfiguration;
     private final LoggerContext loggerContext;
     private final OpenTelemetry openTelemetry;
 
-    public EventStoreClient(EventStoreDBClientSettings settings, LoggerContext loggerContext, OpenTelemetry openTelemetry) {
+    public EventStoreClient(EventStoreDBClientSettings settings, DisruptorConfiguration disruptorConfiguration, LoggerContext loggerContext, OpenTelemetry openTelemetry) {
         client = EventStoreDBClient.create(settings);
+        this.disruptorConfiguration = disruptorConfiguration;
         this.loggerContext = loggerContext;
         this.openTelemetry = openTelemetry;
     }
@@ -65,29 +72,35 @@ public class EventStoreClient {
     }
 
     // Write
-    public BiConsumer<AppendMetadataByteBuffers, SynchronousSink<EventStoreCommit>> appender(
+    public BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> append(
             Function<Metadata, UUID> eventIdSelector,
             Function<Metadata, String> eventTypeSelector,
             Consumer<AppendToStreamOptions> optionsConfigurer) {
-        return new AppendHandler(client, optionsConfigurer, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
+        return new AppendHandler(client, optionsConfigurer, disruptorConfiguration, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
+    }
+
+    public BiConsumer<MetadataByteBuffer, SynchronousSink<MetadataByteBuffer>> appendOptimisticLocking(
+            Function<Metadata, UUID> eventIdSelector,
+            Function<Metadata, String> eventTypeSelector,
+            Consumer<AppendToStreamOptions> optionsConfigurer) {
+        return new AppendOptimisticLockingHandler(client, optionsConfigurer, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
     }
 
     /**
      * Use this with {@link Flux#transformDeferredContextual(BiFunction)}
      *
-     * @param streamId id of streamId to get last written streamPosition of. If null then check if Context has "streamId" set
-     * @return Flux which writes streamId streamPosition if it exists, or an error if something went wrong
+     * @return Flux which writes streamPosition of streamId to ContextView if it exists, or an error if something went wrong
      */
-    public <T> BiFunction<Flux<T>, ContextView, Publisher<T>> lastPosition(String streamId) {
-        return new LastPositionContext<>(client, streamId);
+    public <T> BiFunction<Flux<T>, ContextView, Publisher<T>> lastPosition() {
+        return new LastPositionContext<>(client);
     }
 
     // Read
-    public Publisher<MetadataByteBuffer> readStream(String streamId) {
-        return new ReadStream(client, streamId, loggerContext.getLogger(ReadStream.class));
+    public Publisher<MetadataByteBuffer> readStream() {
+        return new ReadStream(client, loggerContext.getLogger(ReadStream.class));
     }
 
-    public Publisher<MetadataByteBuffer> readStreamSubscription(String streamId) {
-        return new ReadStreamSubscription(client, streamId, loggerContext.getLogger(ReadStreamSubscription.class));
+    public Publisher<MetadataByteBuffer> readStreamSubscription() {
+        return new ReadStreamSubscription(client, loggerContext.getLogger(ReadStreamSubscription.class));
     }
 }

@@ -13,4 +13,5 @@ open module xorcery.eventstore.client.test {
     requires junit;
     requires org.apache.commons.compress;
     requires org.reactivestreams;
+    requires xorcery.reactivestreams.api;
 }

@@ -81,6 +81,22 @@
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-server</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

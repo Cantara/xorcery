@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.reactivestreams.extras.publisher;
+package com.exoreaction.xorcery.reactivestreams.extras.publishers;
 
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -7,7 +7,7 @@ import reactor.core.publisher.FluxSink;
 
 import java.io.IOException;
 
-public class ObjectReaderStreamer<T> {
+class ObjectReaderStreamer<T> {
     private final FluxSink<T> sink;
     private final YAMLParser parser;
     private final ObjectReader objectReader;
@@ -19,7 +19,7 @@ public class ObjectReaderStreamer<T> {
         this.objectReader = objectReader;
 
         // Skip until position
-        if (sink.contextView().getOrDefault("position", null) instanceof Long pos) {
+        if (sink.contextView().getOrDefault(ResourcePublisherContext.streamPosition.name(), null) instanceof Long pos) {
             this.skip = pos + 1;
         } else {
             this.skip = 0;
