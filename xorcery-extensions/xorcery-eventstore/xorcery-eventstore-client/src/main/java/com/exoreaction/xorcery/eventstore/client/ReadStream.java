@@ -1,8 +1,9 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.eventstore.client.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +14,7 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.BaseSubscriber;
+import reactor.util.context.Context;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -23,12 +25,10 @@ public class ReadStream
     private static final JsonMapper jsonMapper = new JsonMapper();
 
     private final EventStoreDBClient client;
-    private final String streamId;
     private final Logger logger;
 
-    public ReadStream(EventStoreDBClient client, String streamId, Logger logger) {
+    public ReadStream(EventStoreDBClient client, Logger logger) {
         this.client = client;
-        this.streamId = streamId;
         this.logger = logger;
     }
 
@@ -47,27 +47,23 @@ public class ReadStream
             this.subscriber = subscriber;
 
             long position = 0;
-            String name = streamId;
             if (subscriber instanceof CoreSubscriber<? super MetadataByteBuffer> coreSubscriber) {
-                if (coreSubscriber.currentContext().getOrDefault(EventStoreContext.streamPosition.name(), null) instanceof Long pos) {
+                Context context = coreSubscriber.currentContext();
+                if (context.getOrDefault(EventStoreContext.streamPosition.name(), null) instanceof Long pos) {
                     position = pos;
                 }
-                if (coreSubscriber.currentContext().getOrDefault(EventStoreContext.streamId.name(), null) instanceof String n) {
-                    name = n;
-                }
-            }
+                String streamId = context.get(EventStoreContext.streamId.name());
 
-            if (name == null) {
-                subscriber.onError(new IllegalArgumentException("No streamId name specified"));
-                return;
+                this.marker = MarkerManager.getMarker(streamId);
+                client.readStreamReactive(streamId, ReadStreamOptions.get()
+                        .fromRevision(position)
+                        .deadline(30000)
+                        .resolveLinkTos()
+                        .notRequireLeader()).subscribe(this);
+            } else
+            {
+                subscriber.onError(new IllegalArgumentException("Subscriber must implement CoreSubscriber"));
             }
-
-            this.marker = MarkerManager.getMarker(name);
-            client.readStreamReactive(name, ReadStreamOptions.get()
-                    .fromRevision(position)
-                    .deadline(30000)
-                    .resolveLinkTos()
-                    .notRequireLeader()).subscribe(this);
         }
 
         @Override

@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import io.opentelemetry.api.OpenTelemetry;
@@ -11,7 +12,6 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
@@ -19,10 +19,13 @@ import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
+import reactor.util.context.ContextView;
 
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class WebSocketStreamsClientService
         implements WebSocketStreamsClient {
@@ -65,32 +68,28 @@ public class WebSocketStreamsClientService
     }
 
     @Override
-    public <PUBLISH> Flux<PUBLISH> publish(URI serverUri, WebSocketClientOptions options, Class<? super PUBLISH> publishType, Publisher<PUBLISH> publisher, String... publishContentTypes) {
-        validateUri(serverUri);
-
+    public <PUBLISH> Function<Flux<PUBLISH>, Publisher<PUBLISH>> publish(WebSocketClientOptions options, Class<? super PUBLISH> publishType, String... publishContentTypes) {
         Collection<String> availableContentTypes = messageWorkers.getAvailableWriteContentTypes(publishType, Arrays.asList(publishContentTypes));
         if (availableContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
         }
 
-        return Flux.create(sink -> new ClientWebSocketStream<>(
-                serverUri,
+        return flux -> Flux.push(sink -> new ClientWebSocketStream<>(
+                getServerUri(sink.contextView()),
                 ReactiveStreamSubProtocol.subscriber,
                 availableContentTypes, null,
                 publishType,
                 null,
                 messageWorkers,
-                publisher,
+                flux,
                 sink,
                 options,
                 dnsLookup, webSocketClient, byteBufferPool, meter, tracer, textMapPropagator, loggerContext.getLogger(ClientWebSocketStream.class)));
     }
 
     @Override
-    public <PUBLISH, RESULT> Flux<RESULT> publishWithResult(URI serverUri, WebSocketClientOptions options, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Publisher<PUBLISH> publisher, Collection<String> publishContentTypes, Collection<String> resultContentTypes) {
-        validateUri(serverUri);
-
-        Collection<String> availableContentTypes = messageWorkers.getAvailableWriteContentTypes(publishType, publishContentTypes);
+    public <PUBLISH, RESULT> Function<Flux<PUBLISH>, Publisher<RESULT>> publishWithResult(WebSocketClientOptions options, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Collection<String> messageContentTypes, Collection<String> resultContentTypes) {
+        Collection<String> availableContentTypes = messageWorkers.getAvailableWriteContentTypes(publishType, messageContentTypes);
         if (availableContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
         }
@@ -98,22 +97,20 @@ public class WebSocketStreamsClientService
         if (availableContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
         }
-        return Flux.create(sink -> new ClientWebSocketStream<>(
-                serverUri,
+        return flux -> Flux.push(sink -> new ClientWebSocketStream<>(
+                getServerUri(sink.contextView()),
                 ReactiveStreamSubProtocol.subscriberWithResult,
                 availableContentTypes, availableResultContentTypes,
-                publishType,resultType,
+                publishType, resultType,
                 messageWorkers,
-                publisher,
+                flux,
                 sink,
                 options,
                 dnsLookup, webSocketClient, byteBufferPool, meter, tracer, textMapPropagator, loggerContext.getLogger(ClientWebSocketStream.class)));
     }
 
     @Override
-    public <SUBSCRIBE> Flux<SUBSCRIBE> subscribe(URI serverUri, WebSocketClientOptions options, Class<? super SUBSCRIBE> subscribeType, String... messageContentTypes) {
-        validateUri(serverUri);
-
+    public <SUBSCRIBE> Flux<SUBSCRIBE> subscribe(WebSocketClientOptions options, Class<? super SUBSCRIBE> subscribeType, String... messageContentTypes) {
         Collection<String> availableResultContentTypes = messageWorkers.getAvailableReadContentTypes(subscribeType, Arrays.asList(messageContentTypes));
         if (availableResultContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
@@ -121,7 +118,7 @@ public class WebSocketStreamsClientService
 
         return Flux.create(sink ->
                 new ClientWebSocketStream<SUBSCRIBE, SUBSCRIBE>(
-                        serverUri,
+                        getServerUri(sink.contextView()),
                         ReactiveStreamSubProtocol.publisher,
                         null, availableResultContentTypes,
                         null, subscribeType,
@@ -138,10 +135,16 @@ public class WebSocketStreamsClientService
                         loggerContext.getLogger(ClientWebSocketStream.class)));
     }
 
-    private void validateUri(URI serverUri)
+    private URI getServerUri(ContextView contextView) {
+        Object serverUri = contextView.get(WebSocketStreamContext.serverUri.name());
+        return validateUri(serverUri instanceof URI uri ? uri : URI.create(serverUri.toString()));
+    }
+
+    private URI validateUri(URI serverUri)
             throws IllegalArgumentException {
         if (!("ws".equals(serverUri.getScheme()) || "wss".equals(serverUri.getScheme()) || "srv".equals(serverUri.getScheme()))) {
             throw new IllegalArgumentException("URI scheme " + serverUri.getScheme() + " not supported. Must be one of 'ws', 'wss', or 'srv'");
         }
+        return serverUri;
     }
 }

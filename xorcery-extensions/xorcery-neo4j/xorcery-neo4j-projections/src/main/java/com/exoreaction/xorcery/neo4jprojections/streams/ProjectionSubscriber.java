@@ -96,7 +96,7 @@ public class ProjectionSubscriber
     public void onNext(WithMetadata<ArrayNode> item) {
 
         try {
-            List<DomainEvent> domainEvents = domainEventsReader.readValue(item.event());
+            List<DomainEvent> domainEvents = domainEventsReader.readValue(item.data());
 
             disruptor.publishEvent((e, seq, md, events) ->
             {

@@ -21,6 +21,7 @@ import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import jakarta.inject.Inject;
@@ -32,6 +33,7 @@ import org.jvnet.hk2.annotations.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.util.context.Context;
 import reactor.util.retry.Retry;
 
 import java.net.URI;
@@ -70,23 +72,20 @@ public class DomainEventsWebSocketsService
         Flux<Metadata> projections = eventStoreUri.map(uri ->
         {
             // Publish events to EventStore
-            Flux<Metadata> result = webSocketStreamsClient.publishWithResult(
-                    domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow(),
-                    WebSocketClientOptions.instance(), MetadataEvents.class, Metadata.class, sink.asFlux()
-            );
+            Flux<Metadata> result = sink.asFlux()
+                    .transform(webSocketStreamsClient.publishWithResult(WebSocketClientOptions.instance(), MetadataEvents.class, Metadata.class))
+                    .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(),domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow()));
 
             // Then wait for projection
-            return webSocketStreamsClient.publishWithResult(
-                    projectionsUri.orElseThrow(),
-                    WebSocketClientOptions.instance(), Metadata.class, Metadata.class, result
-            );
+            return result
+                    .transform(webSocketStreamsClient.publishWithResult(WebSocketClientOptions.instance(), Metadata.class, Metadata.class))
+                    .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(),projectionsUri.orElseThrow()));
         }).orElseGet(() ->
         {
             // Publish events directly to projections
-            return webSocketStreamsClient.publishWithResult(
-                    domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow(),
-                    WebSocketClientOptions.instance(), MetadataEvents.class, Metadata.class, sink.asFlux()
-            );
+            return sink.asFlux()
+                    .transform(webSocketStreamsClient.publishWithResult(WebSocketClientOptions.instance(), MetadataEvents.class, Metadata.class))
+                    .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(),domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow()));
         });
 
         subscribeDisposable = projections

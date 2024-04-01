@@ -21,6 +21,7 @@ import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
@@ -40,11 +41,14 @@ import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+
+import static com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions.instance;
 
 public class PublishWithResultSubscriberWebSocketTest {
 
@@ -67,6 +71,7 @@ public class PublishWithResultSubscriberWebSocketTest {
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
     private WebSocketStreamsServerConfiguration websocketStreamsServerConfiguration;
+    private Context webSocketContext;
 
     Logger logger = LogManager.getLogger();
 
@@ -76,6 +81,7 @@ public class PublishWithResultSubscriberWebSocketTest {
         clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
         websocketStreamsServerConfiguration = WebSocketStreamsServerConfiguration.get(serverConfiguration);
+        webSocketContext = Context.of(WebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers"));
     }
 
     @Test
@@ -96,10 +102,9 @@ public class PublishWithResultSubscriberWebSocketTest {
 
                 // When
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
-                List<Integer> result = websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                WebSocketClientOptions.instance(), Integer.class, Integer.class, Flux.fromIterable(source)
-                        )
+                List<Integer> result = Flux.fromIterable(source)
+                        .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                        .contextWrite(webSocketContext)
                         .toStream().toList();
 
                 // Then
@@ -130,13 +135,12 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 Sinks.Many<Integer> publisher = Sinks.many().unicast().onBackpressureBuffer(new ArrayBlockingQueue<>(1024));
                 List<Integer> result = new ArrayList<>();
-                Disposable subscription = websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                WebSocketClientOptions.instance(), Integer.class, Integer.class, publisher.asFlux()
-                        )
+                Disposable subscription = publisher.asFlux().
+                        transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
                         .doOnError(e -> logger.error("ERROR", e))
                         .doOnNext(result::add)
                         .doOnNext(v -> latch.countDown())
+                        .contextWrite(webSocketContext)
                         .subscribe();
 
                 logger.info("Emitted: " + publisher.tryEmitNext(42));
@@ -176,10 +180,9 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // Then
                 try {
                     List<Integer> source = IntStream.range(0, 100).boxed().toList();
-                    websocketStreamsClient.publishWithResult(
-                                    websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                    WebSocketClientOptions.instance(), Integer.class, Integer.class, Flux.fromIterable(source)
-                            )
+                    Flux.fromIterable(source)
+                            .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                            .contextWrite(webSocketContext)
                             .toStream().toList();
                     Assertions.fail();
                 } catch (ServerStreamException e) {
@@ -219,10 +222,9 @@ public class PublishWithResultSubscriberWebSocketTest {
                 Assertions.assertThrows(IdleTimeoutStreamException.class, () ->
                 {
                     Sinks.Many<Integer> sink = Sinks.many().unicast().onBackpressureBuffer();
-                    List<Integer> result = websocketStreamsClient.publishWithResult(
-                                    websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                    WebSocketClientOptions.instance(), Integer.class, Integer.class, sink.asFlux().doOnNext(System.out::println)
-                            )
+                    List<Integer> result = sink.asFlux().doOnNext(System.out::println)
+                            .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                            .contextWrite(webSocketContext)
                             .toStream().toList();
                 });
             }
@@ -258,10 +260,9 @@ public class PublishWithResultSubscriberWebSocketTest {
                 Assertions.assertThrows(IdleTimeoutStreamException.class, () ->
                 {
                     Sinks.Many<Integer> sink = Sinks.many().unicast().onBackpressureBuffer();
-                    List<Integer> result = websocketStreamsClient.publishWithResult(
-                                    websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                    WebSocketClientOptions.instance(), Integer.class, Integer.class, sink.asFlux()
-                            )
+                    List<Integer> result = sink.asFlux()
+                            .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                            .contextWrite(webSocketContext)
                             .toStream().toList();
                 });
             }
@@ -295,13 +296,12 @@ public class PublishWithResultSubscriberWebSocketTest {
 
                 // When
                 Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
-                websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers"),
-                                WebSocketClientOptions.instance(), Integer.class, Integer.class, sink.asFlux()
-                        )
+                sink.asFlux()
+                        .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
                         .retry()
                         .doOnNext(result::add)
                         .doOnComplete(latch::countDown)
+                        .contextWrite(webSocketContext)
                         .subscribe();
 
                 IntStream.range(0, 5).boxed().forEach(v ->
@@ -318,7 +318,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 latch.await(20, TimeUnit.SECONDS);
 
                 // Then
-                Assertions.assertEquals(List.of(0,1,2,3,4), result);
+                Assertions.assertEquals(List.of(0, 1, 2, 3, 4), result);
             }
         }
     }
@@ -342,7 +342,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 Publisher<String> configPublisher = s -> {
                     if (s instanceof CoreSubscriber<? super String> subscriber) {
-                        String val = subscriber.currentContext().stream().filter(e -> !(e.getKey().equals("request")||e.getKey().equals("response"))).toList().toString();
+                        String val = subscriber.currentContext().stream().filter(e -> !(e.getKey().equals("request") || e.getKey().equals("response"))).toList().toString();
                         s.onSubscribe(new Subscription() {
                             @Override
                             public void request(long n) {
@@ -357,11 +357,11 @@ public class PublishWithResultSubscriberWebSocketTest {
                     }
                 };
 
-                String config = websocketStreamsClient.publishWithResult(
-                                websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
-                                WebSocketClientOptions.instance(), String.class, String.class, configPublisher
-                        )
-                        .contextWrite(Context.of("client", "abc"))
+                String config = Flux.from(configPublisher)
+                        .transform(websocketStreamsClient.publishWithResult(instance(), String.class, String.class))
+                        .contextWrite(Context.of(
+                                WebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
+                                "client", "abc"))
                         .take(1).blockFirst();
 
                 // Then

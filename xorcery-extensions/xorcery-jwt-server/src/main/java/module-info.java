@@ -15,6 +15,11 @@
  */
 module xorcery.jwt.server {
 
+    exports com.exoreaction.xorcery.jwt.server;
+    exports com.exoreaction.xorcery.jwt.server.api;
+    exports com.exoreaction.xorcery.jwt.server.providers;
+    exports com.exoreaction.xorcery.jwt.server.spi;
+
     requires transitive xorcery.jsonapi.server;
     requires transitive xorcery.metadata;
 

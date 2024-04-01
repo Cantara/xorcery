@@ -16,6 +16,10 @@
 package com.exoreaction.xorcery.reactivestreams.api;
 
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES;
 
 /**
  * @author rickardoberg
@@ -24,35 +28,38 @@ import com.exoreaction.xorcery.metadata.Metadata;
 public class WithMetadata<T>
 {
     private Metadata metadata;
-    private T event;
+    private T data;
 
     public WithMetadata() {
     }
 
-    public WithMetadata(Metadata metadata, T event) {
+    @JsonCreator(mode = PROPERTIES)
+    public WithMetadata(Metadata metadata, T data) {
         this.metadata = metadata;
-        this.event = event;
+        this.data = data;
     }
 
-    public void set(Metadata metadata, T event)
+    public void set(Metadata metadata, T data)
     {
         this.metadata = metadata;
-        this.event = event;
+        this.data = data;
     }
 
     public void set(WithMetadata<T> other)
     {
         this.metadata = other.metadata;
-        this.event = other.event;
+        this.data = other.data;
     }
 
+    @JsonGetter
     public Metadata metadata()
     {
         return metadata;
     }
 
-    public T event()
+    @JsonGetter
+    public T data()
     {
-        return event;
+        return data;
     }
 }

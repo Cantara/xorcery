@@ -25,6 +25,5 @@ open module xorcery.reactivestreams.server.test {
     requires org.hamcrest;
     requires jakarta.ws.rs;
     requires org.glassfish.hk2.api;
-    requires com.fasterxml.jackson.datatype.jsr310;
     requires reactor.test;
 }

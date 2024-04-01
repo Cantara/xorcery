@@ -110,7 +110,7 @@ public class FilePersistentSubscriberErrorLog
         String exceptionAsString = exceptionWriter.toString();
         ObjectNode entry = JsonNodeFactory.instance.objectNode();
         entry.set("metadata", arrayNodeWithMetadata.metadata().json());
-        entry.set("events", arrayNodeWithMetadata.event());
+        entry.set("events", arrayNodeWithMetadata.data());
         entry.set("error", JsonNodeFactory.instance.textNode(exceptionAsString));
         ArrayNode singleEntryArray = JsonNodeFactory.instance.arrayNode(1);
         singleEntryArray.add(entry);

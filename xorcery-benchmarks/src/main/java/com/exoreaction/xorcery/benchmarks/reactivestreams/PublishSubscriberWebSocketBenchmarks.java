@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
@@ -30,7 +31,9 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.util.context.Context;
 
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -157,11 +160,11 @@ public class PublishSubscriberWebSocketBenchmarks {
                             done.complete(null);
                         }));
 
+        URI serverUri = ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark");
         WebSocketStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
-        clientDisposable = reactiveStreamsClient.publish(
-                        ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark"),
-                        WebSocketClientOptions.instance(), Integer.class, Flux.fromStream(IntStream.range(0, 1000000).boxed()), MediaType.APPLICATION_JSON
-                )
+        clientDisposable = Flux.fromStream(IntStream.range(0, 1000000).boxed())
+                .transform(reactiveStreamsClient.publish(WebSocketClientOptions.instance(), Integer.class, MediaType.APPLICATION_JSON))
+                .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(), serverUri))
                 .subscribe();
 
         done.orTimeout(100, TimeUnit.SECONDS).join();

@@ -4,7 +4,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test Value as attribute
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedAddress"
@@ -26,7 +26,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedName"
       updated:
@@ -47,7 +47,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test update Value as attribute
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedAddress"
@@ -69,7 +69,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test remove Value as attribute
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedAddress"
@@ -84,7 +84,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test update scalars
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedAge"
@@ -101,7 +101,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test add Value as list attribute
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "AddedFriends"
@@ -149,7 +149,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test update Value as list attribute
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedFriend"
@@ -179,7 +179,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     #Test move Value with index as list attribute
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "UpdatedFriend"
@@ -209,7 +209,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "RedactedState"
       updated:
@@ -226,7 +226,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "RedactedState"
       updated:
@@ -241,7 +241,7 @@
     aggregateId: "1234"
     aggregateType: "Tenant"
     tenant: "1234"
-  events:
+  data:
     - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
       event: "DeletedPerson"
       deleted:
