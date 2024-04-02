@@ -1,9 +1,10 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -63,18 +64,17 @@ public class ReadStreamSubscription
 
             if (subscriber instanceof CoreSubscriber<? super MetadataByteBuffer> coreSubscriber) {
                 Context context = coreSubscriber.currentContext();
-                streamId = context.get(EventStoreContext.streamId.name());
+                this.streamId = ReactiveStreamsContext.getContext(context, ReactiveStreamsContext.streamId);
                 this.marker = MarkerManager.getMarker(streamId);
 
-                if (context.getOrDefault(EventStoreContext.streamPosition.name(), null) instanceof Long pos) {
-                    position.set(pos);
-                    start(StreamPosition.position(pos));
-                } else
-                {
-                    start(StreamPosition.start());
-                }
-            } else
-            {
+                ReactiveStreamsContext.<Long>getOptionalContext(context, ReactiveStreamsContext.streamPosition)
+                        .map(pos ->
+                        {
+                            position.set(pos);
+                            return pos;
+                        }).ifPresentOrElse(pos -> start(StreamPosition.position(pos)),
+                                () -> start(StreamPosition.start()));
+            } else {
                 subscriber.onError(new IllegalArgumentException("Subscriber must implement CoreSubscriber"));
             }
         }
@@ -137,16 +137,14 @@ public class ReadStreamSubscription
                 // Put in ES metadata
                 String streamId = resolvedEvent.getLink() != null ? resolvedEvent.getLink().getStreamId() : resolvedEvent.getEvent().getStreamId();
                 long position = resolvedEvent.getLink() != null ? resolvedEvent.getLink().getRevision() : resolvedEvent.getEvent().getRevision();
-                metadata.add(EventStoreContext.streamId.name(), streamId);
-                metadata.add(EventStoreContext.streamPosition.name(), position);
+                metadata.add(EventStoreMetadata.streamId, streamId);
+                metadata.add(EventStoreMetadata.streamPosition, position);
 
                 if (caughtUp.getAndSet(false)) {
-                    metadata.add(EventStoreContext.streamLive.name(), JsonNodeFactory.instance.booleanNode(true));
+                    metadata.add(EventStoreMetadata.streamLive, JsonNodeFactory.instance.booleanNode(true));
                 } else if (fellBehind.getAndSet(false)) {
-                    metadata.add(EventStoreContext.streamLive.name(), JsonNodeFactory.instance.booleanNode(false));
+                    metadata.add(EventStoreMetadata.streamLive, JsonNodeFactory.instance.booleanNode(false));
                 }
-
-                System.out.println("Position:" + position);
                 this.position.set(position);
                 subscriber.onNext(new MetadataByteBuffer(metadata.build(), ByteBuffer.wrap(event.getEventData())));
 
@@ -186,12 +184,14 @@ public class ReadStreamSubscription
         @Override
         public void onCaughtUp(com.eventstore.dbclient.Subscription subscription) {
             caughtUp.set(true);
+            fellBehind.set(false);
             System.out.println("Caught up");
         }
 
         @Override
         public void onFellBehind(com.eventstore.dbclient.Subscription subscription) {
             fellBehind.set(true);
+            caughtUp.set(false);
         }
     }
 }

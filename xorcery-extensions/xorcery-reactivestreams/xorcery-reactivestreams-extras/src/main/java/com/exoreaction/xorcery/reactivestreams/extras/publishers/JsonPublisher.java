@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.reactivestreams.extras.publishers;
 
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -22,7 +23,7 @@ public class JsonPublisher<T>
     public JsonPublisher(Class<? super T> itemType) {
         flux = Flux.push(sink -> {
             try {
-                Object resourceUrl = sink.contextView().get(ResourcePublisherContext.resourceUrl.name());
+                Object resourceUrl = ReactiveStreamsContext.getContext(sink.contextView(), ResourcePublisherContext.resourceUrl);
                 URL yamlResource = resourceUrl instanceof URL url ? url : new URL(resourceUrl.toString());
                 InputStream resourceAsStream = new BufferedInputStream(yamlResource.openStream(), 32 * 1024);
                 LoaderOptions loaderOptions = new LoaderOptions();

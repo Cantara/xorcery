@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.neo4jprojections.streams;
+package com.exoreaction.xorcery.neo4jprojections.providers;
 
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
@@ -47,7 +47,7 @@ public class CypherEventProjection
     private final Map<String, List<String>> cachedEventCypher = new HashMap<>();
 
     @Override
-    public void write(MetadataEvents events, Transaction transaction) throws Throwable {
+    public void write(MetadataEvents events, Transaction transaction) {
         Map<String, Object> metadataMap = null;
 
         for (DomainEvent event : events.getEvents()) {

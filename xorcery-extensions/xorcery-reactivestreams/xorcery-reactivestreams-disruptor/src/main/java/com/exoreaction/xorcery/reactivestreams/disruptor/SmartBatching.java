@@ -15,12 +15,10 @@ import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Transformer to be used with {@link Flux#transformDeferredContextual(BiFunction)}.
@@ -34,9 +32,9 @@ public class SmartBatching<T>
         implements BiFunction<Flux<T>, ContextView, Publisher<T>> {
 
     private final DisruptorConfiguration configuration;
-    private final BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler;
+    private final BiConsumer<List<T>, SynchronousSink<List<T>>> handler;
 
-    public SmartBatching(DisruptorConfiguration configuration, BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler) {
+    public SmartBatching(DisruptorConfiguration configuration, BiConsumer<List<T>, SynchronousSink<List<T>>> handler) {
         this.configuration = configuration;
         this.handler = handler;
     }
@@ -50,7 +48,7 @@ public class SmartBatching<T>
             implements Publisher<T> {
         private final Flux<T> disruptorPublishSubscriber;
 
-        public DisruptorHandler(Flux<T> upstream, ContextView contextView, BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler) {
+        public DisruptorHandler(Flux<T> upstream, ContextView contextView, BiConsumer<List<T>, SynchronousSink<List<T>>> handler) {
             disruptorPublishSubscriber = Flux.push(sink ->
                     new DisruptorSubscriber(upstream, sink, contextView, handler));
         }
@@ -63,14 +61,14 @@ public class SmartBatching<T>
 
     private class DisruptorSubscriber
             extends BaseSubscriber<T>
-            implements EventHandler<EventReference<T>>, SynchronousSink<Collection<T>> {
+            implements EventHandler<EventReference<T>>, SynchronousSink<List<T>> {
         private final Disruptor<EventReference<T>> disruptor;
         private final FluxSink<T> downstream;
         private final ContextView contextView;
-        private final BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler;
+        private final BiConsumer<List<T>, SynchronousSink<List<T>>> handler;
         private final List<T> list = new ArrayList<>(configuration.getSize());
 
-        public DisruptorSubscriber(Flux<T> upstream, FluxSink<T> downstream, ContextView contextView, BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler) {
+        public DisruptorSubscriber(Flux<T> upstream, FluxSink<T> downstream, ContextView contextView, BiConsumer<List<T>, SynchronousSink<List<T>>> handler) {
             this.downstream = downstream;
             this.contextView = contextView;
             this.handler = handler;
@@ -135,7 +133,6 @@ public class SmartBatching<T>
         }
 
         // SynchronousSink
-
         @Override
         public void complete() {
             downstream.complete();
@@ -147,7 +144,7 @@ public class SmartBatching<T>
         }
 
         @Override
-        public void next(Collection<T> ts) {
+        public void next(List<T> ts) {
             ts.forEach(downstream::next);
         }
 

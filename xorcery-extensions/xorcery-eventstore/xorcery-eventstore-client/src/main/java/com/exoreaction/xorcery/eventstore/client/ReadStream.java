@@ -1,9 +1,10 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.Logger;
@@ -46,20 +47,22 @@ public class ReadStream
         public ReadStreamSubscription(Subscriber<? super MetadataByteBuffer> subscriber) {
             this.subscriber = subscriber;
 
-            long position = 0;
             if (subscriber instanceof CoreSubscriber<? super MetadataByteBuffer> coreSubscriber) {
                 Context context = coreSubscriber.currentContext();
-                if (context.getOrDefault(EventStoreContext.streamPosition.name(), null) instanceof Long pos) {
-                    position = pos;
-                }
-                String streamId = context.get(EventStoreContext.streamId.name());
+                ReactiveStreamsContext.<String>getOptionalContext(context, ReactiveStreamsContext.streamId).ifPresentOrElse(streamId ->
+                {
+                    this.marker = MarkerManager.getMarker(streamId);
+                    ReadStreamOptions options = ReactiveStreamsContext.<Long>getOptionalContext(context, ReactiveStreamsContext.streamPosition)
+                            .map(position ->ReadStreamOptions.get().fromRevision(position))
+                            .orElse(ReadStreamOptions.get())
+                            .deadline(30000)
+                            .resolveLinkTos()
+                            .notRequireLeader();
 
-                this.marker = MarkerManager.getMarker(streamId);
-                client.readStreamReactive(streamId, ReadStreamOptions.get()
-                        .fromRevision(position)
-                        .deadline(30000)
-                        .resolveLinkTos()
-                        .notRequireLeader()).subscribe(this);
+                    client.readStreamReactive(streamId, options).subscribe(this);
+
+                },()-> subscriber.onError(new IllegalArgumentException("Missing context:"+ReactiveStreamsContext.streamId)));
+
             } else
             {
                 subscriber.onError(new IllegalArgumentException("Subscriber must implement CoreSubscriber"));
@@ -105,16 +108,16 @@ public class ReadStream
                     String streamId = linkedEvent.getStreamId();
                     long position = linkedEvent.getRevision();
                     String originalStreamId = resolvedEvent.getEvent().getStreamId();
-                    metadata.add(EventStoreContext.streamId.name(), streamId);
-                    metadata.add(EventStoreContext.streamPosition.name(), position);
-                    metadata.add(EventStoreContext.originalStreamId.name(), originalStreamId);
+                    metadata.add(EventStoreMetadata.streamId, streamId);
+                    metadata.add(EventStoreMetadata.streamPosition, position);
+                    metadata.add(EventStoreMetadata.originalStreamId, originalStreamId);
                 } else
                 {
                     RecordedEvent recordedEvent = resolvedEvent.getEvent();
                     String streamId = recordedEvent.getStreamId();
                     long position = recordedEvent.getRevision();
-                    metadata.add(EventStoreContext.streamId.name(), streamId);
-                    metadata.add(EventStoreContext.streamPosition.name(), position);
+                    metadata.add(EventStoreMetadata.streamId, streamId);
+                    metadata.add(EventStoreMetadata.streamPosition, position);
                 }
                 subscriber.onNext(new MetadataByteBuffer(metadata.build(), ByteBuffer.wrap(event.getEventData())));
             } catch (IOException e) {

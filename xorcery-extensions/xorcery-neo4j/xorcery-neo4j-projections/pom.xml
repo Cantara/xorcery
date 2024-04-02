@@ -118,6 +118,10 @@
             <artifactId>xorcery-reactivestreams-extras</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-extras</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

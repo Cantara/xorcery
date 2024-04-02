@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.reactivestreams.extras.publishers;
 
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.yaml.YAMLParser;
@@ -19,11 +20,8 @@ class ObjectReaderStreamer<T> {
         this.objectReader = objectReader;
 
         // Skip until position
-        if (sink.contextView().getOrDefault(ResourcePublisherContext.streamPosition.name(), null) instanceof Long pos) {
-            this.skip = pos + 1;
-        } else {
-            this.skip = 0;
-        }
+        this.skip = ReactiveStreamsContext.<Long>getOptionalContext(sink.contextView(), ReactiveStreamsContext.streamPosition)
+                .map(pos-> pos+1).orElse(0L);
 
         sink.onRequest(this::request);
     }

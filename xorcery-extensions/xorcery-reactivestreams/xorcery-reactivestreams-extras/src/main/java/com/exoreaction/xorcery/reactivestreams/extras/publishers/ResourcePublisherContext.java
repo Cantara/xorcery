@@ -8,5 +8,4 @@ import reactor.util.context.ContextView;
  */
 public enum ResourcePublisherContext {
     resourceUrl, // URL of resource to be published
-    streamPosition // Position in stream to resume from
 }

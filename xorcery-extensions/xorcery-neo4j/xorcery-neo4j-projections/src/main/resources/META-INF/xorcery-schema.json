@@ -12,6 +12,10 @@
     "neo4jprojections" : {
       "type" : "object",
       "properties" : {
+        "disruptor" : {
+          "type" : "object",
+          "properties" : { }
+        },
         "eventBatchSize" : {
           "type" : [ "number", "string" ],
           "default" : 1024,

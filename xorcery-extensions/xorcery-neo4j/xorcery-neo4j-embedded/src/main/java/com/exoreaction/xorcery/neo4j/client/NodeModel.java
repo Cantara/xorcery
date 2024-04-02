@@ -15,37 +15,23 @@
  */
 package com.exoreaction.xorcery.neo4j.client;
 
+import com.exoreaction.xorcery.collections.Element;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.neo4j.graphdb.Node;
 
 import java.util.Optional;
 
-public record NodeModel(Node node) {
-
-    public String getString(String name) {
-        Object value = node.getProperty(name, null);
-        return value == null ? null : value.toString();
+public record NodeModel(Node node)
+    implements Element
+{
+    @Override
+    public Optional<Object> get(String name) {
+        return Optional.ofNullable(node.getProperty(name, null));
     }
 
-    public String getString(Enum<?> name) {
-        return getString(name.name());
-    }
-
-    public Optional<String> getOptionalString(String name) {
-        return Optional.ofNullable(getString(name));
-    }
-
-    public Optional<String> getOptionalString(Enum<?> name) {
-        return Optional.ofNullable(getString(name.name()));
-    }
-
-    public Long getLong(String name) {
-        Object value = node.getProperty(name, null);
-        return value instanceof Long v ? v : null;
-    }
-
-    public Optional<Long> getOptionalLong(String name) {
-        return Optional.ofNullable(getLong(name));
+    @Override
+    public boolean has(String name) {
+        return node.hasProperty(name);
     }
 
     public JsonNode getJsonNode(String name) {

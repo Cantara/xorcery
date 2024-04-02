@@ -3,11 +3,13 @@ package com.exoreaction.xorcery.collections;
 import java.util.Map;
 import java.util.Optional;
 
-public record MapElement(Map<String, Object> map)
-    implements Element
+public interface MapElement<K,V>
+    extends Element
 {
+    Map<K,V> map();
+
     @Override
-    public Optional<Object> get(String name) {
-        return Optional.ofNullable(map.get(name));
+    default Optional<Object> get(String name) {
+        return Optional.ofNullable(map().get(name));
     }
 }

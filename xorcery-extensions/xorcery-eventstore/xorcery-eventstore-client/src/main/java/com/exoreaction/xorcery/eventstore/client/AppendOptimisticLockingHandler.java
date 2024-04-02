@@ -1,10 +1,11 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryHelpers;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.grpc.StatusRuntimeException;
@@ -68,7 +69,7 @@ public class AppendOptimisticLockingHandler
     @Override
     public void accept(MetadataByteBuffer metadataByteBuffer, SynchronousSink<MetadataByteBuffer> sink) {
 
-        String streamId = sink.contextView().get(EventStoreContext.streamId.name());
+        String streamId = ReactiveStreamsContext.getContext(sink.contextView(), ReactiveStreamsContext.streamId);
         Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.streamId"), streamId);
         try {
             OpenTelemetryHelpers.time(writeTimer, attributes, () -> {
@@ -90,10 +91,7 @@ public class AppendOptimisticLockingHandler
                 AppendToStreamOptions appendOptions = AppendToStreamOptions.get()
                         .deadline(30000);
                 options.accept(appendOptions);
-                if (sink.contextView().getOrDefault(EventStoreContext.expectedPosition.name(), null) instanceof Long expectedPosition)
-                {
-                    appendOptions.expectedRevision(expectedPosition);
-                }
+                metadataByteBuffer.metadata().getLong(EventStoreMetadata.expectedPosition).ifPresent(appendOptions::expectedRevision);
 
                 int retry = 0;
                 while (true) {
@@ -103,7 +101,7 @@ public class AppendOptimisticLockingHandler
                                 .toCompletableFuture().join();
 
                         long streamPosition = writeResult.getNextExpectedRevision().toRawLong();
-                        metadataByteBuffer.metadata().toBuilder().add(EventStoreContext.streamPosition, streamPosition);
+                        metadataByteBuffer.metadata().toBuilder().add(EventStoreMetadata.streamPosition, streamPosition);
                         sink.next(metadataByteBuffer);
                         return null;
                     } catch (Throwable t) {

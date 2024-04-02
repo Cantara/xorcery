@@ -2,8 +2,10 @@ package com.exoreaction.xorcery.eventstore.client.api;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.eventstore.client.AppendHandler;
+import com.exoreaction.xorcery.eventstore.client.AppendOptimisticLockingHandler;
 import com.exoreaction.xorcery.eventstore.client.ReadStream;
-import com.exoreaction.xorcery.eventstore.client.*;
+import com.exoreaction.xorcery.eventstore.client.ReadStreamSubscription;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
@@ -13,7 +15,6 @@ import org.apache.logging.log4j.spi.LoggerContext;
 import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 import reactor.util.context.ContextView;
 
@@ -84,15 +85,6 @@ public class EventStoreClient {
             Function<Metadata, String> eventTypeSelector,
             Consumer<AppendToStreamOptions> optionsConfigurer) {
         return new AppendOptimisticLockingHandler(client, optionsConfigurer, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
-    }
-
-    /**
-     * Use this with {@link Flux#transformDeferredContextual(BiFunction)}
-     *
-     * @return Flux which writes streamPosition of streamId to ContextView if it exists, or an error if something went wrong
-     */
-    public <T> BiFunction<Flux<T>, ContextView, Publisher<T>> lastPosition() {
-        return new LastPositionContext<>(client);
     }
 
     // Read
