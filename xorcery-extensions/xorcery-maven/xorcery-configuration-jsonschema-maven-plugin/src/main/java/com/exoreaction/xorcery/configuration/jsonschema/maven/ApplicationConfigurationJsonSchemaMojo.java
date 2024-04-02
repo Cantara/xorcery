@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -166,7 +167,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends AbstractMojo {
                 return true;
             }
         });
-        artifactJars.sort(File::compareTo);
+        artifactJars.sort(Comparator.comparing(File::getName));
         return artifactJars;
     }
 }
