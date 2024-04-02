@@ -171,11 +171,6 @@
 
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-eventstore</artifactId>
-                <version>0.110.3-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-eventstore-client</artifactId>
                 <version>0.110.3-SNAPSHOT</version>
             </dependency>
