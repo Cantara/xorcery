@@ -19,8 +19,12 @@ import com.exoreaction.xorcery.neo4jprojections.providers.CypherEventProjection;
 open module xorcery.neo4j.projections {
     uses Neo4jEventProjection;
 
+    exports com.exoreaction.xorcery.neo4jprojections;
     exports com.exoreaction.xorcery.neo4jprojections.api;
+    exports com.exoreaction.xorcery.neo4jprojections.providers;
+    exports com.exoreaction.xorcery.neo4jprojections.reactor;
     exports com.exoreaction.xorcery.neo4jprojections.spi;
+    exports com.exoreaction.xorcery.neo4jprojections.streams;
 
     requires xorcery.service.api;
     requires xorcery.neo4j.embedded;

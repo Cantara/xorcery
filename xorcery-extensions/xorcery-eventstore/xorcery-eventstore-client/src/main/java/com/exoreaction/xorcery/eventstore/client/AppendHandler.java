@@ -75,9 +75,9 @@ public class AppendHandler
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        batchSizes = meter.histogramBuilder("eventstore.streamId.writes.batchsize")
+        batchSizes = meter.histogramBuilder("eventstore.stream.writes.batchsize")
                 .ofLongs().setUnit("{count}").build();
-        writeTimer = meter.histogramBuilder("eventstore.streamId.writes.latency")
+        writeTimer = meter.histogramBuilder("eventstore.stream.writes.latency")
                 .setUnit("s").build();
 
     }
