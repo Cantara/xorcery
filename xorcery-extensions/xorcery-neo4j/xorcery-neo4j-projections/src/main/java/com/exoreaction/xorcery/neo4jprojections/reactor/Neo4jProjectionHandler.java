@@ -7,6 +7,7 @@ import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.Projection;
 import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
 import jakarta.inject.Inject;
@@ -39,7 +40,6 @@ public class Neo4jProjectionHandler
     public Neo4jProjectionHandler(
             GraphDatabase database,
             IterableProvider<Neo4jEventProjection> projections,
-            Neo4jProjectionUpdates neo4jProjectionUpdates,
             Configuration configuration,
             Logger logger
     ) {
@@ -106,7 +106,9 @@ public class Neo4jProjectionHandler
         @Override
         public void accept(List<MetadataEvents> events, SynchronousSink<List<MetadataEvents>> sink) {
             try (Transaction tx = database.beginTx()) {
+                String projectionId = ReactiveStreamsContext.getContext(sink.contextView(), ProjectionStreamContext.projectionId);
                 for (MetadataEvents metadataEvents : events) {
+                    metadataEvents.getMetadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
                     for (Neo4jEventProjection projection : projections) {
                         projection.write(metadataEvents, tx);
                     }
@@ -125,7 +127,7 @@ public class Neo4jProjectionHandler
                             .orElseGet(System::currentTimeMillis))
                             .longValue();
                     Map<String, Object> updateParameters = new HashMap<>();
-                    updateParameters.put(Projection.projectionId.name(), sink.contextView().get(ProjectionStreamContext.projectionId.name()));
+                    updateParameters.put(Projection.projectionId.name(), projectionId);
                     updateParameters.put(Projection.projectionPosition.name(), position);
                     updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
                     tx.execute("""
