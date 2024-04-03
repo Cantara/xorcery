@@ -104,7 +104,7 @@ public class ReadStreamSubscription
         }
 
         private void stopSubscription(com.eventstore.dbclient.Subscription subscription, Throwable throwable) {
-            if (throwable != null)
+            if (throwable == null)
                 subscription.stop();
         }
 
@@ -156,7 +156,6 @@ public class ReadStreamSubscription
 
         @Override
         public void onCancelled(com.eventstore.dbclient.Subscription subscription, Throwable throwable) {
-
             if (throwable instanceof StatusRuntimeException sre) {
                 switch ((sre.getStatus().getCode())) {
                     case ABORTED: {

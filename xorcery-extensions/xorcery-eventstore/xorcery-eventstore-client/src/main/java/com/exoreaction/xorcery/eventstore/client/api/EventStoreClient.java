@@ -18,6 +18,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
 import reactor.util.context.ContextView;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -25,7 +27,9 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class EventStoreClient {
+public class EventStoreClient
+    implements Closeable
+{
 
     @Service
     public static class Factory {
@@ -94,5 +98,10 @@ public class EventStoreClient {
 
     public Publisher<MetadataByteBuffer> readStreamSubscription() {
         return new ReadStreamSubscription(client, loggerContext.getLogger(ReadStreamSubscription.class));
+    }
+
+    @Override
+    public void close() throws IOException {
+        client.shutdown();
     }
 }

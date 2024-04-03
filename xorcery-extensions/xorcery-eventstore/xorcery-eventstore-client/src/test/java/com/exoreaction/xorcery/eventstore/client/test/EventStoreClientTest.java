@@ -1,8 +1,6 @@
 package com.exoreaction.xorcery.eventstore.client.test;
 
-import com.eventstore.dbclient.DeleteResult;
-import com.eventstore.dbclient.EventStoreDBClientSettings;
-import com.eventstore.dbclient.EventStoreDBConnectionString;
+import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreClient;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
@@ -29,12 +27,14 @@ import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
@@ -66,9 +66,13 @@ public class EventStoreClientTest {
         client = xorcery.getServiceLocator().getService(EventStoreClient.Factory.class).create(settings);
     }
 
+    @AfterAll static void tearDown() throws IOException {
+        client.close();
+    }
+
     @Test
     @Order(1)
-    public void appender() {
+    public void append() {
         Flux<MetadataByteBuffer> appendFlux = Flux
                 .from(new YamlPublisher<ObjectNode>(ObjectNode.class))
                 .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
@@ -87,7 +91,7 @@ public class EventStoreClientTest {
                     .toStream()
                     .toList();
 
-            System.out.println(result);
+//            System.out.println(result);
             Assertions.assertEquals(3, result.size());
         }
     }
@@ -113,7 +117,7 @@ public class EventStoreClientTest {
                     .toStream()
                     .toList();
 
-            System.out.println(result);
+//            System.out.println(result);
             Assertions.assertEquals(8, result.size());
         }
     }
@@ -128,7 +132,7 @@ public class EventStoreClientTest {
                     .contextWrite(Context.of(ReactiveStreamsContext.streamId, "test-eventstream"))
                     .toStream()
                     .toList();
-            System.out.println(result);
+//            System.out.println(result);
             Assertions.assertEquals(11, result.size());
         }
     }
@@ -160,7 +164,7 @@ public class EventStoreClientTest {
             latch.await(10, TimeUnit.SECONDS);
             disposable.dispose();
 
-            System.out.println(result);
+//            System.out.println(result);
             Assertions.assertEquals(10, result.size());
         }
     }
@@ -212,7 +216,7 @@ public class EventStoreClientTest {
 
         appender.dispose();
 
-        System.out.println(result);
+//        System.out.println(result);
         Assertions.assertEquals(11, result.size());
     }
 
@@ -252,14 +256,14 @@ public class EventStoreClientTest {
                     .map(mdbb -> mdbb.metadata().getLong(ReactiveStreamsContext.streamPosition).orElseThrow())
                     .toList();
 
-            System.out.println(result2);
+//            System.out.println(result2);
 
             Assertions.assertEquals(result, result2);
         }
     }
 
     @Test
-    public void optimisticLockingAppend() {
+    public void appendWithOptimisticLocking() {
 
         // Make first commit
         MetadataByteBuffer commit = Mono.just(new MetadataByteBuffer(new Metadata.Builder().build(), ByteBuffer.wrap("eventdata".getBytes(StandardCharsets.UTF_8))))
@@ -323,7 +327,7 @@ public class EventStoreClientTest {
                 .contextWrite(Context.of(ReactiveStreamsContext.streamId, "$ce-testdelete"))
                 .toStream()
                 .toList();
-        System.out.println(before);
+//        System.out.println(before);
 
         System.out.println("Delete ");
         readStreamFlux
@@ -346,7 +350,7 @@ public class EventStoreClientTest {
                 .contextWrite(Context.of(ReactiveStreamsContext.streamId, "$ce-testdelete"))
                 .toStream()
                 .toList();
-        System.out.println(after);
+//        System.out.println(after);
         Assertions.assertEquals(3, after.size());
 
         System.out.println("Streams");
@@ -355,7 +359,53 @@ public class EventStoreClientTest {
                 .contextWrite(Context.of(ReactiveStreamsContext.streamId, "$streams"))
                 .toStream()
                 .toList();
-        System.out.println(streams);
+//        System.out.println(streams);
         Assertions.assertEquals(1, streams.size());
+    }
+
+    @Test
+    public void appendWithStreamMetadata() {
+        Flux<MetadataByteBuffer> appendFlux = Flux
+                .from(new YamlPublisher<ObjectNode>(ObjectNode.class))
+                .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
+                .transformDeferredContextual(client.append(
+                        metadata -> UUID.randomUUID(),
+                        metadata -> "DomainCommand",
+                        null));
+
+        {
+            URL yamlResource = Resources.getResource("testevents1.yaml").orElseThrow();
+            List<MetadataByteBuffer> result = appendFlux
+                    .contextWrite(Context.of(Map.of(
+                            ResourcePublisherContext.resourceUrl, yamlResource.toExternalForm(),
+                            ReactiveStreamsContext.streamId, "test-metadata",
+                            "maxAge", Duration.ofDays(7).toMillis(),
+                            "maxCount", 10000,
+                            "cacheControl", 10000,
+                            "truncateBefore", 2,
+                            "acl", """
+                                    {"$r":["foo","bar"]}
+                                    """,
+                            "customProperties", """
+                                    {"foo":123}
+                                    """
+                    )))
+                    .toStream()
+                    .toList();
+
+            Assertions.assertEquals(3, result.size());
+
+            StreamMetadata streamMetadata = client.getStreamMetadata("test-metadata")
+                    .orTimeout(10, TimeUnit.SECONDS).join();
+
+            Assertions.assertEquals(604800000L, streamMetadata.getMaxAge());
+            Assertions.assertEquals(10000L, streamMetadata.getMaxCount());
+            if (streamMetadata.getAcl() instanceof StreamAcl acl) {
+                Assertions.assertEquals(List.of("foo", "bar"), acl.getReadRoles());
+            }
+            Map<String, Object> customProperties = streamMetadata.getCustomProperties();
+            customProperties.remove("resourceUrl");
+            Assertions.assertEquals(Map.of("foo",123, "streamId", "test-metadata"), customProperties);
+        }
     }
 }

@@ -9,7 +9,6 @@ import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContex
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.grpc.StatusRuntimeException;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -22,14 +21,9 @@ import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
-import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -37,21 +31,11 @@ import java.util.function.Function;
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 
 public class AppendHandler
+    extends BaseAppendHandler
         implements BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> {
-    private static final JsonMapper jsonMapper = new JsonMapper();
 
-    private final EventStoreDBClient client;
-    private final Consumer<AppendToStreamOptions> options;
-
-    private final Function<Metadata, UUID> eventIdSelector;
-    private final Function<Metadata, String> eventTypeSelector;
-
-    private final Logger logger;
-
-    // Metrics
-    private final LongHistogram batchSizes;
-    private final DoubleHistogram writeTimer;
     private final SmartBatching<MetadataByteBuffer> smartBatching;
+
 
     public AppendHandler(
             EventStoreDBClient client,
@@ -61,54 +45,13 @@ public class AppendHandler
             Function<Metadata, String> eventTypeSelector,
             Logger logger,
             OpenTelemetry openTelemetry) {
-        this.client = client;
-        this.options = options != null ? options : o -> {
-        };
-        this.logger = logger;
+        super(client, options, eventIdSelector, eventTypeSelector, logger, openTelemetry);
         this.smartBatching = new SmartBatching<>(configuration, this::handler);
-        // Metrics
-        this.eventIdSelector = eventIdSelector;
-        this.eventTypeSelector = eventTypeSelector;
-
-        // Metrics
-        Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
-                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
-                .build();
-        batchSizes = meter.histogramBuilder("eventstore.stream.writes.batchsize")
-                .ofLongs().setUnit("{count}").build();
-        writeTimer = meter.histogramBuilder("eventstore.stream.writes.latency")
-                .setUnit("s").build();
-
     }
 
     @Override
     public Publisher<MetadataByteBuffer> apply(Flux<MetadataByteBuffer> metadataByteBufferFlux, ContextView contextView) {
-        return smartBatching.apply(metadataByteBufferFlux.contextWrite(addLastPosition(contextView)), contextView);
-    }
-
-    private Function<Context, Context> addLastPosition(ContextView contextView) {
-        return context ->
-        {
-            try {
-                String streamId = ReactiveStreamsContext.getContext(contextView, ReactiveStreamsContext.streamId);
-                return client.readStream(streamId, ReadStreamOptions.get().backwards().maxCount(1))
-                        .orTimeout(10, TimeUnit.SECONDS).thenApply(readResult ->
-                        {
-                            long lastStreamPosition = readResult.getLastStreamPosition();
-                            return context.put(ReactiveStreamsContext.streamPosition, lastStreamPosition);
-                        }).exceptionallyCompose(throwable ->
-                        {
-                            if (throwable.getCause() instanceof StreamNotFoundException) {
-                                return CompletableFuture.completedStage(context);
-                            } else {
-                                return CompletableFuture.failedStage(throwable.getCause());
-                            }
-                        }).orTimeout(10, TimeUnit.SECONDS).join();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
+        return smartBatching.apply(metadataByteBufferFlux.contextWrite(setStreamMetadata()).contextWrite(addLastPosition()), contextView);
     }
 
     private void handler(List<MetadataByteBuffer> metadataByteBuffers, SynchronousSink<List<MetadataByteBuffer>> sink) {
@@ -147,7 +90,7 @@ public class AppendHandler
                                 .toCompletableFuture().join();
 
                         long streamPosition = writeResult.getNextExpectedRevision().toRawLong();
-                        long eventPosition = streamPosition-metadataByteBuffers.size();
+                        long eventPosition = streamPosition - metadataByteBuffers.size();
                         for (MetadataByteBuffer metadataByteBuffer : metadataByteBuffers) {
                             metadataByteBuffer.metadata().toBuilder().add(EventStoreMetadata.streamPosition, ++eventPosition);
                         }

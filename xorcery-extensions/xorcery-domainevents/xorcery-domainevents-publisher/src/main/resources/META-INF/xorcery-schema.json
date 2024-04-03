@@ -14,13 +14,13 @@
       "properties" : {
         "eventstore" : {
           "type" : "string",
-          "default" : "{{ instance.uri }}/eventstore",
-          "description" : "Default: {{ instance.uri }}/eventstore"
+          "default" : "{{ instance.api }}eventstore",
+          "description" : "Default: {{ instance.api }}eventstore"
         },
         "projections" : {
           "type" : "string",
-          "default" : "{{ instance.uri }}/projections",
-          "description" : "Default: {{ instance.uri }}/projections"
+          "default" : "{{ instance.api }}projections",
+          "description" : "Default: {{ instance.api }}projections"
         }
       }
     }

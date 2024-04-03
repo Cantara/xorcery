@@ -21,15 +21,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.reactivestreams.Publisher;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
+import reactor.util.context.ContextView;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public interface ReactiveStreams {
@@ -54,6 +57,7 @@ public interface ReactiveStreams {
     }
 
     // Transformers
+
     /**
      * Converts an ObjectNode with metadata and JSON body to a MetadataByteBuffer. Use this with {@link Flux#handle(BiConsumer)}
      */
@@ -69,4 +73,37 @@ public interface ReactiveStreams {
             }
         };
     }
+
+    static BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> addContextAsMetadata() {
+        return new ContextMetadataHandler();
+    }
+
+    class ContextMetadataHandler
+            implements BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> {
+
+        @Override
+        public Publisher<MetadataByteBuffer> apply(Flux<MetadataByteBuffer> metadataByteBufferFlux, ContextView contextView) {
+            return metadataByteBufferFlux.map(addContextAsMetadata(contextView));
+        }
+
+        private Function<? super MetadataByteBuffer, ? extends MetadataByteBuffer> addContextAsMetadata(ContextView contextView) {
+            return metadataByteBuffer ->
+            {
+                Metadata.Builder builder = metadataByteBuffer.metadata().toBuilder();
+                contextView.forEach((k, v) -> {
+                    if (v instanceof String str) {
+                        builder.add(k.toString(), str);
+                    } else if (v instanceof Long nr) {
+                        builder.add(k.toString(), nr);
+                    } else if (v instanceof Boolean bool) {
+                        builder.add(k.toString(), bool);
+                    } else {
+                        builder.add(k.toString(), v.toString());
+                    }
+                });
+                return metadataByteBuffer;
+            };
+        }
+    }
+
 }

@@ -26,19 +26,8 @@ import java.util.function.Function;
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 
 public class AppendOptimisticLockingHandler
+    extends BaseAppendHandler
         implements BiConsumer<MetadataByteBuffer, SynchronousSink<MetadataByteBuffer>> {
-    private static final JsonMapper jsonMapper = new JsonMapper();
-
-    private final EventStoreDBClient client;
-    private final Consumer<AppendToStreamOptions> options;
-
-    private final Function<Metadata, UUID> eventIdSelector;
-    private final Function<Metadata, String> eventTypeSelector;
-
-    private final Logger logger;
-
-    // Metrics
-    private final DoubleHistogram writeTimer;
 
     public AppendOptimisticLockingHandler(
             EventStoreDBClient client,
@@ -47,23 +36,7 @@ public class AppendOptimisticLockingHandler
             Function<Metadata, String> eventTypeSelector,
             Logger logger,
             OpenTelemetry openTelemetry) {
-        this.client = client;
-        this.options = options != null ? options : o -> {
-        };
-        this.logger = logger;
-
-        // Metrics
-        this.eventIdSelector = eventIdSelector;
-        this.eventTypeSelector = eventTypeSelector;
-
-        // Metrics
-        Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
-                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
-                .build();
-        writeTimer = meter.histogramBuilder("eventstore.streamId.writes.latency")
-                .setUnit("s").build();
-
+        super(client, options, eventIdSelector, eventTypeSelector, logger, openTelemetry);
     }
 
     @Override
