@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-domainevents</artifactId>
-        <version>0.111.1</version>
+        <version>0.111.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-domainevents-neo4jprojection</artifactId>
