@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
@@ -136,7 +137,7 @@ public class WebSocketStreamsClientService
     }
 
     private URI getServerUri(ContextView contextView) {
-        Object serverUri = contextView.get(WebSocketStreamContext.serverUri.name());
+        Object serverUri = ReactiveStreamsContext.getContext(contextView, WebSocketStreamContext.serverUri);
         return validateUri(serverUri instanceof URI uri ? uri : URI.create(serverUri.toString()));
     }
 

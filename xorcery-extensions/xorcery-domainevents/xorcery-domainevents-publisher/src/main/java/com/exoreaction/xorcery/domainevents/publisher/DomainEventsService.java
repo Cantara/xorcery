@@ -21,6 +21,7 @@ import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
@@ -103,7 +104,7 @@ public class DomainEventsService
             requests.tryAcquire(10, TimeUnit.SECONDS);
             CompletableFuture<Metadata> future = new CompletableFuture<>();
             ArrayNode json = objectMapper.valueToTree(commandEvents.getEvents());
-            subscriber.onNext(new WithResult<>(new WithMetadata<>(commandEvents.getMetadata().toBuilder().add(deploymentMetadata.context()).build(), json), future));
+            subscriber.onNext(new WithResult<>(new MetadataJsonNode<>(commandEvents.getMetadata().toBuilder().add(deploymentMetadata.context()).build(), json), future));
             return future;
         } catch (InterruptedException e) {
             return CompletableFuture.failedFuture(e);

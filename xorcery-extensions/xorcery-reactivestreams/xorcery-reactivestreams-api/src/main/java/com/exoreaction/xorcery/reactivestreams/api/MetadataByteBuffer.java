@@ -15,8 +15,7 @@ public class MetadataByteBuffer
     public MetadataByteBuffer() {
     }
 
-    @JsonCreator(mode = PROPERTIES)
-    public MetadataByteBuffer(@JsonProperty("metadata") Metadata metadata, @JsonProperty("data") ByteBuffer data) {
+    public MetadataByteBuffer(Metadata metadata, ByteBuffer data) {
         super(metadata, data);
     }
 

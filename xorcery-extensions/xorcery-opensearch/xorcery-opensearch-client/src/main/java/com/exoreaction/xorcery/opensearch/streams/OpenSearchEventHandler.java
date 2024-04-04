@@ -21,6 +21,7 @@ import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.opensearch.client.document.BulkResponse;
 import com.exoreaction.xorcery.opensearch.client.document.BulkResponseItem;
 import com.exoreaction.xorcery.opensearch.client.document.IndexBulkRequest;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataObject;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -44,7 +45,7 @@ public class OpenSearchEventHandler
         implements EventHandler<WithMetadata<JsonNode>> {
 
     private final OpenSearchClient client;
-    private Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher;
+    private Consumer<MetadataObject<IndexCommit>> openSearchCommitPublisher;
     private final String index;
     private Logger logger = LogManager.getLogger(getClass());
 
@@ -55,7 +56,7 @@ public class OpenSearchEventHandler
     private int requestCount = 0;
 
     public OpenSearchEventHandler(OpenSearchClient client,
-                                  Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher,
+                                  Consumer<MetadataObject<IndexCommit>> openSearchCommitPublisher,
                                   Subscription subscription,
                                   String index) {
         this.client = client;
@@ -100,7 +101,7 @@ public class OpenSearchEventHandler
             } else {
                 bulkResponse.getObjectListAs("items", BulkResponseItem::new).ifPresent(items ->
                 {
-                    openSearchCommitPublisher.accept(new WithMetadata<>(new OpenSearchMetadata.Builder(new Metadata.Builder())
+                    openSearchCommitPublisher.accept(new MetadataObject<>(new OpenSearchMetadata.Builder(new Metadata.Builder())
                             .timestamp(dem.getTimestamp())
                             .build().context(), new IndexCommit(indexName, items.get(items.size() - 1).getSequenceNr())));
                 });

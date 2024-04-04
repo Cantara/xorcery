@@ -108,7 +108,7 @@ public class ReactiveStreamsServerService
                                              Class<? extends Publisher<?>> publisherType) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        Type type = Classes.resolveActualTypeArgs(publisherType, Publisher.class)[0];
+        Type type = Classes.typeOrBound(Classes.resolveActualTypeArgs(publisherType, Publisher.class)[0]);
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
         MessageWriter<Object> eventWriter = getWriter(eventType);
@@ -164,7 +164,7 @@ public class ReactiveStreamsServerService
                                               Class<? extends Subscriber<?>> subscriberType) {
         CompletableFuture<Void> result = new CompletableFuture<>();
 
-        Type type = Classes.resolveActualTypeArgs(subscriberType, Subscriber.class)[0];
+        Type type = Classes.typeOrBound(Classes.resolveActualTypeArgs(subscriberType, Subscriber.class)[0]);
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
         MessageReader<Object> eventReader = getReader(eventType);

@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
 import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
@@ -150,7 +151,7 @@ public class SubscribePublisherBenchmarks {
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public void writes() throws ExecutionException, InterruptedException, TimeoutException {
-        serverPublisher.publish(new WithMetadata<>(new Metadata.Builder()
+        serverPublisher.publish(new MetadataJsonNode<>(new Metadata.Builder()
                 .add("foo", "bar")
                 .build(), payload));
     }

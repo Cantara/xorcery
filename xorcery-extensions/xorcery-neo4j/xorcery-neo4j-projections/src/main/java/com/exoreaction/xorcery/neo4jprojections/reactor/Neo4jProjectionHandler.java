@@ -52,20 +52,21 @@ public class Neo4jProjectionHandler
     @Override
     public Publisher<MetadataEvents> apply(Flux<MetadataEvents> metadataEventsFlux, ContextView contextView) {
 
-        String projection = contextView.get(ProjectionStreamContext.projectionId.name()).toString();
-        Optional<ProjectionModel> currentProjection = getCurrentProjection(projection);
+        String projectionId = ReactiveStreamsContext.getContext(contextView, ProjectionStreamContext.projectionId);
+        logger.info("Starting Neo4j projection with id "+projectionId);
+        Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
         return currentProjection.flatMap(ProjectionModel::getProjectionPosition)
-                .map(p -> new SmartBatching<>(this.configuration, new Handler(p)).apply(metadataEventsFlux.contextWrite(Context.of(Projection.projectionPosition.name(), p)), contextView))
+                .map(p -> new SmartBatching<>(this.configuration, new Handler(p)).apply(metadataEventsFlux.contextWrite(Context.of(Projection.projectionPosition, p)), contextView))
                 .orElseGet(() ->
                 {
                     // Create projection in Neo4j
                     try (Transaction tx = database.beginTx()) {
                         Map<String, Object> createParameters = new HashMap<>();
-                        createParameters.put(Projection.projectionId.name(), contextView.get(ProjectionStreamContext.projectionId.name()));
+                        createParameters.put(Projection.projectionId.name(), projectionId);
                         Map<String, String> props = new HashMap<>();
                         contextView.forEach((k, v) ->
                         {
-                            if (!k.equals(ProjectionStreamContext.projectionId.name())) {
+                            if (!k.toString().equals(ProjectionStreamContext.projectionId.name())) {
                                 props.put(k.toString(), v.toString());
                             }
                         });
@@ -74,7 +75,8 @@ public class Neo4jProjectionHandler
                                 CREATE (projection:Projection) 
                                 SET 
                                 projection = $props,
-                                projection.id = $projectionId
+                                projection.id = $projectionId,
+                                projection.projectionPosition = -1
                                 RETURN projection
                                 """, createParameters).close();
                         tx.commit();
@@ -117,7 +119,7 @@ public class Neo4jProjectionHandler
                     position = ((Number) events
                             .get(events.size() - 1)
                             .getMetadata()
-                            .getLong(DomainEventMetadata.streamPosition.name())
+                            .getLong(DomainEventMetadata.streamPosition)
                             .orElse(position + events.size()))
                             .longValue();
                     long timestamp = ((Number) events
@@ -136,6 +138,8 @@ public class Neo4jProjectionHandler
                             projection.projectionTimestamp=$projectionTimestamp
                             RETURN projection
                             """, updateParameters).close();
+
+//                    System.out.println("Committed "+events.size());
                 }
 
                 tx.commit();

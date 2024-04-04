@@ -139,4 +139,9 @@ public interface Classes {
         // we have a result if we reached the base class.
         return offspring.equals(base) ? actualArgs : new Type[0];
     }
+
+    static Type typeOrBound(Type type)
+    {
+        return type instanceof TypeVariable<?> tv ? tv.getBounds()[0] : type;
+    }
 }

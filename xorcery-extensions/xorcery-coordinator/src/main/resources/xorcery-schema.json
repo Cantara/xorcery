@@ -4,6 +4,12 @@
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
+    "adminservlet" : {
+      "$ref" : "#/$defs/adminservlet"
+    },
+    "serveradmin" : {
+      "$ref" : "#/$defs/serveradmin"
+    },
     "aws" : {
       "$ref" : "#/$defs/aws"
     },
@@ -75,15 +81,17 @@
     },
     "thymeleaf" : {
       "$ref" : "#/$defs/thymeleaf"
-    },
-    "adminservlet" : {
-      "$ref" : "#/$defs/adminservlet"
-    },
-    "serveradmin" : {
-      "$ref" : "#/$defs/serveradmin"
     }
   },
   "$defs" : {
+    "adminservlet" : {
+      "type" : "object",
+      "properties" : { }
+    },
+    "serveradmin" : {
+      "type" : "object",
+      "properties" : { }
+    },
     "aws" : {
       "type" : "object",
       "properties" : {
@@ -230,16 +238,6 @@
         "client" : {
           "type" : "object",
           "properties" : {
-            "keystore" : {
-              "type" : "string",
-              "default" : "ssl",
-              "description" : "Default: ssl"
-            },
-            "truststore" : {
-              "type" : "string",
-              "default" : "truststore",
-              "description" : "Default: truststore"
-            },
             "properties" : {
               "type" : "object",
               "properties" : { }
@@ -472,16 +470,6 @@
             }
           }
         },
-        "route53" : {
-          "type" : "object",
-          "properties" : {
-            "region" : {
-              "type" : "string",
-              "default" : "aws-global",
-              "description" : "Default: aws-global"
-            }
-          }
-        },
         "dyndns" : {
           "type" : "object",
           "properties" : {
@@ -494,6 +482,16 @@
               "type" : "string",
               "default" : "60s",
               "description" : "Default: 60s"
+            }
+          }
+        },
+        "route53" : {
+          "type" : "object",
+          "properties" : {
+            "region" : {
+              "type" : "string",
+              "default" : "aws-global",
+              "description" : "Default: aws-global"
             }
           }
         }
@@ -524,13 +522,13 @@
         },
         "eventstore" : {
           "type" : "string",
-          "default" : "{{ instance.uri }}/eventstore",
-          "description" : "Default: {{ instance.uri }}/eventstore"
+          "default" : "{{ instance.api }}eventstore",
+          "description" : "Default: {{ instance.api }}eventstore"
         },
         "projections" : {
           "type" : "string",
-          "default" : "{{ instance.uri }}/projections",
-          "description" : "Default: {{ instance.uri }}/projections"
+          "default" : "{{ instance.api }}projections",
+          "description" : "Default: {{ instance.api }}projections"
         }
       }
     },
@@ -1512,14 +1510,6 @@
           }
         }
       }
-    },
-    "adminservlet" : {
-      "type" : "object",
-      "properties" : { }
-    },
-    "serveradmin" : {
-      "type" : "object",
-      "properties" : { }
     }
   }
 }

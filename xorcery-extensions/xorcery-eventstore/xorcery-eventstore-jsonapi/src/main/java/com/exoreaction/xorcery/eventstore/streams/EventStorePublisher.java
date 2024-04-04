@@ -23,6 +23,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.eventstore.resources.EventStoreParameters;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,7 +38,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 public class EventStorePublisher
-        implements Publisher<WithMetadata<ByteBuffer>> {
+        implements Publisher<MetadataByteBuffer> {
     private static final Logger logger = LogManager.getLogger(EventStorePublisher.class);
 
     private final EventStoreDBClient client;
@@ -51,7 +52,7 @@ public class EventStorePublisher
     }
 
     @Override
-    public void subscribe(Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
+    public void subscribe(Subscriber<? super MetadataByteBuffer> subscriber) {
         new EventsProcessor(subscriber);
     }
 
@@ -59,10 +60,10 @@ public class EventStorePublisher
             extends SubscriptionListener
             implements Subscription {
 
-        private Subscriber<? super WithMetadata<ByteBuffer>> subscriber;
+        private Subscriber<? super MetadataByteBuffer> subscriber;
         private com.eventstore.dbclient.Subscription subscription;
 
-        public EventsProcessor(Subscriber<? super WithMetadata<ByteBuffer>> subscriber) {
+        public EventsProcessor(Subscriber<? super MetadataByteBuffer> subscriber) {
             try {
                 this.subscriber = subscriber;
 
@@ -108,7 +109,7 @@ public class EventStorePublisher
                         .revision(resolvedEvent.getEvent().getRevision())
                         .contentType(resolvedEvent.getEvent().getContentType());
 
-                subscriber.onNext(new WithMetadata<>(metadata.build(), ByteBuffer.wrap(resolvedEvent.getEvent().getEventData())));
+                subscriber.onNext(new MetadataByteBuffer(metadata.build(), ByteBuffer.wrap(resolvedEvent.getEvent().getEventData())));
 
             } catch (IOException ex) {
                 subscription.stop();

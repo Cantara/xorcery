@@ -32,10 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 @Service(name = "cypherprojection")
@@ -80,7 +77,7 @@ public class CypherEventProjection
             String statementFile = "META-INF/neo4j/event/" + t + ".cyp";
             List<URL> statementFiles = Resources.getResources(statementFile);
             if (statementFiles.isEmpty())
-                return null;
+                return Collections.emptyList();
             List<String> statements = new ArrayList<>();
             for (URL file : statementFiles) {
                 try (InputStream resourceAsStream = file.openStream()) {

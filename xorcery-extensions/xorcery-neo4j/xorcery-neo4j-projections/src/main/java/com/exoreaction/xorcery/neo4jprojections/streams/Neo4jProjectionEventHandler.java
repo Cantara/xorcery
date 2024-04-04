@@ -61,7 +61,7 @@ public class Neo4jProjectionEventHandler
     private final List<Neo4jEventProjection> projections;
 
     private final Subscription subscription;
-    private final Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher;
+    private final Consumer<MetadataProjectionCommit> projectionCommitPublisher;
 
     private final String projectionId;
 
@@ -85,7 +85,7 @@ public class Neo4jProjectionEventHandler
                                        Subscription subscription,
                                        Optional<ProjectionModel> projectionModel,
                                        String projectionId,
-                                       Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,
+                                       Consumer<MetadataProjectionCommit> projectionCommitPublisher,
                                        List<Neo4jEventProjection> projections,
                                        OpenTelemetry openTelemetry) {
         this.eventBatchSize = configuration.eventBatchSize();
@@ -178,7 +178,7 @@ public class Neo4jProjectionEventHandler
                 previousRevision = revision;
 
                 // Always send commit notification, even if no changes were made
-                projectionCommitPublisher.accept(new WithMetadata<>(new Neo4jMetadata.Builder(new Metadata.Builder())
+                projectionCommitPublisher.accept(new MetadataProjectionCommit(new Neo4jMetadata.Builder(new Metadata.Builder())
                         .timestamp(System.currentTimeMillis())
                         .lastTimestamp(lastTimestamp)
                         .build().context(), new ProjectionCommit(projectionId, revision)));

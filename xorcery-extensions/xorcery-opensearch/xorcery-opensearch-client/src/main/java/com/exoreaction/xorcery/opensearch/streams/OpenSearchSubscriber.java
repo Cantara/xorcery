@@ -20,6 +20,8 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataObject;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -31,17 +33,17 @@ import reactor.util.context.Context;
 import java.util.function.Consumer;
 
 public class OpenSearchSubscriber
-        extends BaseSubscriber<WithMetadata<JsonNode>> {
+        extends BaseSubscriber<MetadataJsonNode<JsonNode>> {
 
     private final OpenSearchClient client;
     private final String indexName;
     private final Configuration publisherConfiguration;
-    private Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher;
+    private Consumer<MetadataObject<IndexCommit>> openSearchCommitPublisher;
     private Configuration configuration;
 
     private Disruptor<WithMetadata<JsonNode>> disruptor;
 
-    public OpenSearchSubscriber(OpenSearchClient client, Consumer<WithMetadata<IndexCommit>> openSearchCommitPublisher, Configuration configuration, Configuration publisherConfiguration) {
+    public OpenSearchSubscriber(OpenSearchClient client, Consumer<MetadataObject<IndexCommit>> openSearchCommitPublisher, Configuration configuration, Configuration publisherConfiguration) {
         this.client = client;
         this.openSearchCommitPublisher = openSearchCommitPublisher;
         this.configuration = configuration;
@@ -56,7 +58,7 @@ public class OpenSearchSubscriber
 
     @Override
     protected void hookOnSubscribe(Subscription subscription) {
-        disruptor = new Disruptor<>(WithMetadata::new, configuration.getInteger("bufferSize").orElse(64), new NamedThreadFactory("OpenSearch-" + indexName + "-"));
+        disruptor = new Disruptor<>(MetadataJsonNode::new, configuration.getInteger("bufferSize").orElse(64), new NamedThreadFactory("OpenSearch-" + indexName + "-"));
         disruptor.handleEventsWith(new OpenSearchEventHandler(client, openSearchCommitPublisher, subscription, indexName));
         disruptor.start();
 
@@ -64,7 +66,7 @@ public class OpenSearchSubscriber
     }
 
     @Override
-    protected void hookOnNext(WithMetadata<JsonNode> item) {
+    protected void hookOnNext(MetadataJsonNode<JsonNode> item) {
         disruptor.publishEvent((e, s, event) ->
         {
             e.set(event);

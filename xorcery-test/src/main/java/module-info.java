@@ -31,4 +31,5 @@ module xorcery.test {
     requires io.opentelemetry.context;
     requires xorcery.jaxrs.server;
     requires xorcery.reactivestreams.disruptor;
+    requires xorcery.util;
 }
