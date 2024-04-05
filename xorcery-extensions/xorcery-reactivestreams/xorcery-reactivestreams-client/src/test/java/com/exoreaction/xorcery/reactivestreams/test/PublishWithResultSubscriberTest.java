@@ -36,6 +36,8 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Semaphore;
@@ -75,14 +77,16 @@ public class PublishWithResultSubscriberTest {
 
 
             AtomicInteger result = new AtomicInteger(0);
+            List<CompletableFuture<Integer>> futures = new ArrayList<>();
             for (int i = 0; i < 100; i++) {
-                publisher.publish(i).whenComplete((v, t) ->
+                futures.add(publisher.publish(i).whenComplete((v, t) ->
                 {
                     logger.info("Result:" + v);
                     result.addAndGet(v);
-                });
+                }));
             }
-
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).toCompletableFuture()
+                    .orTimeout(10, TimeUnit.SECONDS).join();
             publisher.close();
 
             Thread.sleep(1000);
