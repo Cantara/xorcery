@@ -24,7 +24,7 @@ import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="jetty.server.log4j2")
 @Priority(0)
 public class Log4j2HandlerFactory
         implements Factory<Log4j2ThreadContextHandler> {
@@ -36,8 +36,6 @@ public class Log4j2HandlerFactory
     }
 
     @Override
-    @Named("jetty.server.log4j2")
-    @Singleton
     public Log4j2ThreadContextHandler provide() {
         return log4J2ThreadContextHandler;
     }

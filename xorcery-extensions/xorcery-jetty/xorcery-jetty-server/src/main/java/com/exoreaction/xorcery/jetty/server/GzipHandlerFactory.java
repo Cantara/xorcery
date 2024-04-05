@@ -24,7 +24,7 @@ import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="jetty.server.gzip")
 @Priority(10)
 public class GzipHandlerFactory
         implements Factory<GzipHandler> {
@@ -37,8 +37,6 @@ public class GzipHandlerFactory
     }
 
     @Override
-    @Named("jetty.server.gzip")
-    @Singleton
     public GzipHandler provide() {
         return gzipHandler;
     }
