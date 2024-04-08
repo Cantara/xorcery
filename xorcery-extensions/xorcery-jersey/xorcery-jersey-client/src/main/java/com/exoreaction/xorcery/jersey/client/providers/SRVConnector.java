@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.jersey.client.providers;
 
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import jakarta.ws.rs.ProcessingException;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
@@ -31,10 +32,12 @@ public class SRVConnector
         implements Connector {
     private DnsLookup dnsLookup;
     private final Connector delegate;
+    private final Logger logger;
 
-    public SRVConnector(DnsLookup dnsLookup, Connector delegate) {
+    public SRVConnector(DnsLookup dnsLookup, Connector delegate, Logger logger) {
         this.dnsLookup = dnsLookup;
         this.delegate = delegate;
+        this.logger = logger;
     }
 
     @Override
@@ -50,11 +53,11 @@ public class SRVConnector
                     throw new ProcessingException("Could not resolve " + srvUri);
 
                 request.setUri(server);
-                ClientResponse clientResponse = null;
                 try {
                     return delegate.apply(request);
                 } catch (ProcessingException t) {
                     // Try next server
+                    logger.warn("Request failed, trying next server", t);
                     request = new ClientRequest(request);
                     throwable = t;
                 }

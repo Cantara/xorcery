@@ -35,7 +35,6 @@ import org.bouncycastle.util.io.pem.PemWriter;
 
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateFactory;
@@ -127,5 +126,10 @@ public class ClientCertificatesProvider
     @Override
     public void close() {
         client.close();
+    }
+
+    @Override
+    public String toString() {
+        return "Client Certificate provider";
     }
 }
