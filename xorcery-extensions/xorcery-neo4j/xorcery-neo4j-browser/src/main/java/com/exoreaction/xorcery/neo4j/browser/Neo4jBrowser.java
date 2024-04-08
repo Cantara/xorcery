@@ -22,9 +22,11 @@ import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.util.Resources;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.ee10.servlet.DefaultServlet;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
@@ -39,6 +41,7 @@ public class Neo4jBrowser {
     @Inject
     public Neo4jBrowser(ServiceResourceObjects serviceResourceObjects,
                         Configuration configuration,
+                        Logger logger,
                         Provider<ServletContextHandler> ctxProvider) throws URISyntaxException {
 
         // Install servlet for Neo4j Browser
@@ -55,5 +58,7 @@ public class Neo4jBrowser {
                 .version(getClass().getPackage().getImplementationVersion())
                 .api("browser", "api/neo4j/browser/")
                 .build());
+
+        logger.info("Neo4j Browser available from "+webRootLocation);
     }
 }
