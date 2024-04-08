@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 public class Neo4jProjectionCommitPublisher
         implements Publisher<MetadataProjectionCommit>, Consumer<MetadataProjectionCommit> {
 
-    private static final Sinks.Many<MetadataProjectionCommit> sink = Sinks.many().multicast().onBackpressureBuffer(4096);
+    private static final Sinks.Many<MetadataProjectionCommit> sink = Sinks.many().multicast().onBackpressureBuffer(4096, false);
     private static final Flux<MetadataProjectionCommit> sinkPublisher = sink.asFlux();
 
     @Override

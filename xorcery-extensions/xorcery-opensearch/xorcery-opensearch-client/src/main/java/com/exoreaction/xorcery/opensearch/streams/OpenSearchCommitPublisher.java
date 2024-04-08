@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 public class OpenSearchCommitPublisher
         implements Publisher<WithMetadata<IndexCommit>>, Consumer<WithMetadata<IndexCommit>> {
 
-    private static final Sinks.Many<WithMetadata<IndexCommit>> sink = Sinks.many().multicast().onBackpressureBuffer(4096);
+    private static final Sinks.Many<WithMetadata<IndexCommit>> sink = Sinks.many().multicast().onBackpressureBuffer(4096, false);
     private static final Flux<WithMetadata<IndexCommit>> sinkPublisher = sink.asFlux();
 
     @Override
