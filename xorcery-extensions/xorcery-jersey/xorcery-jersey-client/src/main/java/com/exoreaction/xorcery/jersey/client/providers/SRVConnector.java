@@ -55,6 +55,7 @@ public class SRVConnector
                     return delegate.apply(request);
                 } catch (ProcessingException t) {
                     // Try next server
+                    request = new ClientRequest(request);
                     throwable = t;
                 }
             }
