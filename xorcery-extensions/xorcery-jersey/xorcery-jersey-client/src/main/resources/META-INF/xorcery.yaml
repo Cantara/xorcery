@@ -3,4 +3,6 @@ jersey:
     enabled: "{{ jetty.client.enabled }}"
     keystore: null
     truststore: null
+    connectTimeout: "{{ defaults.connectTimeout }}"
+    readTimeout: "0s"
     properties: {}

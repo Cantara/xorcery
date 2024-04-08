@@ -31,7 +31,7 @@ public record JerseyClientConfiguration(Configuration configuration) {
     }
 
     public Duration getReadTimeout() {
-        return Duration.parse("PT" + configuration().getString("connectTimeout").orElse("5s"));
+        return Duration.parse("PT" + configuration().getString("idleTimeout").orElse("0s"));
     }
 
     public Optional<String> getKeyStoreName()
