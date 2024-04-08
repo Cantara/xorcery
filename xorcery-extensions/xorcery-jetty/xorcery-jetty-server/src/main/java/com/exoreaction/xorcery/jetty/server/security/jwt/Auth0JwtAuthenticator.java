@@ -269,7 +269,7 @@ public class Auth0JwtAuthenticator
                     }
 
                     if (error != null) {
-                        logger.warn("Could not find JWT verifier for token:" + decodedJwt.getToken());
+                        logger.warn("Could not find JWT verifier for token:{} (kid:{},issues:{}, sub:{}",decodedJwt.getToken(),decodedJwt.getKeyId(), decodedJwt.getIssuer(), decodedJwt.getSubject());
                         throw new ServerAuthException("Could not authenticate JWT token");
                     }
                 }
