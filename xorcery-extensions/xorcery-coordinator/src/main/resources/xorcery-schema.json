@@ -19,12 +19,6 @@
     "letsencrypt" : {
       "$ref" : "#/$defs/letsencrypt"
     },
-    "keystores" : {
-      "$ref" : "#/$defs/keystores"
-    },
-    "jersey" : {
-      "$ref" : "#/$defs/jersey"
-    },
     "certificates" : {
       "$ref" : "#/$defs/certificates"
     },
@@ -55,11 +49,17 @@
     "health" : {
       "$ref" : "#/$defs/health"
     },
+    "jersey" : {
+      "$ref" : "#/$defs/jersey"
+    },
     "jetty" : {
       "$ref" : "#/$defs/jetty"
     },
     "jwt" : {
       "$ref" : "#/$defs/jwt"
+    },
+    "keystores" : {
+      "$ref" : "#/$defs/keystores"
     },
     "secrets" : {
       "$ref" : "#/$defs/secrets"
@@ -149,100 +149,6 @@
           "type" : "string",
           "default" : "letsencrypt",
           "description" : "Default: letsencrypt"
-        }
-      }
-    },
-    "keystores" : {
-      "type" : "object",
-      "properties" : {
-        "letsencrypt" : {
-          "type" : "object",
-          "properties" : {
-            "template" : {
-              "type" : "string",
-              "default" : "META-INF/letsencrypt.p12",
-              "description" : "Default: META-INF/letsencrypt.p12"
-            },
-            "path" : {
-              "type" : "string",
-              "default" : "{{ instance.home }}/letsencrypt.p12",
-              "description" : "Default: {{ instance.home }}/letsencrypt.p12"
-            }
-          }
-        },
-        "defaultPassword" : {
-          "type" : "string",
-          "default" : "secret:password",
-          "description" : "Default: secret:password"
-        },
-        "secrets" : {
-          "type" : "object",
-          "properties" : {
-            "template" : {
-              "type" : "string",
-              "default" : "META-INF/secrets.p12",
-              "description" : "Default: META-INF/secrets.p12"
-            },
-            "path" : {
-              "type" : "string",
-              "default" : "{{ instance.home }}/secrets.p12",
-              "description" : "Default: {{ instance.home }}/secrets.p12"
-            },
-            "password" : {
-              "type" : "string",
-              "default" : "{{ keystores.defaultPassword }}",
-              "description" : "Default: {{ keystores.defaultPassword }}"
-            }
-          }
-        }
-      }
-    },
-    "jersey" : {
-      "type" : "object",
-      "properties" : {
-        "server" : {
-          "type" : "object",
-          "properties" : {
-            "mediaTypes" : {
-              "type" : "object",
-              "properties" : {
-                "html" : {
-                  "type" : "string",
-                  "default" : "text/html",
-                  "description" : "Default: text/html"
-                },
-                "txt" : {
-                  "type" : "string",
-                  "default" : "text/plain",
-                  "description" : "Default: text/plain"
-                },
-                "json" : {
-                  "type" : "string",
-                  "default" : "application/json",
-                  "description" : "Default: application/json"
-                },
-                "yaml" : {
-                  "type" : "string",
-                  "default" : "application/yaml",
-                  "description" : "Default: application/yaml"
-                },
-                "schema" : {
-                  "type" : "string",
-                  "default" : "application/schema+json",
-                  "description" : "Default: application/schema+json"
-                }
-              }
-            }
-          }
-        },
-        "client" : {
-          "type" : "object",
-          "properties" : {
-            "properties" : {
-              "type" : "object",
-              "properties" : { }
-            }
-          }
         }
       }
     },
@@ -543,6 +449,55 @@
         }
       }
     },
+    "jersey" : {
+      "type" : "object",
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "properties" : {
+            "properties" : {
+              "type" : "object",
+              "properties" : { }
+            }
+          }
+        },
+        "server" : {
+          "type" : "object",
+          "properties" : {
+            "mediaTypes" : {
+              "type" : "object",
+              "properties" : {
+                "html" : {
+                  "type" : "string",
+                  "default" : "text/html",
+                  "description" : "Default: text/html"
+                },
+                "txt" : {
+                  "type" : "string",
+                  "default" : "text/plain",
+                  "description" : "Default: text/plain"
+                },
+                "json" : {
+                  "type" : "string",
+                  "default" : "application/json",
+                  "description" : "Default: application/json"
+                },
+                "yaml" : {
+                  "type" : "string",
+                  "default" : "application/yaml",
+                  "description" : "Default: application/yaml"
+                },
+                "schema" : {
+                  "type" : "string",
+                  "default" : "application/schema+json",
+                  "description" : "Default: application/schema+json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "jetty" : {
       "type" : "object",
       "properties" : {
@@ -821,6 +776,36 @@
         "users" : {
           "type" : "object",
           "properties" : { }
+        }
+      }
+    },
+    "keystores" : {
+      "type" : "object",
+      "properties" : {
+        "defaultPassword" : {
+          "type" : "string",
+          "default" : "secret:password",
+          "description" : "Default: secret:password"
+        },
+        "secrets" : {
+          "type" : "object",
+          "properties" : {
+            "template" : {
+              "type" : "string",
+              "default" : "META-INF/secrets.p12",
+              "description" : "Default: META-INF/secrets.p12"
+            },
+            "path" : {
+              "type" : "string",
+              "default" : "{{ instance.home }}/secrets.p12",
+              "description" : "Default: {{ instance.home }}/secrets.p12"
+            },
+            "password" : {
+              "type" : "string",
+              "default" : "{{ keystores.defaultPassword }}",
+              "description" : "Default: {{ keystores.defaultPassword }}"
+            }
+          }
         }
       }
     },
@@ -1378,8 +1363,8 @@
             },
             "prefix" : {
               "type" : "string",
-              "default" : "WEB-INF/thymeleaf/templates/",
-              "description" : "Default: WEB-INF/thymeleaf/templates/"
+              "default" : "templates/",
+              "description" : "Default: templates/"
             },
             "suffix" : {
               "type" : "string",
@@ -1427,8 +1412,8 @@
             },
             "prefix" : {
               "type" : "string",
-              "default" : "WEB-INF/thymeleaf/templates/",
-              "description" : "Default: WEB-INF/thymeleaf/templates/"
+              "default" : "templates/",
+              "description" : "Default: templates/"
             },
             "suffix" : {
               "type" : "string",

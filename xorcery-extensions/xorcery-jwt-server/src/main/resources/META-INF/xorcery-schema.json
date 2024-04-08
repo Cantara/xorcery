@@ -6,9 +6,6 @@
   "properties" : {
     "jwt" : {
       "$ref" : "#/$defs/jwt"
-    },
-    "jersey" : {
-      "$ref" : "#/$defs/jersey"
     }
   },
   "$defs" : {
@@ -55,15 +52,6 @@
           "properties" : { }
         },
         "users" : {
-          "type" : "object",
-          "properties" : { }
-        }
-      }
-    },
-    "jersey" : {
-      "type" : "object",
-      "properties" : {
-        "server" : {
           "type" : "object",
           "properties" : { }
         }

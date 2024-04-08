@@ -6,7 +6,7 @@ thymeleaf:
     enabled: "{{ thymeleaf.enabled }}"
     templateMode: HTML
     encoding: UTF8
-    prefix: "WEB-INF/thymeleaf/templates/"
+    prefix: "templates/"
     suffix: ".html"
     checkExistence: true
     cacheable: "{{ thymeleaf.development ? false : true }}"
@@ -21,7 +21,7 @@ thymeleaf:
     enabled: false
     templateMode: HTML
     encoding: UTF8
-    prefix: "WEB-INF/thymeleaf/templates/"
+    prefix: "templates/"
     suffix: ".html"
     checkExistence: true
     cacheable: "{{ thymeleaf.development ? false : true }}"
@@ -46,6 +46,3 @@ thymeleaf:
     resolvablePatterns: []
     decoupledLogic: false
     aliases: {}
-
-jersey.server.register:
-  - com.exoreaction.xorcery.thymeleaf.providers.ThymeleafHtmlMessageBodyWriter

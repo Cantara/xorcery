@@ -6,12 +6,6 @@
   "properties" : {
     "letsencrypt" : {
       "$ref" : "#/$defs/letsencrypt"
-    },
-    "keystores" : {
-      "$ref" : "#/$defs/keystores"
-    },
-    "jersey" : {
-      "$ref" : "#/$defs/jersey"
     }
   },
   "$defs" : {
@@ -27,35 +21,6 @@
           "type" : "string",
           "default" : "letsencrypt",
           "description" : "Default: letsencrypt"
-        }
-      }
-    },
-    "keystores" : {
-      "type" : "object",
-      "properties" : {
-        "letsencrypt" : {
-          "type" : "object",
-          "properties" : {
-            "template" : {
-              "type" : "string",
-              "default" : "META-INF/letsencrypt.p12",
-              "description" : "Default: META-INF/letsencrypt.p12"
-            },
-            "path" : {
-              "type" : "string",
-              "default" : "{{ instance.home }}/letsencrypt.p12",
-              "description" : "Default: {{ instance.home }}/letsencrypt.p12"
-            }
-          }
-        }
-      }
-    },
-    "jersey" : {
-      "type" : "object",
-      "properties" : {
-        "server" : {
-          "type" : "object",
-          "properties" : { }
         }
       }
     }

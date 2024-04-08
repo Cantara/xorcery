@@ -4,8 +4,8 @@ neo4jdatabase:
       bolt:
         enabled: "{{ neo4jbrowser.enabled }}"
         tls_level: "{{ neo4jbrowser.ssl.enabled ? \"OPTIONAL\" | \"DISABLED\" }}"
-        listen_address: ":7687"
-        advertised_address: ":7687:"
+        listen_address: "localhost:7687"
+        advertised_address: "localhost:7687"
     dbms:
       ssl:
         policy:
