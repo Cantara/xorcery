@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-extensions</artifactId>
-        <version>0.113.1</version>
+        <version>0.113.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-keystores</artifactId>
