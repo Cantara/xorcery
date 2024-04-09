@@ -1,4 +1,4 @@
 domainevents:
   enabled: "{{ defaults.enabled }}"
-  eventstore: "{{ instance.uri }}/eventstore"
-  projections: "{{ instance.uri }}/projections"
+  eventstore: "{{ instance.api }}eventstore"
+  projections: "{{ instance.api }}projections"

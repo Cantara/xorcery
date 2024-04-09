@@ -15,24 +15,22 @@
  */
 package com.exoreaction.xorcery.neo4jprojections;
 
-import com.exoreaction.xorcery.json.JsonElement;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.exoreaction.xorcery.collections.MapElement;
 
+import java.util.Map;
 import java.util.Optional;
 
-import static com.exoreaction.xorcery.neo4j.client.Cypher.toField;
-
-public record ProjectionModel(ObjectNode json)
-        implements JsonElement {
-    public String getId() {
-        return getString(toField(Projection.id)).orElseThrow();
+public record ProjectionModel(Map<String, Object> map)
+        implements MapElement<String, Object> {
+    public String getProjectionId() {
+        return getString(Projection.projectionId).orElseThrow();
     }
 
-    public Optional<Long> getVersion() {
-        return getLong(toField(Projection.version));
+    public Optional<Long> getProjectionPosition() {
+        return getLong(Projection.projectionPosition);
     }
 
-    public Optional<Long> getRevision() {
-        return getLong(toField(Projection.revision));
+    public Optional<Long> getStreamId() {
+        return getLong(Projection.streamId);
     }
 }

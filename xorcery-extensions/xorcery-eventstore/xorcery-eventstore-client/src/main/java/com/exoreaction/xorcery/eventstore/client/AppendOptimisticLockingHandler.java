@@ -1,19 +1,16 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
-import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryHelpers;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.grpc.StatusRuntimeException;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import reactor.core.publisher.SynchronousSink;
 
@@ -23,61 +20,36 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
+import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
 
 public class AppendOptimisticLockingHandler
+    extends BaseAppendHandler
         implements BiConsumer<MetadataByteBuffer, SynchronousSink<MetadataByteBuffer>> {
-    private static final JsonMapper jsonMapper = new JsonMapper();
-
-    private final EventStoreDBClient client;
-    private final Consumer<AppendToStreamOptions> options;
-
-    private final Function<Metadata, UUID> eventIdSelector;
-    private final Function<Metadata, String> eventTypeSelector;
-
-    private final Logger logger;
-
-    // Metrics
-    private final DoubleHistogram writeTimer;
 
     public AppendOptimisticLockingHandler(
             EventStoreDBClient client,
             Consumer<AppendToStreamOptions> options,
-            Function<Metadata, UUID> eventIdSelector,
-            Function<Metadata, String> eventTypeSelector,
+            Function<MetadataByteBuffer, UUID> eventIdSelector,
+            Function<MetadataByteBuffer, String> eventTypeSelector,
             Logger logger,
             OpenTelemetry openTelemetry) {
-        this.client = client;
-        this.options = options != null ? options : o -> {
-        };
-        this.logger = logger;
-
-        // Metrics
-        this.eventIdSelector = eventIdSelector;
-        this.eventTypeSelector = eventTypeSelector;
-
-        // Metrics
-        Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
-                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
-                .build();
-        writeTimer = meter.histogramBuilder("eventstore.streamId.writes.latency")
-                .setUnit("s").build();
-
+        super(client, options, eventIdSelector, eventTypeSelector, logger, openTelemetry);
     }
 
     @Override
     public void accept(MetadataByteBuffer metadataByteBuffer, SynchronousSink<MetadataByteBuffer> sink) {
-
-        String streamId = sink.contextView().get(EventStoreContext.streamId.name());
-        Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.streamId"), streamId);
+        ContextViewElement contextElement = new ContextViewElement(sink.contextView());
         try {
+            String streamId = contextElement.getString(ReactiveStreamsContext.streamId).orElseThrow(missing(ReactiveStreamsContext.streamId));
+            Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.streamId"), streamId);
+
             OpenTelemetryHelpers.time(writeTimer, attributes, () -> {
 
                 // Prepare the data
                 EventData eventData;
                 try {
-                    UUID eventId = eventIdSelector.apply(metadataByteBuffer.metadata());
-                    String eventType = eventTypeSelector.apply(metadataByteBuffer.metadata());
+                    UUID eventId = eventIdSelector.apply(metadataByteBuffer);
+                    String eventType = eventTypeSelector.apply(metadataByteBuffer);
 
                     eventData = EventDataBuilder.json(eventId, eventType, metadataByteBuffer.data().array())
                             .metadataAsBytes(jsonMapper.writeValueAsBytes(metadataByteBuffer.metadata().json())).build();
@@ -90,10 +62,7 @@ public class AppendOptimisticLockingHandler
                 AppendToStreamOptions appendOptions = AppendToStreamOptions.get()
                         .deadline(30000);
                 options.accept(appendOptions);
-                if (sink.contextView().getOrDefault(EventStoreContext.expectedPosition.name(), null) instanceof Long expectedPosition)
-                {
-                    appendOptions.expectedRevision(expectedPosition);
-                }
+                metadataByteBuffer.metadata().getLong(EventStoreMetadata.expectedPosition).ifPresent(appendOptions::expectedRevision);
 
                 int retry = 0;
                 while (true) {
@@ -103,7 +72,7 @@ public class AppendOptimisticLockingHandler
                                 .toCompletableFuture().join();
 
                         long streamPosition = writeResult.getNextExpectedRevision().toRawLong();
-                        metadataByteBuffer.metadata().toBuilder().add(EventStoreContext.streamPosition, streamPosition);
+                        metadataByteBuffer.metadata().toBuilder().add(EventStoreMetadata.streamPosition, streamPosition);
                         sink.next(metadataByteBuffer);
                         return null;
                     } catch (Throwable t) {

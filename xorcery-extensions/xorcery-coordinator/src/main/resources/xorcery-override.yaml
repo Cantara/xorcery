@@ -12,9 +12,6 @@ certificates:
 
 letsencrypt.enabled: false
 
-log4jpublisher.enabled: false
-metrics.enabled: false
-
 jwt.server.enabled: false
 
 log4j2:

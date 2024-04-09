@@ -2,6 +2,3 @@ certificates:
   server:
     enabled: "{{ defaults.enabled }}"
     authorization: none
-
-jersey.server.register:
-  - com.exoreaction.xorcery.certificates.server.resources.CertificateRequestResource

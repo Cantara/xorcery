@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
 
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberCheckpoint;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class PersistentSubscriberSubscriber
-        implements Subscriber<WithMetadata<ArrayNode>> {
+        implements Subscriber<MetadataJsonNode<ArrayNode>> {
     private final PersistentSubscriberProcess persistentSubscriberProcess;
     private final PersistentSubscriberConfiguration configuration;
     private final PersistentSubscriber persistentSubscriber;
@@ -67,7 +68,7 @@ public class PersistentSubscriberSubscriber
     }
 
     @Override
-    public void onNext(WithMetadata<ArrayNode> arrayNodeWithMetadata) {
+    public void onNext(MetadataJsonNode<ArrayNode> arrayNodeWithMetadata) {
 
         try {
             if (!filter.test(arrayNodeWithMetadata)) {

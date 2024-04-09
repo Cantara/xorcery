@@ -1,22 +1,18 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
-import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryHelpers;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.grpc.StatusRuntimeException;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
@@ -24,7 +20,6 @@ import reactor.core.publisher.SynchronousSink;
 import reactor.util.context.ContextView;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -32,70 +27,45 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
+import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
 
 public class AppendHandler
+    extends BaseAppendHandler
         implements BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> {
-    private static final JsonMapper jsonMapper = new JsonMapper();
 
-    private final EventStoreDBClient client;
-    private final Consumer<AppendToStreamOptions> options;
-
-    private final Function<Metadata, UUID> eventIdSelector;
-    private final Function<Metadata, String> eventTypeSelector;
-
-    private final Logger logger;
-
-    // Metrics
-    private final LongHistogram batchSizes;
-    private final DoubleHistogram writeTimer;
     private final SmartBatching<MetadataByteBuffer> smartBatching;
+
 
     public AppendHandler(
             EventStoreDBClient client,
             Consumer<AppendToStreamOptions> options,
             DisruptorConfiguration configuration,
-            Function<Metadata, UUID> eventIdSelector,
-            Function<Metadata, String> eventTypeSelector,
+            Function<MetadataByteBuffer, UUID> eventIdSelector,
+            Function<MetadataByteBuffer, String> eventTypeSelector,
             Logger logger,
             OpenTelemetry openTelemetry) {
-        this.client = client;
-        this.options = options != null ? options : o -> {
-        };
-        this.logger = logger;
+        super(client, options, eventIdSelector, eventTypeSelector, logger, openTelemetry);
         this.smartBatching = new SmartBatching<>(configuration, this::handler);
-        // Metrics
-        this.eventIdSelector = eventIdSelector;
-        this.eventTypeSelector = eventTypeSelector;
-
-        // Metrics
-        Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
-                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
-                .build();
-        batchSizes = meter.histogramBuilder("eventstore.streamId.writes.batchsize")
-                .ofLongs().setUnit("{count}").build();
-        writeTimer = meter.histogramBuilder("eventstore.streamId.writes.latency")
-                .setUnit("s").build();
-
     }
 
     @Override
     public Publisher<MetadataByteBuffer> apply(Flux<MetadataByteBuffer> metadataByteBufferFlux, ContextView contextView) {
-        return smartBatching.apply(metadataByteBufferFlux, contextView);
+        return smartBatching.apply(metadataByteBufferFlux.contextWrite(setStreamMetadata()).contextWrite(addLastPosition()), contextView);
     }
 
-    private void handler(Collection<MetadataByteBuffer> metadataByteBuffers, SynchronousSink<Collection<MetadataByteBuffer>> sink) {
-        String streamId = sink.contextView().get(EventStoreContext.streamId.name());
-        Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.streamId"), streamId);
+    private void handler(List<MetadataByteBuffer> metadataByteBuffers, SynchronousSink<List<MetadataByteBuffer>> sink) {
+        ContextViewElement contextElement = new ContextViewElement(sink.contextView());
         try {
+            String streamId = contextElement.getString(ReactiveStreamsContext.streamId).orElseThrow(missing(ReactiveStreamsContext.streamId));
+            Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.streamId"), streamId);
             OpenTelemetryHelpers.time(writeTimer, attributes, () -> {
 
                 // Prepare the data
                 List<EventData> eventBatch = new ArrayList<>();
                 try {
                     for (MetadataByteBuffer metadataByteBuffer : metadataByteBuffers) {
-                        UUID eventId = eventIdSelector.apply(metadataByteBuffer.metadata());
-                        String eventType = eventTypeSelector.apply(metadataByteBuffer.metadata());
+                        UUID eventId = eventIdSelector.apply(metadataByteBuffer);
+                        String eventType = eventTypeSelector.apply(metadataByteBuffer);
 
                         EventData eventData = EventDataBuilder.json(eventId, eventType, metadataByteBuffer.data().array())
                                 .metadataAsBytes(jsonMapper.writeValueAsBytes(metadataByteBuffer.metadata().json())).build();
@@ -111,10 +81,6 @@ public class AppendHandler
                 AppendToStreamOptions appendOptions = AppendToStreamOptions.get()
                         .deadline(30000);
                 options.accept(appendOptions);
-                if (sink.contextView().getOrDefault(EventStoreContext.expectedPosition.name(), null) instanceof Long expectedPosition)
-                {
-                    appendOptions.expectedRevision(expectedPosition);
-                }
 
                 int retry = 0;
                 while (true) {
@@ -124,9 +90,9 @@ public class AppendHandler
                                 .toCompletableFuture().join();
 
                         long streamPosition = writeResult.getNextExpectedRevision().toRawLong();
-                        long eventPosition = streamPosition-metadataByteBuffers.size();
+                        long eventPosition = streamPosition - metadataByteBuffers.size();
                         for (MetadataByteBuffer metadataByteBuffer : metadataByteBuffers) {
-                            metadataByteBuffer.metadata().toBuilder().add(EventStoreContext.streamPosition, ++eventPosition);
+                            metadataByteBuffer.metadata().toBuilder().add(EventStoreMetadata.streamPosition, ++eventPosition);
                         }
                         sink.next(metadataByteBuffers);
                         batchSizes.record(metadataByteBuffers.size());

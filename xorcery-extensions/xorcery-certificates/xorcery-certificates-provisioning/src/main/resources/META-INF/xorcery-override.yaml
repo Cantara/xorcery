@@ -15,3 +15,6 @@ jetty.client.ssl.truststore: "truststore"
 
 jetty.server.ssl.keystore: "ssl"
 jetty.server.ssl.truststore: "truststore"
+
+jersey.client.keystore: "ssl"
+jersey.client.truststore: "truststore"

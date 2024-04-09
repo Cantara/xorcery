@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.eventstore.streams;
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -28,7 +29,7 @@ import org.reactivestreams.Subscription;
 import java.nio.ByteBuffer;
 
 public class EventStoreSubscriber
-        implements Subscriber<WithMetadata<ByteBuffer>> {
+        implements Subscriber<MetadataByteBuffer> {
 
     private Disruptor<WithMetadata<ByteBuffer>> disruptor;
     private EventStoreDBClient client;
@@ -41,7 +42,7 @@ public class EventStoreSubscriber
 
     @Override
     public void onSubscribe(Subscription subscription) {
-        disruptor = new Disruptor<>(WithMetadata::new, 512, new NamedThreadFactory("EventStoreSubscriber-"),
+        disruptor = new Disruptor<>(MetadataByteBuffer::new, 512, new NamedThreadFactory("EventStoreSubscriber-"),
                 ProducerType.MULTI,
                 new BlockingWaitStrategy());
         disruptor.handleEventsWith(new EventStoreSubscriberEventHandler(client, subscription, cfg.getString("streamId")));
@@ -50,7 +51,7 @@ public class EventStoreSubscriber
     }
 
     @Override
-    public void onNext(WithMetadata<ByteBuffer> item) {
+    public void onNext(MetadataByteBuffer item) {
         disruptor.publishEvent((e, s, event) ->
         {
             e.set(event);

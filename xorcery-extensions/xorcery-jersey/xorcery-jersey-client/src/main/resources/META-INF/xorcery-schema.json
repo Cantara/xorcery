@@ -15,15 +15,10 @@
         "client" : {
           "type" : "object",
           "properties" : {
-            "keystore" : {
+            "readTimeout" : {
               "type" : "string",
-              "default" : "ssl",
-              "description" : "Default: ssl"
-            },
-            "truststore" : {
-              "type" : "string",
-              "default" : "truststore",
-              "description" : "Default: truststore"
+              "default" : "0s",
+              "description" : "Default: 0s"
             },
             "properties" : {
               "type" : "object",

@@ -66,16 +66,16 @@ public class MessageWorkers {
     public Collection<String> getAvailableReadContentTypes(Class<?> type, Collection<String> acceptableContentTypes) {
         List<String> contentTypes = new ArrayList<>();
         if (acceptableContentTypes.isEmpty()) {
-            for (MessageReader.Factory reader : readers) {
-                String contentType = reader.getContentType(type);
-                if (!contentTypes.contains(contentType) && reader.canRead(type, contentType)) {
+            for (MessageReader.Factory factory : readers) {
+                String contentType = factory.getContentType(type);
+                if (contentType != null && !contentTypes.contains(contentType) && factory.canRead(type, contentType)) {
                     contentTypes.add(contentType);
                 }
             }
         } else {
             for (String acceptableContentType : acceptableContentTypes) {
-                for (MessageReader.Factory reader : readers) {
-                    if (!contentTypes.contains(acceptableContentType) && reader.canRead(type, acceptableContentType)) {
+                for (MessageReader.Factory factory : readers) {
+                    if (!contentTypes.contains(acceptableContentType) && factory.canRead(type, acceptableContentType)) {
                         contentTypes.add(acceptableContentType);
                         break;
                     }
@@ -90,7 +90,7 @@ public class MessageWorkers {
         if (acceptableContentTypes.isEmpty()) {
             for (MessageWriter.Factory writer : writers) {
                 String contentType = writer.getContentType(type);
-                if (!contentTypes.contains(contentType) && writer.canWrite(type, contentType)) {
+                if (contentType != null && !contentTypes.contains(contentType) && writer.canWrite(type, contentType)) {
                     contentTypes.add(contentType);
                 }
             }
@@ -111,7 +111,10 @@ public class MessageWorkers {
         MessageWriter<T> candidate = null;
         if (contentType == null) {
             for (MessageWriter.Factory factory : writers) {
-                MessageWriter<T> writer = factory.newWriter(type, genericType, factory.getContentType(type));
+                String factoryContentType = factory.getContentType(type);
+                if (factoryContentType == null)
+                    continue;
+                MessageWriter<T> writer = factory.newWriter(type, genericType, factoryContentType);
                 if (writer != null) {
                     if (candidate == null) {
                         candidate = writer;
@@ -150,7 +153,10 @@ public class MessageWorkers {
         MessageReader<T> candidate = null;
         if (contentType == null) {
             for (MessageReader.Factory factory : readers) {
-                MessageReader<T> reader = factory.newReader(type, genericType, factory.getContentType(type));
+                String factoryContentType = factory.getContentType(type);
+                if (factoryContentType == null)
+                    continue;
+                MessageReader<T> reader = factory.newReader(type, genericType, factoryContentType);
                 if (reader != null) {
                     if (candidate == null) {
                         candidate = reader;

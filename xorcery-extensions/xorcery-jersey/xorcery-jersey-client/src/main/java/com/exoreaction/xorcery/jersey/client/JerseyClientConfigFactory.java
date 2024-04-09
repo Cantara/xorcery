@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InstantiationService;
@@ -42,14 +43,20 @@ public class JerseyClientConfigFactory
     private Configuration configuration;
     private InstantiationService instantiationService;
     private Provider<DnsLookupService> dnsLookups;
+    private final LoggerContext loggerContext;
 
     @Inject
-    public JerseyClientConfigFactory(Provider<HttpClient> client, Configuration configuration, InstantiationService instantiationService,
-                                     Provider<DnsLookupService> dnsLookups) {
+    public JerseyClientConfigFactory(
+            Provider<HttpClient> client,
+            Configuration configuration,
+            InstantiationService instantiationService,
+            Provider<DnsLookupService> dnsLookups,
+            LoggerContext loggerContext) {
         this.client = client;
         this.configuration = configuration;
         this.instantiationService = instantiationService;
         this.dnsLookups = dnsLookups;
+        this.loggerContext = loggerContext;
     }
 
     @Override
@@ -84,7 +91,7 @@ public class JerseyClientConfigFactory
         return clientConfig
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
                 .register(new JettyHttpClientSupplier(client.get()))
-                .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, jettyConnectorProvider) : jettyConnectorProvider);
+                .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, jettyConnectorProvider, loggerContext) : jettyConnectorProvider);
     }
 
     @Override

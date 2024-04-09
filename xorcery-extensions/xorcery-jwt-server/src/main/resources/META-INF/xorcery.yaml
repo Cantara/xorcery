@@ -19,6 +19,3 @@ jwt:
 #      password: "secret"
 #      claims:
 #        tenant: "tenant1"
-
-jersey.server.register:
-  - com.exoreaction.xorcery.jwt.server.api.JwtLoginResource

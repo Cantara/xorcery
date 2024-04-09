@@ -1,23 +1,4 @@
 neo4jbrowser:
   enabled: "{{ neo4jdatabase.enabled }}"
-
-neo4jbrowser.ssl:
-  enabled: "{{ neo4jbrowser.enabled ? certificates.enabled | false }}"
-
-neo4jdatabase:
-  settings:
-    server:
-      bolt:
-        enabled: "{{ neo4jbrowser.enabled }}"
-        tls_level: "{{ neo4jbrowser.ssl.enabled ? \"OPTIONAL\" | \"DISABLED\" }}"
-        listen_address: ":7687"
-        advertised_address: ":7687:"
-    dbms:
-      ssl:
-        policy:
-          bolt:
-            enabled: "{{ neo4jbrowser.ssl.enabled }}"
-            base_directory: "certificates/bolt"
-            private_key: "private.key"
-            public_certificate: "public.crt"
-            client_auth: "NONE"
+  ssl:
+    enabled: "{{ neo4jbrowser.enabled ? certificates.enabled | false }}"

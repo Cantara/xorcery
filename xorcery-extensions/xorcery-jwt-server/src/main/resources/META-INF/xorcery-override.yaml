@@ -1,0 +1,2 @@
+jersey.server.register:
+  - com.exoreaction.xorcery.jwt.server.api.JwtLoginResource

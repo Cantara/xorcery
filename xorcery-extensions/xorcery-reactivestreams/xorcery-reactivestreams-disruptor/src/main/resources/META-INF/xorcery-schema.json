@@ -21,9 +21,9 @@
               "description" : "Default: 512"
             },
             "shutdownTimeout" : {
-              "type" : [ "number", "string" ],
-              "default" : 60,
-              "description" : "Default: 60"
+              "type" : "string",
+              "default" : "60s",
+              "description" : "Default: 60s"
             }
           }
         }

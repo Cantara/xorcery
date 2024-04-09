@@ -179,7 +179,7 @@ public final class Xorcery
         Populator populator = dcs.getPopulator();
 
         try {
-            populator.populate(new UniqueDescriptorFileFinder(new ClasspathDescriptorFileFinder(ClassLoader.getSystemClassLoader(), hk2Configuration.getDescriptorNames())),
+            populator.populate(new UniqueDescriptorFileFinder(new ClasspathDescriptorFileFinder(Xorcery.class.getClassLoader(), hk2Configuration.getDescriptorNames())),
                     populatorPostProcessor);
         } catch (IOException e) {
             throw new MultiException(e);

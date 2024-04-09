@@ -10,7 +10,7 @@ import org.eclipse.jetty.websocket.server.WebSocketUpgradeHandler;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="jetty.server.websockets")
 @Priority(6)
 public class WebSocketUpgradeHandlerFactory
     implements Factory<WebSocketUpgradeHandler>
@@ -23,8 +23,6 @@ public class WebSocketUpgradeHandlerFactory
         webSocketHandler = WebSocketUpgradeHandler.from(server, webSocketsConfiguration::apply);
     }
 
-    @Named("jetty.server.websockets")
-    @Singleton
     @Override
     public WebSocketUpgradeHandler provide() {
         return webSocketHandler;

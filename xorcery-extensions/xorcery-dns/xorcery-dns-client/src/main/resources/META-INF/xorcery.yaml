@@ -6,5 +6,3 @@ dns:
     hosts: {}
     timeout: 10s
     forceTcp: false
-    discovery:
-      enabled: "{{ dns.client.enabled }}"

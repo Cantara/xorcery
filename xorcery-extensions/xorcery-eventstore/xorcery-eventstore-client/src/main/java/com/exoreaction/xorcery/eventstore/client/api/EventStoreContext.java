@@ -1,12 +1,16 @@
 package com.exoreaction.xorcery.eventstore.client.api;
 
 /**
- * Key names used with Reactor Context
+ * Used as keys with {@link reactor.util.context.ContextView} when appending to streams
  */
 public enum EventStoreContext {
-    streamId,
-    streamPosition,
-    streamLive,
-    originalStreamId,
-    expectedPosition
+    maxAge,
+    maxCount,
+    cacheControl,
+    truncateBefore,
+    acl,
+    customProperties,
+
+    // For readStream, if true stream will not end when there are no more events
+    keepAlive
 }

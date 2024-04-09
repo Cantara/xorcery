@@ -19,7 +19,8 @@ package com.exoreaction.xorcery.neo4jprojections;
  * Fields stored in Neo4j for each projection. Updated on each transaction commit when new events have been projected.
  */
 public enum Projection {
-    id, // Name of projection
-    version, // Version of projection
-    revision // Revision of incoming event stream
+    projectionId, // Name of projection
+    projectionPosition, // Lastest position of event in incoming stream
+    projectionTimestamp, // Lastest timestamp of event in incoming stream
+    streamId // Id of upstream source
 }

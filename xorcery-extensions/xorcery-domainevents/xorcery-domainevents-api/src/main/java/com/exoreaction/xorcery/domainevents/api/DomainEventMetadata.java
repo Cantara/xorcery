@@ -26,5 +26,8 @@ public enum DomainEventMetadata {
     userId, // Id of user, identifies the user actually creating the events
     roleId, // Role id of user (optional)
     actingAsId, // Role id of user on behalf-of whom the events are created (optional)
-    jwt // Client JWT token
+    jwt, // Client JWT token
+
+    // Processing data
+    streamPosition // Position of events in stream
 }

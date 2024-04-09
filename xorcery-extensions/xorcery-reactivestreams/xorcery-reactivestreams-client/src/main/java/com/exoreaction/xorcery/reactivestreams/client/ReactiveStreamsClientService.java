@@ -110,7 +110,7 @@ public class ReactiveStreamsClientService
         MessageReader<Object> resultReader = null;
 
         if (serverUri != null) {
-            Type type = Classes.resolveActualTypeArgs(publisherType, Publisher.class)[0];
+            Type type = Classes.typeOrBound(Classes.resolveActualTypeArgs(publisherType, Publisher.class)[0]);
             Type eventType = getEventType(type);
             Optional<Type> resultType = getResultType(type);
 
@@ -201,7 +201,7 @@ public class ReactiveStreamsClientService
         if (subscriberType == null)
             subscriberType = (Class<? extends Subscriber<?>>) subscriber.getClass();
 
-        Type type = Classes.resolveActualTypeArgs(subscriberType, Subscriber.class)[0];
+        Type type = Classes.typeOrBound(Classes.resolveActualTypeArgs(subscriberType, Subscriber.class)[0]);
         Type eventType = getEventType(type);
         Optional<Type> resultType = getResultType(type);
 

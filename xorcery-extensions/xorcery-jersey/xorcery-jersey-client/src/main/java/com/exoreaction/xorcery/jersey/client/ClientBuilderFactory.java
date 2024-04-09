@@ -27,6 +27,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.client.HttpClient;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.InstantiationService;
@@ -52,6 +53,7 @@ public class ClientBuilderFactory
     private final Provider<KeyStores> keyStoresProvider;
     private final Provider<Secrets> secretsProvider;
     private final Logger logger;
+    private final LoggerContext loggerContext;
 
     @Inject
     public ClientBuilderFactory(Provider<HttpClient> client,
@@ -60,7 +62,8 @@ public class ClientBuilderFactory
                                 Provider<DnsLookupService> dnsLookups,
                                 Provider<KeyStores> keyStoresProvider,
                                 Provider<Secrets> secretsProvider,
-                                Logger logger) {
+                                Logger logger,
+                                LoggerContext loggerContext) {
         this.client = client;
         this.configuration = configuration;
         this.instantiationService = instantiationService;
@@ -68,6 +71,7 @@ public class ClientBuilderFactory
         this.keyStoresProvider = keyStoresProvider;
         this.secretsProvider = secretsProvider;
         this.logger = logger;
+        this.loggerContext = loggerContext;
     }
 
     @Override
@@ -105,7 +109,9 @@ public class ClientBuilderFactory
         HttpClient httpClient = client.get();
         ClientBuilder builder = ClientBuilder.newBuilder()
                 .withConfig(clientConfig
-                        .connectorProvider(dnsLookup != null ? new SRVConnectorProvider(dnsLookup, jettyConnectorProvider) : jettyConnectorProvider))
+                        .connectorProvider(dnsLookup != null
+                                ? new SRVConnectorProvider(dnsLookup, jettyConnectorProvider, loggerContext)
+                                : jettyConnectorProvider))
                 .connectTimeout(jerseyClientConfiguration.getConnectTimeout().toSeconds(), TimeUnit.SECONDS)
                 .readTimeout(jerseyClientConfiguration.getReadTimeout().toSeconds(), TimeUnit.SECONDS)
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())

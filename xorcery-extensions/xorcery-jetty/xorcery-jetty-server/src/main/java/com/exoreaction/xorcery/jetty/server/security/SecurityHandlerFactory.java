@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Service
+@Service(name="jetty.server.security")
 @Priority(4)
 public class SecurityHandlerFactory
         implements Factory<ConstraintSecurityHandler> {
@@ -86,7 +86,6 @@ public class SecurityHandlerFactory
 
     }
 
-    @Named("jetty.server.security")
     @Override
     public ConstraintSecurityHandler provide() {
         return securityHandler;

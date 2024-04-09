@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -70,17 +71,13 @@ public class Neo4jProjectionsService {
 
     public Optional<ProjectionModel> getCurrentProjection(String projectionId) {
         // Check if we already have written data for this projection before
-        return graphDatabase.query("MATCH (Projection:Projection {id:$projection_id})")
-                .parameter(Projection.id, projectionId)
-                .results(Projection.version, Projection.revision)
-                .first(row -> row.toModel(ProjectionModel::new, Projection.version, Projection.revision)).handle((model, exception) ->
-                {
-                    if (exception != null) {
-                        logger.error("Error looking up existing projection details", exception);
-                        return Optional.<ProjectionModel>empty();
-                    }
-                    return model;
-                }).toCompletableFuture().join();
+        return graphDatabase.getGraphDatabaseService().executeTransactionally("""
+                MATCH (projection:Projection {id:$projectionId})
+                RETURN projection.projectionPosition as projectionPosition
+                """, Map.of(Projection.projectionId.name(), projectionId), result ->
+                result.hasNext()
+                        ? Optional.of(new ProjectionModel(result.next()))
+                        : Optional.empty());
     }
 
     public Neo4jProjectionCommitPublisher getNeo4jProjectionCommitPublisher() {

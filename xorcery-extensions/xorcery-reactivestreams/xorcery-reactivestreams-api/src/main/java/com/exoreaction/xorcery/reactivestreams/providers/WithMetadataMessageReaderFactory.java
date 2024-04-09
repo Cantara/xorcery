@@ -28,9 +28,10 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Supplier;
 
@@ -50,17 +51,14 @@ public class WithMetadataMessageReaderFactory
     @Override
     public String getContentType(Class<?> type) {
         if (WithMetadata.class.isAssignableFrom(type)) {
-            Type parameterType = Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>)type, WithMetadata.class)[0];
-            if (parameterType instanceof Class<?> eventType)
-            {
+            Type parameterType = Classes.typeOrBound(Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>) type, WithMetadata.class)[0]);
+            if (parameterType instanceof Class<?> eventType) {
                 return messageWorkers.get().getAvailableReadContentTypes(eventType, Collections.emptyList())
-                        .stream().findFirst().map(ct -> ct+"+metadata").orElse(null);
-            } else if (parameterType instanceof ParameterizedType parameterizedEventType)
-            {
-                if (parameterizedEventType.getRawType() instanceof Class<?> eventType)
-                {
+                        .stream().findFirst().map(ct -> ct + "+metadata").orElse(null);
+            } else if (parameterType instanceof ParameterizedType parameterizedEventType) {
+                if (parameterizedEventType.getRawType() instanceof Class<?> eventType) {
                     return messageWorkers.get().getAvailableReadContentTypes(eventType, Collections.emptyList())
-                            .stream().findFirst().map(ct -> ct+"+metadata").orElse(null);
+                            .stream().findFirst().map(ct -> ct + "+metadata").orElse(null);
                 }
             }
         }
@@ -70,16 +68,13 @@ public class WithMetadataMessageReaderFactory
     @Override
     public boolean canRead(Class<?> type, String mediaType) {
         if (WithMetadata.class.isAssignableFrom(type) && mediaType.endsWith("+metadata")) {
-            Type parameterType = Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>)type, WithMetadata.class)[0];
-            String envelopedMetadata = mediaType.substring(0, mediaType.length()-"+metadata".length());
-            if (parameterType instanceof Class<?> eventType)
-            {
-                return messageWorkers.get().canRead(eventType, envelopedMetadata);
-            } else if (parameterType instanceof ParameterizedType parameterizedEventType)
-            {
-                if (parameterizedEventType.getRawType() instanceof Class<?> eventType)
-                {
-                    return messageWorkers.get().canRead(eventType, envelopedMetadata);
+            Type parameterType = Classes.typeOrBound(Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>) type, WithMetadata.class)[0]);
+            String envelopedContentType = mediaType.substring(0, mediaType.length() - "+metadata".length());
+            if (parameterType instanceof Class<?> eventType) {
+                return messageWorkers.get().canRead(eventType, envelopedContentType);
+            } else if (parameterType instanceof ParameterizedType parameterizedEventType) {
+                if (parameterizedEventType.getRawType() instanceof Class<?> eventType) {
+                    return messageWorkers.get().canRead(eventType, envelopedContentType);
                 }
             }
         }
@@ -88,62 +83,72 @@ public class WithMetadataMessageReaderFactory
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
-
         if (WithMetadata.class.isAssignableFrom(type)) {
-            if (((ParameterizedType) genericType).getActualTypeArguments()[0] instanceof Class<?> eventType)
-            {
-                MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, mediaType);
-                if (eventReader != null) {
-                    return (MessageReader<T>) new WithMetadataMessageReader<>(eventReader);
-                }
-            } else if (((ParameterizedType) genericType).getActualTypeArguments()[0] instanceof ParameterizedType parameterizedEventType)
-            {
-                if (parameterizedEventType.getRawType() instanceof Class<?> eventType)
-                {
-                    MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, mediaType);
+            Type parameterType = Classes.typeOrBound(Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>) type, WithMetadata.class)[0]);
+            String envelopedContentType = mediaType.substring(0, mediaType.length() - "+metadata".length());
+            try {
+                if (parameterType instanceof Class<?> eventType) {
+                    MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, envelopedContentType);
                     if (eventReader != null) {
-                        return (MessageReader<T>) new WithMetadataMessageReader<>(eventReader);
+                        return (MessageReader<T>) new WithMetadataMessageReader(eventReader, (Constructor<WithMetadata<?>>) type.getConstructor(Metadata.class, eventType));
+                    }
+                } else if (parameterType instanceof ParameterizedType parameterizedEventType) {
+                    if (parameterizedEventType.getRawType() instanceof Class<?> eventType) {
+                        MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, envelopedContentType);
+                        if (eventReader != null) {
+                            return (MessageReader<T>) new WithMetadataMessageReader(eventReader, (Constructor<WithMetadata<?>>) type.getConstructor(Metadata.class, eventType));
+                        }
                     }
                 }
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
             }
         }
         return null;
     }
 
-    class WithMetadataMessageReader<T>
-            implements MessageReader<WithMetadata<T>> {
+    class WithMetadataMessageReader
+            implements MessageReader<WithMetadata<?>> {
 
         private final MessageReader<?> eventReader;
+        private final Constructor<WithMetadata<?>> constructor;
 
-        public WithMetadataMessageReader(MessageReader<?> eventReader) {
+        public WithMetadataMessageReader(MessageReader<?> eventReader, Constructor<WithMetadata<?>> constructor) {
 
             this.eventReader = eventReader;
+            this.constructor = constructor;
         }
 
         @Override
-        public WithMetadata<T> readFrom(byte[] bytes, int offset, int len) throws IOException {
-            try (JsonParser jp = jsonMapper.createParser(bytes, offset, len))
-            {
+        public WithMetadata<?> readFrom(byte[] bytes, int offset, int len) throws IOException {
+            try (JsonParser jp = jsonMapper.createParser(bytes, offset, len)) {
                 Metadata metadata = jp.readValueAs(Metadata.class);
-                int metadataOffset = (int)jp.getCurrentLocation().getByteOffset();
+                int metadataOffset = (int) jp.getCurrentLocation().getByteOffset();
 
-                Object event = eventReader.readFrom(bytes, offset+metadataOffset, len-metadataOffset);
-                return (WithMetadata<T>) new WithMetadata<>(metadata, event);
+                Object event = eventReader.readFrom(bytes, offset + metadataOffset, len - metadataOffset);
+                return constructor.newInstance(metadata, event);
+            } catch (IOException e) {
+                throw e;
+            } catch (Throwable e) {
+                throw new IOException(e);
             }
         }
 
         @Override
-        public WithMetadata<T> readFrom(InputStream entityStream) throws IOException {
+        public WithMetadata<?> readFrom(InputStream entityStream) throws IOException {
             entityStream.mark(entityStream.available());
-            try (JsonParser jp = jsonMapper.createParser(entityStream))
-            {
+            try (JsonParser jp = jsonMapper.createParser(entityStream)) {
                 Metadata metadata = jp.readValueAs(Metadata.class);
                 long offset = jp.getCurrentLocation().getByteOffset();
 
                 entityStream.reset();
                 entityStream.skip(offset);
                 Object event = eventReader.readFrom(entityStream);
-                return (WithMetadata<T>) new WithMetadata<>(metadata, event);
+                return constructor.newInstance(metadata, event);
+            } catch (IOException e) {
+                throw e;
+            } catch (Throwable e) {
+                throw new IOException(e);
             }
         }
     }

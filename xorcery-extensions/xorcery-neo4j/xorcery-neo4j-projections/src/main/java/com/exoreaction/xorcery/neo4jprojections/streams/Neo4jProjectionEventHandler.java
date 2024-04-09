@@ -17,11 +17,9 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
-import com.exoreaction.xorcery.lang.Enums;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4jprojections.Neo4jProjectionsConfiguration;
-import com.exoreaction.xorcery.neo4jprojections.Projection;
 import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
@@ -63,14 +61,13 @@ public class Neo4jProjectionEventHandler
     private final List<Neo4jEventProjection> projections;
 
     private final Subscription subscription;
-    private final Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher;
+    private final Consumer<MetadataProjectionCommit> projectionCommitPublisher;
 
     private final String projectionId;
 
     private final Map<String, Object> updateParameters = new HashMap<>();
 
     private Transaction tx;
-    private long version;
     private Long revision;
     private long previousRevision = 0L;
     private long lastTimestamp;
@@ -88,7 +85,7 @@ public class Neo4jProjectionEventHandler
                                        Subscription subscription,
                                        Optional<ProjectionModel> projectionModel,
                                        String projectionId,
-                                       Consumer<WithMetadata<ProjectionCommit>> projectionCommitPublisher,
+                                       Consumer<MetadataProjectionCommit> projectionCommitPublisher,
                                        List<Neo4jEventProjection> projections,
                                        OpenTelemetry openTelemetry) {
         this.eventBatchSize = configuration.eventBatchSize();
@@ -113,11 +110,10 @@ public class Neo4jProjectionEventHandler
 
         projectionModel.ifPresent(pm ->
         {
-            pm.getVersion().ifPresent(from -> version = from);
-            pm.getRevision().ifPresent(from -> revision = from);
+            pm.getProjectionPosition().ifPresent(from -> revision = from);
         });
 
-        updateParameters.put(Enums.toField(Projection.id), projectionId);
+        updateParameters.put("projection_id", projectionId);
 
         logger.info("Started Neo4j projection " + projectionId);
     }
@@ -162,18 +158,15 @@ public class Neo4jProjectionEventHandler
             }
         }
 
-        version++;
         eventBatchCount += event.getEvents().size();
 
         if (endOfBatch || eventBatchCount >= eventBatchSize) {
             try {
 
                 // Update Projection node with current revision
-                updateParameters.put("projection_version", version);
                 revision = ((Number) Optional.ofNullable(metadataMap.get("revision")).orElse(0L)).longValue();
                 updateParameters.put("projection_revision", revision);
                 tx.execute("MERGE (projection:Projection {id:$projection_id}) SET " +
-                                "projection.version=$projection_version, " +
                                 "projection.revision=$projection_revision",
                         updateParameters);
 
@@ -185,10 +178,10 @@ public class Neo4jProjectionEventHandler
                 previousRevision = revision;
 
                 // Always send commit notification, even if no changes were made
-                projectionCommitPublisher.accept(new WithMetadata<>(new Neo4jMetadata.Builder(new Metadata.Builder())
+                projectionCommitPublisher.accept(new MetadataProjectionCommit(new Neo4jMetadata.Builder(new Metadata.Builder())
                         .timestamp(System.currentTimeMillis())
                         .lastTimestamp(lastTimestamp)
-                        .build().context(), new ProjectionCommit(projectionId, version)));
+                        .build().context(), new ProjectionCommit(projectionId, revision)));
             } catch (Throwable t) {
                 logger.error("Could not commit Neo4j updates", t);
 

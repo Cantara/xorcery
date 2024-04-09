@@ -25,18 +25,18 @@ import reactor.core.publisher.Sinks;
 import java.util.function.Consumer;
 
 public class Neo4jProjectionCommitPublisher
-        implements Publisher<WithMetadata<ProjectionCommit>>, Consumer<WithMetadata<ProjectionCommit>> {
+        implements Publisher<MetadataProjectionCommit>, Consumer<MetadataProjectionCommit> {
 
-    private static final Sinks.Many<WithMetadata<ProjectionCommit>> sink = Sinks.many().multicast().onBackpressureBuffer(4096);
-    private static final Flux<WithMetadata<ProjectionCommit>> sinkPublisher = sink.asFlux();
+    private static final Sinks.Many<MetadataProjectionCommit> sink = Sinks.many().multicast().onBackpressureBuffer(4096, false);
+    private static final Flux<MetadataProjectionCommit> sinkPublisher = sink.asFlux();
 
     @Override
-    public void subscribe(Subscriber<? super WithMetadata<ProjectionCommit>> subscriber) {
+    public void subscribe(Subscriber<? super MetadataProjectionCommit> subscriber) {
         sinkPublisher.subscribe(subscriber);
     }
 
     @Override
-    public void accept(WithMetadata<ProjectionCommit> projectionCommitWithMetadata) {
+    public void accept(MetadataProjectionCommit projectionCommitWithMetadata) {
         sink.tryEmitNext(projectionCommitWithMetadata);
     }
 }

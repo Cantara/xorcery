@@ -6,9 +6,6 @@
   "properties" : {
     "thymeleaf" : {
       "$ref" : "#/$defs/thymeleaf"
-    },
-    "jersey" : {
-      "$ref" : "#/$defs/jersey"
     }
   },
   "$defs" : {
@@ -30,8 +27,8 @@
             },
             "prefix" : {
               "type" : "string",
-              "default" : "WEB-INF/thymeleaf/templates/",
-              "description" : "Default: WEB-INF/thymeleaf/templates/"
+              "default" : "templates/",
+              "description" : "Default: templates/"
             },
             "suffix" : {
               "type" : "string",
@@ -79,8 +76,8 @@
             },
             "prefix" : {
               "type" : "string",
-              "default" : "WEB-INF/thymeleaf/templates/",
-              "description" : "Default: WEB-INF/thymeleaf/templates/"
+              "default" : "templates/",
+              "description" : "Default: templates/"
             },
             "suffix" : {
               "type" : "string",
@@ -156,15 +153,6 @@
               "properties" : { }
             }
           }
-        }
-      }
-    },
-    "jersey" : {
-      "type" : "object",
-      "properties" : {
-        "server" : {
-          "type" : "object",
-          "properties" : { }
         }
       }
     }

@@ -2,8 +2,11 @@ package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,7 +18,6 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.util.context.Context;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
@@ -57,25 +59,30 @@ public class ReadStreamSubscription
         private Marker marker;
 
         String streamId;
+        boolean keepAlive;
 
         public ReadStreamSubscriptionListener(Subscriber<? super MetadataByteBuffer> subscriber) {
             this.subscriber = subscriber;
 
-            if (subscriber instanceof CoreSubscriber<? super MetadataByteBuffer> coreSubscriber) {
-                Context context = coreSubscriber.currentContext();
-                streamId = context.get(EventStoreContext.streamId.name());
-                this.marker = MarkerManager.getMarker(streamId);
+            try {
+                if (subscriber instanceof CoreSubscriber<? super MetadataByteBuffer> coreSubscriber) {
+                    ContextViewElement contextElement = new ContextViewElement(coreSubscriber.currentContext());
+                    this.streamId = contextElement.getString(ReactiveStreamsContext.streamId).orElseThrow(() -> new IllegalArgumentException("Missing 'streamId' context parameter"));
+                    this.marker = MarkerManager.getMarker(streamId);
+                    this.keepAlive = contextElement.getBoolean(EventStoreContext.keepAlive).orElse(false);
 
-                if (context.getOrDefault(EventStoreContext.streamPosition.name(), null) instanceof Long pos) {
-                    position.set(pos);
-                    start(StreamPosition.position(pos));
-                } else
-                {
-                    start(StreamPosition.start());
+                    contextElement.getLong(ReactiveStreamsContext.streamPosition)
+                            .map(pos ->
+                            {
+                                position.set(pos);
+                                return pos;
+                            }).ifPresentOrElse(pos -> start(StreamPosition.position(pos)),
+                                    () -> start(StreamPosition.start()));
+                } else {
+                    throw new IllegalArgumentException("Subscriber must implement CoreSubscriber");
                 }
-            } else
-            {
-                subscriber.onError(new IllegalArgumentException("Subscriber must implement CoreSubscriber"));
+            } catch (IllegalArgumentException e) {
+                subscriber.onError(e);
             }
         }
 
@@ -104,7 +111,7 @@ public class ReadStreamSubscription
         }
 
         private void stopSubscription(com.eventstore.dbclient.Subscription subscription, Throwable throwable) {
-            if (throwable != null)
+            if (throwable == null)
                 subscription.stop();
         }
 
@@ -135,18 +142,30 @@ public class ReadStreamSubscription
                 Metadata.Builder metadata = new Metadata.Builder((ObjectNode) jsonMapper.readTree(userMetadata));
 
                 // Put in ES metadata
-                String streamId = resolvedEvent.getLink() != null ? resolvedEvent.getLink().getStreamId() : resolvedEvent.getEvent().getStreamId();
-                long position = resolvedEvent.getLink() != null ? resolvedEvent.getLink().getRevision() : resolvedEvent.getEvent().getRevision();
-                metadata.add(EventStoreContext.streamId.name(), streamId);
-                metadata.add(EventStoreContext.streamPosition.name(), position);
-
-                if (caughtUp.getAndSet(false)) {
-                    metadata.add(EventStoreContext.streamLive.name(), JsonNodeFactory.instance.booleanNode(true));
-                } else if (fellBehind.getAndSet(false)) {
-                    metadata.add(EventStoreContext.streamLive.name(), JsonNodeFactory.instance.booleanNode(false));
+                RecordedEvent linkedEvent = resolvedEvent.getLink();
+                long position;
+                if (linkedEvent != null)
+                {
+                    String streamId = linkedEvent.getStreamId();
+                    position = linkedEvent.getRevision();
+                    String originalStreamId = resolvedEvent.getEvent().getStreamId();
+                    metadata.add(EventStoreMetadata.streamId, streamId);
+                    metadata.add(EventStoreMetadata.streamPosition, position);
+                    metadata.add(EventStoreMetadata.originalStreamId, originalStreamId);
+                } else
+                {
+                    RecordedEvent recordedEvent = resolvedEvent.getEvent();
+                    String streamId = recordedEvent.getStreamId();
+                    position = recordedEvent.getRevision();
+                    metadata.add(EventStoreMetadata.streamId, streamId);
+                    metadata.add(EventStoreMetadata.streamPosition, position);
                 }
 
-                System.out.println("Position:" + position);
+                if (caughtUp.getAndSet(false)) {
+                    metadata.add(EventStoreMetadata.streamLive, JsonNodeFactory.instance.booleanNode(true));
+                } else if (fellBehind.getAndSet(false)) {
+                    metadata.add(EventStoreMetadata.streamLive, JsonNodeFactory.instance.booleanNode(false));
+                }
                 this.position.set(position);
                 subscriber.onNext(new MetadataByteBuffer(metadata.build(), ByteBuffer.wrap(event.getEventData())));
 
@@ -158,7 +177,6 @@ public class ReadStreamSubscription
 
         @Override
         public void onCancelled(com.eventstore.dbclient.Subscription subscription, Throwable throwable) {
-
             if (throwable instanceof StatusRuntimeException sre) {
                 switch ((sre.getStatus().getCode())) {
                     case ABORTED: {
@@ -185,13 +203,23 @@ public class ReadStreamSubscription
 
         @Override
         public void onCaughtUp(com.eventstore.dbclient.Subscription subscription) {
-            caughtUp.set(true);
-            System.out.println("Caught up");
+            if (keepAlive)
+            {
+                caughtUp.set(true);
+                fellBehind.set(false);
+                System.out.println("Caught up");
+            } else
+            {
+                subscriber.onComplete();
+                subscription.stop();
+                System.out.println("Complete");
+            }
         }
 
         @Override
         public void onFellBehind(com.eventstore.dbclient.Subscription subscription) {
             fellBehind.set(true);
+            caughtUp.set(false);
         }
     }
 }

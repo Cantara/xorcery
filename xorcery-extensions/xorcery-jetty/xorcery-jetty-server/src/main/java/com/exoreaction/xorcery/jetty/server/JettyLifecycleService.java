@@ -25,7 +25,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.ee10.servlet.ErrorHandler;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.NetworkConnector;
@@ -67,6 +70,10 @@ public class JettyLifecycleService
         for (ServiceHandle<Handler> serviceHandle : rankedHandlers) {
             logger.info("Registering handler:" + Optional.ofNullable(serviceHandle.getActiveDescriptor().getName()).orElse(serviceHandle.getActiveDescriptor().getImplementation()));
             Handler handler = serviceHandle.getService();
+
+            if (handler instanceof SessionHandler || handler instanceof ConstraintSecurityHandler || handler instanceof ErrorHandler)
+                continue;
+
             if (chain == null) {
                 chain = handler;
             } else if (handler instanceof ServletContextHandler servletContextHandler &&

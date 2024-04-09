@@ -2,8 +2,9 @@ package com.exoreaction.xorcery.eventstore.client.api;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.eventstore.client.ReadStream;
-import com.exoreaction.xorcery.eventstore.client.*;
+import com.exoreaction.xorcery.eventstore.client.AppendHandler;
+import com.exoreaction.xorcery.eventstore.client.AppendOptimisticLockingHandler;
+import com.exoreaction.xorcery.eventstore.client.ReadStreamSubscription;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
@@ -13,10 +14,11 @@ import org.apache.logging.log4j.spi.LoggerContext;
 import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 import reactor.util.context.ContextView;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -24,7 +26,9 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class EventStoreClient {
+public class EventStoreClient
+    implements Closeable
+{
 
     @Service
     public static class Factory {
@@ -72,35 +76,27 @@ public class EventStoreClient {
     }
 
     // Write
-    public BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> append(
-            Function<Metadata, UUID> eventIdSelector,
-            Function<Metadata, String> eventTypeSelector,
+    public BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> appendStream(
+            Function<MetadataByteBuffer, UUID> eventIdSelector,
+            Function<MetadataByteBuffer, String> eventTypeSelector,
             Consumer<AppendToStreamOptions> optionsConfigurer) {
         return new AppendHandler(client, optionsConfigurer, disruptorConfiguration, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
     }
 
     public BiConsumer<MetadataByteBuffer, SynchronousSink<MetadataByteBuffer>> appendOptimisticLocking(
-            Function<Metadata, UUID> eventIdSelector,
-            Function<Metadata, String> eventTypeSelector,
+            Function<MetadataByteBuffer, UUID> eventIdSelector,
+            Function<MetadataByteBuffer, String> eventTypeSelector,
             Consumer<AppendToStreamOptions> optionsConfigurer) {
         return new AppendOptimisticLockingHandler(client, optionsConfigurer, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
     }
 
-    /**
-     * Use this with {@link Flux#transformDeferredContextual(BiFunction)}
-     *
-     * @return Flux which writes streamPosition of streamId to ContextView if it exists, or an error if something went wrong
-     */
-    public <T> BiFunction<Flux<T>, ContextView, Publisher<T>> lastPosition() {
-        return new LastPositionContext<>(client);
-    }
-
     // Read
     public Publisher<MetadataByteBuffer> readStream() {
-        return new ReadStream(client, loggerContext.getLogger(ReadStream.class));
+        return new ReadStreamSubscription(client, loggerContext.getLogger(ReadStreamSubscription.class));
     }
 
-    public Publisher<MetadataByteBuffer> readStreamSubscription() {
-        return new ReadStreamSubscription(client, loggerContext.getLogger(ReadStreamSubscription.class));
+    @Override
+    public void close() throws IOException {
+        client.shutdown();
     }
 }

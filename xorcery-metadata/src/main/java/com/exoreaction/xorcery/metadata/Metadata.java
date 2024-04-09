@@ -60,6 +60,9 @@ public record Metadata(ObjectNode json)
         public Builder add(String name, long value) {
             return add(name, builder.numberNode(value));
         }
+        public Builder add(String name, boolean value) {
+            return add(name, builder.booleanNode(value));
+        }
 
         public Builder add(String name, Enum<?> value) {
             return add(name, builder.textNode(value.name()));
@@ -71,6 +74,10 @@ public record Metadata(ObjectNode json)
 
         public Builder add(Enum<?> name, long value) {
             return add(name.name(), builder.numberNode(value));
+        }
+
+        public Builder add(Enum<?> name, boolean value) {
+            return add(name.name(), builder.booleanNode(value));
         }
 
         public Builder add(Enum<?> name, Enum<?> value) {

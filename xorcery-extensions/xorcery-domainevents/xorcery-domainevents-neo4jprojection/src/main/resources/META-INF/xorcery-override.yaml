@@ -1,0 +1,3 @@
+neo4jdatabase:
+  startup:
+    - "{{ jsondomaineventprojection.enabled ? META-INF/jsondomaineventprojection_schema.cyp }}"

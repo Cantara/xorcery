@@ -226,4 +226,9 @@ public class IntermediateCACertificatesProvider
 
         return converter.getCRL(crlGen.build(signer));
     }
+
+    @Override
+    public String toString() {
+        return "Intermediate CA provider";
+    }
 }

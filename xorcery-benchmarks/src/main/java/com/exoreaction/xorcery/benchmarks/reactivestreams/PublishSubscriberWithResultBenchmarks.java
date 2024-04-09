@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
@@ -34,6 +35,8 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -145,9 +148,9 @@ public class PublishSubscriberWithResultBenchmarks {
 
         CompletableFuture<Integer> integerCompletableFuture = new CompletableFuture<>();
         integerCompletableFuture.whenComplete((i, t) -> total.addAndGet(i));
-        clientPublisher.publish(new WithResult<>(new WithMetadata<>(new Metadata.Builder()
+        clientPublisher.publish(new WithResult<>(new MetadataByteBuffer(new Metadata.Builder()
                 .add("foo", "bar")
-                .build(), System.currentTimeMillis() + ""), integerCompletableFuture));
+                .build(), ByteBuffer.wrap((System.currentTimeMillis() + "").getBytes(StandardCharsets.UTF_8))), integerCompletableFuture));
     }
 
     public static abstract class ServerSubscriber<T>
@@ -172,13 +175,13 @@ public class PublishSubscriberWithResultBenchmarks {
     }
 
     public static class ClientPublisher
-            implements Publisher<WithResult<WithMetadata<String>, Integer>> {
+            implements Publisher<WithResult<MetadataByteBuffer, Integer>> {
 
         private final CompletableFuture<Void> done = new CompletableFuture<>();
         private final Semaphore semaphore = new Semaphore(0);
-        private Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber;
+        private Subscriber<? super WithResult<MetadataByteBuffer, Integer>> subscriber;
 
-        public void publish(WithResult<WithMetadata<String>, Integer> item) throws InterruptedException {
+        public void publish(WithResult<MetadataByteBuffer, Integer> item) throws InterruptedException {
             if (!semaphore.tryAcquire(5, TimeUnit.SECONDS)) {
                 // Try again
                 publish(item);
@@ -191,7 +194,7 @@ public class PublishSubscriberWithResultBenchmarks {
         }
 
         @Override
-        public void subscribe(Subscriber<? super WithResult<WithMetadata<String>, Integer>> subscriber) {
+        public void subscribe(Subscriber<? super WithResult<MetadataByteBuffer, Integer>> subscriber) {
             this.subscriber = subscriber;
             subscriber.onSubscribe(new Subscription() {
                 @Override

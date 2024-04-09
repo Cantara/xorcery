@@ -64,6 +64,7 @@ public record RequestCertificateProcess(PKCS10CertificationRequest csr,
         try {
             CompletionStage<List<X509Certificate>> certs = null;
             for (CertificatesProvider provider : providers) {
+                logger.info("Requesting certificate using "+provider);
                 if (certs == null) {
                     certs = provider.requestCertificates(csr);
                 } else {

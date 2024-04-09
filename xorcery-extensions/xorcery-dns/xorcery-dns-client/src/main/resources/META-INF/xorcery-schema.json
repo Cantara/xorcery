@@ -28,10 +28,6 @@
               "type" : [ "boolean", "string" ],
               "default" : false,
               "description" : "Default: false"
-            },
-            "discovery" : {
-              "type" : "object",
-              "properties" : { }
             }
           }
         }

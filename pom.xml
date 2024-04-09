@@ -21,7 +21,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.110.3-SNAPSHOT</version>
+    <version>0.113.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -33,18 +33,18 @@
 
         <slf4j.version>2.0.12</slf4j.version>
         <log4j.version>2.23.1</log4j.version>
-        <jetty.version>12.0.7</jetty.version>
-        <jersey.version>3.1.5</jersey.version>
-        <opentelemetry.version>1.36.0</opentelemetry.version>
+        <jetty.version>12.0.8</jetty.version>
+        <jersey.version>3.1.6</jersey.version>
+        <opentelemetry.version>1.37.0</opentelemetry.version>
         <eventstore.version>5.3.2</eventstore.version>
-        <grpc.version>1.62.2</grpc.version>
+        <grpc.version>1.63.0</grpc.version>
         <hk2.version>3.1.0</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <jackson.version>2.17.0</jackson.version>
         <asm.version>9.7</asm.version>
-        <projectreactor.version>2023.0.4</projectreactor.version>
-        <aws.java.sdk.version>2.25.21</aws.java.sdk.version>
+        <projectreactor.version>2023.0.5</projectreactor.version>
+        <aws.java.sdk.version>2.25.27</aws.java.sdk.version>
         <netty.version>4.1.108.Final</netty.version>
 
         <junit.version>5.10.2</junit.version>
@@ -558,7 +558,7 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>neo4j-shaded</artifactId>
-                <version>5.12.0.13</version>
+                <version>5.12.1</version>
             </dependency>
             <dependency>
                 <groupId>org.neo4j.client</groupId>
@@ -624,12 +624,12 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk18on</artifactId>
-                <version>1.77</version>
+                <version>1.78</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
-                <version>1.77</version>
+                <version>1.78</version>
             </dependency>
 
 
@@ -959,7 +959,7 @@
                 <plugin>
                     <groupId>com.exoreaction.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.110.2</version>
+                    <version>0.113.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -1043,7 +1043,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.3.0</version>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>

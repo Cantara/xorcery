@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberErrorLog;
@@ -71,7 +72,7 @@ public class FilePersistentSubscriberErrorLog
                 int recoveredCount = 0;
                 int failedCount = 0;
                 for (JsonNode recoveredItem : recoveredItems) {
-                    WithMetadata<ArrayNode> arrayNodeWithMetadata = new WithMetadata<>(
+                    MetadataJsonNode<ArrayNode> arrayNodeWithMetadata = new MetadataJsonNode<>(
                             new Metadata((ObjectNode) recoveredItem.get("metadata")),
                             (ArrayNode) recoveredItem.get("events"));
 

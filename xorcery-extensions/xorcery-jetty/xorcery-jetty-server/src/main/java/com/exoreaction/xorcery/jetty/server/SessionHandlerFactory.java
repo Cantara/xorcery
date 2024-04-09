@@ -3,16 +3,14 @@ package com.exoreaction.xorcery.jetty.server;
 import com.exoreaction.xorcery.util.UUIDs;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.session.DefaultSessionIdManager;
 import org.eclipse.jetty.session.HouseKeeper;
-import org.eclipse.jetty.session.SessionHandler;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="jetty.server.sessions")
 @Priority(2)
 public class SessionHandlerFactory
     implements Factory<SessionHandler>
@@ -37,8 +35,6 @@ public class SessionHandlerFactory
     }
 
     @Override
-    @Named("jetty.server.sessions")
-    @Singleton
     public SessionHandler provide() {
         return sessionHandler;
     }

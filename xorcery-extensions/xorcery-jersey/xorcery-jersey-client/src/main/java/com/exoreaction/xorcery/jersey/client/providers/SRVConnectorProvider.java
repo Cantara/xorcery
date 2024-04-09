@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.core.Configuration;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
 
@@ -26,14 +27,16 @@ public class SRVConnectorProvider
         implements ConnectorProvider {
     private final DnsLookup dnsLookup;
     private ConnectorProvider delegateProvider;
+    private final LoggerContext logger;
 
-    public SRVConnectorProvider(DnsLookupService dnsLookup, ConnectorProvider delegateProvider) {
+    public SRVConnectorProvider(DnsLookupService dnsLookup, ConnectorProvider delegateProvider, LoggerContext loggerContext) {
         this.dnsLookup = dnsLookup;
         this.delegateProvider = delegateProvider;
+        this.logger = loggerContext;
     }
 
     @Override
     public Connector getConnector(Client client, Configuration runtimeConfig) {
-        return new SRVConnector(dnsLookup, delegateProvider.getConnector(client, runtimeConfig));
+        return new SRVConnector(dnsLookup, delegateProvider.getConnector(client, runtimeConfig), logger.getLogger(SRVConnector.class));
     }
 }
