@@ -298,7 +298,7 @@ public class EventStoreClientTest {
     }
 
     @Test
-    public void deleteProjectedStream() {
+    public void deleteProjectedStream() throws InterruptedException {
         Flux<MetadataByteBuffer> appendFlux = Flux.from(new YamlPublisher<ObjectNode>(ObjectNode.class))
                 .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
                 .transformDeferredContextual(client.appendStream(
@@ -325,6 +325,8 @@ public class EventStoreClientTest {
                         ReactiveStreamsContext.streamId, "testdelete-eventstream2-foo"
                 ))
                 .blockLast();
+
+        Thread.sleep(1000); // Just to give the projection some time to catch up
 
         System.out.println("Read 1");
         List<MetadataByteBuffer> before = readStreamFlux
