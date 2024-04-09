@@ -1,11 +1,9 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
-import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
-import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.opentelemetry.api.OpenTelemetry;
@@ -24,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
+
 class BaseAppendHandler {
 
     static final JsonMapper jsonMapper = new JsonMapper();
@@ -31,8 +31,8 @@ class BaseAppendHandler {
     final EventStoreDBClient client;
     final Consumer<AppendToStreamOptions> options;
 
-    final Function<Metadata, UUID> eventIdSelector;
-    final Function<Metadata, String> eventTypeSelector;
+    final Function<MetadataByteBuffer, UUID> eventIdSelector;
+    final Function<MetadataByteBuffer, String> eventTypeSelector;
 
     final Logger logger;
 
@@ -40,7 +40,13 @@ class BaseAppendHandler {
     final LongHistogram batchSizes;
     final DoubleHistogram writeTimer;
 
-    BaseAppendHandler(EventStoreDBClient client, Consumer<AppendToStreamOptions> options, Function<Metadata, UUID> eventIdSelector, Function<Metadata, String> eventTypeSelector, Logger logger, OpenTelemetry openTelemetry) {
+    BaseAppendHandler(
+            EventStoreDBClient client,
+            Consumer<AppendToStreamOptions> options,
+            Function<MetadataByteBuffer, UUID> eventIdSelector,
+            Function<MetadataByteBuffer, String> eventTypeSelector,
+            Logger logger,
+            OpenTelemetry openTelemetry) {
         this.client = client;
         this.options = options != null ? options : o -> {
         };
@@ -65,7 +71,8 @@ class BaseAppendHandler {
         return context ->
         {
             try {
-                String streamId = ReactiveStreamsContext.getContext(context, ReactiveStreamsContext.streamId);
+                String streamId = new ContextViewElement(context).getString(ReactiveStreamsContext.streamId)
+                        .orElseThrow(missing(ReactiveStreamsContext.streamId));
                 return client.readStream(streamId, ReadStreamOptions.get().backwards().maxCount(1))
                         .orTimeout(10, TimeUnit.SECONDS).thenApply(readResult ->
                         {
@@ -92,7 +99,8 @@ class BaseAppendHandler {
                 return context;
 
             try {
-                String streamId = ReactiveStreamsContext.getContext(context, ReactiveStreamsContext.streamId);
+                String streamId = new ContextViewElement(context).getString(ReactiveStreamsContext.streamId)
+                        .orElseThrow(missing(ReactiveStreamsContext.streamId));
                 AppendToStreamOptions setMetaDataOptions = AppendToStreamOptions.get();
                 options.accept(setMetaDataOptions);
                 StreamMetadata streamMetadata = client.getStreamMetadata(streamId)

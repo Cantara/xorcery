@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.Projection;
 import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
 import jakarta.inject.Inject;
@@ -25,6 +25,8 @@ import reactor.util.context.ContextView;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+
+import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
 
 @Service
 public class Neo4jProjectionHandler
@@ -52,38 +54,43 @@ public class Neo4jProjectionHandler
     @Override
     public Publisher<MetadataEvents> apply(Flux<MetadataEvents> metadataEventsFlux, ContextView contextView) {
 
-        String projectionId = ReactiveStreamsContext.getContext(contextView, ProjectionStreamContext.projectionId);
-        logger.info("Starting Neo4j projection with id "+projectionId);
-        Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
-        return currentProjection.flatMap(ProjectionModel::getProjectionPosition)
-                .map(p -> new SmartBatching<>(this.configuration, new Handler(p)).apply(metadataEventsFlux.contextWrite(Context.of(Projection.projectionPosition, p)), contextView))
-                .orElseGet(() ->
-                {
-                    // Create projection in Neo4j
-                    try (Transaction tx = database.beginTx()) {
-                        Map<String, Object> createParameters = new HashMap<>();
-                        createParameters.put(Projection.projectionId.name(), projectionId);
-                        Map<String, String> props = new HashMap<>();
-                        contextView.forEach((k, v) ->
-                        {
-                            if (!k.toString().equals(ProjectionStreamContext.projectionId.name())) {
-                                props.put(k.toString(), v.toString());
-                            }
-                        });
-                        createParameters.put("props", props);
-                        tx.execute("""
-                                CREATE (projection:Projection) 
-                                SET 
-                                projection = $props,
-                                projection.id = $projectionId,
-                                projection.projectionPosition = -1
-                                RETURN projection
-                                """, createParameters).close();
-                        tx.commit();
-                    }
+        try {
+            String projectionId = new ContextViewElement(contextView).getString(ProjectionStreamContext.projectionId)
+                    .orElseThrow(missing(ProjectionStreamContext.projectionId));
+            logger.info("Starting Neo4j projection with id " + projectionId);
+            Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
+            return currentProjection.flatMap(ProjectionModel::getProjectionPosition)
+                    .map(p -> new SmartBatching<>(this.configuration, new Handler(p)).apply(metadataEventsFlux.contextWrite(Context.of(Projection.projectionPosition, p)), contextView))
+                    .orElseGet(() ->
+                    {
+                        // Create projection in Neo4j
+                        try (Transaction tx = database.beginTx()) {
+                            Map<String, Object> createParameters = new HashMap<>();
+                            createParameters.put(Projection.projectionId.name(), projectionId);
+                            Map<String, String> props = new HashMap<>();
+                            contextView.forEach((k, v) ->
+                            {
+                                if (!k.toString().equals(ProjectionStreamContext.projectionId.name())) {
+                                    props.put(k.toString(), v.toString());
+                                }
+                            });
+                            createParameters.put("props", props);
+                            tx.execute("""
+                                    CREATE (projection:Projection) 
+                                    SET 
+                                    projection = $props,
+                                    projection.id = $projectionId,
+                                    projection.projectionPosition = -1
+                                    RETURN projection
+                                    """, createParameters).close();
+                            tx.commit();
+                        }
 
-                    return new SmartBatching<>(this.configuration, new Handler(-1)).apply(metadataEventsFlux, contextView);
-                });
+                        return new SmartBatching<>(this.configuration, new Handler(-1)).apply(metadataEventsFlux, contextView);
+                    });
+        } catch (RuntimeException e) {
+            return Flux.error(e);
+        }
     }
 
     public Optional<ProjectionModel> getCurrentProjection(String projectionId) {
@@ -108,7 +115,8 @@ public class Neo4jProjectionHandler
         @Override
         public void accept(List<MetadataEvents> events, SynchronousSink<List<MetadataEvents>> sink) {
             try (Transaction tx = database.beginTx()) {
-                String projectionId = ReactiveStreamsContext.getContext(sink.contextView(), ProjectionStreamContext.projectionId);
+                String projectionId = new ContextViewElement(sink.contextView()).getString(ProjectionStreamContext.projectionId)
+                        .orElseThrow(missing(ProjectionStreamContext.projectionId));
                 for (MetadataEvents metadataEvents : events) {
                     metadataEvents.getMetadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
                     for (Neo4jEventProjection projection : projections) {

@@ -9,5 +9,8 @@ public enum EventStoreContext {
     cacheControl,
     truncateBefore,
     acl,
-    customProperties
+    customProperties,
+
+    // For readStream, if true stream will not end when there are no more events
+    keepAlive
 }

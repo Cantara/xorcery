@@ -4,7 +4,6 @@ import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.eventstore.client.AppendHandler;
 import com.exoreaction.xorcery.eventstore.client.AppendOptimisticLockingHandler;
-import com.exoreaction.xorcery.eventstore.client.ReadStream;
 import com.exoreaction.xorcery.eventstore.client.ReadStreamSubscription;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
@@ -77,26 +76,22 @@ public class EventStoreClient
     }
 
     // Write
-    public BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> append(
-            Function<Metadata, UUID> eventIdSelector,
-            Function<Metadata, String> eventTypeSelector,
+    public BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> appendStream(
+            Function<MetadataByteBuffer, UUID> eventIdSelector,
+            Function<MetadataByteBuffer, String> eventTypeSelector,
             Consumer<AppendToStreamOptions> optionsConfigurer) {
         return new AppendHandler(client, optionsConfigurer, disruptorConfiguration, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
     }
 
     public BiConsumer<MetadataByteBuffer, SynchronousSink<MetadataByteBuffer>> appendOptimisticLocking(
-            Function<Metadata, UUID> eventIdSelector,
-            Function<Metadata, String> eventTypeSelector,
+            Function<MetadataByteBuffer, UUID> eventIdSelector,
+            Function<MetadataByteBuffer, String> eventTypeSelector,
             Consumer<AppendToStreamOptions> optionsConfigurer) {
         return new AppendOptimisticLockingHandler(client, optionsConfigurer, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
     }
 
     // Read
     public Publisher<MetadataByteBuffer> readStream() {
-        return new ReadStream(client, loggerContext.getLogger(ReadStream.class));
-    }
-
-    public Publisher<MetadataByteBuffer> readStreamSubscription() {
         return new ReadStreamSubscription(client, loggerContext.getLogger(ReadStreamSubscription.class));
     }
 

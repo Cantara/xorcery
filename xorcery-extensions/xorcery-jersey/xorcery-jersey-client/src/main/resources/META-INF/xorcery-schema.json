@@ -15,6 +15,11 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "readTimeout" : {
+              "type" : "string",
+              "default" : "0s",
+              "description" : "Default: 0s"
+            },
             "properties" : {
               "type" : "object",
               "properties" : { }

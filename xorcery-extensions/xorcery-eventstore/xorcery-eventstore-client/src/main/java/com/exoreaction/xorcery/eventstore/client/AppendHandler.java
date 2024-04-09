@@ -2,9 +2,9 @@ package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
-import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryHelpers;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
@@ -13,22 +13,21 @@ import io.grpc.StatusRuntimeException;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
 import reactor.util.context.ContextView;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
+import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
 
 public class AppendHandler
     extends BaseAppendHandler
@@ -41,8 +40,8 @@ public class AppendHandler
             EventStoreDBClient client,
             Consumer<AppendToStreamOptions> options,
             DisruptorConfiguration configuration,
-            Function<Metadata, UUID> eventIdSelector,
-            Function<Metadata, String> eventTypeSelector,
+            Function<MetadataByteBuffer, UUID> eventIdSelector,
+            Function<MetadataByteBuffer, String> eventTypeSelector,
             Logger logger,
             OpenTelemetry openTelemetry) {
         super(client, options, eventIdSelector, eventTypeSelector, logger, openTelemetry);
@@ -55,17 +54,18 @@ public class AppendHandler
     }
 
     private void handler(List<MetadataByteBuffer> metadataByteBuffers, SynchronousSink<List<MetadataByteBuffer>> sink) {
-        String streamId = ReactiveStreamsContext.getContext(sink.contextView(), ReactiveStreamsContext.streamId);
-        Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.streamId"), streamId);
+        ContextViewElement contextElement = new ContextViewElement(sink.contextView());
         try {
+            String streamId = contextElement.getString(ReactiveStreamsContext.streamId).orElseThrow(missing(ReactiveStreamsContext.streamId));
+            Attributes attributes = Attributes.of(AttributeKey.stringKey("eventstore.streamId"), streamId);
             OpenTelemetryHelpers.time(writeTimer, attributes, () -> {
 
                 // Prepare the data
                 List<EventData> eventBatch = new ArrayList<>();
                 try {
                     for (MetadataByteBuffer metadataByteBuffer : metadataByteBuffers) {
-                        UUID eventId = eventIdSelector.apply(metadataByteBuffer.metadata());
-                        String eventType = eventTypeSelector.apply(metadataByteBuffer.metadata());
+                        UUID eventId = eventIdSelector.apply(metadataByteBuffer);
+                        String eventType = eventTypeSelector.apply(metadataByteBuffer);
 
                         EventData eventData = EventDataBuilder.json(eventId, eventType, metadataByteBuffer.data().array())
                                 .metadataAsBytes(jsonMapper.writeValueAsBytes(metadataByteBuffer.metadata().json())).build();

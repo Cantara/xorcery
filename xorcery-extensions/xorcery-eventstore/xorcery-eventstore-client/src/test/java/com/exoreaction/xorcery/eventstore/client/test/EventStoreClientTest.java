@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.eventstore.client.test;
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreClient;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import com.exoreaction.xorcery.metadata.Metadata;
@@ -66,7 +67,8 @@ public class EventStoreClientTest {
         client = xorcery.getServiceLocator().getService(EventStoreClient.Factory.class).create(settings);
     }
 
-    @AfterAll static void tearDown() throws IOException {
+    @AfterAll
+    static void tearDown() throws IOException {
         client.close();
     }
 
@@ -76,7 +78,7 @@ public class EventStoreClientTest {
         Flux<MetadataByteBuffer> appendFlux = Flux
                 .from(new YamlPublisher<ObjectNode>(ObjectNode.class))
                 .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
-                .transformDeferredContextual(client.append(
+                .transformDeferredContextual(client.appendStream(
                         metadata -> UUID.randomUUID(),
                         metadata -> "DomainCommand",
                         null));
@@ -102,7 +104,7 @@ public class EventStoreClientTest {
         Flux<MetadataByteBuffer> resumeFlux = Flux
                 .from(new YamlPublisher<ObjectNode>(ObjectNode.class))
                 .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
-                .transformDeferredContextual(client.append(
+                .transformDeferredContextual(client.appendStream(
                         metadata -> UUID.randomUUID(),
                         metadata -> "DomainCommand",
                         null));
@@ -141,7 +143,7 @@ public class EventStoreClientTest {
     @Order(4)
     public void readStreamSubscription() throws InterruptedException {
 
-        Flux<MetadataByteBuffer> readSubscriptionFlux = Flux.from(client.readStreamSubscription());
+        Flux<MetadataByteBuffer> readSubscriptionFlux = Flux.from(client.readStream());
         {
             AtomicInteger counter = new AtomicInteger();
             List<MetadataByteBuffer> result = new ArrayList<>();
@@ -159,7 +161,8 @@ public class EventStoreClientTest {
                     })
                     .doOnNext(result::add)
                     .doOnError(System.out::println)
-                    .contextWrite(Context.of(ReactiveStreamsContext.streamId, "test-eventstream"))
+                    .contextWrite(Context.of(ReactiveStreamsContext.streamId, "test-eventstream",
+                            EventStoreContext.keepAlive, true))
                     .subscribe();
             latch.await(10, TimeUnit.SECONDS);
             disposable.dispose();
@@ -175,12 +178,12 @@ public class EventStoreClientTest {
         Flux<MetadataByteBuffer> appendFlux = Flux
                 .from(new YamlPublisher<ObjectNode>(ObjectNode.class))
                 .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
-                .transformDeferredContextual(client.append(
+                .transformDeferredContextual(client.appendStream(
                         metadata -> UUID.randomUUID(),
                         metadata -> "DomainCommand",
                         null));
 
-        Flux<MetadataByteBuffer> readSubscriptionFlux = Flux.from(client.readStreamSubscription());
+        Flux<MetadataByteBuffer> readSubscriptionFlux = Flux.from(client.readStream());
 
         // Append events from file to a streamId
         URL yamlResource = Resources.getResource("testevents2.yaml").orElseThrow();
@@ -209,7 +212,8 @@ public class EventStoreClientTest {
                 })
                 .doOnError(System.out::println)
                 .contextWrite(Context.of(
-                        ReactiveStreamsContext.streamId, "$ce-test"
+                        ReactiveStreamsContext.streamId, "$ce-test",
+                        EventStoreContext.keepAlive, true
                 ))
                 .subscribe();
         latch.await(5, TimeUnit.SECONDS);
@@ -236,7 +240,7 @@ public class EventStoreClientTest {
 
         Flux<MetadataByteBuffer> appendFlux = Flux.fromIterable(events)
                 .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
-                .transformDeferredContextual(client.append(
+                .transformDeferredContextual(client.appendStream(
                         metadata -> fixedId,
                         metadata -> "DomainCommand",
                         null))
@@ -297,7 +301,7 @@ public class EventStoreClientTest {
     public void deleteProjectedStream() {
         Flux<MetadataByteBuffer> appendFlux = Flux.from(new YamlPublisher<ObjectNode>(ObjectNode.class))
                 .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
-                .transformDeferredContextual(client.append(
+                .transformDeferredContextual(client.appendStream(
                         metadata -> UUID.randomUUID(),
                         metadata -> "DomainCommand",
                         null));
@@ -327,6 +331,7 @@ public class EventStoreClientTest {
                 .contextWrite(Context.of(ReactiveStreamsContext.streamId, "$ce-testdelete"))
                 .toStream()
                 .toList();
+        Assertions.assertEquals(6, before.size());
 //        System.out.println(before);
 
         System.out.println("Delete ");
@@ -368,7 +373,7 @@ public class EventStoreClientTest {
         Flux<MetadataByteBuffer> appendFlux = Flux
                 .from(new YamlPublisher<ObjectNode>(ObjectNode.class))
                 .handle(ReactiveStreams.toMetadataByteBuffer("metadata", "data"))
-                .transformDeferredContextual(client.append(
+                .transformDeferredContextual(client.appendStream(
                         metadata -> UUID.randomUUID(),
                         metadata -> "DomainCommand",
                         null));
@@ -405,7 +410,7 @@ public class EventStoreClientTest {
             }
             Map<String, Object> customProperties = streamMetadata.getCustomProperties();
             customProperties.remove("resourceUrl");
-            Assertions.assertEquals(Map.of("foo",123, "streamId", "test-metadata"), customProperties);
+            Assertions.assertEquals(Map.of("foo", 123, "streamId", "test-metadata"), customProperties);
         }
     }
 }

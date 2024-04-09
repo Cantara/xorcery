@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.reactivestreams.extras.publishers;
 
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
+import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -10,7 +10,6 @@ import org.yaml.snakeyaml.LoaderOptions;
 import reactor.core.publisher.Flux;
 
 import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -28,14 +27,15 @@ public class YamlPublisher<T>
     public YamlPublisher(Class<? super T> itemType) {
         flux = Flux.push(sink -> {
             try {
-                Object resourceUrl = ReactiveStreamsContext.getContext(sink.contextView(), ResourcePublisherContext.resourceUrl);
+                Object resourceUrl = new ContextViewElement(sink.contextView()).get(ResourcePublisherContext.resourceUrl)
+                        .orElseThrow(ContextViewElement.missing(ResourcePublisherContext.resourceUrl));
                 URL yamlResource = resourceUrl instanceof URL url ? url : new URL(resourceUrl.toString());
                 InputStream resourceAsStream = new BufferedInputStream(yamlResource.openStream(), 32 * 1024);
                 LoaderOptions loaderOptions = new LoaderOptions();
                 loaderOptions.setCodePointLimit(Integer.MAX_VALUE);
                 YAMLFactory factory = YAMLFactory.builder().loaderOptions(loaderOptions).build();
                 new ObjectReaderStreamer<>(sink, factory.createParser(resourceAsStream), yamlReader.forType(itemType));
-            } catch (IOException e) {
+            } catch (Throwable e) {
                 sink.error(e);
             }
         });
