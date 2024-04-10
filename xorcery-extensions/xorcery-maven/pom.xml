@@ -30,4 +30,20 @@
     <modules>
         <module>xorcery-configuration-jsonschema-maven-plugin</module>
     </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-module-schema</id>
+                        <phase/>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

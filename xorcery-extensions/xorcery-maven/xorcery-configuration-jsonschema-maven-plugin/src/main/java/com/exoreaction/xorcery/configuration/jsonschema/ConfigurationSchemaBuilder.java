@@ -39,10 +39,11 @@ public class ConfigurationSchemaBuilder {
         // Create top level definitions
         Properties.Builder properties = new Properties.Builder();
         Definitions.Builder definitions = new Definitions.Builder();
-        for (Map.Entry<String, JsonNode> property : resolvedConfiguration.properties()) {
-
+        for (Map.Entry<String, JsonNode> property : configuration.properties()) {
             JsonNode defaultValue = configuration.get(property.getKey());
-            switch (property.getValue().getNodeType()) {
+            JsonNode value = resolvedConfiguration.get(property.getKey());
+            JsonNode effectiveValue = value == null ? defaultValue : value;
+            switch (effectiveValue.getNodeType()) {
                 case ARRAY -> {
                 }
                 case BINARY -> {
@@ -66,7 +67,7 @@ public class ConfigurationSchemaBuilder {
                             .build());
                 }
                 case OBJECT -> {
-                    definitions.definition(property.getKey(), createSchema(rootSchema, (ObjectNode) defaultValue, (ObjectNode) property.getValue()));
+                    definitions.definition(property.getKey(), createSchema(rootSchema, (ObjectNode) defaultValue, (ObjectNode) effectiveValue));
                     properties.property(property.getKey(), new JsonSchema.Builder().ref("#/$defs/"+property.getKey()).build());
                 }
                 case POJO -> {
@@ -90,10 +91,12 @@ public class ConfigurationSchemaBuilder {
         JsonSchema.Builder schema = new JsonSchema.Builder();
         schema.type(Types.Object);
         Properties.Builder properties = new Properties.Builder();
-        for (Map.Entry<String, JsonNode> property : resolvedConfiguration.properties()) {
+        for (Map.Entry<String, JsonNode> property : configuration.properties()) {
 
             JsonNode defaultValue = configuration.get(property.getKey());
-            switch (property.getValue().getNodeType()) {
+            JsonNode value = resolvedConfiguration.get(property.getKey());
+            JsonNode effectiveValue = value == null ? defaultValue : value;
+            switch (effectiveValue.getNodeType()) {
                 case ARRAY -> {
                 }
                 case BINARY -> {
@@ -102,7 +105,7 @@ public class ConfigurationSchemaBuilder {
                     properties.property(property.getKey(), new JsonSchema.Builder()
                             .with(b -> b.builder().set("type", b.builder().arrayNode().add(Types.Boolean.name().toLowerCase()).add(Types.String.name().toLowerCase())))
                             .with(b -> b.builder().set("default", defaultValue))
-                            .description("Default: " + defaultValue.asBoolean())
+                            .description("Default: " + defaultValue.asText()+(defaultValue.asText().contains("{{") ? " ("+effectiveValue.asText()+")" : ""))
                             .build());
                 }
                 case MISSING -> {
@@ -113,11 +116,11 @@ public class ConfigurationSchemaBuilder {
                     properties.property(property.getKey(), new JsonSchema.Builder()
                             .with(b -> b.builder().set("type", b.builder().arrayNode().add(Types.Number.name().toLowerCase()).add(Types.String.name().toLowerCase())))
                             .with(b -> b.builder().set("default", defaultValue))
-                            .description("Default: " + defaultValue.asText())
+                            .description("Default: " + defaultValue.asText()+(defaultValue.asText().contains("{{") ? " ("+effectiveValue.asText()+")" : ""))
                             .build());
                 }
                 case OBJECT -> {
-                    properties.property(property.getKey(), createSchema(rootSchema, (ObjectNode) defaultValue, (ObjectNode) property.getValue()));
+                    properties.property(property.getKey(), createSchema(rootSchema, (ObjectNode) defaultValue, (ObjectNode) effectiveValue));
                 }
                 case POJO -> {
                 }
@@ -125,7 +128,7 @@ public class ConfigurationSchemaBuilder {
                     properties.property(property.getKey(), new JsonSchema.Builder()
                             .type(Types.String)
                             .with(b -> b.builder().set("default", defaultValue))
-                            .description("Default: " + defaultValue.asText())
+                            .description("Default: " + defaultValue.asText()+(defaultValue.asText().contains("{{") ? " ("+effectiveValue.asText()+")" : ""))
                             .build());
                 }
             }

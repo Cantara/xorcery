@@ -16,12 +16,18 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 @Mojo(name = "module-configuration-jsonschema", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
-public class ModuleConfigurationJsonSchemaMojo extends AbstractMojo {
+public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery.yaml", required = false, readonly = true)
     private String configurationFile;
@@ -31,12 +37,6 @@ public class ModuleConfigurationJsonSchemaMojo extends AbstractMojo {
 
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-schema.json", required = true, readonly = true)
     private String generatedSchemaFile;
-
-    /**
-     * Gives access to the Maven project information.
-     */
-    @Parameter(defaultValue = "${project}", required = true, readonly = true)
-    MavenProject project;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -54,16 +54,32 @@ public class ModuleConfigurationJsonSchemaMojo extends AbstractMojo {
             getLog().debug("META-INF/xorcery-schema.yaml: " + xorceryConfigJsonSchemaExtensionFile + "(exists:" + xorceryConfigJsonSchemaExtensionFile.exists() + ")");
             getLog().debug("META-INF/xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(exists:" + xorceryConfigJsonSchemaFile.exists() + ")");
 
-            Configuration.Builder builder = new Configuration.Builder();
+            Configuration.Builder moduleBuilder = new Configuration.Builder();
+            Configuration.Builder moduleWithDependenciesBuilder = new Configuration.Builder();
             StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
 
+            List<File> dependencyJarFiles = getDependencyJarFiles();
+            List<URL> dependencyJarURLs = new ArrayList<>(dependencyJarFiles.size());
+            for (File dependencyJarFile : dependencyJarFiles) {
+                dependencyJarURLs.add(dependencyJarFile.toURI().toURL());
+            }
+            try (URLClassLoader dependenciesClassLoader = new URLClassLoader(dependencyJarURLs.toArray(new URL[0]), getClass().getClassLoader()))
+            {
+                Thread.currentThread().setContextClassLoader(dependenciesClassLoader);
+                standardConfigurationBuilder.addDefaults(moduleWithDependenciesBuilder);
+            }
+            standardConfigurationBuilder.addYaml("""
+                    instance.host: "service"
+                    instance.ip: "192.168.0.2"
+                    """).accept(moduleWithDependenciesBuilder);
+
             if (xorceryConfigFile.exists())
-                standardConfigurationBuilder.addFile(xorceryConfigFile).accept(builder);
+                standardConfigurationBuilder.addFile(xorceryConfigFile).accept(moduleBuilder);
 
             JsonSchema schema = new ConfigurationSchemaBuilder()
                     .id("http://xorcery.exoreaction.com/modules/"+project.getGroupId()+"/"+project.getArtifactId()+"/schema")
                     .title(project.getArtifactId()+" configuration JSON Schema")
-                    .generateJsonSchema(builder.builder(), builder.build().json());
+                    .generateJsonSchema(moduleBuilder.builder(), moduleWithDependenciesBuilder.build().json());
 
             ObjectNode schemaJson = schema.json();
 
@@ -87,7 +103,7 @@ public class ModuleConfigurationJsonSchemaMojo extends AbstractMojo {
 
             jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, schemaJson);
             getLog().info("Updated module configuration JSON Schema definition: "+xorceryConfigJsonSchemaFile);
-        } catch (IOException e) {
+        } catch (IOException | DependencyGraphBuilderException e) {
             throw new MojoFailureException("Could not create JSON Schema for xorcery.yaml configuration", e);
         }
     }
