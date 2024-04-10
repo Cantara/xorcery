@@ -78,10 +78,10 @@
         <module>xorcery-metadata</module>
         <module>xorcery-service-api</module>
         <module>xorcery-health-api</module>
-        <module>xorcery-health-registry</module>
 
         <module>xorcery-core</module>
         <module>xorcery-log4j</module>
+        <module>xorcery-health-registry</module>
         <module>xorcery-runner</module>
         <module>xorcery-junit</module>
 
