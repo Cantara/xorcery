@@ -9,18 +9,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -58,16 +55,20 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
             Configuration.Builder moduleWithDependenciesBuilder = new Configuration.Builder();
             StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
 
-            List<File> dependencyJarFiles = getDependencyJarFiles();
-            List<URL> dependencyJarURLs = new ArrayList<>(dependencyJarFiles.size());
-            for (File dependencyJarFile : dependencyJarFiles) {
-                dependencyJarURLs.add(dependencyJarFile.toURI().toURL());
-            }
-            try (URLClassLoader dependenciesClassLoader = new URLClassLoader(dependencyJarURLs.toArray(new URL[0]), getClass().getClassLoader()))
+            if (!xorceryConfigFile.getName().equals("xorcery-defaults.yaml"))
             {
-                Thread.currentThread().setContextClassLoader(dependenciesClassLoader);
-                standardConfigurationBuilder.addDefaults(moduleWithDependenciesBuilder);
+                List<File> dependencyJarFiles = getDependencyJarFiles();
+                List<URL> dependencyJarURLs = new ArrayList<>(dependencyJarFiles.size());
+                for (File dependencyJarFile : dependencyJarFiles) {
+                    dependencyJarURLs.add(dependencyJarFile.toURI().toURL());
+                }
+                try (URLClassLoader dependenciesClassLoader = new URLClassLoader(dependencyJarURLs.toArray(new URL[0]), getClass().getClassLoader()))
+                {
+                    Thread.currentThread().setContextClassLoader(dependenciesClassLoader);
+                    standardConfigurationBuilder.addDefaults(moduleWithDependenciesBuilder);
+                }
             }
+
             standardConfigurationBuilder.addYaml("""
                     instance.host: "service"
                     instance.ip: "192.168.0.2"
