@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-extensions</artifactId>
-        <version>0.113.4-SNAPSHOT</version>
+        <version>0.113.4</version>
     </parent>
 
     <artifactId>xorcery-jetty</artifactId>
