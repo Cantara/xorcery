@@ -65,6 +65,8 @@ public abstract class JsonSchemaCommonMojo
                 request.setArtifact(dependencyNode.getArtifact());
                 ArtifactResolutionResult result = repositorySystem.resolve(request);
                 for (Artifact artifact : result.getArtifacts()) {
+                    if (rootNode.getArtifact().equals(artifact))
+                        continue; // Skip self
                     getLog().debug("Using JSON Schema from:" + artifact.getArtifactId() + ":" + artifact.getFile());
                     if (artifact.getFile() != null) {
                         artifactJars.add(artifact.getFile());

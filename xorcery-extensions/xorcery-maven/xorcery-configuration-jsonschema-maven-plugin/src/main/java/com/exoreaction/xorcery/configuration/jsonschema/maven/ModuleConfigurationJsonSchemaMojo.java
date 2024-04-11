@@ -66,6 +66,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 {
                     Thread.currentThread().setContextClassLoader(dependenciesClassLoader);
                     standardConfigurationBuilder.addDefaults(moduleWithDependenciesBuilder);
+                    Thread.currentThread().setContextClassLoader(null);
                 }
             }
 
