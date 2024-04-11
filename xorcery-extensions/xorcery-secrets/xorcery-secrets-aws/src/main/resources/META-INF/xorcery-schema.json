@@ -14,7 +14,18 @@
       "properties" : {
         "aws" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ aws.auth.enabled }}",
+              "description" : "Default: {{ aws.auth.enabled }} ({{ aws.auth.enabled }})"
+            },
+            "region" : {
+              "type" : "string",
+              "default" : "{{ aws.region }}",
+              "description" : "Default: {{ aws.region }} ({{ aws.region }})"
+            }
+          }
         }
       }
     }

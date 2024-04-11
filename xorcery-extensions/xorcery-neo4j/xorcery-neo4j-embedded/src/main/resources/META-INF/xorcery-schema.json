@@ -12,10 +12,15 @@
     "neo4jdatabase" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "path" : {
           "type" : "string",
           "default" : "{{ instance.home }}/neo4j",
-          "description" : "Default: {{ instance.home }}/neo4j"
+          "description" : "Default: {{ instance.home }}/neo4j ({{ instance.home }}/neo4j)"
         },
         "domain" : {
           "type" : "object",
@@ -44,7 +49,7 @@
                     "data" : {
                       "type" : "string",
                       "default" : "{{ neo4jdatabase.path }}/data",
-                      "description" : "Default: {{ neo4jdatabase.path }}/data"
+                      "description" : "Default: {{ neo4jdatabase.path }}/data ({{ neo4jdatabase.path }}/data)"
                     }
                   }
                 }
@@ -54,7 +59,13 @@
         },
         "metrics" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            }
+          }
         }
       }
     }

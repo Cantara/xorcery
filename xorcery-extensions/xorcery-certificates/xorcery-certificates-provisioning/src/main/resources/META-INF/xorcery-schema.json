@@ -12,6 +12,11 @@
     "certificates" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "keystore" : {
           "type" : "string",
           "default" : "ssl",
@@ -25,12 +30,12 @@
         "alias" : {
           "type" : "string",
           "default" : "{{ server.ssl.alias | client.ssl.alias | \"self\"}}",
-          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}}"
+          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}} ({{ server.ssl.alias | client.ssl.alias | \"self\"}})"
         },
         "subject" : {
           "type" : "string",
           "default" : "{{ instance.fqdn | \"server\"}}",
-          "description" : "Default: {{ instance.fqdn | \"server\"}}"
+          "description" : "Default: {{ instance.fqdn | \"server\"}} ({{ instance.fqdn | \"server\"}})"
         }
       }
     }

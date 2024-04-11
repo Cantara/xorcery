@@ -12,9 +12,24 @@
     "aws" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
+        "region" : {
+          "type" : "string",
+          "default" : "{{ ENV:aws.region }}",
+          "description" : "Default: {{ ENV:aws.region }} ({{ ENV:aws.region }})"
+        },
         "auth" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ aws.enabled }}",
+              "description" : "Default: {{ aws.enabled }} ({{ aws.enabled }})"
+            },
             "type" : {
               "type" : "string",
               "default" : "accessKey",

@@ -86,18 +86,45 @@
   "$defs" : {
     "adminservlet" : {
       "type" : "object",
-      "properties" : { }
+      "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        }
+      }
     },
     "serveradmin" : {
       "type" : "object",
-      "properties" : { }
+      "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        }
+      }
     },
     "aws" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
+        "region" : {
+          "type" : "string",
+          "default" : "{{ ENV:aws.region }}",
+          "description" : "Default: {{ ENV:aws.region }} ({{ ENV:aws.region }})"
+        },
         "auth" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ aws.enabled }}",
+              "description" : "Default: {{ aws.enabled }} ({{ aws.enabled }})"
+            },
             "type" : {
               "type" : "string",
               "default" : "accessKey",
@@ -125,6 +152,11 @@
     "intermediateca" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "alias" : {
           "type" : "string",
           "default" : "intermediate",
@@ -140,6 +172,11 @@
     "letsencrypt" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "url" : {
           "type" : "string",
           "default" : "acme://letsencrypt.org",
@@ -155,6 +192,11 @@
     "certificates" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "keystore" : {
           "type" : "string",
           "default" : "ssl",
@@ -168,16 +210,21 @@
         "alias" : {
           "type" : "string",
           "default" : "{{ server.ssl.alias | client.ssl.alias | \"self\"}}",
-          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}}"
+          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}} ({{ server.ssl.alias | client.ssl.alias | \"self\"}})"
         },
         "subject" : {
           "type" : "string",
           "default" : "{{ instance.fqdn | \"server\"}}",
-          "description" : "Default: {{ instance.fqdn | \"server\"}}"
+          "description" : "Default: {{ instance.fqdn | \"server\"}} ({{ instance.fqdn | \"server\"}})"
         },
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "authorization" : {
               "type" : "string",
               "default" : "none",
@@ -193,12 +240,22 @@
         "id" : {
           "type" : "string",
           "default" : "{{ instance.host}}.{{ application.name}}",
-          "description" : "Default: {{ instance.host}}.{{ application.name}}"
+          "description" : "Default: {{ instance.host}}.{{ application.name}} ({{ instance.host}}.{{ application.name}})"
+        },
+        "host" : {
+          "type" : "string",
+          "default" : "{{ CALCULATED.hostName }}",
+          "description" : "Default: {{ CALCULATED.hostName }} (service)"
         },
         "fqdn" : {
           "type" : "string",
           "default" : "{{ instance.host }}.{{ instance.domain }}",
-          "description" : "Default: {{ instance.host }}.{{ instance.domain }}"
+          "description" : "Default: {{ instance.host }}.{{ instance.domain }} ({{ instance.host }}.{{ instance.domain }})"
+        },
+        "ip" : {
+          "type" : "string",
+          "default" : "{{ CALCULATED.ip | null }}",
+          "description" : "Default: {{ CALCULATED.ip | null }} (192.168.0.2)"
         },
         "domain" : {
           "type" : "string",
@@ -211,15 +268,25 @@
           "description" : "Default: development",
           "enum" : [ "development", "qa", "production" ]
         },
+        "home" : {
+          "type" : "string",
+          "default" : "{{ SYSTEM.user_dir }}",
+          "description" : "Default: {{ SYSTEM.user_dir }} ({{ SYSTEM.user_dir }})"
+        },
+        "resources" : {
+          "type" : "string",
+          "default" : "{{ instance.home }}",
+          "description" : "Default: {{ instance.home }} ({{ instance.home }})"
+        },
         "uri" : {
           "type" : "string",
           "default" : "http://{{ instance.fqdn }}/",
-          "description" : "Default: http://{{ instance.fqdn }}/"
+          "description" : "Default: http://{{ instance.fqdn }}/ (http://{{ instance.fqdn }}/)"
         },
         "api" : {
           "type" : "string",
           "default" : "{{ instance.uri }}api/",
-          "description" : "Default: {{ instance.uri }}api/"
+          "description" : "Default: {{ instance.uri }}api/ ({{ instance.uri }}api/)"
         }
       }
     },
@@ -228,8 +295,8 @@
       "properties" : {
         "name" : {
           "type" : "string",
-          "default" : "genericserver",
-          "description" : "Default: genericserver"
+          "default" : "application",
+          "description" : "Default: application"
         },
         "version" : {
           "type" : "string",
@@ -334,6 +401,11 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "hosts" : {
               "type" : "object",
               "properties" : { }
@@ -352,11 +424,22 @@
         },
         "registration" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            }
+          }
         },
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "port" : {
               "type" : [ "number", "string" ],
               "default" : 53,
@@ -364,17 +447,39 @@
             },
             "tcp" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ dns.server.enabled }}",
+                  "description" : "Default: {{ dns.server.enabled }} ({{ dns.server.enabled }})"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.idleTimeout }}",
+                  "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+                }
+              }
             },
             "udp" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ dns.server.enabled }}",
+                  "description" : "Default: {{ dns.server.enabled }} ({{ dns.server.enabled }})"
+                }
+              }
             }
           }
         },
         "dyndns" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ dns.registration.enabled }}",
+              "description" : "Default: {{ dns.registration.enabled }} ({{ dns.registration.enabled }})"
+            },
             "timeout" : {
               "type" : "string",
               "default" : "30s",
@@ -402,6 +507,11 @@
     "domainevents" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "subscriber" : {
           "type" : "object",
           "properties" : {
@@ -425,12 +535,12 @@
         "eventstore" : {
           "type" : "string",
           "default" : "{{ instance.api }}eventstore",
-          "description" : "Default: {{ instance.api }}eventstore"
+          "description" : "Default: {{ instance.api }}eventstore ({{ instance.api }}eventstore)"
         },
         "projections" : {
           "type" : "string",
           "default" : "{{ instance.api }}projections",
-          "description" : "Default: {{ instance.api }}projections"
+          "description" : "Default: {{ instance.api }}projections ({{ instance.api }}projections)"
         }
       }
     },
@@ -455,6 +565,16 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ jetty.client.enabled }}",
+              "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+            },
+            "connectTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.connectTimeout }}",
+              "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
+            },
             "readTimeout" : {
               "type" : "string",
               "default" : "0s",
@@ -469,6 +589,11 @@
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.enabled }}",
+              "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+            },
             "mediaTypes" : {
               "type" : "object",
               "properties" : {
@@ -509,6 +634,16 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+            },
             "connectTimeout" : {
               "type" : "string",
               "default" : "5s",
@@ -521,12 +656,22 @@
                   "type" : [ "boolean", "string" ],
                   "default" : false,
                   "description" : "Default: false"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.client.idleTimeout }}",
+                  "description" : "Default: {{ jetty.client.idleTimeout }} ({{ jetty.client.idleTimeout }})"
                 }
               }
             },
             "ssl" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.client.enabled }}",
+                  "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+                },
                 "alias" : {
                   "type" : "string",
                   "default" : "self",
@@ -549,20 +694,25 @@
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "scheme" : {
               "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }} ({{ jetty.server.ssl.enabled ? \"https\" | \"http\" }})"
             },
             "port" : {
-              "type" : [ "number", "string" ],
+              "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }} ({{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }})"
             },
             "uri" : {
               "type" : "string",
               "default" : "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/",
-              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/"
+              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/ ({{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/)"
             },
             "minThreads" : {
               "type" : [ "number", "string" ],
@@ -584,9 +734,19 @@
               "default" : 16384,
               "description" : "Default: 16384"
             },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+            },
             "http" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                },
                 "port" : {
                   "type" : [ "number", "string" ],
                   "default" : 80,
@@ -596,11 +756,22 @@
             },
             "http2" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             },
             "ssl" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                },
                 "port" : {
                   "type" : [ "number", "string" ],
                   "default" : 443,
@@ -655,15 +826,32 @@
             },
             "log4j2" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             },
             "sessions" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             },
             "security" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                },
                 "type" : {
                   "type" : "string",
                   "default" : "jwt",
@@ -671,11 +859,22 @@
                 },
                 "certificate" : {
                   "type" : "object",
-                  "properties" : { }
+                  "properties" : {
+                    "enabled" : {
+                      "type" : "string",
+                      "default" : "{{ jetty.server.security.enabled }}",
+                      "description" : "Default: {{ jetty.server.security.enabled }} ({{ jetty.server.security.enabled }})"
+                    }
+                  }
                 },
                 "jwt" : {
                   "type" : "object",
                   "properties" : {
+                    "enabled" : {
+                      "type" : "string",
+                      "default" : "{{ jetty.server.security.enabled }}",
+                      "description" : "Default: {{ jetty.server.security.enabled }} ({{ jetty.server.security.enabled }})"
+                    },
                     "issuers" : {
                       "type" : "object",
                       "properties" : {
@@ -692,10 +891,20 @@
             "websockets" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                },
                 "autoFragment" : {
                   "type" : [ "boolean", "string" ],
                   "default" : true,
                   "description" : "Default: true"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.idleTimeout }}",
+                  "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
                 },
                 "inputBufferSize" : {
                   "type" : [ "number", "string" ],
@@ -726,11 +935,23 @@
             },
             "servlet" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             },
             "gzip" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             }
           }
         }
@@ -742,6 +963,11 @@
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "token" : {
               "type" : "object",
               "properties" : {
@@ -749,6 +975,11 @@
                   "type" : "string",
                   "default" : "P7D",
                   "description" : "Default: P7D"
+                },
+                "issuer" : {
+                  "type" : "string",
+                  "default" : "{{ instance.fqdn }}",
+                  "description" : "Default: {{ instance.fqdn }} ({{ instance.fqdn }})"
                 }
               }
             },
@@ -769,6 +1000,11 @@
                   "type" : "string",
                   "default" : "/",
                   "description" : "Default: /"
+                },
+                "domain" : {
+                  "type" : "string",
+                  "default" : "{{ instance.domain }}",
+                  "description" : "Default: {{ instance.domain }} ({{ instance.domain }})"
                 }
               }
             }
@@ -776,7 +1012,13 @@
         },
         "configuration" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            }
+          }
         },
         "users" : {
           "type" : "object",
@@ -787,6 +1029,11 @@
     "keystores" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "defaultPassword" : {
           "type" : "string",
           "default" : "secret:password",
@@ -803,12 +1050,12 @@
             "path" : {
               "type" : "string",
               "default" : "{{ instance.home }}/secrets.p12",
-              "description" : "Default: {{ instance.home }}/secrets.p12"
+              "description" : "Default: {{ instance.home }}/secrets.p12 ({{ instance.home }}/secrets.p12)"
             },
             "password" : {
               "type" : "string",
               "default" : "{{ keystores.defaultPassword }}",
-              "description" : "Default: {{ keystores.defaultPassword }}"
+              "description" : "Default: {{ keystores.defaultPassword }} ({{ keystores.defaultPassword }})"
             }
           }
         }
@@ -820,12 +1067,22 @@
         "keystore" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{secrets.enabled}}",
+              "description" : "Default: {{secrets.enabled}} ({{secrets.enabled}})"
+            },
             "name" : {
               "type" : "string",
               "default" : "secrets",
               "description" : "Default: secrets"
             }
           }
+        },
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{defaults.enabled}}",
+          "description" : "Default: {{defaults.enabled}} ({{defaults.enabled}})"
         },
         "default" : {
           "type" : "string",
@@ -834,7 +1091,13 @@
         },
         "env" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
         }
       }
     },
@@ -929,9 +1192,9 @@
           "type" : "object",
           "properties" : {
             "enabled" : {
-              "type" : [ "boolean", "string" ],
+              "type" : "string",
               "default" : "{{ opentelemetry.enabled ? false | true }}",
-              "description" : "Default: false"
+              "description" : "Default: {{ opentelemetry.enabled ? false | true }} ({{ opentelemetry.enabled ? false | true }})"
             }
           }
         },
@@ -941,6 +1204,11 @@
             "jersey" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.enabled }}",
+                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                },
                 "attributes" : {
                   "type" : "object",
                   "properties" : {
@@ -1081,6 +1349,11 @@
             "jvm" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.enabled }}",
+                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                },
                 "attributes" : {
                   "type" : "object",
                   "properties" : {
@@ -1135,11 +1408,22 @@
             },
             "log4j" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.enabled }}",
+                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                }
+              }
             },
             "system" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.enabled }}",
+                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                },
                 "attributes" : {
                   "type" : "object",
                   "properties" : {
@@ -1154,6 +1438,11 @@
             }
           }
         },
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "install" : {
           "type" : [ "boolean", "string" ],
           "default" : true,
@@ -1162,10 +1451,50 @@
         "resource" : {
           "type" : "object",
           "properties" : {
+            "service.namespace" : {
+              "type" : "string",
+              "default" : "{{ instance.environment }}",
+              "description" : "Default: {{ instance.environment }} ({{ instance.environment }})"
+            },
+            "service.name" : {
+              "type" : "string",
+              "default" : "{{ application.name }}",
+              "description" : "Default: {{ application.name }} ({{ application.name }})"
+            },
+            "service.version" : {
+              "type" : "string",
+              "default" : "{{ application.version }}",
+              "description" : "Default: {{ application.version }} ({{ application.version }})"
+            },
+            "service.instance.id" : {
+              "type" : "string",
+              "default" : "{{ instance.id }}",
+              "description" : "Default: {{ instance.id }} ({{ instance.id }})"
+            },
+            "host.name" : {
+              "type" : "string",
+              "default" : "{{ instance.fqdn }}",
+              "description" : "Default: {{ instance.fqdn }} ({{ instance.fqdn }})"
+            },
+            "host.ip" : {
+              "type" : "string",
+              "default" : "{{ CALCULATED.ipv4Addresses }}",
+              "description" : "Default: {{ CALCULATED.ipv4Addresses }} ({{ CALCULATED.ipv4Addresses }})"
+            },
+            "process.runtime.name" : {
+              "type" : "string",
+              "default" : "{{ SYSTEM.java_runtime_name }}",
+              "description" : "Default: {{ SYSTEM.java_runtime_name }} ({{ SYSTEM.java_runtime_name }})"
+            },
+            "process.runtime.version" : {
+              "type" : "string",
+              "default" : "{{ SYSTEM.java_runtime_version }}",
+              "description" : "Default: {{ SYSTEM.java_runtime_version }} ({{ SYSTEM.java_runtime_version }})"
+            },
             "process.runtime.description" : {
               "type" : "string",
               "default" : "{{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}",
-              "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}"
+              "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }} ({{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }})"
             }
           }
         },
@@ -1176,9 +1505,9 @@
               "type" : "object",
               "properties" : {
                 "enabled" : {
-                  "type" : [ "boolean", "string" ],
+                  "type" : "string",
                   "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
-                  "description" : "Default: false"
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} ({{ opentelemetry.exporters.otlp.endpoint ? false | true }})"
                 },
                 "interval" : {
                   "type" : "string",
@@ -1194,9 +1523,9 @@
                   "type" : "object",
                   "properties" : {
                     "enabled" : {
-                      "type" : [ "boolean", "string" ],
+                      "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint ? true | false }}",
-                      "description" : "Default: false"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? true | false }} ({{ opentelemetry.exporters.otlp.endpoint ? true | false }})"
                     },
                     "port" : {
                       "type" : [ "number", "string" ],
@@ -1211,6 +1540,11 @@
                     "headers" : {
                       "type" : "object",
                       "properties" : { }
+                    },
+                    "connectTimeout" : {
+                      "type" : "string",
+                      "default" : "{{ defaults.connectTimeout }}",
+                      "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
                     },
                     "timeout" : {
                       "type" : "string",
@@ -1250,17 +1584,17 @@
                     "logsEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs)"
                     },
                     "tracesEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces)"
                     },
                     "metricsEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics)"
                     }
                   }
                 }
@@ -1270,7 +1604,13 @@
         },
         "sampler" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ opentelemetry.enabled }}",
+              "description" : "Default: {{ opentelemetry.enabled }} ({{ opentelemetry.enabled }})"
+            }
+          }
         }
       }
     },
@@ -1280,6 +1620,21 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ jetty.client.enabled }}",
+              "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+            },
+            "connectTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.connectTimeout }}",
+              "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
+            },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+            },
             "autoFragment" : {
               "type" : [ "boolean", "string" ],
               "default" : true,
@@ -1312,26 +1667,48 @@
             },
             "reactor" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ reactivestreams.client.enabled }}",
+                  "description" : "Default: {{ reactivestreams.client.enabled }} ({{ reactivestreams.client.enabled }})"
+                }
+              }
             }
           }
+        },
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
         },
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.websockets.enabled }}",
+              "description" : "Default: {{ jetty.server.websockets.enabled }} ({{ jetty.server.websockets.enabled }})"
+            },
             "scheme" : {
               "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }} ({{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }})"
             },
             "uri" : {
               "type" : "string",
               "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
-              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/"
+              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ ({{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/)"
             },
             "reactor" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ reactivestreams.server.enabled }}",
+                  "description" : "Default: {{ reactivestreams.server.enabled }} ({{ reactivestreams.server.enabled }})"
+                }
+              }
             }
           }
         }
@@ -1342,20 +1719,47 @@
       "properties" : {
         "status" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            }
+          }
         }
       }
     },
     "status" : {
       "type" : "object",
-      "properties" : { }
+      "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        }
+      }
     },
     "thymeleaf" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
+        "development" : {
+          "type" : "string",
+          "default" : "{{ defaults.development }}",
+          "description" : "Default: {{ defaults.development }} ({{ defaults.development }})"
+        },
         "classloader" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ thymeleaf.enabled }}",
+              "description" : "Default: {{ thymeleaf.enabled }} ({{ thymeleaf.enabled }})"
+            },
             "templateMode" : {
               "type" : "string",
               "default" : "HTML",
@@ -1380,6 +1784,11 @@
               "type" : [ "boolean", "string" ],
               "default" : true,
               "description" : "Default: true"
+            },
+            "cacheable" : {
+              "type" : "string",
+              "default" : "{{ thymeleaf.development ? false : true }}",
+              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
             },
             "cacheTTL" : {
               "type" : "string",
@@ -1430,6 +1839,11 @@
               "default" : true,
               "description" : "Default: true"
             },
+            "cacheable" : {
+              "type" : "string",
+              "default" : "{{ thymeleaf.development ? false : true }}",
+              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
+            },
             "cacheTTL" : {
               "type" : "string",
               "default" : "1h",
@@ -1478,6 +1892,11 @@
               "type" : [ "boolean", "string" ],
               "default" : true,
               "description" : "Default: true"
+            },
+            "cacheable" : {
+              "type" : "string",
+              "default" : "{{ thymeleaf.development ? false : true }}",
+              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
             },
             "cacheTTL" : {
               "type" : "string",

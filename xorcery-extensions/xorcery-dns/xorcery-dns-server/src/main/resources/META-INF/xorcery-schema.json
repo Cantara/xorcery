@@ -15,6 +15,11 @@
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "port" : {
               "type" : [ "number", "string" ],
               "default" : 53,
@@ -22,11 +27,28 @@
             },
             "tcp" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ dns.server.enabled }}",
+                  "description" : "Default: {{ dns.server.enabled }} ({{ dns.server.enabled }})"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.idleTimeout }}",
+                  "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+                }
+              }
             },
             "udp" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ dns.server.enabled }}",
+                  "description" : "Default: {{ dns.server.enabled }} ({{ dns.server.enabled }})"
+                }
+              }
             }
           }
         }

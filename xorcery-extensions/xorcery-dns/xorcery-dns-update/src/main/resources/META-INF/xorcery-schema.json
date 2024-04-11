@@ -15,6 +15,11 @@
         "dyndns" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ dns.registration.enabled }}",
+              "description" : "Default: {{ dns.registration.enabled }} ({{ dns.registration.enabled }})"
+            },
             "timeout" : {
               "type" : "string",
               "default" : "30s",

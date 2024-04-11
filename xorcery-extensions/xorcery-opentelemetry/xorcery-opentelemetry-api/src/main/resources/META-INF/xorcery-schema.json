@@ -16,9 +16,9 @@
           "type" : "object",
           "properties" : {
             "enabled" : {
-              "type" : [ "boolean", "string" ],
+              "type" : "string",
               "default" : "{{ opentelemetry.enabled ? false | true }}",
-              "description" : "Default: false"
+              "description" : "Default: {{ opentelemetry.enabled ? false | true }} ({{ opentelemetry.enabled ? false | true }})"
             }
           }
         }

@@ -12,6 +12,11 @@
     "secrets" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{defaults.enabled}}",
+          "description" : "Default: {{defaults.enabled}} ({{defaults.enabled}})"
+        },
         "default" : {
           "type" : "string",
           "default" : "secret",
@@ -19,7 +24,13 @@
         },
         "env" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
         }
       }
     }

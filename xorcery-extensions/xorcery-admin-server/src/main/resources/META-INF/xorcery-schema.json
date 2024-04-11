@@ -14,11 +14,23 @@
   "$defs" : {
     "adminservlet" : {
       "type" : "object",
-      "properties" : { }
+      "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        }
+      }
     },
     "serveradmin" : {
       "type" : "object",
-      "properties" : { }
+      "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        }
+      }
     }
   }
 }

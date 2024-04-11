@@ -15,6 +15,11 @@
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.enabled }}",
+              "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+            },
             "mediaTypes" : {
               "type" : "object",
               "properties" : {

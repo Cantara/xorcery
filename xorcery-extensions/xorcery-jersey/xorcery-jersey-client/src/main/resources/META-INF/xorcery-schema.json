@@ -15,6 +15,16 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ jetty.client.enabled }}",
+              "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+            },
+            "connectTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.connectTimeout }}",
+              "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
+            },
             "readTimeout" : {
               "type" : "string",
               "default" : "0s",

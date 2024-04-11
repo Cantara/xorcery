@@ -15,6 +15,16 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+            },
             "connectTimeout" : {
               "type" : "string",
               "default" : "5s",
@@ -27,12 +37,22 @@
                   "type" : [ "boolean", "string" ],
                   "default" : false,
                   "description" : "Default: false"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.client.idleTimeout }}",
+                  "description" : "Default: {{ jetty.client.idleTimeout }} ({{ jetty.client.idleTimeout }})"
                 }
               }
             },
             "ssl" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.client.enabled }}",
+                  "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+                },
                 "alias" : {
                   "type" : "string",
                   "default" : "self",

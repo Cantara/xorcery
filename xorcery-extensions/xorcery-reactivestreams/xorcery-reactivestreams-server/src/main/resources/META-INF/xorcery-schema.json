@@ -12,22 +12,38 @@
     "reactivestreams" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.websockets.enabled }}",
+              "description" : "Default: {{ jetty.server.websockets.enabled }} ({{ jetty.server.websockets.enabled }})"
+            },
             "scheme" : {
               "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }} ({{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }})"
             },
             "uri" : {
               "type" : "string",
               "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
-              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/"
+              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ ({{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/)"
             },
             "reactor" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ reactivestreams.server.enabled }}",
+                  "description" : "Default: {{ reactivestreams.server.enabled }} ({{ reactivestreams.server.enabled }})"
+                }
+              }
             }
           }
         }
