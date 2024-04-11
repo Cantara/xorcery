@@ -146,11 +146,6 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                <version>0.113.6-SNAPSHOT</version>
-            </plugin>
         </plugins>
     </build>
 
