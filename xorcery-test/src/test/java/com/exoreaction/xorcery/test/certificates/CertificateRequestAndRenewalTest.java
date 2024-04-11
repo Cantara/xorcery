@@ -93,8 +93,8 @@ public class CertificateRequestAndRenewalTest {
             .build();
 
 
-    @RepeatedTest(1000)
-//    @Test
+//    @RepeatedTest(1000)
+    @Test
     public void testCertificateRequestAndRenewal() throws Exception {
 
         URI service = InstanceConfiguration.get(server.getConfiguration()).getAPI().resolve("subject");
