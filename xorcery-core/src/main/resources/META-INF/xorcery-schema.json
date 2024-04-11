@@ -65,8 +65,8 @@
       "properties" : {
         "name" : {
           "type" : "string",
-          "default" : "genericserver",
-          "description" : "Default: genericserver"
+          "default" : "application",
+          "description" : "Default: application"
         },
         "version" : {
           "type" : "string",

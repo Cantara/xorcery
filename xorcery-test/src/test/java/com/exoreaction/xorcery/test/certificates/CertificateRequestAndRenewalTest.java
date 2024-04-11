@@ -31,6 +31,7 @@ import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -92,8 +93,8 @@ public class CertificateRequestAndRenewalTest {
             .build();
 
 
-//    @RepeatedTest(1000)
-    @Test
+    @RepeatedTest(1000)
+//    @Test
     public void testCertificateRequestAndRenewal() throws Exception {
 
         URI service = InstanceConfiguration.get(server.getConfiguration()).getAPI().resolve("subject");
@@ -104,17 +105,18 @@ public class CertificateRequestAndRenewalTest {
         Assertions.assertEquals(200, contentResponse.getStatus());
 
         // Use Jersey client
-        Client client = server.getServiceLocator().getService(ClientBuilder.class)
+        try (Client client = server.getServiceLocator().getService(ClientBuilder.class)
                 .register(JsonElementMessageBodyReader.class)
                 .register(JsonElementMessageBodyWriter.class)
-                .build();
-        Response response = client.target(service).request().get();
-        LogManager.getLogger().info(response.readEntity(String.class));
-        Assertions.assertEquals(200, response.getStatus());
+                .build())
+        {
+            Response response = client.target(service).request().get();
+            LogManager.getLogger().info(response.readEntity(String.class));
+            Assertions.assertEquals(200, response.getStatus());
+        }
     }
 
     @Test
-//    @RepeatedTest(1000)
     public void testCRL() throws Exception {
 
         try {

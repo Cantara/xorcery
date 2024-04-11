@@ -26,7 +26,7 @@ import java.util.List;
 @Mojo(name = "module-configuration-jsonschema", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery.yaml", required = false, readonly = true)
+    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery.yaml", required = false, readonly = false)
     private String configurationFile;
 
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-schema.yaml", required = false, readonly = true)

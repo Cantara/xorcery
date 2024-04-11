@@ -95,12 +95,6 @@ public class HttpClientFactory {
         }
 
         HttpClient client = new HttpClient(transport);
-        client.addEventListener(new LifeCycle.Listener() {
-            @Override
-            public void lifeCycleStopping(LifeCycle event) {
-                new Throwable().printStackTrace();
-            }
-        });
         client.getRequestListeners().addListener(new OpenTelemetryRequestListener(openTelemetry));
         client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
         QueuedThreadPool executor = new JettyClientConnectorThreadPool();
