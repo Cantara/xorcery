@@ -65,7 +65,11 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 try (URLClassLoader dependenciesClassLoader = new URLClassLoader(dependencyJarURLs.toArray(new URL[0]), getClass().getClassLoader()))
                 {
                     Thread.currentThread().setContextClassLoader(dependenciesClassLoader);
-                    standardConfigurationBuilder.addDefaults(moduleWithDependenciesBuilder);
+                    standardConfigurationBuilder.addXorceryDefaults(moduleWithDependenciesBuilder);
+                    standardConfigurationBuilder.addModules(moduleWithDependenciesBuilder);
+                    standardConfigurationBuilder.addModuleOverrides(moduleWithDependenciesBuilder);
+                    standardConfigurationBuilder.addApplication(moduleWithDependenciesBuilder);
+                    standardConfigurationBuilder.addConfigurationProviders(moduleWithDependenciesBuilder);
                     Thread.currentThread().setContextClassLoader(null);
                 }
             }
@@ -105,7 +109,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
             jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, schemaJson);
             getLog().info("Updated module configuration JSON Schema definition: "+xorceryConfigJsonSchemaFile);
-        } catch (IOException | DependencyGraphBuilderException e) {
+        } catch (Throwable e) {
             throw new MojoFailureException("Could not create JSON Schema for xorcery.yaml configuration", e);
         }
     }
