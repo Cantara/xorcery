@@ -92,14 +92,15 @@ public class StandardConfigurationBuilder {
 
     public void addXorceryDefaults(Configuration.Builder builder) throws UncheckedIOException {
         // Load Xorcery defaults
-        URL resource = Resources.getResource("META-INF/xorcery-defaults.yaml")
-                .orElseThrow(() -> new UncheckedIOException(new IOException("Resource not found: META-INF/xorcery-defaults.yaml")));
-        try (InputStream in = resource.openStream()) {
-            addYaml(in).accept(builder);
-            logger.log("Loaded " + resource);
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
+        Resources.getResource("META-INF/xorcery-defaults.yaml").ifPresent(resource ->
+                {
+                    try (InputStream in = resource.openStream()) {
+                        addYaml(in).accept(builder);
+                        logger.log("Loaded " + resource);
+                    } catch (IOException ex) {
+                        throw new UncheckedIOException(ex);
+                    }
+                });
     }
 
     public void addModules(Configuration.Builder builder) throws UncheckedIOException {
