@@ -82,7 +82,7 @@ public class SubscribeReactiveStream
     private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
             (carrier, key, value) -> carrier.setHeader(key, value);
 
-    private static JsonMapper jsonMapper = new JsonMapper();
+    private static final JsonMapper jsonMapper = new JsonMapper();
 
     private final URI serverUri;
     private final String streamName;
@@ -403,7 +403,6 @@ public class SubscribeReactiveStream
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "onWebSocketBinary {}", new String(payload.array(), payload.arrayOffset(), payload.limit(), StandardCharsets.UTF_8));
             }
-//            ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(byteBuffer);
             Object event = eventReader.readFrom(payload.array(), payload.arrayOffset(), payload.limit());
             subscriber.onNext(event);
             receivedBytes.record(payload.limit(), attributes);
