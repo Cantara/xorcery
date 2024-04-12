@@ -255,8 +255,10 @@ public class StandardConfigurationBuilder {
         return builder ->
         {
             try {
-                ObjectNode yaml = (ObjectNode) yamlMapper.readTree(yamlString);
-                new JsonMerger().merge(builder.builder(), yaml);
+                if (yamlMapper.readTree(yamlString) instanceof ObjectNode yaml)
+                {
+                    new JsonMerger().merge(builder.builder(), yaml);
+                }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -267,8 +269,10 @@ public class StandardConfigurationBuilder {
         return builder ->
         {
             try (propertiesStream) {
-                ObjectNode properties = (ObjectNode) javaPropsMapper.readTree(propertiesStream);
-                new JsonMerger().merge(builder.builder(), properties);
+                if (javaPropsMapper.readTree(propertiesStream) instanceof ObjectNode properties)
+                {
+                    new JsonMerger().merge(builder.builder(), properties);
+                }
             } catch (IOException ex) {
                 throw new UncheckedIOException(ex);
             }
@@ -279,8 +283,10 @@ public class StandardConfigurationBuilder {
         return builder ->
         {
             try {
-                ObjectNode properties = (ObjectNode) javaPropsMapper.readTree(propertiesString);
-                new JsonMerger().merge(builder.builder(), properties);
+                if (javaPropsMapper.readTree(propertiesString) instanceof ObjectNode properties)
+                {
+                    new JsonMerger().merge(builder.builder(), properties);
+                }
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
