@@ -44,7 +44,7 @@ public class EventStoreService {
         client = EventStoreDBClient.create(settings);
 
         // Test connection
-        logger.info("Testing connection");
+        logger.info("Testing connection to "+eventStoreConfiguration.getURI());
         ConnectionTestProcess connectionTestProcess = new ConnectionTestProcess(client, new CompletableFuture<>());
         connectionTestProcess.start();
         StreamMetadata metadata = connectionTestProcess.result().orTimeout(60, TimeUnit.SECONDS).join();
