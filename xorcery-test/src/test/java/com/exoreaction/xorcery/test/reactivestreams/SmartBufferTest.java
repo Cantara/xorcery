@@ -102,7 +102,7 @@ public class SmartBufferTest {
         private final Flux<List<T>> disruptorPublishSubscriber;
 
         public DisruptorHandler(Flux<T> upstream) {
-            disruptorPublishSubscriber = Flux.<List<T>>push(sink ->
+            disruptorPublishSubscriber = Flux.<List<T>>create(sink ->
             {
                 new DisruptorSubscriber<>(upstream, sink);
             });

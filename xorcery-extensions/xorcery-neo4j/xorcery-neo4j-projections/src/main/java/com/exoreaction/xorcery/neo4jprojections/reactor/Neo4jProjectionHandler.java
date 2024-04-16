@@ -60,7 +60,7 @@ public class Neo4jProjectionHandler
             logger.info("Starting Neo4j projection with id " + projectionId);
             Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
             return currentProjection.flatMap(ProjectionModel::getProjectionPosition)
-                    .map(p -> new SmartBatching<>(this.configuration, new Handler(p)).apply(metadataEventsFlux.contextWrite(Context.of(Projection.projectionPosition, p)), contextView))
+                    .map(p -> new SmartBatching<>(this.configuration, new Handler(p)).apply(metadataEventsFlux.contextWrite(Context.of(ProjectionStreamContext.projectionPosition, p)), contextView))
                     .orElseGet(() ->
                     {
                         // Create projection in Neo4j
@@ -141,13 +141,14 @@ public class Neo4jProjectionHandler
                     updateParameters.put(Projection.projectionPosition.name(), position);
                     updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
                     tx.execute("""
-                            MERGE (projection:Projection {id:$projectionId}) SET 
+                            MATCH (projection:Projection {id:$projectionId}) SET 
                             projection.projectionPosition=$projectionPosition,
                             projection.projectionTimestamp=$projectionTimestamp
                             RETURN projection
                             """, updateParameters).close();
 
-//                    System.out.println("Committed "+events.size());
+                    System.out.println("Committed "+events.size());
+//                    Thread.sleep(1000);
                 }
 
                 tx.commit();

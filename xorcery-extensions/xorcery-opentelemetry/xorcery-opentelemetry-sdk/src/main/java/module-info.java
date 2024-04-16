@@ -17,6 +17,7 @@ module xorcery.opentelemetry.sdk {
 
     exports com.exoreaction.xorcery.opentelemetry.sdk;
     exports com.exoreaction.xorcery.opentelemetry.sdk.exporters;
+    exports com.exoreaction.xorcery.opentelemetry.sdk.exporters.jmx;
     exports com.exoreaction.xorcery.opentelemetry.sdk.exporters.logging;
     exports com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp;
     exports com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk;

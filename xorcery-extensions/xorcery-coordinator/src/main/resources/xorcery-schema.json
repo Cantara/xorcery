@@ -1516,6 +1516,21 @@
                 }
               }
             },
+            "jmx" : {
+              "type" : "object",
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} ({{ opentelemetry.exporters.otlp.endpoint ? false | true }})"
+                },
+                "interval" : {
+                  "type" : "string",
+                  "default" : "5s",
+                  "description" : "Default: 5s"
+                }
+              }
+            },
             "otlp" : {
               "type" : "object",
               "properties" : {
