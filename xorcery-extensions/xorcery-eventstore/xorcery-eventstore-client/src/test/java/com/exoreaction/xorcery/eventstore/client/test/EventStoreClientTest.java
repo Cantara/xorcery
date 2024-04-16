@@ -326,7 +326,7 @@ public class EventStoreClientTest {
                 ))
                 .blockLast();
 
-        Thread.sleep(1000); // Just to give the projection some time to catch up
+        Thread.sleep(3000); // Just to give the projection some time to catch up
 
         System.out.println("Read 1");
         List<MetadataByteBuffer> before = readStreamFlux
