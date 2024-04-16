@@ -50,7 +50,7 @@ public class SmartBatching<T>
         private final Flux<T> disruptorPublishSubscriber;
 
         public DisruptorHandler(Flux<T> upstream, ContextView contextView, BiConsumer<List<T>, SynchronousSink<List<T>>> handler) {
-            disruptorPublishSubscriber = Flux.push(sink -> new DisruptorSubscriber(upstream, sink, contextView, handler)
+            disruptorPublishSubscriber = Flux.create(sink -> new DisruptorSubscriber(upstream, sink, contextView, handler)
             );
         }
 

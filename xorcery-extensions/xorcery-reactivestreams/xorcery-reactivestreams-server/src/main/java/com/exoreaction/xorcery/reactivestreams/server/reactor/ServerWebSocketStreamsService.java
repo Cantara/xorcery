@@ -15,7 +15,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.http.HttpField;
@@ -42,7 +41,7 @@ import java.util.function.Function;
 @Service(name = "reactivestreams.server.reactor")
 @ContractsProvided({WebSocketStreamsServer.class})
 @RunLevel(4)
-public class WebSocketStreamsServerService
+public class ServerWebSocketStreamsService
         implements WebSocketStreamsServer {
 
     protected static final TextMapGetter<ServerUpgradeRequest> jettyGetter =
@@ -78,7 +77,7 @@ public class WebSocketStreamsServerService
     private final StreamWebSocketCreator webSocketCreator = new StreamWebSocketCreator();
 
     @Inject
-    public WebSocketStreamsServerService(
+    public ServerWebSocketStreamsService(
             MessageWorkers messageWorkers,
             WebSocketUpgradeHandler webSocketUpgradeHandler,
             OpenTelemetry openTelemetry,
