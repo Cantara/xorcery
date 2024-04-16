@@ -11,7 +11,7 @@ import reactor.core.publisher.Sinks;
 
 import java.util.function.Function;
 
-@Service(name="neo4j.projections.updates")
+@Service(name="neo4jprojections.updates")
 public class Neo4jProjectionUpdates
     implements Publisher<Metadata>,
         Function<MetadataEvents, MetadataEvents>,
