@@ -76,11 +76,13 @@ public class Neo4jProjectionHandler
                             });
                             createParameters.put("props", props);
                             tx.execute("""
-                                    CREATE (projection:Projection) 
-                                    SET 
-                                    projection = $props,
-                                    projection.id = $projectionId,
-                                    projection.projectionPosition = -1
+                                    MERGE (projection:Projection {id:$projectionId})
+                                    ON CREATE SET
+                                    projection.projectionPosition = -1,
+                                    projection += $props
+                                    ON MATCH SET
+                                    projection.projectionPosition = projection.revision,
+                                    projection += $props
                                     RETURN projection
                                     """, createParameters).close();
                             tx.commit();
