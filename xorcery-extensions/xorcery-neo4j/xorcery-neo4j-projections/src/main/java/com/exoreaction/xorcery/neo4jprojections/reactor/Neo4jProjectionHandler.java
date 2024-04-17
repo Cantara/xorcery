@@ -97,7 +97,7 @@ public class Neo4jProjectionHandler
         // Check if we already have written data for this projection before
         return database.executeTransactionally("""
                 MATCH (projection:Projection {id:$projectionId})
-                RETURN projection.projectionPosition as projectionPosition
+                RETURN coalesce(projection.projectionPosition, projection.revision) as projectionPosition
                 """, Map.of(Projection.projectionId.name(), projectionId), result ->
                 result.hasNext()
                         ? Optional.of(new ProjectionModel(result.next()))
