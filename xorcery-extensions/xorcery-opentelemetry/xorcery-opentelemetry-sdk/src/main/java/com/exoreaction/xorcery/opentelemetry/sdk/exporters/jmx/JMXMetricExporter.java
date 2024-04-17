@@ -101,11 +101,15 @@ public final class JMXMetricExporter implements MetricExporter {
             if (!pointData.getAttributes().isEmpty())
             {
                 resourceObjectName += ","+ pointData.getAttributes().asMap().entrySet().stream()
-                        .map(entry -> entry.getKey().getKey() + "=\"" + entry.getValue().toString().replace("\\", "\\\\")).collect(Collectors.joining(","));
+                        .map(entry -> entry.getKey().getKey() + "=\"" + entry.getValue().toString().replace("\\", "\\\\")+"\"").collect(Collectors.joining(","));
             }
-            ObjectName objectName = new ObjectName("opentelemetry:" + resourceObjectName );
-            managementServer.registerMBean(resourceMbean, objectName);
-            attributesResourceDynamicMBeanMap.put(pointData.getAttributes(), resourceMbean);
+            try {
+                ObjectName objectName = new ObjectName("opentelemetry:" + resourceObjectName );
+                managementServer.registerMBean(resourceMbean, objectName);
+                attributesResourceDynamicMBeanMap.put(pointData.getAttributes(), resourceMbean);
+            } catch (MalformedObjectNameException e) {
+                throw new RuntimeException("Invalid name:"+resourceObjectName, e);
+            }
         }
         return resourceMbean;
     }
