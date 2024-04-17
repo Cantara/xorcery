@@ -81,7 +81,7 @@ public class Neo4jProjectionHandler
                                     projection.projectionPosition = -1,
                                     projection += $props
                                     ON MATCH SET
-                                    projection.projectionPosition = projection.revision,
+                                    projection.projectionPosition = coalesce(projection.revision,-1),
                                     projection += $props
                                     RETURN projection
                                     """, createParameters).close();
