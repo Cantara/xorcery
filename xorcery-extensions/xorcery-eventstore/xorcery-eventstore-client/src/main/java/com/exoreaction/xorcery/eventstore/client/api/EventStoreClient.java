@@ -4,7 +4,7 @@ import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.eventstore.client.AppendHandler;
 import com.exoreaction.xorcery.eventstore.client.AppendOptimisticLockingHandler;
-import com.exoreaction.xorcery.eventstore.client.ReadStreamSubscription2;
+import com.exoreaction.xorcery.eventstore.client.ReadStreamSubscription;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -94,7 +94,7 @@ public class EventStoreClient
 
     // Read
     public Publisher<MetadataByteBuffer> readStream() {
-        return Flux.create(sink -> new ReadStreamSubscription2(client, sink, loggerContext.getLogger(ReadStreamSubscription2.class)));
+        return Flux.create(sink -> new ReadStreamSubscription(client, sink, loggerContext.getLogger(ReadStreamSubscription.class)));
     }
 
     @Override
