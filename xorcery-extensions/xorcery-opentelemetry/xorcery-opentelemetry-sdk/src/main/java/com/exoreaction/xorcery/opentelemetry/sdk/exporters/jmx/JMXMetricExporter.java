@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.opentelemetry.sdk.exporters.jmx;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.metrics.InstrumentType;
 import io.opentelemetry.sdk.metrics.data.*;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
@@ -13,6 +14,7 @@ import javax.management.modelmbean.*;
 import java.lang.management.ManagementFactory;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -21,7 +23,7 @@ public final class JMXMetricExporter implements MetricExporter {
     private final AtomicBoolean isShutdown;
     private final AggregationTemporality aggregationTemporality;
     private final MBeanServer managementServer;
-    private final Map<Resource, Map<Attributes, ResourceDynamicMBean>> registeredMBeans = new HashMap<>();
+    private final Map<Resource, Map<List<Object>, ResourceDynamicMBean>> registeredMBeans = new HashMap<>();
     private final Logger logger;
 
     public JMXMetricExporter(AggregationTemporality aggregationTemporality, Logger logger) {
@@ -64,10 +66,19 @@ public final class JMXMetricExporter implements MetricExporter {
                             }
                         }
                         case SUMMARY -> {
+                            for (SummaryPointData summaryPointData : metric.getSummaryData().getPoints()) {
+                                getResourceDynamicMBean(metric, summaryPointData).setMetric(metric, summaryPointData);
+                            }
                         }
                         case HISTOGRAM -> {
+                            for (HistogramPointData histogramPointData : metric.getHistogramData().getPoints()) {
+                                getResourceDynamicMBean(metric, histogramPointData).setMetric(metric, histogramPointData);
+                            }
                         }
                         case EXPONENTIAL_HISTOGRAM -> {
+                            for (ExponentialHistogramPointData histogramPointData : metric.getExponentialHistogramData().getPoints()) {
+                                getResourceDynamicMBean(metric, histogramPointData).setMetric(metric, histogramPointData);
+                            }
                         }
                     }
                 }
@@ -81,8 +92,8 @@ public final class JMXMetricExporter implements MetricExporter {
     }
 
     private ResourceDynamicMBean getResourceDynamicMBean(MetricData metric, PointData pointData) throws MalformedObjectNameException, InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException {
-        Map<Attributes, ResourceDynamicMBean> attributesResourceDynamicMBeanMap = registeredMBeans.computeIfAbsent(metric.getResource(), r -> new HashMap<>());
-        ResourceDynamicMBean resourceMbean = attributesResourceDynamicMBeanMap.get(pointData.getAttributes());
+        Map<List<Object>, ResourceDynamicMBean> attributesResourceDynamicMBeanMap = registeredMBeans.computeIfAbsent(metric.getResource(), r -> new HashMap<>());
+        ResourceDynamicMBean resourceMbean = attributesResourceDynamicMBeanMap.get(List.of(metric.getInstrumentationScopeInfo(), pointData.getAttributes()));
         if (resourceMbean == null) {
             ModelMBeanInfoSupport mBeanInfoSupport = new ModelMBeanInfoSupport(
                     RequiredModelMBean.class.getName(),
@@ -95,18 +106,29 @@ public final class JMXMetricExporter implements MetricExporter {
 
             resourceMbean = new ResourceDynamicMBean(mBeanInfoSupport);
 
+            // The ObjectName is derived from resource -> scope -> attributes
             String resourceObjectName = metric.getResource().getAttributes().asMap().entrySet().stream()
                     .filter(entry -> entry.getKey().getKey().equals("service.instance.id"))
                     .map(entry -> entry.getKey().getKey() + "=" + entry.getValue().toString()).collect(Collectors.joining(","));
+
+            InstrumentationScopeInfo instrumentationScopeInfo = metric.getInstrumentationScopeInfo();
+            resourceObjectName += ",scope="+ instrumentationScopeInfo.getName();
+            if (!instrumentationScopeInfo.getAttributes().isEmpty())
+            {
+                resourceObjectName += ","+ instrumentationScopeInfo.getAttributes().asMap().entrySet().stream()
+                        .map(entry -> entry.getKey().getKey() + "=\"" + entry.getValue().toString().replace("\\", "\\\\")+"\"").collect(Collectors.joining(","));
+            }
+
             if (!pointData.getAttributes().isEmpty())
             {
                 resourceObjectName += ","+ pointData.getAttributes().asMap().entrySet().stream()
                         .map(entry -> entry.getKey().getKey() + "=\"" + entry.getValue().toString().replace("\\", "\\\\")+"\"").collect(Collectors.joining(","));
             }
+
             try {
                 ObjectName objectName = new ObjectName("opentelemetry:" + resourceObjectName );
                 managementServer.registerMBean(resourceMbean, objectName);
-                attributesResourceDynamicMBeanMap.put(pointData.getAttributes(), resourceMbean);
+                attributesResourceDynamicMBeanMap.put(List.of(metric.getInstrumentationScopeInfo(), pointData.getAttributes()), resourceMbean);
             } catch (MalformedObjectNameException e) {
                 throw new RuntimeException("Invalid name:"+resourceObjectName, e);
             }

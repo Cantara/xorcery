@@ -16,7 +16,7 @@ opentelemetry:
       enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}"
       interval: 10s
     jmx:
-      enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}"
+      enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}"
       interval: 5s
     otlp:
       endpoint: null
