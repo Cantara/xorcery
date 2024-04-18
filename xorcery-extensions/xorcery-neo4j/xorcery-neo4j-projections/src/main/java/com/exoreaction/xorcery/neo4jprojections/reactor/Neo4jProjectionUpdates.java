@@ -7,6 +7,7 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.util.function.Function;
@@ -18,16 +19,17 @@ public class Neo4jProjectionUpdates
         PreDestroy
 {
     private final Sinks.Many<Metadata> sink;
+    private final Flux<Metadata> projectionUpdatesFlux;
 
     @Inject
     public Neo4jProjectionUpdates() {
-
-        sink = Sinks.many().multicast().onBackpressureBuffer();
+        sink = Sinks.many().replay().limit(1);
+        projectionUpdatesFlux = sink.asFlux();
     }
 
     @Override
     public void subscribe(Subscriber<? super Metadata> s) {
-        sink.asFlux().subscribe(s);
+        projectionUpdatesFlux.subscribe(s);
     }
 
     @Override
