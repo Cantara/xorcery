@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-dns</artifactId>
-        <version>0.114.8</version>
+        <version>0.114.9-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-dns-client</artifactId>
