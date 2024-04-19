@@ -57,12 +57,12 @@ public class Auth0JwtAuthenticator
         extends LoginAuthenticator {
 
     public static final String JWT_AUTH = "JWT";
-    public static final String JWT_TOKEN = "token";
 
     private final Logger logger = LogManager.getLogger(Auth0JwtAuthenticator.class);
 
     private final JWT jwtParser;
     private final Map<String, Map<String, JWTVerifier>> verifiers = new HashMap<>();
+    private final JwtConfiguration jwtConfiguration;
 
     private String loginPath;
     private String loginPage;
@@ -70,9 +70,9 @@ public class Auth0JwtAuthenticator
     private String errorPath;
 
     @Inject
-    public Auth0JwtAuthenticator(com.exoreaction.xorcery.configuration.Configuration configuration, LoginService loginService, Secrets secrets) throws NoSuchAlgorithmException {
+    public Auth0JwtAuthenticator(com.exoreaction.xorcery.configuration.Configuration configuration, Secrets secrets) throws NoSuchAlgorithmException {
         jwtParser = new JWT();
-        JwtConfiguration jwtConfiguration = new JwtConfiguration(configuration.getConfiguration("jetty.server.security.jwt"));
+        jwtConfiguration = new JwtConfiguration(configuration.getConfiguration("jetty.server.security.jwt"));
 
         jwtConfiguration.getLoginPage().ifPresent(this::setLoginPage);
         jwtConfiguration.getErrorPage().ifPresent(this::setErrorPage);
@@ -195,7 +195,7 @@ public class Auth0JwtAuthenticator
         // Remove JWT token cookie
         List<HttpCookie> cookies = getCookies(request);
         for (HttpCookie cookie : cookies) {
-            if (cookie.getName().equals(JWT_TOKEN)) {
+            if (cookie.getName().equals(jwtConfiguration.getTokenCookieName())) {
                 HttpCookie tokenCookie = HttpCookie.build(cookie).expires(Instant.now()).build();
                 HttpFields.Mutable trailers = HttpFields.build(HttpFields.from(new HttpField(HttpHeader.COOKIE, HttpCookie.toString(tokenCookie))));
                 response.setTrailersSupplier(() -> trailers);
@@ -226,6 +226,10 @@ public class Auth0JwtAuthenticator
         if (jwt != null) {
             try {
                 DecodedJWT decodedJwt = jwtParser.decodeJwt(jwt);
+
+                // Check expiration date
+                if (decodedJwt.getExpiresAtAsInstant().isBefore(Instant.now()))
+                    throw new ServerAuthException("JWT token is expired");
 
                 Map<String, JWTVerifier> issuerVerifiers = this.verifiers.getOrDefault(Optional.ofNullable(decodedJwt.getIssuer()).orElse("default"), Collections.emptyMap());
 
@@ -316,7 +320,7 @@ public class Auth0JwtAuthenticator
         if (cookies == null)
             return null;
         for (HttpCookie cookie : cookies) {
-            if (cookie.getName().equals(JWT_TOKEN))
+            if (cookie.getName().equals(jwtConfiguration.getTokenCookieName()))
                 return cookie.getValue();
         }
         return null;

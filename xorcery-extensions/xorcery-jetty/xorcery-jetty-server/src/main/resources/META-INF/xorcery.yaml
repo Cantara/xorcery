@@ -55,8 +55,7 @@ jetty:
         enabled: "{{ jetty.server.security.enabled }}"
       jwt:
         enabled: "{{ jetty.server.security.enabled }}"
-        cookies:
-          - token
+        cookie: "token"
         issuers:
           default:
             keys: [ ]

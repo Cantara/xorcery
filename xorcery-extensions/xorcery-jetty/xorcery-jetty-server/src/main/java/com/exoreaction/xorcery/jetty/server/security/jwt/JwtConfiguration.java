@@ -37,4 +37,9 @@ public record JwtConfiguration(Configuration configuration) {
     public Optional<String> getErrorPage() {
         return configuration.getString("errorPage");
     }
+
+    public String getTokenCookieName()
+    {
+        return configuration.getString("cookie").orElse("token");
+    }
 }
