@@ -959,7 +959,7 @@
                 <plugin>
                     <groupId>com.exoreaction.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.114.9</version>
+                    <version>0.114.10</version>
                 </plugin>
             </plugins>
         </pluginManagement>
