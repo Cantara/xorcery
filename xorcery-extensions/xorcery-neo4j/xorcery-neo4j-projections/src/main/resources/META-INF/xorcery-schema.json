@@ -45,6 +45,16 @@
               "description" : "Default: {{ neo4jprojections.enabled }} ({{ neo4jprojections.enabled }})"
             }
           }
+        },
+        "updates" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ neo4jprojections.enabled }}",
+              "description" : "Default: {{ neo4jprojections.enabled }} ({{ neo4jprojections.enabled }})"
+            }
+          }
         }
       }
     }

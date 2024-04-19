@@ -98,8 +98,8 @@
               "properties" : {
                 "enabled" : {
                   "type" : "string",
-                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
-                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} ({{ opentelemetry.exporters.otlp.endpoint ? false | true }})"
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} ({{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }})"
                 },
                 "interval" : {
                   "type" : "string",

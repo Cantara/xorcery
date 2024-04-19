@@ -196,6 +196,11 @@
                       "default" : "{{ jetty.server.security.enabled }}",
                       "description" : "Default: {{ jetty.server.security.enabled }} ({{ jetty.server.security.enabled }})"
                     },
+                    "cookie" : {
+                      "type" : "string",
+                      "default" : "token",
+                      "description" : "Default: token"
+                    },
                     "issuers" : {
                       "type" : "object",
                       "properties" : {
