@@ -31,7 +31,7 @@ class ObjectReaderStreamer<T> {
     private void request(long request) {
         try {
             JsonToken token = null;
-            while (request-- > 0 && !(token = parser.nextToken()).isStructEnd()) {
+            while (request-- > 0 && (token = parser.nextToken()) != null && !token.isStructEnd()) {
                 //                    System.out.println(token);
                 parser.nextToken();
                 T item = objectReader.readValue(parser);
