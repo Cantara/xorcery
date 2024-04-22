@@ -80,7 +80,7 @@ public class Neo4jProjectionHandler
             logger.info("Starting Neo4j projection with id " + projectionId);
             Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
             Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
-            Handler handler = new Handler(attributes, meter);
+            Handler handler = new Handler(attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
             return Flux.from(currentProjection
                     .map(p -> new SmartBatching<>(this.configuration, handler)
                             .apply(p.getProjectionPosition()
@@ -144,7 +144,8 @@ public class Neo4jProjectionHandler
         private final ObservableLongGauge positionGauge;
         long position = -1;
 
-        public Handler(Attributes attributes, Meter meter) {
+        public Handler(Attributes attributes, Meter meter, long currentPosition) {
+            this.position = currentPosition;
             this.attributes = attributes;
             this.positionGauge = meter.gaugeBuilder("neo4j.projection.position")
                     .ofLongs().setUnit("{count}").buildWithCallback(callback -> callback.record(position, attributes));
