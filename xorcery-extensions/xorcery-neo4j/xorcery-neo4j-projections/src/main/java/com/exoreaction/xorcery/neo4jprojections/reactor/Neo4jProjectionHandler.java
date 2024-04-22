@@ -16,7 +16,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.api.metrics.ObservableLongGauge;
 import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
@@ -47,7 +47,7 @@ public class Neo4jProjectionHandler
     private final DisruptorConfiguration configuration;
     private final LongHistogram batchSizeHistogram;
     private final DoubleHistogram writeLatencyHistogram;
-    private final ObservableLongMeasurement positionMeter;
+    private final Meter meter;
 
     @Inject
     public Neo4jProjectionHandler(
@@ -61,12 +61,10 @@ public class Neo4jProjectionHandler
         this.logger = logger;
         projections.forEach(this.projections::add);
         this.configuration = new DisruptorConfiguration(configuration.getConfiguration("neo4jprojections.disruptor"));
-        Meter meter = openTelemetry.meterBuilder(getClass().getName())
+        meter = openTelemetry.meterBuilder(getClass().getName())
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        positionMeter = meter.gaugeBuilder("neo4j.projection.position")
-                .ofLongs().setUnit("{count}").buildObserver();
         batchSizeHistogram = meter.histogramBuilder("neo4j.projection.batchsize")
                 .ofLongs().setUnit("{count}").build();
         writeLatencyHistogram = meter.histogramBuilder("neo4j.projection.latency")
@@ -82,13 +80,13 @@ public class Neo4jProjectionHandler
             logger.info("Starting Neo4j projection with id " + projectionId);
             Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
             Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
-            return currentProjection
-                    .map(p -> new SmartBatching<>(this.configuration, new Handler(attributes))
+            Handler handler = new Handler(attributes, meter);
+            return Flux.from(currentProjection
+                    .map(p -> new SmartBatching<>(this.configuration, handler)
                             .apply(p.getProjectionPosition()
                                             .map(pos ->
                                             {
                                                 logger.info("Resuming from position:{}", pos);
-                                                positionMeter.record(pos, attributes);
                                                 return metadataEventsFlux.contextWrite(Context.of(ProjectionStreamContext.projectionPosition, pos));
                                             })
                                             .orElse(metadataEventsFlux),
@@ -121,8 +119,8 @@ public class Neo4jProjectionHandler
                             tx.commit();
                         }
 
-                        return new SmartBatching<>(this.configuration, new Handler(attributes)).apply(metadataEventsFlux, contextView);
-                    });
+                        return new SmartBatching<>(this.configuration, handler).apply(metadataEventsFlux, contextView);
+                    })).doAfterTerminate(handler::close);
         } catch (RuntimeException e) {
             return Flux.error(e);
         }
@@ -140,13 +138,16 @@ public class Neo4jProjectionHandler
     }
 
     private class Handler
-            implements BiConsumer<List<MetadataEvents>, SynchronousSink<List<MetadataEvents>>> {
+            implements BiConsumer<List<MetadataEvents>, SynchronousSink<List<MetadataEvents>>>, AutoCloseable {
 
         private final Attributes attributes;
+        private final ObservableLongGauge positionGauge;
         long position = -1;
 
-        public Handler(Attributes attributes) {
+        public Handler(Attributes attributes, Meter meter) {
             this.attributes = attributes;
+            this.positionGauge = meter.gaugeBuilder("neo4j.projection.position")
+                    .ofLongs().setUnit("{count}").buildWithCallback(callback -> callback.record(position, attributes));
         }
 
         @Override
@@ -190,7 +191,6 @@ public class Neo4jProjectionHandler
                     batchSizeHistogram.record(events.size(),attributes);
                     double writeDuration = stop - start;
                     writeLatencyHistogram.record(writeDuration /  1_000_000_000.0, attributes);
-                    positionMeter.record(position, attributes);
 
                     if (logger.isTraceEnabled())
                         logger.trace("Committed " + events.size());
@@ -201,6 +201,11 @@ public class Neo4jProjectionHandler
                 return;
             }
             sink.next(events);
+        }
+
+        @Override
+        public void close() {
+            positionGauge.close();
         }
     }
 }
