@@ -25,6 +25,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
@@ -34,8 +35,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
-@Named("eventstore.projections")
+@Service(name="eventstore.projections")
+@RunLevel(4)
 public class EventStoreProjectionsService {
 
     private final Logger logger = LogManager.getLogger(getClass());

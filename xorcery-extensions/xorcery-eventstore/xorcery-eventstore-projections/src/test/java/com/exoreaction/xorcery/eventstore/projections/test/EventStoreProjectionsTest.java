@@ -30,32 +30,36 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 
-//@Testcontainers(disabledWithoutDocker = true)
+@Testcontainers(disabledWithoutDocker = true)
 public class EventStoreProjectionsTest {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    //@Container
+    @Container
     public static DockerComposeContainer environment =
             new DockerComposeContainer(new File("src/test/resources/compose-test.yaml"))
                     .withLogConsumer("eventstore", new Slf4jLogConsumer(LoggerFactory.getLogger(EventStoreProjectionsTest.class)))
-                    .withExposedService("eventstore", 2113);
+                    .withExposedService("eventstore", 2115)
+                    .withStartupTimeout(Duration.ofMinutes(10));
 
     @Test
-    @Disabled
-    // TODO Enable test again after fixing bind failed on port 8080 already in use. Preferable should we start all services on ephemeral or high free ports
     public void createProjection() throws Exception {
         String config = """
                 eventstore:
+                    uri: "esdb://localhost:2115?tls=false"
                     streams.enabled: false
                     projections:
                         projections:
                             - name: testprojection
-                              query: testprojection.js
+                              query: testprojections.js
                 """;
 
         Configuration configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).build();
