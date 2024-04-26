@@ -6,7 +6,7 @@ import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;

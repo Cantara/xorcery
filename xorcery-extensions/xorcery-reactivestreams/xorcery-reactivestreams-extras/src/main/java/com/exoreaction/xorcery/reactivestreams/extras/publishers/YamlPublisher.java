@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.reactivestreams.extras.publishers;
 
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;

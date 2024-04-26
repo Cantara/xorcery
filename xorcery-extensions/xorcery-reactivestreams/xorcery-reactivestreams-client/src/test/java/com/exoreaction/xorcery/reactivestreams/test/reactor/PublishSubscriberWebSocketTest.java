@@ -41,11 +41,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
+
+import static com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions.instance;
 
 public class PublishSubscriberWebSocketTest {
 
@@ -265,7 +269,6 @@ public class PublishSubscriberWebSocketTest {
     }
 
     @Test
-    @Disabled()
     public void clientIdleTimeoutWithRetry() throws Exception {
 
         // Given
@@ -290,11 +293,16 @@ public class PublishSubscriberWebSocketTest {
                         upstream -> upstream.doOnNext(result::add).doOnComplete(latch::countDown));
 
                 // When
-                Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
+                Sinks.Many<Integer> sink = Sinks.many().replay().all();
                 sink.asFlux().transform(websocketStreamsClient.publish(
                                 WebSocketClientOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
                         ))
-                        .retry()
+                        .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(3))
+                                .doBeforeRetry(rs ->
+                                {
+                                    result.clear();
+                                    logger.warn(rs.failure());
+                                }))
                         .contextWrite(webSocketContext)
                         .subscribe();
 

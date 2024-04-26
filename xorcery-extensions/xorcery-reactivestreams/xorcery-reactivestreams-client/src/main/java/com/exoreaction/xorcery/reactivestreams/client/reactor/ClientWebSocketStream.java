@@ -40,11 +40,14 @@ import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.io.RetainableByteBuffer;
-import org.eclipse.jetty.websocket.api.*;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.ExtensionConfig;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.FluxSink;
@@ -474,7 +477,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 }
                 INPUT event = reader.readFrom(new ByteBufferBackedInputStream(payload));
                 outstandingRequests.decrementAndGet();
-                sendRequests(0);
+                sendRequests(SEND_BUFFERED_REQUESTS);
                 callback.succeed();
                 sink.next(event);
                 receivedCounter.add(1, attributes);
@@ -490,7 +493,9 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     public void onWebSocketError(Throwable throwable) {
 
         Throwable unwrap = unwrap(throwable);
-        if (unwrap instanceof ClosedChannelException || throwable instanceof EofException)
+        if (unwrap instanceof ClosedChannelException
+                || throwable instanceof EofException
+                || throwable instanceof WebSocketTimeoutException)
             return;
 
         if (logger.isDebugEnabled()) {
@@ -506,6 +511,14 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
 
+/*
+        // Upstream
+        if (upstream() != null) {
+            upstream().cancel();
+        }
+*/
+
+        // Downstream
         if (statusCode == StatusCode.NORMAL) {
             logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             if (reason == null) {
@@ -595,7 +608,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 rn = requests.addAndGet(n);
 
                 if (sendRequestsThreshold == 0) {
-                    sendRequestsThreshold = Math.max(1, Math.min((rn * 3) / 4, 8192));
+                    sendRequestsThreshold = Math.max(1, (rn / 4) * 3);
                 } else {
                     if (rn < sendRequestsThreshold) {
                         return; // Wait until we have more requests lined up
@@ -619,6 +632,11 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
             if (logger.isTraceEnabled())
                 logger.trace(marker, "sendRequest {}",
+                        rn == CANCEL ? "CANCEL"
+                                : rn == COMPLETE ? "COMPLETE"
+                                : rn);
+            else if (logger.isDebugEnabled())
+                logger.debug(marker, "sendRequest {}",
                         rn == CANCEL ? "CANCEL"
                                 : rn == COMPLETE ? "COMPLETE"
                                 : rn);

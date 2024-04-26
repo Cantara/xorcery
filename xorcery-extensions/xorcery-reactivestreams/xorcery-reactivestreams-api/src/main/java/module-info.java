@@ -17,7 +17,6 @@ open module xorcery.reactivestreams.api {
     exports com.exoreaction.xorcery.reactivestreams.api;
     exports com.exoreaction.xorcery.reactivestreams.api.client;
     exports com.exoreaction.xorcery.reactivestreams.api.server;
-    exports com.exoreaction.xorcery.reactivestreams.api.reactor;
     exports com.exoreaction.xorcery.reactivestreams.spi;
     exports com.exoreaction.xorcery.reactivestreams.providers;
     exports com.exoreaction.xorcery.reactivestreams.util;

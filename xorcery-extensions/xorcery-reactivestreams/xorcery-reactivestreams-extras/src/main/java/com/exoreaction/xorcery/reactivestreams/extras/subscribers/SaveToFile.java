@@ -1,6 +1,6 @@
 package com.exoreaction.xorcery.reactivestreams.extras.subscribers;
 
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
