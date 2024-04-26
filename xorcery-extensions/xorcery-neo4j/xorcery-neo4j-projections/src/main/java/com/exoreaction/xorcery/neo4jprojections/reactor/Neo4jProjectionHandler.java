@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.Projection;
 import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
 import io.opentelemetry.api.OpenTelemetry;
@@ -34,7 +34,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
-import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
+import static com.exoreaction.xorcery.reactivestreams.api.ContextViewElement.missing;
 
 @Service
 public class Neo4jProjectionHandler
@@ -80,13 +80,13 @@ public class Neo4jProjectionHandler
             logger.info("Starting Neo4j projection with id " + projectionId);
             Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
             Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
-            Handler handler = new Handler(attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
+            Handler handler = new Handler(projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
             return Flux.from(currentProjection
                     .map(p -> new SmartBatching<>(this.configuration, handler)
                             .apply(p.getProjectionPosition()
                                             .map(pos ->
                                             {
-                                                logger.info("Resuming from position:{}", pos);
+                                                logger.debug("Resuming from position:{}", pos);
                                                 return metadataEventsFlux.contextWrite(Context.of(ProjectionStreamContext.projectionPosition, pos));
                                             })
                                             .orElse(metadataEventsFlux),
@@ -142,9 +142,11 @@ public class Neo4jProjectionHandler
 
         private final Attributes attributes;
         private final ObservableLongGauge positionGauge;
+        private final String projectionId;
         long position = -1;
 
-        public Handler(Attributes attributes, Meter meter, long currentPosition) {
+        public Handler(String projectionId, Attributes attributes, Meter meter, long currentPosition) {
+            this.projectionId = projectionId;
             this.position = currentPosition;
             this.attributes = attributes;
             this.positionGauge = meter.gaugeBuilder("neo4j.projection.position")
@@ -155,8 +157,6 @@ public class Neo4jProjectionHandler
         public void accept(List<MetadataEvents> events, SynchronousSink<List<MetadataEvents>> sink) {
             long start = System.nanoTime();
             try (Transaction tx = database.beginTx()) {
-                String projectionId = new ContextViewElement(sink.contextView()).getString(ProjectionStreamContext.projectionId)
-                        .orElseThrow(missing(ProjectionStreamContext.projectionId));
                 for (MetadataEvents metadataEvents : events) {
                     metadataEvents.getMetadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
                     for (Neo4jEventProjection projection : projections) {
@@ -206,6 +206,7 @@ public class Neo4jProjectionHandler
 
         @Override
         public void close() {
+            logger.debug("Close projection "+projectionId);
             positionGauge.close();
         }
     }
