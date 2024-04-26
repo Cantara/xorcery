@@ -2,8 +2,8 @@ package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.opentelemetry.api.OpenTelemetry;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
+import static com.exoreaction.xorcery.reactivestreams.api.ContextViewElement.missing;
 
 class BaseAppendHandler {
 

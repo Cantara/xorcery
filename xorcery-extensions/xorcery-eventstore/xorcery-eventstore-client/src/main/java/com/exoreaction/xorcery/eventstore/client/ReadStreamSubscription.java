@@ -5,8 +5,8 @@ import com.exoreaction.xorcery.eventstore.client.api.EventStoreContext;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -62,7 +62,7 @@ public class ReadStreamSubscription
                             () -> start(StreamPosition.start()));
 
             sink.onRequest(this::release);
-            sink.onCancel(this::cancel);
+            sink.onDispose(this::dispose);
         } catch (IllegalArgumentException e) {
             sink.error(e);
         }
@@ -87,11 +87,12 @@ public class ReadStreamSubscription
             sink.error(throwable);
     }
 
-    public void cancel() {
+    public void dispose() {
         subscribeFuture.whenComplete(this::stopSubscription);
     }
 
     private void stopSubscription(com.eventstore.dbclient.Subscription subscription, Throwable throwable) {
+        logger.debug("Stop subscription for "+streamId);
         if (throwable == null)
             subscription.stop();
     }
@@ -107,7 +108,7 @@ public class ReadStreamSubscription
 
             if (outstandingRequests.get() == 0)
             {
-                System.out.println("Wait for requests");
+                logger.debug("Wait for requests at "+resolvedEvent.getLink().getRevision());
             }
 
             while (!sink.isCancelled() && outstandingRequests.get() == 0) {
@@ -132,43 +133,38 @@ public class ReadStreamSubscription
             if (logger.isTraceEnabled())
                 logger.trace(marker, "Read metadata: " + new String(userMetadata));
 
-            CompletableFuture.runAsync(()->
-            {
-                try {
-                    Metadata.Builder metadata = new Metadata.Builder((ObjectNode) jsonMapper.readTree(userMetadata));
+            try {
+                Metadata.Builder metadata = new Metadata.Builder((ObjectNode) jsonMapper.readTree(userMetadata));
 
-                    // Put in ES metadata
-                    RecordedEvent linkedEvent = resolvedEvent.getLink();
-                    long position;
-                    if (linkedEvent != null) {
-                        String streamId = linkedEvent.getStreamId();
-                        position = linkedEvent.getRevision();
-                        String originalStreamId = resolvedEvent.getEvent().getStreamId();
-                        metadata.add(EventStoreMetadata.streamId, streamId);
-                        metadata.add(EventStoreMetadata.streamPosition, position);
-                        metadata.add(EventStoreMetadata.originalStreamId, originalStreamId);
-                    } else {
-                        RecordedEvent recordedEvent = resolvedEvent.getEvent();
-                        String streamId = recordedEvent.getStreamId();
-                        position = recordedEvent.getRevision();
-                        metadata.add(EventStoreMetadata.streamId, streamId);
-                        metadata.add(EventStoreMetadata.streamPosition, position);
-                    }
-
-                    if (caughtUp.getAndSet(false)) {
-                        metadata.add(EventStoreMetadata.streamLive, JsonNodeFactory.instance.booleanNode(true));
-                    } else if (fellBehind.getAndSet(false)) {
-                        metadata.add(EventStoreMetadata.streamLive, JsonNodeFactory.instance.booleanNode(false));
-                    }
-                    this.position.set(position);
-                    sink.next(new MetadataByteBuffer(metadata.build(), ByteBuffer.wrap(event.getEventData())));
-                } catch (IOException e) {
-                    cancel();
-                    sink.error(e);
+                // Put in ES metadata
+                RecordedEvent linkedEvent = resolvedEvent.getLink();
+                long position;
+                if (linkedEvent != null) {
+                    String streamId = linkedEvent.getStreamId();
+                    position = linkedEvent.getRevision();
+                    String originalStreamId = resolvedEvent.getEvent().getStreamId();
+                    metadata.add(EventStoreMetadata.streamId, streamId);
+                    metadata.add(EventStoreMetadata.streamPosition, position);
+                    metadata.add(EventStoreMetadata.originalStreamId, originalStreamId);
+                } else {
+                    RecordedEvent recordedEvent = resolvedEvent.getEvent();
+                    String streamId = recordedEvent.getStreamId();
+                    position = recordedEvent.getRevision();
+                    metadata.add(EventStoreMetadata.streamId, streamId);
+                    metadata.add(EventStoreMetadata.streamPosition, position);
                 }
-            });
+
+                if (caughtUp.getAndSet(false)) {
+                    metadata.add(EventStoreMetadata.streamLive, JsonNodeFactory.instance.booleanNode(true));
+                } else if (fellBehind.getAndSet(false)) {
+                    metadata.add(EventStoreMetadata.streamLive, JsonNodeFactory.instance.booleanNode(false));
+                }
+                this.position.set(position);
+                sink.next(new MetadataByteBuffer(metadata.build(), ByteBuffer.wrap(event.getEventData())));
+            } catch (IOException e) {
+                sink.error(e);
+            }
         } catch (Throwable e) {
-            cancel();
             sink.error(e);
         }
     }
@@ -185,12 +181,12 @@ public class ReadStreamSubscription
 
                 default: {
                     logger.error("EventStore error", throwable);
+                    sink.error(throwable);
                 }
             }
         } else if (throwable instanceof NotLeaderException) {
             // Simply retry
             start(StreamPosition.position(position.get()));
-            return;
         } else if (throwable != null) {
             sink.error(throwable);
         }

@@ -4,8 +4,8 @@ import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryHelpers;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
-import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
+import static com.exoreaction.xorcery.reactivestreams.api.ContextViewElement.missing;
 
 public class AppendHandler
     extends BaseAppendHandler
