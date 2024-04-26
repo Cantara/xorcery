@@ -16,24 +16,19 @@
 package com.exoreaction.xorcery.neo4jprojections.api;
 
 import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
-import com.exoreaction.xorcery.jsonapi.Meta;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4jprojections.reactor.ProjectionStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ReactiveStreamsContext;
+import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
+import reactor.util.context.Context;
 
-import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class WaitForProjectionUpdate
         extends BaseSubscriber<Metadata>
@@ -53,6 +48,11 @@ public class WaitForProjectionUpdate
 
     public WaitForProjectionUpdate(String projectionId) {
         this.projectionId = projectionId;
+    }
+
+    @Override
+    public Context currentContext() {
+        return Context.of(ProjectionStreamContext.projectionId, projectionId);
     }
 
     public CompletableFuture<Metadata> waitForPosition(long position) {
