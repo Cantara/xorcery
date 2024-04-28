@@ -93,14 +93,14 @@ public class SRVConnector
                             public void failure(Throwable failure) {
                                 if (serverIterator.hasNext()) {
                                     URI server = serverIterator.next();
-                                    request.setUri(server);
-                                    delegate.apply(request, this);
+                                    ClientRequest nextRequest = new ClientRequest(request);
+                                    nextRequest.setUri(server);
+                                    delegate.apply(nextRequest, this);
                                 } else {
                                     callback.failure(failure);
                                 }
                             }
                         });
-                        callback.response(delegate.apply(request));
                     } else
                         callback.failure(new ProcessingException("Could not resolve " + srvUri));
                 } else {

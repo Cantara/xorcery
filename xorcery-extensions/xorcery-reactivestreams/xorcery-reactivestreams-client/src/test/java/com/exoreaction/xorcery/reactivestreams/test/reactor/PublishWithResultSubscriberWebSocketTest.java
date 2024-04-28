@@ -39,7 +39,9 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -295,10 +297,15 @@ public class PublishWithResultSubscriberWebSocketTest {
                         upstream -> upstream);
 
                 // When
-                Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
+                Sinks.Many<Integer> sink = Sinks.many().replay().all();
                 sink.asFlux()
                         .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
-                        .retry()
+                        .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(3))
+                                .doBeforeRetry(rs ->
+                                {
+                                    result.clear();
+                                    logger.warn(rs.failure());
+                                }))
                         .doOnNext(result::add)
                         .doOnComplete(latch::countDown)
                         .contextWrite(webSocketContext)

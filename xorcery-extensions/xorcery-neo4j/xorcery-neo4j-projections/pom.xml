@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-neo4j</artifactId>
-        <version>0.113.2-SNAPSHOT</version>
+        <version>0.115.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-neo4j-projections</artifactId>
@@ -31,6 +31,10 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-disruptor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-extras</artifactId>
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
@@ -112,15 +116,6 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-client</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams-extras</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams-extras</artifactId>
         </dependency>
     </dependencies>
 

@@ -31,16 +31,22 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
+import org.neo4j.configuration.Config;
 import org.neo4j.dbms.api.DatabaseManagementService;
-import org.neo4j.dbms.api.DatabaseManagementServiceBuilder;
+import org.neo4j.dbms.api.DatabaseManagementServiceBuilderImplementation;
 import org.neo4j.dbms.api.DatabaseNotFoundException;
 import org.neo4j.exceptions.KernelException;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.factory.module.GlobalModule;
+import org.neo4j.graphdb.factory.module.edition.AbstractEditionModule;
+import org.neo4j.graphdb.factory.module.edition.CommunityEditionModule;
 import org.neo4j.kernel.api.procedure.GlobalProcedures;
 import org.neo4j.kernel.impl.factory.GraphDatabaseFacade;
 import org.neo4j.kernel.impl.transaction.stats.TransactionCounters;
 import org.neo4j.logging.log4j.Log4jLogProvider;
 import org.neo4j.logging.log4j.Neo4jLoggerContext;
+import org.neo4j.server.config.AuthConfigProvider;
+import org.neo4j.server.rest.repr.MappingRepresentation;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,6 +56,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 
 @Service
 @Named(Neo4jService.SERVICE_TYPE)
@@ -176,11 +183,29 @@ public class Neo4jService
     }
 
     private DatabaseManagementService createDatabaseManagementService(Path home, Path tmpConfigFile) {
-        return new DatabaseManagementServiceBuilder(home)
-                .setUserLogProvider(new Log4jLogProvider(
-                        new Neo4jLoggerContext(loggerContext, () -> {}, "")))
-                .loadPropertiesFromFile(tmpConfigFile)
-                .build();
+
+        return new DatabaseManagementServiceBuilderImplementation(home)
+        {
+            @Override
+            protected Function<GlobalModule, AbstractEditionModule> getEditionFactory(Config config) {
+                return globalModule -> new CommunityEditionModule(globalModule)
+                {
+                    @Override
+                    protected AuthConfigProvider createAuthConfigProvider(GlobalModule globalModule) {
+                        return new AuthConfigProvider() {
+                            @Override
+                            public MappingRepresentation getRepresentation() {
+                                return null;
+                            }
+                        };
+                    }
+                };
+            }
+        }
+        .setUserLogProvider(new Log4jLogProvider(
+                new Neo4jLoggerContext(loggerContext, () -> {}, "")))
+        .loadPropertiesFromFile(tmpConfigFile)
+        .build();
     }
 
     private static GraphDatabaseService createDatabase(DatabaseManagementService managementService) {

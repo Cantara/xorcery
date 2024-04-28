@@ -58,7 +58,10 @@ public class JsonMerger
                     JsonNode nextNode = currentNode.path(keys[i]);
                     if (nextNode.isMissingNode()) {
                         nextNode = current.objectNode();
-                        ((ObjectNode) currentNode).set(keys[i], nextNode);
+                        if (currentNode instanceof ObjectNode on)
+                        {
+                            on.set(keys[i], nextNode);
+                        }
                     }
                     currentNode = nextNode;
                 }
@@ -68,8 +71,10 @@ public class JsonMerger
             if (!currentNode.isObject())
                 continue;
 
-            ObjectNode currentObject = (ObjectNode) currentNode;
-            setValue(currentObject, key, entry.getValue());
+            if (currentNode instanceof ObjectNode currentObject)
+            {
+                setValue(currentObject, key, entry.getValue());
+            }
         }
         return current;
     }

@@ -328,42 +328,14 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         try {
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
-            }
-
-            if (statusCode == StatusCode.NORMAL) {
+            } else
+            {
                 logger.debug(marker, "Session closed:{} {}", statusCode, reason);
-                if (upstream() != null)
-                    upstream().cancel();
-            } else {
-                if (downstreamSink == null)
-                    return;
-                if (reason.equals("Connection Idle Timeout")) {
-                    downstreamSink.error(new IdleTimeoutStreamException());
-                    return;
-                }
-
-                try {
-                    JsonNode reasonJson = jsonMapper.readTree(reason);
-                    if (reasonJson instanceof ObjectNode objectNode) {
-                        Throwable throwable;
-                        String message = objectNode.path("reason").asText();
-
-                        int status = reasonJson.get("status").asInt();
-                        throwable = switch (status) {
-                            case 401 -> new NotAuthorizedStreamException(message);
-
-                            default -> new ServerStreamException(status, message);
-                        };
-
-                        downstreamSink.error(throwable);
-                    } else {
-                        downstreamSink.error(new ServerStreamException(statusCode, reason));
-                    }
-                } catch (JsonProcessingException e) {
-                    downstreamSink.error(new ServerStreamException(statusCode, reason));
-                }
-                logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
             }
+
+            Subscription upstream = upstream();
+            if (upstream != null)
+                upstream.cancel();
         } finally {
             span.end();
         }

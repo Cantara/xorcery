@@ -22,8 +22,8 @@ import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
 import com.exoreaction.xorcery.reactivestreams.server.reactor.WebSocketStreamsServerConfiguration;
 import jakarta.ws.rs.core.MediaType;
@@ -35,11 +35,14 @@ import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 public class SubscribePublisherWebSocketTest {
@@ -264,36 +267,32 @@ public class SubscribePublisherWebSocketTest {
                 WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
                 WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
 
-                Sinks.Many<Integer> sink = Sinks.many().multicast().onBackpressureBuffer();
+                AtomicInteger count = new AtomicInteger(3);
+
+                Sinks.Many<Integer> sink = Sinks.many().replay().all();
                 websocketStreamsServer.publisher(
                         "numbers",
                         Integer.class,
                         sink.asFlux());
+                IntStream.range(0, 5).boxed().forEach(sink::tryEmitNext);
 
                 // When
-                ForkJoinPool.commonPool().execute(() ->
-                {
-                    IntStream.range(0, 5).boxed().forEach(v ->
-                    {
-                        try {
-                            sink.tryEmitNext(v);
-                            Thread.sleep(2000);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                    sink.tryEmitComplete();
-                });
-
                 List<Integer> result = websocketStreamsClient.subscribe(
                                 WebSocketClientOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
                         )
+                        .doOnSubscribe(s ->
+                        {
+                            if (count.decrementAndGet() == 0)
+                            {
+                                sink.tryEmitComplete();
+                            }
+                        })
                         .retry()
                         .contextWrite(webSocketContext)
                         .toStream().toList();
 
                 // Then
-                Assertions.assertEquals(List.of(0, 1, 2, 3, 4), result);
+                Assertions.assertEquals(List.of(0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4), result);
             }
         }
     }

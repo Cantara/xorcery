@@ -15,20 +15,25 @@
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "scheme" : {
               "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }} ({{ jetty.server.ssl.enabled ? \"https\" | \"http\" }})"
             },
             "port" : {
-              "type" : [ "number", "string" ],
+              "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }} ({{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }})"
             },
             "uri" : {
               "type" : "string",
               "default" : "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/",
-              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/"
+              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/ ({{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/)"
             },
             "minThreads" : {
               "type" : [ "number", "string" ],
@@ -50,9 +55,19 @@
               "default" : 16384,
               "description" : "Default: 16384"
             },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+            },
             "http" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                },
                 "port" : {
                   "type" : [ "number", "string" ],
                   "default" : 80,
@@ -62,11 +77,22 @@
             },
             "http2" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             },
             "ssl" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                },
                 "port" : {
                   "type" : [ "number", "string" ],
                   "default" : 443,
@@ -121,15 +147,32 @@
             },
             "log4j2" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             },
             "sessions" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             },
             "security" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                },
                 "type" : {
                   "type" : "string",
                   "default" : "jwt",
@@ -137,11 +180,27 @@
                 },
                 "certificate" : {
                   "type" : "object",
-                  "properties" : { }
+                  "properties" : {
+                    "enabled" : {
+                      "type" : "string",
+                      "default" : "{{ jetty.server.security.enabled }}",
+                      "description" : "Default: {{ jetty.server.security.enabled }} ({{ jetty.server.security.enabled }})"
+                    }
+                  }
                 },
                 "jwt" : {
                   "type" : "object",
                   "properties" : {
+                    "enabled" : {
+                      "type" : "string",
+                      "default" : "{{ jetty.server.security.enabled }}",
+                      "description" : "Default: {{ jetty.server.security.enabled }} ({{ jetty.server.security.enabled }})"
+                    },
+                    "cookie" : {
+                      "type" : "string",
+                      "default" : "token",
+                      "description" : "Default: token"
+                    },
                     "issuers" : {
                       "type" : "object",
                       "properties" : {
@@ -158,10 +217,20 @@
             "websockets" : {
               "type" : "object",
               "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                },
                 "autoFragment" : {
                   "type" : [ "boolean", "string" ],
                   "default" : true,
                   "description" : "Default: true"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.idleTimeout }}",
+                  "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
                 },
                 "inputBufferSize" : {
                   "type" : [ "number", "string" ],
@@ -192,11 +261,23 @@
             },
             "servlet" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             },
             "gzip" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                }
+              }
             }
           }
         }

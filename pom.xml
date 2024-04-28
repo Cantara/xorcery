@@ -21,7 +21,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.113.2-SNAPSHOT</version>
+    <version>0.115.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -31,7 +31,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.release>17</maven.compiler.release>
 
-        <slf4j.version>2.0.12</slf4j.version>
+        <slf4j.version>2.0.13</slf4j.version>
         <log4j.version>2.23.1</log4j.version>
         <jetty.version>12.0.8</jetty.version>
         <jersey.version>3.1.6</jersey.version>
@@ -44,8 +44,8 @@
         <jackson.version>2.17.0</jackson.version>
         <asm.version>9.7</asm.version>
         <projectreactor.version>2023.0.5</projectreactor.version>
-        <aws.java.sdk.version>2.25.27</aws.java.sdk.version>
-        <netty.version>4.1.108.Final</netty.version>
+        <aws.java.sdk.version>2.25.40</aws.java.sdk.version>
+        <netty.version>4.1.109.Final</netty.version>
 
         <junit.version>5.10.2</junit.version>
         <junit.platform.version>1.10.2</junit.platform.version>
@@ -78,10 +78,10 @@
         <module>xorcery-metadata</module>
         <module>xorcery-service-api</module>
         <module>xorcery-health-api</module>
-        <module>xorcery-health-registry</module>
 
         <module>xorcery-core</module>
         <module>xorcery-log4j</module>
+        <module>xorcery-health-registry</module>
         <module>xorcery-runner</module>
         <module>xorcery-junit</module>
 
@@ -558,7 +558,7 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>neo4j-shaded</artifactId>
-                <version>5.12.1</version>
+                <version>5.18.1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.neo4j.client</groupId>
@@ -624,12 +624,12 @@
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk18on</artifactId>
-                <version>1.78</version>
+                <version>1.78.1</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk18on</artifactId>
-                <version>1.78</version>
+                <version>1.78.1</version>
             </dependency>
 
 
@@ -851,7 +851,7 @@
             <dependency>
                 <groupId>com.google.errorprone</groupId>
                 <artifactId>error_prone_annotations</artifactId>
-                <version>2.26.1</version>
+                <version>2.27.0</version>
             </dependency>
 
             <dependency>
@@ -922,7 +922,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.3.0</version>
+                    <version>3.4.1</version>
                     <configuration>
                         <archive>
                             <manifest>
@@ -959,7 +959,7 @@
                 <plugin>
                     <groupId>com.exoreaction.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.113.1</version>
+                    <version>0.115.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -996,8 +996,11 @@
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>generate-module-jsonschema</id>
+                        <phase>generate-resources</phase>
                         <goals>
-                            <goal>module-configuration-jsonschema</goal></goals>
+                            <goal>module-configuration-jsonschema</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

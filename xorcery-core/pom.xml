@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-project</artifactId>
-        <version>0.113.2-SNAPSHOT</version>
+        <version>0.115.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-core</artifactId>
@@ -83,11 +83,19 @@
             <plugin>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-
-                <configuration>
-                    <configurationFile>${project.basedir}/src/main/resources/META-INF/xorcery-defaults.yaml
-                    </configurationFile>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-module-jsonschema</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>module-configuration-jsonschema</goal>
+                        </goals>
+                        <configuration>
+                            <configurationFile>${project.basedir}/src/main/resources/META-INF/xorcery-defaults.yaml
+                            </configurationFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

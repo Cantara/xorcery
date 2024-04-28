@@ -167,7 +167,7 @@ public class Neo4jProjectionEventHandler
                 revision = ((Number) Optional.ofNullable(metadataMap.get("revision")).orElse(0L)).longValue();
                 updateParameters.put("projection_revision", revision);
                 tx.execute("MERGE (projection:Projection {id:$projection_id}) SET " +
-                                "projection.revision=$projection_revision",
+                                "projection.revision=$projection_revision,projection.projectionPosition=$projection_revision",
                         updateParameters);
 
                 tx.commit();

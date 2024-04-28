@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-opentelemetry</artifactId>
-        <version>0.113.2-SNAPSHOT</version>
+        <version>0.115.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-opentelemetry-sdk</artifactId>
@@ -79,6 +79,10 @@
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
         </dependency>
 
         <dependency>

@@ -12,6 +12,11 @@
     "letsencrypt" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "url" : {
           "type" : "string",
           "default" : "acme://letsencrypt.org",

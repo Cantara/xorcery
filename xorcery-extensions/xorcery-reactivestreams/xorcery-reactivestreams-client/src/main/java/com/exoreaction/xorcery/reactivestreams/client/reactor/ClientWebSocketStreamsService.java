@@ -6,7 +6,7 @@ import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Function;
 
-public class WebSocketStreamsClientService
+public class ClientWebSocketStreamsService
         implements WebSocketStreamsClient {
 
     private final WebSocketClient webSocketClient;
@@ -39,7 +39,7 @@ public class WebSocketStreamsClientService
     private final ByteBufferPool byteBufferPool;
     private final Meter meter;
 
-    public WebSocketStreamsClientService(
+    public ClientWebSocketStreamsService(
             Configuration configuration,
             MessageWorkers messageWorkers,
             HttpClient httpClient,
@@ -74,7 +74,7 @@ public class WebSocketStreamsClientService
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
         }
 
-        return flux -> Flux.push(sink -> new ClientWebSocketStream<>(
+        return flux -> Flux.create(sink -> new ClientWebSocketStream<>(
                 getServerUri(sink.contextView()),
                 ReactiveStreamSubProtocol.subscriber,
                 availableContentTypes, null,
@@ -97,7 +97,7 @@ public class WebSocketStreamsClientService
         if (availableContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
         }
-        return flux -> Flux.push(sink -> new ClientWebSocketStream<>(
+        return flux -> Flux.create(sink -> new ClientWebSocketStream<>(
                 getServerUri(sink.contextView()),
                 ReactiveStreamSubProtocol.subscriberWithResult,
                 availableContentTypes, availableResultContentTypes,

@@ -32,7 +32,14 @@ import java.util.Optional;
 public interface Resources {
 
     static Optional<URL> getResource(String path) {
-        URL resource = ClassLoader.getSystemResource(path);
+
+        URL resource = Optional.ofNullable(Thread.currentThread().getContextClassLoader())
+                .map(cl -> cl.getResource(path))
+                .orElse(null);
+        if (resource != null)
+            return Optional.of(resource);
+
+        resource = ClassLoader.getSystemResource(path);
         if (resource != null)
             return Optional.of(resource);
         resource = Resources.class.getClassLoader().getResource(path);
@@ -54,6 +61,16 @@ public interface Resources {
             throws UncheckedIOException {
         try {
             List<URL> resources = new ArrayList<>();
+            ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+            if (contextClassLoader != null)
+            {
+                contextClassLoader.getResources(path).asIterator().forEachRemaining(url ->
+                {
+                    if (!resources.contains(url)) {
+                        resources.add(url);
+                    }
+                });
+            }
             ClassLoader.getSystemResources(path).asIterator().forEachRemaining(url ->
             {
                 if (!resources.contains(url)) {

@@ -18,11 +18,11 @@ import org.jvnet.hk2.annotations.Service;
 @Service(name = "reactivestreams.client.reactor")
 @ContractsProvided({WebSocketStreamsClient.class})
 @RunLevel(0)
-public class WebSocketStreamsClientServiceHK2
-    extends WebSocketStreamsClientService
+public class ClientWebSocketStreamsServiceHK2
+    extends ClientWebSocketStreamsService
 {
     @Inject
-    public WebSocketStreamsClientServiceHK2(Configuration configuration, MessageWorkers messageWorkers, HttpClient httpClient, DnsLookupService dnsLookup, OpenTelemetry openTelemetry, LoggerContext loggerContext) throws Exception {
+    public ClientWebSocketStreamsServiceHK2(Configuration configuration, MessageWorkers messageWorkers, HttpClient httpClient, DnsLookupService dnsLookup, OpenTelemetry openTelemetry, LoggerContext loggerContext) throws Exception {
         super(configuration, messageWorkers, httpClient, dnsLookup, openTelemetry, loggerContext);
     }
 }

@@ -17,6 +17,7 @@ module xorcery.opentelemetry.sdk {
 
     exports com.exoreaction.xorcery.opentelemetry.sdk;
     exports com.exoreaction.xorcery.opentelemetry.sdk.exporters;
+    exports com.exoreaction.xorcery.opentelemetry.sdk.exporters.jmx;
     exports com.exoreaction.xorcery.opentelemetry.sdk.exporters.logging;
     exports com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp;
     exports com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk;
@@ -27,6 +28,7 @@ module xorcery.opentelemetry.sdk {
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
+    requires org.apache.logging.log4j;
 
     requires io.opentelemetry.api;
     requires io.opentelemetry.sdk;
@@ -41,6 +43,7 @@ module xorcery.opentelemetry.sdk {
     requires io.opentelemetry.exporter.internal;
     requires jakarta.annotation;
     requires java.net.http;
+    requires java.management;
 
     provides io.opentelemetry.exporter.internal.http.HttpSenderProvider with com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider;
 }

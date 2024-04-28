@@ -12,6 +12,11 @@
     "domainevents" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "subscriber" : {
           "type" : "object",
           "properties" : {

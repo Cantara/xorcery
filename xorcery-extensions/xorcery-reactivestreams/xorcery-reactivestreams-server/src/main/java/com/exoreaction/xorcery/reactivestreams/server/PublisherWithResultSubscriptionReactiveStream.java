@@ -65,7 +65,7 @@ public class PublisherWithResultSubscriptionReactiveStream
 
         try {
             // Check if we are getting an exception back
-            if (payload.limit() > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload.array(), payload.arrayOffset(), payload.position() + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {
+            if (payload.limit() > ReactiveStreamsAbstractService.XOR.length && Arrays.equals(payload.array(), payload.arrayOffset(), payload.arrayOffset() + ReactiveStreamsAbstractService.XOR.length, ReactiveStreamsAbstractService.XOR, 0, ReactiveStreamsAbstractService.XOR.length)) {
                 ByteArrayInputStream bin = new ByteArrayInputStream(payload.array(), payload.arrayOffset() + ReactiveStreamsAbstractService.XOR.length, payload.limit() - ReactiveStreamsAbstractService.XOR.length);
                 ObjectInputStream oin = new ObjectInputStream(bin);
                 Throwable throwable = (Throwable) oin.readObject();

@@ -15,6 +15,11 @@
     "opentelemetry" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "install" : {
           "type" : [ "boolean", "string" ],
           "default" : true,
@@ -23,10 +28,50 @@
         "resource" : {
           "type" : "object",
           "properties" : {
+            "service.namespace" : {
+              "type" : "string",
+              "default" : "{{ instance.environment }}",
+              "description" : "Default: {{ instance.environment }} ({{ instance.environment }})"
+            },
+            "service.name" : {
+              "type" : "string",
+              "default" : "{{ application.name }}",
+              "description" : "Default: {{ application.name }} ({{ application.name }})"
+            },
+            "service.version" : {
+              "type" : "string",
+              "default" : "{{ application.version }}",
+              "description" : "Default: {{ application.version }} ({{ application.version }})"
+            },
+            "service.instance.id" : {
+              "type" : "string",
+              "default" : "{{ instance.id }}",
+              "description" : "Default: {{ instance.id }} ({{ instance.id }})"
+            },
+            "host.name" : {
+              "type" : "string",
+              "default" : "{{ instance.fqdn }}",
+              "description" : "Default: {{ instance.fqdn }} ({{ instance.fqdn }})"
+            },
+            "host.ip" : {
+              "type" : "string",
+              "default" : "{{ CALCULATED.ipv4Addresses }}",
+              "description" : "Default: {{ CALCULATED.ipv4Addresses }} ({{ CALCULATED.ipv4Addresses }})"
+            },
+            "process.runtime.name" : {
+              "type" : "string",
+              "default" : "{{ SYSTEM.java_runtime_name }}",
+              "description" : "Default: {{ SYSTEM.java_runtime_name }} ({{ SYSTEM.java_runtime_name }})"
+            },
+            "process.runtime.version" : {
+              "type" : "string",
+              "default" : "{{ SYSTEM.java_runtime_version }}",
+              "description" : "Default: {{ SYSTEM.java_runtime_version }} ({{ SYSTEM.java_runtime_version }})"
+            },
             "process.runtime.description" : {
               "type" : "string",
               "default" : "{{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}",
-              "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}"
+              "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }} ({{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }})"
             }
           }
         },
@@ -37,14 +82,29 @@
               "type" : "object",
               "properties" : {
                 "enabled" : {
-                  "type" : [ "boolean", "string" ],
+                  "type" : "string",
                   "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
-                  "description" : "Default: false"
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} ({{ opentelemetry.exporters.otlp.endpoint ? false | true }})"
                 },
                 "interval" : {
                   "type" : "string",
                   "default" : "10s",
                   "description" : "Default: 10s"
+                }
+              }
+            },
+            "jmx" : {
+              "type" : "object",
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} ({{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }})"
+                },
+                "interval" : {
+                  "type" : "string",
+                  "default" : "5s",
+                  "description" : "Default: 5s"
                 }
               }
             },
@@ -55,9 +115,9 @@
                   "type" : "object",
                   "properties" : {
                     "enabled" : {
-                      "type" : [ "boolean", "string" ],
+                      "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint ? true | false }}",
-                      "description" : "Default: false"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? true | false }} ({{ opentelemetry.exporters.otlp.endpoint ? true | false }})"
                     },
                     "port" : {
                       "type" : [ "number", "string" ],
@@ -72,6 +132,11 @@
                     "headers" : {
                       "type" : "object",
                       "properties" : { }
+                    },
+                    "connectTimeout" : {
+                      "type" : "string",
+                      "default" : "{{ defaults.connectTimeout }}",
+                      "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
                     },
                     "timeout" : {
                       "type" : "string",
@@ -111,17 +176,17 @@
                     "logsEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs)"
                     },
                     "tracesEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces)"
                     },
                     "metricsEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics)"
                     }
                   }
                 }
@@ -131,7 +196,13 @@
         },
         "sampler" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ opentelemetry.enabled }}",
+              "description" : "Default: {{ opentelemetry.enabled }} ({{ opentelemetry.enabled }})"
+            }
+          }
         },
         "instrumentations" : {
           "type" : "object",

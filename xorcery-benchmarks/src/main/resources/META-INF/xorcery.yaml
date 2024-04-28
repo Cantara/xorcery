@@ -4,7 +4,6 @@ log4j2:
   Configuration:
     name: Xorcery benchmarks
     status: warn
-    properties:
     thresholdFilter:
       level: trace
     appenders:

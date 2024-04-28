@@ -11,3 +11,5 @@ neo4jprojections:
 #    stream: somestream
 #    projection: someprojection
 #    configuration: {}
+  updates:
+    enabled: "{{ neo4jprojections.enabled }}"

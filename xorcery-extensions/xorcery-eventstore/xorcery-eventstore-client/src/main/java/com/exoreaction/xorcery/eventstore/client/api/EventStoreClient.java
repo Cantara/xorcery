@@ -5,9 +5,9 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.eventstore.client.AppendHandler;
 import com.exoreaction.xorcery.eventstore.client.AppendOptimisticLockingHandler;
 import com.exoreaction.xorcery.eventstore.client.ReadStreamSubscription;
-import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.spi.LoggerContext;
@@ -49,6 +49,8 @@ public class EventStoreClient
             return new EventStoreClient(settings, disruptorConfiguration, loggerContext, openTelemetry);
         }
     }
+
+    private static final JsonMapper jsonMapper = new JsonMapper();
 
     private final EventStoreDBClient client;
     private final DisruptorConfiguration disruptorConfiguration;
@@ -92,7 +94,7 @@ public class EventStoreClient
 
     // Read
     public Publisher<MetadataByteBuffer> readStream() {
-        return new ReadStreamSubscription(client, loggerContext.getLogger(ReadStreamSubscription.class));
+        return Flux.create(sink -> new ReadStreamSubscription(client, sink, loggerContext.getLogger(ReadStreamSubscription.class)));
     }
 
     @Override

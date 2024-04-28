@@ -12,13 +12,18 @@
     "neo4jbrowser" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ neo4jdatabase.enabled }}",
+          "description" : "Default: {{ neo4jdatabase.enabled }} ({{ neo4jdatabase.enabled }})"
+        },
         "ssl" : {
           "type" : "object",
           "properties" : {
             "enabled" : {
-              "type" : [ "boolean", "string" ],
+              "type" : "string",
               "default" : "{{ neo4jbrowser.enabled ? certificates.enabled | false }}",
-              "description" : "Default: false"
+              "description" : "Default: {{ neo4jbrowser.enabled ? certificates.enabled | false }} ({{ neo4jbrowser.enabled ? certificates.enabled | false }})"
             }
           }
         }

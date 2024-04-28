@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 @Service(name = "cypherprojection")
@@ -41,7 +42,7 @@ public class CypherEventProjection
         implements Neo4jEventProjection {
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final Map<String, List<String>> cachedEventCypher = new HashMap<>();
+    private final Map<String, List<String>> cachedEventCypher = new ConcurrentHashMap<>();
 
     @Override
     public void write(MetadataEvents events, Transaction transaction) {

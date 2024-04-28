@@ -15,6 +15,11 @@
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "authorization" : {
               "type" : "string",
               "default" : "none",

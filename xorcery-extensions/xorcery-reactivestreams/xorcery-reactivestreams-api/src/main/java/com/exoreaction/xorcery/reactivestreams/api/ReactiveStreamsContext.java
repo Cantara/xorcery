@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.reactivestreams.api.reactor;
+package com.exoreaction.xorcery.reactivestreams.api;
 
 import reactor.util.context.ContextView;
 

@@ -38,40 +38,13 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 @Mojo(name = "application-configuration-jsonschema", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
-public class ApplicationConfigurationJsonSchemaMojo extends AbstractMojo {
+public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-schema.json")
     private String applicationSchemaFile;
 
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/xorcery-schema.json")
     private String generatedSchemaFile;
-
-    /**
-     * Gives access to the Maven project information.
-     */
-    @Parameter(defaultValue = "${project}", required = true, readonly = true)
-    MavenProject project;
-
-    @Parameter(defaultValue = "${repositorySystemSession}")
-    private RepositorySystemSession repoSession;
-
-    @Parameter(defaultValue = "${project.remoteProjectRepositories}")
-    private List<RemoteRepository> projectRepos;
-
-    @Component
-    private MavenSession session;
-
-    @Component
-    protected RepositorySystem repositorySystem;
-
-    @Component(hint = "default")
-    private DependencyCollectorBuilder dependencyCollectorBuilder;
-
-    /**
-     * The dependency graph builder to use.
-     */
-    @Component(hint = "default")
-    private DependencyGraphBuilder dependencyGraphBuilder;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -136,38 +109,5 @@ public class ApplicationConfigurationJsonSchemaMojo extends AbstractMojo {
         } catch (Throwable e) {
             throw new MojoFailureException("Could not create JSON Schema for xorcery.yaml configuration", e);
         }
-    }
-
-    private List<File> getDependencyJarFiles() throws DependencyGraphBuilderException {
-        ProjectBuildingRequest buildingRequest =
-                new DefaultProjectBuildingRequest(session.getProjectBuildingRequest());
-
-        buildingRequest.setProject(project);
-
-        DependencyNode rootNode = dependencyGraphBuilder.buildDependencyGraph(buildingRequest, null);
-
-        final List<File> artifactJars = new ArrayList<>();
-        rootNode.accept(new DependencyNodeVisitor() {
-            @Override
-            public boolean visit(DependencyNode dependencyNode) {
-                ArtifactResolutionRequest request = new ArtifactResolutionRequest();
-                request.setArtifact(dependencyNode.getArtifact());
-                ArtifactResolutionResult result = repositorySystem.resolve(request);
-                for (Artifact artifact : result.getArtifacts()) {
-                    getLog().debug("Using JSON Schema from:"+artifact.getArtifactId() + ":" + artifact.getFile());
-                    if (artifact.getFile() != null) {
-                        artifactJars.add(artifact.getFile());
-                    }
-                }
-                return true;
-            }
-
-            @Override
-            public boolean endVisit(DependencyNode dependencyNode) {
-                return true;
-            }
-        });
-        artifactJars.sort(Comparator.comparing(File::getName));
-        return artifactJars;
     }
 }

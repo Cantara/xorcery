@@ -15,6 +15,11 @@
         "client" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "uri" : {
               "type" : "string",
               "default" : "srv://_certificates._sub._https._tcp/api",

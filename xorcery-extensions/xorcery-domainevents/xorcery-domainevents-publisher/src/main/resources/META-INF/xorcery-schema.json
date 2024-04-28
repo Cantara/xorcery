@@ -12,15 +12,20 @@
     "domainevents" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "eventstore" : {
           "type" : "string",
           "default" : "{{ instance.api }}eventstore",
-          "description" : "Default: {{ instance.api }}eventstore"
+          "description" : "Default: {{ instance.api }}eventstore ({{ instance.api }}eventstore)"
         },
         "projections" : {
           "type" : "string",
           "default" : "{{ instance.api }}projections",
-          "description" : "Default: {{ instance.api }}projections"
+          "description" : "Default: {{ instance.api }}projections ({{ instance.api }}projections)"
         }
       }
     }

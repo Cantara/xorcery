@@ -13,7 +13,7 @@ instance:
   api: "{{ instance.uri }}api/"
 
 application:
-  name: genericserver
+  name: "application"
   version: "unknown"
 
 system: {}

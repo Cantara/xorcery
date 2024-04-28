@@ -12,9 +12,24 @@
     "thymeleaf" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
+        "development" : {
+          "type" : "string",
+          "default" : "{{ defaults.development }}",
+          "description" : "Default: {{ defaults.development }} ({{ defaults.development }})"
+        },
         "classloader" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ thymeleaf.enabled }}",
+              "description" : "Default: {{ thymeleaf.enabled }} ({{ thymeleaf.enabled }})"
+            },
             "templateMode" : {
               "type" : "string",
               "default" : "HTML",
@@ -39,6 +54,11 @@
               "type" : [ "boolean", "string" ],
               "default" : true,
               "description" : "Default: true"
+            },
+            "cacheable" : {
+              "type" : "string",
+              "default" : "{{ thymeleaf.development ? false : true }}",
+              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
             },
             "cacheTTL" : {
               "type" : "string",
@@ -89,6 +109,11 @@
               "default" : true,
               "description" : "Default: true"
             },
+            "cacheable" : {
+              "type" : "string",
+              "default" : "{{ thymeleaf.development ? false : true }}",
+              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
+            },
             "cacheTTL" : {
               "type" : "string",
               "default" : "1h",
@@ -137,6 +162,11 @@
               "type" : [ "boolean", "string" ],
               "default" : true,
               "description" : "Default: true"
+            },
+            "cacheable" : {
+              "type" : "string",
+              "default" : "{{ thymeleaf.development ? false : true }}",
+              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
             },
             "cacheTTL" : {
               "type" : "string",

@@ -15,6 +15,11 @@
     "keystores" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "defaultPassword" : {
           "type" : "string",
           "default" : "secret:password",
@@ -31,12 +36,12 @@
             "path" : {
               "type" : "string",
               "default" : "{{ instance.home }}/secrets.p12",
-              "description" : "Default: {{ instance.home }}/secrets.p12"
+              "description" : "Default: {{ instance.home }}/secrets.p12 ({{ instance.home }}/secrets.p12)"
             },
             "password" : {
               "type" : "string",
               "default" : "{{ keystores.defaultPassword }}",
-              "description" : "Default: {{ keystores.defaultPassword }}"
+              "description" : "Default: {{ keystores.defaultPassword }} ({{ keystores.defaultPassword }})"
             }
           }
         }
@@ -48,6 +53,11 @@
         "keystore" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{secrets.enabled}}",
+              "description" : "Default: {{secrets.enabled}} ({{secrets.enabled}})"
+            },
             "name" : {
               "type" : "string",
               "default" : "secrets",

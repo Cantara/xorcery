@@ -7,9 +7,17 @@ import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.Projection;
 import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableLongGauge;
+import io.opentelemetry.semconv.SemanticAttributes;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.IterableProvider;
@@ -26,7 +34,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
-import static com.exoreaction.xorcery.reactivestreams.api.reactor.ContextViewElement.missing;
+import static com.exoreaction.xorcery.reactivestreams.api.ContextViewElement.missing;
 
 @Service
 public class Neo4jProjectionHandler
@@ -37,18 +45,30 @@ public class Neo4jProjectionHandler
     private final List<Neo4jEventProjection> projections = new ArrayList<>();
 
     private final DisruptorConfiguration configuration;
+    private final LongHistogram batchSizeHistogram;
+    private final DoubleHistogram writeLatencyHistogram;
+    private final Meter meter;
 
     @Inject
     public Neo4jProjectionHandler(
             GraphDatabase database,
             IterableProvider<Neo4jEventProjection> projections,
             Configuration configuration,
+            OpenTelemetry openTelemetry,
             Logger logger
     ) {
         this.database = database.getGraphDatabaseService();
         this.logger = logger;
         projections.forEach(this.projections::add);
         this.configuration = new DisruptorConfiguration(configuration.getConfiguration("neo4jprojections.disruptor"));
+        meter = openTelemetry.meterBuilder(getClass().getName())
+                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
+                .build();
+        batchSizeHistogram = meter.histogramBuilder("neo4j.projection.batchsize")
+                .ofLongs().setUnit("{count}").build();
+        writeLatencyHistogram = meter.histogramBuilder("neo4j.projection.latency")
+                .setUnit("s").build();
     }
 
     @Override
@@ -59,10 +79,22 @@ public class Neo4jProjectionHandler
                     .orElseThrow(missing(ProjectionStreamContext.projectionId));
             logger.info("Starting Neo4j projection with id " + projectionId);
             Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
-            return currentProjection.flatMap(ProjectionModel::getProjectionPosition)
-                    .map(p -> new SmartBatching<>(this.configuration, new Handler(p)).apply(metadataEventsFlux.contextWrite(Context.of(Projection.projectionPosition, p)), contextView))
+            Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
+            Handler handler = new Handler(projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
+            return Flux.from(currentProjection
+                    .map(p -> new SmartBatching<>(this.configuration, handler)
+                            .apply(p.getProjectionPosition()
+                                            .map(pos ->
+                                            {
+                                                logger.debug("Resuming from position:{}", pos);
+                                                return metadataEventsFlux.contextWrite(Context.of(ProjectionStreamContext.projectionPosition, pos));
+                                            })
+                                            .orElse(metadataEventsFlux),
+                                    contextView))
                     .orElseGet(() ->
                     {
+                        logger.info("Creating projection {}", projectionId);
+
                         // Create projection in Neo4j
                         try (Transaction tx = database.beginTx()) {
                             Map<String, Object> createParameters = new HashMap<>();
@@ -76,18 +108,19 @@ public class Neo4jProjectionHandler
                             });
                             createParameters.put("props", props);
                             tx.execute("""
-                                    CREATE (projection:Projection) 
-                                    SET 
-                                    projection = $props,
-                                    projection.id = $projectionId,
-                                    projection.projectionPosition = -1
+                                    MERGE (projection:Projection {id:$projectionId})
+                                    ON CREATE SET
+                                    projection += $props
+                                    ON MATCH SET
+                                    projection.projectionPosition = coalesce(projection.revision,null),
+                                    projection += $props
                                     RETURN projection
                                     """, createParameters).close();
                             tx.commit();
                         }
 
-                        return new SmartBatching<>(this.configuration, new Handler(-1)).apply(metadataEventsFlux, contextView);
-                    });
+                        return new SmartBatching<>(this.configuration, handler).apply(metadataEventsFlux, contextView);
+                    })).doAfterTerminate(handler::close);
         } catch (RuntimeException e) {
             return Flux.error(e);
         }
@@ -97,7 +130,7 @@ public class Neo4jProjectionHandler
         // Check if we already have written data for this projection before
         return database.executeTransactionally("""
                 MATCH (projection:Projection {id:$projectionId})
-                RETURN projection.projectionPosition as projectionPosition
+                RETURN coalesce(projection.projectionPosition, projection.revision) as projectionPosition, projection.id as projectionId, projection.streamId as streamId
                 """, Map.of(Projection.projectionId.name(), projectionId), result ->
                 result.hasNext()
                         ? Optional.of(new ProjectionModel(result.next()))
@@ -105,18 +138,25 @@ public class Neo4jProjectionHandler
     }
 
     private class Handler
-            implements BiConsumer<List<MetadataEvents>, SynchronousSink<List<MetadataEvents>>> {
-        long position;
+            implements BiConsumer<List<MetadataEvents>, SynchronousSink<List<MetadataEvents>>>, AutoCloseable {
 
-        public Handler(long position) {
-            this.position = position;
+        private final Attributes attributes;
+        private final ObservableLongGauge positionGauge;
+        private final String projectionId;
+        long position = -1;
+
+        public Handler(String projectionId, Attributes attributes, Meter meter, long currentPosition) {
+            this.projectionId = projectionId;
+            this.position = currentPosition;
+            this.attributes = attributes;
+            this.positionGauge = meter.gaugeBuilder("neo4j.projection.position")
+                    .ofLongs().setUnit("{count}").buildWithCallback(callback -> callback.record(position, attributes));
         }
 
         @Override
         public void accept(List<MetadataEvents> events, SynchronousSink<List<MetadataEvents>> sink) {
+            long start = System.nanoTime();
             try (Transaction tx = database.beginTx()) {
-                String projectionId = new ContextViewElement(sink.contextView()).getString(ProjectionStreamContext.projectionId)
-                        .orElseThrow(missing(ProjectionStreamContext.projectionId));
                 for (MetadataEvents metadataEvents : events) {
                     metadataEvents.getMetadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
                     for (Neo4jEventProjection projection : projections) {
@@ -141,21 +181,33 @@ public class Neo4jProjectionHandler
                     updateParameters.put(Projection.projectionPosition.name(), position);
                     updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
                     tx.execute("""
-                            MERGE (projection:Projection {id:$projectionId}) SET 
+                            MATCH (projection:Projection {id:$projectionId}) SET 
                             projection.projectionPosition=$projectionPosition,
                             projection.projectionTimestamp=$projectionTimestamp
                             RETURN projection
                             """, updateParameters).close();
 
-//                    System.out.println("Committed "+events.size());
+                    tx.commit();
+                    long stop = System.nanoTime();
+                    batchSizeHistogram.record(events.size(),attributes);
+                    double writeDuration = stop - start;
+                    writeLatencyHistogram.record(writeDuration /  1_000_000_000.0, attributes);
+
+                    if (logger.isTraceEnabled())
+                        logger.trace("Committed " + events.size());
                 }
 
-                tx.commit();
             } catch (Throwable e) {
                 sink.error(e);
                 return;
             }
             sink.next(events);
+        }
+
+        @Override
+        public void close() {
+            logger.debug("Close projection "+projectionId);
+            positionGauge.close();
         }
     }
 }

@@ -15,6 +15,11 @@
         "server" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "token" : {
               "type" : "object",
               "properties" : {
@@ -22,6 +27,11 @@
                   "type" : "string",
                   "default" : "P7D",
                   "description" : "Default: P7D"
+                },
+                "issuer" : {
+                  "type" : "string",
+                  "default" : "{{ instance.fqdn }}",
+                  "description" : "Default: {{ instance.fqdn }} ({{ instance.fqdn }})"
                 }
               }
             },
@@ -42,6 +52,11 @@
                   "type" : "string",
                   "default" : "/",
                   "description" : "Default: /"
+                },
+                "domain" : {
+                  "type" : "string",
+                  "default" : "{{ instance.domain }}",
+                  "description" : "Default: {{ instance.domain }} ({{ instance.domain }})"
                 }
               }
             }
@@ -49,7 +64,13 @@
         },
         "configuration" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            }
+          }
         },
         "users" : {
           "type" : "object",

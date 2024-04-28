@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Span;
@@ -39,11 +40,14 @@ import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.io.RetainableByteBuffer;
-import org.eclipse.jetty.websocket.api.*;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.ExtensionConfig;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.FluxSink;
@@ -124,6 +128,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private volatile Throwable error; // Upstream error we are saving for when server closes the websocket
 
     private final Attributes attributes;
+    private final LongCounter receivedCounter;
+    private final LongHistogram receivedBytes;
     private final LongHistogram sentBytes;
     private final LongHistogram requestsHistogram;
 
@@ -174,6 +180,10 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
+        this.receivedCounter = meter.counterBuilder(SUBSCRIBER_REQUESTS)
+                .setUnit("{request}").build();
+        this.receivedBytes = meter.histogramBuilder(SUBSCRIBER_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
 
         span = tracer.spanBuilder(serverUri.toASCIIString() + " client")
                 .setSpanKind(SpanKind.CLIENT)
@@ -371,7 +381,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         try {
             String contextJsonString = jsonMapper.writeValueAsString(contextJson);
             session.sendText(contextJsonString, Callback.NOOP);
-            logger.debug(marker, "Connected to {}", session.getRemoteSocketAddress());
+            logger.debug(marker, "Connected to {} with context {}", session.getRemoteSocketAddress(), contextJsonString);
 
             sink.onRequest(this::sendRequests);
         } catch (Throwable e) {
@@ -466,10 +476,11 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                     logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(payload.asReadOnlyBuffer()).toString());
                 }
                 INPUT event = reader.readFrom(new ByteBufferBackedInputStream(payload));
-                sink.next(event);
                 outstandingRequests.decrementAndGet();
-                sendRequests(0);
+                sendRequests(SEND_BUFFERED_REQUESTS);
                 callback.succeed();
+                sink.next(event);
+                receivedCounter.add(1, attributes);
             } catch (IOException e) {
                 error = e;
                 session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
@@ -482,7 +493,9 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     public void onWebSocketError(Throwable throwable) {
 
         Throwable unwrap = unwrap(throwable);
-        if (unwrap instanceof ClosedChannelException || throwable instanceof EofException)
+        if (unwrap instanceof ClosedChannelException
+                || throwable instanceof EofException
+                || throwable instanceof WebSocketTimeoutException)
             return;
 
         if (logger.isDebugEnabled()) {
@@ -498,6 +511,14 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
 
+/*
+        // Upstream
+        if (upstream() != null) {
+            upstream().cancel();
+        }
+*/
+
+        // Downstream
         if (statusCode == StatusCode.NORMAL) {
             logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             if (reason == null) {
@@ -587,7 +608,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 rn = requests.addAndGet(n);
 
                 if (sendRequestsThreshold == 0) {
-                    sendRequestsThreshold = Math.max(1, Math.min((rn * 3) / 4, 2048));
+                    sendRequestsThreshold = Math.max(1, (rn / 4) * 3);
                 } else {
                     if (rn < sendRequestsThreshold) {
                         return; // Wait until we have more requests lined up
@@ -611,6 +632,11 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
             if (logger.isTraceEnabled())
                 logger.trace(marker, "sendRequest {}",
+                        rn == CANCEL ? "CANCEL"
+                                : rn == COMPLETE ? "COMPLETE"
+                                : rn);
+            else if (logger.isDebugEnabled())
+                logger.debug(marker, "sendRequest {}",
                         rn == CANCEL ? "CANCEL"
                                 : rn == COMPLETE ? "COMPLETE"
                                 : rn);

@@ -15,13 +15,30 @@
         "multicast" : {
           "type" : "object",
           "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            },
             "discovery" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ dns.multicast.enabled }}",
+                  "description" : "Default: {{ dns.multicast.enabled }} ({{ dns.multicast.enabled }})"
+                }
+              }
             },
             "announce" : {
               "type" : "object",
-              "properties" : { }
+              "properties" : {
+                "enabled" : {
+                  "type" : "string",
+                  "default" : "{{ dns.multicast.enabled }}",
+                  "description" : "Default: {{ dns.multicast.enabled }} ({{ dns.multicast.enabled }})"
+                }
+              }
             }
           }
         }

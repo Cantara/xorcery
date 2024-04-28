@@ -12,6 +12,11 @@
     "eventstore" : {
       "type" : "object",
       "properties" : {
+        "enabled" : {
+          "type" : "string",
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+        },
         "uri" : {
           "type" : "string",
           "default" : "esdb://localhost:2113?tls=false",
@@ -19,7 +24,13 @@
         },
         "client" : {
           "type" : "object",
-          "properties" : { }
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+            }
+          }
         }
       }
     }

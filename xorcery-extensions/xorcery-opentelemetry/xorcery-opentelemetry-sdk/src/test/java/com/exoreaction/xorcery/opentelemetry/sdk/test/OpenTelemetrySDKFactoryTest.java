@@ -69,6 +69,6 @@ class OpenTelemetrySDKFactoryTest {
         span.end();
 
         System.out.println("DONE");
-        Thread.sleep(10000);
+//        Thread.sleep(10000);
     }
 }
