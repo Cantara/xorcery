@@ -20,13 +20,11 @@ import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.server.reactor.WebSocketStreamsServerConfiguration;
-import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
@@ -43,14 +41,13 @@ import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
-import static com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions.instance;
+import static com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions.instance;
 
 public class PublishWithResultSubscriberWebSocketTest {
 
@@ -83,7 +80,7 @@ public class PublishWithResultSubscriberWebSocketTest {
         clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
         websocketStreamsServerConfiguration = WebSocketStreamsServerConfiguration.get(serverConfiguration);
-        webSocketContext = Context.of(WebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers"));
+        webSocketContext = Context.of(ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers"));
     }
 
     @Test
@@ -93,8 +90,8 @@ public class PublishWithResultSubscriberWebSocketTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 LogManager.getLogger().info(clientConfiguration);
-                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
-                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreamsClient websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
 
                 websocketStreamsServer.subscriberWithResult(
                         "numbers",
@@ -105,7 +102,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
                 List<Integer> result = Flux.fromIterable(source)
-                        .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                        .transform(websocketStreamsClientClient.publishWithResult(instance(), Integer.class, Integer.class))
                         .contextWrite(webSocketContext)
                         .toStream().toList();
 
@@ -122,8 +119,8 @@ public class PublishWithResultSubscriberWebSocketTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 LogManager.getLogger().info(clientConfiguration);
-                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
-                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreamsClient websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
 
                 CountDownLatch cancelled = new CountDownLatch(1);
                 CountDownLatch latch = new CountDownLatch(1);
@@ -138,7 +135,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 Sinks.Many<Integer> publisher = Sinks.many().unicast().onBackpressureBuffer(new ArrayBlockingQueue<>(1024));
                 List<Integer> result = new ArrayList<>();
                 Disposable subscription = publisher.asFlux().
-                        transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                        transform(websocketStreamsClientClient.publishWithResult(instance(), Integer.class, Integer.class))
                         .doOnError(e -> logger.error("ERROR", e))
                         .doOnNext(result::add)
                         .doOnNext(v -> latch.countDown())
@@ -164,8 +161,8 @@ public class PublishWithResultSubscriberWebSocketTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 LogManager.getLogger().info(clientConfiguration);
-                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
-                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreamsClient websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
 
                 websocketStreamsServer.subscriberWithResult(
                         "numbers",
@@ -183,7 +180,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 try {
                     List<Integer> source = IntStream.range(0, 100).boxed().toList();
                     Flux.fromIterable(source)
-                            .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                            .transform(websocketStreamsClientClient.publishWithResult(instance(), Integer.class, Integer.class))
                             .contextWrite(webSocketContext)
                             .toStream().toList();
                     Assertions.fail();
@@ -209,8 +206,8 @@ public class PublishWithResultSubscriberWebSocketTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 LogManager.getLogger().info(clientConfiguration);
-                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
-                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreamsClient websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
 
                 websocketStreamsServer.subscriberWithResult(
                         "numbers",
@@ -225,7 +222,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 {
                     Sinks.Many<Integer> sink = Sinks.many().unicast().onBackpressureBuffer();
                     List<Integer> result = sink.asFlux().doOnNext(System.out::println)
-                            .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                            .transform(websocketStreamsClientClient.publishWithResult(instance(), Integer.class, Integer.class))
                             .contextWrite(webSocketContext)
                             .toStream().toList();
                 });
@@ -247,8 +244,8 @@ public class PublishWithResultSubscriberWebSocketTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 LogManager.getLogger().info(clientConfiguration);
-                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
-                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreamsClient websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
 
                 websocketStreamsServer.subscriberWithResult(
                         "numbers",
@@ -263,7 +260,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 {
                     Sinks.Many<Integer> sink = Sinks.many().unicast().onBackpressureBuffer();
                     List<Integer> result = sink.asFlux()
-                            .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                            .transform(websocketStreamsClientClient.publishWithResult(instance(), Integer.class, Integer.class))
                             .contextWrite(webSocketContext)
                             .toStream().toList();
                 });
@@ -285,8 +282,8 @@ public class PublishWithResultSubscriberWebSocketTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 LogManager.getLogger().info(clientConfiguration);
-                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
-                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreamsClient websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
 
                 List<Integer> result = new ArrayList<>();
                 CountDownLatch latch = new CountDownLatch(1);
@@ -299,7 +296,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // When
                 Sinks.Many<Integer> sink = Sinks.many().replay().all();
                 sink.asFlux()
-                        .transform(websocketStreamsClient.publishWithResult(instance(), Integer.class, Integer.class))
+                        .transform(websocketStreamsClientClient.publishWithResult(instance(), Integer.class, Integer.class))
                         .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(3))
                                 .doBeforeRetry(rs ->
                                 {
@@ -337,8 +334,8 @@ public class PublishWithResultSubscriberWebSocketTest {
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
                 LogManager.getLogger().info(clientConfiguration);
-                WebSocketStreamsServer websocketStreamsServer = server.getServiceLocator().getService(WebSocketStreamsServer.class);
-                WebSocketStreamsClient websocketStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreamsClient websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
 
                 websocketStreamsServer.subscriberWithResult(
                         "numbers/{foo}",
@@ -365,9 +362,9 @@ public class PublishWithResultSubscriberWebSocketTest {
                 };
 
                 String config = Flux.from(configPublisher)
-                        .transform(websocketStreamsClient.publishWithResult(instance(), String.class, String.class))
+                        .transform(websocketStreamsClientClient.publishWithResult(instance(), String.class, String.class))
                         .contextWrite(Context.of(
-                                WebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
+                                ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
                                 "client", "abc"))
                         .take(1).blockFirst();
 

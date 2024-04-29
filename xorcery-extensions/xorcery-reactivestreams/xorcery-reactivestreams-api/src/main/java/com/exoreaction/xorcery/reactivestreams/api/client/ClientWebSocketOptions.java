@@ -3,16 +3,16 @@ package com.exoreaction.xorcery.reactivestreams.api.client;
 import java.net.HttpCookie;
 import java.util.*;
 
-public record WebSocketClientOptions(Map<String, List<String>> headers, List<String> extensions,
+public record ClientWebSocketOptions(Map<String, List<String>> headers, List<String> extensions,
                                      List<HttpCookie> cookies) {
 
-    private static final WebSocketClientOptions INSTANCE = new Builder().build();
+    private static final ClientWebSocketOptions INSTANCE = new Builder().build();
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public static WebSocketClientOptions instance() {
+    public static ClientWebSocketOptions instance() {
         return INSTANCE;
     }
 
@@ -44,8 +44,8 @@ public record WebSocketClientOptions(Map<String, List<String>> headers, List<Str
             return this;
         }
 
-        public WebSocketClientOptions build() {
-            return new WebSocketClientOptions(headers, extensions, cookies);
+        public ClientWebSocketOptions build() {
+            return new ClientWebSocketOptions(headers, extensions, cookies);
         }
     }
 }

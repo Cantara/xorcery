@@ -5,7 +5,7 @@ import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.client.ReleaseCallback;
@@ -96,7 +96,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private final Publisher<OUTPUT> publisher; // if null -> subscribe
     private final FluxSink<INPUT> sink;
 
-    private final WebSocketClientOptions options;
+    private final ClientWebSocketOptions options;
     private final DnsLookup dnsLookup;
     private final WebSocketClient webSocketClient;
 
@@ -144,7 +144,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             Publisher<OUTPUT> publisher,
             FluxSink<INPUT> downstreamSink,
 
-            WebSocketClientOptions options,
+            ClientWebSocketOptions options,
             DnsLookup dnsLookup,
             WebSocketClient webSocketClient,
 

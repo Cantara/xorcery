@@ -1,5 +1,5 @@
 package com.exoreaction.xorcery.reactivestreams.api.client;
 
-public enum WebSocketStreamContext {
+public enum ClientWebSocketStreamContext {
     serverUri
 }

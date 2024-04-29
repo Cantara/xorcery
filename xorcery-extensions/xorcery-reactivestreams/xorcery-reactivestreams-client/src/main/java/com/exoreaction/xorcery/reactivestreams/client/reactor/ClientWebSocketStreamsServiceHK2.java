@@ -2,7 +2,7 @@ package com.exoreaction.xorcery.reactivestreams.client.reactor;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
@@ -16,7 +16,7 @@ import org.jvnet.hk2.annotations.Service;
  * Note: this is set to run level 0 primarily so that client streams are the last to close when an application shuts down.
  */
 @Service(name = "reactivestreams.client.reactor")
-@ContractsProvided({WebSocketStreamsClient.class})
+@ContractsProvided({ClientWebSocketStreamsClient.class})
 @RunLevel(0)
 public class ClientWebSocketStreamsServiceHK2
     extends ClientWebSocketStreamsService

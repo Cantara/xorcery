@@ -18,10 +18,10 @@ package com.exoreaction.xorcery.benchmarks.reactivestreams;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
@@ -149,7 +149,7 @@ public class PublishSubscriberWebSocketBenchmarks {
     @BenchmarkMode(Mode.Throughput)
     public void writes(OpCounters counters) {
         counters.counter = 0;
-        WebSocketStreamsServer streamsServer = this.server.getServiceLocator().getService(WebSocketStreamsServer.class);
+        ServerWebSocketStreams streamsServer = this.server.getServiceLocator().getService(ServerWebSocketStreams.class);
         done = new CompletableFuture<>();
         serverDisposable = streamsServer.subscriber("benchmark", Integer.class,
                 flux -> flux
@@ -161,10 +161,10 @@ public class PublishSubscriberWebSocketBenchmarks {
                         }));
 
         URI serverUri = ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark");
-        WebSocketStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(WebSocketStreamsClient.class);
+        ClientWebSocketStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
         clientDisposable = Flux.fromStream(IntStream.range(0, 1000000).boxed())
-                .transform(reactiveStreamsClient.publish(WebSocketClientOptions.instance(), Integer.class, MediaType.APPLICATION_JSON))
-                .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(), serverUri))
+                .transform(reactiveStreamsClient.publish(ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON))
+                .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
                 .subscribe();
 
         done.orTimeout(100, TimeUnit.SECONDS).join();

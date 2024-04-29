@@ -3,13 +3,10 @@ package com.exoreaction.xorcery.reactivestreams.server.reactor;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.lang.Exceptions;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
-import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
-import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketServerOptions;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -27,7 +24,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
 import org.eclipse.jetty.io.ByteBufferOutputStream2;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.io.RetainableByteBuffer;
@@ -67,7 +63,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     private final String path;
     private final Map<String, String> pathParameters;
 
-    private final WebSocketServerOptions options;
+    private final ServerWebSocketOptions options;
     private final MessageWriter<OUTPUT> writer;
     private final MessageReader<INPUT> reader;
     private final Publisher<OUTPUT> publisher;
@@ -101,7 +97,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     public ServerWebSocketStream(
             String path,
             Map<String, String> pathParameters,
-            WebSocketServerOptions options,
+            ServerWebSocketOptions options,
 
             MessageWriter<OUTPUT> writer,
             MessageReader<INPUT> reader,

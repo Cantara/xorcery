@@ -2,10 +2,10 @@ package com.exoreaction.reactivestreams.server.extra.yaml.test;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
 import com.exoreaction.xorcery.reactivestreams.server.reactor.WebSocketStreamsServerConfiguration;
@@ -41,7 +41,7 @@ public class SmileMessageReaderWriterTest {
     @Test
     public void testSmileMessageReaderWriter() {
 
-        server.getServiceLocator().getService(WebSocketStreamsServer.class)
+        server.getServiceLocator().getService(ServerWebSocketStreams.class)
                 .subscriberWithResult(
                         "test",
                         Map.class,
@@ -49,16 +49,16 @@ public class SmileMessageReaderWriterTest {
                         flux -> flux.doOnNext(map -> map.put("some", "value")));
 
         YamlPublisher<Map<String, Object>> filePublisher = new YamlPublisher<>(Map.class);
-        List<Map<String, Object>> result = Flux.from(filePublisher).transform(client.getServiceLocator().getService(WebSocketStreamsClient.class)
+        List<Map<String, Object>> result = Flux.from(filePublisher).transform(client.getServiceLocator().getService(ClientWebSocketStreamsClient.class)
                 .<Map<String, Object>, Map<String, Object>>publishWithResult(
-                        WebSocketClientOptions.instance(),
+                        ClientWebSocketOptions.instance(),
                         Map.class,
                         Map.class,
                         "application/x-jackson-smile",
                         "application/x-jackson-smile"
                 ))
                 .contextWrite(Context.of(
-                        WebSocketStreamContext.serverUri.name(), WebSocketStreamsServerConfiguration.get(server.getConfiguration()).getURI().resolve("test"),
+                        ClientWebSocketStreamContext.serverUri.name(), WebSocketStreamsServerConfiguration.get(server.getConfiguration()).getURI().resolve("test"),
                         ResourcePublisherContext.resourceUrl.name(), Resources.getResource("testevents.yaml").orElseThrow().toExternalForm()))
                 .toStream().toList();
 

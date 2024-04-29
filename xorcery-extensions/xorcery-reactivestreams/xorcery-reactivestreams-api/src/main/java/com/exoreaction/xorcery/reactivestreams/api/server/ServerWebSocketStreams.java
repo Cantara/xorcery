@@ -6,7 +6,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.function.Function;
 
-public interface WebSocketStreamsServer {
+public interface ServerWebSocketStreams {
     <PUBLISH> Disposable publisher(
             String path,
             Class<? super PUBLISH> publishType,

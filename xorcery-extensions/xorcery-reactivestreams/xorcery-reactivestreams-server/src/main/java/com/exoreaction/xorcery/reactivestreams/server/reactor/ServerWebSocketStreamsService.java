@@ -2,8 +2,8 @@ package com.exoreaction.xorcery.reactivestreams.server.reactor;
 
 
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketServerOptions;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -39,10 +39,10 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Function;
 
 @Service(name = "reactivestreams.server.reactor")
-@ContractsProvided({WebSocketStreamsServer.class})
+@ContractsProvided({ServerWebSocketStreams.class})
 @RunLevel(4)
 public class ServerWebSocketStreamsService
-        implements WebSocketStreamsServer {
+        implements ServerWebSocketStreams {
 
     protected static final TextMapGetter<ServerUpgradeRequest> jettyGetter =
             new TextMapGetter<>() {
@@ -208,7 +208,7 @@ public class ServerWebSocketStreamsService
                 return new ServerWebSocketStream<>(
                         path,
                         pathParameters,
-                        WebSocketServerOptions.instance(),
+                        ServerWebSocketOptions.instance(),
                         writer,
                         reader,
                         handler,

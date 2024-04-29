@@ -1,14 +1,14 @@
 package com.exoreaction.xorcery.reactivestreams.api.server;
 
-public record WebSocketServerOptions(int maxOutgoingFrames) {
+public record ServerWebSocketOptions(int maxOutgoingFrames) {
 
-    private static final WebSocketServerOptions INSTANCE = new Builder().build();
+    private static final ServerWebSocketOptions INSTANCE = new Builder().build();
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public static WebSocketServerOptions instance() {
+    public static ServerWebSocketOptions instance() {
         return INSTANCE;
     }
 
@@ -23,9 +23,9 @@ public record WebSocketServerOptions(int maxOutgoingFrames) {
             return this;
         }
 
-        public WebSocketServerOptions build()
+        public ServerWebSocketOptions build()
         {
-            return new WebSocketServerOptions(maxOutgoingFrames);
+            return new ServerWebSocketOptions(maxOutgoingFrames);
         }
     }
 }

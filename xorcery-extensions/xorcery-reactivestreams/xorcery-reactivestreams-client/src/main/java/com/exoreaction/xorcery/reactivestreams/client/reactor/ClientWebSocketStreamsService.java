@@ -3,9 +3,9 @@ package com.exoreaction.xorcery.reactivestreams.client.reactor;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
 import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import io.opentelemetry.api.OpenTelemetry;
@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 public class ClientWebSocketStreamsService
-        implements WebSocketStreamsClient {
+        implements ClientWebSocketStreamsClient {
 
     private final WebSocketClient webSocketClient;
     private final MessageWorkers messageWorkers;
@@ -68,7 +68,7 @@ public class ClientWebSocketStreamsService
     }
 
     @Override
-    public <PUBLISH> Function<Flux<PUBLISH>, Publisher<PUBLISH>> publish(WebSocketClientOptions options, Class<? super PUBLISH> publishType, String... publishContentTypes) {
+    public <PUBLISH> Function<Flux<PUBLISH>, Publisher<PUBLISH>> publish(ClientWebSocketOptions options, Class<? super PUBLISH> publishType, String... publishContentTypes) {
         Collection<String> availableContentTypes = messageWorkers.getAvailableWriteContentTypes(publishType, Arrays.asList(publishContentTypes));
         if (availableContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
@@ -88,7 +88,7 @@ public class ClientWebSocketStreamsService
     }
 
     @Override
-    public <PUBLISH, RESULT> Function<Flux<PUBLISH>, Publisher<RESULT>> publishWithResult(WebSocketClientOptions options, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Collection<String> messageContentTypes, Collection<String> resultContentTypes) {
+    public <PUBLISH, RESULT> Function<Flux<PUBLISH>, Publisher<RESULT>> publishWithResult(ClientWebSocketOptions options, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Collection<String> messageContentTypes, Collection<String> resultContentTypes) {
         Collection<String> availableContentTypes = messageWorkers.getAvailableWriteContentTypes(publishType, messageContentTypes);
         if (availableContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
@@ -110,7 +110,7 @@ public class ClientWebSocketStreamsService
     }
 
     @Override
-    public <SUBSCRIBE> Flux<SUBSCRIBE> subscribe(WebSocketClientOptions options, Class<? super SUBSCRIBE> subscribeType, String... messageContentTypes) {
+    public <SUBSCRIBE> Flux<SUBSCRIBE> subscribe(ClientWebSocketOptions options, Class<? super SUBSCRIBE> subscribeType, String... messageContentTypes) {
         Collection<String> availableResultContentTypes = messageWorkers.getAvailableReadContentTypes(subscribeType, Arrays.asList(messageContentTypes));
         if (availableResultContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
@@ -136,8 +136,8 @@ public class ClientWebSocketStreamsService
     }
 
     private URI getServerUri(ContextView contextView) {
-        Object serverUri = new ContextViewElement(contextView).get(WebSocketStreamContext.serverUri)
-                .orElseThrow(ContextViewElement.missing(WebSocketStreamContext.serverUri));
+        Object serverUri = new ContextViewElement(contextView).get(ClientWebSocketStreamContext.serverUri)
+                .orElseThrow(ContextViewElement.missing(ClientWebSocketStreamContext.serverUri));
         return validateUri(serverUri instanceof URI uri ? uri : URI.create(serverUri.toString()));
     }
 
