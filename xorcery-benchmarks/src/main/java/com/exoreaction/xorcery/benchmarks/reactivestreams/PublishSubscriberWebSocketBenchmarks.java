@@ -20,7 +20,7 @@ import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
 import jakarta.ws.rs.core.MediaType;
@@ -161,7 +161,7 @@ public class PublishSubscriberWebSocketBenchmarks {
                         }));
 
         URI serverUri = ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark");
-        ClientWebSocketStreamsClient reactiveStreamsClient = client.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
+        ClientWebSocketStreams reactiveStreamsClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
         clientDisposable = Flux.fromStream(IntStream.range(0, 1000000).boxed())
                 .transform(reactiveStreamsClient.publish(ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON))
                 .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))

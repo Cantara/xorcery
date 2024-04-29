@@ -5,7 +5,7 @@ import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import io.opentelemetry.api.OpenTelemetry;
@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 public class ClientWebSocketStreamsService
-        implements ClientWebSocketStreamsClient {
+        implements ClientWebSocketStreams {
 
     private final WebSocketClient webSocketClient;
     private final MessageWorkers messageWorkers;

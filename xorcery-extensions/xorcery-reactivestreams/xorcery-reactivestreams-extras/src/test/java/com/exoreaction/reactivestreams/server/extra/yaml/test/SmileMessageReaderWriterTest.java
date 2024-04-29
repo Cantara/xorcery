@@ -4,7 +4,7 @@ import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
@@ -49,7 +49,7 @@ public class SmileMessageReaderWriterTest {
                         flux -> flux.doOnNext(map -> map.put("some", "value")));
 
         YamlPublisher<Map<String, Object>> filePublisher = new YamlPublisher<>(Map.class);
-        List<Map<String, Object>> result = Flux.from(filePublisher).transform(client.getServiceLocator().getService(ClientWebSocketStreamsClient.class)
+        List<Map<String, Object>> result = Flux.from(filePublisher).transform(client.getServiceLocator().getService(ClientWebSocketStreams.class)
                 .<Map<String, Object>, Map<String, Object>>publishWithResult(
                         ClientWebSocketOptions.instance(),
                         Map.class,

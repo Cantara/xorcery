@@ -9,7 +9,7 @@ import com.exoreaction.xorcery.neo4jprojections.reactor.ProjectionStreamContext;
 import com.exoreaction.xorcery.neo4jprojections.reactor.SkipEventsUntil;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
@@ -84,7 +84,7 @@ public class Neo4jProjectionTest {
 
         try {
             // Client
-            ClientWebSocketStreamsClient client = xorceryExtension.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
+            ClientWebSocketStreams client = xorceryExtension.getServiceLocator().getService(ClientWebSocketStreams.class);
 
             YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
             AtomicInteger timestamp = new AtomicInteger();
@@ -123,7 +123,7 @@ public class Neo4jProjectionTest {
 
         try {
             // Client
-            ClientWebSocketStreamsClient client = xorceryExtension.getServiceLocator().getService(ClientWebSocketStreamsClient.class);
+            ClientWebSocketStreams client = xorceryExtension.getServiceLocator().getService(ClientWebSocketStreams.class);
 
             YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
             AtomicInteger timestamp = new AtomicInteger();

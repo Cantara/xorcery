@@ -14,7 +14,7 @@ import java.util.function.Function;
  * The methods without a specific server URI to connect to must be supplied via {@link reactor.util.context.ContextView}
  * under the key {@link ClientWebSocketStreamContext#serverUri} as a {@link URI} or {@link String}.
  */
-public interface ClientWebSocketStreamsClient {
+public interface ClientWebSocketStreams {
 
     <PUBLISH> Function<Flux<PUBLISH>, Publisher<PUBLISH>> publish(
             ClientWebSocketOptions options,
