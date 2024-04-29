@@ -127,6 +127,7 @@ class BaseAppendHandler {
                         case "acl" -> streamMetadata.setAcl(parseAcl(entry.getValue()));
                         case "customProperties" ->
                                 customProperties.putAll(jsonMapper.readValue(entry.getValue().toString(), Map.class));
+                        case "request", "response" -> {}
                         default -> customProperties.put(entry.getKey().toString(), entry.getValue());
                     }
                 }
