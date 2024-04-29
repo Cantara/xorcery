@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.domainevents.helpers.context;
 
+import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
 import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
@@ -92,7 +93,9 @@ public record EventMetadata(Metadata context)
     }
 
     public String getAggregateId() {
-        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId.name()).orElseThrow(missing(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId));
+        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId.name())
+                .or(()->context.getString(DomainEventMetadata.tenantId.name()))
+                .orElseThrow(missing(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId));
     }
 
     public String getCommandName() {

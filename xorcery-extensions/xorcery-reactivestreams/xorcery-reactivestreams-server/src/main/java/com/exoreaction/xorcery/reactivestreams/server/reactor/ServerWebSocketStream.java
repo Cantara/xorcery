@@ -200,7 +200,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     @Override
     public void onWebSocketOpen(Session session) {
         if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress());
 
         this.session = session;
         session.setMaxOutgoingFrames(options.maxOutgoingFrames());

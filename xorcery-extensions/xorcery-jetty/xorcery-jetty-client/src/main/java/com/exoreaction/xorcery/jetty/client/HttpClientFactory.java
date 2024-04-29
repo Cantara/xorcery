@@ -64,6 +64,7 @@ public class HttpClientFactory {
         // Client setup
         ClientConnector connector = new ClientConnector();
         connector.setIdleTimeout(jettyClientConfiguration.getIdleTimeout());
+        connector.setReusePort(jettyClientConfiguration.getReusePort());
 
         // HTTP 1.1
         ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;

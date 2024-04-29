@@ -16,11 +16,13 @@
 package com.exoreaction.xorcery.reactivestreams.providers;
 
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
+import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 @Service
 @ContractsProvided({MessageReader.Factory.class})
+@Rank(2)
 public class ByteBufferMessageReaderFactoryHK2 extends ByteBufferMessageReaderFactory
         implements MessageReader.Factory {
 

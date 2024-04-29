@@ -27,12 +27,12 @@ public class ByteBufferMessageReaderFactory
 
     @Override
     public boolean canRead(Class<?> type, String mediaType) {
-        return ByteBuffer.class.isAssignableFrom(type) && mediaType.equals("application/octet-stream");
+        return ByteBuffer.class.isAssignableFrom(type);
     }
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
-        if (ByteBuffer.class.isAssignableFrom(type) && mediaType.equals("application/octet-stream"))
+        if (ByteBuffer.class.isAssignableFrom(type))
             return (MessageReader<T>) new MessageWriterImplementation();
         else
             return null;

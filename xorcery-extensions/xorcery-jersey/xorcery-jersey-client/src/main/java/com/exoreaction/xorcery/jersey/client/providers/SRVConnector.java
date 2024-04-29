@@ -92,6 +92,7 @@ public class SRVConnector
                             @Override
                             public void failure(Throwable failure) {
                                 if (serverIterator.hasNext()) {
+                                    logger.warn("Request failed, trying next server", failure);
                                     URI server = serverIterator.next();
                                     ClientRequest nextRequest = new ClientRequest(request);
                                     nextRequest.setUri(server);
