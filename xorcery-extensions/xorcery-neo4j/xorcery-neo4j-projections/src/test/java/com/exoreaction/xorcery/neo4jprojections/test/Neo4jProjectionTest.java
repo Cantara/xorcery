@@ -3,6 +3,8 @@ package com.exoreaction.xorcery.neo4jprojections.test;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.junit.XorceryExtension;
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.reactor.Neo4jProjections;
 import com.exoreaction.xorcery.neo4jprojections.reactor.ProjectionStreamContext;
@@ -44,7 +46,7 @@ public class Neo4jProjectionTest {
         YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
         AtomicInteger timestamp = new AtomicInteger();
         Flux.from(filePublisher)
-                .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
+                .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
                 .transformDeferredContextual(new SkipEventsUntil(ProjectionStreamContext.projectionPosition.name()))
                 .transformDeferredContextual(neo4jProjections.projection())
                 .doOnNext(System.out::println)
@@ -89,7 +91,7 @@ public class Neo4jProjectionTest {
             YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
             AtomicInteger timestamp = new AtomicInteger();
             Flux<MetadataEvents> publisher = Flux.from(filePublisher)
-                    .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
+                    .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
                     .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
             URI serverUri = ReactiveStreamsServerConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
@@ -118,8 +120,8 @@ public class Neo4jProjectionTest {
         // Server
         Neo4jProjections neo4jProjections = xorceryExtension.getServiceLocator().getService(Neo4jProjections.class);
         ServerWebSocketStreams server = xorceryExtension.getServiceLocator().getService(ServerWebSocketStreams.class);
-        Disposable subscriber = server.subscriber("projections/{projectionId}", MetadataEvents.class,
-                flux -> flux.transformDeferredContextual(neo4jProjections.projection()));
+        Disposable subscriber = server.subscriberWithResult("projections/{projectionId}", MetadataEvents.class, Metadata.class,
+                flux -> flux.transformDeferredContextual(neo4jProjections.projection()).map(WithMetadata::metadata));
 
         try {
             // Client
@@ -128,11 +130,11 @@ public class Neo4jProjectionTest {
             YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
             AtomicInteger timestamp = new AtomicInteger();
             Flux<MetadataEvents> publisher = Flux.from(filePublisher)
-                    .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
+                    .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
                     .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
             URI serverUri = ReactiveStreamsServerConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
-            publisher.transform(client.publish(ClientWebSocketOptions.instance(), MetadataEvents.class, MediaType.APPLICATION_JSON))
+            publisher.transform(client.publishWithResult(ClientWebSocketOptions.instance(), MetadataEvents.class, Metadata.class, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON))
                     .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
                     .blockLast();
 

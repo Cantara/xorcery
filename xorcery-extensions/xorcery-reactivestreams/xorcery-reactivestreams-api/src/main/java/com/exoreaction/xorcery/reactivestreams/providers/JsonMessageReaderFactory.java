@@ -46,7 +46,6 @@ public class JsonMessageReaderFactory implements MessageReader.Factory {
         return jsonMapper.canDeserialize(jsonMapper.constructType(type))
                 && !JsonNode.class.isAssignableFrom(type)
                 && !JsonElement.class.isAssignableFrom(type)
-                && !WithMetadata.class.isAssignableFrom(type)
                 && mediaType.startsWith("application/json");
     }
 

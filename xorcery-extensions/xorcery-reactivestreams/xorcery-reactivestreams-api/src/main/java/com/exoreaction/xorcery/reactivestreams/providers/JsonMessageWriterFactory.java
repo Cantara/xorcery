@@ -48,7 +48,6 @@ public class JsonMessageWriterFactory
         return jsonMapper.canSerialize(type)
                 && !JsonNode.class.isAssignableFrom(type)
                 && !JsonElement.class.isAssignableFrom(type)
-                && !WithMetadata.class.isAssignableFrom(type)
                 && mediaType.startsWith("application/json");
     }
 

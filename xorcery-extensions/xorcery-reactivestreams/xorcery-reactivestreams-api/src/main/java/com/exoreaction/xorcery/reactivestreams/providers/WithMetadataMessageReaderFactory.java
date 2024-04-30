@@ -82,7 +82,7 @@ public class WithMetadataMessageReaderFactory
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
-        if (WithMetadata.class.isAssignableFrom(type)) {
+        if (WithMetadata.class.isAssignableFrom(type) && mediaType.endsWith("+metadata")) {
             Type parameterType = Classes.typeOrBound(Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>) type, WithMetadata.class)[0]);
             String envelopedContentType = mediaType.substring(0, mediaType.length() - "+metadata".length());
             try {

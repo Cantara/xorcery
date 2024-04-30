@@ -193,7 +193,7 @@ public class MessageWorkers {
 
     private Class<?> getRootType(Type type) {
         if (type instanceof ParameterizedType)
-            return (Class<?>) ((ParameterizedType) type).getOwnerType();
+            return (Class<?>) ((ParameterizedType) type).getRawType();
         else
             return (Class<?>) type;
     }

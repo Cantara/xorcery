@@ -87,7 +87,7 @@ public class WithMetadataMessageWriterFactory
     }
     @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (WithMetadata.class.isAssignableFrom(type)) {
+        if (WithMetadata.class.isAssignableFrom(type) && mediaType.endsWith("+metadata")) {
             Type parameterType = Classes.typeOrBound(Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>)type, WithMetadata.class)[0]);
             String envelopedContentType = mediaType.substring(0, mediaType.length()-"+metadata".length());
             if (parameterType instanceof Class<?> eventType)
