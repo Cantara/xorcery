@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.reactivestreams.providers;
 
 import com.exoreaction.xorcery.json.JsonElement;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -59,7 +59,7 @@ public class JsonMessageReaderFactory implements MessageReader.Factory {
 
     class JsonMessageReader implements MessageReader<Object> {
 
-        private Class<Object> type;
+        private final Class<Object> type;
 
         public JsonMessageReader(Class<Object> type) {
             this.type = type;

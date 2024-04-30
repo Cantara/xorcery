@@ -192,6 +192,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     @Override
     protected void hookOnError(Throwable throwable) {
         if (session.isOpen()) {
+            logger.error(marker, "Reactive stream error", throwable);
             session.close(StatusCode.NORMAL, getError(throwable).toPrettyString(), Callback.NOOP);
         }
     }

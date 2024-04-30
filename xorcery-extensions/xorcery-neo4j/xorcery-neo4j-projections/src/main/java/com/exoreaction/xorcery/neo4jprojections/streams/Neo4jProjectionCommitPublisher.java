@@ -15,8 +15,6 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.streams;
 
-import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import reactor.core.publisher.Flux;

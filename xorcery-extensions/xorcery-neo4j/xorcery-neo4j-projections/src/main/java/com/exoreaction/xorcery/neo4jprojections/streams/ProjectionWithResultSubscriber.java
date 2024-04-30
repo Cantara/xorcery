@@ -18,7 +18,7 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4jprojections.api.WaitForProjectionCommit;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.WithResult;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.reactivestreams.Subscriber;

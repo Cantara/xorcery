@@ -2,10 +2,9 @@ package com.exoreaction.xorcery.neo4jprojections.streams;
 
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 
 public class MetadataProjectionCommit
-    extends WithMetadata<ProjectionCommit>
+    extends com.exoreaction.xorcery.metadata.WithMetadata<ProjectionCommit>
 {
     public MetadataProjectionCommit() {
     }

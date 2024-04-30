@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.reactivestreams.api;
 
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class MetadataJsonNode<T extends JsonNode>

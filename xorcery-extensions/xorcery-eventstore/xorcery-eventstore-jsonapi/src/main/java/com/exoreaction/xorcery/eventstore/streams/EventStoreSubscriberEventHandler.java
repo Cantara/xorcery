@@ -19,7 +19,7 @@ import com.eventstore.dbclient.EventData;
 import com.eventstore.dbclient.EventDataBuilder;
 import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.eventstore.api.EventStoreMetadata;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.lmax.disruptor.EventHandler;
 import org.apache.logging.log4j.LogManager;

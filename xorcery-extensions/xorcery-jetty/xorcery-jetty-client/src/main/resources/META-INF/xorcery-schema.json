@@ -30,6 +30,11 @@
               "default" : "5s",
               "description" : "Default: 5s"
             },
+            "reusePort" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
             "http2" : {
               "type" : "object",
               "properties" : {

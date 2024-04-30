@@ -15,7 +15,7 @@
  */
 package com.exoreaction.xorcery.neo4jprojections.api;
 
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Subscriber;

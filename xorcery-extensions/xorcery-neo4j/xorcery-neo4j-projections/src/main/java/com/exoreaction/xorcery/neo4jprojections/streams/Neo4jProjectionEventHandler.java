@@ -23,7 +23,6 @@ import com.exoreaction.xorcery.neo4jprojections.Neo4jProjectionsConfiguration;
 import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionCommit;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.lmax.disruptor.RewindableEventHandler;
 import com.lmax.disruptor.RewindableException;
 import io.opentelemetry.api.OpenTelemetry;

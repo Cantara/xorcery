@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.reactivestreams.providers;
 
 import com.exoreaction.xorcery.lang.Classes;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -35,12 +35,11 @@ import java.util.function.Supplier;
 public class WithMetadataMessageWriterFactory
         implements MessageWriter.Factory {
 
-    private final ObjectMapper objectMapper;
     private final ObjectWriter objectWriter;
     private final Supplier<MessageWorkers> messageWorkersSupplier;
 
     public WithMetadataMessageWriterFactory(Supplier<MessageWorkers> messageWorkersSupplier) {
-        objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectWriter = objectMapper.writer();

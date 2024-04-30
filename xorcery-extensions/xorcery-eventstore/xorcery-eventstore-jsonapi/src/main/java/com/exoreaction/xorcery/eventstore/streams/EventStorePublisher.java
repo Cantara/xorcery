@@ -24,7 +24,6 @@ import com.exoreaction.xorcery.eventstore.api.EventStoreMetadata;
 import com.exoreaction.xorcery.eventstore.resources.EventStoreParameters;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
