@@ -96,7 +96,7 @@ public class Neo4jEntitySnapshotLoader {
                         });
 
                         if (snapshot.get() == null) {
-                            return CompletableFuture.failedStage(new NotFoundException(metadata.getAggregateId()));
+                            return CompletableFuture.failedStage(new NotFoundException(entityId));
                         }
 
                         return CompletableFuture.completedStage(snapshot.get());
