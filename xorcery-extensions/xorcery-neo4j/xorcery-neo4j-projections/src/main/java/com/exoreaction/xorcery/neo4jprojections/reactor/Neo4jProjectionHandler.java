@@ -158,7 +158,7 @@ public class Neo4jProjectionHandler
             long start = System.nanoTime();
             try (Transaction tx = database.beginTx()) {
                 for (MetadataEvents metadataEvents : events) {
-                    metadataEvents.getMetadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
+                    metadataEvents.metadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
                     for (Neo4jEventProjection projection : projections) {
                         projection.write(metadataEvents, tx);
                     }
@@ -166,13 +166,13 @@ public class Neo4jProjectionHandler
                 if (!events.isEmpty()) {
                     position = ((Number) events
                             .get(events.size() - 1)
-                            .getMetadata()
+                            .metadata()
                             .getLong(DomainEventMetadata.streamPosition)
                             .orElse(position + events.size()))
                             .longValue();
                     long timestamp = ((Number) events
                             .get(events.size() - 1)
-                            .getMetadata()
+                            .metadata()
                             .getLong(DomainEventMetadata.timestamp)
                             .orElseGet(System::currentTimeMillis))
                             .longValue();

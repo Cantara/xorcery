@@ -123,14 +123,14 @@ public class Neo4jProjectionEventHandler
             tx = graphDatabaseService.beginTx();
         }
 
-        event.getMetadata().getLong("timestamp").ifPresent(value ->
+        event.metadata().getLong("timestamp").ifPresent(value ->
         {
             lastTimestamp = Math.max(lastTimestamp, value);
         });
 
-        Map<String, Object> metadataMap = Cypher.toMap(event.getMetadata().metadata());
+        Map<String, Object> metadataMap = Cypher.toMap(event.metadata().metadata());
         // Preprocessor may have removed all the events, so check for this
-        List<DomainEvent> domainEvents = event.getEvents();
+        List<DomainEvent> domainEvents = event.data();
         if (!domainEvents.isEmpty()) {
 
             try {
@@ -144,10 +144,10 @@ public class Neo4jProjectionEventHandler
 
                 MetadataEvents cleanedMetadataEvents = event.cloneWithoutState();
                 if (t instanceof EntityNotFoundException) {
-                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, cleanedMetadataEvents.getEvents()), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, retrying. Metadata: %s%nEvent: %s", metadataMap, cleanedMetadataEvents.data()), t);
                     throw new RewindableException(t);
                 } else {
-                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, cleanedMetadataEvents.getEvents()), t);
+                    logger.error(String.format("Could not apply Neo4j event projection update, needs to be restarted. Metadata: %s%nEvent: %s", metadataMap, cleanedMetadataEvents.data()), t);
 
                     if (t instanceof Exception e)
                         throw e;
@@ -157,7 +157,7 @@ public class Neo4jProjectionEventHandler
             }
         }
 
-        eventBatchCount += event.getEvents().size();
+        eventBatchCount += event.data().size();
 
         if (endOfBatch || eventBatchCount >= eventBatchSize) {
             try {

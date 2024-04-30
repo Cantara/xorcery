@@ -57,7 +57,7 @@ public class MetadataEventsTest {
             MetadataEvents deserializedMetadataEvents = mapper.readerFor(MetadataEvents.class).readValue(serializedJson);
 
             System.out.println(deserializedMetadataEvents);
-            for (DomainEvent deserializedEvent : deserializedMetadataEvents.getEvents()) {
+            for (DomainEvent deserializedEvent : deserializedMetadataEvents.data()) {
                 System.out.println(deserializedEvent);
             }
         }

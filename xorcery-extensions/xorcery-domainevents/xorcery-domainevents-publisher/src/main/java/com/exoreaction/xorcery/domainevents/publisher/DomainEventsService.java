@@ -102,8 +102,8 @@ public class DomainEventsService
         try {
             requests.tryAcquire(10, TimeUnit.SECONDS);
             CompletableFuture<Metadata> future = new CompletableFuture<>();
-            ArrayNode json = objectMapper.valueToTree(commandEvents.getEvents());
-            subscriber.onNext(new WithResult<>(new MetadataJsonNode<>(commandEvents.getMetadata().toBuilder().add(deploymentMetadata.context()).build(), json), future));
+            ArrayNode json = objectMapper.valueToTree(commandEvents.data());
+            subscriber.onNext(new WithResult<>(new MetadataJsonNode<>(commandEvents.metadata().toBuilder().add(deploymentMetadata.context()).build(), json), future));
             return future;
         } catch (InterruptedException e) {
             return CompletableFuture.failedFuture(e);

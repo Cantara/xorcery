@@ -23,7 +23,7 @@ public class SkipEventsUntil
             long projectionRevision = contextView.get(contextKey);
             return metadataEventsFlux.handle((me, sink)->
             {
-                if (me.getMetadata().getLong(contextKey)
+                if (me.metadata().getLong(contextKey)
                         .map(revision -> revision > projectionRevision).orElse(true))
                     sink.next(me);
             });

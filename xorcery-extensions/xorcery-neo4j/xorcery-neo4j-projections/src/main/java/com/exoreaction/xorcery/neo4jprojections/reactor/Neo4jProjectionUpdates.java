@@ -46,8 +46,8 @@ public class Neo4jProjectionUpdates
 
     @Override
     public MetadataEvents apply(MetadataEvents metadataEvents) {
-        metadataEvents.getMetadata().getString("projectionId")
-                .ifPresent(id -> sinkFluxes.computeIfAbsent(id, Neo4jProjectionUpdates::createSinkFlux).sink.tryEmitNext(metadataEvents.getMetadata()));
+        metadataEvents.metadata().getString("projectionId")
+                .ifPresent(id -> sinkFluxes.computeIfAbsent(id, Neo4jProjectionUpdates::createSinkFlux).sink.tryEmitNext(metadataEvents.metadata()));
 
         return metadataEvents;
     }

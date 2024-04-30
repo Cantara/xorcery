@@ -49,7 +49,7 @@ public class PreProcessorEventHandler
                 preProcessor.preProcess(event);
 
                 // Remove the flag
-                event.getMetadata().json().remove("earlyrelease");
+                event.metadata().json().remove("earlyrelease");
             } catch (EarlyReleaseException ex) {
                 LogManager.getLogger().error("Event migration threw EarlyReleastException again:\n{}", event);
                 throw ex;

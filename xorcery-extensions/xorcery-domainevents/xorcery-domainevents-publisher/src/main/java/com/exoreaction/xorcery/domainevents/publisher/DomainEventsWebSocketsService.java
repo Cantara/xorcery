@@ -118,7 +118,7 @@ public class DomainEventsWebSocketsService
     }
 
     public CompletableFuture<Metadata> publish(MetadataEvents metadataEvents) {
-        metadataEvents.getMetadata().toBuilder().add(deploymentMetadata.context());
+        metadataEvents.metadata().toBuilder().add(deploymentMetadata.context());
         CompletableFuture<Metadata> future = new CompletableFuture<>();
         if (requestQueue.offer(future)) {
             if (sink.tryEmitNext(metadataEvents).isFailure()) {
