@@ -27,7 +27,7 @@ public class ByteBufferMessageWriterFactory
 
     @Override
     public boolean canWrite(Class<?> type, String mediaType) {
-        return ByteBuffer.class.isAssignableFrom(type) &&  mediaType.equals("application/octet-stream");
+        return ByteBuffer.class.isAssignableFrom(type);
     }
 
     @Override

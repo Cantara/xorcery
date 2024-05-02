@@ -26,7 +26,7 @@ public class ByteArrayMessageReaderFactory
 
     @Override
     public boolean canRead(Class<?> type, String mediaType) {
-        return byte[].class.isAssignableFrom(type) && mediaType.equals("application/octet-stream");
+        return byte[].class.isAssignableFrom(type);
     }
 
     @Override
