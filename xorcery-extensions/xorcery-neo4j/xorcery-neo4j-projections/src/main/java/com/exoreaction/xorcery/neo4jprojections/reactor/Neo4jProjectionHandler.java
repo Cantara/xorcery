@@ -9,7 +9,7 @@ import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
-import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
+import com.exoreaction.xorcery.reactivestreams.extras.operators.SmartBatchingOperator;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -82,7 +82,7 @@ public class Neo4jProjectionHandler
             Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
             Handler handler = new Handler(projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
             return Flux.from(currentProjection
-                    .map(p -> new SmartBatching<>(this.configuration, handler)
+                    .map(p -> SmartBatchingOperator.smartBatching(handler)
                             .apply(p.getProjectionPosition()
                                             .map(pos ->
                                             {
@@ -119,7 +119,7 @@ public class Neo4jProjectionHandler
                             tx.commit();
                         }
 
-                        return new SmartBatching<>(this.configuration, handler).apply(metadataEventsFlux, contextView);
+                        return SmartBatchingOperator.smartBatching(handler).apply(metadataEventsFlux, contextView);
                     })).doAfterTerminate(handler::close);
         } catch (RuntimeException e) {
             return Flux.error(e);
@@ -138,7 +138,7 @@ public class Neo4jProjectionHandler
     }
 
     private class Handler
-            implements BiConsumer<List<MetadataEvents>, SynchronousSink<List<MetadataEvents>>>, AutoCloseable {
+            implements BiConsumer<Collection<MetadataEvents>, SynchronousSink<Collection<MetadataEvents>>>, AutoCloseable {
 
         private final Attributes attributes;
         private final ObservableLongGauge positionGauge;
@@ -154,24 +154,24 @@ public class Neo4jProjectionHandler
         }
 
         @Override
-        public void accept(List<MetadataEvents> events, SynchronousSink<List<MetadataEvents>> sink) {
+        public void accept(Collection<MetadataEvents> events, SynchronousSink<Collection<MetadataEvents>> sink) {
             long start = System.nanoTime();
             try (Transaction tx = database.beginTx()) {
+                MetadataEvents lastEvent = null;
                 for (MetadataEvents metadataEvents : events) {
                     metadataEvents.metadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
                     for (Neo4jEventProjection projection : projections) {
                         projection.write(metadataEvents, tx);
                     }
+                    lastEvent = metadataEvents;
                 }
                 if (!events.isEmpty()) {
-                    position = ((Number) events
-                            .get(events.size() - 1)
+                    position = ((Number) lastEvent
                             .metadata()
                             .getLong(DomainEventMetadata.streamPosition)
                             .orElse(position + events.size()))
                             .longValue();
-                    long timestamp = ((Number) events
-                            .get(events.size() - 1)
+                    long timestamp = ((Number) lastEvent
                             .metadata()
                             .getLong(DomainEventMetadata.timestamp)
                             .orElseGet(System::currentTimeMillis))
@@ -189,9 +189,9 @@ public class Neo4jProjectionHandler
 
                     tx.commit();
                     long stop = System.nanoTime();
-                    batchSizeHistogram.record(events.size(),attributes);
+                    batchSizeHistogram.record(events.size(), attributes);
                     double writeDuration = stop - start;
-                    writeLatencyHistogram.record(writeDuration /  1_000_000_000.0, attributes);
+                    writeLatencyHistogram.record(writeDuration / 1_000_000_000.0, attributes);
 
                     if (logger.isTraceEnabled())
                         logger.trace("Committed " + events.size());
@@ -206,7 +206,7 @@ public class Neo4jProjectionHandler
 
         @Override
         public void close() {
-            logger.debug("Close projection "+projectionId);
+            logger.debug("Close projection " + projectionId);
             positionGauge.close();
         }
     }
