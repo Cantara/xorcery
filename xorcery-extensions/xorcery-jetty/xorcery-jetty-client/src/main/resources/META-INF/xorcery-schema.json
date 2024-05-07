@@ -30,6 +30,11 @@
               "default" : "5s",
               "description" : "Default: 5s"
             },
+            "requestBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            },
             "reusePort" : {
               "type" : [ "boolean", "string" ],
               "default" : false,

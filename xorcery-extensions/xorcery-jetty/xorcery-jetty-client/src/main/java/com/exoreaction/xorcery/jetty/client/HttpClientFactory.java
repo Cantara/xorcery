@@ -98,8 +98,10 @@ public class HttpClientFactory {
         HttpClient client = new HttpClient(transport);
         client.getRequestListeners().addListener(new OpenTelemetryRequestListener(openTelemetry));
         client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
+        client.setRequestBufferSize(jettyClientConfiguration.getRequestBufferSize());
         QueuedThreadPool executor = new JettyClientConnectorThreadPool();
-        executor.setName(applicationConfiguration.getName());
+        executor.setDaemon(true);
+        executor.setName("jetty-http-client");
         client.setExecutor(executor);
         client.setScheduler(new ScheduledExecutorScheduler(applicationConfiguration.getName() + "-scheduler", false));
 

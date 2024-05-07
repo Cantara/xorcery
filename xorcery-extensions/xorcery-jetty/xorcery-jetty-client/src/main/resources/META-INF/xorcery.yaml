@@ -3,6 +3,7 @@ jetty:
     enabled: "{{ defaults.enabled }}"
     idleTimeout: "{{ defaults.idleTimeout }}"
     connectTimeout: "5s"
+    requestBufferSize: 4096
     reusePort: false
     http2:
       # HTTP2 doesn't work with WebSockets and query parameters at the moment (Jetty 11.0.19)
