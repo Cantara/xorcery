@@ -91,7 +91,7 @@ public class PublishWithResultBenchmarks {
             jetty.server.enabled: true
             jetty.server.http.enabled: true
             jetty.server.http2.enabled: false
-            jetty.server.ssl.enabled: true
+            jetty.server.ssl.enabled: false
             jetty.server.ssl.port: 8443
 
             reactivestreams.client.enabled: false
@@ -103,7 +103,7 @@ public class PublishWithResultBenchmarks {
     public static void main(String[] args) throws Exception {
 
         new Runner(new OptionsBuilder()
-                .include(PublishWithResultBenchmarks.class.getSimpleName() + ".publishWithResultMetadataByteBuffer")
+                .include(PublishWithResultBenchmarks.class.getSimpleName() + ".publishWithResultByteBuffer")
                 .forks(0)
                 .jvmArgs("-Dcom.sun.management.jmxremote=true")
                 .build()).run();
@@ -190,7 +190,7 @@ public class PublishWithResultBenchmarks {
         ServerWebSocketStreams streamsServer = this.server.getServiceLocator().getService(ServerWebSocketStreams.class);
         serverDisposable = streamsServer.subscriberWithResult("benchmark", publishType,resultType,
                 flux -> flux
-                        .publishOn(Schedulers.boundedElastic(), 4096)
+                        .publishOn(Schedulers.boundedElastic(), 1024)
                         .map(item ->
                         {
                             counters.counter++;
@@ -206,7 +206,7 @@ public class PublishWithResultBenchmarks {
 
         System.out.println("Start");
         AtomicInteger count = new AtomicInteger();
-        CompletableFuture done = new CompletableFuture();
+        CompletableFuture<Void> done = new CompletableFuture<>();
 
         source
 //                .doOnRequest(r -> System.out.println("Requests:"+r))

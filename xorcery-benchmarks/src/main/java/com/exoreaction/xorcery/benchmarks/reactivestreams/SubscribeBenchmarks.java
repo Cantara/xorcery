@@ -41,18 +41,15 @@ import reactor.util.context.Context;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @State(Scope.Benchmark)
 @Fork(value = 1, warmups = 1, jvmArgs = "-Dcom.sun.management.jmxremote=true")
 @Warmup(iterations = 0)
-@Measurement(iterations = 3)
-public class PublishBenchmarks {
+@Measurement(iterations = 5)
+public class SubscribeBenchmarks {
 
     private static final String config = """
             secrets.enabled: true
@@ -103,7 +100,7 @@ public class PublishBenchmarks {
     public static void main(String[] args) throws Exception {
 
         new Runner(new OptionsBuilder()
-                .include(PublishBenchmarks.class.getSimpleName() + ".publishByteBuffer")
+                .include(SubscribeBenchmarks.class.getSimpleName() + ".subscribeInteger")
                 .forks(0)
                 .jvmArgs("-Dcom.sun.management.jmxremote=true")
                 .build()).run();
@@ -152,7 +149,7 @@ public class PublishBenchmarks {
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public void publishMetadataByteBuffer(OpCounters counters) throws JsonProcessingException {
+    public void subscribeMetadataByteBuffer(OpCounters counters) throws JsonProcessingException {
         String metadata = """
                   tenant: "acme-small"
                   aggregateId: "acme-small"
@@ -167,56 +164,44 @@ public class PublishBenchmarks {
         ObjectNode metadataJson = (ObjectNode) new YAMLMapper().readTree(metadata);
         ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[1024]);
         MetadataByteBuffer metadataByteBuffer = new MetadataByteBuffer(new Metadata(metadataJson), byteBuffer);
-        runBenchmark(counters, MetadataByteBuffer.class, Flux.fromStream(Stream.generate(()-> metadataByteBuffer).limit(5000000)), MediaType.APPLICATION_JSON+"metadata");
+        runBenchmark(counters, MetadataByteBuffer.class, Flux.fromStream(Stream.generate(()-> metadataByteBuffer).limit(1000000)), MediaType.APPLICATION_JSON+"metadata");
     }
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public void publishByteBuffer(OpCounters counters) {
+    public void subscribeByteBuffer(OpCounters counters) {
 
-        ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[4]);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[1024]);
         runBenchmark(counters, ByteBuffer.class, Flux.fromStream(Stream.generate(()-> byteBuffer).limit(10000000)), MediaType.APPLICATION_JSON);
     }
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public void publishInteger(OpCounters counters) {
+    public void subscribeInteger(OpCounters counters) {
         runBenchmark(counters, Integer.class, Flux.fromStream(IntStream.range(0, 10000000).boxed()), MediaType.APPLICATION_JSON);
     }
 
-    private <T> void runBenchmark(OpCounters counters, Class<T> publishType, Flux<T> source, String contentType)
+    private <T,R> void runBenchmark(OpCounters counters, Class<T> publishType, Flux<T> source, String contentType)
     {
         counters.counter = 0;
         ServerWebSocketStreams streamsServer = this.server.getServiceLocator().getService(ServerWebSocketStreams.class);
-        serverDisposable = streamsServer.subscriber("benchmark", publishType,
-                flux -> flux
-                        .publishOn(Schedulers.boundedElastic(), 2048)
-                        .doOnNext(item ->
-                        {
-                            counters.counter++;
-                        })
-                        .doOnComplete(() ->
-                        {
-                            System.out.println("Invoke count:" + counters.counter);
-                        }));
+        serverDisposable = streamsServer.publisher("benchmark", publishType,source);
 
         URI serverUri = ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark");
-        System.out.println("Server URI:"+serverUri);
         ClientWebSocketStreams reactiveStreamsClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
 
         System.out.println("Start");
-        AtomicInteger count = new AtomicInteger();
-        CompletableFuture done = new CompletableFuture();
+        CompletableFuture<Void> done = new CompletableFuture<>();
 
-        source
+        reactiveStreamsClient.subscribe(ClientWebSocketOptions.builder().build(), publishType, contentType)
 //                .doOnRequest(r -> System.out.println("Requests:"+r))
 //                .subscribeOn(Schedulers.boundedElastic(), true)
-                .transform(reactiveStreamsClient.publish(ClientWebSocketOptions.builder().extensionPerMessageDeflate().build(), publishType, contentType))
+                .publishOn(Schedulers.boundedElastic(), 1024)
                 .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
                 .doOnRequest(r -> System.out.println("Requests downstream:"+r))
-                .subscribe(result->count.incrementAndGet(), done::completeExceptionally, ()->done.complete(null) );
+                .subscribe(result->counters.counter++, done::completeExceptionally, ()->done.complete(null) );
         done.join();
-        System.out.println("Stop "+count);
+        System.out.println("Stop");
         serverDisposable.dispose();
     }
 }
