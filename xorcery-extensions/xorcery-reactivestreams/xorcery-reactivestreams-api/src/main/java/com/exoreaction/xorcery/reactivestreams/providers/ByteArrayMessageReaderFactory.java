@@ -32,12 +32,12 @@ public class ByteArrayMessageReaderFactory
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
         if (canRead(type, mediaType))
-            return (MessageReader<T>) new MessageWriterImplementation();
+            return (MessageReader<T>) new MessageReaderImplementation();
         else
             return null;
     }
 
-    static class MessageWriterImplementation
+    static class MessageReaderImplementation
             implements MessageReader<byte[]> {
 
         @Override
