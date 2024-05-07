@@ -55,6 +55,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
@@ -106,7 +107,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private final TextMapPropagator textMapPropagator;
 
     private final ByteBufferPool byteBufferPool;
-    private final SmartBatcher<RetainableByteBuffer> batcher;
+    private final SmartBatcher<OUTPUT> batcher;
 
     private volatile boolean redundancyNotificationIssued = false;
 
@@ -130,7 +131,10 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private final LongHistogram receivedBytes;
     private final LongHistogram sentBytes;
     private final LongHistogram requestsHistogram;
-    private long serverMaxBinaryMessageSize;
+    private final LongHistogram flushHistogram;
+
+    private final int queueSize = 1024;
+    private int serverMaxBinaryMessageSize;
 
     public ClientWebSocketStream(
             URI serverUri,
@@ -172,7 +176,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         this.marker = MarkerManager.getMarker(serverUri.toASCIIString());
 
         if (outputType != null) {
-            this.batcher = new SmartBatcher<>(this::flush, new ArrayBlockingQueue<>(1024), flushingExecutor);
+            this.batcher = new SmartBatcher<>(this::flush, new ArrayBlockingQueue<>(queueSize), flushingExecutor);
         } else {
             this.batcher = null;
         }
@@ -189,6 +193,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 .setUnit("{request}").build();
         this.receivedBytes = meter.histogramBuilder(SUBSCRIBER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
+                .setUnit("{item}").ofLongs().build();
 
         span = tracer.spanBuilder(serverUri.toASCIIString() + " client")
                 .setSpanKind(SpanKind.CLIENT)
@@ -295,84 +301,106 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     @Override
     protected void hookOnNext(OUTPUT item) {
 
-        try (ByteBufferOutputStream2 outputStream = new ByteBufferOutputStream2(byteBufferPool, false)) {
-            writer.writeTo(item, outputStream);
+        if (serverMaxBinaryMessageSize == -1) {
+            try (ByteBufferOutputStream2 outputStream = new ByteBufferOutputStream2(byteBufferPool, false)) {
+                writer.writeTo(item, outputStream);
 
-            if (serverMaxBinaryMessageSize == -1) {
                 RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
                 ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
                 sentBytes.record(eventBuffer.limit(), attributes);
                 session.sendBinary(eventBuffer, new ReleaseCallback(retainableByteBuffer));
-            } else {
-                batcher.submit(outputStream.takeByteBuffer());
-            }
+            } catch (Throwable e) {
 
-            if (reader == null) {
-                sink.next((INPUT) item);
-            }
-        } catch (Throwable e) {
+                if (isCausedBy(e, EofException.class, ClosedChannelException.class)) {
+                    // Shutting down, ignore this
+                    return;
+                }
 
-            if (isCausedBy(e, EofException.class, ClosedChannelException.class)) {
-                // Shutting down, ignore this
+                // Tell server we have a problem
+                onError(e);
+
+                // Save it for when websocket is closed so that we can report it accurately
+                this.error = e;
                 return;
             }
+        } else {
+            try {
+                batcher.submit(item);
+            } catch (InterruptedException e) {
+                onError(e);
+                this.error = e;
+                return;
+            }
+        }
 
-            // Tell server we have a problem
-            onError(e);
-
-            // Save it for when websocket is closed so that we can report it accurately
-            this.error = e;
+        if (reader == null) {
+            sink.next((INPUT) item);
         }
     }
 
-    private final List<RetainableByteBuffer> batchBuffers = new ArrayList<>();
+    private final int[] sizes = new int[queueSize];
 
-    private void flush(Collection<RetainableByteBuffer> items) {
-        int total = 0;
-        for (RetainableByteBuffer item : items) {
-            int limit = item.getByteBuffer().limit();
-            if (total + limit + 4 > serverMaxBinaryMessageSize) {
-//                logger.info("Intermediate flushing {} buffers with {} bytes ", batchBuffers.size(), total);
-                RetainableByteBuffer sendBuffer = byteBufferPool.acquire(total, false);
-                ByteBuffer sendByteBuffer = sendBuffer.getByteBuffer();
-                sendByteBuffer.limit(total);
-                for (RetainableByteBuffer batchBuffer : batchBuffers) {
+    private void flush(Collection<OUTPUT> items) {
+        RetainableByteBuffer sendByteBuffer = byteBufferPool.acquire(serverMaxBinaryMessageSize, false);
+        ByteBuffer byteBuffer = sendByteBuffer.getByteBuffer();
+//        logger.info("FLUSH {}", items.size());
+        try (ByteBufferOutputStream outputStream = new ByteBufferOutputStream(byteBuffer)) {
+            int idx = 0;
+            for (OUTPUT item : items) {
+                outputStream.write(new byte[4]);
+                int position = byteBuffer.limit();
+                try {
+                    writer.writeTo(item, outputStream);
+                } catch (BufferOverflowException e) {
+                    logger.info("OVERFLOW FLUSH {}", position);
 
-                    sendByteBuffer.putInt(batchBuffer.getByteBuffer().limit());
-                    sendByteBuffer.put(batchBuffer.getByteBuffer());
-                    batchBuffer.release();
+                    // Flush what we have so far and start again
+                    position = 0;
+                    for (int i = 0; i < idx; i++) {
+                        int size = sizes[i];
+                        byteBuffer.putInt(size);
+                        position += 4 + size;
+                        byteBuffer.position(position);
+                    }
+                    byteBuffer.flip();
+                    CompletableFuture<Void> flushDone = new CompletableFuture<>();
+                    session.sendBinary(byteBuffer, Callback.from(()->flushDone.complete(null), flushDone::completeExceptionally));
+                    flushDone.join();
+                    byteBuffer.limit(0);
+                    idx = 0;
+
+                    // Try again
+                    outputStream.write(new byte[4]);
+                    position = byteBuffer.limit();
+                    writer.writeTo(item, outputStream);
                 }
-                batchBuffers.clear();
-                total = 0;
-                sendByteBuffer.flip();
-                sentBytes.record(sendByteBuffer.limit(), attributes);
-                session.sendBinary(sendByteBuffer, new ReleaseCallback(sendBuffer));
+                int size = byteBuffer.limit()-position;
+                sizes[idx++] = size;
             }
 
-            batchBuffers.add(item);
-            total += limit + 4;
-        }
+            // Fill in the item sizes
+            int position = 0;
+            for (int i = 0; i < idx; i++) {
+                int size = sizes[i];
+                byteBuffer.putInt(size);
+                position += 4 + size;
+                byteBuffer.position(position);
+            }
+            byteBuffer.flip();
 
-//        logger.info("Flushing {} buffers with {} bytes ", batchBuffers.size(), total);
-        RetainableByteBuffer sendBuffer = byteBufferPool.acquire(total, false);
-        ByteBuffer sendByteBuffer = sendBuffer.getByteBuffer();
-        sendByteBuffer.limit(total);
-        for (RetainableByteBuffer batchBuffer : batchBuffers) {
-            sendByteBuffer.putInt(batchBuffer.getByteBuffer().limit());
-            sendByteBuffer.put(batchBuffer.getByteBuffer());
-            batchBuffer.release();
+            sentBytes.record(byteBuffer.limit(), attributes);
+            flushHistogram.record(items.size(), attributes);
+            session.sendBinary(byteBuffer, new ReleaseCallback(sendByteBuffer));
+        } catch (Throwable e) {
+            logger.error("Flush failed", e);
+            onError(e);
         }
-        batchBuffers.clear();
-        sendByteBuffer.flip();
-        sentBytes.record(sendByteBuffer.limit(), attributes);
-        session.sendBinary(sendByteBuffer, new ReleaseCallback(sendBuffer));
     }
 
     @Override
     protected void hookOnComplete() {
         if (session.isOpen()) {
-            if (batcher != null)
-            {
+            if (batcher != null) {
                 batcher.close();
             }
             sendRequests(COMPLETE);
@@ -382,6 +410,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     @Override
     protected void hookOnError(Throwable throwable) {
         if (session.isOpen()) {
+            batcher.close();
             session.close(StatusCode.NORMAL, getError(throwable).toPrettyString(), Callback.NOOP);
 
             // Save it for when websocket is closed so that we can report it accurately
@@ -431,8 +460,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 String[] paramKeyValue = parameter.split("=");
                 parameters.put(paramKeyValue[0], paramKeyValue[1]);
             });
-            return Long.valueOf(parameters.computeIfAbsent("maxBinaryMessageSize", k -> "-1"));
-        }).orElse(-1L);
+            return Integer.valueOf(parameters.computeIfAbsent("maxBinaryMessageSize", k -> "-1"));
+        }).orElse(-1);
 
         ObjectNode contextJson = JsonNodeFactory.instance.objectNode();
         sink.contextView().forEach((k, v) ->
@@ -546,7 +575,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                     logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(payload.asReadOnlyBuffer()).toString());
                 }
 
-                if (serverMaxBinaryMessageSize == -1){
+                if (serverMaxBinaryMessageSize == -1) {
                     INPUT event = reader.readFrom(new ByteBufferBackedInputStream(payload));
                     outstandingRequests.decrementAndGet();
                     receivedCounter.add(1, attributes);

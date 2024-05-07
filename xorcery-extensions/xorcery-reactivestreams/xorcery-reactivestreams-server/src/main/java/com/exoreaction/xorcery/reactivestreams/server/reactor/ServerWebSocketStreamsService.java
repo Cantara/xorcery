@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.reactivestreams.server.reactor;
 
 
+import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
@@ -37,6 +38,8 @@ import reactor.core.publisher.Flux;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 @Service(name = "reactivestreams.server.reactor")
@@ -65,7 +68,7 @@ public class ServerWebSocketStreamsService
     private final WebSocketUpgradeHandler webSocketUpgradeHandler;
 
     protected final ByteBufferPool byteBufferPool;
-
+    private final ExecutorService flushingExecutors = Executors.newCachedThreadPool(new NamedThreadFactory("reactivestreams-server-flusher-"));
 
     // Path -> Subprotocol -> handler
     private final Map<String, Map<ReactiveStreamSubProtocol, WebSocketHandler>> pathHandlers = new ConcurrentHashMap<>();
@@ -208,15 +211,15 @@ public class ServerWebSocketStreamsService
                 serverUpgradeResponse.getHeaders().add("Aggregate", "maxBinaryMessageSize="+webSocketUpgradeHandler.getServerWebSocketContainer().getMaxBinaryMessageSize());
 
                 // Aggregate header for batching support
-                long clientMaxBinaryMessageSize = Optional.ofNullable(serverUpgradeRequest.getHeaders().get("Aggregate")).map(header ->
+                int clientMaxBinaryMessageSize = Optional.ofNullable(serverUpgradeRequest.getHeaders().get("Aggregate")).map(header ->
                 {
                     Map<String, String> parameters = new HashMap<>();
                     Arrays.asList(header.split(";")).forEach(parameter -> {
                         String[] paramKeyValue = parameter.split("=");
                         parameters.put(paramKeyValue[0], paramKeyValue[1]);
                     });
-                    return Long.valueOf(parameters.computeIfAbsent("maxBinaryMessageSize", k -> "-1"));
-                }).orElse(-1L);
+                    return Integer.valueOf(parameters.computeIfAbsent("maxBinaryMessageSize", k -> "-1"));
+                }).orElse(-1);
 
 
                 return new ServerWebSocketStream<>(
@@ -226,6 +229,7 @@ public class ServerWebSocketStreamsService
                         writer,
                         reader,
                         handler,
+                        flushingExecutors,
                         byteBufferPool,
                         clientMaxBinaryMessageSize,
                         loggerContext.getLogger(ServerWebSocketStream.class),
