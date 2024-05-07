@@ -25,6 +25,7 @@ import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.websocket.api.ExtensionConfig;
 import org.eclipse.jetty.websocket.server.*;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
@@ -204,6 +205,19 @@ public class ServerWebSocketStreamsService
                 Context context = textMapPropagator.extract(Context.current(), serverUpgradeRequest, jettyGetter);
                 Function<Flux<Object>, Publisher<Object>> handler = subProtocolHandler.handler();
                 serverUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol.name());
+                serverUpgradeResponse.getHeaders().add("Aggregate", "maxBinaryMessageSize="+webSocketUpgradeHandler.getServerWebSocketContainer().getMaxBinaryMessageSize());
+
+                // Aggregate header for batching support
+                long clientMaxBinaryMessageSize = Optional.ofNullable(serverUpgradeRequest.getHeaders().get("Aggregate")).map(header ->
+                {
+                    Map<String, String> parameters = new HashMap<>();
+                    Arrays.asList(header.split(";")).forEach(parameter -> {
+                        String[] paramKeyValue = parameter.split("=");
+                        parameters.put(paramKeyValue[0], paramKeyValue[1]);
+                    });
+                    return Long.valueOf(parameters.computeIfAbsent("maxBinaryMessageSize", k -> "-1"));
+                }).orElse(-1L);
+
 
                 return new ServerWebSocketStream<>(
                         path,
@@ -213,6 +227,7 @@ public class ServerWebSocketStreamsService
                         reader,
                         handler,
                         byteBufferPool,
+                        clientMaxBinaryMessageSize,
                         loggerContext.getLogger(ServerWebSocketStream.class),
                         tracer,
                         meter,

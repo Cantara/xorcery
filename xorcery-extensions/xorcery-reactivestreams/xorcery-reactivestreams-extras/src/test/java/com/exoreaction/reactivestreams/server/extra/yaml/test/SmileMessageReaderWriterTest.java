@@ -8,7 +8,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
-import com.exoreaction.xorcery.reactivestreams.server.reactor.WebSocketStreamsServerConfiguration;
+import com.exoreaction.xorcery.reactivestreams.server.reactor.ServerWebSocketStreamsConfiguration;
 import com.exoreaction.xorcery.util.Resources;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,7 +58,7 @@ public class SmileMessageReaderWriterTest {
                         "application/x-jackson-smile"
                 ))
                 .contextWrite(Context.of(
-                        ClientWebSocketStreamContext.serverUri.name(), WebSocketStreamsServerConfiguration.get(server.getConfiguration()).getURI().resolve("test"),
+                        ClientWebSocketStreamContext.serverUri.name(), ServerWebSocketStreamsConfiguration.get(server.getConfiguration()).getURI().resolve("test"),
                         ResourcePublisherContext.resourceUrl.name(), Resources.getResource("testevents.yaml").orElseThrow().toExternalForm()))
                 .toStream().toList();
 

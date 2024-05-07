@@ -20,11 +20,12 @@ import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.IdleTimeoutStreamException;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
-import com.exoreaction.xorcery.reactivestreams.server.reactor.WebSocketStreamsServerConfiguration;
+import com.exoreaction.xorcery.reactivestreams.server.reactor.ServerWebSocketStreamsConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
@@ -69,7 +70,7 @@ public class PublishWithResultSubscriberWebSocketTest {
 
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
-    private WebSocketStreamsServerConfiguration websocketStreamsServerConfiguration;
+    private ServerWebSocketStreamsConfiguration websocketStreamsServerWebSocketStreamsConfiguration;
     private Context webSocketContext;
 
     Logger logger = LogManager.getLogger();
@@ -79,8 +80,8 @@ public class PublishWithResultSubscriberWebSocketTest {
         System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
         clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
-        websocketStreamsServerConfiguration = WebSocketStreamsServerConfiguration.get(serverConfiguration);
-        webSocketContext = Context.of(ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers"));
+        websocketStreamsServerWebSocketStreamsConfiguration = ServerWebSocketStreamsConfiguration.get(serverConfiguration);
+        webSocketContext = Context.of(ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers"));
     }
 
     @Test
@@ -364,7 +365,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 String config = Flux.from(configPublisher)
                         .transform(websocketStreamsClientClient.publishWithResult(instance(), String.class, String.class))
                         .contextWrite(Context.of(
-                                ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
+                                ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers/bar?param1=value1"),
                                 "client", "abc"))
                         .take(1).blockFirst();
 
@@ -373,4 +374,34 @@ public class PublishWithResultSubscriberWebSocketTest {
             }
         }
     }
+
+    @Test
+    public void completeBatching() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
+
+                websocketStreamsServer.subscriberWithResult(
+                        "numbers",
+                        Integer.class,
+                        Integer.class,
+                        upstream -> upstream.map(v -> v));
+
+                // When
+                List<Integer> source = IntStream.range(0, 100).boxed().toList();
+                List<Integer> result = Flux.fromIterable(source)
+                        .transform(websocketStreamsClientClient.publishWithResult(ClientWebSocketOptions.instance(), Integer.class, Integer.class))
+                        .contextWrite(webSocketContext)
+                        .toStream().toList();
+
+                // Then
+                Assertions.assertEquals(source, result);
+            }
+        }
+    }
+
 }

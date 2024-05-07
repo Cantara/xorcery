@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.reactivestreams.client.reactor;
 
+import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
@@ -13,6 +14,7 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.semconv.SemanticAttributes;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
@@ -25,6 +27,8 @@ import reactor.util.context.ContextView;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 public class ClientWebSocketStreamsService
@@ -34,10 +38,12 @@ public class ClientWebSocketStreamsService
     private final MessageWorkers messageWorkers;
     private final DnsLookup dnsLookup;
     private final LoggerContext loggerContext;
+    private final Logger logger;
     private final Tracer tracer;
     private final TextMapPropagator textMapPropagator;
     private final ByteBufferPool byteBufferPool;
     private final Meter meter;
+    private final ExecutorService flushingExecutors = Executors.newCachedThreadPool(new NamedThreadFactory("reactivestreams-client-flusher-"));
 
     public ClientWebSocketStreamsService(
             Configuration configuration,
@@ -50,8 +56,9 @@ public class ClientWebSocketStreamsService
         this.messageWorkers = messageWorkers;
         this.dnsLookup = dnsLookup;
         this.loggerContext = loggerContext;
+        this.logger = loggerContext.getLogger(ClientWebSocketStreamsService.class);
         WebSocketClient webSocketClient = new WebSocketClient(httpClient);
-        WebSocketStreamClientConfiguration.get(configuration).configure(webSocketClient);
+        ClientWebSocketStreamConfiguration.get(configuration).configure(webSocketClient);
         webSocketClient.start();
         this.webSocketClient = webSocketClient;
         byteBufferPool = new ArrayByteBufferPool();
@@ -84,7 +91,14 @@ public class ClientWebSocketStreamsService
                 flux,
                 sink,
                 options,
-                dnsLookup, webSocketClient, byteBufferPool, meter, tracer, textMapPropagator, loggerContext.getLogger(ClientWebSocketStream.class)));
+                dnsLookup,
+                webSocketClient,
+                flushingExecutors,
+                byteBufferPool,
+                meter,
+                tracer,
+                textMapPropagator,
+                loggerContext.getLogger(ClientWebSocketStream.class)));
     }
 
     @Override
@@ -106,7 +120,14 @@ public class ClientWebSocketStreamsService
                 flux,
                 sink,
                 options,
-                dnsLookup, webSocketClient, byteBufferPool, meter, tracer, textMapPropagator, loggerContext.getLogger(ClientWebSocketStream.class)));
+                dnsLookup,
+                webSocketClient,
+                flushingExecutors,
+                byteBufferPool,
+                meter,
+                tracer,
+                textMapPropagator,
+                loggerContext.getLogger(ClientWebSocketStream.class)));
     }
 
     @Override
@@ -128,11 +149,22 @@ public class ClientWebSocketStreamsService
                         options,
                         dnsLookup,
                         webSocketClient,
+                        flushingExecutors,
                         byteBufferPool,
                         meter,
                         tracer,
                         textMapPropagator,
                         loggerContext.getLogger(ClientWebSocketStream.class)));
+    }
+
+    public void preDestroy() {
+        System.out.println("Stopping "+getClass().getName());
+        try {
+            webSocketClient.stop();
+            webSocketClient.getHttpClient().stop();
+        } catch (Exception e) {
+            logger.warn("Could not stop websocket client", e);
+        }
     }
 
     private URI getServerUri(ContextView contextView) {

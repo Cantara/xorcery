@@ -313,6 +313,7 @@ public class ReactiveStreamsClientService
         logger.info("Shutdown reactive streams client");
         try {
             webSocketClient.stop();
+            webSocketClient.getHttpClient().stop();
         } catch (Exception e) {
             logger.warn("Could not stop websocket client", e);
         }

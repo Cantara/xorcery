@@ -1,0 +1,146 @@
+package com.exoreaction.xorcery.reactivestreams.extras.operators;
+
+import com.exoreaction.xorcery.concurrent.SmartBatcher;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import reactor.core.publisher.BaseSubscriber;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.context.Context;
+import reactor.util.context.ContextView;
+
+import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
+public final class SmartBatchingOperator {
+
+    public static <T> BiFunction<Flux<T>, ContextView, Publisher<T>> smartBatching(
+            BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler,
+            BlockingQueue<T> queue,
+            Scheduler scheduler) {
+        return (flux, contextView) -> new SmartBatchingHandler<T>(flux, contextView, handler, queue, scheduler);
+    }
+
+    public static <T> BiFunction<Flux<T>, ContextView, Publisher<T>> smartBatching(
+            BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler) {
+        return smartBatching(handler, new ArrayBlockingQueue<>(1024), Schedulers.boundedElastic());
+    }
+
+    private static class SmartBatchingHandler<T>
+            implements Publisher<T> {
+
+        private final Flux<T> smartBatchingPublishSubscriber;
+
+        public SmartBatchingHandler(
+                Flux<T> upstream,
+                ContextView contextView,
+                BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler,
+                BlockingQueue<T> queue,
+                Scheduler scheduler) {
+            smartBatchingPublishSubscriber = Flux.create(sink -> new SmartBatchingSubscriber<T>(upstream, sink, contextView, handler, queue, scheduler));
+        }
+
+        @Override
+        public void subscribe(Subscriber<? super T> subscriber) {
+            smartBatchingPublishSubscriber.subscribe(subscriber);
+        }
+    }
+
+    private static class SmartBatchingSubscriber<T>
+            extends BaseSubscriber<T>
+            implements Consumer<Collection<T>>, SynchronousSink<Collection<T>> {
+
+        private final FluxSink<T> downstream;
+        private final ContextView contextView;
+        private final BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler;
+        private final SmartBatcher<T> smartBatcher;
+
+        public SmartBatchingSubscriber(
+                Flux<T> upstream,
+                FluxSink<T> downstream,
+                ContextView contextView, BiConsumer<Collection<T>,
+                SynchronousSink<Collection<T>>> handler,
+                BlockingQueue<T> queue,
+                Scheduler scheduler) {
+            this.downstream = downstream;
+            this.contextView = contextView;
+            this.handler = handler;
+            smartBatcher = new SmartBatcher<>(this, queue, scheduler::schedule);
+            upstream.subscribe(this);
+
+            downstream.onDispose(smartBatcher::close);
+            downstream.onCancel(this::cancel);
+            downstream.onRequest(this::request);
+        }
+
+        @Override
+        protected void hookOnNext(T value) {
+            try {
+                smartBatcher.submit(value);
+            } catch (InterruptedException e) {
+                downstream.error(e);
+            }
+        }
+
+        @Override
+        protected void hookOnError(Throwable throwable) {
+            smartBatcher.close();
+            downstream.error(throwable);
+        }
+
+        @Override
+        protected void hookOnComplete() {
+            smartBatcher.close();
+            downstream.complete();
+        }
+
+        @Override
+        protected void hookOnCancel() {
+            smartBatcher.close();
+        }
+
+        @Override
+        protected void hookOnSubscribe(Subscription subscription) {
+
+        }
+
+        @Override
+        public void accept(Collection<T> ts) {
+            handler.accept(ts, this);
+        }
+
+        // SynchronousSink
+        @Override
+        public void complete() {
+            downstream.complete();
+        }
+
+        @Override
+        public void error(Throwable e) {
+            downstream.error(e);
+        }
+
+        @Override
+        public void next(Collection<T> ts) {
+            ts.forEach(downstream::next);
+        }
+
+        @Override
+        public Context currentContext() {
+            return Context.of(contextView);
+        }
+
+        @Override
+        public ContextView contextView() {
+            return contextView;
+        }
+    }
+}

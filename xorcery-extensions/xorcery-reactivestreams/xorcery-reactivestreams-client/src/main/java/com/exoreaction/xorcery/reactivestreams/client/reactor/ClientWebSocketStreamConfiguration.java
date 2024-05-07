@@ -5,9 +5,9 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import java.time.Duration;
 
-public record WebSocketStreamClientConfiguration(Configuration configuration) {
-    public static WebSocketStreamClientConfiguration get(Configuration configuration) {
-        return new WebSocketStreamClientConfiguration(configuration.getConfiguration("reactivestreams.client"));
+public record ClientWebSocketStreamConfiguration(Configuration configuration) {
+    public static ClientWebSocketStreamConfiguration get(Configuration configuration) {
+        return new ClientWebSocketStreamConfiguration(configuration.getConfiguration("reactivestreams.client"));
     }
 
     public Duration getConnectTimeout() {

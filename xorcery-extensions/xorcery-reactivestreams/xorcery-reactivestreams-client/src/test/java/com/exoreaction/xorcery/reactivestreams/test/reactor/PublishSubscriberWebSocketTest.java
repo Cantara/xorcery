@@ -25,7 +25,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamC
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
-import com.exoreaction.xorcery.reactivestreams.server.reactor.WebSocketStreamsServerConfiguration;
+import com.exoreaction.xorcery.reactivestreams.server.reactor.ServerWebSocketStreamsConfiguration;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,7 +66,7 @@ public class PublishSubscriberWebSocketTest {
 
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
-    private WebSocketStreamsServerConfiguration websocketStreamsServerConfiguration;
+    private ServerWebSocketStreamsConfiguration websocketStreamsServerWebSocketStreamsConfiguration;
     private ContextView webSocketContext;
 
     Logger logger = LogManager.getLogger();
@@ -76,8 +76,8 @@ public class PublishSubscriberWebSocketTest {
         System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
         clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
-        websocketStreamsServerConfiguration = WebSocketStreamsServerConfiguration.get(serverConfiguration);
-        webSocketContext = Context.of(ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers"));
+        websocketStreamsServerWebSocketStreamsConfiguration = ServerWebSocketStreamsConfiguration.get(serverConfiguration);
+        webSocketContext = Context.of(ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers"));
     }
 
     @Test
@@ -358,7 +358,7 @@ public class PublishSubscriberWebSocketTest {
                 String config = Flux.from(configPublisher).transform(websocketStreamsClientClient.publish(ClientWebSocketOptions.instance(), String.class, MediaType.APPLICATION_JSON
                         ))
                         .contextWrite(Context.of(
-                                ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerConfiguration.getURI().resolve("numbers/bar?param1=value1"),
+                                ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers/bar?param1=value1"),
                                 "client", "abc"))
                         .take(1).blockFirst();
 

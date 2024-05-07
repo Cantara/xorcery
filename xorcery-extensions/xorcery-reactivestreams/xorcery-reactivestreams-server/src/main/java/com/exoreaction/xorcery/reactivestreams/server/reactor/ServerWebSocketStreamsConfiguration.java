@@ -20,12 +20,12 @@ import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 
 import java.net.URI;
 
-public record WebSocketStreamsServerConfiguration(Configuration context)
+public record ServerWebSocketStreamsConfiguration(Configuration context)
         implements ServiceConfiguration {
 
-    public static WebSocketStreamsServerConfiguration get(Configuration configuration)
+    public static ServerWebSocketStreamsConfiguration get(Configuration configuration)
     {
-        return new WebSocketStreamsServerConfiguration(configuration.getConfiguration("reactivestreams.server"));
+        return new ServerWebSocketStreamsConfiguration(configuration.getConfiguration("reactivestreams.server"));
     }
 
     public URI getURI() {

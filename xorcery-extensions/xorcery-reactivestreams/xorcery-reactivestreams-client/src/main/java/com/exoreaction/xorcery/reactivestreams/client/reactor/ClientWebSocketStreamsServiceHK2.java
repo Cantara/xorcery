@@ -8,6 +8,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.eclipse.jetty.client.HttpClient;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
@@ -20,6 +21,7 @@ import org.jvnet.hk2.annotations.Service;
 @RunLevel(0)
 public class ClientWebSocketStreamsServiceHK2
     extends ClientWebSocketStreamsService
+    implements PreDestroy
 {
     @Inject
     public ClientWebSocketStreamsServiceHK2(Configuration configuration, MessageWorkers messageWorkers, HttpClient httpClient, DnsLookupService dnsLookup, OpenTelemetry openTelemetry, LoggerContext loggerContext) throws Exception {
