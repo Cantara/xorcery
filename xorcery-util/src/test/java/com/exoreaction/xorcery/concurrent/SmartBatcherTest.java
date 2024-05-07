@@ -1,5 +1,6 @@
 package com.exoreaction.xorcery.concurrent;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -15,8 +16,10 @@ class SmartBatcherTest {
                 batcher.submit("value"+i);
                 Thread.sleep(1);
             }
+            System.out.println("Close");
         }
         System.out.println("SmartBatcher closed");
+        Assertions.assertEquals(1000, count);
     }
 
     int count;
