@@ -20,7 +20,9 @@ import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -52,29 +54,35 @@ public class JsonMessageReaderFactory implements MessageReader.Factory {
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
         if (canRead(type, mediaType))
-            return (MessageReader<T>) new JsonMessageReader((Class<Object>) type);
+            return (MessageReader<T>) new JsonMessageReader(genericType);
         else return null;
     }
 
     class JsonMessageReader implements MessageReader<Object> {
 
-        private final Class<Object> type;
+        private final TypeReference<?> typeReference;
 
-        public JsonMessageReader(Class<Object> type) {
-            this.type = type;
+        public JsonMessageReader(Type type) {
+            this.typeReference = new TypeReference<>()
+            {
+                @Override
+                public Type getType() {
+                    return type;
+                }
+            };
         }
 
         @Override
         public Object readFrom(byte[] bytes, int offset, int len) throws IOException {
             try (JsonParser jp = jsonMapper.createParser(bytes, offset, len)) {
-                return jp.readValueAs(type);
+                return jp.readValueAs(typeReference);
             }
         }
 
         @Override
         public Object readFrom(InputStream entityStream) throws IOException {
             try (JsonParser jp = jsonMapper.createParser(entityStream)) {
-                return jp.readValueAs(type);
+                return jp.readValueAs(typeReference);
             }
         }
     }

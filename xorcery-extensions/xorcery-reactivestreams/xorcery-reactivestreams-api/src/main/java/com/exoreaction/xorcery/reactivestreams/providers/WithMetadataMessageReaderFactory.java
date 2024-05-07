@@ -93,7 +93,7 @@ public class WithMetadataMessageReaderFactory
                     }
                 } else if (parameterType instanceof ParameterizedType parameterizedEventType) {
                     if (parameterizedEventType.getRawType() instanceof Class<?> eventType) {
-                        MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, envelopedContentType);
+                        MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, parameterizedEventType, envelopedContentType);
                         if (eventReader != null) {
                             return (MessageReader<T>) new WithMetadataMessageReader(eventReader, (Constructor<WithMetadata<?>>) type.getConstructor(Metadata.class, eventType));
                         }
