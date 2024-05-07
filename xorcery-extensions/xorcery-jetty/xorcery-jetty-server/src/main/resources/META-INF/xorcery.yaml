@@ -71,10 +71,10 @@ jetty:
       autoFragment: true
       idleTimeout: "{{ defaults.idleTimeout }}"
       inputBufferSize: 4096
-      maxFrameSize: 65536
-      maxTextMessageSize: 65536
-      maxBinaryMessageSize: 65536
       outputBufferSize: 4096
+      maxFrameSize: 65536
+      maxTextMessageSize: 1048576
+      maxBinaryMessageSize: 1048576
 
     servlet:
       enabled: "{{ jetty.server.enabled }}"
