@@ -18,11 +18,17 @@ package com.exoreaction.xorcery.benchmarks.reactivestreams;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,19 +37,22 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @State(Scope.Benchmark)
 @Fork(value = 1, warmups = 1, jvmArgs = "-Dcom.sun.management.jmxremote=true")
 @Warmup(iterations = 0)
-@Measurement(iterations = 3)
-public class PublishSubscriberWebSocketBenchmarks {
+@Measurement(iterations = 5)
+public class PublishWithResultBenchmarks {
 
     private static final String config = """
             secrets.enabled: true
@@ -56,17 +65,25 @@ public class PublishSubscriberWebSocketBenchmarks {
             jetty.client.enabled: true
             jetty.client.ssl.enabled: true
 
-            reactivestreams.enabled: true
+            reactivestreams.enabled: true            
 
-            metrics.enabled: false
-            metrics.filter:
-                - xorcery:*
-            metrics.subscriber.authority: localhost:443    
+            log4j2.Configuration.thresholdFilter: debug
+            
+            reactivestreams.client.maxFrameSize: 1048576
             """;
 
     private static final String clientConfig = """
             instance.id: client
             reactivestreams.server.enabled: false
+
+            log4j2.Configuration.thresholdFilter: debug
+            
+            log4j2.Configuration.Loggers.logger:
+                - name: com.exoreaction.xorcery.reactivestreams
+                  level: info
+
+                - name: org.eclipse.jetty.websocket.core.internal.FrameFlusher
+                  level: info                       
             """;
 
     private static final String serverConfig = """
@@ -80,15 +97,13 @@ public class PublishSubscriberWebSocketBenchmarks {
             reactivestreams.client.enabled: false
             """;
 
-    private Disposable clientDisposable;
     private Disposable serverDisposable;
-    private CompletableFuture<ByteBuffer> done;
     private Configuration serverConf;
 
     public static void main(String[] args) throws Exception {
 
         new Runner(new OptionsBuilder()
-                .include(PublishSubscriberWebSocketBenchmarks.class.getSimpleName() + ".*")
+                .include(PublishWithResultBenchmarks.class.getSimpleName() + ".publishWithResultMetadataByteBuffer")
                 .forks(0)
                 .jvmArgs("-Dcom.sun.management.jmxremote=true")
                 .build()).run();
@@ -122,22 +137,12 @@ public class PublishSubscriberWebSocketBenchmarks {
 
     @TearDown
     public void teardown() throws Exception {
-        done.orTimeout(10, TimeUnit.SECONDS).join();
         System.out.println("Completed");
         serverDisposable.dispose();
         client.close();
         server.close();
         LogManager.getLogger().info("Teardown done");
     }
-
-/*
-    @Benchmark
-    @BenchmarkMode(Mode.Throughput)
-    public void writes() {
-        while(clientSink.tryEmitNext(byteBufferPayload).isFailure())
-        {};
-    }
-*/
 
     @State(Scope.Thread)
     @AuxCounters(AuxCounters.Type.OPERATIONS)
@@ -147,28 +152,71 @@ public class PublishSubscriberWebSocketBenchmarks {
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public void writes(OpCounters counters) {
+    public void publishWithResultMetadataByteBuffer(OpCounters counters) throws JsonProcessingException {
+        String metadata = """
+                  tenant: "acme-small"
+                  aggregateId: "acme-small"
+                  commandName: "DoStuff"
+                  environment: "development"
+                  source: "myapp/1.0.0"
+                  streamId: "$ce-development"
+                  streamPosition: 8836
+                  originalStreamId: "events-development-myapp-acme-small"
+                """;
+
+        ObjectNode metadataJson = (ObjectNode) new YAMLMapper().readTree(metadata);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[1024]);
+        MetadataByteBuffer metadataByteBuffer = new MetadataByteBuffer(new Metadata(metadataJson), byteBuffer);
+        runBenchmark(counters, MetadataByteBuffer.class, Metadata.class, WithMetadata::metadata, Flux.fromStream(Stream.generate(()-> metadataByteBuffer).limit(1000000)), MediaType.APPLICATION_JSON+"metadata", MediaType.APPLICATION_JSON);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public void publishWithResultByteBuffer(OpCounters counters) {
+
+        ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[1024]);
+        runBenchmark(counters, ByteBuffer.class, ByteBuffer.class, Function.identity(), Flux.fromStream(Stream.generate(()-> byteBuffer).limit(10000000)), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public void publishWithResultInteger(OpCounters counters) {
+        runBenchmark(counters, Integer.class, Integer.class, Function.identity(), Flux.fromStream(IntStream.range(0, 10000000).boxed()), MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
+    }
+
+    private <T,R> void runBenchmark(OpCounters counters, Class<T> publishType, Class<R> resultType, Function<T, R> mapper, Flux<T> source, String contentType, String resultContentType)
+    {
         counters.counter = 0;
         ServerWebSocketStreams streamsServer = this.server.getServiceLocator().getService(ServerWebSocketStreams.class);
-        done = new CompletableFuture<>();
-        serverDisposable = streamsServer.subscriber("benchmark", Integer.class,
+        serverDisposable = streamsServer.subscriberWithResult("benchmark", publishType,resultType,
                 flux -> flux
-                        .doOnNext(item -> counters.counter++)
+                        .publishOn(Schedulers.boundedElastic(), 4096)
+                        .map(item ->
+                        {
+                            counters.counter++;
+                            return mapper.apply(item);
+                        })
                         .doOnComplete(() ->
                         {
                             System.out.println("Invoke count:" + counters.counter);
-                            done.complete(null);
                         }));
 
         URI serverUri = ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark");
         ClientWebSocketStreams reactiveStreamsClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
-        clientDisposable = Flux.fromStream(IntStream.range(0, 1000000).boxed())
-                .transform(reactiveStreamsClient.publish(ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON))
-                .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
-                .subscribe();
 
-        done.orTimeout(100, TimeUnit.SECONDS).join();
-        clientDisposable.dispose();
+        System.out.println("Start");
+        AtomicInteger count = new AtomicInteger();
+        CompletableFuture done = new CompletableFuture();
+
+        source
+//                .doOnRequest(r -> System.out.println("Requests:"+r))
+//                .subscribeOn(Schedulers.boundedElastic(), true)
+                .transform(reactiveStreamsClient.publishWithResult(ClientWebSocketOptions.builder().build(), publishType, publishType, contentType, resultContentType))
+                .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
+                .doOnRequest(r -> System.out.println("Requests downstream:"+r))
+                .subscribe(result->count.incrementAndGet(), done::completeExceptionally, ()->done.complete(null) );
+        done.join();
+        System.out.println("Stop "+count);
         serverDisposable.dispose();
     }
 }
