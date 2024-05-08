@@ -18,11 +18,13 @@ package com.exoreaction.xorcery.opentelemetry.sdk;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 import com.exoreaction.xorcery.json.JsonElement;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.ResourceAttributes;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -45,6 +47,11 @@ public record OpenTelemetryConfiguration(Configuration context)
                 .map(JsonElement::toMap)
                 .map(map -> map.entrySet().stream().map(this::updateEntry).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
                 .orElse(Collections.<AttributeKey<Object>, Object>emptyMap());
+    }
+
+    public List<String> getNoopImplementationMeters()
+    {
+        return context.getListAs("meters.noop", JsonNode::asText).orElse(Collections.emptyList());
     }
 
     private Map.Entry<AttributeKey<Object>, Object> updateEntry(Map.Entry<String, Object> entry) {

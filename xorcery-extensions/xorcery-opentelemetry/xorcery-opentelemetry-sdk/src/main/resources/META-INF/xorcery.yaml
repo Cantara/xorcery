@@ -50,6 +50,9 @@ opentelemetry:
     #     http.response.status_code: 500
     excludes: []
     includes: []
+  meters:
+    # List of implementations names whose Meter instances should be noop. Useful for turning off metrics that are not needed
+    noop: []
   instrumentations: {}
 
 system:

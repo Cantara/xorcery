@@ -204,6 +204,10 @@
             }
           }
         },
+        "meters" : {
+          "type" : "object",
+          "properties" : { }
+        },
         "instrumentations" : {
           "type" : "object",
           "properties" : { }

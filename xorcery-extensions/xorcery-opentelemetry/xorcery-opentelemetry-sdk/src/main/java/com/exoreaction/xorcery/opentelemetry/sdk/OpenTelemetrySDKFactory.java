@@ -19,6 +19,9 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -39,23 +42,26 @@ import org.jvnet.hk2.annotations.Service;
 public class OpenTelemetrySDKFactory
     implements Factory<OpenTelemetry>
 {
-
-    private final OpenTelemetrySdk openTelemetry;
+    private final OpenTelemetryImpl openTelemetry;
 
     @Inject
     public OpenTelemetrySDKFactory(Configuration configuration,
                                    SdkTracerProvider tracerProvider,
                                    SdkMeterProvider meterProvider,
                                    Provider<SdkLoggerProvider> loggerProvider) {
-
         OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
 
-        openTelemetry = OpenTelemetrySdk.builder()
-                .setTracerProvider(tracerProvider)
-                .setMeterProvider(meterProvider)
-                .setLoggerProvider(loggerProvider.get())
-                .setPropagators(ContextPropagators.create(TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance())))
-                .build();
+        // This allows us to turn off individual instrumentation scopes
+        MeterProvider filteredMeterProvider = instrumentationScopeName ->
+                openTelemetryConfiguration.getNoopImplementationMeters().contains(instrumentationScopeName)
+                ? MeterProvider.noop().meterBuilder(instrumentationScopeName)
+                : meterProvider.meterBuilder(instrumentationScopeName);
+
+        openTelemetry = new OpenTelemetryImpl(
+                tracerProvider,
+                filteredMeterProvider,
+                loggerProvider.get(),
+                ContextPropagators.create(TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance())));
 
         if (openTelemetryConfiguration.isInstall())
         {
@@ -72,6 +78,5 @@ public class OpenTelemetrySDKFactory
 
     @Override
     public void dispose(OpenTelemetry instance) {
-        openTelemetry.close();
     }
 }
