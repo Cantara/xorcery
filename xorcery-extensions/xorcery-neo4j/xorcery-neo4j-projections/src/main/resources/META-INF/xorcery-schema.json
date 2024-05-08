@@ -14,47 +14,13 @@
       "properties" : {
         "enabled" : {
           "type" : "string",
-          "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
-        },
-        "disruptor" : {
-          "type" : "object",
-          "properties" : { }
+          "default" : "{{ neo4jdatabase.enabled }}",
+          "description" : "Default: {{ neo4jdatabase.enabled }} ({{ neo4jdatabase.enabled }})"
         },
         "eventBatchSize" : {
           "type" : [ "number", "string" ],
           "default" : 1024,
           "description" : "Default: 1024"
-        },
-        "commitpublisher" : {
-          "type" : "object",
-          "properties" : {
-            "enabled" : {
-              "type" : "string",
-              "default" : "{{ neo4jprojections.enabled }}",
-              "description" : "Default: {{ neo4jprojections.enabled }} ({{ neo4jprojections.enabled }})"
-            }
-          }
-        },
-        "eventsubscriber" : {
-          "type" : "object",
-          "properties" : {
-            "enabled" : {
-              "type" : "string",
-              "default" : "{{ neo4jprojections.enabled }}",
-              "description" : "Default: {{ neo4jprojections.enabled }} ({{ neo4jprojections.enabled }})"
-            }
-          }
-        },
-        "updates" : {
-          "type" : "object",
-          "properties" : {
-            "enabled" : {
-              "type" : "string",
-              "default" : "{{ neo4jprojections.enabled }}",
-              "description" : "Default: {{ neo4jprojections.enabled }} ({{ neo4jprojections.enabled }})"
-            }
-          }
         }
       }
     }
