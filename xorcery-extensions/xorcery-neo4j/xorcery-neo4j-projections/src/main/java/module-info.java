@@ -22,15 +22,12 @@ open module xorcery.neo4j.projections {
     exports com.exoreaction.xorcery.neo4jprojections;
     exports com.exoreaction.xorcery.neo4jprojections.api;
     exports com.exoreaction.xorcery.neo4jprojections.providers;
-    exports com.exoreaction.xorcery.neo4jprojections.reactor;
     exports com.exoreaction.xorcery.neo4jprojections.spi;
-    exports com.exoreaction.xorcery.neo4jprojections.streams;
 
     requires xorcery.service.api;
     requires xorcery.neo4j.embedded;
     requires xorcery.neo4j.shaded;
     requires xorcery.reactivestreams.api;
-    requires xorcery.reactivestreams.disruptor;
 
     requires reactor.core;
     requires org.glassfish.hk2.api;
@@ -41,6 +38,8 @@ open module xorcery.neo4j.projections {
     requires io.opentelemetry.semconv;
     requires xorcery.domainevents.api;
     requires xorcery.reactivestreams.extras;
+    requires xorcery.opentelemetry.api;
+    requires io.opentelemetry.context;
 
     provides Neo4jEventProjection with CypherEventProjection;
 }

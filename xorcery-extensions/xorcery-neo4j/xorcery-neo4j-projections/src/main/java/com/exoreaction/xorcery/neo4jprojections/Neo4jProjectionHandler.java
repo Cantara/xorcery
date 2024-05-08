@@ -1,14 +1,16 @@
-package com.exoreaction.xorcery.neo4jprojections.reactor;
+package com.exoreaction.xorcery.neo4jprojections;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
+import com.exoreaction.xorcery.neo4jprojections.Neo4jProjectionsConfiguration;
 import com.exoreaction.xorcery.neo4jprojections.Projection;
 import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
+import com.exoreaction.xorcery.neo4jprojections.api.ProjectionStreamContext;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
+import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
 import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
-import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
 import com.exoreaction.xorcery.reactivestreams.extras.operators.SmartBatchingOperator;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -27,24 +29,28 @@ import org.neo4j.graphdb.Transaction;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import static com.exoreaction.xorcery.reactivestreams.api.ContextViewElement.missing;
+import static io.opentelemetry.context.Context.taskWrapping;
 
 @Service
 public class Neo4jProjectionHandler
         implements BiFunction<Flux<MetadataEvents>, ContextView, Publisher<MetadataEvents>> {
 
+    private final Neo4jProjectionsConfiguration projectionsConfiguration;
+
     private final GraphDatabaseService database;
     private final Logger logger;
     private final List<Neo4jEventProjection> projections = new ArrayList<>();
 
-    private final DisruptorConfiguration configuration;
     private final LongHistogram batchSizeHistogram;
     private final DoubleHistogram writeLatencyHistogram;
     private final Meter meter;
@@ -59,8 +65,8 @@ public class Neo4jProjectionHandler
     ) {
         this.database = database.getGraphDatabaseService();
         this.logger = logger;
+        this.projectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
         projections.forEach(this.projections::add);
-        this.configuration = new DisruptorConfiguration(configuration.getConfiguration("neo4jprojections.disruptor"));
         meter = openTelemetry.meterBuilder(getClass().getName())
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
@@ -68,7 +74,7 @@ public class Neo4jProjectionHandler
         batchSizeHistogram = meter.histogramBuilder("neo4j.projection.batchsize")
                 .ofLongs().setUnit("{count}").build();
         writeLatencyHistogram = meter.histogramBuilder("neo4j.projection.latency")
-                .setUnit("s").build();
+                .setUnit(OpenTelemetryUnits.SECONDS).build();
     }
 
     @Override
@@ -81,8 +87,9 @@ public class Neo4jProjectionHandler
             Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
             Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
             Handler handler = new Handler(projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
+            ArrayBlockingQueue<MetadataEvents> smartBatchingQueue = new ArrayBlockingQueue<>(projectionsConfiguration.eventBatchSize());
             return Flux.from(currentProjection
-                    .map(p -> SmartBatchingOperator.smartBatching(handler)
+                    .map(p -> SmartBatchingOperator.smartBatching(handler, ()->smartBatchingQueue, ()->taskWrapping(Schedulers.boundedElastic()::schedule))
                             .apply(p.getProjectionPosition()
                                             .map(pos ->
                                             {
@@ -119,7 +126,8 @@ public class Neo4jProjectionHandler
                             tx.commit();
                         }
 
-                        return SmartBatchingOperator.smartBatching(handler).apply(metadataEventsFlux, contextView);
+                        return SmartBatchingOperator.smartBatching(handler, ()->smartBatchingQueue, ()->taskWrapping(Schedulers.boundedElastic()::schedule))
+                                .apply(metadataEventsFlux, contextView);
                     })).doAfterTerminate(handler::close);
         } catch (RuntimeException e) {
             return Flux.error(e);

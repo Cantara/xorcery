@@ -1,7 +1,8 @@
-package com.exoreaction.xorcery.neo4jprojections.reactor;
+package com.exoreaction.xorcery.neo4jprojections;
 
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.neo4jprojections.api.ProjectionStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.PreDestroy;

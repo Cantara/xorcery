@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.neo4jprojections.reactor;
+package com.exoreaction.xorcery.neo4jprojections;
 
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import org.reactivestreams.Publisher;

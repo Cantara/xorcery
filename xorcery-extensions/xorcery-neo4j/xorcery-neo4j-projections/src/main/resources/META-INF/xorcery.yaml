@@ -1,15 +1,3 @@
 neo4jprojections:
-  enabled: "{{ defaults.enabled }}"
-  disruptor: {}
+  enabled: "{{ neo4jdatabase.enabled }}"
   eventBatchSize: 1024
-  commitpublisher:
-    enabled: "{{ neo4jprojections.enabled }}"
-  eventsubscriber:
-    enabled: "{{ neo4jprojections.enabled }}"
-  subscribers: []
-#  - uri: "wss://somehost:someport"
-#    stream: somestream
-#    projection: someprojection
-#    configuration: {}
-  updates:
-    enabled: "{{ neo4jprojections.enabled }}"
