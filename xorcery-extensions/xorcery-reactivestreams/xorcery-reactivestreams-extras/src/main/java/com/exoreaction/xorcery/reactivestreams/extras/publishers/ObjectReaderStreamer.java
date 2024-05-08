@@ -2,33 +2,37 @@ package com.exoreaction.xorcery.reactivestreams.extras.publishers;
 
 import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.base.ParserBase;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.yaml.YAMLParser;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.FluxSink;
 
 import java.io.IOException;
 
-class ObjectReaderStreamer<T> {
-    private final FluxSink<T> sink;
-    private final YAMLParser parser;
+class ObjectReaderStreamer<T>
+        implements Subscription {
+    private final JsonParser parser;
     private final ObjectReader objectReader;
+    private final CoreSubscriber<T> subscriber;
     private long skip;
 
-    public ObjectReaderStreamer(FluxSink<T> sink, YAMLParser parser, ObjectReader objectReader) {
-        this.sink = sink;
+    public ObjectReaderStreamer(CoreSubscriber<T> subscriber, JsonParser parser, ObjectReader objectReader) {
+        this.subscriber = subscriber;
         this.parser = parser;
         this.objectReader = objectReader;
 
         // Skip until position
-        this.skip = new ContextViewElement(sink.contextView())
+        this.skip = new ContextViewElement(subscriber.currentContext())
                 .getLong(ReactiveStreamsContext.streamPosition)
                 .map(pos -> pos + 1).orElse(0L);
-
-        sink.onRequest(this::request);
     }
 
-    private void request(long request) {
+    public void request(long request) {
         try {
             JsonToken token = null;
             while (request-- > 0 && (token = parser.nextToken()) != null && !token.isStructEnd()) {
@@ -39,15 +43,24 @@ class ObjectReaderStreamer<T> {
                     request++;
                     skip--;
                 } else {
-                    sink.next(item);
+                    subscriber.onNext(item);
                 }
             }
 
             if (token == null || token.isStructEnd()) {
-                sink.complete();
+                subscriber.onComplete();
             }
+        } catch (Throwable e) {
+            subscriber.onError(e);
+        }
+    }
+
+    @Override
+    public void cancel() {
+        try {
+            parser.close();
         } catch (IOException e) {
-            sink.error(e);
+            subscriber.onError(e);
         }
     }
 }
