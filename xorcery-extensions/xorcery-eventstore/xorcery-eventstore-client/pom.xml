@@ -31,10 +31,6 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams-disruptor</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
@@ -52,6 +48,10 @@
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-extras</artifactId>
         </dependency>
     </dependencies>
 </project>
