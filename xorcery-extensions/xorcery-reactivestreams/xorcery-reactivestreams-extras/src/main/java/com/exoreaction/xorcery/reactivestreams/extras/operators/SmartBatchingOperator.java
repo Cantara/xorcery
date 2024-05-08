@@ -8,7 +8,6 @@ import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.SynchronousSink;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
@@ -16,22 +15,24 @@ import reactor.util.context.ContextView;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public final class SmartBatchingOperator {
 
     public static <T> BiFunction<Flux<T>, ContextView, Publisher<T>> smartBatching(
             BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler,
-            BlockingQueue<T> queue,
-            Scheduler scheduler) {
-        return (flux, contextView) -> new SmartBatchingHandler<T>(flux, contextView, handler, queue, scheduler);
+            Supplier<BlockingQueue<T>> queue,
+            Supplier<Executor> executor) {
+        return (flux, contextView) -> new SmartBatchingHandler<T>(flux, contextView, handler, queue.get(), executor.get());
     }
 
     public static <T> BiFunction<Flux<T>, ContextView, Publisher<T>> smartBatching(
             BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler) {
-        return smartBatching(handler, new ArrayBlockingQueue<>(1024), Schedulers.boundedElastic());
+        return smartBatching(handler, ()-> new ArrayBlockingQueue<>(1024), ()->Schedulers.boundedElastic()::schedule);
     }
 
     private static class SmartBatchingHandler<T>
@@ -44,8 +45,8 @@ public final class SmartBatchingOperator {
                 ContextView contextView,
                 BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler,
                 BlockingQueue<T> queue,
-                Scheduler scheduler) {
-            smartBatchingPublishSubscriber = Flux.create(sink -> new SmartBatchingSubscriber<T>(upstream, sink, contextView, handler, queue, scheduler));
+                Executor executor) {
+            smartBatchingPublishSubscriber = Flux.create(sink -> new SmartBatchingSubscriber<T>(upstream, sink, contextView, handler, queue, executor));
         }
 
         @Override
@@ -69,11 +70,11 @@ public final class SmartBatchingOperator {
                 ContextView contextView, BiConsumer<Collection<T>,
                 SynchronousSink<Collection<T>>> handler,
                 BlockingQueue<T> queue,
-                Scheduler scheduler) {
+                Executor executor) {
             this.downstream = downstream;
             this.contextView = contextView;
             this.handler = handler;
-            smartBatcher = new SmartBatcher<>(this, queue, scheduler::schedule);
+            smartBatcher = new SmartBatcher<>(this, queue, executor);
             upstream.subscribe(this);
 
             downstream.onDispose(smartBatcher::close);
