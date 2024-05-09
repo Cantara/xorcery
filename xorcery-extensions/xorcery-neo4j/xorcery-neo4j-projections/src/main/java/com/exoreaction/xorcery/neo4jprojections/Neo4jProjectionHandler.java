@@ -4,9 +4,6 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
-import com.exoreaction.xorcery.neo4jprojections.Neo4jProjectionsConfiguration;
-import com.exoreaction.xorcery.neo4jprojections.Projection;
-import com.exoreaction.xorcery.neo4jprojections.ProjectionModel;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionStreamContext;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
@@ -26,6 +23,8 @@ import org.glassfish.hk2.api.IterableProvider;
 import org.jvnet.hk2.annotations.Service;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.TransientTransactionFailureException;
+import org.neo4j.memory.MemoryLimitExceededException;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
@@ -53,6 +52,8 @@ public class Neo4jProjectionHandler
 
     private final LongHistogram batchSizeHistogram;
     private final DoubleHistogram writeLatencyHistogram;
+    private final DoubleHistogram projectionLatencyHistogram;
+    private final DoubleHistogram commitLatencyHistogram;
     private final Meter meter;
 
     @Inject
@@ -75,6 +76,10 @@ public class Neo4jProjectionHandler
                 .ofLongs().setUnit("{count}").build();
         writeLatencyHistogram = meter.histogramBuilder("neo4j.projection.latency")
                 .setUnit(OpenTelemetryUnits.SECONDS).build();
+        projectionLatencyHistogram = meter.histogramBuilder("neo4j.projection.projectLatency")
+                .setUnit(OpenTelemetryUnits.SECONDS).build();
+        commitLatencyHistogram = meter.histogramBuilder("neo4j.projection.commitLatency")
+                .setUnit(OpenTelemetryUnits.SECONDS).build();
     }
 
     @Override
@@ -89,7 +94,7 @@ public class Neo4jProjectionHandler
             Handler handler = new Handler(projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
             ArrayBlockingQueue<MetadataEvents> smartBatchingQueue = new ArrayBlockingQueue<>(projectionsConfiguration.eventBatchSize());
             return Flux.from(currentProjection
-                    .map(p -> SmartBatchingOperator.smartBatching(handler, ()->smartBatchingQueue, ()->taskWrapping(Schedulers.boundedElastic()::schedule))
+                    .map(p -> SmartBatchingOperator.smartBatching(handler, () -> smartBatchingQueue, () -> taskWrapping(Schedulers.boundedElastic()::schedule))
                             .apply(p.getProjectionPosition()
                                             .map(pos ->
                                             {
@@ -126,7 +131,7 @@ public class Neo4jProjectionHandler
                             tx.commit();
                         }
 
-                        return SmartBatchingOperator.smartBatching(handler, ()->smartBatchingQueue, ()->taskWrapping(Schedulers.boundedElastic()::schedule))
+                        return SmartBatchingOperator.smartBatching(handler, () -> smartBatchingQueue, () -> taskWrapping(Schedulers.boundedElastic()::schedule))
                                 .apply(metadataEventsFlux, contextView);
                     })).doAfterTerminate(handler::close);
         } catch (RuntimeException e) {
@@ -163,51 +168,113 @@ public class Neo4jProjectionHandler
 
         @Override
         public void accept(Collection<MetadataEvents> events, SynchronousSink<Collection<MetadataEvents>> sink) {
-            long start = System.nanoTime();
-            try (Transaction tx = database.beginTx()) {
-                MetadataEvents lastEvent = null;
-                for (MetadataEvents metadataEvents : events) {
-                    metadataEvents.metadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
-                    for (Neo4jEventProjection projection : projections) {
-                        projection.write(metadataEvents, tx);
+            final long start = System.nanoTime();
+            final int eventsSize = events.size();
+            int maxEvents = eventsSize;
+            int committed = 0;
+            Iterator<MetadataEvents> metadataEventsIterator = events.iterator();
+            Transaction tx = database.beginTx();
+            while (true) {
+                try {
+                    int eventCount = 0;
+                    long startProjection = System.nanoTime();
+                    while (metadataEventsIterator.hasNext()) {
+                        MetadataEvents metadataEvents = metadataEventsIterator.next();
+
+                        if (maxEvents == 1 && eventsSize > maxEvents)
+                        {
+                            logger.debug("Handling a single problematic event", metadataEvents);
+                        }
+                        metadataEvents.metadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
+                        for (Neo4jEventProjection projection : projections) {
+                            projection.write(metadataEvents, tx);
+                        }
+
+                        if (++eventCount == maxEvents || !metadataEventsIterator.hasNext()) {
+
+                            double projectDuration = System.nanoTime() - startProjection;
+                            projectionLatencyHistogram.record(projectDuration / 1_000_000_000.0, attributes);
+
+                            position = ((Number) metadataEvents
+                                    .metadata()
+                                    .getLong(DomainEventMetadata.streamPosition)
+                                    .orElse(position + eventsSize))
+                                    .longValue();
+                            long timestamp = ((Number) metadataEvents
+                                    .metadata()
+                                    .getLong(DomainEventMetadata.timestamp)
+                                    .orElseGet(System::currentTimeMillis))
+                                    .longValue();
+                            Map<String, Object> updateParameters = new HashMap<>();
+                            updateParameters.put(Projection.projectionId.name(), projectionId);
+                            updateParameters.put(Projection.projectionPosition.name(), position);
+                            updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
+                            tx.execute("""
+                                    MATCH (projection:Projection {id:$projectionId}) SET 
+                                    projection.projectionPosition=$projectionPosition,
+                                    projection.projectionTimestamp=$projectionTimestamp
+                                    RETURN projection
+                                    """, updateParameters).close();
+
+                            long startCommit = System.nanoTime();
+                            tx.commit();
+                            tx.close();
+                            double commitDuration = System.nanoTime() - startCommit;
+                            commitLatencyHistogram.record(commitDuration / 1_000_000_000.0, attributes);
+
+                            long stop = System.nanoTime();
+                            batchSizeHistogram.record(eventCount, attributes);
+                            double writeDuration = stop - start;
+                            writeLatencyHistogram.record(writeDuration / 1_000_000_000.0, attributes);
+
+                            if (logger.isTraceEnabled())
+                                logger.trace("Committed " + eventsSize);
+
+                            if (metadataEventsIterator.hasNext())
+                            {
+                                committed += eventCount;
+                                if (maxEvents < eventsSize - committed)
+                                {
+                                    logger.info("Resized batch complete");
+                                    maxEvents = eventsSize - committed;
+                                }
+                                tx = database.beginTx();
+                            } else
+                            {
+                                tx = null;
+                            }
+                        }
                     }
-                    lastEvent = metadataEvents;
+                    if (tx != null)
+                    {
+                        tx.close();
+                    }
+                    break;
+                } catch (MemoryLimitExceededException |TransientTransactionFailureException e) {
+                    tx.rollback();
+                    tx.close();
+
+                    maxEvents /= 2;
+
+                    if (maxEvents == 0)
+                    {
+                        logger.error("Transaction too large even with just one event, stopping projection");
+                        sink.error(e);
+                        return;
+                    } else
+                    {
+                        logger.warn("Transaction too large, trying again with smaller batch size:"+maxEvents);
+                        tx = database.beginTx();
+                    }
+                    metadataEventsIterator = events.iterator();
+                    // Remove already processed items
+                    for (int i = 0; i < committed; i++) {
+                        metadataEventsIterator.next();
+                    }
+                } catch (Throwable e) {
+                    sink.error(e);
+                    return;
                 }
-                if (!events.isEmpty()) {
-                    position = ((Number) lastEvent
-                            .metadata()
-                            .getLong(DomainEventMetadata.streamPosition)
-                            .orElse(position + events.size()))
-                            .longValue();
-                    long timestamp = ((Number) lastEvent
-                            .metadata()
-                            .getLong(DomainEventMetadata.timestamp)
-                            .orElseGet(System::currentTimeMillis))
-                            .longValue();
-                    Map<String, Object> updateParameters = new HashMap<>();
-                    updateParameters.put(Projection.projectionId.name(), projectionId);
-                    updateParameters.put(Projection.projectionPosition.name(), position);
-                    updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
-                    tx.execute("""
-                            MATCH (projection:Projection {id:$projectionId}) SET 
-                            projection.projectionPosition=$projectionPosition,
-                            projection.projectionTimestamp=$projectionTimestamp
-                            RETURN projection
-                            """, updateParameters).close();
-
-                    tx.commit();
-                    long stop = System.nanoTime();
-                    batchSizeHistogram.record(events.size(), attributes);
-                    double writeDuration = stop - start;
-                    writeLatencyHistogram.record(writeDuration / 1_000_000_000.0, attributes);
-
-                    if (logger.isTraceEnabled())
-                        logger.trace("Committed " + events.size());
-                }
-
-            } catch (Throwable e) {
-                sink.error(e);
-                return;
             }
             sink.next(events);
         }
