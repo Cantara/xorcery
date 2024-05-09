@@ -79,13 +79,16 @@ public class SmartBatcher<T>
 
     @Override
     public void close() {
-        closed.set(true);
-        while (handlingLock.availablePermits() == 0 || !queue.isEmpty()) {
+        if (closed.compareAndSet(false, true))
+        {
+            int tries = 0;
+            while ((handlingLock.availablePermits() == 0 || !queue.isEmpty()) && tries++ < 100) {
 //            System.out.println("Wait to shutdown");
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                // Ignore
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    // Ignore
+                }
             }
         }
     }
