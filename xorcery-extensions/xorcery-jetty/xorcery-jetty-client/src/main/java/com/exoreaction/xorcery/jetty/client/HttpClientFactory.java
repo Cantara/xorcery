@@ -111,13 +111,6 @@ public class HttpClientFactory {
             client.setSocketAddressResolver(new SocketAddressResolver.Async(client.getExecutor(), client.getScheduler(), client.getAddressResolutionTimeout()));
         }
 
-        transport.setConnectionPoolFactory(destination ->
-        {
-            RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, 10);
-//            pool.preCreateConnections(10);
-            return pool;
-        });
-
         try {
             client.start();
             logger.info("Started Jetty client");
