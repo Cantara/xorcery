@@ -51,8 +51,10 @@ opentelemetry:
     excludes: []
     includes: []
   meters:
-    # List of implementations names whose Meter instances should be noop. Useful for turning off metrics that are not needed
-    noop: []
+    # List of implementations names whose Meter instances should be included or excluded. Useful for turning off metrics that are not needed
+    # Excludes are processed first, then includes. Matching is done using name.contains(excludes/includes). By default all scopes are included
+    excludes: []
+    includes: []
   instrumentations: {}
 
 system:

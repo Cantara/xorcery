@@ -37,11 +37,12 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
+import java.util.List;
+
 @Service(name = "opentelemetry")
 @RunLevel(0)
 public class OpenTelemetrySDKFactory
-    implements Factory<OpenTelemetry>
-{
+        implements Factory<OpenTelemetry> {
     private final OpenTelemetryImpl openTelemetry;
 
     @Inject
@@ -52,10 +53,20 @@ public class OpenTelemetrySDKFactory
         OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
 
         // This allows us to turn off individual instrumentation scopes
-        MeterProvider filteredMeterProvider = instrumentationScopeName ->
-                openTelemetryConfiguration.getNoopImplementationMeters().contains(instrumentationScopeName)
-                ? MeterProvider.noop().meterBuilder(instrumentationScopeName)
-                : meterProvider.meterBuilder(instrumentationScopeName);
+        List<String> excludes = openTelemetryConfiguration.getExcludedMeters();
+        List<String> includes = openTelemetryConfiguration.getExcludedMeters();
+
+        MeterProvider filteredMeterProvider = instrumentationScopeName -> excludes.isEmpty()
+                ? (includes.isEmpty()
+                ? meterProvider.meterBuilder(instrumentationScopeName)
+                : (isIncluded(includes, instrumentationScopeName)
+                ? meterProvider.meterBuilder(instrumentationScopeName)
+                : MeterProvider.noop().meterBuilder(instrumentationScopeName)))
+                : (isExcluded(excludes, instrumentationScopeName)
+                ? (isIncluded(includes, instrumentationScopeName)
+                ? meterProvider.meterBuilder(instrumentationScopeName)
+                : MeterProvider.noop().meterBuilder(instrumentationScopeName))
+                : meterProvider.meterBuilder(instrumentationScopeName));
 
         openTelemetry = new OpenTelemetryImpl(
                 tracerProvider,
@@ -63,10 +74,25 @@ public class OpenTelemetrySDKFactory
                 loggerProvider.get(),
                 ContextPropagators.create(TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance())));
 
-        if (openTelemetryConfiguration.isInstall())
-        {
+        if (openTelemetryConfiguration.isInstall()) {
             GlobalOpenTelemetry.set(openTelemetry);
         }
+    }
+
+    private boolean isExcluded(List<String> excludes, String instrumentationScopeName) {
+        for (String exclude : excludes) {
+            if (instrumentationScopeName.contains(exclude))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isIncluded(List<String> includes, String instrumentationScopeName) {
+        for (String include : includes) {
+            if (instrumentationScopeName.contains(include))
+                return true;
+        }
+        return false;
     }
 
     @Override

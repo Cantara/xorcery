@@ -49,9 +49,14 @@ public record OpenTelemetryConfiguration(Configuration context)
                 .orElse(Collections.<AttributeKey<Object>, Object>emptyMap());
     }
 
-    public List<String> getNoopImplementationMeters()
+    public List<String> getIncludedMeters()
     {
-        return context.getListAs("meters.noop", JsonNode::asText).orElse(Collections.emptyList());
+        return context.getListAs("meters.includes", JsonNode::asText).orElse(Collections.emptyList());
+    }
+
+    public List<String> getExcludedMeters()
+    {
+        return context.getListAs("meters.excludes", JsonNode::asText).orElse(Collections.emptyList());
     }
 
     private Map.Entry<AttributeKey<Object>, Object> updateEntry(Map.Entry<String, Object> entry) {
