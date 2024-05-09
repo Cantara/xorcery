@@ -38,6 +38,13 @@ public interface Model {
         metadata
     }
 
+    enum JsonSystemEventModel
+    {
+        event,
+        attributes,
+        metadata
+    }
+
     enum ValueModel
     {
         attributes,
