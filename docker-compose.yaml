@@ -40,7 +40,7 @@ services:
         target: /var/log/eventstore
 
   xorcery-opensearch:
-    image: opensearchproject/opensearch:2.13.0
+    image: opensearchproject/opensearch:2.14.0
     environment:
       - cluster.name=opensearch-cluster
       - node.name=opensearch-node1
