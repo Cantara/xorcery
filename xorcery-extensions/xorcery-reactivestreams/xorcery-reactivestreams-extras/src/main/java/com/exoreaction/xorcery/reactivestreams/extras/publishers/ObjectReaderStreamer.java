@@ -48,9 +48,15 @@ class ObjectReaderStreamer<T>
             }
 
             if (token == null || token.isStructEnd()) {
+                parser.close();
                 subscriber.onComplete();
             }
         } catch (Throwable e) {
+            try {
+                parser.close();
+            } catch (IOException ex) {
+                // Ignore
+            }
             subscriber.onError(e);
         }
     }

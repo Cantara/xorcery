@@ -47,8 +47,8 @@ public class Neo4jProjectionHandler
     private final Neo4jProjectionsConfiguration projectionsConfiguration;
 
     private final GraphDatabaseService database;
+    private final IterableProvider<Neo4jEventProjection> projectionProviders;
     private final Logger logger;
-    private final List<Neo4jEventProjection> projections = new ArrayList<>();
 
     private final LongHistogram batchSizeHistogram;
     private final DoubleHistogram writeLatencyHistogram;
@@ -59,15 +59,15 @@ public class Neo4jProjectionHandler
     @Inject
     public Neo4jProjectionHandler(
             GraphDatabase database,
-            IterableProvider<Neo4jEventProjection> projections,
+            IterableProvider<Neo4jEventProjection> projectionProviders,
             Configuration configuration,
             OpenTelemetry openTelemetry,
             Logger logger
     ) {
         this.database = database.getGraphDatabaseService();
+        this.projectionProviders = projectionProviders;
         this.logger = logger;
         this.projectionsConfiguration = new Neo4jProjectionsConfiguration(configuration.getConfiguration("neo4jprojections"));
-        projections.forEach(this.projections::add);
         meter = openTelemetry.meterBuilder(getClass().getName())
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
@@ -91,7 +91,9 @@ public class Neo4jProjectionHandler
             logger.info("Starting Neo4j projection with id " + projectionId);
             Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
             Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
-            Handler handler = new Handler(projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
+            List<Neo4jEventProjection> projections = new ArrayList<>();
+            projectionProviders.forEach(projections::add);
+            Handler handler = new Handler(projections, projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
             ArrayBlockingQueue<MetadataEvents> smartBatchingQueue = new ArrayBlockingQueue<>(projectionsConfiguration.eventBatchSize());
             return Flux.from(currentProjection
                     .map(p -> SmartBatchingOperator.smartBatching(handler, () -> smartBatchingQueue, () -> taskWrapping(Schedulers.boundedElastic()::schedule))
@@ -155,10 +157,12 @@ public class Neo4jProjectionHandler
 
         private final Attributes attributes;
         private final ObservableLongGauge positionGauge;
+        private final List<Neo4jEventProjection> projections;
         private final String projectionId;
         long position = -1;
 
-        public Handler(String projectionId, Attributes attributes, Meter meter, long currentPosition) {
+        public Handler(List<Neo4jEventProjection> projections, String projectionId, Attributes attributes, Meter meter, long currentPosition) {
+            this.projections = projections;
             this.projectionId = projectionId;
             this.position = currentPosition;
             this.attributes = attributes;
