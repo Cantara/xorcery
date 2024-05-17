@@ -58,7 +58,7 @@ public class SmartBatcher<T>
 
     private void drainQueue() {
         try {
-            queue.drainTo(batch);
+            queue.drainTo(batch, queue.size());
             handler.accept(batch);
             batch.clear();
 
@@ -73,6 +73,7 @@ public class SmartBatcher<T>
                 updateLock.unlock();
             }
         } catch (Throwable t) {
+            System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "SmartBatcher handler failed", t);
             handlingLock.release();
         }
     }
