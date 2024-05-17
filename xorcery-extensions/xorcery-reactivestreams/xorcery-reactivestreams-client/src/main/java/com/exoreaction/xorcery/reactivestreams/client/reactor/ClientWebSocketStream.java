@@ -349,10 +349,19 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             for (OUTPUT item : items) {
                 outputStream.write(new byte[4]);
                 int position = byteBuffer.limit();
+                boolean isBufferOverflow = false;
                 try {
                     writer.writeTo(item, outputStream);
-                } catch (BufferOverflowException e) {
-                    logger.info("OVERFLOW FLUSH {}", position);
+                } catch (Throwable e) {
+                    if (unwrap(e) instanceof BufferOverflowException) {
+                        isBufferOverflow = true;
+                    } else {
+                        throw e;
+                    }
+                }
+
+                if (byteBuffer.limit() > serverMaxBinaryMessageSize || isBufferOverflow) {
+                    logger.info("OVERFLOW FLUSH {}", byteBuffer.limit());
 
                     // Flush what we have so far and start again
                     position = 0;
@@ -364,7 +373,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                     }
                     byteBuffer.flip();
                     CompletableFuture<Void> flushDone = new CompletableFuture<>();
-                    session.sendBinary(byteBuffer, Callback.from(()->flushDone.complete(null), flushDone::completeExceptionally));
+                    session.sendBinary(byteBuffer, Callback.from(() -> flushDone.complete(null), flushDone::completeExceptionally));
                     flushDone.join();
                     byteBuffer.limit(0);
                     idx = 0;
@@ -373,8 +382,13 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                     outputStream.write(new byte[4]);
                     position = byteBuffer.limit();
                     writer.writeTo(item, outputStream);
+
+                    if (byteBuffer.limit() > serverMaxBinaryMessageSize) {
+                        throw new IOException(String.format("Item is too large:%d bytes, server max binary message size:%d", byteBuffer.limit(), serverMaxBinaryMessageSize));
+                    }
                 }
-                int size = byteBuffer.limit()-position;
+
+                int size = byteBuffer.limit() - position;
                 sizes[idx++] = size;
             }
 
@@ -392,6 +406,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             flushHistogram.record(items.size(), attributes);
             session.sendBinary(byteBuffer, new ReleaseCallback(sendByteBuffer));
         } catch (Throwable e) {
+            this.error = e;
             logger.error("Flush failed", e);
             onError(e);
         }
@@ -403,7 +418,12 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             if (batcher != null) {
                 batcher.close();
             }
-            sendRequests(COMPLETE);
+            if (error == null) {
+                sendRequests(COMPLETE);
+            } else if (session.isOpen())
+            {
+                hookOnError(error);
+            }
         }
     }
 

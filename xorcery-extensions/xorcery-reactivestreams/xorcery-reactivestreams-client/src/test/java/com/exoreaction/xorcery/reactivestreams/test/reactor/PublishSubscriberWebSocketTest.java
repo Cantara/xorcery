@@ -38,15 +38,18 @@ import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 import reactor.util.retry.Retry;
 
+import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class PublishSubscriberWebSocketTest {
 
@@ -62,6 +65,7 @@ public class PublishSubscriberWebSocketTest {
                             reactivestreams.client.enabled: false
                             jetty.server.http.enabled: false
                             jetty.server.ssl.port: "{{ SYSTEM.port }}"
+                            jetty.server.websockets.maxBinaryMessageSize: 1024
             """;
 
     private Configuration clientConfiguration;
@@ -364,6 +368,72 @@ public class PublishSubscriberWebSocketTest {
 
                 // Then
                 Assertions.assertEquals("[server=123, foo=bar, client=abc, param1=value1]", config);
+            }
+        }
+    }
+
+    @Test
+    public void largeItems() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
+
+                List<ByteBuffer> result = new ArrayList<>();
+                websocketStreamsServer.subscriber(
+                        "numbers",
+                        ByteBuffer.class,
+                        upstream -> upstream.doOnNext(result::add));
+
+                // When
+                List<ByteBuffer> source = List.of(800, 800, 800)
+                        .stream().map(n -> ByteBuffer.wrap(new byte[n]))
+                        .toList();
+
+                Flux.fromIterable(source)
+                        .transform(websocketStreamsClientClient.publish(ClientWebSocketOptions.instance(), ByteBuffer.class, MediaType.APPLICATION_JSON))
+                        .contextWrite(webSocketContext)
+                        .blockLast();
+
+                // Then
+                Assertions.assertEquals(source, result);
+            }
+        }
+    }
+
+    @Test
+    public void tooLargeItem() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
+
+                List<ByteBuffer> result = new ArrayList<>();
+                websocketStreamsServer.subscriber(
+                        "numbers",
+                        ByteBuffer.class,
+                        upstream -> upstream.doOnNext(result::add));
+
+                // When
+                List<ByteBuffer> source = List.of(800, 1800, 800)
+                        .stream().map(n -> ByteBuffer.wrap(new byte[n]))
+                        .toList();
+
+                // Then
+                Assertions.assertThrows(ServerStreamException.class, ()->
+                {
+                    Flux.fromIterable(source)
+                            .subscribeOn(Schedulers.boundedElastic(), true)
+                            .transform(websocketStreamsClientClient.publish(ClientWebSocketOptions.instance(), ByteBuffer.class, MediaType.APPLICATION_JSON))
+                            .contextWrite(webSocketContext)
+                            .blockLast();
+                });
             }
         }
     }

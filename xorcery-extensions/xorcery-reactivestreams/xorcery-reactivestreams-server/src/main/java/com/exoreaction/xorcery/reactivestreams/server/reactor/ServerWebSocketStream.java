@@ -25,7 +25,10 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.io.*;
+import org.eclipse.jetty.io.ByteBufferOutputStream;
+import org.eclipse.jetty.io.ByteBufferOutputStream2;
+import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.io.RetainableByteBuffer;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
@@ -35,21 +38,23 @@ import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 
+import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
-import static com.exoreaction.xorcery.lang.Exceptions.isCausedBy;
+import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
 
 public class ServerWebSocketStream<OUTPUT, INPUT>
@@ -94,6 +99,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     private volatile long sendRequestsThreshold = 0;
     private final AtomicLong requests = new AtomicLong(0);
     private final AtomicLong outstandingRequests = new AtomicLong(0);
+    private volatile Throwable error; // Upstream error we are saving for when server closes the websocket
 
     private final int queueSize = 1024;
     private final int clientMaxBinaryMessageSize;
@@ -218,10 +224,19 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             for (OUTPUT item : items) {
                 outputStream.write(new byte[4]);
                 int position = byteBuffer.limit();
+                boolean isBufferOverflow = false;
                 try {
                     writer.writeTo(item, outputStream);
-                } catch (BufferOverflowException e) {
-                    logger.info("OVERFLOW FLUSH {}", position);
+                } catch (Throwable e) {
+                    if (unwrap(e) instanceof BufferOverflowException) {
+                        isBufferOverflow = true;
+                    } else {
+                        throw e;
+                    }
+                }
+
+                if (byteBuffer.limit() > clientMaxBinaryMessageSize || isBufferOverflow) {
+                    logger.info("OVERFLOW FLUSH {}", byteBuffer.limit());
 
                     // Flush what we have so far and start again
                     position = 0;
@@ -233,7 +248,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                     }
                     byteBuffer.flip();
                     CompletableFuture<Void> flushDone = new CompletableFuture<>();
-                    session.sendBinary(byteBuffer, Callback.from(()->flushDone.complete(null), flushDone::completeExceptionally));
+                    session.sendBinary(byteBuffer, Callback.from(() -> flushDone.complete(null), flushDone::completeExceptionally));
                     flushDone.join();
                     byteBuffer.limit(0);
                     idx = 0;
@@ -242,6 +257,10 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                     outputStream.write(new byte[4]);
                     position = byteBuffer.limit();
                     writer.writeTo(item, outputStream);
+
+                    if (byteBuffer.limit() > clientMaxBinaryMessageSize) {
+                        throw new IOException(String.format("Item is too large:%d bytes, server max binary message size:%d", byteBuffer.limit(), clientMaxBinaryMessageSize));
+                    }
                 }
                 int size = byteBuffer.limit()-position;
                 sizes[idx++] = size;
@@ -261,6 +280,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             flushHistogram.record(items.size(), attributes);
             session.sendBinary(byteBuffer, new ReleaseCallback(sendByteBuffer));
         } catch (Throwable e) {
+            this.error = e;
             logger.error("Flush failed", e);
             onError(e);
         }
@@ -273,7 +293,13 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             {
                 batcher.close();
             }
-            session.close(StatusCode.NORMAL, null, Callback.NOOP);
+            if (error == null)
+            {
+                session.close(StatusCode.NORMAL, null, Callback.NOOP);
+            } else if (session.isOpen())
+            {
+                hookOnError(error);
+            }
         }
     }
 
