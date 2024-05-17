@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import com.exoreaction.xorcery.neo4j.providers.TransactionContextExtensions;
 import com.exoreaction.xorcery.neo4j.spi.Neo4jProvider;
 
 module xorcery.neo4j.embedded {
@@ -21,6 +22,7 @@ module xorcery.neo4j.embedded {
 
     exports com.exoreaction.xorcery.neo4j.client;
     exports com.exoreaction.xorcery.neo4j;
+    exports com.exoreaction.xorcery.neo4j.providers;
     exports com.exoreaction.xorcery.neo4j.spi;
 
     requires xorcery.configuration.api;
@@ -34,4 +36,6 @@ module xorcery.neo4j.embedded {
     requires io.opentelemetry.api;
     requires io.opentelemetry.semconv;
     requires org.glassfish.hk2.runlevel;
+
+    provides Neo4jProvider with TransactionContextExtensions;
 }
