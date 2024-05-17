@@ -122,8 +122,12 @@ public class WithMetadataMessageWriterFactory
 
         @Override
         public void writeTo(WithMetadata<T> instance, OutputStream entityStream) throws IOException {
-            objectWriter.writeValue(entityStream, instance.metadata().metadata());
-            eventWriter.writeTo(instance.data(), entityStream);
+            try {
+                objectWriter.writeValue(entityStream, instance.metadata().metadata());
+                eventWriter.writeTo(instance.data(), entityStream);
+            } catch (Throwable e) {
+                throw new IOException("Failed to write item with metadata:"+instance.metadata().toString(), e);
+            }
         }
     }
 }
