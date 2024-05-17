@@ -41,8 +41,7 @@ public class Neo4jProjectionTest {
             .build();
 
     @Test
-    public void testProjection() {
-        Neo4jProjections neo4jProjections = xorceryExtension.getServiceLocator().getService(Neo4jProjections.class);
+    public void testProjection(Neo4jProjections neo4jProjections) {
         YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
         AtomicInteger timestamp = new AtomicInteger();
         Flux.from(filePublisher)

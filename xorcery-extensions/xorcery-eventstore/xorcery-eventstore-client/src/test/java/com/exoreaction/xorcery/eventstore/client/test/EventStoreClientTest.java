@@ -62,9 +62,9 @@ public class EventStoreClientTest {
     private static EventStoreClient client;
 
     @BeforeAll
-    public static void setup() {
+    public static void setup(EventStoreClient.Factory clientFactory) {
         settings = EventStoreDBConnectionString.parseOrThrow("esdb://localhost:2115?tls=false");
-        client = xorcery.getServiceLocator().getService(EventStoreClient.Factory.class).create(settings);
+        client = clientFactory.create(settings);
     }
 
     @AfterAll
