@@ -19,7 +19,7 @@ import com.eventstore.dbclient.EventStoreDBClient;
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -32,8 +32,8 @@ public class EventStoreSubscriber
         implements Subscriber<MetadataByteBuffer> {
 
     private Disruptor<WithMetadata<ByteBuffer>> disruptor;
-    private EventStoreDBClient client;
-    private Configuration cfg;
+    private final EventStoreDBClient client;
+    private final Configuration cfg;
 
     public EventStoreSubscriber(EventStoreDBClient client, Configuration cfg) {
         this.client = client;

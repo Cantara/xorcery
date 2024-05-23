@@ -30,6 +30,14 @@ public record JettyClientConfiguration(Configuration context)
         return Duration.parse("PT" + context().getString("connectTimeout").orElse("5s"));
     }
 
+    public boolean getReusePort() {
+        return context().getBoolean("reusePort").orElse(false);
+    }
+
+    public int getRequestBufferSize() {
+        return context().getInteger("requestBufferSize").orElse(4096);
+    }
+
     public JettyHttp2Configuration getHTTP2Configuration() {
         return new JettyHttp2Configuration(context.getConfiguration("http2"));
     }

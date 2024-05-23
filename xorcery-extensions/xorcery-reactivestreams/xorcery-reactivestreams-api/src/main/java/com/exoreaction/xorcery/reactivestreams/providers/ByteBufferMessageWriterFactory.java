@@ -21,13 +21,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 
 public class ByteBufferMessageWriterFactory
         implements MessageWriter.Factory {
 
     @Override
     public boolean canWrite(Class<?> type, String mediaType) {
-        return ByteBuffer.class.isAssignableFrom(type) &&  mediaType.equals("application/octet-stream");
+        return ByteBuffer.class.isAssignableFrom(type);
     }
 
     @Override
@@ -42,7 +43,13 @@ public class ByteBufferMessageWriterFactory
             implements MessageWriter<ByteBuffer> {
         @Override
         public void writeTo(ByteBuffer instance, OutputStream out) throws IOException {
-            out.write(instance.array(), instance.position(), instance.limit() - instance.position());
+            if (instance.hasArray())
+            {
+                out.write(instance.array(), instance.position(), instance.limit() - instance.position());
+            } else
+            {
+                Channels.newChannel(out).write(instance);
+            }
         }
     }
 }

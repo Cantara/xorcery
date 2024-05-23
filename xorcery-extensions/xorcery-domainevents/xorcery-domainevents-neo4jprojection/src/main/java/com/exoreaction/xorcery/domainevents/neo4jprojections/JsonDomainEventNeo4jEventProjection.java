@@ -40,9 +40,9 @@ public class JsonDomainEventNeo4jEventProjection
 
     @Override
     public void write(MetadataEvents events, Transaction transaction) throws Throwable {
-        Map<String, Object> metadataMap = Cypher.toMap(events.getMetadata().metadata());
+        Map<String, Object> metadataMap = Cypher.toMap(events.metadata().metadata());
 
-        for (DomainEvent domainEvent : events.getEvents()) {
+        for (DomainEvent domainEvent : events.data()) {
             if (domainEvent instanceof JsonDomainEvent jsonDomainEvent)
             {
 

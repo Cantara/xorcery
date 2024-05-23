@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module xorcery.metadata {
+open module xorcery.metadata {
     exports com.exoreaction.xorcery.metadata;
 
     requires transitive xorcery.configuration.api;

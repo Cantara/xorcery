@@ -6,7 +6,6 @@ module xorcery.eventstore.client {
     requires xorcery.metadata;
     requires xorcery.opentelemetry.api;
     requires xorcery.reactivestreams.api;
-    requires xorcery.reactivestreams.disruptor;
 
     requires db.client.java;
     requires org.reactivestreams;
@@ -20,4 +19,6 @@ module xorcery.eventstore.client {
     requires jakarta.inject;
     requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
+    requires xorcery.reactivestreams.extras;
+    requires io.opentelemetry.context;
 }

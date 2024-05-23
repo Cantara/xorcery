@@ -22,18 +22,14 @@ class AwsSecretsProviderTest {
             .build();
 
     @Test
-    public void testGetSecretString()
+    public void testGetSecretString(Secrets secrets)
     {
-        Secrets secrets = xorcery.getServiceLocator().getService(Secrets.class);
-
         String secretValue = secrets.getSecretString("aws:xorcery-secrets-aws/testsecret");
         Assertions.assertEquals("{\"testsecret\":\"secretvalue\"}", secretValue);
     }
 
     @Test
-    public void testRefreshSecret() {
-        Secrets secrets = xorcery.getServiceLocator().getService(Secrets.class);
-
+    public void testRefreshSecret(Secrets secrets) {
         secrets.refreshSecret("aws:xorcery-secrets-aws/testsecret");
         String secretValue = secrets.getSecretString("aws:xorcery-secrets-aws/testsecret");
         Assertions.assertEquals("{\"testsecret\":\"secretvalue\"}", secretValue);

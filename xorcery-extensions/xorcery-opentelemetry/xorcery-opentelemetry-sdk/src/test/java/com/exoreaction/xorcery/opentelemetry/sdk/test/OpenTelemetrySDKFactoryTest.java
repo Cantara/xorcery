@@ -44,8 +44,7 @@ class OpenTelemetrySDKFactoryTest {
             .build();
 
     @Test
-    public void test() throws InterruptedException {
-        OpenTelemetry openTelemetry = xorcery.getServiceLocator().getService(OpenTelemetry.class);
+    public void test(OpenTelemetry openTelemetry) throws InterruptedException {
 
         // Logging
         for (int i = 0; i < 100; i++) {

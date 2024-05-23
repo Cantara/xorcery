@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-eventstore</artifactId>
-        <version>0.115.1-SNAPSHOT</version>
+        <version>0.120.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-eventstore-client</artifactId>
@@ -30,10 +30,6 @@
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-reactivestreams-disruptor</artifactId>
         </dependency>
 
         <dependency>
@@ -52,6 +48,10 @@
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-reactivestreams-extras</artifactId>
         </dependency>
     </dependencies>
 </project>

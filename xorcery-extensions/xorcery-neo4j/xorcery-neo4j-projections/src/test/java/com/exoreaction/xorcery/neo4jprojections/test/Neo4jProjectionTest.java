@@ -3,14 +3,16 @@ package com.exoreaction.xorcery.neo4jprojections.test;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.junit.XorceryExtension;
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
-import com.exoreaction.xorcery.neo4jprojections.reactor.Neo4jProjections;
-import com.exoreaction.xorcery.neo4jprojections.reactor.ProjectionStreamContext;
-import com.exoreaction.xorcery.neo4jprojections.reactor.SkipEventsUntil;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
+import com.exoreaction.xorcery.neo4jprojections.api.Neo4jProjections;
+import com.exoreaction.xorcery.neo4jprojections.api.ProjectionStreamContext;
+import com.exoreaction.xorcery.neo4jprojections.SkipEventsUntil;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
 import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
@@ -39,12 +41,11 @@ public class Neo4jProjectionTest {
             .build();
 
     @Test
-    public void testProjection() {
-        Neo4jProjections neo4jProjections = xorceryExtension.getServiceLocator().getService(Neo4jProjections.class);
+    public void testProjection(Neo4jProjections neo4jProjections) {
         YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
         AtomicInteger timestamp = new AtomicInteger();
         Flux.from(filePublisher)
-                .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
+                .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
                 .transformDeferredContextual(new SkipEventsUntil(ProjectionStreamContext.projectionPosition.name()))
                 .transformDeferredContextual(neo4jProjections.projection())
                 .doOnNext(System.out::println)
@@ -78,23 +79,23 @@ public class Neo4jProjectionTest {
     public void testRemoteProjection() {
         // Server
         Neo4jProjections neo4jProjections = xorceryExtension.getServiceLocator().getService(Neo4jProjections.class);
-        WebSocketStreamsServer server = xorceryExtension.getServiceLocator().getService(WebSocketStreamsServer.class);
+        ServerWebSocketStreams server = xorceryExtension.getServiceLocator().getService(ServerWebSocketStreams.class);
         Disposable subscriber = server.subscriber("projections/{projectionId}", MetadataEvents.class,
                 flux -> flux.transformDeferredContextual(neo4jProjections.projection()));
 
         try {
             // Client
-            WebSocketStreamsClient client = xorceryExtension.getServiceLocator().getService(WebSocketStreamsClient.class);
+            ClientWebSocketStreams client = xorceryExtension.getServiceLocator().getService(ClientWebSocketStreams.class);
 
             YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
             AtomicInteger timestamp = new AtomicInteger();
             Flux<MetadataEvents> publisher = Flux.from(filePublisher)
-                    .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
+                    .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
                     .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
             URI serverUri = ReactiveStreamsServerConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
-            publisher.transform(client.publish(WebSocketClientOptions.instance(), MetadataEvents.class, MediaType.APPLICATION_JSON))
-                    .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(), serverUri))
+            publisher.transform(client.publish(ClientWebSocketOptions.instance(), MetadataEvents.class, MediaType.APPLICATION_JSON))
+                    .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
                     .blockLast();
 
             // Check results
@@ -117,23 +118,23 @@ public class Neo4jProjectionTest {
     public void testRemoteProjectionWithObserver() {
         // Server
         Neo4jProjections neo4jProjections = xorceryExtension.getServiceLocator().getService(Neo4jProjections.class);
-        WebSocketStreamsServer server = xorceryExtension.getServiceLocator().getService(WebSocketStreamsServer.class);
-        Disposable subscriber = server.subscriber("projections/{projectionId}", MetadataEvents.class,
-                flux -> flux.transformDeferredContextual(neo4jProjections.projection()));
+        ServerWebSocketStreams server = xorceryExtension.getServiceLocator().getService(ServerWebSocketStreams.class);
+        Disposable subscriber = server.subscriberWithResult("projections/{projectionId}", MetadataEvents.class, Metadata.class,
+                flux -> flux.transformDeferredContextual(neo4jProjections.projection()).map(WithMetadata::metadata));
 
         try {
             // Client
-            WebSocketStreamsClient client = xorceryExtension.getServiceLocator().getService(WebSocketStreamsClient.class);
+            ClientWebSocketStreams client = xorceryExtension.getServiceLocator().getService(ClientWebSocketStreams.class);
 
             YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
             AtomicInteger timestamp = new AtomicInteger();
             Flux<MetadataEvents> publisher = Flux.from(filePublisher)
-                    .doOnNext(me -> me.getMetadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
+                    .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
                     .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
             URI serverUri = ReactiveStreamsServerConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
-            publisher.transform(client.publish(WebSocketClientOptions.instance(), MetadataEvents.class, MediaType.APPLICATION_JSON))
-                    .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(), serverUri))
+            publisher.transform(client.publishWithResult(ClientWebSocketOptions.instance(), MetadataEvents.class, Metadata.class, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON))
+                    .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
                     .blockLast();
 
             // Check results

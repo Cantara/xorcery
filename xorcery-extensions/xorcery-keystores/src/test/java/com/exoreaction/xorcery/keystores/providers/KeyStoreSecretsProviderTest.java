@@ -30,8 +30,7 @@ public class KeyStoreSecretsProviderTest {
             .build();
 
     @Test
-    public void getSecretStringTest() throws Exception {
-        Secrets secrets = xorcery.getXorcery().getServiceLocator().getService(Secrets.class);
+    public void getSecretStringTest(Secrets secrets) throws Exception {
         Assertions.assertEquals("mysecretpassword", secrets.getSecretString("keystore:secretpassword"));
     }
 }

@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.reactivestreams.providers;
 
 import com.exoreaction.xorcery.lang.Classes;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -35,12 +35,11 @@ import java.util.function.Supplier;
 public class WithMetadataMessageWriterFactory
         implements MessageWriter.Factory {
 
-    private final ObjectMapper objectMapper;
     private final ObjectWriter objectWriter;
     private final Supplier<MessageWorkers> messageWorkersSupplier;
 
     public WithMetadataMessageWriterFactory(Supplier<MessageWorkers> messageWorkersSupplier) {
-        objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectWriter = objectMapper.writer();
@@ -88,7 +87,7 @@ public class WithMetadataMessageWriterFactory
     }
     @Override
     public <T> MessageWriter<T> newWriter(Class<?> type, Type genericType, String mediaType) {
-        if (WithMetadata.class.isAssignableFrom(type)) {
+        if (WithMetadata.class.isAssignableFrom(type) && mediaType.endsWith("+metadata")) {
             Type parameterType = Classes.typeOrBound(Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>)type, WithMetadata.class)[0]);
             String envelopedContentType = mediaType.substring(0, mediaType.length()-"+metadata".length());
             if (parameterType instanceof Class<?> eventType)
@@ -123,8 +122,12 @@ public class WithMetadataMessageWriterFactory
 
         @Override
         public void writeTo(WithMetadata<T> instance, OutputStream entityStream) throws IOException {
-            objectWriter.writeValue(entityStream, instance.metadata().metadata());
-            eventWriter.writeTo(instance.data(), entityStream);
+            try {
+                objectWriter.writeValue(entityStream, instance.metadata().metadata());
+                eventWriter.writeTo(instance.data(), entityStream);
+            } catch (Throwable e) {
+                throw new IOException("Failed to write item with metadata:"+instance.metadata().toString(), e);
+            }
         }
     }
 }

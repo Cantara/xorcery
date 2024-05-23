@@ -16,45 +16,26 @@
 package com.exoreaction.xorcery.domainevents.api;
 
 import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MetadataEvents {
-    private Metadata metadata;
-    private List<DomainEvent> events;
-
+public class MetadataEvents
+    extends WithMetadata<List<DomainEvent>>
+{
     public MetadataEvents() {
     }
 
-    public MetadataEvents(Metadata metadata, List<DomainEvent> events) {
-        this.metadata = metadata;
-        this.events = events;
-    }
-
-    public void set(Metadata metadata, List<DomainEvent> events) {
-        this.metadata = metadata;
-        this.events = events;
-    }
-
-    public void set(MetadataEvents other) {
-        this.metadata = other.metadata;
-        this.events = other.events;
-    }
-
-    public Metadata getMetadata() {
-        return metadata;
-    }
-
-    public List<DomainEvent> getEvents() {
-        return events;
+    public MetadataEvents(Metadata metadata, List<DomainEvent> data) {
+        super(metadata, data);
     }
 
     // Strip away attributes and relationships for security reasons
     public MetadataEvents cloneWithoutState()
     {
-        List<DomainEvent> cleanedDomainEvents = new ArrayList<>(events.size());
-        for (DomainEvent domainEvent : events) {
+        List<DomainEvent> cleanedDomainEvents = new ArrayList<>(data().size());
+        for (DomainEvent domainEvent : data()) {
             if (domainEvent instanceof JsonDomainEvent jde)
             {
                 JsonDomainEvent jsonDomainEvent = new JsonDomainEvent(jde.json().deepCopy());
@@ -70,11 +51,11 @@ public class MetadataEvents {
                 cleanedDomainEvents.add(domainEvent);
             }
         }
-        return new MetadataEvents(metadata, cleanedDomainEvents);
+        return new MetadataEvents(metadata(), cleanedDomainEvents);
     }
 
     @Override
     public String toString() {
-        return metadata.toString()+events.toString();
+        return metadata().toString()+data().toString();
     }
 }

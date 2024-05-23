@@ -1,9 +1,10 @@
 package com.exoreaction.xorcery.reactivestreams.server.reactor;
 
 
+import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketServerOptions;
-import com.exoreaction.xorcery.reactivestreams.api.server.WebSocketStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -25,6 +26,7 @@ import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.websocket.api.ExtensionConfig;
 import org.eclipse.jetty.websocket.server.*;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
@@ -33,16 +35,19 @@ import org.reactivestreams.Publisher;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 @Service(name = "reactivestreams.server.reactor")
-@ContractsProvided({WebSocketStreamsServer.class})
+@ContractsProvided({ServerWebSocketStreams.class})
 @RunLevel(4)
 public class ServerWebSocketStreamsService
-        implements WebSocketStreamsServer {
+        implements ServerWebSocketStreams {
 
     protected static final TextMapGetter<ServerUpgradeRequest> jettyGetter =
             new TextMapGetter<>() {
@@ -64,7 +69,7 @@ public class ServerWebSocketStreamsService
     private final WebSocketUpgradeHandler webSocketUpgradeHandler;
 
     protected final ByteBufferPool byteBufferPool;
-
+    private final ExecutorService flushingExecutors = Executors.newCachedThreadPool(new NamedThreadFactory("reactivestreams-server-flusher-"));
 
     // Path -> Subprotocol -> handler
     private final Map<String, Map<ReactiveStreamSubProtocol, WebSocketHandler>> pathHandlers = new ConcurrentHashMap<>();
@@ -90,7 +95,7 @@ public class ServerWebSocketStreamsService
 
         this.byteBufferPool = new ArrayByteBufferPool();
         textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
-        meter = openTelemetry.meterBuilder(getClass().getName())
+        meter = openTelemetry.meterBuilder(ServerWebSocketStream.class.getName())
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
@@ -204,18 +209,38 @@ public class ServerWebSocketStreamsService
                 Context context = textMapPropagator.extract(Context.current(), serverUpgradeRequest, jettyGetter);
                 Function<Flux<Object>, Publisher<Object>> handler = subProtocolHandler.handler();
                 serverUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol.name());
+                serverUpgradeResponse.getHeaders().add("Aggregate", "maxBinaryMessageSize="+webSocketUpgradeHandler.getServerWebSocketContainer().getMaxBinaryMessageSize());
+
+                // Aggregate header for batching support
+                int clientMaxBinaryMessageSize = Optional.ofNullable(serverUpgradeRequest.getHeaders().get("Aggregate")).map(header ->
+                {
+                    Map<String, String> parameters = new HashMap<>();
+                    Arrays.asList(header.split(";")).forEach(parameter -> {
+                        String[] paramKeyValue = parameter.split("=");
+                        parameters.put(paramKeyValue[0], paramKeyValue[1]);
+                    });
+                    return Integer.valueOf(parameters.computeIfAbsent("maxBinaryMessageSize", k -> "-1"));
+                }).orElse(-1);
+
+
+                String clientHost = serverUpgradeRequest.getConnectionMetaData().getRemoteSocketAddress() instanceof InetSocketAddress isa
+                        ? isa.getHostName()
+                        : serverUpgradeRequest.getConnectionMetaData().getRemoteSocketAddress().toString();
 
                 return new ServerWebSocketStream<>(
                         path,
                         pathParameters,
-                        WebSocketServerOptions.instance(),
+                        ServerWebSocketOptions.instance(),
                         writer,
                         reader,
                         handler,
+                        flushingExecutors,
                         byteBufferPool,
+                        clientMaxBinaryMessageSize,
                         loggerContext.getLogger(ServerWebSocketStream.class),
                         tracer,
                         meter,
+                        clientHost,
                         context
                 );
             }

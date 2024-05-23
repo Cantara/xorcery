@@ -47,11 +47,7 @@ class KeyStoresTest {
             .build();
 
     @Test
-    public void testKeyStoreTemplate() throws Exception {
-
-        // Given
-        KeyStores keyStores = xorcery.getXorcery().getServiceLocator().getService(KeyStores.class);
-
+    public void testKeyStoreTemplate(KeyStores keyStores) throws Exception {
         // When
         KeyStore keyStore = keyStores.getKeyStore("teststore");
 
@@ -60,10 +56,7 @@ class KeyStoresTest {
     }
 
     @Test
-    public void testCreateEmptyKeyStore() throws Exception {
-        // Given
-        KeyStores keyStores = xorcery.getXorcery().getServiceLocator().getService(KeyStores.class);
-
+    public void testCreateEmptyKeyStore(KeyStores keyStores) throws Exception {
         // When
         KeyStore keyStore = keyStores.getKeyStore("emptystore");
 

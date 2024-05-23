@@ -39,8 +39,7 @@ public class LabelAccessModeTest {
             .build();
 
     @Test
-    public void testLabelAccessMode() {
-        GraphDatabase graphDatabase = xorceryExtension.getServiceLocator().getService(GraphDatabase.class);
+    public void testLabelAccessMode(GraphDatabase graphDatabase) {
         GraphDatabaseAPI graphDatabaseService = (GraphDatabaseAPI) graphDatabase.getGraphDatabaseService();
         // Given two nodes with Entity label but different tenant labels
         Label sometenantid = Label.label("sometenantid");

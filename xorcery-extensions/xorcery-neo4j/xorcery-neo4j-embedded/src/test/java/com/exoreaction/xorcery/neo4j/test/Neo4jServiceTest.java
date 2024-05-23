@@ -34,8 +34,7 @@ public class Neo4jServiceTest {
             .build();
 
     @Test
-    public void startupNeo4j() throws Exception {
-        Neo4jService neo4jService = xorceryExtension.getXorcery().getServiceLocator().getService(Neo4jService.class);
+    public void startupNeo4j(Neo4jService neo4jService) throws Exception {
         try (GraphResult graphResult = neo4jService.provide().execute("MATCH (n) RETURN count(n)", Collections.emptyMap(), 10).toCompletableFuture().join())
         {
             System.out.println(graphResult.getResult().resultAsString());

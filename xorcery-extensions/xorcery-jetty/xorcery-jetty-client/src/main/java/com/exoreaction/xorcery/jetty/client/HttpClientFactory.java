@@ -64,6 +64,7 @@ public class HttpClientFactory {
         // Client setup
         ClientConnector connector = new ClientConnector();
         connector.setIdleTimeout(jettyClientConfiguration.getIdleTimeout());
+        connector.setReusePort(jettyClientConfiguration.getReusePort());
 
         // HTTP 1.1
         ClientConnectionFactory.Info http1 = HttpClientConnectionFactory.HTTP11;
@@ -97,8 +98,10 @@ public class HttpClientFactory {
         HttpClient client = new HttpClient(transport);
         client.getRequestListeners().addListener(new OpenTelemetryRequestListener(openTelemetry));
         client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
+        client.setRequestBufferSize(jettyClientConfiguration.getRequestBufferSize());
         QueuedThreadPool executor = new JettyClientConnectorThreadPool();
-        executor.setName(applicationConfiguration.getName());
+        executor.setDaemon(true);
+        executor.setName("jetty-http-client");
         client.setExecutor(executor);
         client.setScheduler(new ScheduledExecutorScheduler(applicationConfiguration.getName() + "-scheduler", false));
 
@@ -107,13 +110,6 @@ public class HttpClientFactory {
         } else {
             client.setSocketAddressResolver(new SocketAddressResolver.Async(client.getExecutor(), client.getScheduler(), client.getAddressResolutionTimeout()));
         }
-
-        transport.setConnectionPoolFactory(destination ->
-        {
-            RoundRobinConnectionPool pool = new RoundRobinConnectionPool(destination, 10, 10);
-//            pool.preCreateConnections(10);
-            return pool;
-        });
 
         try {
             client.start();

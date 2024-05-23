@@ -29,17 +29,27 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel.attributes;
-import static com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel.event;
+import static com.exoreaction.xorcery.domainevents.api.Model.JsonSystemEventModel.attributes;
+import static com.exoreaction.xorcery.domainevents.api.Model.JsonSystemEventModel.event;
 import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
 
 /**
  * These events signify changes in the system. These can be injected in an event stream to signal non-domain changes,
- * such as a stream reaching the live state.
+ * such as streams being deleted.
  */
 public record JsonSystemEvent(ObjectNode json)
     implements JsonElement, DomainEvent
 {
+    static final Map<Class<?>, Function<Object, JsonNode>> TO_JSON =
+            Map.of(
+                    String.class, v -> JsonNodeFactory.instance.textNode(v.toString()),
+                    Double.class, v -> JsonNodeFactory.instance.numberNode((Double) v),
+                    Float.class, v -> JsonNodeFactory.instance.numberNode((Float) v),
+                    Boolean.class, v -> JsonNodeFactory.instance.booleanNode((Boolean) v),
+                    Long.class, v -> JsonNodeFactory.instance.numberNode((Long) v),
+                    Integer.class, v -> JsonNodeFactory.instance.numberNode((Integer) v),
+                    Enum.class, v -> JsonNodeFactory.instance.textNode(((Enum<?>) v).name())
+            );
 
     public static JsonSystemEvent.Builder systemEvent(String eventName) {
         return new JsonSystemEvent.Builder(eventName);
@@ -52,17 +62,11 @@ public record JsonSystemEvent(ObjectNode json)
             builder.set(event.name(), builder.textNode(eventName));
         }
 
-        private static final Map<Class<?>, Function<Object, JsonNode>> TO_JSON =
-                Map.of(
-                        String.class, v -> JsonNodeFactory.instance.textNode(v.toString()),
-                        Integer.class, v -> JsonNodeFactory.instance.numberNode((Integer) v)
-                );
-
         public Builder attribute(String name, JsonNode value) {
-            JsonNode attributes = builder.get(Model.JsonDomainEventModel.attributes.name());
+            JsonNode attributes = builder.get(Model.JsonSystemEventModel.attributes.name());
             if (attributes == null) {
                 attributes = builder.objectNode();
-                builder.set(Model.JsonDomainEventModel.attributes.name(), attributes);
+                builder.set(Model.JsonSystemEventModel.attributes.name(), attributes);
             }
 
             ObjectNode objectNode = (ObjectNode) attributes;
@@ -93,10 +97,10 @@ public record JsonSystemEvent(ObjectNode json)
 
         public Builder addMetadata(String key, JsonNode value) {
 
-            ObjectNode metadata = (ObjectNode) builder.get(Model.JsonDomainEventModel.metadata.name());
+            ObjectNode metadata = (ObjectNode) builder.get(Model.JsonSystemEventModel.metadata.name());
             if (metadata == null) {
                 metadata = builder.objectNode();
-                builder.set(Model.JsonDomainEventModel.metadata.name(), metadata);
+                builder.set(Model.JsonSystemEventModel.metadata.name(), metadata);
             }
 
             metadata.set(key, value);
@@ -135,8 +139,8 @@ public record JsonSystemEvent(ObjectNode json)
         }
 
 
-        public JsonDomainEvent build() {
-            return new JsonDomainEvent(builder);
+        public JsonSystemEvent build() {
+            return new JsonSystemEvent(builder);
         }
     }
 
@@ -162,7 +166,7 @@ public record JsonSystemEvent(ObjectNode json)
     }
 
     public Optional<Metadata> getMetadata() {
-        ObjectNode metadata = (ObjectNode) json.get(Model.JsonDomainEventModel.metadata.name());
+        ObjectNode metadata = (ObjectNode) json.get(Model.JsonSystemEventModel.metadata.name());
         if (metadata == null)
             return Optional.empty();
         else

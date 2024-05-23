@@ -21,16 +21,8 @@ import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 public record Neo4jProjectionsConfiguration(Configuration context)
     implements ServiceConfiguration
 {
-    public boolean isEventSubscriberEnabled() {
-        return context.getBoolean("eventsubscriber.enabled").orElse(true);
-    }
-
-    public boolean isCommitPublisherEnabled() {
-        return context.getBoolean("commitpublisher.enabled").orElse(true);
-    }
-
     /**
-     * How many individual events to apply before committing and starting a new transaction.
+     * Max size of batched MetadataEvents to apply before committing and starting a new transaction.
      */
     public int eventBatchSize()
     {

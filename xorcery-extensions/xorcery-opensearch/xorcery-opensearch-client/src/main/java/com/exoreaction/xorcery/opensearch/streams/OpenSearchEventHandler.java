@@ -22,7 +22,7 @@ import com.exoreaction.xorcery.opensearch.client.document.BulkResponse;
 import com.exoreaction.xorcery.opensearch.client.document.BulkResponseItem;
 import com.exoreaction.xorcery.opensearch.client.document.IndexBulkRequest;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataObject;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.lmax.disruptor.EventHandler;

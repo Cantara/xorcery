@@ -19,9 +19,9 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationLogger;
-import com.exoreaction.xorcery.log4j.LoggerContextFactory;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.io.ZipFiles;
+import com.exoreaction.xorcery.log4j.LoggerContextFactory;
 import com.exoreaction.xorcery.util.Resources;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
@@ -201,12 +201,12 @@ public class XorceryExtension
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-        return extensionContext.getStore(NAMESPACE).get(parameterContext.getParameter().getType()) != null;
+        return xorcery.getServiceLocator().getService(parameterContext.getParameter().getType()) != null;
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-        return extensionContext.getStore(NAMESPACE).get(parameterContext.getParameter().getType());
+        return xorcery.getServiceLocator().getService(parameterContext.getParameter().getType());
     }
 
     @Override

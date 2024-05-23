@@ -26,7 +26,7 @@ public class ByteArrayMessageWriterFactory
 
     @Override
     public boolean canWrite(Class<?> type, String mediaType) {
-        return byte[].class.isAssignableFrom(type) &&  mediaType.equals("application/octet-stream");
+        return byte[].class.isAssignableFrom(type);
     }
 
     @Override

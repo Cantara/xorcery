@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.yaml.snakeyaml.LoaderOptions;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 
 import java.io.BufferedInputStream;
@@ -22,28 +23,33 @@ public class YamlPublisher<T>
         implements Publisher<T> {
 
     private static final ObjectReader yamlReader = new YAMLMapper().reader();
-    private final Flux<T> flux;
+    private final Class<? super T> itemType;
 
     public YamlPublisher(Class<? super T> itemType) {
-        flux = Flux.push(sink -> {
+        this.itemType = itemType;
+    }
+
+    @Override
+    public void subscribe(Subscriber<? super T> s) {
+
+        if (s instanceof CoreSubscriber<? super T> coreSubscriber)
+        {
             try {
-                Object resourceUrl = new ContextViewElement(sink.contextView()).get(ResourcePublisherContext.resourceUrl)
+                Object resourceUrl = new ContextViewElement(coreSubscriber.currentContext()).get(ResourcePublisherContext.resourceUrl)
                         .orElseThrow(ContextViewElement.missing(ResourcePublisherContext.resourceUrl));
                 URL yamlResource = resourceUrl instanceof URL url ? url : new URL(resourceUrl.toString());
                 InputStream resourceAsStream = new BufferedInputStream(yamlResource.openStream(), 32 * 1024);
                 LoaderOptions loaderOptions = new LoaderOptions();
                 loaderOptions.setCodePointLimit(Integer.MAX_VALUE);
                 YAMLFactory factory = YAMLFactory.builder().loaderOptions(loaderOptions).build();
-                new ObjectReaderStreamer<>(sink, factory.createParser(resourceAsStream), yamlReader.forType(itemType));
+                coreSubscriber.onSubscribe(new ObjectReaderStreamer<>(coreSubscriber, factory.createParser(resourceAsStream), yamlReader.forType(itemType)));
             } catch (Throwable e) {
-                sink.error(e);
+                coreSubscriber.onError(e);
             }
-        });
-    }
-
-    @Override
-    public void subscribe(Subscriber<? super T> s) {
-        flux.subscribe(s);
+        } else
+        {
+            s.onError(new IllegalArgumentException("Subscriber must implement CoreSubscriber"));
+        }
     }
 
 }

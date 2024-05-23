@@ -1,13 +1,10 @@
 package com.exoreaction.xorcery.eventstore.client.api;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.eventstore.client.AppendHandler;
 import com.exoreaction.xorcery.eventstore.client.AppendOptimisticLockingHandler;
 import com.exoreaction.xorcery.eventstore.client.ReadStreamSubscription;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
-import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.spi.LoggerContext;
@@ -42,24 +39,16 @@ public class EventStoreClient
         }
 
         public EventStoreClient create(EventStoreDBClientSettings settings) {
-            return create(settings, new DisruptorConfiguration(new Configuration.Builder().build()));
-        }
-
-        public EventStoreClient create(EventStoreDBClientSettings settings, DisruptorConfiguration disruptorConfiguration) {
-            return new EventStoreClient(settings, disruptorConfiguration, loggerContext, openTelemetry);
+            return new EventStoreClient(settings, loggerContext, openTelemetry);
         }
     }
 
-    private static final JsonMapper jsonMapper = new JsonMapper();
-
     private final EventStoreDBClient client;
-    private final DisruptorConfiguration disruptorConfiguration;
     private final LoggerContext loggerContext;
     private final OpenTelemetry openTelemetry;
 
-    public EventStoreClient(EventStoreDBClientSettings settings, DisruptorConfiguration disruptorConfiguration, LoggerContext loggerContext, OpenTelemetry openTelemetry) {
+    public EventStoreClient(EventStoreDBClientSettings settings, LoggerContext loggerContext, OpenTelemetry openTelemetry) {
         client = EventStoreDBClient.create(settings);
-        this.disruptorConfiguration = disruptorConfiguration;
         this.loggerContext = loggerContext;
         this.openTelemetry = openTelemetry;
     }
@@ -82,7 +71,7 @@ public class EventStoreClient
             Function<MetadataByteBuffer, UUID> eventIdSelector,
             Function<MetadataByteBuffer, String> eventTypeSelector,
             Consumer<AppendToStreamOptions> optionsConfigurer) {
-        return new AppendHandler(client, optionsConfigurer, disruptorConfiguration, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
+        return new AppendHandler(client, optionsConfigurer, eventIdSelector, eventTypeSelector, loggerContext.getLogger(AppendHandler.class), openTelemetry);
     }
 
     public BiConsumer<MetadataByteBuffer, SynchronousSink<MetadataByteBuffer>> appendOptimisticLocking(

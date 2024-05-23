@@ -19,11 +19,13 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 @Service
 @ContractsProvided({MessageReader.Factory.class})
+@Rank(3)
 public class WithMetadataMessageReaderFactoryHK2 extends WithMetadataMessageReaderFactory
         implements MessageReader.Factory {
 

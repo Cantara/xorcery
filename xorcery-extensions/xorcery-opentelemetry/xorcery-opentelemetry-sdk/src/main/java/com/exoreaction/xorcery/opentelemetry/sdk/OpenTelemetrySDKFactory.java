@@ -19,6 +19,9 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -34,33 +37,62 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
+import java.util.List;
+
 @Service(name = "opentelemetry")
 @RunLevel(0)
 public class OpenTelemetrySDKFactory
-    implements Factory<OpenTelemetry>
-{
-
-    private final OpenTelemetrySdk openTelemetry;
+        implements Factory<OpenTelemetry> {
+    private final OpenTelemetryImpl openTelemetry;
 
     @Inject
     public OpenTelemetrySDKFactory(Configuration configuration,
                                    SdkTracerProvider tracerProvider,
                                    SdkMeterProvider meterProvider,
                                    Provider<SdkLoggerProvider> loggerProvider) {
-
         OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
 
-        openTelemetry = OpenTelemetrySdk.builder()
-                .setTracerProvider(tracerProvider)
-                .setMeterProvider(meterProvider)
-                .setLoggerProvider(loggerProvider.get())
-                .setPropagators(ContextPropagators.create(TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance())))
-                .build();
+        // This allows us to turn off individual instrumentation scopes
+        List<String> excludes = openTelemetryConfiguration.getExcludedMeters();
+        List<String> includes = openTelemetryConfiguration.getExcludedMeters();
 
-        if (openTelemetryConfiguration.isInstall())
-        {
+        MeterProvider filteredMeterProvider = instrumentationScopeName -> excludes.isEmpty()
+                ? (includes.isEmpty()
+                ? meterProvider.meterBuilder(instrumentationScopeName)
+                : (isIncluded(includes, instrumentationScopeName)
+                ? meterProvider.meterBuilder(instrumentationScopeName)
+                : MeterProvider.noop().meterBuilder(instrumentationScopeName)))
+                : (isExcluded(excludes, instrumentationScopeName)
+                ? (isIncluded(includes, instrumentationScopeName)
+                ? meterProvider.meterBuilder(instrumentationScopeName)
+                : MeterProvider.noop().meterBuilder(instrumentationScopeName))
+                : meterProvider.meterBuilder(instrumentationScopeName));
+
+        openTelemetry = new OpenTelemetryImpl(
+                tracerProvider,
+                filteredMeterProvider,
+                loggerProvider.get(),
+                ContextPropagators.create(TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance())));
+
+        if (openTelemetryConfiguration.isInstall()) {
             GlobalOpenTelemetry.set(openTelemetry);
         }
+    }
+
+    private boolean isExcluded(List<String> excludes, String instrumentationScopeName) {
+        for (String exclude : excludes) {
+            if (instrumentationScopeName.contains(exclude))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isIncluded(List<String> includes, String instrumentationScopeName) {
+        for (String include : includes) {
+            if (instrumentationScopeName.contains(include))
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -72,6 +104,5 @@ public class OpenTelemetrySDKFactory
 
     @Override
     public void dispose(OpenTelemetry instance) {
-        openTelemetry.close();
     }
 }

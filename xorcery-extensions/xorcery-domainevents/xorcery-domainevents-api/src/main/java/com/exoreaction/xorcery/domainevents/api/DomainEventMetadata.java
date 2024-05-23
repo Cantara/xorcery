@@ -17,6 +17,7 @@ public enum DomainEventMetadata {
     reason, // User specified reason for change (optional)
 
     // Scope related
+    environment, // environment identifier, e.g. development, qa, staging, production
     domain, // Group of events this belongs to
     tenantId, // Id of tenant (optional)
     aggregateType, // Type of aggregate of these events

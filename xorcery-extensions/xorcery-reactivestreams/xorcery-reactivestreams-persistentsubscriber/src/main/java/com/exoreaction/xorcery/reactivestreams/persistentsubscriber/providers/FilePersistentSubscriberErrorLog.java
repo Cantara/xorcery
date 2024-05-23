@@ -21,7 +21,7 @@ import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.Persiste
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberErrorLog;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -39,8 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class FilePersistentSubscriberErrorLog
         implements PersistentSubscriberErrorLog {
     private final Logger logger;
-    private String name;
-    private YAMLMapper yamlMapper;
+    private final YAMLMapper yamlMapper;
     private FileOutputStream out;
 
     public FilePersistentSubscriberErrorLog(Logger logger) {
@@ -52,7 +51,7 @@ public class FilePersistentSubscriberErrorLog
 
     @Override
     public void init(PersistentSubscriberConfiguration configuration, PersistentSubscriber persistentSubscriber) throws IOException {
-        name = configuration.getName();
+        String name = configuration.getName();
         File errorLog = new File(configuration.getString("errors").orElseThrow(Configuration.missing("errors"))).getAbsoluteFile();
 
         if (!errorLog.getParentFile().exists() && !errorLog.getParentFile().mkdirs()) {

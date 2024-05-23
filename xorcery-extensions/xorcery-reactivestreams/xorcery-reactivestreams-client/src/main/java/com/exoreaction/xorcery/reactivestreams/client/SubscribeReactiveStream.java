@@ -331,7 +331,7 @@ public class SubscribeReactiveStream
     @Override
     public void onWebSocketOpen(Session session) {
         if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress().toString());
+            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress());
         }
         this.session = session;
         this.retryDelay = Duration.parse("PT" + subscriberConfiguration.getRetryDelay()).toMillis();

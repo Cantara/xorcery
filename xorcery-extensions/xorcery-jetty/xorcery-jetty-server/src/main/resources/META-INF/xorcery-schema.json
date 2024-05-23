@@ -237,6 +237,11 @@
                   "default" : 4096,
                   "description" : "Default: 4096"
                 },
+                "outputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
                 "maxFrameSize" : {
                   "type" : [ "number", "string" ],
                   "default" : 65536,
@@ -244,18 +249,13 @@
                 },
                 "maxTextMessageSize" : {
                   "type" : [ "number", "string" ],
-                  "default" : 65536,
-                  "description" : "Default: 65536"
+                  "default" : 1048576,
+                  "description" : "Default: 1048576"
                 },
                 "maxBinaryMessageSize" : {
                   "type" : [ "number", "string" ],
-                  "default" : 65536,
-                  "description" : "Default: 65536"
-                },
-                "outputBufferSize" : {
-                  "type" : [ "number", "string" ],
-                  "default" : 4096,
-                  "description" : "Default: 4096"
+                  "default" : 1048576,
+                  "description" : "Default: 1048576"
                 }
               }
             },

@@ -20,13 +20,12 @@ import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketClientOptions;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamContext;
-import com.exoreaction.xorcery.reactivestreams.api.client.WebSocketStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerShutdownStreamException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.core.MediaType;
 import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
@@ -58,7 +57,7 @@ public class DomainEventsWebSocketsService
     private final Queue<CompletableFuture<Metadata>> requestQueue = new ArrayBlockingQueue<>(4096);
 
     @Inject
-    public DomainEventsWebSocketsService(WebSocketStreamsClient webSocketStreamsClient,
+    public DomainEventsWebSocketsService(ClientWebSocketStreams clientWebSocketStreams,
                                          Configuration configuration) {
 
         // TODO This needs to updated to latest DomainEventMetadata values
@@ -73,19 +72,19 @@ public class DomainEventsWebSocketsService
         {
             // Publish events to EventStore
             Flux<Metadata> result = sink.asFlux()
-                    .transform(webSocketStreamsClient.publishWithResult(WebSocketClientOptions.instance(), MetadataEvents.class, Metadata.class))
-                    .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(),domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow()));
+                    .transform(clientWebSocketStreams.publishWithResult(ClientWebSocketOptions.instance(), MetadataEvents.class, Metadata.class))
+                    .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(),domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow()));
 
             // Then wait for projection
             return result
-                    .transform(webSocketStreamsClient.publishWithResult(WebSocketClientOptions.instance(), Metadata.class, Metadata.class))
-                    .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(),projectionsUri.orElseThrow()));
+                    .transform(clientWebSocketStreams.publishWithResult(ClientWebSocketOptions.instance(), Metadata.class, Metadata.class))
+                    .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(),projectionsUri.orElseThrow()));
         }).orElseGet(() ->
         {
             // Publish events directly to projections
             return sink.asFlux()
-                    .transform(webSocketStreamsClient.publishWithResult(WebSocketClientOptions.instance(), MetadataEvents.class, Metadata.class))
-                    .contextWrite(Context.of(WebSocketStreamContext.serverUri.name(),domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow()));
+                    .transform(clientWebSocketStreams.publishWithResult(ClientWebSocketOptions.instance(), MetadataEvents.class, Metadata.class))
+                    .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(),domainEventsConfiguration.getPublisherConfiguration().getURI("uri").orElseThrow()));
         });
 
         subscribeDisposable = projections
@@ -119,7 +118,7 @@ public class DomainEventsWebSocketsService
     }
 
     public CompletableFuture<Metadata> publish(MetadataEvents metadataEvents) {
-        metadataEvents.getMetadata().toBuilder().add(deploymentMetadata.context());
+        metadataEvents.metadata().toBuilder().add(deploymentMetadata.context());
         CompletableFuture<Metadata> future = new CompletableFuture<>();
         if (requestQueue.offer(future)) {
             if (sink.tryEmitNext(metadataEvents).isFailure()) {

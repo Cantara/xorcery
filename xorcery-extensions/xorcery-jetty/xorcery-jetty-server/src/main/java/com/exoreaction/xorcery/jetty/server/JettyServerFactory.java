@@ -49,7 +49,7 @@ public class JettyServerFactory
 
         // Setup thread pool
         JettyConnectorThreadPool jettyConnectorThreadPool = new JettyConnectorThreadPool();
-        jettyConnectorThreadPool.setName("jetty-http-server-");
+        jettyConnectorThreadPool.setName("jetty-http-server");
         jettyConnectorThreadPool.setMinThreads(jettyConfig.getMinThreads());
         jettyConnectorThreadPool.setMaxThreads(jettyConfig.getMaxThreads());
 

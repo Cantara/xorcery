@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.reactivestreams.providers;
 
 import com.exoreaction.xorcery.lang.Classes;
 import com.exoreaction.xorcery.metadata.Metadata;
-import com.exoreaction.xorcery.reactivestreams.api.WithMetadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
@@ -83,7 +82,7 @@ public class WithMetadataMessageReaderFactory
 
     @Override
     public <T> MessageReader<T> newReader(Class<?> type, Type genericType, String mediaType) {
-        if (WithMetadata.class.isAssignableFrom(type)) {
+        if (WithMetadata.class.isAssignableFrom(type) && mediaType.endsWith("+metadata")) {
             Type parameterType = Classes.typeOrBound(Classes.resolveActualTypeArgs((Class<? extends WithMetadata<?>>) type, WithMetadata.class)[0]);
             String envelopedContentType = mediaType.substring(0, mediaType.length() - "+metadata".length());
             try {
@@ -94,7 +93,7 @@ public class WithMetadataMessageReaderFactory
                     }
                 } else if (parameterType instanceof ParameterizedType parameterizedEventType) {
                     if (parameterizedEventType.getRawType() instanceof Class<?> eventType) {
-                        MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, eventType, envelopedContentType);
+                        MessageReader<?> eventReader = messageWorkers.get().newReader(eventType, parameterizedEventType, envelopedContentType);
                         if (eventReader != null) {
                             return (MessageReader<T>) new WithMetadataMessageReader(eventReader, (Constructor<WithMetadata<?>>) type.getConstructor(Metadata.class, eventType));
                         }
@@ -123,7 +122,7 @@ public class WithMetadataMessageReaderFactory
         public WithMetadata<?> readFrom(byte[] bytes, int offset, int len) throws IOException {
             try (JsonParser jp = jsonMapper.createParser(bytes, offset, len)) {
                 Metadata metadata = jp.readValueAs(Metadata.class);
-                int metadataOffset = (int) jp.getCurrentLocation().getByteOffset();
+                int metadataOffset = (int) jp.currentLocation().getByteOffset();
 
                 Object event = eventReader.readFrom(bytes, offset + metadataOffset, len - metadataOffset);
                 return constructor.newInstance(metadata, event);
@@ -139,7 +138,7 @@ public class WithMetadataMessageReaderFactory
             entityStream.mark(entityStream.available());
             try (JsonParser jp = jsonMapper.createParser(entityStream)) {
                 Metadata metadata = jp.readValueAs(Metadata.class);
-                long offset = jp.getCurrentLocation().getByteOffset();
+                long offset = jp.currentLocation().getByteOffset();
 
                 entityStream.reset();
                 entityStream.skip(offset);

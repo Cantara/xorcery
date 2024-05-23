@@ -3,11 +3,10 @@ package com.exoreaction.xorcery.eventstore.client;
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.eventstore.client.api.EventStoreMetadata;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryHelpers;
-import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
-import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;
-import com.exoreaction.xorcery.reactivestreams.disruptor.SmartBatching;
+import com.exoreaction.xorcery.reactivestreams.extras.operators.SmartBatchingOperator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.grpc.StatusRuntimeException;
 import io.opentelemetry.api.OpenTelemetry;
@@ -17,35 +16,38 @@ import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.context.ContextView;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.exoreaction.xorcery.lang.Exceptions.unwrap;
 import static com.exoreaction.xorcery.reactivestreams.api.ContextViewElement.missing;
+import static io.opentelemetry.context.Context.taskWrapping;
 
 public class AppendHandler
     extends BaseAppendHandler
         implements BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> {
 
-    private final SmartBatching<MetadataByteBuffer> smartBatching;
+    private final BiFunction<Flux<MetadataByteBuffer>, ContextView, Publisher<MetadataByteBuffer>> smartBatching;
 
 
     public AppendHandler(
             EventStoreDBClient client,
             Consumer<AppendToStreamOptions> options,
-            DisruptorConfiguration configuration,
             Function<MetadataByteBuffer, UUID> eventIdSelector,
             Function<MetadataByteBuffer, String> eventTypeSelector,
             Logger logger,
             OpenTelemetry openTelemetry) {
         super(client, options, eventIdSelector, eventTypeSelector, logger, openTelemetry);
-        this.smartBatching = new SmartBatching<>(configuration, this::handler);
+        this.smartBatching = SmartBatchingOperator.smartBatching(this::handler, ()-> new ArrayBlockingQueue<>(1024), ()-> taskWrapping(Schedulers.boundedElastic()::schedule));
     }
 
     @Override
@@ -53,7 +55,7 @@ public class AppendHandler
         return smartBatching.apply(metadataByteBufferFlux.contextWrite(setStreamMetadata()).contextWrite(addLastPosition()), contextView);
     }
 
-    private void handler(List<MetadataByteBuffer> metadataByteBuffers, SynchronousSink<List<MetadataByteBuffer>> sink) {
+    private void handler(Collection<MetadataByteBuffer> metadataByteBuffers, SynchronousSink<Collection<MetadataByteBuffer>> sink) {
         ContextViewElement contextElement = new ContextViewElement(sink.contextView());
         try {
             String streamId = contextElement.getString(ReactiveStreamsContext.streamId).orElseThrow(missing(ReactiveStreamsContext.streamId));

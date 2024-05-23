@@ -48,7 +48,7 @@ public class CypherEventProjection
     public void write(MetadataEvents events, Transaction transaction) {
         Map<String, Object> metadataMap = null;
 
-        for (DomainEvent event : events.getEvents()) {
+        for (DomainEvent event : events.data()) {
             if (event instanceof JsonDomainEvent jsonDomainEvent)
             {
                 ObjectNode eventJson = jsonDomainEvent.json();
@@ -60,7 +60,7 @@ public class CypherEventProjection
 
                 // Only do this if any of the events are actually projected
                 if (metadataMap == null)
-                    metadataMap = Cypher.toMap(events.getMetadata().metadata());
+                    metadataMap = Cypher.toMap(events.metadata().metadata());
 
                 Map<String, Object> parameters = Cypher.toMap(eventJson);
                 parameters.put("metadata", metadataMap);

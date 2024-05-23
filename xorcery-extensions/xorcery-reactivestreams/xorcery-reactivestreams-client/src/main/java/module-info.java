@@ -36,4 +36,5 @@ module xorcery.reactivestreams.client {
     requires org.eclipse.jetty.client;
     requires org.eclipse.jetty.websocket.api;
     requires org.eclipse.jetty.websocket.client;
+    requires org.eclipse.jetty.websocket.common;
 }

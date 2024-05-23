@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.domainevents.helpers.context;
 
+import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
 import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
 import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
@@ -54,27 +55,32 @@ public record EventMetadata(Metadata context)
         }
 
         public Builder domain(String value) {
-            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.domain, value);
+            builder.add(DomainEventMetadata.domain, value);
+            return this;
+        }
+
+        public Builder tenantId(String value) {
+            builder.add(DomainEventMetadata.tenantId, value);
             return this;
         }
 
         public Builder aggregateId(String value) {
-            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId, value);
+            builder.add(DomainEventMetadata.aggregateId, value);
             return this;
         }
 
         public Builder aggregateType(String name) {
-            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateType, name);
+            builder.add(DomainEventMetadata.aggregateType, name);
             return this;
         }
 
         public Builder commandName(String commandName) {
-            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.commandName, commandName);
+            builder.add(DomainEventMetadata.commandName, commandName);
             return this;
         }
 
         public Builder commandName(Class<? extends Command> commandClass) {
-            builder.add(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.commandName, commandClass.getSimpleName());
+            builder.add(DomainEventMetadata.commandName, commandClass.getSimpleName());
             return this;
         }
 
@@ -83,19 +89,23 @@ public record EventMetadata(Metadata context)
         }
     }
 
+    public String getTenantId() {
+        return context.getString(DomainEventMetadata.tenantId.name()).orElseThrow(missing(DomainEventMetadata.tenantId));
+    }
+
     public String getDomain() {
-        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.domain.name()).orElse("default");
+        return context.getString(DomainEventMetadata.domain.name()).orElse("default");
     }
 
     public String getAggregateType() {
-        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateType.name()).orElseThrow(missing(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateType));
+        return context.getString(DomainEventMetadata.aggregateType.name()).orElseThrow(missing(DomainEventMetadata.aggregateType));
     }
 
     public String getAggregateId() {
-        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId.name()).orElseThrow(missing(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.aggregateId));
+        return context.getString(DomainEventMetadata.aggregateId.name()).orElseThrow(missing(DomainEventMetadata.aggregateId));
     }
 
     public String getCommandName() {
-        return context.getString(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.commandName.name()).orElseThrow(missing(com.exoreaction.xorcery.domainevents.api.DomainEventMetadata.commandName));
+        return context.getString(DomainEventMetadata.commandName.name()).orElseThrow(missing(DomainEventMetadata.commandName));
     }
 }
