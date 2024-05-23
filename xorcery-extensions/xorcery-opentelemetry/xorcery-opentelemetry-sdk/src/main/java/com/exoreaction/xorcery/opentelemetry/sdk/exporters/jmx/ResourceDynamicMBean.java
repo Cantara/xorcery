@@ -79,6 +79,21 @@ public class ResourceDynamicMBean
                     attributes.put(metric.getName()+".min", hpd.getMin());
                     attributes.put(metric.getName()+".max", hpd.getMax());
                     attributes.put(metric.getName()+".sum", hpd.getSum());
+                    List<Double> boundaries = hpd.getBoundaries();
+                    List<Long> counts = hpd.getCounts();
+                    StringBuilder result = new StringBuilder();
+                    for (int i = 0; i < boundaries.size(); i++) {
+                        Double boundary = boundaries.get(i);
+                        long count = counts.get(i);
+                        if (count > 0)
+                        {
+                            if (!result.isEmpty())
+                                result.append(", ");
+
+                            result.append(boundary).append('=').append(count);
+                        }
+                    }
+                    attributes.put(metric.getName()+".counts", result.toString());
                     attributes.put(metric.getName()+".count", hpd.getCount());
                 }
             }
@@ -132,6 +147,7 @@ public class ResourceDynamicMBean
                 consumer.accept(new ModelMBeanAttributeInfo(metricData.getName()+".min", Double.TYPE.getName(), metricData.getDescription(), true, false, false));
                 consumer.accept(new ModelMBeanAttributeInfo(metricData.getName()+".max", Double.TYPE.getName(), metricData.getDescription(), true, false, false));
                 consumer.accept(new ModelMBeanAttributeInfo(metricData.getName()+".sum", Double.TYPE.getName(), metricData.getDescription(), true, false, false));
+                consumer.accept(new ModelMBeanAttributeInfo(metricData.getName()+".counts", String.class.getName(), metricData.getDescription(), true, false, false));
                 consumer.accept(new ModelMBeanAttributeInfo(metricData.getName()+".count", Long.TYPE.getName(), metricData.getDescription(), true, false, false));
             }
             case EXPONENTIAL_HISTOGRAM ->
