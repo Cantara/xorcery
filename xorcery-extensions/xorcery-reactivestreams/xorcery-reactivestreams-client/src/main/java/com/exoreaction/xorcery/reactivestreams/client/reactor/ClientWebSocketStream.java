@@ -128,10 +128,15 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
     private final Attributes attributes;
     private final LongCounter receivedCounter;
-    private final LongHistogram receivedBytes;
+
     private final LongHistogram sentBytes;
-    private final LongHistogram requestsHistogram;
+    private final LongHistogram itemSentSizes;
     private final LongHistogram flushHistogram;
+
+    private final LongHistogram receivedBytes;
+    private final LongHistogram itemReceivedSizes;
+
+    private final LongHistogram requestsHistogram;
 
     private final int queueSize = 1024;
     private int serverMaxBinaryMessageSize;
@@ -152,6 +157,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             WebSocketClient webSocketClient,
             Executor flushingExecutor,
 
+            String host,
             ByteBufferPool byteBufferPool,
             Meter meter,
             Tracer tracer,
@@ -184,15 +190,22 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         this.attributes = Attributes.builder()
                 .put(SemanticAttributes.MESSAGING_SYSTEM, ReactiveStreamsOpenTelemetry.XORCERY_MESSAGING_SYSTEM)
                 .put(SemanticAttributes.URL_FULL, serverUri.toASCIIString())
+                .put(SemanticAttributes.CLIENT_ADDRESS, host)
                 .build();
-        this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
+
+        this.sentBytes = outputType == null ? null : meter.histogramBuilder(PUBLISHER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.itemSentSizes = outputType == null ? null : meter.histogramBuilder(PUBLISHER_ITEM_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.receivedBytes = inputType == null ? null : meter.histogramBuilder(SUBSCRIBER_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.itemReceivedSizes = inputType == null ? null : meter.histogramBuilder(SUBSCRIBER_ITEM_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+
         this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
         this.receivedCounter = meter.counterBuilder(SUBSCRIBER_REQUESTS)
                 .setUnit("{request}").build();
-        this.receivedBytes = meter.histogramBuilder(SUBSCRIBER_IO)
-                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
 
@@ -308,6 +321,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
                 ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
                 sentBytes.record(eventBuffer.limit(), attributes);
+                itemSentSizes.record(eventBuffer.limit(), attributes);
                 session.sendBinary(eventBuffer, new ReleaseCallback(retainableByteBuffer));
             } catch (Throwable e) {
 
@@ -370,6 +384,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                         byteBuffer.putInt(size);
                         position += 4 + size;
                         byteBuffer.position(position);
+                        itemSentSizes.record(size, attributes);
                     }
                     byteBuffer.flip();
                     CompletableFuture<Void> flushDone = new CompletableFuture<>();
@@ -399,6 +414,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 byteBuffer.putInt(size);
                 position += 4 + size;
                 byteBuffer.position(position);
+                itemSentSizes.record(size, attributes);
             }
             byteBuffer.flip();
 
@@ -582,7 +598,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     }
 
     @Override
-    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
+    public void onWebSocketBinary(ByteBuffer byteBuffer, Callback callback) {
         if (reader == null) {
             if (!redundancyNotificationIssued) {
                 logger.warn(marker, "Receiving redundant results from server");
@@ -592,23 +608,27 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         } else {
             try {
                 if (logger.isTraceEnabled()) {
-                    logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(payload.asReadOnlyBuffer()).toString());
+                    logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(byteBuffer.asReadOnlyBuffer()).toString());
                 }
 
                 if (serverMaxBinaryMessageSize == -1) {
-                    INPUT event = reader.readFrom(new ByteBufferBackedInputStream(payload));
+                    receivedBytes.record(byteBuffer.limit(), attributes);
+                    itemReceivedSizes.record(byteBuffer.limit(), attributes);
+                    INPUT event = reader.readFrom(new ByteBufferBackedInputStream(byteBuffer));
                     outstandingRequests.decrementAndGet();
                     receivedCounter.add(1, attributes);
                 } else {
                     //                    logger.info("READ AGGREGATED "+byteBuffer.limit());
                     int count = 0;
-                    while (payload.position() != payload.limit()) {
-                        int length = payload.getInt();
-                        ByteBuffer itemByteBuffer = payload.slice(payload.position(), length);
+                    receivedBytes.record(byteBuffer.limit(), attributes);
+                    while (byteBuffer.position() != byteBuffer.limit()) {
+                        int length = byteBuffer.getInt();
+                        ByteBuffer itemByteBuffer = byteBuffer.slice(byteBuffer.position(), length);
                         INPUT event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
-                        payload.position(payload.position() + length);
+                        byteBuffer.position(byteBuffer.position() + length);
                         sink.next(event);
                         count++;
+                        itemReceivedSizes.record(length, attributes);
                     }
                     outstandingRequests.addAndGet(-count);
                     receivedCounter.add(count, attributes);

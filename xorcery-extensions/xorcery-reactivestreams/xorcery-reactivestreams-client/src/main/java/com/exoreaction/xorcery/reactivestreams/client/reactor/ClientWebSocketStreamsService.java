@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.reactivestreams.client.reactor;
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.dns.client.api.DnsLookup;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
@@ -43,6 +44,7 @@ public class ClientWebSocketStreamsService
     private final TextMapPropagator textMapPropagator;
     private final ByteBufferPool byteBufferPool;
     private final Meter meter;
+    private final String host;
     private final ExecutorService flushingExecutors = Executors.newCachedThreadPool(new NamedThreadFactory("reactivestreams-client-flusher-"));
 
     public ClientWebSocketStreamsService(
@@ -61,13 +63,14 @@ public class ClientWebSocketStreamsService
         ClientWebSocketStreamConfiguration.get(configuration).configure(webSocketClient);
         webSocketClient.start();
         this.webSocketClient = webSocketClient;
+        this.host = InstanceConfiguration.get(configuration).getHost();
         byteBufferPool = new ArrayByteBufferPool();
 
         tracer = openTelemetry.tracerBuilder(getClass().getName())
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        meter = openTelemetry.meterBuilder(getClass().getName())
+        meter = openTelemetry.meterBuilder(ClientWebSocketStream.class.getName())
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
@@ -94,6 +97,7 @@ public class ClientWebSocketStreamsService
                 dnsLookup,
                 webSocketClient,
                 flushingExecutors,
+                host,
                 byteBufferPool,
                 meter,
                 tracer,
@@ -123,6 +127,7 @@ public class ClientWebSocketStreamsService
                 dnsLookup,
                 webSocketClient,
                 flushingExecutors,
+                host,
                 byteBufferPool,
                 meter,
                 tracer,
@@ -150,6 +155,7 @@ public class ClientWebSocketStreamsService
                         dnsLookup,
                         webSocketClient,
                         flushingExecutors,
+                        host,
                         byteBufferPool,
                         meter,
                         tracer,

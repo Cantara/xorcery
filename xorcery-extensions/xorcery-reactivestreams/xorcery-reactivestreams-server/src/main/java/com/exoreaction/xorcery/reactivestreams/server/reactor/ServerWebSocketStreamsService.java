@@ -35,6 +35,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -94,7 +95,7 @@ public class ServerWebSocketStreamsService
 
         this.byteBufferPool = new ArrayByteBufferPool();
         textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
-        meter = openTelemetry.meterBuilder(getClass().getName())
+        meter = openTelemetry.meterBuilder(ServerWebSocketStream.class.getName())
                 .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
@@ -222,6 +223,10 @@ public class ServerWebSocketStreamsService
                 }).orElse(-1);
 
 
+                String clientHost = serverUpgradeRequest.getConnectionMetaData().getRemoteSocketAddress() instanceof InetSocketAddress isa
+                        ? isa.getHostName()
+                        : serverUpgradeRequest.getConnectionMetaData().getRemoteSocketAddress().toString();
+
                 return new ServerWebSocketStream<>(
                         path,
                         pathParameters,
@@ -235,6 +240,7 @@ public class ServerWebSocketStreamsService
                         loggerContext.getLogger(ServerWebSocketStream.class),
                         tracer,
                         meter,
+                        clientHost,
                         context
                 );
             }

@@ -81,9 +81,16 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     private final Marker marker;
     private final Tracer tracer;
     private final Attributes attributes;
+
     private final LongHistogram sentBytes;
-    private final LongHistogram requestsHistogram;
+    private final LongHistogram itemSentSizes;
     private final LongHistogram flushHistogram;
+
+    private final LongHistogram receivedBytes;
+    private final LongHistogram itemReceivedSizes;
+
+    private final LongHistogram requestsHistogram;
+
     private final Context requestContext;
     private final Span span;
 
@@ -119,6 +126,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             Logger logger,
             Tracer tracer,
             Meter meter,
+            String clientHost,
             io.opentelemetry.context.Context requestContext) {
         this.path = path;
         this.pathParameters = pathParameters;
@@ -139,23 +147,28 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         });
         this.publisher = customizer.apply(source);
 
-        if (writer != null)
-        {
+        if (writer != null) {
             this.batcher = new SmartBatcher<>(this::flush, new ArrayBlockingQueue<>(queueSize), flushingExecutor);
-        } else
-        {
+        } else {
             this.batcher = null;
         }
 
         this.attributes = Attributes.builder()
                 .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, path)
                 .put(SemanticAttributes.MESSAGING_SYSTEM, XORCERY_MESSAGING_SYSTEM)
+                .put(SemanticAttributes.CLIENT_ADDRESS, clientHost)
                 .build();
-        this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
+        this.sentBytes = writer == null ? null : meter.histogramBuilder(PUBLISHER_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.itemSentSizes = writer == null ? null : meter.histogramBuilder(PUBLISHER_ITEM_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.receivedBytes = reader == null ? null : meter.histogramBuilder(SUBSCRIBER_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.itemReceivedSizes = reader == null ? null : meter.histogramBuilder(SUBSCRIBER_ITEM_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
-        this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
+        this.flushHistogram = writer == null ? null : meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
         this.span = tracer.spanBuilder(path + " server")
                 .setParent(requestContext)
@@ -188,26 +201,25 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     @Override
     protected void hookOnNext(OUTPUT item) {
         if (writer != null) {
-                if (clientMaxBinaryMessageSize == -1)
-                {
-                    try (ByteBufferOutputStream2 outputStream = new ByteBufferOutputStream2(byteBufferPool, false)) {
-                        writer.writeTo(item, outputStream);
+            if (clientMaxBinaryMessageSize == -1) {
+                try (ByteBufferOutputStream2 outputStream = new ByteBufferOutputStream2(byteBufferPool, false)) {
+                    writer.writeTo(item, outputStream);
 
-                        RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
-                        ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
-                        sentBytes.record(eventBuffer.limit(), attributes);
-                        session.sendBinary(eventBuffer, new ReleaseCallback(retainableByteBuffer));
-                    } catch (Throwable e) {
-                        session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
-                    }
-                } else
-                {
-                    try {
-                        batcher.submit(item);
-                    } catch (InterruptedException e) {
-                        onError(e);
-                    }
+                    RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
+                    ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
+                    sentBytes.record(eventBuffer.limit(), attributes);
+                    itemSentSizes.record(eventBuffer.limit(), attributes);
+                    session.sendBinary(eventBuffer, new ReleaseCallback(retainableByteBuffer));
+                } catch (Throwable e) {
+                    session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
                 }
+            } else {
+                try {
+                    batcher.submit(item);
+                } catch (InterruptedException e) {
+                    onError(e);
+                }
+            }
         } else {
             upstream().request(1);
         }
@@ -245,6 +257,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                         byteBuffer.putInt(size);
                         position += 4 + size;
                         byteBuffer.position(position);
+                        itemSentSizes.record(size, attributes);
                     }
                     byteBuffer.flip();
                     CompletableFuture<Void> flushDone = new CompletableFuture<>();
@@ -262,7 +275,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                         throw new IOException(String.format("Item is too large:%d bytes, server max binary message size:%d", byteBuffer.limit(), clientMaxBinaryMessageSize));
                     }
                 }
-                int size = byteBuffer.limit()-position;
+                int size = byteBuffer.limit() - position;
                 sizes[idx++] = size;
             }
 
@@ -273,6 +286,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 byteBuffer.putInt(size);
                 position += 4 + size;
                 byteBuffer.position(position);
+                itemSentSizes.record(size, attributes);
             }
             byteBuffer.flip();
 
@@ -289,15 +303,12 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     @Override
     protected void hookOnComplete() {
         if (session.isOpen()) {
-            if (batcher != null)
-            {
+            if (batcher != null) {
                 batcher.close();
             }
-            if (error == null)
-            {
+            if (error == null) {
                 session.close(StatusCode.NORMAL, null, Callback.NOOP);
-            } else if (session.isOpen())
-            {
+            } else if (session.isOpen()) {
                 hookOnError(error);
             }
         }
@@ -332,8 +343,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             if (json instanceof NumericNode numericNode) {
                 long requests = numericNode.asLong();
                 if (requests == COMPLETE) {
-                    if (downstreamSink != null)
-                    {
+                    if (downstreamSink != null) {
                         upstream().request(Long.MAX_VALUE);
                         downstreamSink.complete();
                     }
@@ -415,25 +425,24 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                     logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(byteBuffer.asReadOnlyBuffer()).toString());
                 }
 
-                if (clientMaxBinaryMessageSize == -1)
-                {
+                if (clientMaxBinaryMessageSize == -1) {
+                    receivedBytes.record(byteBuffer.limit(), attributes);
+                    itemReceivedSizes.record(byteBuffer.limit(), attributes);
                     INPUT event = reader.readFrom(new ByteBufferBackedInputStream(byteBuffer));
                     downstreamSink.next(event);
                     outstandingRequests.decrementAndGet();
-                } else
-                {
-//                    logger.info("READ AGGREGATED "+byteBuffer.limit());
+                } else {
                     int count = 0;
-                    while (byteBuffer.position() != byteBuffer.limit())
-                    {
+                    receivedBytes.record(byteBuffer.limit(), attributes);
+                    while (byteBuffer.position() != byteBuffer.limit()) {
                         int length = byteBuffer.getInt();
                         ByteBuffer itemByteBuffer = byteBuffer.slice(byteBuffer.position(), length);
                         INPUT event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
-                        byteBuffer.position(byteBuffer.position()+length);
+                        byteBuffer.position(byteBuffer.position() + length);
                         downstreamSink.next(event);
                         count++;
+                        itemReceivedSizes.record(length, attributes);
                     }
-//                    logger.info("READ AGGREGATED DONE {}", count);
                     outstandingRequests.addAndGet(-count);
                 }
                 sendRequests(SEND_BUFFERED_REQUESTS);
@@ -461,8 +470,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         try {
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
-            } else
-            {
+            } else {
                 logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             }
 
