@@ -1089,7 +1089,7 @@
 
     <distributionManagement>
         <repository>
-            <id>cantara</id>
+            <id>cantara-releases</id>
             <name>Cantara Release Repository</name>
             <url>https://mvnrepo.cantara.no/content/repositories/releases/</url>
         </repository>
