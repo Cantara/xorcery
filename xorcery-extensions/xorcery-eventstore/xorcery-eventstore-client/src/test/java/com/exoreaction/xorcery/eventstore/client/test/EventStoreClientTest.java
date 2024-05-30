@@ -90,6 +90,7 @@ public class EventStoreClientTest {
                             ResourcePublisherContext.resourceUrl, yamlResource.toExternalForm(),
                             ReactiveStreamsContext.streamId, "test-eventstream"
                     ))
+                    .timeout(Duration.ofSeconds(30))
                     .toStream()
                     .toList();
 
@@ -116,6 +117,7 @@ public class EventStoreClientTest {
                             ResourcePublisherContext.resourceUrl, yamlResource.toExternalForm(),
                             ReactiveStreamsContext.streamId, "test-eventstream"
                     ))
+                    .timeout(Duration.ofSeconds(30))
                     .toStream()
                     .toList();
 
@@ -132,6 +134,7 @@ public class EventStoreClientTest {
         {
             List<MetadataByteBuffer> result = readFlux
                     .contextWrite(Context.of(ReactiveStreamsContext.streamId, "test-eventstream"))
+                    .timeout(Duration.ofSeconds(30))
                     .toStream()
                     .toList();
 //            System.out.println(result);
@@ -163,6 +166,7 @@ public class EventStoreClientTest {
                     .doOnError(System.out::println)
                     .contextWrite(Context.of(ReactiveStreamsContext.streamId, "test-eventstream",
                             EventStoreContext.keepAlive, true))
+                    .timeout(Duration.ofSeconds(30))
                     .subscribe();
             latch.await(10, TimeUnit.SECONDS);
             disposable.dispose();
@@ -192,6 +196,7 @@ public class EventStoreClientTest {
                         ResourcePublisherContext.resourceUrl, yamlResource.toExternalForm(),
                         ReactiveStreamsContext.streamId, "test-eventstream"
                 ))
+                .timeout(Duration.ofSeconds(30))
                 .subscribe();
 
         // Read events from projection
@@ -215,6 +220,7 @@ public class EventStoreClientTest {
                         ReactiveStreamsContext.streamId, "$ce-test",
                         EventStoreContext.keepAlive, true
                 ))
+                .timeout(Duration.ofSeconds(30))
                 .subscribe();
         latch.await(5, TimeUnit.SECONDS);
 
@@ -236,6 +242,7 @@ public class EventStoreClientTest {
                 .contextWrite(Context.of(
                         ResourcePublisherContext.resourceUrl, yamlResource.toExternalForm()
                 ))
+                .timeout(Duration.ofSeconds(30))
                 .toStream().toList();
 
         Flux<MetadataByteBuffer> appendFlux = Flux.fromIterable(events)
@@ -246,7 +253,7 @@ public class EventStoreClientTest {
                         null))
                 .contextWrite(Context.of(
                         ReactiveStreamsContext.streamId, "test-eventstreamidempotent"
-                ));
+                )).timeout(Duration.ofSeconds(30));
 
         {
             List<Long> result = appendFlux
@@ -399,6 +406,7 @@ public class EventStoreClientTest {
                                     {"foo":123}
                                     """
                     )))
+                    .timeout(Duration.ofSeconds(30))
                     .toStream()
                     .toList();
 

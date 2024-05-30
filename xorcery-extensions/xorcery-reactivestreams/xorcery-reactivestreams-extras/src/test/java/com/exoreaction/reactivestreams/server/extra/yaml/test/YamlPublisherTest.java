@@ -17,7 +17,6 @@ package com.exoreaction.reactivestreams.server.extra.yaml.test;
 
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
-import com.exoreaction.xorcery.reactivestreams.extras.publisher.YamlPublisher;
 import com.exoreaction.xorcery.util.Resources;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;

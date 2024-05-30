@@ -704,7 +704,7 @@
             <dependency>
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java-util</artifactId>
-                <version>4.27.0</version>
+                <version>3.25.3</version>
             </dependency>
 
             <!-- OpenTelemetry -->
@@ -721,7 +721,7 @@
             <dependency>
                 <groupId>io.opentelemetry.semconv</groupId>
                 <artifactId>opentelemetry-semconv</artifactId>
-                <version>1.23.1-alpha</version>
+                <version>1.25.0-alpha</version>
             </dependency>
 
             <!-- DNS -->
