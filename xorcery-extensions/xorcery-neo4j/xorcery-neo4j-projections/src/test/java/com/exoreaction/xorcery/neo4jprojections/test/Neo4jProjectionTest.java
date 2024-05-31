@@ -15,7 +15,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
-import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
+import com.exoreaction.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.ws.rs.core.MediaType;
@@ -93,7 +93,7 @@ public class Neo4jProjectionTest {
                     .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
                     .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
-            URI serverUri = ReactiveStreamsServerConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
+            URI serverUri = ServerWebSocketStreamsConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
             publisher.transform(client.publish(ClientWebSocketOptions.instance(), MetadataEvents.class, MediaType.APPLICATION_JSON))
                     .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
                     .blockLast();
@@ -132,7 +132,7 @@ public class Neo4jProjectionTest {
                     .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
                     .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
-            URI serverUri = ReactiveStreamsServerConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
+            URI serverUri = ServerWebSocketStreamsConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
             publisher.transform(client.publishWithResult(ClientWebSocketOptions.instance(), MetadataEvents.class, Metadata.class, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON))
                     .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
                     .blockLast();

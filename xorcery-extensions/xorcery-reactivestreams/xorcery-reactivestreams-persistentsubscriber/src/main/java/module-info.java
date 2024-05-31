@@ -30,4 +30,5 @@ module xorcery.reactivestreams.persistentsubscriber {
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
+    requires xorcery.domainevents.api;
 }

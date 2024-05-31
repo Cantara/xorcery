@@ -8,7 +8,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import com.exoreaction.xorcery.reactivestreams.extras.publishers.YamlPublisher;
-import com.exoreaction.xorcery.reactivestreams.server.reactor.ServerWebSocketStreamsConfiguration;
+import com.exoreaction.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import com.exoreaction.xorcery.util.Resources;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

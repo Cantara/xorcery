@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.process.ActiveProcesses;
-import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberCheckpoint;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
@@ -47,7 +47,7 @@ public class PersistentSubscribersService
             Configuration configuration,
             Logger logger,
             LoggerContext loggerContext,
-            ReactiveStreamsClient reactiveStreamsClient,
+            ClientWebSocketStreams reactiveStreamsClient,
             IterableProvider<PersistentSubscriber> persistentSubscribers,
             IterableProvider<PersistentSubscriberCheckpoint> checkpointProviders,
             IterableProvider<PersistentSubscriberErrorLog> errorLogProviders) throws IOException {

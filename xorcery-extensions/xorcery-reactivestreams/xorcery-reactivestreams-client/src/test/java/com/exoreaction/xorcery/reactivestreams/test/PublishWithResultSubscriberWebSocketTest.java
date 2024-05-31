@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.reactivestreams.test.reactor;
+package com.exoreaction.xorcery.reactivestreams.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
@@ -25,7 +25,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamC
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
-import com.exoreaction.xorcery.reactivestreams.server.reactor.ServerWebSocketStreamsConfiguration;
+import com.exoreaction.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;

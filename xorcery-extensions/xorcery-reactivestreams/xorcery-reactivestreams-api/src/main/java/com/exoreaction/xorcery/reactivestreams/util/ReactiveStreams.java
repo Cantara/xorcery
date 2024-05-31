@@ -38,15 +38,6 @@ import java.util.function.Function;
 public interface ReactiveStreams {
     JsonMapper jsonMapper = new JsonMapper();
 
-    @Deprecated
-    static <T> Function<Throwable, CompletionStage<T>> cancelStream(CompletableFuture<Void> streamFuture) {
-        return t ->
-        {
-            streamFuture.cancel(true);
-            return CompletableFuture.failedStage(t);
-        };
-    }
-
     static <T> BiConsumer<T, Throwable> onErrorDispose(Disposable disposable) {
         return (v, t) ->
         {

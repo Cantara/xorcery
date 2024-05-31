@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.filter;
 
 import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.function.Predicate;
@@ -27,10 +28,10 @@ import java.util.function.Predicate;
  * @param timestampInclusive
  */
 public record SkipUntilTimestampFilter(long timestampInclusive)
-    implements Predicate<WithMetadata<ArrayNode>>
+    implements Predicate<MetadataJsonNode<ArrayNode>>
 {
     @Override
-    public boolean test(WithMetadata<ArrayNode> arrayNodeWithMetadata) {
+    public boolean test(MetadataJsonNode<ArrayNode> arrayNodeWithMetadata) {
         CommonMetadata commonMetadata = arrayNodeWithMetadata::metadata;
         return commonMetadata.getTimestamp() >= timestampInclusive;
     }

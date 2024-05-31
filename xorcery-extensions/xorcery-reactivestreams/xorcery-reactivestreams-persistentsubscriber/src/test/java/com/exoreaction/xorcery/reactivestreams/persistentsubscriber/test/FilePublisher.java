@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.util.Resources;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
@@ -23,8 +24,8 @@ public final class FilePublisher
             Logger logger = LogManager.getLogger();
             logger.info("YAML file publishing");
             try {
-                serviceLocator.getService(ReactiveStreamsServer.class).publisher("testevents",
-                        cfg -> new JsonYamlPublisher(Resources.getResource("persistentsubscribertestevents.yaml").orElseThrow()), JsonYamlPublisher.class);
+                serviceLocator.getService(ServerWebSocketStreams.class).publisher("testevents",
+                        MetadataJsonNode.class, new JsonYamlPublisher(Resources.getResource("persistentsubscribertestevents.yaml").orElseThrow()));
                 logger.info("YAML file published");
             } catch (Throwable e) {
                 logger.error(e);

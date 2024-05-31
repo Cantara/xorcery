@@ -16,54 +16,105 @@
 package com.exoreaction.xorcery.eventstore.streams;
 
 
-import com.eventstore.dbclient.EventStoreDBClient;
+import com.eventstore.dbclient.EventStoreDBClientSettings;
+import com.eventstore.dbclient.EventStoreDBConnectionString;
+import com.eventstore.dbclient.StreamMetadata;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.eventstore.EventStoreRels;
-import com.exoreaction.xorcery.eventstore.EventStoreService;
-import com.exoreaction.xorcery.reactivestreams.api.server.ReactiveStreamsServer;
+import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
+import com.exoreaction.xorcery.eventstore.client.api.EventStoreClient;
+import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.metadata.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
+import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
 import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
+import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 
-@Service
+import java.util.UUID;
+
+import static com.exoreaction.xorcery.reactivestreams.api.ContextViewElement.missing;
+import static com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext.streamId;
+
+@Service(name = "eventstore.api")
 @RunLevel(6)
-public class EventStoreStreamsService {
+public class EventStoreStreamsService
+        implements PreDestroy {
+    private final Disposable publisher;
+    private final Disposable subscriber;
+    private final EventStoreClient eventStoreClient;
+    private final Logger logger;
 
     @Inject
-    public EventStoreStreamsService(EventStoreService eventStoreService,
-                                    ServiceResourceObjects serviceResourceObjects,
+    public EventStoreStreamsService(ServiceResourceObjects serviceResourceObjects,
                                     Configuration configuration,
-                                    ReactiveStreamsServer reactiveStreams) {
-        ObjectMapper objectMapper = new ObjectMapper()
-                .findAndRegisterModules()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+                                    ServerWebSocketStreams reactiveStreams,
+                                    EventStoreClient.Factory eventStoreClientFactory,
+                                    OpenTelemetry openTelemetry,
+                                    Logger logger) {
+        this.logger = logger;
 
-        ServiceResourceObject.Builder builder = new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "eventstore")
-                .version(getClass().getPackage().getImplementationVersion())
-                .api(EventStoreRels.eventstore.name(), "api/eventstore");
+        ServiceResourceObject sro = new ServiceResourceObject.Builder(InstanceConfiguration.get(configuration), "eventstore")
+                .api("self", "api/eventstore")
+                .build();
+        serviceResourceObjects.add(sro);
 
-        EventStoreDBClient client = eventStoreService.getClient();
+        EventStoreDBClientSettings settings = EventStoreDBConnectionString.parseOrThrow(configuration.getString("eventstore.uri").orElseThrow(Configuration.missing("eventstore.uri")));
+        eventStoreClient = eventStoreClientFactory.create(settings);
 
-        StreamsConfiguration streamsConfiguration = new StreamsConfiguration(configuration.getConfiguration("eventstore.streams"));
+        // Test connection
+        StreamMetadata allMetadata = eventStoreClient.getStreamMetadata("$all").join();
+        logger.info("$all stream metadata:" + allMetadata.toString());
 
         // Read
-        if (streamsConfiguration.isPublisherEnabled()) {
-            builder.publisher("eventstore");
-            reactiveStreams.publisher("eventstore", cfg -> new EventStorePublisher(client, objectMapper, cfg), EventStorePublisher.class);
-        }
+        publisher = reactiveStreams.publisher("api/eventstore/{streamId}", MetadataByteBuffer.class,
+                Flux.from(eventStoreClient.readStream())
+//                        .subscribeOn(Schedulers.single(), true)
+//                        .publishOn(Schedulers.newSingle(new NamedThreadFactory("EventStore")), 8192)
+                        .contextWrite(context ->
+                        {
+                            ContextViewElement cv = new ContextViewElement(context);
+                            logger.info("Publishing " + cv.get(streamId).orElseThrow(missing(streamId)) +
+                                    cv.getLong(ReactiveStreamsContext.streamPosition).map(pos -> String.format(" from position %d", pos)).orElse(""));
+                            return context;
+                        }));
+//                        .doOnRequest(System.out::println));
 
         // Write
-        if (streamsConfiguration.isSubscriberEnabled()) {
-            builder.subscriber("eventstore");
-            reactiveStreams.subscriber("eventstore", cfg -> new EventStoreSubscriber(client, cfg), EventStoreSubscriber.class);
-        }
+        subscriber = reactiveStreams.subscriberWithResult(
+                "api/eventstore/{streamId}",
+                MetadataByteBuffer.class,
+                Metadata.class,
+                flux -> flux
+                        .transformDeferredContextual(eventStoreClient.appendStream(this::eventId, this::eventType, options -> {
+                        }))
+                        .map(WithMetadata::metadata));
+    }
 
-        ServiceResourceObject sro = builder.build();
-        serviceResourceObjects.add(sro);
+    @Override
+    public void preDestroy() {
+        publisher.dispose();
+        subscriber.dispose();
+    }
+
+    private UUID eventId(MetadataByteBuffer metadata) {
+        try {
+            return metadata.metadata().getString(DomainEventMetadata.correlationId).map(UUID::fromString).orElse(null);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private String eventType(MetadataByteBuffer metadata) {
+        return metadata.metadata().getString(DomainEventMetadata.commandName).orElse(null);
     }
 }

@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.reactivestreams.server.reactor;
+package com.exoreaction.xorcery.reactivestreams.server;
 
 
 import com.exoreaction.xorcery.concurrent.NamedThreadFactory;

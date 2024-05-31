@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers;
 
 import com.exoreaction.xorcery.metadata.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.filter.SkipUntilTimestampFilter;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
@@ -30,12 +31,12 @@ import java.util.function.Predicate;
 public abstract class BasePersistentSubscriber
         implements PersistentSubscriber {
 
-    protected Predicate<WithMetadata<ArrayNode>> filter;
+    protected Predicate<MetadataJsonNode<ArrayNode>> filter;
 
     @Override
     public void init(PersistentSubscriberConfiguration subscriberConfiguration) {
         BasePersistentSubscriberConfiguration cfg = new BasePersistentSubscriberConfiguration(subscriberConfiguration.getConfiguration());
-        Predicate<WithMetadata<ArrayNode>> filter = wman -> true;
+        Predicate<MetadataJsonNode<ArrayNode>> filter = wman -> true;
 
         if (cfg.getSkipOld()) {
             filter = new SkipUntilTimestampFilter(System.currentTimeMillis());
@@ -50,7 +51,7 @@ public abstract class BasePersistentSubscriber
     }
 
     @Override
-    public Predicate<WithMetadata<ArrayNode>> getFilter() {
+    public Predicate<MetadataJsonNode<ArrayNode>> getFilter() {
         return filter;
     }
 }

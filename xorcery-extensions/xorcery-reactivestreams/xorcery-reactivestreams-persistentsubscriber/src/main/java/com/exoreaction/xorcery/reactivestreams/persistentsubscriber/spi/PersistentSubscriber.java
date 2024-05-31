@@ -15,7 +15,9 @@
  */
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi;
 
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.metadata.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.jvnet.hk2.annotations.Contract;
 
@@ -31,9 +33,9 @@ public interface PersistentSubscriber {
     {
     }
 
-    default Predicate<WithMetadata<ArrayNode>> getFilter() {
+    default Predicate<MetadataJsonNode<ArrayNode>> getFilter() {
         return wman -> true;
     }
 
-    void handle(WithMetadata<ArrayNode> eventsWithMetadata, CompletableFuture<Void> result);
+    void handle(MetadataJsonNode<ArrayNode> metadataJson, CompletableFuture<Void> result);
 }

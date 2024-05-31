@@ -104,7 +104,7 @@ public class FilePersistentSubscriberErrorLog
     }
 
     @Override
-    public void handle(WithMetadata<ArrayNode> arrayNodeWithMetadata, Throwable exception) throws IOException {
+    public void handle(MetadataJsonNode<ArrayNode> arrayNodeWithMetadata, Throwable exception) throws IOException {
         StringWriter exceptionWriter = new StringWriter();
         exception.printStackTrace(new PrintWriter(exceptionWriter));
         String exceptionAsString = exceptionWriter.toString();

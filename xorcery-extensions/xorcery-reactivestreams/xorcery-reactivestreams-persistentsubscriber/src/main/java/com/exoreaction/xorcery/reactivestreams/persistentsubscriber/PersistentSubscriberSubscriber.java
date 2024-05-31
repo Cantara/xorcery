@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
 
-import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberCheckpoint;
@@ -23,23 +22,25 @@ import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.Persiste
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberErrorLog;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.logging.log4j.Logger;
-import org.reactivestreams.Subscriber;
+import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.SynchronousSink;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class PersistentSubscriberSubscriber
-        implements Subscriber<MetadataJsonNode<ArrayNode>> {
+        implements Function<Flux<MetadataJsonNode<ArrayNode>>, Publisher<MetadataJsonNode<ArrayNode>>> {
     private final PersistentSubscriberProcess persistentSubscriberProcess;
     private final PersistentSubscriberConfiguration configuration;
     private final PersistentSubscriber persistentSubscriber;
-    private final Predicate<WithMetadata<ArrayNode>> filter;
+    private final Predicate<MetadataJsonNode<ArrayNode>> filter;
     private final PersistentSubscriberCheckpoint persistentSubscriberCheckpoint;
     private final PersistentSubscriberErrorLog persistentSubscriberErrorLog;
     private final Logger logger;
-    private Subscription subscription;
 
     long skipped = 0;
 
@@ -61,20 +62,15 @@ public class PersistentSubscriberSubscriber
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
-        this.subscription = subscription;
-        logger.debug("onSubscribe");
-        subscription.request(1024);
+    public Publisher<MetadataJsonNode<ArrayNode>> apply(Flux<MetadataJsonNode<ArrayNode>> metadataJsonNodeFlux) {
+        return metadataJsonNodeFlux.handle(this::handle);
     }
 
-    @Override
-    public void onNext(MetadataJsonNode<ArrayNode> arrayNodeWithMetadata) {
-
+    private void handle(MetadataJsonNode<ArrayNode> arrayNodeWithMetadata, SynchronousSink<MetadataJsonNode<ArrayNode>> sink) {
         try {
             if (!filter.test(arrayNodeWithMetadata)) {
                 skipped++;
                 if (skipped == 256) {
-                    subscription.request(skipped);
                     skipped = 0;
                     long revision = arrayNodeWithMetadata.metadata().getLong("revision").orElseThrow(() -> new IllegalStateException("Metadata does not contain revision"));
                     persistentSubscriberCheckpoint.setCheckpoint(revision);
@@ -94,21 +90,10 @@ public class PersistentSubscriberSubscriber
             } catch (Throwable t) {
                 persistentSubscriberErrorLog.handle(arrayNodeWithMetadata, t);
             }
-            subscription.request(1 + skipped);
             skipped = 0;
+            sink.next(arrayNodeWithMetadata);
         } catch (Throwable e) {
-            subscription.cancel();
-            logger.error("Persistent subscriber cancelled", e);
+            sink.error(e);
         }
-    }
-
-    @Override
-    public void onError(Throwable t) {
-        persistentSubscriberProcess.retry();
-    }
-
-    @Override
-    public void onComplete() {
-        logger.info("onComplete");
     }
 }

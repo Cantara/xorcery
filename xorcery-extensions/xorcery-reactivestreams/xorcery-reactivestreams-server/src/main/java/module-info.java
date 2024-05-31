@@ -15,7 +15,6 @@
  */
 module xorcery.reactivestreams.server {
     exports com.exoreaction.xorcery.reactivestreams.server;
-    exports com.exoreaction.xorcery.reactivestreams.server.reactor;
 
     requires transitive xorcery.reactivestreams.api;
 

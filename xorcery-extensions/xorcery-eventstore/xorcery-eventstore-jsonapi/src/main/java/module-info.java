@@ -12,6 +12,8 @@ module xorcery.eventstore.jsonapi {
     requires org.glassfish.hk2.runlevel;
     requires xorcery.service.api;
     requires com.lmax.disruptor;
+    requires io.opentelemetry.api;
+    requires xorcery.domainevents.api;
     exports com.exoreaction.xorcery.eventstore.api;
     exports com.exoreaction.xorcery.eventstore.streams;
     exports com.exoreaction.xorcery.eventstore.resources;

@@ -38,6 +38,10 @@
         </dependency>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-domainevents-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-configuration</artifactId>
             <scope>test</scope>
         </dependency>

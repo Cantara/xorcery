@@ -17,13 +17,16 @@ package com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.process.Process;
-import com.exoreaction.xorcery.reactivestreams.api.client.ClientConfiguration;
-import com.exoreaction.xorcery.reactivestreams.api.client.ReactiveStreamsClient;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
+import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriber;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberCheckpoint;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberConfiguration;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.PersistentSubscriberErrorLog;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.logging.log4j.Logger;
+import reactor.core.Disposable;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -33,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
 
 public record PersistentSubscriberProcess(
         PersistentSubscriberConfiguration configuration,
-        ReactiveStreamsClient reactiveStreamsClient,
+        ClientWebSocketStreams reactiveStreamsClient,
         PersistentSubscriber persistentSubscriber,
         PersistentSubscriberCheckpoint persistentSubscriberCheckpoint,
         PersistentSubscriberErrorLog persistentSubscriberErrorLog,
@@ -56,17 +59,15 @@ public record PersistentSubscriberProcess(
                 persistentSubscriberErrorLog,
                 logger);
 
-        CompletableFuture<Void> subscribeFuture = reactiveStreamsClient.subscribe(eventsUri,
-                stream,
-                this::publisherStreamConfiguration,
-                subscriber,
-                subscriber.getClass(),
-                ClientConfiguration.defaults());
-        subscribeFuture.whenComplete(this::complete);
+        Disposable subscribeDisposable = reactiveStreamsClient.subscribe(ClientWebSocketOptions.instance(),
+                        MetadataJsonNode.class)
+                .map(metadataJsonNode -> (MetadataJsonNode<ArrayNode>) metadataJsonNode)
+                .transform(subscriber)
+                .subscribe();
 
         result.whenComplete((r, t) ->
         {
-            subscribeFuture.cancel(false);
+            subscribeDisposable.dispose();
         });
     }
 

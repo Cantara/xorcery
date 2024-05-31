@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 
 import com.exoreaction.xorcery.metadata.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers.BasePersistentSubscriber;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import jakarta.inject.Inject;
@@ -40,7 +41,7 @@ public class TestSubscriber
     }
 
     @Override
-    public void handle(WithMetadata<ArrayNode> eventsWithMetadata, CompletableFuture<Void> result) {
+    public void handle(MetadataJsonNode<ArrayNode> eventsWithMetadata, CompletableFuture<Void> result) {
         System.out.println(eventsWithMetadata.metadata().json().get("timestamp"));
         handled.incrementAndGet();
         result.complete(null);

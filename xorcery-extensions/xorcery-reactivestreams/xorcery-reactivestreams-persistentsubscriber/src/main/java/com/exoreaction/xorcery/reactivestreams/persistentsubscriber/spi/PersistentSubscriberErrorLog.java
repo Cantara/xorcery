@@ -15,7 +15,9 @@
  */
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi;
 
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.metadata.WithMetadata;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.jvnet.hk2.annotations.Contract;
 
@@ -28,5 +30,5 @@ public interface PersistentSubscriberErrorLog
 
     void init(PersistentSubscriberConfiguration configuration, PersistentSubscriber persistentSubscriber) throws IOException;
 
-    void handle(WithMetadata<ArrayNode> arrayNodeWithMetadata, Throwable exception) throws IOException;
+    void handle(MetadataJsonNode<ArrayNode> metadataJsonNode, Throwable exception) throws IOException;
 }

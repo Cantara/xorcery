@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.reactivestreams.client.reactor;
+package com.exoreaction.xorcery.reactivestreams.client;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import org.eclipse.jetty.websocket.client.WebSocketClient;

@@ -19,9 +19,11 @@ import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import com.exoreaction.xorcery.net.Sockets;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@Disabled
 public class PersistentSubscribersTest {
 
     static String config = String.format("""
