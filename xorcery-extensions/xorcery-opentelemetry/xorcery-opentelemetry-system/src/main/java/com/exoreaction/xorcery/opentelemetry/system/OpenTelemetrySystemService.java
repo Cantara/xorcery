@@ -20,7 +20,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.semconv.incubating.SystemIncubatingAttributes;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -49,7 +50,7 @@ public class OpenTelemetrySystemService {
         this.fileStores = getValidFileStores();
 
         Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
 
@@ -88,15 +89,15 @@ public class OpenTelemetrySystemService {
 
                 observableLongMeasurement.record(free,
                         Attributes.of(
-                                SemanticAttributes.SYSTEM_DEVICE, fileStore.toString(),
-                                SemanticAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
-                                SemanticAttributes.SYSTEM_FILESYSTEM_STATE, SemanticAttributes.SystemFilesystemStateValues.FREE)
+                                SystemIncubatingAttributes.SYSTEM_DEVICE, fileStore.toString(),
+                                SystemIncubatingAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
+                                SystemIncubatingAttributes.SYSTEM_FILESYSTEM_STATE, SystemIncubatingAttributes.SystemFilesystemStateValues.FREE)
                 );
                 observableLongMeasurement.record(used,
                         Attributes.of(
-                                SemanticAttributes.SYSTEM_DEVICE, fileStore.toString(),
-                                SemanticAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
-                                SemanticAttributes.SYSTEM_FILESYSTEM_STATE, SemanticAttributes.SystemFilesystemStateValues.USED)
+                                SystemIncubatingAttributes.SYSTEM_DEVICE, fileStore.toString(),
+                                SystemIncubatingAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
+                                SystemIncubatingAttributes.SYSTEM_FILESYSTEM_STATE, SystemIncubatingAttributes.SystemFilesystemStateValues.USED)
                 );
             } catch (IOException e) {
                 logger.error("Could not record filesystem stats for "+fileStore, e);

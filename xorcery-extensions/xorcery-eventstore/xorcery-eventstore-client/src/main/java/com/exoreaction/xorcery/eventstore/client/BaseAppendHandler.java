@@ -1,8 +1,8 @@
 package com.exoreaction.xorcery.eventstore.client;
 
 import com.eventstore.dbclient.*;
-import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
+import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -10,7 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import org.apache.logging.log4j.Logger;
 import reactor.util.context.Context;
 
@@ -57,7 +57,7 @@ class BaseAppendHandler {
 
         // Metrics
         Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
         batchSizes = meter.histogramBuilder("eventstore.stream.writes.batchsize")

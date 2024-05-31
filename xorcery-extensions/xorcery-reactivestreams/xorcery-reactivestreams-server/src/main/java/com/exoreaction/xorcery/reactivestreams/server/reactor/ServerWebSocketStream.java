@@ -20,7 +20,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -154,9 +155,9 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         }
 
         this.attributes = Attributes.builder()
-                .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, path)
-                .put(SemanticAttributes.MESSAGING_SYSTEM, XORCERY_MESSAGING_SYSTEM)
-                .put(SemanticAttributes.CLIENT_ADDRESS, clientHost)
+                .put(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, path)
+                .put(MessagingIncubatingAttributes.MESSAGING_SYSTEM, XORCERY_MESSAGING_SYSTEM)
+                .put(ClientAttributes.CLIENT_ADDRESS, clientHost)
                 .build();
         this.sentBytes = writer == null ? null : meter.histogramBuilder(PUBLISHER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();

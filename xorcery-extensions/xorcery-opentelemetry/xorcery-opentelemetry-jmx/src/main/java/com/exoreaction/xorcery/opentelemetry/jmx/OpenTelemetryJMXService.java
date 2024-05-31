@@ -20,10 +20,9 @@ import com.exoreaction.xorcery.lang.AutoCloseables;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
-import org.glassfish.hk2.api.InjectionPointIndicator;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
@@ -50,7 +49,7 @@ public class OpenTelemetryJMXService
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
 
         Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
 

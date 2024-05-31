@@ -15,10 +15,10 @@
  */
 package com.exoreaction.xorcery.certificates.ca.test;
 
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.certificates.ca.IntermediateCACertificatesProvider;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.core.Xorcery;
 import org.junit.jupiter.api.Test;
 
 public class GenerateEmptyCRLTest {

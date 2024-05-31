@@ -3,8 +3,6 @@ package com.exoreaction.xorcery.jetty.server;
 import com.exoreaction.xorcery.configuration.Configuration;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.websocket.server.WebSocketUpgradeHandler;
 import org.glassfish.hk2.api.Factory;

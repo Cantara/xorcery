@@ -18,7 +18,6 @@ package com.exoreaction.xorcery.jetty.server.security;
 import com.exoreaction.xorcery.configuration.Configuration;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.servlet.annotation.ServletSecurity;
 import org.apache.logging.log4j.Logger;

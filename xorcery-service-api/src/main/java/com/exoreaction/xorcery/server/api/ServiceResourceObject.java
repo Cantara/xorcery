@@ -20,7 +20,6 @@ import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.Link;
 import com.exoreaction.xorcery.jsonapi.Links;
-import com.exoreaction.xorcery.jsonapi.Meta;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
 
 import java.net.URI;

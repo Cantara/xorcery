@@ -34,7 +34,8 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -130,16 +131,16 @@ public class PublisherSubscriptionReactiveStream
         this.activeSubscriptions = activeSubscriptions;
 
         Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
         tracer = openTelemetry.tracerBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
         this.attributes = Attributes.builder()
-                .put(SemanticAttributes.MESSAGING_DESTINATION_NAME, streamName)
-                .put(SemanticAttributes.MESSAGING_SYSTEM, XORCERY_MESSAGING_SYSTEM)
+                .put(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, streamName)
+                .put(MessagingIncubatingAttributes.MESSAGING_SYSTEM, XORCERY_MESSAGING_SYSTEM)
                 .build();
         this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
@@ -357,7 +358,7 @@ public class PublisherSubscriptionReactiveStream
                     logger.trace(marker, "flush {}", itemsSent);
                 flushHistogram.record(itemsSent, attributes);
 
-                sentSpan.setAttribute(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, totalSent);
+                sentSpan.setAttribute(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, totalSent);
                 sentSpan.end();
             }
 

@@ -15,8 +15,8 @@
  */
 package com.exoreaction.xorcery.certificates.server;
 
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.keystores.KeyStores;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;

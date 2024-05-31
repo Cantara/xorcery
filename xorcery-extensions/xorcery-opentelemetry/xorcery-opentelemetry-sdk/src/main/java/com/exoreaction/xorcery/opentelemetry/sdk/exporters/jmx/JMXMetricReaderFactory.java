@@ -17,7 +17,6 @@ package com.exoreaction.xorcery.opentelemetry.sdk.exporters.jmx;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.opentelemetry.sdk.exporters.logging.LoggingConfiguration;
-import io.opentelemetry.exporter.logging.LoggingMetricExporter;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
@@ -27,8 +26,6 @@ import jakarta.inject.Singleton;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
-
-import java.io.IOException;
 
 @Service
 public class JMXMetricReaderFactory

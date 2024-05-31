@@ -16,10 +16,10 @@
 package com.exoreaction.xorcery.certificates.server.test;
 
 import com.exoreaction.xorcery.certificates.provisioning.CertificateProvisioningService;
-import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
+import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
+import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

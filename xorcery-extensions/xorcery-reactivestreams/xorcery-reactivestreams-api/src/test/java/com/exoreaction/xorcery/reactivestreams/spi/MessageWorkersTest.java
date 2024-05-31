@@ -15,8 +15,6 @@
  */
 package com.exoreaction.xorcery.reactivestreams.spi;
 
-import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
-import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

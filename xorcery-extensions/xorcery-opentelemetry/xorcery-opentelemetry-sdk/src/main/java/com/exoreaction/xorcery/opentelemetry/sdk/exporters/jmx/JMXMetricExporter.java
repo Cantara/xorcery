@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.opentelemetry.sdk.exporters.jmx;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.metrics.InstrumentType;

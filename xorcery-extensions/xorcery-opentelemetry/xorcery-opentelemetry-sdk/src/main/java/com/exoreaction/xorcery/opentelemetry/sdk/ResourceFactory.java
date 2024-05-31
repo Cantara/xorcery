@@ -18,7 +18,7 @@ package com.exoreaction.xorcery.opentelemetry.sdk;
 import com.exoreaction.xorcery.configuration.Configuration;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.resources.ResourceBuilder;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
@@ -34,7 +34,7 @@ public class ResourceFactory
     public ResourceFactory(Configuration configuration) {
         OpenTelemetryConfiguration openTelemetryConfiguration = new OpenTelemetryConfiguration(configuration.getConfiguration("opentelemetry"));
         ResourceBuilder builder = Resource.getDefault().toBuilder();
-        builder.setSchemaUrl(SemanticAttributes.SCHEMA_URL);
+        builder.setSchemaUrl(SchemaUrls.V1_25_0);
         openTelemetryConfiguration.getResource().forEach(builder::put);
         resource = builder.build();
     }

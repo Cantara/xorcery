@@ -15,8 +15,8 @@
  */
 package com.exoreaction.xorcery.certificates.ca;
 
-import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
+import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.keystores.KeyStores;
 import com.exoreaction.xorcery.keystores.KeyStoresConfiguration;
 import com.exoreaction.xorcery.secrets.Secrets;
@@ -27,7 +27,10 @@ import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v2CRLBuilder;
 import org.bouncycastle.cert.X509v3CertificateBuilder;

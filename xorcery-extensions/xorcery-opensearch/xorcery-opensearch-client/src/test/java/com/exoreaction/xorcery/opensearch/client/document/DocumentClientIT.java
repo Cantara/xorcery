@@ -15,8 +15,8 @@
  */
 package com.exoreaction.xorcery.opensearch.client.document;
 
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.opensearch.client.index.CreateComponentTemplateRequest;
 import com.exoreaction.xorcery.opensearch.client.index.CreateIndexTemplateRequest;

@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import javax.net.ssl.SSLHandshakeException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public record ClientConfiguration(Configuration configuration) {
 

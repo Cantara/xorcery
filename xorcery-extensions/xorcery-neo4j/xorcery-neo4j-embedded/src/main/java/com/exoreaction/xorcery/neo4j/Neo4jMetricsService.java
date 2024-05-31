@@ -19,7 +19,7 @@ import com.exoreaction.xorcery.lang.AutoCloseables;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
@@ -41,7 +41,7 @@ public class Neo4jMetricsService
         this.logger = logger;
 
         Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
 

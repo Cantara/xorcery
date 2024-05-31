@@ -8,7 +8,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import org.eclipse.jetty.client.Request;
 
 import java.util.EventListener;
@@ -25,7 +26,7 @@ public class OpenTelemetryRequestListener
     public OpenTelemetryRequestListener(OpenTelemetry openTelemetry) {
         this.textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
         this.tracer = openTelemetry.tracerBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
     }
@@ -37,12 +38,12 @@ public class OpenTelemetryRequestListener
                         .startSpan();
         request.onResponseSuccess( r ->
         {
-            span.setAttribute(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, r.getStatus());
+            span.setAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, r.getStatus());
             span.end();
         });
         request.onResponseFailure( (r,f)->
         {
-            span.setAttribute(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, r.getStatus());
+            span.setAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, r.getStatus());
             span.end();
         });
         try (Scope scope = span.makeCurrent()) {

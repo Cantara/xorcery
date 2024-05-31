@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.configuration.builder;
 
-import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.configuration.Configuration;
 
 import java.util.function.Consumer;

@@ -15,7 +15,10 @@
  */
 package com.exoreaction.xorcery.domainevents.api.test;
 
-import com.exoreaction.xorcery.domainevents.api.*;
+import com.exoreaction.xorcery.domainevents.api.DomainEvent;
+import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
+import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;

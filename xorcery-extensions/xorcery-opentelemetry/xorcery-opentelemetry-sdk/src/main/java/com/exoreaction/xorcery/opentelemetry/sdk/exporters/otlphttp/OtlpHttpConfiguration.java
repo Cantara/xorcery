@@ -18,8 +18,6 @@ package com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.secrets.Secrets;
-import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
-import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
 
 import java.time.Duration;
 import java.util.Collections;

@@ -15,11 +15,11 @@
  */
 package com.exoreaction.xorcery.domainevents.jsonapi.resources;
 
-import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
 import com.exoreaction.xorcery.domainevents.helpers.context.DomainContext;
+import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
 import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
-import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.jsonapi.Error;
+import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.util.UUIDs;
 import com.fasterxml.jackson.databind.JsonNode;

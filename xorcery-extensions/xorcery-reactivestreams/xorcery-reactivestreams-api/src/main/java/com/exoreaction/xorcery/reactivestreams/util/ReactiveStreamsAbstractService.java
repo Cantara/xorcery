@@ -24,9 +24,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Optional;
 
 @Deprecated
 public abstract class ReactiveStreamsAbstractService {

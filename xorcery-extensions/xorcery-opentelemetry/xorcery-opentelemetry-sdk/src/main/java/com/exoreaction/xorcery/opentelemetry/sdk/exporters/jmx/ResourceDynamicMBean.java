@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.opentelemetry.sdk.exporters.jmx;
 
-import io.opentelemetry.sdk.metrics.data.ExponentialHistogramData;
 import io.opentelemetry.sdk.metrics.data.ExponentialHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;

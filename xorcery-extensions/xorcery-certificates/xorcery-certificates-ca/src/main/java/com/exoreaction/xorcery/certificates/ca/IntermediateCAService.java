@@ -17,8 +17,8 @@ package com.exoreaction.xorcery.certificates.ca;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import com.exoreaction.xorcery.server.api.ServiceResourceObject;
+import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;

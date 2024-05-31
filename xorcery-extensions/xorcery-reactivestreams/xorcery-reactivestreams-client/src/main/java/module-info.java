@@ -32,6 +32,7 @@ module xorcery.reactivestreams.client {
     requires jakarta.inject;
     requires io.opentelemetry.api;
     requires io.opentelemetry.semconv;
+    requires io.opentelemetry.semconv.incubating;
     requires io.opentelemetry.context;
     requires org.eclipse.jetty.client;
     requires org.eclipse.jetty.websocket.api;

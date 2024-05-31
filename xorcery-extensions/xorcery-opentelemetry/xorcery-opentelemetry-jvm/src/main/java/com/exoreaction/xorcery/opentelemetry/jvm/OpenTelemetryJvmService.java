@@ -25,7 +25,8 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.JvmAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,15 +65,15 @@ public class OpenTelemetryJvmService
         OpenTelemetryJvmConfiguration jvmConfiguration = OpenTelemetryJvmConfiguration.get(configuration);
 
         Meter meter = openTelemetry.meterBuilder(getClass().getName())
-                .setSchemaUrl(SemanticAttributes.SCHEMA_URL)
+                .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
 
         // Memory Pools
         memoryPoolAttributes = ManagementFactory.getMemoryPoolMXBeans().stream()
                 .map(pool -> Map.entry(pool, Attributes.builder()
-                        .put(SemanticAttributes.JVM_MEMORY_POOL_NAME, pool.getName())
-                        .put(SemanticAttributes.JVM_MEMORY_TYPE, pool.getType().name().toLowerCase())
+                        .put(JvmAttributes.JVM_MEMORY_POOL_NAME, pool.getName())
+                        .put(JvmAttributes.JVM_MEMORY_TYPE, pool.getType().name().toLowerCase())
                         .build()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
@@ -85,8 +86,8 @@ public class OpenTelemetryJvmService
                     GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from(cd);
 
                     Attributes attributes = Attributes.builder()
-                            .put(SemanticAttributes.JVM_GC_ACTION, info.getGcAction())
-                            .put(SemanticAttributes.JVM_GC_NAME, info.getGcName())
+                            .put(JvmAttributes.JVM_GC_ACTION, info.getGcAction())
+                            .put(JvmAttributes.JVM_GC_NAME, info.getGcName())
                             .build();
                     dh.record(info.getGcInfo().getDuration() / 1000D, attributes);
                 }

@@ -2,8 +2,6 @@ package com.exoreaction.xorcery.reactivestreams.api;
 
 import reactor.util.context.ContextView;
 
-import java.util.Optional;
-
 /**
  * Commonly used {@link ContextView} keys
  */

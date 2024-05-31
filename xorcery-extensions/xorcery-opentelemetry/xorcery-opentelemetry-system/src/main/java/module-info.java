@@ -28,4 +28,5 @@ module xorcery.opentelemetry.system {
     requires xorcery.opentelemetry.api;
     requires jdk.management;
     requires org.apache.logging.log4j;
+    requires io.opentelemetry.semconv.incubating;
 }

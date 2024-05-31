@@ -4,12 +4,9 @@ import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-import org.yaml.snakeyaml.LoaderOptions;
 import reactor.core.CoreSubscriber;
-import reactor.core.publisher.Flux;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;

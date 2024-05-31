@@ -21,8 +21,6 @@ import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 import java.net.URI;
 import java.time.Duration;
 
-import static com.exoreaction.xorcery.configuration.Configuration.missing;
-
 public record ReactiveStreamsServerConfiguration(Configuration context)
         implements ServiceConfiguration {
 

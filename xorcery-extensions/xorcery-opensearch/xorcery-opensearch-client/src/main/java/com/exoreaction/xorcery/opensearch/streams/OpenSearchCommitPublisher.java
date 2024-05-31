@@ -15,8 +15,8 @@
  */
 package com.exoreaction.xorcery.opensearch.streams;
 
-import com.exoreaction.xorcery.opensearch.api.IndexCommit;
 import com.exoreaction.xorcery.metadata.WithMetadata;
+import com.exoreaction.xorcery.opensearch.api.IndexCommit;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import reactor.core.publisher.Flux;

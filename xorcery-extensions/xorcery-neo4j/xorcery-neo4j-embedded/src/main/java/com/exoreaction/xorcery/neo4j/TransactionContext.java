@@ -1,6 +1,5 @@
 package com.exoreaction.xorcery.neo4j;
 
-import jakarta.inject.Inject;
 import org.jvnet.hk2.annotations.Service;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.kernel.api.KernelTransaction;

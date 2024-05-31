@@ -22,7 +22,6 @@ import com.eventstore.dbclient.UpdateProjectionOptions;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.eventstore.EventStoreService;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.runlevel.RunLevel;

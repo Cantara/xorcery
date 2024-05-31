@@ -18,8 +18,6 @@ package com.exoreaction.xorcery.jetty.server;
 import com.exoreaction.xorcery.configuration.Configuration;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;

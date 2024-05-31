@@ -6,8 +6,6 @@ import com.exoreaction.xorcery.reactivestreams.extras.subscribers.ResourceSubscr
 import com.exoreaction.xorcery.reactivestreams.extras.subscribers.SaveToFile;
 import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,10 @@
 package com.exoreaction.xorcery.reactivestreams.api.client;
 
 import java.net.HttpCookie;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public record ClientWebSocketOptions(Map<String, List<String>> headers, List<String> extensions,
                                      List<HttpCookie> cookies) {

@@ -31,7 +31,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -188,9 +190,9 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         }
 
         this.attributes = Attributes.builder()
-                .put(SemanticAttributes.MESSAGING_SYSTEM, ReactiveStreamsOpenTelemetry.XORCERY_MESSAGING_SYSTEM)
-                .put(SemanticAttributes.URL_FULL, serverUri.toASCIIString())
-                .put(SemanticAttributes.CLIENT_ADDRESS, host)
+                .put(MessagingIncubatingAttributes.MESSAGING_SYSTEM, ReactiveStreamsOpenTelemetry.XORCERY_MESSAGING_SYSTEM)
+                .put(UrlAttributes.URL_FULL, serverUri.toASCIIString())
+                .put(ClientAttributes.CLIENT_ADDRESS, host)
                 .build();
 
         this.sentBytes = outputType == null ? null : meter.histogramBuilder(PUBLISHER_IO)

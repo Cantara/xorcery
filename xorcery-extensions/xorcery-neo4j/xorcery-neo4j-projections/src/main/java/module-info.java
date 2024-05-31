@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
+
 import com.exoreaction.xorcery.neo4jprojections.providers.CypherEventProjection;
+import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 
 open module xorcery.neo4j.projections {
     uses Neo4jEventProjection;

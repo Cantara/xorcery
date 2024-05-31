@@ -27,7 +27,7 @@ import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.io.IOException;
-import java.security.*;
+import java.security.GeneralSecurityException;
 
 @Service(name = "certificates")
 @RunLevel(value = 2)

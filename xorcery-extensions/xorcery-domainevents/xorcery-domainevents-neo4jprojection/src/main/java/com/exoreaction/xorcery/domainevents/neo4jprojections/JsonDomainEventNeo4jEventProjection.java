@@ -15,9 +15,9 @@
  */
 package com.exoreaction.xorcery.domainevents.neo4jprojections;
 
-import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
+import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import com.fasterxml.jackson.databind.JsonNode;

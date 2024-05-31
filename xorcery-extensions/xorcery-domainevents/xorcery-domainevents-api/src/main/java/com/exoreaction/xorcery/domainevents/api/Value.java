@@ -23,8 +23,7 @@ import com.fasterxml.jackson.databind.node.*;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel.*;
-import static com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel.removedrelationships;
+import static com.exoreaction.xorcery.domainevents.api.Model.JsonDomainEventModel.attributes;
 
 public final class Value
         implements JsonElement {
