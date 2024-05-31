@@ -25,7 +25,7 @@ import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
-import com.exoreaction.xorcery.reactivestreams.server.ReactiveStreamsServerConfiguration;
+import com.exoreaction.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -201,7 +201,7 @@ public class PublishWithResultBenchmarks {
                             System.out.println("Invoke count:" + counters.counter);
                         }));
 
-        URI serverUri = ReactiveStreamsServerConfiguration.get(serverConf).getURI().resolve("benchmark");
+        URI serverUri = ServerWebSocketStreamsConfiguration.get(serverConf).getURI().resolve("benchmark");
         ClientWebSocketStreams reactiveStreamsClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
 
         System.out.println("Start");
