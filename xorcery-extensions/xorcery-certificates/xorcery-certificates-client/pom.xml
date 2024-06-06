@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-certificates</artifactId>
-        <version>0.121.5-SNAPSHOT</version>
+        <version>0.122.0</version>
     </parent>
 
     <artifactId>xorcery-certificates-client</artifactId>
