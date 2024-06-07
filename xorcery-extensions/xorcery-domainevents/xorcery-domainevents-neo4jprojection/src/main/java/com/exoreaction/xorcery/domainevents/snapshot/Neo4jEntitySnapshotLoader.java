@@ -15,10 +15,8 @@
  */
 package com.exoreaction.xorcery.domainevents.snapshot;
 
-import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
-import com.exoreaction.xorcery.domainevents.helpers.entity.Entity;
-import com.exoreaction.xorcery.domainevents.helpers.entity.EntitySnapshot;
-import com.exoreaction.xorcery.domainevents.helpers.model.CommonModel;
+import com.exoreaction.xorcery.domainevents.context.CommandMetadata;
+import com.exoreaction.xorcery.domainevents.entity.Entity;
 import com.exoreaction.xorcery.neo4j.client.Cypher;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4j.client.RowModel;
@@ -56,7 +54,7 @@ public class Neo4jEntitySnapshotLoader {
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
     }
 
-    public <T extends EntitySnapshot> T load(EventMetadata metadata, String entityId, Entity<T> entity)
+    public <T> T load(CommandMetadata metadata, String entityId, Entity<T> entity)
             throws IOException {
 
         String cypher = cypherCache.computeIfAbsent(entity.getClass(),
@@ -76,7 +74,7 @@ public class Neo4jEntitySnapshotLoader {
                 });
 
         Map<String, Object> metadataMap = Cypher.toMap(metadata.context().metadata());
-        return database.execute(cypher, Map.of("metadata", metadataMap, CommonModel.Entity.id.name(), entityId), 30)
+        return database.execute(cypher, Map.of("metadata", metadataMap, "id", entityId), 30)
                 .thenCompose(result ->
                 {
                     try (result) {

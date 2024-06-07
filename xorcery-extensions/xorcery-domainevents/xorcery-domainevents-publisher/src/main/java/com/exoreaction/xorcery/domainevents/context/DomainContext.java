@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.domainevents.helpers.context;
+package com.exoreaction.xorcery.domainevents.context;
 
-import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
-import com.exoreaction.xorcery.metadata.Metadata;
+import com.exoreaction.xorcery.domainevents.entity.Command;
 import jakarta.ws.rs.NotFoundException;
 
 import java.util.Collections;
@@ -26,10 +25,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public interface DomainContext {
-
-    class Empty
-            implements DomainContext {
-    }
 
     default List<Command> commands() {
         return Collections.emptyList();
@@ -42,7 +37,7 @@ public interface DomainContext {
                 .findFirst();
     }
 
-    default CompletionStage<Metadata> handle(Metadata metadata, Command command) {
-        return CompletableFuture.failedStage(new NotFoundException());
+    default <T extends Command> CompletableFuture<CommandResult<T>> handle(CommandMetadata metadata, T command) {
+        return CompletableFuture.failedFuture(new NotFoundException());
     }
 }

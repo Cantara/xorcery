@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.domainevents.helpers.context;
+package com.exoreaction.xorcery.domainevents.context;
 
 import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
-import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
+import com.exoreaction.xorcery.domainevents.entity.Command;
 import com.exoreaction.xorcery.metadata.CommonMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
@@ -25,9 +25,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static com.exoreaction.xorcery.metadata.Metadata.missing;
 
-public record EventMetadata(Metadata context)
+public record CommandMetadata(Metadata context)
         implements CommonMetadata, RequestMetadata, DeploymentMetadata {
-    public EventMetadata(ObjectNode metadata) {
+    public CommandMetadata(ObjectNode metadata) {
         this(new Metadata(metadata));
     }
 
@@ -35,15 +35,15 @@ public record EventMetadata(Metadata context)
             implements CommonMetadata.Builder<Builder>,
             RequestMetadata.Builder<Builder>,
             DeploymentMetadata.Builder<Builder> {
-        public static EventMetadata aggregateId(String aggregateId, Metadata metadata) {
+        public static CommandMetadata aggregateId(String aggregateId, Metadata metadata) {
             return new Builder(metadata).aggregateId(aggregateId).build();
         }
 
-        public static EventMetadata aggregateType(String aggregateType, Metadata metadata) {
+        public static CommandMetadata aggregateType(String aggregateType, Metadata metadata) {
             return new Builder(metadata).aggregateType(aggregateType).build();
         }
 
-        public static EventMetadata aggregate(String aggregateType, String aggregateId, Metadata metadata) {
+        public static CommandMetadata aggregate(String aggregateType, String aggregateId, Metadata metadata) {
             return new Builder(metadata)
                     .aggregateType(aggregateType)
                     .aggregateId(aggregateId)
@@ -84,8 +84,8 @@ public record EventMetadata(Metadata context)
             return this;
         }
 
-        public EventMetadata build() {
-            return new EventMetadata(builder.build());
+        public CommandMetadata build() {
+            return new CommandMetadata(builder.build());
         }
     }
 

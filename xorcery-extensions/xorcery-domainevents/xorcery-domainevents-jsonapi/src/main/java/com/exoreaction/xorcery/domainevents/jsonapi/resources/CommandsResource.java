@@ -15,9 +15,10 @@
  */
 package com.exoreaction.xorcery.domainevents.jsonapi.resources;
 
-import com.exoreaction.xorcery.domainevents.helpers.context.DomainContext;
-import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
-import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
+import com.exoreaction.xorcery.domainevents.context.CommandResult;
+import com.exoreaction.xorcery.domainevents.context.DomainContext;
+import com.exoreaction.xorcery.domainevents.context.CommandMetadata;
+import com.exoreaction.xorcery.domainevents.entity.Command;
 import com.exoreaction.xorcery.jsonapi.Error;
 import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.metadata.Metadata;
@@ -62,7 +63,7 @@ public interface CommandsResource
     default Metadata metadata() {
         Metadata.Builder metadata = new Metadata.Builder();
 
-        EventMetadata.Builder request = new EventMetadata.Builder(metadata);
+        CommandMetadata.Builder request = new CommandMetadata.Builder(metadata);
 
         request.timestamp(System.currentTimeMillis());
 
@@ -156,18 +157,21 @@ public interface CommandsResource
         }).findFirst().orElseThrow(NotFoundException::new);
 
         // Transfer over ResourceObject.id as aggregate id if not already set
+        CommandMetadata commandMetadata;
         if (!metadata.has("aggregateId"))
         {
             String id = resourceObject.getId() != null ? resourceObject.getId() : UUIDs.newId();
-            EventMetadata.Builder.aggregateId(id, metadata);
+            commandMetadata = CommandMetadata.Builder.aggregateId(id, metadata);
+        } else {
+            commandMetadata = new CommandMetadata(metadata);
         }
 
-        return context.handle(metadata, command)
-                .thenApply(md ->
+        return context.handle(commandMetadata, command)
+                .thenApply(commandResult ->
                 {
                     metadata.getString("aggregateId")
-                            .ifPresent(id -> md.metadata().set("aggregateId", md.metadata().textNode(id)));
-                    return md;
+                            .ifPresent(id -> commandResult.metadata().metadata().set("aggregateId", commandResult.metadata().metadata().textNode(id)));
+                    return commandResult;
                 })
                 .thenCompose(md -> ok(md, command))
                 .exceptionallyCompose(throwable ->
@@ -191,7 +195,7 @@ public interface CommandsResource
 
     CompletionStage<ResourceDocument> get(String rel);
 
-    default CompletionStage<Response> ok(Metadata metadata, Command command) {
+    default <T extends Command> CompletionStage<Response> ok(CommandResult<T> commandResult, T command) {
         return get(null).thenApply(rd -> Response.ok(rd).build());
     }
 

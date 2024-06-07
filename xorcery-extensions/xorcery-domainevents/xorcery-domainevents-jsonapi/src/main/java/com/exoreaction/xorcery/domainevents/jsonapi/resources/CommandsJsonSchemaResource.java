@@ -15,8 +15,8 @@
  */
 package com.exoreaction.xorcery.domainevents.jsonapi.resources;
 
-import com.exoreaction.xorcery.domainevents.helpers.entity.Command;
-import com.exoreaction.xorcery.domainevents.helpers.entity.annotation.Update;
+import com.exoreaction.xorcery.domainevents.entity.Command;
+import com.exoreaction.xorcery.domainevents.entity.annotation.Update;
 import com.exoreaction.xorcery.hyperschema.Link;
 import com.exoreaction.xorcery.hyperschema.Links;
 import com.exoreaction.xorcery.jaxrs.server.resources.ContextResource;

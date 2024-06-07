@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.domainevents.publisher;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
-import com.exoreaction.xorcery.domainevents.helpers.context.EventMetadata;
+import com.exoreaction.xorcery.domainevents.context.CommandMetadata;
 import com.exoreaction.xorcery.metadata.DeploymentMetadata;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
@@ -61,7 +61,7 @@ public class DomainEventsWebSocketsService
                                          Configuration configuration) {
 
         // TODO This needs to updated to latest DomainEventMetadata values
-        this.deploymentMetadata = new EventMetadata.Builder(new Metadata.Builder())
+        this.deploymentMetadata = new CommandMetadata.Builder(new Metadata.Builder())
                 .configuration(configuration)
                 .build();
         DomainEventsConfiguration domainEventsConfiguration = new DomainEventsConfiguration(configuration.getConfiguration("domainevents"));

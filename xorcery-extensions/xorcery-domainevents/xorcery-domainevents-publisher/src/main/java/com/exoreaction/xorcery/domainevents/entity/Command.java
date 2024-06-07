@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.domainevents.helpers.entity;
+package com.exoreaction.xorcery.domainevents.entity;
 
-import com.exoreaction.xorcery.domainevents.helpers.entity.annotation.Create;
-import com.exoreaction.xorcery.domainevents.helpers.entity.annotation.Delete;
-import com.exoreaction.xorcery.domainevents.helpers.entity.annotation.Update;
+import com.exoreaction.xorcery.domainevents.entity.annotation.Create;
+import com.exoreaction.xorcery.domainevents.entity.annotation.Delete;
+import com.exoreaction.xorcery.domainevents.entity.annotation.Update;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

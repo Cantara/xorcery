@@ -15,6 +15,7 @@
  */
 package com.exoreaction.xorcery.domainevents.helpers.model;
 
+import com.exoreaction.xorcery.collections.MapElement;
 import com.exoreaction.xorcery.json.JsonElement;
 
 import java.util.Map;
@@ -22,7 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public interface Model
-    extends JsonElement
+    extends MapElement<String, Object>
 {
     Map<Enum<?>,String> fieldMappings = new ConcurrentHashMap<>();
 
