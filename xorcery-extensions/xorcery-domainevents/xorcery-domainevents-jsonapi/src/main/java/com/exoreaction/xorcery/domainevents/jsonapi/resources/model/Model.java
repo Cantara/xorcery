@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.domainevents.helpers.model;
+package com.exoreaction.xorcery.domainevents.jsonapi.resources.model;
 
 import com.exoreaction.xorcery.collections.MapElement;
-import com.exoreaction.xorcery.json.JsonElement;
 
 import java.util.Map;
 import java.util.Optional;

@@ -38,6 +38,11 @@
         "Configuration" : {
           "type" : "object",
           "properties" : {
+            "packages" : {
+              "type" : "string",
+              "default" : "io.opentelemetry.instrumentation.log4j.appender.v2_17",
+              "description" : "Default: io.opentelemetry.instrumentation.log4j.appender.v2_17"
+            },
             "appenders" : {
               "type" : "object",
               "properties" : {
@@ -48,11 +53,6 @@
                       "type" : "string",
                       "default" : "OpenTelemetryAppender",
                       "description" : "Default: OpenTelemetryAppender"
-                    },
-                    "type" : {
-                      "type" : "string",
-                      "default" : "io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender",
-                      "description" : "Default: io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppender"
                     },
                     "captureMapMessageAttributes" : {
                       "type" : [ "boolean", "string" ],

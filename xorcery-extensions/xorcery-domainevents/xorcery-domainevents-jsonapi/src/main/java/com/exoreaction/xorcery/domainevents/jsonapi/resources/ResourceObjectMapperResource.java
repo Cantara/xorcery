@@ -15,9 +15,10 @@
  */
 package com.exoreaction.xorcery.domainevents.jsonapi.resources;
 
-import com.exoreaction.xorcery.collections.MapElement;
 import com.exoreaction.xorcery.domainevents.context.DomainContext;
 import com.exoreaction.xorcery.domainevents.entity.Command;
+import com.exoreaction.xorcery.domainevents.jsonapi.resources.model.EntityModel;
+import com.exoreaction.xorcery.domainevents.jsonapi.resources.model.Model;
 import com.exoreaction.xorcery.jsonapi.*;
 import com.exoreaction.xorcery.jsonapi.server.resources.IncludesResource;
 import com.exoreaction.xorcery.jsonapi.server.resources.RelationshipsResource;
@@ -32,15 +33,15 @@ import static com.exoreaction.xorcery.jsonapi.JsonApiRels.related;
 import static com.exoreaction.xorcery.jsonapi.JsonApiRels.self;
 
 public interface ResourceObjectMapperResource
-    extends IncludesResource, RelationshipsResource
+        extends IncludesResource, RelationshipsResource
 {
-    default <T extends MapElement<String, Object>> ResourceObjectMapperBuilder<T> resourceObjectMapper(Function<T, ResourceObject.Builder> mapper, Included.Builder included)
+    default <T extends Model> ResourceObjectMapperBuilder<T> resourceObjectMapper(Function<T, ResourceObject.Builder> mapper, Included.Builder included)
     {
         return new ResourceObjectMapperBuilder<>(mapper, included);
     }
 
     // Attributes
-    default <T extends MapElement<String, Object>> BiConsumer<T, ResourceObjectMapper> modelAttributes(Predicate<String> fieldSelection)
+    default <T extends Model> BiConsumer<T, ResourceObjectMapper> modelAttributes(Predicate<String> fieldSelection)
     {
         return (model, mapper) -> model.map().forEach((key, value) -> {
             if (fieldSelection.test(key))
@@ -49,7 +50,7 @@ public interface ResourceObjectMapperResource
     }
 
     // Relationships
-    default <T extends MapElement<String, Object>> BiConsumer<T, ResourceObjectMapper> modelRelationship(Enum<?> relationshipName,
+    default <T extends Model> BiConsumer<T, ResourceObjectMapper> modelRelationship(Enum<?> relationshipName,
                                                                                     Predicate<String> fieldSelection,
                                                                                     String includePrefix,
                                                                                     Function<T, URI> relationshipRelatedMapper,
@@ -92,24 +93,24 @@ public interface ResourceObjectMapperResource
         }
     }
 
-    interface IncludedResourceObjects<T>
+    interface IncludedResourceObjects<T extends Model>
     {
         ResourceObjects resourceObjects(T model, ResourceObjectMapper mapper, String relationshipIncludePrefix);
     }
 
     // Links
-    default <T extends MapElement<String, Object>> BiConsumer<T, ResourceObjectMapper> selfLink(Function<T, URI> linkMapper)
+    default <T extends Model> BiConsumer<T, ResourceObjectMapper> selfLink(Function<T, URI> linkMapper)
     {
         return (model, mapper) -> mapper.links().link(self, linkMapper.apply(model));
     }
 
-    default <T extends MapElement<String, Object>> BiConsumer<T, ResourceObjectMapper> selfLink(Class<?> resourceClass)
+    default <T extends EntityModel> BiConsumer<T, ResourceObjectMapper> selfLink(Class<?> resourceClass)
     {
         UriBuilder uriBuilder = getUriBuilderFor(resourceClass);
-        return selfLink(model -> uriBuilder.build(model.getString("id").orElseThrow()));
+        return selfLink(model -> uriBuilder.build(model.getId()));
     }
 
-    default <T> BiConsumer<T, ResourceObjectMapper> commandLinks(Function<T, UriBuilder> baseUriMapper, Function<T, DomainContext> contextMapper) {
+    default <T extends Model> BiConsumer<T, ResourceObjectMapper> commandLinks(Function<T, UriBuilder> baseUriMapper, Function<T, DomainContext> contextMapper) {
         return (model, mapper) ->
         {
             DomainContext context = contextMapper.apply(model);
@@ -124,13 +125,13 @@ public interface ResourceObjectMapperResource
         };
     }
 
-    default <T extends MapElement<String, Object>> BiConsumer<T, ResourceObjectMapper> commandLinks(Class<?> resourceClass, Function<T, DomainContext> contextMapper) {
+    default <T extends EntityModel> BiConsumer<T, ResourceObjectMapper> commandLinks(Class<?> resourceClass, Function<T, DomainContext> contextMapper) {
         UriBuilder uriBuilder = getUriBuilderFor(resourceClass);
-        return commandLinks(model -> uriBuilder.clone().resolveTemplate("id", model.getString("id").orElseThrow()), contextMapper);
+        return commandLinks(model -> uriBuilder.clone().resolveTemplate("id", model.getId()), contextMapper);
     }
 
     // Builders and helpers
-    class ResourceObjectMapperBuilder<T extends MapElement>
+    class ResourceObjectMapperBuilder<T extends Model>
     {
         Function<T, ResourceObject.Builder> resourceObjectBuilderMapper;
         private Included.Builder included;

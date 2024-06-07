@@ -13,15 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.domainevents.helpers.model;
+package com.exoreaction.xorcery.domainevents.jsonapi.resources.model;
 
-public interface EntityModel
-        extends Model {
-    default String getId() {
-        return getString(CommonModel.Entity.id).orElse(null);
+public interface CommonModel {
+
+    enum Label {
+        Entity,
+        Aggregate,
     }
 
-    default String getAggregateId() {
-        return getString(CommonModel.Entity.aggregateId).orElse(null);
+    enum Entity {
+        id,
+        aggregateId,
+        externalId,
+        createdOn,
+        lastUpdatedOn,
     }
 }
