@@ -43,14 +43,4 @@ public interface ModelsResource
             return creator.apply(json);
         };
     }
-
-    default <T> Function<RowModel, T> rowToMapModel(Function<Map<String, Object>, T> creator, Collection<Enum<?>> fields) {
-        return rowModel -> {
-            Map<String, Object> map = new HashMap<>();
-            for (Enum<?> enumConstant : fields) {
-                map.put(Enums.toField(enumConstant), rowModel.getJsonNode(Enums.toField(enumConstant)));
-            }
-            return creator.apply(map);
-        };
-    }
 }

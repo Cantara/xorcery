@@ -43,9 +43,9 @@ public interface ResourceObjectMapperResource
     // Attributes
     default <T extends Model> BiConsumer<T, ResourceObjectMapper> modelAttributes(Predicate<String> fieldSelection)
     {
-        return (model, mapper) -> model.map().forEach((key, value) -> {
-            if (fieldSelection.test(key))
-                mapper.attributes().attribute(key, value);
+        return (model, mapper) -> model.object().fields().forEachRemaining(entry -> {
+            if (fieldSelection.test(entry.getKey()))
+                mapper.attributes().attribute(entry.getKey(), entry.getValue());
         });
     }
 
