@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 public interface ModelsResource
@@ -32,13 +34,23 @@ public interface ModelsResource
         return service(GraphDatabase.class);
     }
 
-    default <T> Function<RowModel, T> toModel(Function<ObjectNode, T> creator, Collection<Enum<?>> fields) {
+    default <T> Function<RowModel, T> rowToJsonModel(Function<ObjectNode, T> creator, Collection<Enum<?>> fields) {
         return rowModel -> {
             ObjectNode json = JsonNodeFactory.instance.objectNode();
             for (Enum<?> enumConstant : fields) {
                 json.set(Enums.toField(enumConstant), rowModel.getJsonNode(Enums.toField(enumConstant)));
             }
             return creator.apply(json);
+        };
+    }
+
+    default <T> Function<RowModel, T> rowToMapModel(Function<Map<String, Object>, T> creator, Collection<Enum<?>> fields) {
+        return rowModel -> {
+            Map<String, Object> map = new HashMap<>();
+            for (Enum<?> enumConstant : fields) {
+                map.put(Enums.toField(enumConstant), rowModel.getJsonNode(Enums.toField(enumConstant)));
+            }
+            return creator.apply(map);
         };
     }
 }
