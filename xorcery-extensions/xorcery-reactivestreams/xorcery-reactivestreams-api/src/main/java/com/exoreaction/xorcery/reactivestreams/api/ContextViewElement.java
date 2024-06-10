@@ -14,13 +14,13 @@ public record ContextViewElement(ContextView context)
     }
 
     @Override
-    public Optional<Object> get(String name) {
+    public <T> Optional<T> get(String name) {
         return context.getOrEmpty(name);
     }
 
     @Override
-    public Optional<Object> get(Enum<?> name) {
-        return context.getOrEmpty(name).or(()->context.getOrEmpty(name.name()));
+    public <T> Optional<T> get(Enum<?> name) {
+        return context.<T>getOrEmpty(name).or(()->context.getOrEmpty(name.name()));
     }
 
     @Override

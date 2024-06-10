@@ -9,7 +9,7 @@ public interface MapElement<K,V>
     Map<K,V> map();
 
     @Override
-    default Optional<Object> get(String name) {
-        return Optional.ofNullable(map().get(name));
+    default <T> Optional<T> get(String name) {
+        return Optional.ofNullable((T)map().get(name));
     }
 }

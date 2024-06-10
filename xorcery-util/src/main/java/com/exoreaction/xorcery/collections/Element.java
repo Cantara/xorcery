@@ -10,9 +10,9 @@ import java.util.Optional;
  */
 public interface Element {
 
-    Optional<Object> get(String name);
+    <T> Optional<T> get(String name);
 
-    default Optional<Object> get(Enum<?> name)
+    default <T> Optional<T> get(Enum<?> name)
     {
         return get(name.name());
     }

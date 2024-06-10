@@ -22,18 +22,8 @@ import org.neo4j.graphdb.Node;
 import java.util.Optional;
 
 public record NodeModel(Node node)
-    implements Element
+    implements NodeElement
 {
-    @Override
-    public Optional<Object> get(String name) {
-        return Optional.ofNullable(node.getProperty(name, null));
-    }
-
-    @Override
-    public boolean has(String name) {
-        return node.hasProperty(name);
-    }
-
     public JsonNode getJsonNode(String name) {
         return Cypher.toJsonNode(node.getProperty(name, null));
     }

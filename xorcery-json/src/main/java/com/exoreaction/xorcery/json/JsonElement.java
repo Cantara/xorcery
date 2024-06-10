@@ -84,9 +84,9 @@ public interface JsonElement
 
     // Element
     @Override
-    default Optional<Object> get(String name) {
+    default <T> Optional<T> get(String name) {
         return lookup(object(), name).map(json ->
-                switch (json.getNodeType()) {
+                (T) switch (json.getNodeType()) {
                     case ARRAY -> toList((ArrayNode) json);
                     case OBJECT -> toMap((ObjectNode) json);
                     case STRING -> json.textValue();
