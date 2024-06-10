@@ -28,9 +28,14 @@ public interface Model {
         deleted,
         type,
         id,
+
         attributes,
         addedattributes,
         removedattributes,
+        name,
+        value,
+        index,
+
         updatedrelationships,
         addedrelationships,
         removedrelationships,

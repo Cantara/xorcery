@@ -168,18 +168,18 @@ public record JsonDomainEvent(ObjectNode json)
             if (value == null || value.isNull() || value.isMissingNode())
                 return this;
 
-            JsonNode attributes = builder.get("addedattributes");
+            JsonNode attributes = builder.get(JsonDomainEventModel.addedattributes.name());
             if (attributes == null) {
                 attributes = builder.arrayNode();
-                builder.set("addedattributes", attributes);
+                builder.set(JsonDomainEventModel.addedattributes.name(), attributes);
             }
 
             ArrayNode arrayNode = (ArrayNode) attributes;
             ObjectNode attributeNode = arrayNode.objectNode()
-                    .<ObjectNode>set("name", arrayNode.textNode(name))
-                    .set("value", value);
+                    .<ObjectNode>set(JsonDomainEventModel.name.name(), arrayNode.textNode(name))
+                    .set(JsonDomainEventModel.value.name(), value);
             if (index >= 0) {
-                attributeNode.set("index", arrayNode.numberNode(index));
+                attributeNode.set(JsonDomainEventModel.index.name(), arrayNode.numberNode(index));
             }
             arrayNode.add(attributeNode);
 
@@ -227,16 +227,16 @@ public record JsonDomainEvent(ObjectNode json)
             if (value == null || value.isNull() || value.isMissingNode())
                 return this;
 
-            JsonNode attributes = builder.get("removedattributes");
+            JsonNode attributes = builder.get(removedattributes.name());
             if (attributes == null) {
                 attributes = builder.arrayNode();
-                builder.set("removedattributes", attributes);
+                builder.set(removedattributes.name(), attributes);
             }
 
             ArrayNode arrayNode = (ArrayNode) attributes;
             ObjectNode attributeNode = arrayNode.objectNode()
-                    .<ObjectNode>set("name", arrayNode.textNode(name))
-                    .set("value", value);
+                    .<ObjectNode>set(JsonDomainEventModel.name.name(), arrayNode.textNode(name))
+                    .set(JsonDomainEventModel.value.name(), value);
             arrayNode.add(attributeNode);
 
             return this;
@@ -408,7 +408,7 @@ public record JsonDomainEvent(ObjectNode json)
     }
 
     public String getName() {
-        return json.path("event").asText();
+        return json.path(event.name()).asText();
     }
 
     public boolean isCreated() {
@@ -468,7 +468,7 @@ public record JsonDomainEvent(ObjectNode json)
         {
             List<NameValue> nameValueList = new ArrayList<>(attrs.size());
             for (JsonNode attr : attrs) {
-                nameValueList.add(new NameValue(attr.path("name").textValue(), attr.get("value")));
+                nameValueList.add(new NameValue(attr.path(name.name()).textValue(), attr.get(value.name())));
             }
             return nameValueList;
         }
@@ -482,7 +482,7 @@ public record JsonDomainEvent(ObjectNode json)
         {
             List<NameValue> nameValueList = new ArrayList<>(attrs.size());
             for (JsonNode attr : attrs) {
-                nameValueList.add(new NameValue(attr.path("name").textValue(), attr.get("value")));
+                nameValueList.add(new NameValue(attr.path(name.name()).textValue(), attr.get(value.name())));
             }
             return nameValueList;
         }
