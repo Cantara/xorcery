@@ -1,0 +1,155 @@
+{
+  "$id": "https://xorcery.exoreaction.com/jsondomainevent/2024-06/schema",
+  "title": "JsonDomainEvent JSON Schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "unevaluatedProperties": false,
+  "required": [
+    "@class",
+    "event"
+  ],
+  "oneOf": [
+    {
+      "required": [
+        "created"
+      ],
+      "properties": {
+        "created": {
+          "$ref": "#/$defs/entity"
+        }
+      }
+    },
+    {
+      "required": [
+        "updated"
+      ],
+      "properties": {
+        "updated": {
+          "$ref": "#/$defs/entity"
+        }
+      }
+    },
+    {
+      "required": [
+        "deleted"
+      ],
+      "properties": {
+        "deleted": {
+          "$ref": "#/$defs/entity"
+        }
+      }
+    }
+  ],
+  "properties": {
+    "@class": {
+      "type": "string",
+      "const": "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent",
+      "description": "Java class to use for deserialization"
+    },
+    "event": {
+      "type": "string",
+      "description": "Name of event"
+    },
+    "attributes": {
+      "$ref": "#/$defs/attributes"
+    },
+    "addedattributes": {
+      "$ref": "#/$defs/attributelist"
+    },
+    "removedattributes": {
+      "$ref": "#/$defs/attributelist"
+    },
+    "addedrelationships": {
+      "$ref": "#/$defs/relationships"
+    },
+    "updatedrelationships": {
+      "$ref": "#/$defs/relationships"
+    },
+    "removedrelationships": {
+      "$ref": "#/$defs/removedrelationships"
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "entity": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "attributes": {
+      "type": "object"
+    },
+    "attributelist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {},
+          "index": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "relationship"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "removedrelationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "relationship"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "relationship": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
