@@ -30,6 +30,10 @@ class ObjectReaderStreamer<T>
 
     public void request(long request) {
         try {
+
+            if (request == 0)
+                return;
+
             JsonToken token = null;
             while (request-- > 0 && (token = parser.nextToken()) != null && !token.isStructEnd()) {
                 //                    System.out.println(token);
