@@ -47,7 +47,7 @@
         <aws.java.sdk.version>2.26.10</aws.java.sdk.version>
         <netty.version>4.1.111.Final</netty.version>
 
-        <junit.version>5.10.2</junit.version>
+        <junit.version>5.10.3</junit.version>
         <junit.platform.version>1.10.2</junit.platform.version>
     </properties>
 
@@ -958,7 +958,7 @@
                         <consoleOutputReporter>
                             <disable>true</disable>
                         </consoleOutputReporter>
-                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter" />
+                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter"/>
                     </configuration>
                 </plugin>
                 <plugin>
