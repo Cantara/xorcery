@@ -40,6 +40,7 @@ import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
 import reactor.util.retry.Retry;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -362,15 +363,16 @@ public class PublishWithResultSubscriberWebSocketTest {
                     }
                 };
 
+                URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers/bar?param1=value1");
                 String config = Flux.from(configPublisher)
                         .transform(websocketStreamsClientClient.publishWithResult(instance(), String.class, String.class))
                         .contextWrite(Context.of(
-                                ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers/bar?param1=value1"),
+                                ClientWebSocketStreamContext.serverUri.name(), serverUri,
                                 "client", "abc"))
                         .take(1).blockFirst();
 
                 // Then
-                Assertions.assertEquals("[server=123, foo=bar, client=abc, param1=value1]", config);
+                Assertions.assertEquals(String.format("[server=123, serverUri=%s, foo=bar, client=abc, param1=value1]",serverUri.toASCIIString()), config);
             }
         }
     }

@@ -39,6 +39,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
 
+import java.net.URI;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -327,16 +328,17 @@ public class SubscribePublisherWebSocketTest {
                         String.class,
                         configPublisher);
 
+                URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers/bar?param1=value1");
                 String config = websocketStreamsClientClient.subscribe(
                                 ClientWebSocketOptions.instance(), String.class, MediaType.APPLICATION_JSON
                         )
                         .contextWrite(Context.of(
-                                ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers/bar?param1=value1"),
+                                ClientWebSocketStreamContext.serverUri.name(), serverUri,
                                 "client", "abc"))
                         .take(1).blockFirst();
 
                 // Then
-                Assertions.assertEquals("[foo=bar, client=abc, param1=value1]", config);
+                Assertions.assertEquals(String.format("[serverUri=%s, foo=bar, client=abc, param1=value1]",serverUri.toASCIIString()), config);
             }
         }
     }
