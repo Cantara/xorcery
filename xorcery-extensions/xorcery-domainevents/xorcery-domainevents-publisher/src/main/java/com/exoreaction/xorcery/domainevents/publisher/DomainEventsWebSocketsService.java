@@ -88,7 +88,6 @@ public class DomainEventsWebSocketsService
         });
 
         subscribeDisposable = projections
-                .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(3)).maxBackoff(Duration.ofSeconds(30)))
                 .doOnNext(metadata -> requestQueue.remove().complete(metadata))
                 .doOnError(throwable ->
                 {
@@ -103,6 +102,7 @@ public class DomainEventsWebSocketsService
                     }
                 })
                 .doOnComplete(completeLatch::countDown)
+                .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(3)).maxBackoff(Duration.ofSeconds(30)))
                 .subscribe();
     }
 
