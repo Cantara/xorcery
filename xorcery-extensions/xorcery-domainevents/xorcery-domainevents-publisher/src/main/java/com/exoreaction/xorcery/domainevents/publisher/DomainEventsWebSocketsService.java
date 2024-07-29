@@ -101,20 +101,20 @@ public class DomainEventsWebSocketsService
                         future.completeExceptionally(new ServerShutdownStreamException(1001, "Shutting down"));
                     }
                 })
-                .doOnComplete(completeLatch::countDown)
                 .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(3)).maxBackoff(Duration.ofSeconds(30)))
+                .doOnCancel(completeLatch::countDown)
                 .subscribe();
     }
 
     @Override
     public void preDestroy() {
         sink.tryEmitComplete();
+        subscribeDisposable.dispose();
         try {
             completeLatch.await(1, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             // Ignore
         }
-        subscribeDisposable.dispose();
     }
 
     public CompletableFuture<Metadata> publish(MetadataEvents metadataEvents) {
