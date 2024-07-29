@@ -150,6 +150,12 @@ public final class Xorcery
             runLevelController.proceedTo(-1);
             serviceLocator.shutdown();
             logger.info(marker, "Stopped");
+
+            // Notify anyone waiting for this instance to close
+            synchronized (this)
+            {
+                this.notifyAll();
+            }
         }
     }
 
