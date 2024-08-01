@@ -12,20 +12,16 @@ import org.neo4j.procedure.UserFunction;
 public class TransactionContextExtensions
     implements Neo4jProvider
 {
-
     @Context
     public Transaction transaction;
 
-    @Context
-    public ServiceLocator serviceLocator;
-
     @Procedure("transaction.context")
     public void setTransactionContext(@Name("name") String name, @Name("value") Object value) {
-        serviceLocator.getService(TransactionContext.class).setTransactionContext(transaction, name, value);
+        TransactionContext.setTransactionContext(transaction, name, value);
     }
 
     @UserFunction("transaction.context")
     public Object getTransactionContext(@Name("name") String name) {
-        return serviceLocator.getService(TransactionContext.class).getTransactionContext(transaction, name).orElse(null);
+        return TransactionContext.getTransactionContext(transaction, name).orElse(null);
     }
 }
