@@ -26,7 +26,7 @@ defaults:
 
 hk2:
   threadPolicy: "FULLY_THREADED"
-  threadCount: 5
+  threadCount: 1
   runLevel: 20
   immediateScope:
     enabled: true

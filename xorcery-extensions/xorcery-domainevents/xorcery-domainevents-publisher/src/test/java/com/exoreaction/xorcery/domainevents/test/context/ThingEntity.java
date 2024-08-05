@@ -13,16 +13,16 @@ public class ThingEntity
 
     public void handle(CreateThing command)
     {
-        event(createdThing(command.id(), command.foo()).build());
+        add(createdThing(command.id(), command.foo()).build());
     }
 
     public void handle(UpdateThing command)
     {
-        event(updatedThing(command.id(), command.foo()).build());
+        add(updatedThing(command.id(), command.foo()).build());
     }
 
     public void handle(DeleteThing command)
     {
-        event(deletedThing(command.id()));
+        add(deletedThing(command.id()));
     }
 }

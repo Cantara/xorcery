@@ -21,7 +21,7 @@
 
     <groupId>com.exoreaction.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.124.1-SNAPSHOT</version>
+    <version>0.124.5-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -41,14 +41,14 @@
         <hk2.version>3.1.0</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
-        <jackson.version>2.17.1</jackson.version>
+        <jackson.version>2.17.2</jackson.version>
         <asm.version>9.7</asm.version>
         <projectreactor.version>2023.0.7</projectreactor.version>
         <aws.java.sdk.version>2.26.10</aws.java.sdk.version>
         <netty.version>4.1.111.Final</netty.version>
 
         <junit.version>5.10.3</junit.version>
-        <junit.platform.version>1.10.2</junit.platform.version>
+        <junit.platform.version>1.10.3</junit.platform.version>
     </properties>
 
     <developers>
@@ -733,7 +733,7 @@
             <dependency>
                 <groupId>dnsjava</groupId>
                 <artifactId>dnsjava</artifactId>
-                <version>3.5.3</version>
+                <version>3.6.0</version>
             </dependency>
             <dependency>
                 <groupId>org.jmdns</groupId>

@@ -27,10 +27,10 @@ class TransactionContextTest {
             .build();
 
     @Test
-    public void givenTransactionContextWhenGetTransactionContextThenTransactionContextIsReturned(GraphDatabase graphDatabase, TransactionContext transactionContext) throws Exception {
+    public void givenTransactionContextWhenGetTransactionContextThenTransactionContextIsReturned(GraphDatabase graphDatabase) throws Exception {
 
         try (Transaction tx = graphDatabase.getGraphDatabaseService().beginTx()) {
-            transactionContext.setTransactionContext(tx, "foo", "bar1");
+            TransactionContext.setTransactionContext(tx, "foo", "bar1");
 
             try (Result graphResult = tx.execute("""
                     UNWIND transaction.context("foo") as foo RETURN foo

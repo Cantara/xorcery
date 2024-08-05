@@ -164,7 +164,6 @@ public class ClientWebSocketStreamsService
     }
 
     public void preDestroy() {
-        System.out.println("Stopping "+getClass().getName());
         try {
             webSocketClient.stop();
             webSocketClient.getHttpClient().stop();

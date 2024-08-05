@@ -32,4 +32,7 @@ module xorcery.thymeleaf.jsonapi {
     requires jakarta.inject;
     requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;
+
+    opens templates.jsonapi;
+    opens templates.jsonapi.fragment;
 }

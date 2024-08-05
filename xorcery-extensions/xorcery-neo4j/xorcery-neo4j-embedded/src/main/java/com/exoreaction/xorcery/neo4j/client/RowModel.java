@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.neo4j.graphdb.Result;
 
+import java.util.Collection;
 import java.util.function.Function;
 
 public record RowModel(Result.ResultRow row) {
@@ -37,11 +38,14 @@ public record RowModel(Result.ResultRow row) {
         return new NodeModel(row.getNode(name.name()));
     }
 
-    public <T> T toModel(Function<ObjectNode, T> creator, Enum<?>... fields) {
-        ObjectNode json = JsonNodeFactory.instance.objectNode();
-        for (Enum<?> enumConstant : fields) {
-            json.set(Enums.toField(enumConstant), this.getJsonNode(Enums.toField(enumConstant)));
-        }
-        return creator.apply(json);
+    public static <T> Function<RowModel, T> toModel(Function<ObjectNode, T> creator, Collection<Enum<?>> fields) {
+        return rowModel ->
+        {
+            ObjectNode json = JsonNodeFactory.instance.objectNode();
+            for (Enum<?> enumConstant : fields) {
+                json.set(Enums.toField(enumConstant), rowModel.getJsonNode(Enums.toField(enumConstant)));
+            }
+            return creator.apply(json);
+        };
     }
 }

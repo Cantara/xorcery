@@ -438,8 +438,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             }
             if (error == null) {
                 sendRequests(COMPLETE);
-            } else if (session.isOpen())
-            {
+            } else if (session.isOpen()) {
                 hookOnError(error);
             }
         }
@@ -512,6 +511,10 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 contextJson.set(k.toString(), contextJson.numberNode(nr));
             } else if (v instanceof Boolean bool) {
                 contextJson.set(k.toString(), contextJson.booleanNode(bool));
+            } else if (v instanceof JsonNode jsonNode) {
+                contextJson.set(k.toString(), jsonNode);
+            } else {
+                contextJson.set(k.toString(), jsonMapper.valueToTree(v));
             }
         });
 

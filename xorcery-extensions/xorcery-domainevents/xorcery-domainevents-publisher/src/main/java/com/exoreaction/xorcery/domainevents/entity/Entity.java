@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 public abstract class Entity<SNAPSHOT> {
 
@@ -78,7 +77,7 @@ public abstract class Entity<SNAPSHOT> {
         return CompletableFuture.completedFuture(new CommandResult<>(command, events, metadata.context()));
     }
 
-    protected void event(DomainEvent event) {
+    protected void add(DomainEvent event) {
         if (event != null) {
             events.add(event);
         }

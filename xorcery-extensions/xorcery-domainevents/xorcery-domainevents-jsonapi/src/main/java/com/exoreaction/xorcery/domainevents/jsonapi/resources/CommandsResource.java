@@ -173,7 +173,7 @@ public interface CommandsResource
                             .ifPresent(id -> commandResult.metadata().metadata().set("aggregateId", commandResult.metadata().metadata().textNode(id)));
                     return commandResult;
                 })
-                .thenCompose(md -> ok(md, command))
+                .thenCompose(commandResult -> ok(commandResult))
                 .exceptionallyCompose(throwable ->
                 {
                     while (throwable.getCause() != null) {
@@ -195,7 +195,7 @@ public interface CommandsResource
 
     CompletionStage<ResourceDocument> get(String rel);
 
-    default <T extends Command> CompletionStage<Response> ok(CommandResult<T> commandResult, T command) {
+    default <T extends Command> CompletionStage<Response> ok(CommandResult<T> commandResult) {
         return get(null).thenApply(rd -> Response.ok(rd).build());
     }
 

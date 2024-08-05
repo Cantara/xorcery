@@ -52,24 +52,16 @@ public class Main
     public Integer call() throws Exception {
         Configuration configuration = loadConfiguration();
 
-        xorcery = new Xorcery(configuration);
-
+        Xorcery xorcery = new Xorcery(configuration);
+        this.xorcery = xorcery;
+        Logger mainLogger = LogManager.getLogger(Main.class);
         Runtime.getRuntime().addShutdownHook(new Thread(() ->
         {
-            Logger mainLogger = LogManager.getLogger(Main.class);
             mainLogger.info("Shutting down");
             try {
                 xorcery.close();
             } catch (Exception e) {
                 mainLogger.warn("Error during shutdown", e);
-            }
-            mainLogger.info("Shutdown");
-
-            LogManager.shutdown();
-
-            synchronized (xorcery)
-            {
-                xorcery.notifyAll();
             }
         }));
 
@@ -77,6 +69,8 @@ public class Main
         {
             xorcery.wait();
         }
+        mainLogger.info("Shutdown");
+        LogManager.shutdown();
 
         return 0;
     }

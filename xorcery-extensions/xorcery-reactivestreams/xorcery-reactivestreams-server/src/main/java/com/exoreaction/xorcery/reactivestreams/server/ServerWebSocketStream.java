@@ -46,6 +46,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
@@ -365,6 +366,10 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                         case BOOLEAN -> contextMap.put(property.getKey(), value.asBoolean());
                         case NUMBER ->
                                 contextMap.put(property.getKey(), value.isIntegralNumber() ? value.asLong() : value.asDouble());
+                        case OBJECT ->
+                            contextMap.put(property.getKey(), jsonMapper.treeToValue(value, Map.class));
+                        case ARRAY ->
+                            contextMap.put(property.getKey(), jsonMapper.treeToValue(value, List.class));
                     }
                 }
 
