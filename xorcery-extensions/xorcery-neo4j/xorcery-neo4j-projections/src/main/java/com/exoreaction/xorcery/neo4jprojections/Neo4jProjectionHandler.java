@@ -178,12 +178,13 @@ public class Neo4jProjectionHandler
             int committed = 0;
             Iterator<MetadataEvents> metadataEventsIterator = events.iterator();
             Transaction tx = database.beginTx();
+            MetadataEvents metadataEvents = null;
             while (true) {
                 try {
                     int eventCount = 0;
                     long startProjection = System.nanoTime();
                     while (metadataEventsIterator.hasNext()) {
-                        MetadataEvents metadataEvents = metadataEventsIterator.next();
+                        metadataEvents = metadataEventsIterator.next();
 
                         if (maxEvents == 1 && eventsSize > maxEvents)
                         {
@@ -276,7 +277,17 @@ public class Neo4jProjectionHandler
                         metadataEventsIterator.next();
                     }
                 } catch (Throwable e) {
-                    sink.error(e);
+                    long position = -1;
+                    if (metadataEvents != null)
+                    {
+                        position = ((Number) metadataEvents
+                                .metadata()
+                                .getLong(DomainEventMetadata.streamPosition)
+                                .orElse(position + eventsSize))
+                                .longValue();
+                    }
+
+                    sink.error(new IllegalArgumentException("Could not handle event at stream position: "+position, e));
                     return;
                 }
             }
