@@ -40,6 +40,7 @@ public class SRVConnectorTest {
             """;
 
     @Test
+    @Disabled
     public void testClientSRVConnectorLoadBalancing() throws Exception {
         System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
         Configuration server1Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""                        

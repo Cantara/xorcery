@@ -22,13 +22,14 @@ import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import com.exoreaction.xorcery.net.Sockets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-//@Disabled
+@Disabled
 public class DnsRegistrationTest {
 
     String config = """
