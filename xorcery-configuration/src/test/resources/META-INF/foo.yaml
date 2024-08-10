@@ -1,0 +1,28 @@
+#Translations
+title:
+  en: "Title"
+  sv: "Titel"
+  no: "{{ title.sv }}"
+
+color:
+  en:
+    default: "Color"
+    GB: "Colour"
+  sv: "Farg"
+
+# Country specific
+dateFormat:
+  default: "yyyy-MM-dd"
+  GB: "dd/MM/yyyy"
+  US: "MM-dd-yyyy"
+
+# General purpose configuration
+setting: 5
+complexsetting:
+  abc:
+    foo: 3
+    bar: "test"
+    list:
+      - item1
+      - item2
+      - item3

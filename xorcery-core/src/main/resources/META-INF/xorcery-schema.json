@@ -134,8 +134,8 @@
         },
         "threadCount" : {
           "type" : [ "number", "string" ],
-          "default" : 5,
-          "description" : "Default: 5"
+          "default" : 1,
+          "description" : "Default: 1"
         },
         "runLevel" : {
           "type" : [ "number", "string" ],

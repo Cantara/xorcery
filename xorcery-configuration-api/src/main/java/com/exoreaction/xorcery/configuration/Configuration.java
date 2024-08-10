@@ -136,12 +136,14 @@ public record Configuration(ObjectNode json)
 
     public Configuration getConfiguration(String name) {
         return getJson(name)
+                .filter(ObjectNode.class::isInstance)
                 .map(ObjectNode.class::cast).map(Configuration::new)
                 .orElseGet(() -> new Configuration(JsonNodeFactory.instance.objectNode()));
     }
 
     public List<Configuration> getConfigurations(String name) {
         return getJson(name)
+                .filter(ArrayNode.class::isInstance)
                 .map(ArrayNode.class::cast)
                 .map(a -> JsonElement.getValuesAs(a, Configuration::new))
                 .orElseGet(Collections::emptyList);

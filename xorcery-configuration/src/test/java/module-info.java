@@ -16,4 +16,6 @@
 open module xorcery.config.test {
     requires xorcery.configuration;
     requires org.junit.jupiter.api;
+
+    uses com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
 }

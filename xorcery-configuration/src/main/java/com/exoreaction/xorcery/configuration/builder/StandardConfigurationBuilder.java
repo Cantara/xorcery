@@ -35,14 +35,21 @@ public class StandardConfigurationBuilder {
 
     private static final YAMLMapper yamlMapper = new YAMLMapper();
     private static final JavaPropsMapper javaPropsMapper = new JavaPropsMapper();
+    
+    private String baseName;
+    
+    public StandardConfigurationBuilder(String baseName) {
+        this.baseName = baseName;
+    }
 
     public StandardConfigurationBuilder() {
+        this("xorcery");
     }
 
     public void addDefaults(Configuration.Builder builder)
             throws UncheckedIOException {
 
-        addXorceryDefaults(builder);
+        addDefault(builder);
         addModules(builder);
         addModuleOverrides(builder);
         addApplication(builder);
@@ -58,7 +65,7 @@ public class StandardConfigurationBuilder {
             throws UncheckedIOException {
 
         // First add the standard configuration
-        addXorceryDefaults(builder);
+        addDefault(builder);
         addModules(builder);
         addModuleOverrides(builder);
         addApplication(builder);
@@ -90,9 +97,9 @@ public class StandardConfigurationBuilder {
         }
     }
 
-    public void addXorceryDefaults(Configuration.Builder builder) throws UncheckedIOException {
-        // Load Xorcery defaults
-        Resources.getResource("META-INF/xorcery-defaults.yaml").ifPresent(resource ->
+    public void addDefault(Configuration.Builder builder) throws UncheckedIOException {
+        // Load default
+        Resources.getResource("META-INF/"+baseName+"-defaults.yaml").ifPresent(resource ->
                 {
                     try (InputStream in = resource.openStream()) {
                         addYaml(in).accept(builder);
@@ -105,7 +112,7 @@ public class StandardConfigurationBuilder {
 
     public void addModules(Configuration.Builder builder) throws UncheckedIOException {
         // Load modules
-        for (URL resource : Resources.getResources("META-INF/xorcery.yaml")) {
+        for (URL resource : Resources.getResources("META-INF/"+baseName+".yaml")) {
             try (InputStream configurationStream = resource.openStream()) {
                 addYaml(configurationStream).accept(builder);
                 logger.log("Loaded " + resource);
@@ -119,7 +126,7 @@ public class StandardConfigurationBuilder {
 
     public void addModuleOverrides(Configuration.Builder builder) throws UncheckedIOException {
         // Load module overrides, to allow modules to change defaults from other modules
-        for (URL resource : Resources.getResources("META-INF/xorcery-override.yaml")) {
+        for (URL resource : Resources.getResources("META-INF/"+baseName+"-override.yaml")) {
             try (InputStream configurationStream = resource.openStream()) {
                 addYaml(configurationStream).accept(builder);
                 logger.log("Loaded " + resource);
@@ -134,7 +141,7 @@ public class StandardConfigurationBuilder {
     public void addModulesTest(Configuration.Builder builder) throws UncheckedIOException {
         // Load extensions
         try {
-            for (URL resource : Resources.getResources("META-INF/xorcery-test.yaml")) {
+            for (URL resource : Resources.getResources("META-INF/"+baseName+"-test.yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     addYaml(configurationStream).accept(builder);
                     logger.log("Loaded " + resource);
@@ -148,7 +155,7 @@ public class StandardConfigurationBuilder {
     public void addApplication(Configuration.Builder builder) throws UncheckedIOException {
         // Load application config file
         try {
-            for (URL resource : Resources.getResources("xorcery.yaml")) {
+            for (URL resource : Resources.getResources(baseName+".yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     addYaml(configurationStream).accept(builder);
                     logger.log("Loaded " + resource);
@@ -162,7 +169,7 @@ public class StandardConfigurationBuilder {
     public void addApplicationTest(Configuration.Builder builder) throws UncheckedIOException {
         // Load application config file
         try {
-            for (URL resource : Resources.getResources("xorcery-test.yaml")) {
+            for (URL resource : Resources.getResources(baseName+"-test.yaml")) {
                 try (InputStream configurationStream = resource.openStream()) {
                     addYaml(configurationStream).accept(builder);
                     logger.log("Loaded " + resource);
@@ -176,7 +183,7 @@ public class StandardConfigurationBuilder {
     public void addHome(Configuration.Builder builder) throws UncheckedIOException {
         // Load user home overrides
         try {
-            File userYamlFile = new File(System.getProperty("user.home"), ".xorcery/xorcery.yaml");
+            File userYamlFile = new File(System.getProperty("user.home"), ".xorcery/"+baseName+".yaml");
             if (userYamlFile.exists()) {
                 FileInputStream userYamlStream = new FileInputStream(userYamlFile);
                 addYaml(userYamlStream).accept(builder);
@@ -190,7 +197,7 @@ public class StandardConfigurationBuilder {
     public void addUserDirectory(Configuration.Builder builder) throws UncheckedIOException {
         // Load user directory overrides
         try {
-            File overridesYamlFile = new File(System.getProperty("user.dir"), "xorcery.yaml");
+            File overridesYamlFile = new File(System.getProperty("user.dir"), baseName+".yaml");
             if (overridesYamlFile.exists()) {
                 FileInputStream overridesYamlStream = new FileInputStream(overridesYamlFile);
                 addYaml(overridesYamlStream).accept(builder);
@@ -224,8 +231,8 @@ public class StandardConfigurationBuilder {
     }
 
     public void addXorceryTestDefaults(Configuration.Builder builder) throws UncheckedIOException {
-        // Load Xorcery defaults
-        Resources.getResource("META-INF/xorcery-defaults-test.yaml").ifPresent(resource ->
+        // Load test defaults
+        Resources.getResource("META-INF/"+baseName+"-defaults-test.yaml").ifPresent(resource ->
         {
             try (InputStream in = resource.openStream()) {
                 addYaml(in).accept(builder);

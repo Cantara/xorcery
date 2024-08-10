@@ -1,3 +1,6 @@
+import com.exoreaction.xorcery.configuration.providers.ConfigurationResourceBundlesProvider;
+import com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
+
 /*
  * Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
  *
@@ -32,4 +35,7 @@ module xorcery.configuration {
             com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigurationProvider,
             com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider,
             com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider;
+
+    provides ResourceBundlesProvider
+            with ConfigurationResourceBundlesProvider;
 }

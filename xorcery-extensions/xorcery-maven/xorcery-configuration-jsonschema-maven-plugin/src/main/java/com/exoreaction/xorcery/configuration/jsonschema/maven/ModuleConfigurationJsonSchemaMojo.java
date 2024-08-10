@@ -63,7 +63,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 try (URLClassLoader dependenciesClassLoader = new URLClassLoader(dependencyJarURLs.toArray(new URL[0]), getClass().getClassLoader()))
                 {
                     Thread.currentThread().setContextClassLoader(dependenciesClassLoader);
-                    standardConfigurationBuilder.addXorceryDefaults(moduleWithDependenciesBuilder);
+                    standardConfigurationBuilder.addDefault(moduleWithDependenciesBuilder);
                     standardConfigurationBuilder.addModules(moduleWithDependenciesBuilder);
                     standardConfigurationBuilder.addModuleOverrides(moduleWithDependenciesBuilder);
                     standardConfigurationBuilder.addApplication(moduleWithDependenciesBuilder);

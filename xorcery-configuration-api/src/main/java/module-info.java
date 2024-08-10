@@ -15,6 +15,8 @@
  */
 module xorcery.configuration.api {
     exports com.exoreaction.xorcery.configuration;
+    exports com.exoreaction.xorcery.configuration.resourcebundle;
+    exports com.exoreaction.xorcery.configuration.resourcebundle.spi;
 
     requires transitive xorcery.json;
     requires transitive xorcery.util;
