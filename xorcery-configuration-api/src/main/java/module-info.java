@@ -22,4 +22,6 @@ module xorcery.configuration.api {
     requires transitive xorcery.util;
     requires transitive com.fasterxml.jackson.dataformat.yaml;
     requires transitive org.yaml.snakeyaml;
+
+    uses com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
 }
