@@ -18,7 +18,7 @@ version: "3.9"
 
 services:
   xorcery-bind9:
-    image: docker.io/internetsystemsconsortium/bind9:9.19
+    image: docker.io/internetsystemsconsortium/bind9:9.20
     ports:
       - "53:53/udp"
       - "53:53/tcp"
