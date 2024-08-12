@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-opensearch</artifactId>
-        <version>0.126.2</version>
+        <version>0.126.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-opensearch-client</artifactId>
