@@ -16,7 +16,7 @@ import com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesP
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module xorcery.configuration {
+open module xorcery.configuration {
     uses com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
     exports com.exoreaction.xorcery.configuration.builder;
     exports com.exoreaction.xorcery.configuration.providers;

@@ -19,13 +19,15 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 
 public record Neo4jProjectionsConfiguration(Configuration context)
-    implements ServiceConfiguration
-{
+        implements ServiceConfiguration {
     /**
      * Max size of batched MetadataEvents to apply before committing and starting a new transaction.
      */
-    public int eventBatchSize()
-    {
+    public int eventBatchSize() {
         return context.getInteger("eventBatchSize").orElse(1024);
+    }
+
+    public int getMaxThreadCount() {
+        return context.getInteger("maxThreadCount").orElse(-1);
     }
 }

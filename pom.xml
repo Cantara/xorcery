@@ -558,12 +558,18 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>neo4j-shaded</artifactId>
-                <version>5.18.1.0</version>
+                <version>5.22.0.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.scala-lang</groupId>
+                        <artifactId>scala-library</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.neo4j.client</groupId>
                 <artifactId>neo4j-browser</artifactId>
-                <version>5.15.0</version>
+                <version>5.21.0</version>
             </dependency>
 
             <!-- CLI -->

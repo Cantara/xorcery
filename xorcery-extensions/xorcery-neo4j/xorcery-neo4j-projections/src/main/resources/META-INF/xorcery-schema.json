@@ -21,6 +21,11 @@
           "type" : [ "number", "string" ],
           "default" : 1024,
           "description" : "Default: 1024"
+        },
+        "maxThreadCount" : {
+          "type" : [ "number", "string" ],
+          "default" : -1,
+          "description" : "Default: -1"
         }
       }
     }

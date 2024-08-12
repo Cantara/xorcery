@@ -27,7 +27,6 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.HttpHeaders;
-import org.apache.shiro.codec.Base64;
 import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
@@ -35,6 +34,7 @@ import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.interfaces.ECKey;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 
@@ -65,7 +65,7 @@ public class JwtAuthenticationTest {
         g.initialize(256);
         KeyPair keyPair = g.generateKeyPair();
 
-        String publicKey = Base64.encodeToString(keyPair.getPublic().getEncoded());
+        String publicKey = Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded());
         String keyId = UUID.randomUUID().toString();
         System.setProperty("kid", keyId);
         System.setProperty("key", publicKey);

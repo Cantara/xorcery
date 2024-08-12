@@ -32,4 +32,5 @@ module xorcery.test {
     requires xorcery.jaxrs.server;
     requires xorcery.reactivestreams.disruptor;
     requires xorcery.util;
+    requires xorcery.configuration;
 }

@@ -28,6 +28,7 @@ import org.neo4j.memory.MemoryLimitExceededException;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
@@ -95,8 +96,15 @@ public class Neo4jProjectionHandler
             projectionProviders.forEach(projections::add);
             Handler handler = new Handler(projections, projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
             ArrayBlockingQueue<MetadataEvents> smartBatchingQueue = new ArrayBlockingQueue<>(projectionsConfiguration.eventBatchSize());
+            int maxThreadCount = projectionsConfiguration.getMaxThreadCount();
+            Scheduler scheduler = maxThreadCount == -1
+                    ? Schedulers.boundedElastic()
+                    :
+                    maxThreadCount == 1
+                            ? Schedulers.single()
+                            : Schedulers.newBoundedElastic(maxThreadCount, 1024, "Neo4j Projection");
             return Flux.from(currentProjection
-                    .map(p -> SmartBatchingOperator.smartBatching(handler, () -> smartBatchingQueue, () -> taskWrapping(Schedulers.boundedElastic()::schedule))
+                    .map(p -> SmartBatchingOperator.smartBatching(handler, () -> smartBatchingQueue, () -> taskWrapping(scheduler::schedule))
                             .apply(p.getProjectionPosition()
                                             .map(pos ->
                                             {
@@ -186,8 +194,7 @@ public class Neo4jProjectionHandler
                     while (metadataEventsIterator.hasNext()) {
                         metadataEvents = metadataEventsIterator.next();
 
-                        if (maxEvents == 1 && eventsSize > maxEvents)
-                        {
+                        if (maxEvents == 1 && eventsSize > maxEvents) {
                             logger.debug("Handling a single problematic event", metadataEvents);
                         }
                         metadataEvents.metadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
@@ -235,40 +242,34 @@ public class Neo4jProjectionHandler
                             if (logger.isTraceEnabled())
                                 logger.trace("Committed " + eventsSize);
 
-                            if (metadataEventsIterator.hasNext())
-                            {
+                            if (metadataEventsIterator.hasNext()) {
                                 committed += eventCount;
-                                if (maxEvents < eventsSize - committed)
-                                {
+                                if (maxEvents < eventsSize - committed) {
                                     logger.info("Resized batch complete");
                                     maxEvents = eventsSize - committed;
                                 }
                                 tx = database.beginTx();
-                            } else
-                            {
+                            } else {
                                 tx = null;
                             }
                         }
                     }
-                    if (tx != null)
-                    {
+                    if (tx != null) {
                         tx.close();
                     }
                     break;
-                } catch (MemoryLimitExceededException |TransientTransactionFailureException e) {
+                } catch (MemoryLimitExceededException | TransientTransactionFailureException e) {
                     tx.rollback();
                     tx.close();
 
                     maxEvents /= 2;
 
-                    if (maxEvents == 0)
-                    {
+                    if (maxEvents == 0) {
                         logger.error("Transaction too large even with just one event, stopping projection");
                         sink.error(e);
                         return;
-                    } else
-                    {
-                        logger.warn("Transaction too large, trying again with smaller batch size:"+maxEvents);
+                    } else {
+                        logger.warn("Transaction too large, trying again with smaller batch size:" + maxEvents);
                         tx = database.beginTx();
                     }
                     metadataEventsIterator = events.iterator();
@@ -278,8 +279,7 @@ public class Neo4jProjectionHandler
                     }
                 } catch (Throwable e) {
                     long position = -1;
-                    if (metadataEvents != null)
-                    {
+                    if (metadataEvents != null) {
                         position = ((Number) metadataEvents
                                 .metadata()
                                 .getLong(DomainEventMetadata.streamPosition)
@@ -287,7 +287,7 @@ public class Neo4jProjectionHandler
                                 .longValue();
                     }
 
-                    sink.error(new IllegalArgumentException("Could not handle event at stream position: "+position, e));
+                    sink.error(new IllegalArgumentException("Could not handle event at stream position: " + position, e));
                     return;
                 }
             }

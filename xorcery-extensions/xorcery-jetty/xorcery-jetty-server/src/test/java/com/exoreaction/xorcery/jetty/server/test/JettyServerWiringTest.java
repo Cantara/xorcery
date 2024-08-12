@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.jetty.server;
+package com.exoreaction.xorcery.jetty.server.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;

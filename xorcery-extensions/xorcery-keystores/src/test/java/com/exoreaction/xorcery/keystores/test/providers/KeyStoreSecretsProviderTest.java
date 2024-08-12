@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.keystores.providers;
+package com.exoreaction.xorcery.keystores.test.providers;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
