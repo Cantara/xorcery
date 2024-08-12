@@ -1,7 +1,9 @@
 package com.exoreaction.xorcery.reactivestreams.api.client;
 
 import org.reactivestreams.Publisher;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.util.context.ContextView;
 
 import java.net.URI;
 import java.util.Collection;
@@ -54,4 +56,38 @@ public interface ClientWebSocketStreams {
             Class<? super SUBSCRIBE> subscribeType,
             String... subscribeContentTypes
     );
+
+    <SUBSCRIBE, RESULT> Disposable subscribeWithResult(
+            ClientWebSocketOptions options,
+            Class<? super SUBSCRIBE> subscribeType,
+            Class<? super RESULT> resultType,
+            Collection<String> subscribeContentTypes,
+            Collection<String> resultContentTypes,
+            ContextView context,
+            Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeWithResultTransform)
+            throws IllegalArgumentException;
+
+    default <SUBSCRIBE, RESULT> Disposable subscribeWithResult(
+            ClientWebSocketOptions options,
+            Class<? super SUBSCRIBE> subscribeType,
+            Class<? super RESULT> resultType,
+            String subscribeContentType,
+            String resultContentType,
+            ContextView context,
+            Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeWithResultTransform)
+            throws IllegalArgumentException
+    {
+        return subscribeWithResult(options, subscribeType, resultType, List.of(subscribeContentType), List.of(resultContentType), context, subscribeWithResultTransform);
+    }
+
+    default <SUBSCRIBE, RESULT> Disposable subscribeWithResult(
+            ClientWebSocketOptions options,
+            Class<? super SUBSCRIBE> subscribeType,
+            Class<? super RESULT> resultType,
+            ContextView context,
+            Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeWithResultTransform)
+            throws IllegalArgumentException
+    {
+        return subscribeWithResult(options, subscribeType, resultType, Collections.emptyList(), Collections.emptyList(), context, subscribeWithResultTransform);
+    }
 }

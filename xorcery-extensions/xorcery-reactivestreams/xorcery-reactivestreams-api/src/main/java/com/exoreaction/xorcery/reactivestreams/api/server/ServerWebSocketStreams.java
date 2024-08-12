@@ -13,6 +13,13 @@ public interface ServerWebSocketStreams {
             Publisher<PUBLISH> publisher)
             throws IllegalArgumentException;
 
+    <PUBLISH, RESULT> Disposable publisherWithResult(
+            String path,
+            Class<? super PUBLISH> publishType,
+            Class<? super RESULT> resultType,
+            Function<Flux<RESULT>, Publisher<PUBLISH>> publisherWithResultTransform)
+            throws IllegalArgumentException;
+
     <SUBSCRIBE> Disposable subscriber(
             String path,
             Class<? super SUBSCRIBE> subscribeType,

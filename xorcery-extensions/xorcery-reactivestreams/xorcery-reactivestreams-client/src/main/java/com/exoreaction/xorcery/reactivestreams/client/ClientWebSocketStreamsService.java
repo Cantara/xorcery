@@ -22,7 +22,9 @@ import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Publisher;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 import reactor.util.context.ContextView;
 
 import java.net.URI;
@@ -112,7 +114,7 @@ public class ClientWebSocketStreamsService
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
         }
         Collection<String> availableResultContentTypes = messageWorkers.getAvailableReadContentTypes(resultType, resultContentTypes);
-        if (availableContentTypes.isEmpty()) {
+        if (availableResultContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
         }
         return flux -> Flux.create(sink -> new ClientWebSocketStream<>(
@@ -161,6 +163,55 @@ public class ClientWebSocketStreamsService
                         tracer,
                         textMapPropagator,
                         loggerContext.getLogger(ClientWebSocketStream.class)));
+    }
+
+    @Override
+    public <SUBSCRIBE, RESULT> Disposable subscribeWithResult(
+            ClientWebSocketOptions options,
+            Class<? super SUBSCRIBE> subscribeType, Class<? super RESULT> resultType,
+            Collection<String> subscribeContentTypes, Collection<String> resultContentTypes,
+            ContextView context,
+            Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeWithResultTransform)
+            throws IllegalArgumentException {
+        Collection<String> availableContentTypes = messageWorkers.getAvailableWriteContentTypes(subscribeType, subscribeContentTypes);
+        if (availableContentTypes.isEmpty()) {
+            throw new IllegalArgumentException("No MessageWriter implementation for given subscribed type and content types");
+        }
+        Collection<String> availableResultContentTypes = messageWorkers.getAvailableReadContentTypes(resultType, resultContentTypes);
+        if (availableResultContentTypes.isEmpty()) {
+            throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
+        }
+
+        Sinks.Many<SUBSCRIBE> manySink = Sinks.many().unicast().onBackpressureBuffer();
+        Flux<SUBSCRIBE> flux = Flux.create(subscribeSink ->
+        {
+            Flux<SUBSCRIBE> subscribeFlux = manySink.asFlux();
+            Publisher<RESULT> publisher = subscribeWithResultTransform.apply(subscribeFlux);
+
+            new ClientWebSocketStream<>(
+                    getServerUri(subscribeSink.contextView()),
+                    ReactiveStreamSubProtocol.publisherWithResult,
+                    availableResultContentTypes, availableContentTypes,
+                    resultType, subscribeType,
+                    messageWorkers,
+                    publisher,
+                    subscribeSink,
+                    options,
+                    dnsLookup,
+                    webSocketClient,
+                    flushingExecutors,
+                    host,
+                    byteBufferPool,
+                    meter,
+                    tracer,
+                    textMapPropagator,
+                    loggerContext.getLogger(ClientWebSocketStream.class));
+        });
+
+        Disposable subscribe = flux
+                .contextWrite(context)
+                .subscribe(manySink::tryEmitNext, manySink::tryEmitError, manySink::tryEmitComplete);
+        return subscribe;
     }
 
     public void preDestroy() {

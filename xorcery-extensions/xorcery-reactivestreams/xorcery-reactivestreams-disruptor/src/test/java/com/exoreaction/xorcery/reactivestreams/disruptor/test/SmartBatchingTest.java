@@ -1,4 +1,4 @@
-package com.exoreaction.xorcery.disruptor.reactor;
+package com.exoreaction.xorcery.reactivestreams.disruptor.test;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.reactivestreams.disruptor.DisruptorConfiguration;

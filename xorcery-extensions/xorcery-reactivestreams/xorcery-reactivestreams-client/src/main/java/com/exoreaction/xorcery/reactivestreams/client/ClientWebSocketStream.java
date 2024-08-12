@@ -9,7 +9,6 @@ import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
-import com.exoreaction.xorcery.reactivestreams.client.ReleaseCallback;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
@@ -40,10 +39,7 @@ import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.io.*;
-import org.eclipse.jetty.websocket.api.Callback;
-import org.eclipse.jetty.websocket.api.ExtensionConfig;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
@@ -282,7 +278,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                     case subscriber -> {
                         clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), List.copyOf(outputContentTypes));
                     }
-                    case subscriberWithResult -> {
+                    case subscriberWithResult, publisherWithResult -> {
                         clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), List.copyOf(outputContentTypes));
                         clientUpgradeRequest.setHeader(HttpHeader.ACCEPT.asString(), List.copyOf(inputContentTypes));
                     }
@@ -349,7 +345,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             }
         }
 
-        if (reader == null) {
+        if (subProtocol == ReactiveStreamSubProtocol.subscriber) {
             sink.next((INPUT) item);
         }
     }
@@ -481,7 +477,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 if (!initWriter(serverAcceptType))
                     return;
             }
-            case subscriberWithResult -> {
+            case subscriberWithResult, publisherWithResult -> {
                 if (!initWriter(serverAcceptType))
                     return;
                 if (!initReader(serverContentType))
@@ -513,6 +509,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 contextJson.set(k.toString(), contextJson.booleanNode(bool));
             } else if (v instanceof JsonNode jsonNode) {
                 contextJson.set(k.toString(), jsonNode);
+            } else if (v instanceof UpgradeRequest || v instanceof UpgradeResponse) {
+                // Ignore
             } else {
                 contextJson.set(k.toString(), jsonMapper.valueToTree(v));
             }
@@ -569,6 +567,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 if (requests == CANCEL) {
                     upstream().cancel();
                     session.close(StatusCode.NORMAL, null, Callback.NOOP);
+                } else if (requests == COMPLETE) {
+                    sink.complete();
                 } else {
                     if (upstream() != null)
                         upstream().request(requests);

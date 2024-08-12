@@ -114,6 +114,11 @@ public class ServerWebSocketStreamsService
     }
 
     @Override
+    public <PUBLISH, RESULT> Disposable publisherWithResult(String path, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Function<Flux<RESULT>, Publisher<PUBLISH>> publisherWithResultTransform) throws IllegalArgumentException {
+        return registerHandler(ReactiveStreamSubProtocol.publisherWithResult, path, resultType, publishType, publisherWithResultTransform);
+    }
+
+    @Override
     public <SUBSCRIBE> Disposable subscriber(String path, Class<? super SUBSCRIBE> subscribeType, Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> appendSubscriber) throws IllegalArgumentException {
         return registerHandler(ReactiveStreamSubProtocol.subscriber, path, subscribeType, null, appendSubscriber);
     }
@@ -197,7 +202,7 @@ public class ServerWebSocketStreamsService
                         if (reader == null)
                             return null;
                     }
-                    case subscriberWithResult -> {
+                    case subscriberWithResult,publisherWithResult -> {
                         reader = getReader(subProtocolHandler.readerType(), serverUpgradeRequest, serverUpgradeResponse);
                         if (reader == null)
                             return null;
@@ -232,6 +237,7 @@ public class ServerWebSocketStreamsService
                 return new ServerWebSocketStream<>(
                         path,
                         pathParameters,
+                        requestSubProtocol,
                         ServerWebSocketOptions.instance(),
                         writer,
                         reader,

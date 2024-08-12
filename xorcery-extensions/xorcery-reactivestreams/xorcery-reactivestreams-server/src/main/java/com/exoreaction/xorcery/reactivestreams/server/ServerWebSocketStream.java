@@ -4,6 +4,7 @@ import com.exoreaction.xorcery.concurrent.SmartBatcher;
 import com.exoreaction.xorcery.io.ByteBufferBackedInputStream;
 import com.exoreaction.xorcery.lang.Exceptions;
 import com.exoreaction.xorcery.opentelemetry.OpenTelemetryUnits;
+import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import com.exoreaction.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
@@ -72,6 +73,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     private final String path;
     private final Map<String, String> pathParameters;
 
+    private final ReactiveStreamSubProtocol requestSubProtocol;
     private final ServerWebSocketOptions options;
     private final MessageWriter<OUTPUT> writer;
     private final MessageReader<INPUT> reader;
@@ -116,6 +118,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     public ServerWebSocketStream(
             String path,
             Map<String, String> pathParameters,
+            ReactiveStreamSubProtocol requestSubProtocol,
             ServerWebSocketOptions options,
 
             MessageWriter<OUTPUT> writer,
@@ -132,6 +135,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             io.opentelemetry.context.Context requestContext) {
         this.path = path;
         this.pathParameters = pathParameters;
+        this.requestSubProtocol = requestSubProtocol;
         this.options = options;
         this.writer = writer;
         this.reader = reader;
@@ -309,7 +313,14 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 batcher.close();
             }
             if (error == null) {
-                session.close(StatusCode.NORMAL, null, Callback.NOOP);
+                if (requestSubProtocol == ReactiveStreamSubProtocol.publisherWithResult)
+                {
+                    sendRequests(SEND_BUFFERED_REQUESTS);
+                    sendRequests(COMPLETE);
+                } else
+                {
+                    session.close(StatusCode.NORMAL, null, Callback.NOOP);
+                }
             } else if (session.isOpen()) {
                 hookOnError(error);
             }
@@ -520,7 +531,9 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 } else {
                     return;
                 }
-            } else {
+            } else if (n == COMPLETE) {
+                rn = n;
+            }else {
                 rn = requests.addAndGet(n);
 
                 if (sendRequestsThreshold == 0) {

@@ -367,6 +367,7 @@ public class PublishSubscriberWebSocketTest {
                         .contextWrite(Context.of(
                                 ClientWebSocketStreamContext.serverUri.name(), serverUri,
                                 "client", "abc"))
+                        .doOnNext(s -> System.out.println(s))
                         .take(1).blockFirst();
 
                 // Then
