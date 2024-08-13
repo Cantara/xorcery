@@ -3,6 +3,7 @@ package com.exoreaction.xorcery.configuration.resourcebundle;
 import com.exoreaction.xorcery.collections.Element;
 
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -21,6 +22,10 @@ public record ResourceBundles(ResourceBundle resourceBundle, String bundleName)
 
     @Override
     public <T> Optional<T> get(String name) {
-        return Optional.ofNullable((T)resourceBundle.getObject(bundleName+"."+name));
+        try {
+            return Optional.ofNullable((T)resourceBundle.getObject(bundleName+"."+name));
+        } catch (MissingResourceException e) {
+            return Optional.empty();
+        }
     }
 }

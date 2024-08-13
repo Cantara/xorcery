@@ -32,4 +32,9 @@ public class ConfigurationResourceBundlesProvider
         return configurations.computeIfAbsent(moduleName, name ->
                 new Configuration.Builder().with(new StandardConfigurationBuilder(moduleName)::addDefaults).build());
     }
+
+    public void reload() {
+        configurations.clear();
+        resourceBundles.clear();
+    }
 }
