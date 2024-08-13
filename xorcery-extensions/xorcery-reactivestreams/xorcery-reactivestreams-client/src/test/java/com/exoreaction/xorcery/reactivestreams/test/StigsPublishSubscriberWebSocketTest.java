@@ -22,7 +22,6 @@ import com.exoreaction.xorcery.net.Sockets;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import com.exoreaction.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
-import com.exoreaction.xorcery.reactivestreams.api.server.ServerStreamException;
 import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import com.exoreaction.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import jakarta.ws.rs.core.MediaType;
@@ -33,12 +32,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 import reactor.util.context.ContextView;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -83,10 +79,7 @@ public class StigsPublishSubscriberWebSocketTest {
 
         // Given
         try (Xorcery server = new Xorcery(serverConfiguration)) {
-            try (Xorcery client = new Xorcery(clientConfiguration)) {
-                LogManager.getLogger().info(clientConfiguration);
                 ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
-                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
 /*
                 List<ByteBuffer> source = List.of(800, 800, 800)
                         .stream().map(n -> ByteBuffer.wrap(new byte[n]))
@@ -107,89 +100,46 @@ public class StigsPublishSubscriberWebSocketTest {
                         });
 
                 // When
-                Disposable disposable = websocketStreamsClientClient.subscribeWithResult(ClientWebSocketOptions.instance(),
-                        Integer.class, Integer.class,
-                        List.of(MediaType.APPLICATION_JSON), List.of(MediaType.APPLICATION_JSON),
-                        webSocketContext,
-                        flux -> flux.map(v -> v));
-
+                new Thread(new ThreadedWorker(clientConfiguration, webSocketContext)).start();
                 completeLatch.await(30, TimeUnit.SECONDS);
 
                 // Then
                 Assertions.assertEquals(source, result);
-            }
+
         }
     }
+}
 
+class ThreadedWorker implements Runnable {
 
+    final private Configuration clientConfiguration;
+    final private ContextView webSocketContext;
 
-
-
-
-
-    @Test
-    public void largeItems() throws Exception {
-
-        // Given
-        try (Xorcery server = new Xorcery(serverConfiguration)) {
-            try (Xorcery client = new Xorcery(clientConfiguration)) {
-                LogManager.getLogger().info(clientConfiguration);
-                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
-                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
-
-                List<ByteBuffer> result = new ArrayList<>();
-                websocketStreamsServer.subscriber(
-                        "numbers",
-                        ByteBuffer.class,
-                        upstream -> upstream.doOnNext(result::add));
-
-                // When
-                List<ByteBuffer> source = List.of(800, 800, 800)
-                        .stream().map(n -> ByteBuffer.wrap(new byte[n]))
-                        .toList();
-
-                Flux.fromIterable(source)
-                        .transform(websocketStreamsClientClient.publish(ClientWebSocketOptions.instance(), ByteBuffer.class, MediaType.APPLICATION_JSON))
-                        .contextWrite(webSocketContext)
-                        .blockLast();
-
-                // Then
-                Assertions.assertEquals(source, result);
-            }
-        }
+    ThreadedWorker(Configuration clientConfiguration, ContextView webSocketContext) {
+        this.clientConfiguration = clientConfiguration;
+        this.webSocketContext = webSocketContext;
     }
 
-    @Test
-    public void tooLargeItem() throws Exception {
+    @Override
+    public void run() {
 
-        // Given
-        try (Xorcery server = new Xorcery(serverConfiguration)) {
-            try (Xorcery client = new Xorcery(clientConfiguration)) {
-                LogManager.getLogger().info(clientConfiguration);
-                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
-                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
+        try (Xorcery client = new Xorcery(clientConfiguration)) {
+            ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
 
-                List<ByteBuffer> result = new ArrayList<>();
-                websocketStreamsServer.subscriber(
-                        "numbers",
-                        ByteBuffer.class,
-                        upstream -> upstream.doOnNext(result::add));
+            LogManager.getLogger().info(clientConfiguration);
 
-                // When
-                List<ByteBuffer> source = List.of(800, 1800, 800)
-                        .stream().map(n -> ByteBuffer.wrap(new byte[n]))
-                        .toList();
-
-                // Then
-                Assertions.assertThrows(ServerStreamException.class, ()->
-                {
-                    Flux.fromIterable(source)
-                            .subscribeOn(Schedulers.boundedElastic(), true)
-                            .transform(websocketStreamsClientClient.publish(ClientWebSocketOptions.instance(), ByteBuffer.class, MediaType.APPLICATION_JSON))
-                            .contextWrite(webSocketContext)
-                            .blockLast();
-                });
-            }
+            Disposable disposable = websocketStreamsClientClient.subscribeWithResult(ClientWebSocketOptions.instance(),
+                    Integer.class, Integer.class,
+                    List.of(MediaType.APPLICATION_JSON), List.of(MediaType.APPLICATION_JSON),
+                    webSocketContext,
+                    flux -> flux.map(v ->
+                            v //v*v
+                    ));
+            //Just add some time so not to shut down too early
+            Thread.sleep(10000);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+        System.out.println("Stopped Threaded client");
     }
 }
