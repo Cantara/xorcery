@@ -25,6 +25,8 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 import static com.exoreaction.xorcery.configuration.Configuration.missing;
 
@@ -35,8 +37,7 @@ import static com.exoreaction.xorcery.configuration.Configuration.missing;
  * @since 20/04/2022
  */
 public record InstanceConfiguration(Configuration configuration) {
-    public static InstanceConfiguration get(Configuration configuration)
-    {
+    public static InstanceConfiguration get(Configuration configuration) {
         return new InstanceConfiguration(configuration.getConfiguration("instance"));
     }
 
@@ -103,5 +104,10 @@ public record InstanceConfiguration(Configuration configuration) {
 
     public URI getAPI() {
         return configuration.getURI("api").orElseThrow(missing("api"));
+    }
+
+    public Optional<Locale> getLocale() {
+        return configuration.getString("locale")
+                .map(Locale::forLanguageTag);
     }
 }
