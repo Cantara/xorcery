@@ -47,8 +47,8 @@
         <aws.java.sdk.version>2.27.4</aws.java.sdk.version>
         <netty.version>4.1.112.Final</netty.version>
 
-        <junit.version>5.10.3</junit.version>
-        <junit.platform.version>1.10.3</junit.platform.version>
+        <junit.version>5.11.0</junit.version>
+        <junit.platform.version>1.11.0</junit.platform.version>
     </properties>
 
     <developers>
