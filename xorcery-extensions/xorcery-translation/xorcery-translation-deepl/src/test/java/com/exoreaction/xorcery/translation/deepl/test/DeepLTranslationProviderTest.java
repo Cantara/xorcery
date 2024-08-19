@@ -3,11 +3,13 @@ package com.exoreaction.xorcery.translation.deepl.test;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import com.exoreaction.xorcery.translation.api.Translation;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Locale;
 
+@Disabled("only enabled during development, requires authkey")
 public class DeepLTranslationProviderTest {
 
     @RegisterExtension

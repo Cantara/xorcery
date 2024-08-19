@@ -4,10 +4,12 @@ import com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvid
 import com.exoreaction.xorcery.translation.deepl.providers.DeepLResourceBundleTranslationProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
 
+@Disabled("only enabled during development, requires authkey")
 public class DeepLResourceBundleTranslationProviderTest
 {
 
