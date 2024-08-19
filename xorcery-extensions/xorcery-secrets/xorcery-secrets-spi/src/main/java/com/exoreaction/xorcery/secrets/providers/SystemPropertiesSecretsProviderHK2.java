@@ -20,7 +20,7 @@ import jakarta.inject.Inject;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
-@Service(name="env", metadata = "enabled=secrets.enabled")
+@Service(name="system", metadata = "enabled=secrets.system.enabled")
 @ContractsProvided(SecretsProvider.class)
 public class SystemPropertiesSecretsProviderHK2
     extends SystemPropertiesSecretsProvider

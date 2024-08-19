@@ -2,6 +2,7 @@ package com.exoreaction.xorcery.configuration.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.resourcebundle.ResourceBundles;
+import com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvider;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,10 +13,15 @@ public class ConfigurationResourceBundle
     private final Function<String, Configuration> configurations;
     private final Map<String, Object> cachedLookups = new ConcurrentHashMap<>();
     private final Locale locale;
+    private final List<ResourceBundleTranslationProvider> resourceBundleTranslationProvider;
 
-    public ConfigurationResourceBundle(Function<String, Configuration> configurations, Locale locale) {
+    public ConfigurationResourceBundle(
+            Function<String, Configuration> configurations,
+            Locale locale,
+            List<ResourceBundleTranslationProvider> resourceBundleTranslationProvider) {
         this.configurations = configurations;
         this.locale = locale;
+        this.resourceBundleTranslationProvider = resourceBundleTranslationProvider;
     }
 
     @Override
@@ -29,8 +35,7 @@ public class ConfigurationResourceBundle
         String key = moduleKey.substring(dotIndex + 1);
         Configuration moduleConfiguration = configurations.apply(module);
         Configuration keyConfiguration = moduleConfiguration.getConfiguration(key);
-        if (keyConfiguration.object().isEmpty())
-        {
+        if (keyConfiguration.object().isEmpty()) {
             // This is just a simple configuration
             return moduleConfiguration.get(key).orElse(null);
         }
@@ -46,7 +51,12 @@ public class ConfigurationResourceBundle
                     return result;
 
                 // key.language.default
-                return language.get("default");
+                result = language.get("default");
+                if (result instanceof String strResult) {
+                    return translate(strResult);
+                } else {
+                    return result;
+                }
             } else if (result != null)
                 return result;
 
@@ -56,13 +66,27 @@ public class ConfigurationResourceBundle
                 return result;
 
             // key.default
-            return keyConfiguration.get("default").orElseGet(()-> moduleConfiguration.get(key).orElse(null));
+            result = keyConfiguration.get("default").orElseGet(() -> moduleConfiguration.get(key).orElse(null));
+            if (result instanceof String strResult)
+            {
+                return translate(strResult);
+            } else
+            {
+                return result;
+            }
         } else {
             // key.language
             result = keyConfiguration.get(locale.getLanguage()).orElse(null);
             if (result instanceof Map<?, ?> language) {
                 // key.language.default
-                return language.get("default");
+                result = language.get("default");
+                if (result instanceof String strResult)
+                {
+                    return translate(strResult);
+                } else
+                {
+                    return result;
+                }
             } else if (result != null)
                 return result;
 
@@ -79,5 +103,15 @@ public class ConfigurationResourceBundle
     @Override
     public String getBaseBundleName() {
         return ResourceBundles.class.getName();
+    }
+
+    private String translate(String result)
+    {
+        for (ResourceBundleTranslationProvider translationProvider : resourceBundleTranslationProvider) {
+            String translatedResult = translationProvider.translate(result, locale);
+            if (translatedResult != null)
+                return translatedResult;
+        }
+        return result;
     }
 }

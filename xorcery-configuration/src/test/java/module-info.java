@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-open module xorcery.config.test {
-    requires xorcery.configuration;
+open module xorcery.configuration.test {
+    requires transitive xorcery.configuration;
     requires org.junit.jupiter.api;
 
     uses com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;

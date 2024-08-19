@@ -1,0 +1,28 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-translation-deepl/schema",
+  "title" : "xorcery-translation-deepl configuration JSON Schema",
+  "properties" : {
+    "deepl" : {
+      "$ref" : "#/$defs/deepl"
+    }
+  },
+  "$defs" : {
+    "deepl" : {
+      "type" : "object",
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        },
+        "authkey" : {
+          "type" : "string",
+          "default" : "env:deepl",
+          "description" : "Default: env:deepl"
+        }
+      }
+    }
+  }
+}

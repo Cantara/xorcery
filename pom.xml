@@ -457,6 +457,16 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-translation-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-translation-deepl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-util</artifactId>
                 <version>${project.version}</version>
             </dependency>

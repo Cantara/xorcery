@@ -97,7 +97,8 @@ public final class Xorcery
             setupServiceLocator(serviceLocator, hk2Configuration);
 
             // Instantiate all enabled services
-            xorceryLogger = serviceLocator.getService(LoggerContext.class).getLogger(Xorcery.class);
+            LoggerContext loggerContext = serviceLocator.getService(LoggerContext.class);
+            xorceryLogger = loggerContext.getLogger(Xorcery.class);
             xorceryMarker = MarkerManager.getMarker(instanceConfiguration.getId());
             if (xorceryLogger.isDebugEnabled()) {
                 for (String msg : ConfigurationLogger.getLogger().drain()) {
@@ -161,7 +162,7 @@ public final class Xorcery
         }
     }
 
-    protected Filter getEnabledServicesFilter(Configuration configuration) {
+    private Filter getEnabledServicesFilter(Configuration configuration) {
         return d ->
         {
             boolean result = Optional.ofNullable(d.getName())
@@ -172,7 +173,7 @@ public final class Xorcery
         };
     }
 
-    protected void populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration, Hk2Configuration hk2Configuration, PopulatorPostProcessor populatorPostProcessor) throws MultiException {
+    private void populateServiceLocator(ServiceLocator serviceLocator, Configuration configuration, Hk2Configuration hk2Configuration, PopulatorPostProcessor populatorPostProcessor) throws MultiException {
         DynamicConfigurationService dcs = serviceLocator.getService(DynamicConfigurationService.class);
 
         DynamicConfiguration dynamicConfiguration = ServiceLocatorUtilities.createDynamicConfiguration(serviceLocator);

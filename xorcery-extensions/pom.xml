@@ -31,6 +31,7 @@
         <module>xorcery-jsonschema</module>
         <module>xorcery-aws-auth</module>
         <module>xorcery-secrets</module>
+        <module>xorcery-translation</module>
         <module>xorcery-keystores</module>
         <module>xorcery-certificates</module>
         <module>xorcery-jetty</module>

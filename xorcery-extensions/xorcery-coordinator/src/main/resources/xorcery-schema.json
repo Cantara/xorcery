@@ -1113,6 +1113,16 @@
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
           }
+        },
+        "system" : {
+          "type" : "object",
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
         }
       }
     },

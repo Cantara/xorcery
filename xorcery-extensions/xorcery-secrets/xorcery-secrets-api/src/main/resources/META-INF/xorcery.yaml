@@ -4,3 +4,5 @@ secrets:
 
   env:
     enabled: "{{ secrets.enabled }}"
+  system:
+    enabled: "{{ secrets.enabled }}"

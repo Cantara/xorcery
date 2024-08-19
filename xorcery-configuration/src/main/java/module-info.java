@@ -18,6 +18,7 @@ import com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesP
  */
 open module xorcery.configuration {
     uses com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
+    uses com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvider;
     exports com.exoreaction.xorcery.configuration.builder;
     exports com.exoreaction.xorcery.configuration.providers;
     exports com.exoreaction.xorcery.configuration.spi;

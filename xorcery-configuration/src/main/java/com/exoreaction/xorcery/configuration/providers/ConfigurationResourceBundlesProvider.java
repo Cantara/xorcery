@@ -4,10 +4,9 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.resourcebundle.ResourceBundles;
 import com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
+import com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvider;
 
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigurationResourceBundlesProvider
@@ -15,14 +14,20 @@ public class ConfigurationResourceBundlesProvider
 {
     private final Map<String, Configuration> configurations = new ConcurrentHashMap<>();
     private final Map<Locale, ResourceBundle> resourceBundles = new ConcurrentHashMap<>();
+    private final List<ResourceBundleTranslationProvider> resourceBundleTranslationProviders = new ArrayList<>();
+
+    public ConfigurationResourceBundlesProvider(Iterable<ResourceBundleTranslationProvider> resourceBundleTranslationProviderList) {
+        resourceBundleTranslationProviderList.forEach(resourceBundleTranslationProviders::add);
+    }
 
     public ConfigurationResourceBundlesProvider() {
+        this(ServiceLoader.load(ResourceBundleTranslationProvider.class));
     }
 
     @Override
     public ResourceBundle getBundle(String baseName, Locale locale) {
         if (baseName.equals(ResourceBundles.class.getName()))
-            return resourceBundles.computeIfAbsent(locale, l -> new ConfigurationResourceBundle(this::getConfiguration, locale));
+            return resourceBundles.computeIfAbsent(locale, l -> new ConfigurationResourceBundle(this::getConfiguration, locale, resourceBundleTranslationProviders));
         else
             return null;
     }
