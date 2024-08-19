@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilde
 import com.exoreaction.xorcery.configuration.resourcebundle.ResourceBundles;
 import com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
 import com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvider;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,6 +18,16 @@ public class ConfigurationResourceBundlesProvider
     private final List<ResourceBundleTranslationProvider> resourceBundleTranslationProviders = new ArrayList<>();
 
     public ConfigurationResourceBundlesProvider(Iterable<ResourceBundleTranslationProvider> resourceBundleTranslationProviderList) {
+        Iterator<ResourceBundleTranslationProvider> providerIterator = resourceBundleTranslationProviderList.iterator();
+        while (providerIterator.hasNext()) {
+            try {
+                ResourceBundleTranslationProvider provider = providerIterator.next();
+                resourceBundleTranslationProviders.add(provider);
+            } catch (Throwable e) {
+                LogManager.getLogger().warn("Could not instantiate translator:"+e.getMessage());
+            }
+
+        }
         resourceBundleTranslationProviderList.forEach(resourceBundleTranslationProviders::add);
     }
 
