@@ -31,6 +31,14 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-dns-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jetty-client</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>

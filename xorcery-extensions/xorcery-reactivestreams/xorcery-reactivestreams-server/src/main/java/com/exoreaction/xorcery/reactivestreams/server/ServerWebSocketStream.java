@@ -95,6 +95,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
     private final LongHistogram requestsHistogram;
 
+    private final AtomicLong connectionCounter;
     private final Context requestContext;
     private final Span span;
 
@@ -131,6 +132,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             Logger logger,
             Tracer tracer,
             Meter meter,
+            AtomicLong connectionCounter,
             String clientHost,
             io.opentelemetry.context.Context requestContext) {
         this.path = path;
@@ -144,6 +146,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         this.tracer = tracer;
         this.logger = logger;
         this.marker = MarkerManager.getMarker(path);
+        this.connectionCounter = connectionCounter;
         this.requestContext = requestContext;
 
         Flux<INPUT> source = Flux.<INPUT>create(sink -> {
@@ -343,6 +346,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
         this.session = session;
         session.setMaxOutgoingFrames(options.maxOutgoingFrames());
+        connectionCounter.incrementAndGet();
     }
 
     @Override
@@ -496,6 +500,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 upstream.cancel();
         } finally {
             span.end();
+            connectionCounter.decrementAndGet();
         }
     }
 

@@ -4,4 +4,5 @@ open module xorcery.reactivestreams.extras.test {
     requires xorcery.junit;
     requires xorcery.reactivestreams.api;
     requires xorcery.reactivestreams.server;
+    requires jakarta.ws.rs;
 }

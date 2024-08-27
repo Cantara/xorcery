@@ -10,6 +10,7 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageWorkers;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -43,7 +44,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+
+import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.OPEN_CONNECTIONS;
 
 @Service(name = "reactivestreams.server.reactor")
 @ContractsProvided({ServerWebSocketStreams.class})
@@ -80,6 +84,8 @@ public class ServerWebSocketStreamsService
     private final TextMapPropagator textMapPropagator;
     private final Meter meter;
     private final Tracer tracer;
+    private final ObservableLongUpDownCounter openConnections;
+    private final AtomicLong connectionCounter = new AtomicLong();
 
     private final StreamWebSocketCreator webSocketCreator = new StreamWebSocketCreator();
 
@@ -105,6 +111,10 @@ public class ServerWebSocketStreamsService
                 .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
+
+        openConnections = meter.upDownCounterBuilder(OPEN_CONNECTIONS)
+                .setUnit("{connection}")
+                .buildWithCallback(observableLongMeasurement -> observableLongMeasurement.record(connectionCounter.get()));
     }
 
     @Override
@@ -161,6 +171,27 @@ public class ServerWebSocketStreamsService
 
         @Override
         public Object createWebSocket(ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse, Callback callback) {
+            // Check if this is just a load balancer check
+            String loadBalancing = serverUpgradeRequest.getHeaders().get("Xorcery-LoadBalancing");
+            if (loadBalancing != null)
+            {
+                List<String> response = new ArrayList<>();
+                for (String loadBalancingType : loadBalancing.split(",")) {
+                    switch (loadBalancingType)
+                    {
+                        case "connections":
+                        {
+                            response.add("connections="+connectionCounter.get());
+                            break;
+                        }
+                    }
+                }
+                String loadBalancingResponse = String.join(",", response);
+                serverUpgradeResponse.getHeaders().add("Xorcery-LoadBalancing", loadBalancingResponse);
+                serverUpgradeResponse.setStatus(HttpStatus.NO_CONTENT_204);
+                return null;
+            }
+
             for (String requestSubProtocolString : serverUpgradeRequest.getSubProtocols()) {
 
                 ReactiveStreamSubProtocol requestSubProtocol = null;
@@ -248,6 +279,7 @@ public class ServerWebSocketStreamsService
                         loggerContext.getLogger(ServerWebSocketStream.class),
                         tracer,
                         meter,
+                        connectionCounter,
                         clientHost,
                         context
                 );

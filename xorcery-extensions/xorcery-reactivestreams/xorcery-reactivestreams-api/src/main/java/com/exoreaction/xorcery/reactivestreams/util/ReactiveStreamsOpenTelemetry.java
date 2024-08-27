@@ -13,4 +13,6 @@ public interface ReactiveStreamsOpenTelemetry {
     String PUBLISHER_ITEM_IO = NAMESPACE + "publisher.item.io";
     String PUBLISHER_REQUESTS = NAMESPACE + "publisher.requests";
     String PUBLISHER_FLUSH_COUNT = NAMESPACE + "publisher.flush.count";
+
+    String OPEN_CONNECTIONS = NAMESPACE + "open_connections";
 }

@@ -18,9 +18,11 @@ module xorcery.reactivestreams.extras {
     exports com.exoreaction.xorcery.reactivestreams.extras.publishers;
     exports com.exoreaction.xorcery.reactivestreams.extras.providers;
     exports com.exoreaction.xorcery.reactivestreams.extras.subscribers;
+    exports com.exoreaction.xorcery.reactivestreams.extras.loadbalancing;
 
     requires xorcery.reactivestreams.api;
     requires xorcery.util;
+    requires xorcery.dns.client;
 
     requires reactor.core;
     requires com.fasterxml.jackson.databind;
@@ -29,4 +31,7 @@ module xorcery.reactivestreams.extras {
     requires org.reactivestreams;
     requires org.yaml.snakeyaml;
     requires org.glassfish.hk2.api;
+    requires jakarta.inject;
+    requires org.eclipse.jetty.client;
+    requires org.apache.logging.log4j;
 }
