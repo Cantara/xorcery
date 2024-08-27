@@ -16,6 +16,7 @@
 module xorcery.dns.server {
     exports com.exoreaction.xorcery.dns.server;
     exports com.exoreaction.xorcery.dns.server.tcp;
+    exports com.exoreaction.xorcery.dns.server.udp;
 
     requires xorcery.configuration.api;
     requires xorcery.jsonapi.api;
