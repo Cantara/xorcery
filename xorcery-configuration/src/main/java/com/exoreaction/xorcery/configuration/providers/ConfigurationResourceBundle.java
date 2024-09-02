@@ -6,6 +6,7 @@ import com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvid
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class ConfigurationResourceBundle
@@ -108,9 +109,13 @@ public class ConfigurationResourceBundle
     private String translate(String result)
     {
         for (ResourceBundleTranslationProvider translationProvider : resourceBundleTranslationProvider) {
-            String translatedResult = translationProvider.translate(result, locale);
-            if (translatedResult != null)
-                return translatedResult;
+            try {
+                String translatedResult = translationProvider.translate(result, locale).orTimeout(10, TimeUnit.SECONDS).join();
+                if (translatedResult != null)
+                    return translatedResult;
+            } catch (Throwable e) {
+                // Translation failed, ignore
+            }
         }
         return result;
     }

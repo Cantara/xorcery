@@ -6,6 +6,7 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class Translation {
@@ -17,17 +18,22 @@ public class Translation {
         this.translationProvider = translationProvider;
     }
 
-    public String translate(String text, Locale source, Locale target)
+    public CompletableFuture<String> translate(String text, Locale source, Locale target)
     {
-        return translationProvider.translate(List.of(text), source, target).get(0);
+        return translationProvider.translate(List.of(text), source, target).thenApply(translations -> translations.get(0));
     }
 
-    public List<String> getSourceLanguages()
+    public CompletableFuture<List<String>> translate(List<String> texts, Locale source, Locale target)
+    {
+        return translationProvider.translate(texts, source, target);
+    }
+
+    public CompletableFuture<List<String>> getSourceLanguages()
     {
         return translationProvider.getSourceLanguages();
     }
 
-    public List<String> getTargetLanguages()
+    public CompletableFuture<List<String>> getTargetLanguages()
     {
         return translationProvider.getTargetLanguages();
     }

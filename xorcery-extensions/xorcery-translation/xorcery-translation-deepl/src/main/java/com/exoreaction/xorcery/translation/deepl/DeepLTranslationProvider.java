@@ -12,6 +12,7 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @ContractsProvided(TranslationProvider.class)
@@ -26,30 +27,34 @@ public class DeepLTranslationProvider
         translator = new Translator(authKey);
     }
 
-    @Override
-    public List<String> translate(List<String> text, Locale source, Locale target) {
-
-        try {
-            return translator.translateText(text, source.getLanguage(), target.getLanguage()).stream().map(TextResult::getText).toList();
-        } catch (Throwable e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-    public List<String> getSourceLanguages() {
-        try {
-            return translator.getSourceLanguages().stream().map(Language::getCode).toList();
-        } catch (Throwable e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
+    public Translator getTranslator() {
+        return translator;
     }
 
     @Override
-    public List<String> getTargetLanguages() {
+    public CompletableFuture<List<String>> translate(List<String> text, Locale source, Locale target) {
+
         try {
-            return translator.getTargetLanguages().stream().map(Language::getCode).toList();
+            return CompletableFuture.completedFuture(translator.translateText(text, source.getLanguage(), target.getLanguage()).stream().map(TextResult::getText).toList());
         } catch (Throwable e) {
-            throw new RuntimeException(e.getMessage(), e);
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    public CompletableFuture<List<String>> getSourceLanguages() {
+        try {
+            return CompletableFuture.completedFuture(translator.getSourceLanguages().stream().map(Language::getCode).toList());
+        } catch (Throwable e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    @Override
+    public CompletableFuture<List<String>> getTargetLanguages() {
+        try {
+            return CompletableFuture.completedFuture(translator.getTargetLanguages().stream().map(Language::getCode).toList());
+        } catch (Throwable e) {
+            return CompletableFuture.failedFuture(e);
         }
     }
 }

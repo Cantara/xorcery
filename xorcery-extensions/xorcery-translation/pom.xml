@@ -29,5 +29,6 @@
     <modules>
         <module>xorcery-translation-api</module>
         <module>xorcery-translation-deepl</module>
+        <module>xorcery-translation-resourcebundle-maven-plugin</module>
     </modules>
 </project>

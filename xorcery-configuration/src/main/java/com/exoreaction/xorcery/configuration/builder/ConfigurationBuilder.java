@@ -32,6 +32,10 @@ public record ConfigurationBuilder(Configuration.Builder builder, StandardConfig
         this(new Configuration.Builder(), new StandardConfigurationBuilder());
     }
 
+    public ConfigurationBuilder(String baseName) {
+        this(new Configuration.Builder(), new StandardConfigurationBuilder(baseName));
+    }
+
     public ConfigurationBuilder addDefaults()
     {
         standardConfigurationBuilder.addDefaults(builder);

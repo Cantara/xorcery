@@ -1,6 +1,7 @@
 package com.exoreaction.xorcery.configuration.spi;
 
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 public interface ResourceBundleTranslationProvider {
 
@@ -10,5 +11,5 @@ public interface ResourceBundleTranslationProvider {
      * @param locale to be translated to
      * @return translated text or null if no translation is found or translation failed
      */
-    String translate(String text, Locale locale);
+    CompletableFuture<String> translate(String text, Locale locale);
 }
