@@ -1,0 +1,6 @@
+test2:
+  de: "Blah"
+
+test4:
+  default: "This should be removed"
+  sv: "Blah"

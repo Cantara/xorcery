@@ -1,0 +1,11 @@
+test1: 5
+test2:
+  default: "This should be extended"
+  sv: "Manuellt fixad"
+test3:
+  default: "This should be added"
+parameters:
+  test5:
+    default: "This text has %d parameters"
+  test6:
+    default: "This text has {} parameters"
