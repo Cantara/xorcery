@@ -63,7 +63,7 @@ public class Secrets {
         Objects.requireNonNull(secretName, "Secret name is null");
 
         String providerName;
-        String[] names = secretName.split(":");
+        String[] names = secretName.split(":", 2);
         if (names.length == 2) {
             providerName = names[0];
             secretName = names[1];

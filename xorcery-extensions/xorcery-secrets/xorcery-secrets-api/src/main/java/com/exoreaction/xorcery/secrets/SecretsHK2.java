@@ -29,6 +29,6 @@ public class SecretsHK2
 {
     @Inject
     public SecretsHK2(IterableProvider<SecretsProvider> providers, Configuration configuration) {
-        super(name -> providers.named(name).get(), configuration.getString("secrets.default").orElse("env"));
+        super(name -> providers.named(name).get(), configuration.getString("secrets.default").orElse("secret"));
     }
 }
