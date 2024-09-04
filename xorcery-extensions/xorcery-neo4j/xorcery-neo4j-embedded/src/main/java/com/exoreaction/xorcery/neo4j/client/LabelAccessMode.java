@@ -30,11 +30,7 @@ public class LabelAccessMode
     private final int requiredLabelId;
 
     public static LoginContext getLoginContextForLabel(String labelName) {
-        return new LoginContext(AuthSubject.AUTH_DISABLED, ClientConnectionInfo.EMBEDDED_CONNECTION) {
-            public SecurityContext authorize(IdLookup idLookup, String dbName, AbstractSecurityLog securityLog) {
-                return new SecurityContext(AuthSubject.AUTH_DISABLED, new LabelAccessMode(idLookup.getLabelId(labelName)), this.connectionInfo(), dbName);
-            }
-        };
+        return new LabelLoginContext(labelName);
     }
 
     public LabelAccessMode(int labelId) {
@@ -64,5 +60,18 @@ public class LabelAccessMode
                 return true;
         }
         return false;
+    }
+
+    private static class LabelLoginContext extends LoginContext {
+        private final String labelName;
+
+        public LabelLoginContext(String labelName) {
+            super(AuthSubject.AUTH_DISABLED, ClientConnectionInfo.EMBEDDED_CONNECTION);
+            this.labelName = labelName;
+        }
+
+        public SecurityContext authorize(IdLookup idLookup, String dbName, AbstractSecurityLog securityLog) {
+            return new SecurityContext(AuthSubject.AUTH_DISABLED, new LabelAccessMode(idLookup.getLabelId(labelName)), this.connectionInfo(), dbName);
+        }
     }
 }
