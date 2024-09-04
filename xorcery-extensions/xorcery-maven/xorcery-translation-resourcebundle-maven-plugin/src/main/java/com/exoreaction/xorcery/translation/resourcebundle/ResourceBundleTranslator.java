@@ -60,7 +60,7 @@ public class ResourceBundleTranslator {
             Map<Locale, List<TranslationRequest>> translationRequired = new LinkedHashMap<>();
             for (String translationPath : translationPaths) {
                 for (Locale resultLocale : resultLocales) {
-                    String resultPath = translationPath + "." + resultLocale.toLanguageTag().replace('_', '.');
+                    String resultPath = translationPath + "." + resultLocale.toLanguageTag().replace('-', '.');
                     if (!sourceBundle.has(resultPath) && !resultBundle.has(resultPath)) {
                         translationRequired.computeIfAbsent(resultLocale, v -> new ArrayList<>())
                                 .add(new TranslationRequest(resultPath, sourceBundle.getString(translationPath + ".default").orElseThrow()));

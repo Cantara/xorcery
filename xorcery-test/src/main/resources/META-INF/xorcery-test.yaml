@@ -1,0 +1,3 @@
+test1:
+  default: "This is a test"
+test2.default: "This is another test"

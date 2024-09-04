@@ -24,7 +24,9 @@ class ResourceBundleTranslatorTest {
     @Test
     public void testResourceBundleTranslator()
     {
-        Configuration configuration = new ConfigurationBuilder().addTestDefaults().build();
+        Configuration configuration = new ConfigurationBuilder()
+                .addTestDefaults()
+                .build();
         ResourceBundleTranslator resourceBundleTranslator = new ResourceBundleTranslator(new Translation(new DeepLTranslationProvider(configuration, new Secrets(Map.of("env", new EnvSecretsProvider())::get, "env"))));
 
         File resultFile = new File(Resources.getResource("resourcebundle-override.yaml").orElseThrow().getFile());

@@ -35,7 +35,7 @@ public class DeepLTranslationProvider
     public CompletableFuture<List<String>> translate(List<String> text, Locale source, Locale target) {
 
         try {
-            return CompletableFuture.completedFuture(translator.translateText(text, source.getLanguage(), target.getLanguage()).stream().map(TextResult::getText).toList());
+            return CompletableFuture.completedFuture(translator.translateText(text, source.toLanguageTag(), target.toLanguageTag()).stream().map(TextResult::getText).toList());
         } catch (Throwable e) {
             return CompletableFuture.failedFuture(e);
         }
