@@ -29,6 +29,7 @@
 
     <modules>
         <module>xorcery-configuration-jsonschema-maven-plugin</module>
+        <module>xorcery-translation-resourcebundle-maven-plugin</module>
     </modules>
 
     <build>
@@ -39,7 +40,7 @@
                 <executions>
                     <execution>
                         <id>generate-module-schema</id>
-                        <phase />
+                        <phase>generate-resources</phase>
                     </execution>
                 </executions>
             </plugin>

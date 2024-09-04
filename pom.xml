@@ -16,7 +16,8 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.exoreaction.xorcery</groupId>
@@ -923,7 +924,9 @@
                         <execution>
                             <id>default-testCompile</id>
                             <phase>test-compile</phase>
-                            <goals><goal>testCompile</goal></goals>
+                            <goals>
+                                <goal>testCompile</goal>
+                            </goals>
                             <configuration>
                                 <compilerArgs>
                                     <arg>-Aorg.glassfish.hk2.metadata.location=META-INF/hk2-locator/xorcerytest</arg>
@@ -974,7 +977,8 @@
                         <consoleOutputReporter>
                             <disable>true</disable>
                         </consoleOutputReporter>
-                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter" />
+                        <statelessTestsetInfoReporter
+                                implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter"/>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -982,6 +986,13 @@
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
                     <version>0.127.3</version>
                 </plugin>
+<!--
+                <plugin>
+                    <groupId>com.exoreaction.xorcery</groupId>
+                    <artifactId>xorcery-translation-resourcebundle-maven-plugin</artifactId>
+                    <version>0.127.3</version>
+                </plugin>
+-->
             </plugins>
         </pluginManagement>
         <plugins>
@@ -995,8 +1006,7 @@
                     <locale>en</locale>
                     <noqualifier>all</noqualifier>
                     <useStandardDocletOptions>false</useStandardDocletOptions>
-                    <reportOutputDirectory>${project.directory}/../xorcery-docs/src/doc/docs</reportOutputDirectory>
-                    <destDir>apidocs</destDir>
+                    <outputDirectory>${project.directory}/../xorcery-docs/src/doc/docs/apidocs</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -1080,6 +1090,35 @@
                 </plugins>
             </build>
         </profile>
+<!--
+        <profile>
+            <id>translateresourcebundles</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.exoreaction.xorcery</groupId>
+                        <artifactId>xorcery-translation-resourcebundle-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals><goal>translate-resourcebundle</goal></goals>
+                                <phase>generate-resources</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <source>${project.artifactId}</source>
+                            <sourceLocale>en</sourceLocale>
+                            <targetLocales>
+                                <targetLocale>de</targetLocale>
+                                <targetLocale>fr</targetLocale>
+                                <targetLocale>sv</targetLocale>
+                            </targetLocales>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+-->
     </profiles>
 
     <repositories>
