@@ -103,6 +103,14 @@
                   "default" : 443,
                   "description" : "Default: 443"
                 },
+                "keystore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "truststore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
                 "trustAll" : {
                   "type" : [ "boolean", "string" ],
                   "default" : false,

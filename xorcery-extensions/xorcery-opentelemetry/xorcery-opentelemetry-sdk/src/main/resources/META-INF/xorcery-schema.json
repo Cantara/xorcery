@@ -115,6 +115,10 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "endpoint" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
                 "http" : {
                   "type" : "object",
                   "additionalProperties" : false,

@@ -22,6 +22,14 @@
               "default" : "{{ jetty.client.enabled }}",
               "description" : "Default: {{ jetty.client.enabled }} (true)"
             },
+            "keystore" : {
+              "default" : null,
+              "description" : "Default: null"
+            },
+            "truststore" : {
+              "default" : null,
+              "description" : "Default: null"
+            },
             "connectTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.connectTimeout }}",

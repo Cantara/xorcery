@@ -267,6 +267,10 @@
           "default" : "{{ instance.host }}.{{ instance.domain }}",
           "description" : "Default: {{ instance.host }}.{{ instance.domain }} (.xorcery.test)"
         },
+        "ip" : {
+          "default" : "{{ CALCULATED.ip | null }}",
+          "description" : "Default: null"
+        },
         "domain" : {
           "type" : "string",
           "default" : "xorcery.test",
@@ -300,6 +304,10 @@
           "type" : "string",
           "default" : "{{ instance.uri }}api/",
           "description" : "Default: {{ instance.uri }}api/ (http://.xorcery.test/api/)"
+        },
+        "locale" : {
+          "default" : null,
+          "description" : "Default: null"
         }
       }
     },
@@ -621,6 +629,14 @@
               "default" : "{{ jetty.client.enabled }}",
               "description" : "Default: {{ jetty.client.enabled }} (true)"
             },
+            "keystore" : {
+              "default" : null,
+              "description" : "Default: null"
+            },
+            "truststore" : {
+              "default" : null,
+              "description" : "Default: null"
+            },
             "connectTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.connectTimeout }}",
@@ -851,6 +867,14 @@
                   "type" : [ "number", "string" ],
                   "default" : 443,
                   "description" : "Default: 443"
+                },
+                "keystore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "truststore" : {
+                  "default" : null,
+                  "description" : "Default: null"
                 },
                 "trustAll" : {
                   "type" : [ "boolean", "string" ],
@@ -1705,6 +1729,10 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "endpoint" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
                 "http" : {
                   "type" : "object",
                   "additionalProperties" : false,

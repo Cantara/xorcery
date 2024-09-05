@@ -43,6 +43,10 @@
           "default" : "{{ instance.host }}.{{ instance.domain }}",
           "description" : "Default: {{ instance.host }}.{{ instance.domain }} (.xorcery.test)"
         },
+        "ip" : {
+          "default" : "{{ CALCULATED.ip | null }}",
+          "description" : "Default: null"
+        },
         "domain" : {
           "type" : "string",
           "default" : "xorcery.test",
@@ -76,6 +80,10 @@
           "type" : "string",
           "default" : "{{ instance.uri }}api/",
           "description" : "Default: {{ instance.uri }}api/ (http://.xorcery.test/api/)"
+        },
+        "locale" : {
+          "default" : null,
+          "description" : "Default: null"
         }
       }
     },
