@@ -1,8 +1,1 @@
-$defs:
-  neo4jdatabase:
-    properties:
-      settings:
-        additionalProperties : true
-        properties:
-          server:
-            additionalProperties : true
+$defs.neo4jdatabase.properties.path: ""

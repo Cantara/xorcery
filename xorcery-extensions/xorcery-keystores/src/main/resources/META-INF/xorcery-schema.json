@@ -38,7 +38,7 @@
             "path" : {
               "type" : "string",
               "default" : "{{ instance.home }}/secrets.p12",
-              "description" : "Default: {{ instance.home }}/secrets.p12 (C:\\Users\\ricka\\IdeaProjects\\xorcery/secrets.p12)"
+              "description" : "Default: {{ instance.home }}/secrets.p12"
             },
             "password" : {
               "type" : "string",

@@ -18,11 +18,7 @@
           "default" : "{{ defaults.enabled }}",
           "description" : "Default: {{ defaults.enabled }} (true)"
         },
-        "path" : {
-          "type" : "string",
-          "default" : "{{ instance.home }}/neo4j",
-          "description" : "Default: {{ instance.home }}/neo4j (C:\\Users\\ricka\\IdeaProjects\\xorcery/neo4j)"
-        },
+        "path" : "",
         "startup" : {
           "type" : "array"
         },
@@ -45,25 +41,7 @@
         "settings" : {
           "type" : "object",
           "additionalProperties" : true,
-          "properties" : {
-            "server" : {
-              "type" : "object",
-              "additionalProperties" : true,
-              "properties" : {
-                "directories" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "data" : {
-                      "type" : "string",
-                      "default" : "{{ neo4jdatabase.path }}/data",
-                      "description" : "Default: {{ neo4jdatabase.path }}/data (C:\\Users\\ricka\\IdeaProjects\\xorcery/neo4j/data)"
-                    }
-                  }
-                }
-              }
-            }
-          }
+          "properties" : { }
         },
         "metrics" : {
           "type" : "object",

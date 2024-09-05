@@ -652,7 +652,7 @@
             },
             "mediaTypes" : {
               "type" : "object",
-              "additionalProperties" : false,
+              "additionalProperties" : true,
               "properties" : {
                 "html" : {
                   "type" : "string",
@@ -680,8 +680,7 @@
                   "description" : "Default: application/schema+json"
                 }
               }
-            },
-            "additionalProperties" : true
+            }
           }
         }
       }
@@ -1108,7 +1107,7 @@
                   "description" : "Default: /"
                 },
                 "domain" : {
-                  "type" : [ "string", null, "string" ],
+                  "type" : [ null, "string" ],
                   "default" : "{{ instance.domain }}",
                   "description" : "Default: {{ instance.domain }} (xorcery.test)"
                 }
@@ -1181,7 +1180,7 @@
             "path" : {
               "type" : "string",
               "default" : "{{ instance.home }}/secrets.p12",
-              "description" : "Default: {{ instance.home }}/secrets.p12 (C:\\Users\\ricka\\IdeaProjects\\xorcery/secrets.p12)"
+              "description" : "Default: {{ instance.home }}/secrets.p12"
             },
             "password" : {
               "type" : "string",

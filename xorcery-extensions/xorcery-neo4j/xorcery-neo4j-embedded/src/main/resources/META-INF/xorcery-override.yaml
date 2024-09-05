@@ -1,3 +1,9 @@
 log4j2.Configuration.Loggers.logger:
       - name: org.apache.commons.beanutils.FluentPropertyBeanIntrospector
         level: warn
+
+neo4jdatabase:
+  settings:
+    server:
+      directories:
+        data: "{{ neo4jdatabase.path }}/data"

@@ -58,7 +58,7 @@
                   "description" : "Default: /"
                 },
                 "domain" : {
-                  "type" : [ "string", null, "string" ],
+                  "type" : [ null, "string" ],
                   "default" : "{{ instance.domain }}",
                   "description" : "Default: {{ instance.domain }} (xorcery.test)"
                 }

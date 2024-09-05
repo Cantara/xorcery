@@ -27,7 +27,7 @@
             },
             "mediaTypes" : {
               "type" : "object",
-              "additionalProperties" : false,
+              "additionalProperties" : true,
               "properties" : {
                 "html" : {
                   "type" : "string",
@@ -55,8 +55,7 @@
                   "description" : "Default: application/schema+json"
                 }
               }
-            },
-            "additionalProperties" : true
+            }
           }
         }
       }

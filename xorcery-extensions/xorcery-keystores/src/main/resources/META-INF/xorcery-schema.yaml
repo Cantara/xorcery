@@ -1,0 +1,1 @@
+$defs.keystores.properties.secrets.properties.path.description: "Default: {{ instance.home }}/secrets.p12"
