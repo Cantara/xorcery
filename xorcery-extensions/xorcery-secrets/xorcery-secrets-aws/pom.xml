@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-secrets</artifactId>
-        <version>0.127.6</version>
+        <version>0.127.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-secrets-aws</artifactId>
