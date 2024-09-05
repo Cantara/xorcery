@@ -3,6 +3,11 @@ $defs:
     properties:
       server:
         properties:
+          cookie:
+            properties:
+              domain:
+                type:
+                  - null
           keys:
             items:
               type: object

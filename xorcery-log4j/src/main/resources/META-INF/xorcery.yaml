@@ -8,6 +8,8 @@ log4j2:
     appenders: {}
 
     Loggers:
+      logger: []
+
       Root:
         level: info
         AppenderRef: []

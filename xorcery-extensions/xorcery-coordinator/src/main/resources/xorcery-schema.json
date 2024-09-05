@@ -680,7 +680,8 @@
                   "description" : "Default: application/schema+json"
                 }
               }
-            }
+            },
+            "additionalProperties" : true
           }
         }
       }
@@ -969,7 +970,7 @@
                     },
                     "issuers" : {
                       "type" : "object",
-                      "additionalProperties" : false,
+                      "additionalProperties" : true,
                       "properties" : {
                         "default" : {
                           "type" : "object",
@@ -1107,7 +1108,7 @@
                   "description" : "Default: /"
                 },
                 "domain" : {
-                  "type" : "string",
+                  "type" : [ "string", null, "string" ],
                   "default" : "{{ instance.domain }}",
                   "description" : "Default: {{ instance.domain }} (xorcery.test)"
                 }
@@ -1315,6 +1316,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "logger" : {
+                  "type" : "array"
+                },
                 "Root" : {
                   "type" : "object",
                   "additionalProperties" : false,
@@ -1870,17 +1874,6 @@
               "type" : [ "number", "string" ],
               "default" : 4096,
               "description" : "Default: 4096"
-            },
-            "reactor" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ reactivestreams.client.enabled }}",
-                  "description" : "Default: {{ reactivestreams.client.enabled }} (true)"
-                }
-              }
             }
           }
         },
@@ -1907,17 +1900,6 @@
               "type" : "string",
               "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
               "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ (wss://service.xorcery.test:443/)"
-            },
-            "reactor" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ reactivestreams.server.enabled }}",
-                  "description" : "Default: {{ reactivestreams.server.enabled }} (true)"
-                }
-              }
             }
           }
         }

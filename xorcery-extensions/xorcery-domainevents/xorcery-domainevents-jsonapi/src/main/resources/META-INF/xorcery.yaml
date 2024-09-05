@@ -1,7 +1,0 @@
-domainevents:
-  enabled: "{{ defaults.enabled }}"
-  subscriber:
-    authority: null
-    stream: "neo4jprojections"
-    configuration:
-      projection: "domainprojection"

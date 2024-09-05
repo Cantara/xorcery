@@ -36,17 +36,6 @@
               "type" : "string",
               "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
               "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ (wss://service.xorcery.test:443/)"
-            },
-            "reactor" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ reactivestreams.server.enabled }}",
-                  "description" : "Default: {{ reactivestreams.server.enabled }} (true)"
-                }
-              }
             }
           }
         }

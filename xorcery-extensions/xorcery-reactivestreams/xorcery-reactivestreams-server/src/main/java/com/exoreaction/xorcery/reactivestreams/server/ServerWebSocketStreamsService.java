@@ -49,7 +49,7 @@ import java.util.function.Function;
 
 import static com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.OPEN_CONNECTIONS;
 
-@Service(name = "reactivestreams.server.reactor")
+@Service(name = "reactivestreams.server")
 @ContractsProvided({ServerWebSocketStreams.class})
 @RunLevel(4)
 public class ServerWebSocketStreamsService

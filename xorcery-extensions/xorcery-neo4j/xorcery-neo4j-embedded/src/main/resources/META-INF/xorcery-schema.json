@@ -44,11 +44,11 @@
         },
         "settings" : {
           "type" : "object",
-          "additionalProperties" : false,
+          "additionalProperties" : true,
           "properties" : {
             "server" : {
               "type" : "object",
-              "additionalProperties" : false,
+              "additionalProperties" : true,
               "properties" : {
                 "directories" : {
                   "type" : "object",

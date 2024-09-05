@@ -1,0 +1,8 @@
+$defs:
+  neo4jdatabase:
+    properties:
+      settings:
+        additionalProperties : true
+        properties:
+          server:
+            additionalProperties : true

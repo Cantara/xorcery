@@ -1,4 +1,4 @@
 neo4jbrowser:
-  enabled: "{{ neo4jdatabase.enabled }}"
+  enabled: "{{ neo4jdatabase.enabled | defaults.enabled }}"
   ssl:
     enabled: "{{ neo4jbrowser.enabled ? certificates.enabled | false }}"

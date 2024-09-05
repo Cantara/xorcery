@@ -14,9 +14,9 @@
       "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
-          "default" : "{{ neo4jdatabase.enabled }}",
-          "description" : "Default: {{ neo4jdatabase.enabled }} ({{ neo4jdatabase.enabled }})"
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ neo4jdatabase.enabled | defaults.enabled }}",
+          "description" : "Default: {{ neo4jdatabase.enabled | defaults.enabled }} (true)"
         },
         "ssl" : {
           "type" : "object",

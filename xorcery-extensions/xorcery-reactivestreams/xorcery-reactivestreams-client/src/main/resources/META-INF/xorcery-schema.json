@@ -61,17 +61,6 @@
               "type" : [ "number", "string" ],
               "default" : 4096,
               "description" : "Default: 4096"
-            },
-            "reactor" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ reactivestreams.client.enabled }}",
-                  "description" : "Default: {{ reactivestreams.client.enabled }} (true)"
-                }
-              }
             }
           }
         }

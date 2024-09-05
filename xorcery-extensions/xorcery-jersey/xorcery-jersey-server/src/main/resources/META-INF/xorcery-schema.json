@@ -55,7 +55,8 @@
                   "description" : "Default: application/schema+json"
                 }
               }
-            }
+            },
+            "additionalProperties" : true
           }
         }
       }

@@ -22,8 +22,8 @@ jetty:
     ssl:
       enabled: "{{ jetty.server.enabled }}"
       port: 443
-#      keystore: null
-#      truststore: null
+      keystore: null
+      truststore: null
       trustAll: false
       needClientAuth: false
       wantClientAuth: true

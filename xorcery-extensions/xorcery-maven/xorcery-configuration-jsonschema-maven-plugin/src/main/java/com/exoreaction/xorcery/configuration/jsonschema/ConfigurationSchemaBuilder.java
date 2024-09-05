@@ -51,20 +51,24 @@ public class ConfigurationSchemaBuilder {
                 }
                 case BOOLEAN -> {
                     properties.property(property.getKey(), new JsonSchema.Builder()
-                            .with(b -> b.builder().set("type", b.builder().arrayNode().add(Types.Boolean.name().toLowerCase()).add(Types.String.name().toLowerCase())))
+                            .types(Types.Boolean,Types.String)
                             .with(b -> b.builder().set("default", defaultValue))
-                            .description("Default: " + defaultValue.asBoolean())
+                            .description("Default: " + defaultValue.asText() + (defaultValue.asText().contains("{{") ? " (" + effectiveValue.asText() + ")" : ""))
                             .build());
                 }
                 case MISSING -> {
                 }
                 case NULL -> {
+                    properties.property(property.getKey(), new JsonSchema.Builder()
+                            .with(b -> b.builder().set("default", defaultValue))
+                            .description("Default: null")
+                            .build());
                 }
                 case NUMBER -> {
                     properties.property(property.getKey(), new JsonSchema.Builder()
-                            .with(b -> b.builder().set("type", b.builder().arrayNode().add(Types.Number.name().toLowerCase()).add(Types.String.name().toLowerCase())))
+                            .types(Types.Number,Types.String)
                             .with(b -> b.builder().set("default", defaultValue))
-                            .description("Default: " + defaultValue.asText())
+                            .description("Default: " + defaultValue.asText() + (defaultValue.asText().contains("{{") ? " (" + effectiveValue.asText() + ")" : ""))
                             .build());
                 }
                 case OBJECT -> {
@@ -77,7 +81,7 @@ public class ConfigurationSchemaBuilder {
                     properties.property(property.getKey(), new JsonSchema.Builder()
                             .type(Types.String)
                             .with(b -> b.builder().set("default", defaultValue))
-                            .description("Default: " + defaultValue.asText())
+                            .description("Default: " + defaultValue.asText() + (defaultValue.asText().contains("{{") ? " (" + effectiveValue.asText() + ")" : ""))
                             .build());
                 }
             }

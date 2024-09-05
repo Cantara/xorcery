@@ -52,6 +52,9 @@
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "logger" : {
+                  "type" : "array"
+                },
                 "Root" : {
                   "type" : "object",
                   "additionalProperties" : false,
