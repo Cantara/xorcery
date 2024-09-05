@@ -120,6 +120,10 @@ public class ConfigurationSchemaBuilder {
                 case MISSING -> {
                 }
                 case NULL -> {
+                    properties.property(property.getKey(), new JsonSchema.Builder()
+                            .with(b -> b.builder().set("default", defaultValue))
+                            .description("Default: null")
+                            .build());
                 }
                 case NUMBER -> {
                     properties.property(property.getKey(), new JsonSchema.Builder()
