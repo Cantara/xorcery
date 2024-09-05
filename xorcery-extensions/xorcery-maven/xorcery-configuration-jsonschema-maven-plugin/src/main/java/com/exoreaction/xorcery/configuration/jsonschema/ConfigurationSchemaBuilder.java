@@ -91,7 +91,7 @@ public class ConfigurationSchemaBuilder {
 
         JsonSchema.Builder schema = new JsonSchema.Builder();
         schema.type(Types.Object);
-        schema.additionalProperties(false);
+        schema.additionalProperties(configuration.isEmpty());
         Properties.Builder properties = new Properties.Builder();
         for (Map.Entry<String, JsonNode> property : configuration.properties()) {
 
@@ -100,12 +100,15 @@ public class ConfigurationSchemaBuilder {
             JsonNode effectiveValue = value == null ? defaultValue : value;
             switch (effectiveValue.getNodeType()) {
                 case ARRAY -> {
+                    properties.property(property.getKey(), new JsonSchema.Builder()
+                            .type(Types.Array)
+                            .build());
                 }
                 case BINARY -> {
                 }
                 case BOOLEAN -> {
                     properties.property(property.getKey(), new JsonSchema.Builder()
-                            .with(b -> b.builder().set("type", b.builder().arrayNode().add(Types.Boolean.name().toLowerCase()).add(Types.String.name().toLowerCase())))
+                            .types(Types.Boolean,Types.String)
                             .with(b -> b.builder().set("default", defaultValue))
                             .description("Default: " + defaultValue.asText() + (defaultValue.asText().contains("{{") ? " (" + effectiveValue.asText() + ")" : ""))
                             .build());
@@ -116,7 +119,7 @@ public class ConfigurationSchemaBuilder {
                 }
                 case NUMBER -> {
                     properties.property(property.getKey(), new JsonSchema.Builder()
-                            .with(b -> b.builder().set("type", b.builder().arrayNode().add(Types.Number.name().toLowerCase()).add(Types.String.name().toLowerCase())))
+                            .types(Types.Number, Types.String)
                             .with(b -> b.builder().set("default", defaultValue))
                             .description("Default: " + defaultValue.asText() + (defaultValue.asText().contains("{{") ? " (" + effectiveValue.asText() + ")" : ""))
                             .build());
