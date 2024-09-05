@@ -20,6 +20,7 @@ import org.neo4j.internal.kernel.api.security.AbstractSecurityLog;
 import org.neo4j.internal.kernel.api.security.AuthSubject;
 import org.neo4j.internal.kernel.api.security.LoginContext;
 import org.neo4j.internal.kernel.api.security.SecurityContext;
+import org.neo4j.kernel.database.PrivilegeDatabaseReference;
 import org.neo4j.kernel.impl.api.security.OverriddenAccessMode;
 
 /**
@@ -70,8 +71,9 @@ public class LabelAccessMode
             this.labelName = labelName;
         }
 
-        public SecurityContext authorize(IdLookup idLookup, String dbName, AbstractSecurityLog securityLog) {
-            return new SecurityContext(AuthSubject.AUTH_DISABLED, new LabelAccessMode(idLookup.getLabelId(labelName)), this.connectionInfo(), dbName);
+        @Override
+        public SecurityContext authorize(IdLookup idLookup, PrivilegeDatabaseReference privilegeDatabaseReference, AbstractSecurityLog abstractSecurityLog) {
+            return new SecurityContext(AuthSubject.AUTH_DISABLED, new LabelAccessMode(idLookup.getLabelId(labelName)), this.connectionInfo(), privilegeDatabaseReference.name());
         }
     }
 }

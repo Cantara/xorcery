@@ -105,6 +105,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-configuration-validation</artifactId>
+                <version>0.127.4-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-coordinator</artifactId>
                 <version>0.127.4-SNAPSHOT</version>
             </dependency>

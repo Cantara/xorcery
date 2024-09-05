@@ -76,6 +76,7 @@
         <module>xorcery-json</module>
         <module>xorcery-configuration-api</module>
         <module>xorcery-configuration</module>
+        <module>xorcery-configuration-validation</module>
         <module>xorcery-metadata</module>
         <module>xorcery-service-api</module>
         <module>xorcery-health-api</module>
@@ -569,7 +570,7 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>neo4j-shaded</artifactId>
-                <version>5.22.0.0</version>
+                <version>5.23.0.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.scala-lang</groupId>

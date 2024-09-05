@@ -78,7 +78,10 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                     """).accept(moduleWithDependenciesBuilder);
 
             if (xorceryConfigFile.exists())
+            {
                 standardConfigurationBuilder.addFile(xorceryConfigFile).accept(moduleBuilder);
+                standardConfigurationBuilder.addFile(xorceryConfigFile).accept(moduleWithDependenciesBuilder);
+            }
 
             JsonSchema schema = new ConfigurationSchemaBuilder()
                     .id("http://xorcery.exoreaction.com/modules/"+project.getGroupId()+"/"+project.getArtifactId()+"/schema")
