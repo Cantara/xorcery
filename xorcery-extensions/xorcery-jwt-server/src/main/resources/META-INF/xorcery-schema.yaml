@@ -7,7 +7,7 @@ $defs:
             properties:
               domain:
                 type:
-                  - null
+                  - "null"
           keys:
             items:
               type: object

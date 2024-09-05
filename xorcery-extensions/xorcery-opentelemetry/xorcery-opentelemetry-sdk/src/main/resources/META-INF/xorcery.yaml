@@ -56,6 +56,3 @@ opentelemetry:
     excludes: []
     includes: []
   instrumentations: {}
-
-system:
-  io.opentelemetry.exporter.internal.http.HttpSenderProvider: com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider

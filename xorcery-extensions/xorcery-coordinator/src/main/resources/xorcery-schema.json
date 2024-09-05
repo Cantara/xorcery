@@ -329,14 +329,8 @@
     },
     "system" : {
       "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "io.opentelemetry.exporter.internal.http.HttpSenderProvider" : {
-          "type" : "string",
-          "default" : "com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider",
-          "description" : "Default: com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider"
-        }
-      }
+      "additionalProperties" : true,
+      "properties" : { }
     },
     "defaults" : {
       "type" : "object",
@@ -1131,7 +1125,7 @@
                   "description" : "Default: /"
                 },
                 "domain" : {
-                  "type" : [ null, "string" ],
+                  "type" : [ "null", "string" ],
                   "default" : "{{ instance.domain }}",
                   "description" : "Default: {{ instance.domain }} (xorcery.test)"
                 }
@@ -1305,35 +1299,8 @@
             },
             "appenders" : {
               "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "OpenTelemetry" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "name" : {
-                      "type" : "string",
-                      "default" : "OpenTelemetryAppender",
-                      "description" : "Default: OpenTelemetryAppender"
-                    },
-                    "captureMapMessageAttributes" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : true,
-                      "description" : "Default: true"
-                    },
-                    "captureMarkerAttribute" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : true,
-                      "description" : "Default: true"
-                    },
-                    "captureContextDataAttributes" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : true,
-                      "description" : "Default: true"
-                    }
-                  }
-                }
-              }
+              "additionalProperties" : true,
+              "properties" : { }
             },
             "Loggers" : {
               "type" : "object",

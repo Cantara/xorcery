@@ -6,9 +6,6 @@
   "properties" : {
     "opentelemetry" : {
       "$ref" : "#/$defs/opentelemetry"
-    },
-    "system" : {
-      "$ref" : "#/$defs/system"
     }
   },
   "$defs" : {
@@ -237,17 +234,6 @@
           "type" : "object",
           "additionalProperties" : true,
           "properties" : { }
-        }
-      }
-    },
-    "system" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "io.opentelemetry.exporter.internal.http.HttpSenderProvider" : {
-          "type" : "string",
-          "default" : "com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider",
-          "description" : "Default: com.exoreaction.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider"
         }
       }
     }
