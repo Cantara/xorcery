@@ -26,6 +26,7 @@
   "$defs" : {
     "instance" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "id" : {
           "type" : "string",
@@ -53,6 +54,9 @@
           "description" : "Default: development",
           "enum" : [ "development", "qa", "production" ]
         },
+        "tags" : {
+          "type" : "array"
+        },
         "home" : {
           "type" : "string",
           "default" : "{{ SYSTEM.user_dir }}",
@@ -77,6 +81,7 @@
     },
     "application" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "name" : {
           "type" : "string",
@@ -92,10 +97,12 @@
     },
     "system" : {
       "type" : "object",
+      "additionalProperties" : true,
       "properties" : { }
     },
     "defaults" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
           "type" : [ "boolean", "string" ],
@@ -121,6 +128,7 @@
     },
     "hk2" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "threadPolicy" : {
           "type" : "string",
@@ -139,6 +147,7 @@
         },
         "immediateScope" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
@@ -154,6 +163,7 @@
         },
         "threadScope" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
@@ -161,11 +171,15 @@
               "description" : "Default: true"
             }
           }
+        },
+        "names" : {
+          "type" : "array"
         }
       }
     },
     "DefaultRunLevelContext" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
           "type" : [ "boolean", "string" ],

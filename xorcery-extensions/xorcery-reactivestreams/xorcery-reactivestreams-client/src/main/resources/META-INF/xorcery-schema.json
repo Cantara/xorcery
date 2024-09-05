@@ -11,24 +11,26 @@
   "$defs" : {
     "reactivestreams" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "client" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ jetty.client.enabled }}",
-              "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+              "description" : "Default: {{ jetty.client.enabled }} (true)"
             },
             "connectTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.connectTimeout }}",
-              "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
+              "description" : "Default: {{ defaults.connectTimeout }} (5s)"
             },
             "idleTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.idleTimeout }}",
-              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
             },
             "autoFragment" : {
               "type" : [ "boolean", "string" ],
@@ -62,11 +64,12 @@
             },
             "reactor" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ reactivestreams.client.enabled }}",
-                  "description" : "Default: {{ reactivestreams.client.enabled }} ({{ reactivestreams.client.enabled }})"
+                  "description" : "Default: {{ reactivestreams.client.enabled }} (true)"
                 }
               }
             }

@@ -11,14 +11,16 @@
   "$defs" : {
     "dns" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "dyndns" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
-              "default" : "{{ dns.registration.enabled }}",
-              "description" : "Default: {{ dns.registration.enabled }} ({{ dns.registration.enabled }})"
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ dns.client.enabled }}",
+              "description" : "Default: {{ dns.client.enabled }} (true)"
             },
             "timeout" : {
               "type" : "string",

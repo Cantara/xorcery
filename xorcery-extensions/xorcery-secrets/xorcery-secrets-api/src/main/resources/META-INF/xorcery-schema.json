@@ -11,11 +11,12 @@
   "$defs" : {
     "secrets" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{defaults.enabled}}",
-          "description" : "Default: {{defaults.enabled}} ({{defaults.enabled}})"
+          "description" : "Default: {{defaults.enabled}} (true)"
         },
         "default" : {
           "type" : "string",
@@ -24,21 +25,23 @@
         },
         "env" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+              "description" : "Default: {{ secrets.enabled }} (true)"
             }
           }
         },
         "system" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+              "description" : "Default: {{ secrets.enabled }} (true)"
             }
           }
         }

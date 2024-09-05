@@ -11,14 +11,16 @@
   "$defs" : {
     "secrets" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "aws" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ aws.auth.enabled }}",
-              "description" : "Default: {{ aws.auth.enabled }} ({{ aws.auth.enabled }})"
+              "description" : "Default: {{ aws.auth.enabled }} (true)"
             },
             "region" : {
               "type" : "string",

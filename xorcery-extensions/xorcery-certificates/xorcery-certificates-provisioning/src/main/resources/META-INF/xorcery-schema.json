@@ -11,11 +11,12 @@
   "$defs" : {
     "certificates" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "keystore" : {
           "type" : "string",
@@ -30,12 +31,18 @@
         "alias" : {
           "type" : "string",
           "default" : "{{ server.ssl.alias | client.ssl.alias | \"self\"}}",
-          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}} ({{ server.ssl.alias | client.ssl.alias | \"self\"}})"
+          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}} (self)"
         },
         "subject" : {
           "type" : "string",
           "default" : "{{ instance.fqdn | \"server\"}}",
-          "description" : "Default: {{ instance.fqdn | \"server\"}} ({{ instance.fqdn | \"server\"}})"
+          "description" : "Default: {{ instance.fqdn | \"server\"}} (service.xorcery.test)"
+        },
+        "ipAddresses" : {
+          "type" : "array"
+        },
+        "dnsNames" : {
+          "type" : "array"
         }
       }
     }

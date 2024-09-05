@@ -11,32 +11,36 @@
   "$defs" : {
     "dns" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "multicast" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "discovery" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ dns.multicast.enabled }}",
-                  "description" : "Default: {{ dns.multicast.enabled }} ({{ dns.multicast.enabled }})"
+                  "description" : "Default: {{ dns.multicast.enabled }} (true)"
                 }
               }
             },
             "announce" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ dns.multicast.enabled }}",
-                  "description" : "Default: {{ dns.multicast.enabled }} ({{ dns.multicast.enabled }})"
+                  "description" : "Default: {{ dns.multicast.enabled }} (true)"
                 }
               }
             }

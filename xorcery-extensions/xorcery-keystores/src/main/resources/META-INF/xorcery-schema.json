@@ -14,11 +14,12 @@
   "$defs" : {
     "keystores" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "defaultPassword" : {
           "type" : "string",
@@ -27,6 +28,7 @@
         },
         "secrets" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "template" : {
               "type" : "string",
@@ -36,12 +38,12 @@
             "path" : {
               "type" : "string",
               "default" : "{{ instance.home }}/secrets.p12",
-              "description" : "Default: {{ instance.home }}/secrets.p12 ({{ instance.home }}/secrets.p12)"
+              "description" : "Default: {{ instance.home }}/secrets.p12 (C:\\Users\\ricka\\IdeaProjects\\xorcery/secrets.p12)"
             },
             "password" : {
               "type" : "string",
               "default" : "{{ keystores.defaultPassword }}",
-              "description" : "Default: {{ keystores.defaultPassword }} ({{ keystores.defaultPassword }})"
+              "description" : "Default: {{ keystores.defaultPassword }} (secret:password)"
             }
           }
         }
@@ -49,14 +51,16 @@
     },
     "secrets" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "keystore" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{secrets.enabled}}",
-              "description" : "Default: {{secrets.enabled}} ({{secrets.enabled}})"
+              "description" : "Default: {{secrets.enabled}} (true)"
             },
             "name" : {
               "type" : "string",

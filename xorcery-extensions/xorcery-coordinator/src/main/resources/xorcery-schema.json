@@ -86,31 +86,34 @@
   "$defs" : {
     "adminservlet" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         }
       }
     },
     "serveradmin" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         }
       }
     },
     "aws" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "region" : {
           "type" : "string",
@@ -119,11 +122,12 @@
         },
         "auth" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ aws.enabled }}",
-              "description" : "Default: {{ aws.enabled }} ({{ aws.enabled }})"
+              "description" : "Default: {{ aws.enabled }} (true)"
             },
             "type" : {
               "type" : "string",
@@ -151,11 +155,12 @@
     },
     "intermediateca" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "alias" : {
           "type" : "string",
@@ -171,11 +176,12 @@
     },
     "letsencrypt" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "url" : {
           "type" : "string",
@@ -191,11 +197,12 @@
     },
     "certificates" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "keystore" : {
           "type" : "string",
@@ -210,20 +217,27 @@
         "alias" : {
           "type" : "string",
           "default" : "{{ server.ssl.alias | client.ssl.alias | \"self\"}}",
-          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}} ({{ server.ssl.alias | client.ssl.alias | \"self\"}})"
+          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}} (self)"
         },
         "subject" : {
           "type" : "string",
           "default" : "{{ instance.fqdn | \"server\"}}",
-          "description" : "Default: {{ instance.fqdn | \"server\"}} ({{ instance.fqdn | \"server\"}})"
+          "description" : "Default: {{ instance.fqdn | \"server\"}} (service.xorcery.test)"
+        },
+        "ipAddresses" : {
+          "type" : "array"
+        },
+        "dnsNames" : {
+          "type" : "array"
         },
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "authorization" : {
               "type" : "string",
@@ -236,26 +250,22 @@
     },
     "instance" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "id" : {
           "type" : "string",
           "default" : "{{ instance.host}}.{{ application.name}}",
-          "description" : "Default: {{ instance.host}}.{{ application.name}} ({{ instance.host}}.{{ application.name}})"
+          "description" : "Default: {{ instance.host}}.{{ application.name}} (.application)"
         },
         "host" : {
           "type" : "string",
           "default" : "{{ CALCULATED.hostName }}",
-          "description" : "Default: {{ CALCULATED.hostName }} (service)"
+          "description" : "Default: {{ CALCULATED.hostName }} ({{ CALCULATED.hostName }})"
         },
         "fqdn" : {
           "type" : "string",
           "default" : "{{ instance.host }}.{{ instance.domain }}",
-          "description" : "Default: {{ instance.host }}.{{ instance.domain }} ({{ instance.host }}.{{ instance.domain }})"
-        },
-        "ip" : {
-          "type" : "string",
-          "default" : "{{ CALCULATED.ip | null }}",
-          "description" : "Default: {{ CALCULATED.ip | null }} (192.168.0.2)"
+          "description" : "Default: {{ instance.host }}.{{ instance.domain }} (.xorcery.test)"
         },
         "domain" : {
           "type" : "string",
@@ -267,6 +277,9 @@
           "default" : "development",
           "description" : "Default: development",
           "enum" : [ "development", "qa", "production" ]
+        },
+        "tags" : {
+          "type" : "array"
         },
         "home" : {
           "type" : "string",
@@ -281,17 +294,18 @@
         "uri" : {
           "type" : "string",
           "default" : "http://{{ instance.fqdn }}/",
-          "description" : "Default: http://{{ instance.fqdn }}/ (http://{{ instance.fqdn }}/)"
+          "description" : "Default: http://{{ instance.fqdn }}/ (http://.xorcery.test/)"
         },
         "api" : {
           "type" : "string",
           "default" : "{{ instance.uri }}api/",
-          "description" : "Default: {{ instance.uri }}api/ ({{ instance.uri }}api/)"
+          "description" : "Default: {{ instance.uri }}api/ (http://.xorcery.test/api/)"
         }
       }
     },
     "application" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "name" : {
           "type" : "string",
@@ -307,6 +321,7 @@
     },
     "system" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "io.opentelemetry.exporter.internal.http.HttpSenderProvider" : {
           "type" : "string",
@@ -317,6 +332,7 @@
     },
     "defaults" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
           "type" : [ "boolean", "string" ],
@@ -342,6 +358,7 @@
     },
     "hk2" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "threadPolicy" : {
           "type" : "string",
@@ -360,6 +377,7 @@
         },
         "immediateScope" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
@@ -375,6 +393,7 @@
         },
         "threadScope" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
@@ -382,11 +401,15 @@
               "description" : "Default: true"
             }
           }
+        },
+        "names" : {
+          "type" : "array"
         }
       }
     },
     "DefaultRunLevelContext" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
           "type" : [ "boolean", "string" ],
@@ -397,17 +420,26 @@
     },
     "dns" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "client" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "nameServers" : {
+              "type" : "array"
+            },
+            "search" : {
+              "type" : "array"
             },
             "hosts" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             },
             "timeout" : {
@@ -424,49 +456,59 @@
         },
         "registration" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             }
           }
         },
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "port" : {
               "type" : [ "number", "string" ],
               "default" : 53,
               "description" : "Default: 53"
             },
+            "zones" : {
+              "type" : "array"
+            },
+            "keys" : {
+              "type" : "array"
+            },
             "tcp" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ dns.server.enabled }}",
-                  "description" : "Default: {{ dns.server.enabled }} ({{ dns.server.enabled }})"
+                  "description" : "Default: {{ dns.server.enabled }} (true)"
                 },
                 "idleTimeout" : {
                   "type" : "string",
                   "default" : "{{ defaults.idleTimeout }}",
-                  "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+                  "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
                 }
               }
             },
             "udp" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ dns.server.enabled }}",
-                  "description" : "Default: {{ dns.server.enabled }} ({{ dns.server.enabled }})"
+                  "description" : "Default: {{ dns.server.enabled }} (true)"
                 }
               }
             }
@@ -474,11 +516,12 @@
         },
         "dyndns" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
-              "default" : "{{ dns.registration.enabled }}",
-              "description" : "Default: {{ dns.registration.enabled }} ({{ dns.registration.enabled }})"
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ dns.client.enabled }}",
+              "description" : "Default: {{ dns.client.enabled }} (true)"
             },
             "timeout" : {
               "type" : "string",
@@ -494,6 +537,7 @@
         },
         "route53" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "region" : {
               "type" : "string",
@@ -506,14 +550,16 @@
     },
     "domainevents" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string", "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "subscriber" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "stream" : {
               "type" : "string",
@@ -522,6 +568,7 @@
             },
             "configuration" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "projection" : {
                   "type" : "string",
@@ -535,20 +582,22 @@
         "eventstore" : {
           "type" : "string",
           "default" : "{{ instance.api }}eventstore",
-          "description" : "Default: {{ instance.api }}eventstore ({{ instance.api }}eventstore)"
+          "description" : "Default: {{ instance.api }}eventstore (http://service.xorcery.test/api/eventstore)"
         },
         "projections" : {
           "type" : "string",
           "default" : "{{ instance.api }}projections",
-          "description" : "Default: {{ instance.api }}projections ({{ instance.api }}projections)"
+          "description" : "Default: {{ instance.api }}projections (http://service.xorcery.test/api/projections)"
         }
       }
     },
     "health" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "updater" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "interval" : {
               "type" : "string",
@@ -561,19 +610,21 @@
     },
     "jersey" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "client" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ jetty.client.enabled }}",
-              "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+              "description" : "Default: {{ jetty.client.enabled }} (true)"
             },
             "connectTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.connectTimeout }}",
-              "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
+              "description" : "Default: {{ defaults.connectTimeout }} (5s)"
             },
             "readTimeout" : {
               "type" : "string",
@@ -582,20 +633,26 @@
             },
             "properties" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             }
           }
         },
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ jetty.server.enabled }}",
-              "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+              "description" : "Default: {{ jetty.server.enabled }} (true)"
+            },
+            "register" : {
+              "type" : "array"
             },
             "mediaTypes" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "html" : {
                   "type" : "string",
@@ -630,19 +687,21 @@
     },
     "jetty" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "client" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "idleTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.idleTimeout }}",
-              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
             },
             "connectTimeout" : {
               "type" : "string",
@@ -661,6 +720,7 @@
             },
             "http2" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
                   "type" : [ "boolean", "string" ],
@@ -670,17 +730,18 @@
                 "idleTimeout" : {
                   "type" : "string",
                   "default" : "{{ jetty.client.idleTimeout }}",
-                  "description" : "Default: {{ jetty.client.idleTimeout }} ({{ jetty.client.idleTimeout }})"
+                  "description" : "Default: {{ jetty.client.idleTimeout }} (-1s)"
                 }
               }
             },
             "ssl" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.client.enabled }}",
-                  "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+                  "description" : "Default: {{ jetty.client.enabled }} (true)"
                 },
                 "alias" : {
                   "type" : "string",
@@ -703,26 +764,27 @@
         },
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "scheme" : {
               "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }} ({{ jetty.server.ssl.enabled ? \"https\" | \"http\" }})"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }} (https)"
             },
             "port" : {
-              "type" : "string",
+              "type" : [ "number", "string" ],
               "default" : "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }} ({{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }})"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }} (443)"
             },
             "uri" : {
               "type" : "string",
               "default" : "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/",
-              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/ ({{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/)"
+              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/ (https://service.xorcery.test:443/)"
             },
             "minThreads" : {
               "type" : [ "number", "string" ],
@@ -747,15 +809,16 @@
             "idleTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.idleTimeout }}",
-              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
             },
             "http" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 },
                 "port" : {
                   "type" : [ "number", "string" ],
@@ -766,21 +829,23 @@
             },
             "http2" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 }
               }
             },
             "ssl" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 },
                 "port" : {
                   "type" : [ "number", "string" ],
@@ -821,6 +886,7 @@
             },
             "srv" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "priority" : {
                   "type" : [ "number", "string" ],
@@ -836,54 +902,65 @@
             },
             "log4j2" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 }
               }
             },
             "sessions" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 }
               }
             },
             "security" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 },
                 "type" : {
                   "type" : "string",
                   "default" : "jwt",
                   "description" : "Default: jwt"
                 },
+                "constraints" : {
+                  "type" : "array"
+                },
+                "mappings" : {
+                  "type" : "array"
+                },
                 "certificate" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "enabled" : {
-                      "type" : "string",
+                      "type" : [ "boolean", "string" ],
                       "default" : "{{ jetty.server.security.enabled }}",
-                      "description" : "Default: {{ jetty.server.security.enabled }} ({{ jetty.server.security.enabled }})"
+                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
                     }
                   }
                 },
                 "jwt" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "enabled" : {
-                      "type" : "string",
+                      "type" : [ "boolean", "string" ],
                       "default" : "{{ jetty.server.security.enabled }}",
-                      "description" : "Default: {{ jetty.server.security.enabled }} ({{ jetty.server.security.enabled }})"
+                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
                     },
                     "cookie" : {
                       "type" : "string",
@@ -892,10 +969,16 @@
                     },
                     "issuers" : {
                       "type" : "object",
+                      "additionalProperties" : false,
                       "properties" : {
                         "default" : {
                           "type" : "object",
-                          "properties" : { }
+                          "additionalProperties" : false,
+                          "properties" : {
+                            "keys" : {
+                              "type" : "array"
+                            }
+                          }
                         }
                       }
                     }
@@ -905,11 +988,12 @@
             },
             "websockets" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 },
                 "autoFragment" : {
                   "type" : [ "boolean", "string" ],
@@ -919,7 +1003,7 @@
                 "idleTimeout" : {
                   "type" : "string",
                   "default" : "{{ defaults.idleTimeout }}",
-                  "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+                  "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
                 },
                 "inputBufferSize" : {
                   "type" : [ "number", "string" ],
@@ -950,21 +1034,23 @@
             },
             "servlet" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 }
               }
             },
             "gzip" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 }
               }
             }
@@ -974,17 +1060,20 @@
     },
     "jwt" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "token" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "duration" : {
                   "type" : "string",
@@ -994,12 +1083,13 @@
                 "issuer" : {
                   "type" : "string",
                   "default" : "{{ instance.fqdn }}",
-                  "description" : "Default: {{ instance.fqdn }} ({{ instance.fqdn }})"
+                  "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
                 }
               }
             },
             "cookie" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "duration" : {
                   "type" : "string",
@@ -1019,7 +1109,28 @@
                 "domain" : {
                   "type" : "string",
                   "default" : "{{ instance.domain }}",
-                  "description" : "Default: {{ instance.domain }} ({{ instance.domain }})"
+                  "description" : "Default: {{ instance.domain }} (xorcery.test)"
+                }
+              }
+            },
+            "keys" : {
+              "type" : "array",
+              "items" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "kid" : {
+                    "type" : "string"
+                  },
+                  "alg" : {
+                    "type" : "string"
+                  },
+                  "publicKey" : {
+                    "type" : "string"
+                  },
+                  "privateKey" : {
+                    "type" : "string"
+                  }
                 }
               }
             }
@@ -1027,27 +1138,30 @@
         },
         "configuration" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             }
           }
         },
         "users" : {
           "type" : "object",
+          "additionalProperties" : true,
           "properties" : { }
         }
       }
     },
     "keystores" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "defaultPassword" : {
           "type" : "string",
@@ -1056,6 +1170,7 @@
         },
         "secrets" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "template" : {
               "type" : "string",
@@ -1065,12 +1180,12 @@
             "path" : {
               "type" : "string",
               "default" : "{{ instance.home }}/secrets.p12",
-              "description" : "Default: {{ instance.home }}/secrets.p12 ({{ instance.home }}/secrets.p12)"
+              "description" : "Default: {{ instance.home }}/secrets.p12 (C:\\Users\\ricka\\IdeaProjects\\xorcery/secrets.p12)"
             },
             "password" : {
               "type" : "string",
               "default" : "{{ keystores.defaultPassword }}",
-              "description" : "Default: {{ keystores.defaultPassword }} ({{ keystores.defaultPassword }})"
+              "description" : "Default: {{ keystores.defaultPassword }} (secret:password)"
             }
           }
         }
@@ -1078,14 +1193,16 @@
     },
     "secrets" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "keystore" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{secrets.enabled}}",
-              "description" : "Default: {{secrets.enabled}} ({{secrets.enabled}})"
+              "description" : "Default: {{secrets.enabled}} (true)"
             },
             "name" : {
               "type" : "string",
@@ -1095,9 +1212,9 @@
           }
         },
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{defaults.enabled}}",
-          "description" : "Default: {{defaults.enabled}} ({{defaults.enabled}})"
+          "description" : "Default: {{defaults.enabled}} (true)"
         },
         "default" : {
           "type" : "string",
@@ -1106,21 +1223,23 @@
         },
         "env" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+              "description" : "Default: {{ secrets.enabled }} (true)"
             }
           }
         },
         "system" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+              "description" : "Default: {{ secrets.enabled }} (true)"
             }
           }
         }
@@ -1128,9 +1247,11 @@
     },
     "log4j2" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "Configuration" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "name" : {
               "type" : "string",
@@ -1144,10 +1265,12 @@
             },
             "properties" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             },
             "thresholdFilter" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "level" : {
                   "type" : "string",
@@ -1158,9 +1281,11 @@
             },
             "appenders" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "OpenTelemetry" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "name" : {
                       "type" : "string",
@@ -1188,23 +1313,23 @@
             },
             "Loggers" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "Root" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "level" : {
                       "type" : "string",
                       "default" : "info",
                       "description" : "Default: info"
+                    },
+                    "AppenderRef" : {
+                      "type" : "array"
                     }
                   }
                 }
               }
-            },
-            "packages" : {
-              "type" : "string",
-              "default" : "io.opentelemetry.instrumentation.log4j.appender.v2_17",
-              "description" : "Default: io.opentelemetry.instrumentation.log4j.appender.v2_17"
             }
           }
         }
@@ -1212,30 +1337,35 @@
     },
     "opentelemetry" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "global" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ opentelemetry.enabled ? false | true }}",
-              "description" : "Default: {{ opentelemetry.enabled ? false | true }} ({{ opentelemetry.enabled ? false | true }})"
+              "description" : "Default: {{ opentelemetry.enabled ? false | true }} (true)"
             }
           }
         },
         "instrumentations" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "jersey" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                  "description" : "Default: {{ defaults.enabled }} (true)"
                 },
                 "attributes" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "http.request.method" : {
                       "type" : "string",
@@ -1273,12 +1403,15 @@
             },
             "jmx" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "attributes" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "classloading.loadedClasses" : {
                       "type" : "object",
+                      "additionalProperties" : false,
                       "properties" : {
                         "description" : {
                           "type" : "string",
@@ -1309,6 +1442,7 @@
                     },
                     "system.memory.limit" : {
                       "type" : "object",
+                      "additionalProperties" : false,
                       "properties" : {
                         "description" : {
                           "type" : "string",
@@ -1339,6 +1473,7 @@
                     },
                     "system.cpu.utilization" : {
                       "type" : "object",
+                      "additionalProperties" : false,
                       "properties" : {
                         "description" : {
                           "type" : "string",
@@ -1373,14 +1508,16 @@
             },
             "jvm" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                  "description" : "Default: {{ defaults.enabled }} (true)"
                 },
                 "attributes" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "jvm.memory.used" : {
                       "type" : "string",
@@ -1433,24 +1570,27 @@
             },
             "log4j" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                  "description" : "Default: {{ defaults.enabled }} (true)"
                 }
               }
             },
             "system" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                  "description" : "Default: {{ defaults.enabled }} (true)"
                 },
                 "attributes" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "system.filesystem.usage" : {
                       "type" : "string",
@@ -1464,9 +1604,9 @@
           }
         },
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "install" : {
           "type" : [ "boolean", "string" ],
@@ -1475,64 +1615,65 @@
         },
         "resource" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "service.namespace" : {
               "type" : "string",
               "default" : "{{ instance.environment }}",
-              "description" : "Default: {{ instance.environment }} ({{ instance.environment }})"
+              "description" : "Default: {{ instance.environment }} (development)"
             },
             "service.name" : {
               "type" : "string",
               "default" : "{{ application.name }}",
-              "description" : "Default: {{ application.name }} ({{ application.name }})"
+              "description" : "Default: {{ application.name }} (application)"
             },
             "service.version" : {
               "type" : "string",
               "default" : "{{ application.version }}",
-              "description" : "Default: {{ application.version }} ({{ application.version }})"
+              "description" : "Default: {{ application.version }} (unknown)"
             },
             "service.instance.id" : {
               "type" : "string",
               "default" : "{{ instance.id }}",
-              "description" : "Default: {{ instance.id }} ({{ instance.id }})"
+              "description" : "Default: {{ instance.id }} (service.application)"
             },
             "host.name" : {
               "type" : "string",
               "default" : "{{ instance.fqdn }}",
-              "description" : "Default: {{ instance.fqdn }} ({{ instance.fqdn }})"
+              "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
             },
             "host.ip" : {
-              "type" : "string",
-              "default" : "{{ CALCULATED.ipv4Addresses }}",
-              "description" : "Default: {{ CALCULATED.ipv4Addresses }} ({{ CALCULATED.ipv4Addresses }})"
+              "type" : "array"
             },
             "process.runtime.name" : {
               "type" : "string",
               "default" : "{{ SYSTEM.java_runtime_name }}",
-              "description" : "Default: {{ SYSTEM.java_runtime_name }} ({{ SYSTEM.java_runtime_name }})"
+              "description" : "Default: {{ SYSTEM.java_runtime_name }} (OpenJDK Runtime Environment)"
             },
             "process.runtime.version" : {
               "type" : "string",
               "default" : "{{ SYSTEM.java_runtime_version }}",
-              "description" : "Default: {{ SYSTEM.java_runtime_version }} ({{ SYSTEM.java_runtime_version }})"
+              "description" : "Default: {{ SYSTEM.java_runtime_version }} (17.0.8+7-LTS)"
             },
             "process.runtime.description" : {
               "type" : "string",
               "default" : "{{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}",
-              "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }} ({{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }})"
+              "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }} (Amazon.com Inc. OpenJDK 64-Bit Server VM 17.0.8+7-LTS)"
             }
           }
         },
         "exporters" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "logging" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
-                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} ({{ opentelemetry.exporters.otlp.endpoint ? false | true }})"
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} (true)"
                 },
                 "interval" : {
                   "type" : "string",
@@ -1543,11 +1684,12 @@
             },
             "jmx" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
-                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} ({{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }})"
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
                 },
                 "interval" : {
                   "type" : "string",
@@ -1558,14 +1700,16 @@
             },
             "otlp" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "http" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "enabled" : {
-                      "type" : "string",
+                      "type" : [ "boolean", "string" ],
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint ? true | false }}",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? true | false }} ({{ opentelemetry.exporters.otlp.endpoint ? true | false }})"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? true | false }} (false)"
                     },
                     "port" : {
                       "type" : [ "number", "string" ],
@@ -1579,12 +1723,13 @@
                     },
                     "headers" : {
                       "type" : "object",
+                      "additionalProperties" : true,
                       "properties" : { }
                     },
                     "connectTimeout" : {
                       "type" : "string",
                       "default" : "{{ defaults.connectTimeout }}",
-                      "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
+                      "description" : "Default: {{ defaults.connectTimeout }} (5s)"
                     },
                     "timeout" : {
                       "type" : "string",
@@ -1624,17 +1769,17 @@
                     "logsEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs)"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs (null:4318/v1/logs)"
                     },
                     "tracesEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces)"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces (null:4318/v1/traces)"
                     },
                     "metricsEndpoint" : {
                       "type" : "string",
                       "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics ({{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics)"
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics (null:4318/v1/metrics)"
                     }
                   }
                 }
@@ -1644,40 +1789,57 @@
         },
         "sampler" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ opentelemetry.enabled }}",
-              "description" : "Default: {{ opentelemetry.enabled }} ({{ opentelemetry.enabled }})"
+              "description" : "Default: {{ opentelemetry.enabled }} (true)"
+            },
+            "excludes" : {
+              "type" : "array"
+            },
+            "includes" : {
+              "type" : "array"
             }
           }
         },
         "meters" : {
           "type" : "object",
-          "properties" : { }
+          "additionalProperties" : false,
+          "properties" : {
+            "excludes" : {
+              "type" : "array"
+            },
+            "includes" : {
+              "type" : "array"
+            }
+          }
         }
       }
     },
     "reactivestreams" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "client" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ jetty.client.enabled }}",
-              "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+              "description" : "Default: {{ jetty.client.enabled }} (true)"
             },
             "connectTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.connectTimeout }}",
-              "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
+              "description" : "Default: {{ defaults.connectTimeout }} (5s)"
             },
             "idleTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.idleTimeout }}",
-              "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
             },
             "autoFragment" : {
               "type" : [ "boolean", "string" ],
@@ -1711,46 +1873,49 @@
             },
             "reactor" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ reactivestreams.client.enabled }}",
-                  "description" : "Default: {{ reactivestreams.client.enabled }} ({{ reactivestreams.client.enabled }})"
+                  "description" : "Default: {{ reactivestreams.client.enabled }} (true)"
                 }
               }
             }
           }
         },
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ jetty.server.websockets.enabled }}",
-              "description" : "Default: {{ jetty.server.websockets.enabled }} ({{ jetty.server.websockets.enabled }})"
+              "description" : "Default: {{ jetty.server.websockets.enabled }} (true)"
             },
             "scheme" : {
               "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }} ({{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }})"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }} (wss)"
             },
             "uri" : {
               "type" : "string",
               "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
-              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ ({{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/)"
+              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ (wss://service.xorcery.test:443/)"
             },
             "reactor" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ reactivestreams.server.enabled }}",
-                  "description" : "Default: {{ reactivestreams.server.enabled }} ({{ reactivestreams.server.enabled }})"
+                  "description" : "Default: {{ reactivestreams.server.enabled }} (true)"
                 }
               }
             }
@@ -1760,14 +1925,16 @@
     },
     "jmx" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "status" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             }
           }
         }
@@ -1775,34 +1942,37 @@
     },
     "status" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         }
       }
     },
     "thymeleaf" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "development" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.development }}",
-          "description" : "Default: {{ defaults.development }} ({{ defaults.development }})"
+          "description" : "Default: {{ defaults.development }} (false)"
         },
         "classloader" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ thymeleaf.enabled }}",
-              "description" : "Default: {{ thymeleaf.enabled }} ({{ thymeleaf.enabled }})"
+              "description" : "Default: {{ thymeleaf.enabled }} (true)"
             },
             "templateMode" : {
               "type" : "string",
@@ -1830,14 +2000,23 @@
               "description" : "Default: true"
             },
             "cacheable" : {
-              "type" : "string",
-              "default" : "{{ thymeleaf.development ? false : true }}",
-              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ thymeleaf.development ? false | true }}",
+              "description" : "Default: {{ thymeleaf.development ? false | true }} (true)"
             },
             "cacheTTL" : {
               "type" : "string",
               "default" : "1h",
               "description" : "Default: 1h"
+            },
+            "cacheablePatterns" : {
+              "type" : "array"
+            },
+            "nonCacheablePatterns" : {
+              "type" : "array"
+            },
+            "resolvablePatterns" : {
+              "type" : "array"
             },
             "decoupledLogic" : {
               "type" : [ "boolean", "string" ],
@@ -1846,12 +2025,14 @@
             },
             "aliases" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             }
           }
         },
         "webapplication" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
@@ -1884,14 +2065,23 @@
               "description" : "Default: true"
             },
             "cacheable" : {
-              "type" : "string",
-              "default" : "{{ thymeleaf.development ? false : true }}",
-              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ thymeleaf.development ? false | true }}",
+              "description" : "Default: {{ thymeleaf.development ? false | true }} (true)"
             },
             "cacheTTL" : {
               "type" : "string",
               "default" : "1h",
               "description" : "Default: 1h"
+            },
+            "cacheablePatterns" : {
+              "type" : "array"
+            },
+            "nonCacheablePatterns" : {
+              "type" : "array"
+            },
+            "resolvablePatterns" : {
+              "type" : "array"
             },
             "decoupledLogic" : {
               "type" : [ "boolean", "string" ],
@@ -1900,12 +2090,14 @@
             },
             "aliases" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             }
           }
         },
         "file" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
@@ -1938,14 +2130,23 @@
               "description" : "Default: true"
             },
             "cacheable" : {
-              "type" : "string",
-              "default" : "{{ thymeleaf.development ? false : true }}",
-              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ thymeleaf.development ? false | true }}",
+              "description" : "Default: {{ thymeleaf.development ? false | true }} (true)"
             },
             "cacheTTL" : {
               "type" : "string",
               "default" : "1h",
               "description" : "Default: 1h"
+            },
+            "cacheablePatterns" : {
+              "type" : "array"
+            },
+            "nonCacheablePatterns" : {
+              "type" : "array"
+            },
+            "resolvablePatterns" : {
+              "type" : "array"
             },
             "decoupledLogic" : {
               "type" : [ "boolean", "string" ],
@@ -1954,6 +2155,7 @@
             },
             "aliases" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             }
           }

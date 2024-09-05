@@ -14,17 +14,20 @@
   "$defs" : {
     "opentelemetry" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "instrumentations" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "log4j" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                  "description" : "Default: {{ defaults.enabled }} (true)"
                 }
               }
             }
@@ -34,20 +37,19 @@
     },
     "log4j2" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "Configuration" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
-            "packages" : {
-              "type" : "string",
-              "default" : "io.opentelemetry.instrumentation.log4j.appender.v2_17",
-              "description" : "Default: io.opentelemetry.instrumentation.log4j.appender.v2_17"
-            },
             "appenders" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "OpenTelemetry" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "name" : {
                       "type" : "string",
@@ -75,10 +77,16 @@
             },
             "Loggers" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "Root" : {
                   "type" : "object",
-                  "properties" : { }
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "AppenderRef" : {
+                      "type" : "array"
+                    }
+                  }
                 }
               }
             }

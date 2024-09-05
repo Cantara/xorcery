@@ -11,21 +11,22 @@
   "$defs" : {
     "domainevents" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "eventstore" : {
           "type" : "string",
           "default" : "{{ instance.api }}eventstore",
-          "description" : "Default: {{ instance.api }}eventstore ({{ instance.api }}eventstore)"
+          "description" : "Default: {{ instance.api }}eventstore (http://service.xorcery.test/api/eventstore)"
         },
         "projections" : {
           "type" : "string",
           "default" : "{{ instance.api }}projections",
-          "description" : "Default: {{ instance.api }}projections ({{ instance.api }}projections)"
+          "description" : "Default: {{ instance.api }}projections (http://service.xorcery.test/api/projections)"
         }
       }
     }

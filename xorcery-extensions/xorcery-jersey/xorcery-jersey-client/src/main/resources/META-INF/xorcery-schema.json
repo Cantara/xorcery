@@ -11,19 +11,21 @@
   "$defs" : {
     "jersey" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "client" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ jetty.client.enabled }}",
-              "description" : "Default: {{ jetty.client.enabled }} ({{ jetty.client.enabled }})"
+              "description" : "Default: {{ jetty.client.enabled }} (true)"
             },
             "connectTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.connectTimeout }}",
-              "description" : "Default: {{ defaults.connectTimeout }} ({{ defaults.connectTimeout }})"
+              "description" : "Default: {{ defaults.connectTimeout }} (5s)"
             },
             "readTimeout" : {
               "type" : "string",
@@ -32,6 +34,7 @@
             },
             "properties" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             }
           }

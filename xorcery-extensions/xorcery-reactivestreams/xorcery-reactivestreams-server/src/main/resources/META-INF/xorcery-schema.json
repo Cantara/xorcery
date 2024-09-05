@@ -11,37 +11,40 @@
   "$defs" : {
     "reactivestreams" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ jetty.server.websockets.enabled }}",
-              "description" : "Default: {{ jetty.server.websockets.enabled }} ({{ jetty.server.websockets.enabled }})"
+              "description" : "Default: {{ jetty.server.websockets.enabled }} (true)"
             },
             "scheme" : {
               "type" : "string",
               "default" : "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}",
-              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }} ({{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }})"
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }} (wss)"
             },
             "uri" : {
               "type" : "string",
               "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
-              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ ({{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/)"
+              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ (wss://service.xorcery.test:443/)"
             },
             "reactor" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ reactivestreams.server.enabled }}",
-                  "description" : "Default: {{ reactivestreams.server.enabled }} ({{ reactivestreams.server.enabled }})"
+                  "description" : "Default: {{ reactivestreams.server.enabled }} (true)"
                 }
               }
             }

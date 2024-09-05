@@ -11,19 +11,24 @@
   "$defs" : {
     "neo4jdatabase" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "path" : {
           "type" : "string",
           "default" : "{{ instance.home }}/neo4j",
-          "description" : "Default: {{ instance.home }}/neo4j ({{ instance.home }}/neo4j)"
+          "description" : "Default: {{ instance.home }}/neo4j (C:\\Users\\ricka\\IdeaProjects\\xorcery/neo4j)"
+        },
+        "startup" : {
+          "type" : "array"
         },
         "domain" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "version" : {
               "type" : "string",
@@ -39,17 +44,20 @@
         },
         "settings" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "server" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "directories" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "data" : {
                       "type" : "string",
                       "default" : "{{ neo4jdatabase.path }}/data",
-                      "description" : "Default: {{ neo4jdatabase.path }}/data ({{ neo4jdatabase.path }}/data)"
+                      "description" : "Default: {{ neo4jdatabase.path }}/data (C:\\Users\\ricka\\IdeaProjects\\xorcery/neo4j/data)"
                     }
                   }
                 }
@@ -59,11 +67,12 @@
         },
         "metrics" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             }
           }
         }

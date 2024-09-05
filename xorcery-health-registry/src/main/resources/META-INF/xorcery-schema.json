@@ -11,9 +11,11 @@
   "$defs" : {
     "health" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "updater" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "interval" : {
               "type" : "string",

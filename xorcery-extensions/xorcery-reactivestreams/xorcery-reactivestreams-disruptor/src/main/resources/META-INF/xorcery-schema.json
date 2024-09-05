@@ -11,9 +11,11 @@
   "$defs" : {
     "disruptor" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "standard" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "size" : {
               "type" : [ "number", "string" ],

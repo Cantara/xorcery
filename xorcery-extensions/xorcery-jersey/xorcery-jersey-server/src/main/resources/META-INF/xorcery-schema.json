@@ -11,17 +11,23 @@
   "$defs" : {
     "jersey" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ jetty.server.enabled }}",
-              "description" : "Default: {{ jetty.server.enabled }} ({{ jetty.server.enabled }})"
+              "description" : "Default: {{ jetty.server.enabled }} (true)"
+            },
+            "register" : {
+              "type" : "array"
             },
             "mediaTypes" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "html" : {
                   "type" : "string",

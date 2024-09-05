@@ -11,9 +11,11 @@
   "$defs" : {
     "dns" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "route53" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "region" : {
               "type" : "string",

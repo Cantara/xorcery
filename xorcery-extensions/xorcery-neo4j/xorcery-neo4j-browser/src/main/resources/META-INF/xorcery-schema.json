@@ -11,6 +11,7 @@
   "$defs" : {
     "neo4jbrowser" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
           "type" : "string",
@@ -19,11 +20,12 @@
         },
         "ssl" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ neo4jbrowser.enabled ? certificates.enabled | false }}",
-              "description" : "Default: {{ neo4jbrowser.enabled ? certificates.enabled | false }} ({{ neo4jbrowser.enabled ? certificates.enabled | false }})"
+              "description" : "Default: {{ neo4jbrowser.enabled ? certificates.enabled | false }} (false)"
             }
           }
         }

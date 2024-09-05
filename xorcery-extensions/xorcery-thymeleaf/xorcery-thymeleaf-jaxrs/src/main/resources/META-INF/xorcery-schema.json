@@ -11,24 +11,26 @@
   "$defs" : {
     "thymeleaf" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "development" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.development }}",
-          "description" : "Default: {{ defaults.development }} ({{ defaults.development }})"
+          "description" : "Default: {{ defaults.development }} (false)"
         },
         "classloader" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ thymeleaf.enabled }}",
-              "description" : "Default: {{ thymeleaf.enabled }} ({{ thymeleaf.enabled }})"
+              "description" : "Default: {{ thymeleaf.enabled }} (true)"
             },
             "templateMode" : {
               "type" : "string",
@@ -56,14 +58,23 @@
               "description" : "Default: true"
             },
             "cacheable" : {
-              "type" : "string",
-              "default" : "{{ thymeleaf.development ? false : true }}",
-              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ thymeleaf.development ? false | true }}",
+              "description" : "Default: {{ thymeleaf.development ? false | true }} (true)"
             },
             "cacheTTL" : {
               "type" : "string",
               "default" : "1h",
               "description" : "Default: 1h"
+            },
+            "cacheablePatterns" : {
+              "type" : "array"
+            },
+            "nonCacheablePatterns" : {
+              "type" : "array"
+            },
+            "resolvablePatterns" : {
+              "type" : "array"
             },
             "decoupledLogic" : {
               "type" : [ "boolean", "string" ],
@@ -72,12 +83,14 @@
             },
             "aliases" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             }
           }
         },
         "webapplication" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
@@ -110,14 +123,23 @@
               "description" : "Default: true"
             },
             "cacheable" : {
-              "type" : "string",
-              "default" : "{{ thymeleaf.development ? false : true }}",
-              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ thymeleaf.development ? false | true }}",
+              "description" : "Default: {{ thymeleaf.development ? false | true }} (true)"
             },
             "cacheTTL" : {
               "type" : "string",
               "default" : "1h",
               "description" : "Default: 1h"
+            },
+            "cacheablePatterns" : {
+              "type" : "array"
+            },
+            "nonCacheablePatterns" : {
+              "type" : "array"
+            },
+            "resolvablePatterns" : {
+              "type" : "array"
             },
             "decoupledLogic" : {
               "type" : [ "boolean", "string" ],
@@ -126,12 +148,14 @@
             },
             "aliases" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             }
           }
         },
         "file" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
@@ -164,14 +188,23 @@
               "description" : "Default: true"
             },
             "cacheable" : {
-              "type" : "string",
-              "default" : "{{ thymeleaf.development ? false : true }}",
-              "description" : "Default: {{ thymeleaf.development ? false : true }} ({{ thymeleaf.development ? false : true }})"
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ thymeleaf.development ? false | true }}",
+              "description" : "Default: {{ thymeleaf.development ? false | true }} (true)"
             },
             "cacheTTL" : {
               "type" : "string",
               "default" : "1h",
               "description" : "Default: 1h"
+            },
+            "cacheablePatterns" : {
+              "type" : "array"
+            },
+            "nonCacheablePatterns" : {
+              "type" : "array"
+            },
+            "resolvablePatterns" : {
+              "type" : "array"
             },
             "decoupledLogic" : {
               "type" : [ "boolean", "string" ],
@@ -180,6 +213,7 @@
             },
             "aliases" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             }
           }

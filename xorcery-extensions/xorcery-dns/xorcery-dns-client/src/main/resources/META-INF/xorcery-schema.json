@@ -11,17 +11,26 @@
   "$defs" : {
     "dns" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "client" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "nameServers" : {
+              "type" : "array"
+            },
+            "search" : {
+              "type" : "array"
             },
             "hosts" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             },
             "timeout" : {

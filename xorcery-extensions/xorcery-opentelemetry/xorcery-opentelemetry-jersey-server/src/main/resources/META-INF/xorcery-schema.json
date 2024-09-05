@@ -14,20 +14,24 @@
   "$defs" : {
     "opentelemetry" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "instrumentations" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "jersey" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                  "description" : "Default: {{ defaults.enabled }} (true)"
                 },
                 "attributes" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "http.request.method" : {
                       "type" : "string",
@@ -69,10 +73,16 @@
     },
     "jersey" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "server" : {
           "type" : "object",
-          "properties" : { }
+          "additionalProperties" : false,
+          "properties" : {
+            "register" : {
+              "type" : "array"
+            }
+          }
         }
       }
     }

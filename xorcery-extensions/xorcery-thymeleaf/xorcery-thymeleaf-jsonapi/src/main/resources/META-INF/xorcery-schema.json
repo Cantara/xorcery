@@ -11,10 +11,16 @@
   "$defs" : {
     "jersey" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "server" : {
           "type" : "object",
-          "properties" : { }
+          "additionalProperties" : false,
+          "properties" : {
+            "register" : {
+              "type" : "array"
+            }
+          }
         }
       }
     }

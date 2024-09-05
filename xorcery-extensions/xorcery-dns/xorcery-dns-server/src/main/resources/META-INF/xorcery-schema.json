@@ -11,42 +11,52 @@
   "$defs" : {
     "dns" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "port" : {
               "type" : [ "number", "string" ],
               "default" : 53,
               "description" : "Default: 53"
             },
+            "zones" : {
+              "type" : "array"
+            },
+            "keys" : {
+              "type" : "array"
+            },
             "tcp" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ dns.server.enabled }}",
-                  "description" : "Default: {{ dns.server.enabled }} ({{ dns.server.enabled }})"
+                  "description" : "Default: {{ dns.server.enabled }} (true)"
                 },
                 "idleTimeout" : {
                   "type" : "string",
                   "default" : "{{ defaults.idleTimeout }}",
-                  "description" : "Default: {{ defaults.idleTimeout }} ({{ defaults.idleTimeout }})"
+                  "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
                 }
               }
             },
             "udp" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ dns.server.enabled }}",
-                  "description" : "Default: {{ dns.server.enabled }} ({{ dns.server.enabled }})"
+                  "description" : "Default: {{ dns.server.enabled }} (true)"
                 }
               }
             }

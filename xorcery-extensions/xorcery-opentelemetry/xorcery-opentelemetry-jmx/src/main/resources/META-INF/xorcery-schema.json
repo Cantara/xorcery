@@ -11,18 +11,23 @@
   "$defs" : {
     "opentelemetry" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "instrumentations" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "jmx" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "attributes" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "classloading.loadedClasses" : {
                       "type" : "object",
+                      "additionalProperties" : false,
                       "properties" : {
                         "description" : {
                           "type" : "string",
@@ -53,6 +58,7 @@
                     },
                     "system.memory.limit" : {
                       "type" : "object",
+                      "additionalProperties" : false,
                       "properties" : {
                         "description" : {
                           "type" : "string",
@@ -83,6 +89,7 @@
                     },
                     "system.cpu.utilization" : {
                       "type" : "object",
+                      "additionalProperties" : false,
                       "properties" : {
                         "description" : {
                           "type" : "string",

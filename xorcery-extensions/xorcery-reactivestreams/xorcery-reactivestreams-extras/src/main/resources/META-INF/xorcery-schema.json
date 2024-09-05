@@ -11,11 +11,15 @@
   "$defs" : {
     "yamlfilepublisher" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "string",
+          "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "publishers" : {
+          "type" : "array"
         }
       }
     }

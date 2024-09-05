@@ -11,20 +11,24 @@
   "$defs" : {
     "opentelemetry" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "instrumentations" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "jvm" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : "string",
+                  "type" : [ "boolean", "string" ],
                   "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+                  "description" : "Default: {{ defaults.enabled }} (true)"
                 },
                 "attributes" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "jvm.memory.used" : {
                       "type" : "string",

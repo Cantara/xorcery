@@ -11,17 +11,20 @@
   "$defs" : {
     "jwt" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "server" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "token" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "duration" : {
                   "type" : "string",
@@ -31,12 +34,13 @@
                 "issuer" : {
                   "type" : "string",
                   "default" : "{{ instance.fqdn }}",
-                  "description" : "Default: {{ instance.fqdn }} ({{ instance.fqdn }})"
+                  "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
                 }
               }
             },
             "cookie" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "duration" : {
                   "type" : "string",
@@ -56,7 +60,28 @@
                 "domain" : {
                   "type" : "string",
                   "default" : "{{ instance.domain }}",
-                  "description" : "Default: {{ instance.domain }} ({{ instance.domain }})"
+                  "description" : "Default: {{ instance.domain }} (xorcery.test)"
+                }
+              }
+            },
+            "keys" : {
+              "type" : "array",
+              "items" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "kid" : {
+                    "type" : "string"
+                  },
+                  "alg" : {
+                    "type" : "string"
+                  },
+                  "publicKey" : {
+                    "type" : "string"
+                  },
+                  "privateKey" : {
+                    "type" : "string"
+                  }
                 }
               }
             }
@@ -64,16 +89,18 @@
         },
         "configuration" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} ({{ defaults.enabled }})"
+              "description" : "Default: {{ defaults.enabled }} (true)"
             }
           }
         },
         "users" : {
           "type" : "object",
+          "additionalProperties" : true,
           "properties" : { }
         }
       }

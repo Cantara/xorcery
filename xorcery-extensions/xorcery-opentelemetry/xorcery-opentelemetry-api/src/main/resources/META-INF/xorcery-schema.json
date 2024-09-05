@@ -11,14 +11,16 @@
   "$defs" : {
     "opentelemetry" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "global" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ opentelemetry.enabled ? false | true }}",
-              "description" : "Default: {{ opentelemetry.enabled ? false | true }} ({{ opentelemetry.enabled ? false | true }})"
+              "description" : "Default: {{ opentelemetry.enabled ? false | true }} (true)"
             }
           }
         }

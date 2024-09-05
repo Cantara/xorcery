@@ -11,14 +11,19 @@
   "$defs" : {
     "eventstore" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "projections" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ eventstore.enabled }}",
-              "description" : "Default: {{ eventstore.enabled }} ({{ eventstore.enabled }})"
+              "description" : "Default: {{ eventstore.enabled }} (true)"
+            },
+            "projections" : {
+              "type" : "array"
             }
           }
         }
