@@ -23,9 +23,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.net.Proxy;
+import java.util.*;
 
 /**
  * @author rickardoberg
@@ -95,6 +94,11 @@ public record JsonSchema(ObjectNode json)
 
         public Builder type(Types value) {
             builder.set("type", builder.textNode(value.name().toLowerCase()));
+            return this;
+        }
+
+        public Builder types(Types... value) {
+            builder.set("type", builder.arrayNode().addAll(Arrays.stream(value).map(t -> t.name().toLowerCase()).map(builder::textNode).toList()));
             return this;
         }
 
@@ -181,6 +185,10 @@ public record JsonSchema(ObjectNode json)
 
     public Types getType() {
         return getString("type").map(t -> Types.valueOf(Strings.capitalize(t))).orElse(Types.Null);
+    }
+
+    public List<Types> getTypes() {
+        return getListAs("type", str -> Types.valueOf(Strings.capitalize(str.asText()))).orElse(Collections.emptyList());
     }
 
     public Optional<List<String>> getRequired() {
