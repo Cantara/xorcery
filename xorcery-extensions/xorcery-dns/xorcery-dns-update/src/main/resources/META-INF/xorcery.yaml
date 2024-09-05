@@ -1,6 +1,6 @@
 dns:
   dyndns:
-    enabled: "{{ dns.registration.enabled }}"
+    enabled: "{{ dns.client.enabled }}"
     timeout: 30s
     ttl: 60s
 # TSIG key for DDNS updates

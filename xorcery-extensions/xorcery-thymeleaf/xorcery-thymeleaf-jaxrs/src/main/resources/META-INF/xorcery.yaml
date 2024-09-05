@@ -9,7 +9,7 @@ thymeleaf:
     prefix: "templates/"
     suffix: ".html"
     checkExistence: true
-    cacheable: "{{ thymeleaf.development ? false : true }}"
+    cacheable: "{{ thymeleaf.development ? false | true }}"
     cacheTTL: 1h
     cacheablePatterns: []
     nonCacheablePatterns: []
@@ -24,7 +24,7 @@ thymeleaf:
     prefix: "templates/"
     suffix: ".html"
     checkExistence: true
-    cacheable: "{{ thymeleaf.development ? false : true }}"
+    cacheable: "{{ thymeleaf.development ? false | true }}"
     cacheTTL: 1h
     cacheablePatterns: []
     nonCacheablePatterns: []
@@ -39,7 +39,7 @@ thymeleaf:
     prefix: ""
     suffix: ".html"
     checkExistence: true
-    cacheable: "{{ thymeleaf.development ? false : true }}"
+    cacheable: "{{ thymeleaf.development ? false | true }}"
     cacheTTL: 1h
     cacheablePatterns: []
     nonCacheablePatterns: []

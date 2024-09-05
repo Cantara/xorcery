@@ -5,7 +5,6 @@ opentelemetry:
 
 log4j2:
   Configuration:
-    packages: "io.opentelemetry.instrumentation.log4j.appender.v2_17"
     appenders:
       OpenTelemetry:
         name: OpenTelemetryAppender

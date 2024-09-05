@@ -1,8 +1,8 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-core/schema",
-  "title" : "xorcery-core configuration JSON Schema",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-configuration-api/schema",
+  "title" : "xorcery-configuration-api configuration JSON Schema",
   "properties" : {
     "instance" : {
       "$ref" : "#/$defs/instance"
@@ -30,22 +30,17 @@
         "id" : {
           "type" : "string",
           "default" : "{{ instance.host}}.{{ application.name}}",
-          "description" : "Default: {{ instance.host}}.{{ application.name}} ({{ instance.host}}.{{ application.name}})"
+          "description" : "Default: {{ instance.host}}.{{ application.name}} (.application)"
         },
         "host" : {
           "type" : "string",
           "default" : "{{ CALCULATED.hostName }}",
-          "description" : "Default: {{ CALCULATED.hostName }} (service)"
+          "description" : "Default: {{ CALCULATED.hostName }} ({{ CALCULATED.hostName }})"
         },
         "fqdn" : {
           "type" : "string",
           "default" : "{{ instance.host }}.{{ instance.domain }}",
-          "description" : "Default: {{ instance.host }}.{{ instance.domain }} ({{ instance.host }}.{{ instance.domain }})"
-        },
-        "ip" : {
-          "type" : "string",
-          "default" : "{{ CALCULATED.ip | null }}",
-          "description" : "Default: {{ CALCULATED.ip | null }} (192.168.0.2)"
+          "description" : "Default: {{ instance.host }}.{{ instance.domain }} (.xorcery.test)"
         },
         "domain" : {
           "type" : "string",
@@ -71,12 +66,12 @@
         "uri" : {
           "type" : "string",
           "default" : "http://{{ instance.fqdn }}/",
-          "description" : "Default: http://{{ instance.fqdn }}/ (http://{{ instance.fqdn }}/)"
+          "description" : "Default: http://{{ instance.fqdn }}/ (http://.xorcery.test/)"
         },
         "api" : {
           "type" : "string",
           "default" : "{{ instance.uri }}api/",
-          "description" : "Default: {{ instance.uri }}api/ ({{ instance.uri }}api/)"
+          "description" : "Default: {{ instance.uri }}api/ (http://.xorcery.test/api/)"
         }
       }
     },

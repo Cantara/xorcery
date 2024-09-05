@@ -91,6 +91,7 @@ public class ConfigurationSchemaBuilder {
 
         JsonSchema.Builder schema = new JsonSchema.Builder();
         schema.type(Types.Object);
+        schema.additionalProperties(false);
         Properties.Builder properties = new Properties.Builder();
         for (Map.Entry<String, JsonNode> property : configuration.properties()) {
 

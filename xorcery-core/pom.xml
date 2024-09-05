@@ -30,15 +30,7 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-configuration-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-json</artifactId>
         </dependency>
 
         <!-- Dependency Injection through HK2 -->
@@ -77,26 +69,4 @@
             <artifactId>log4j-api</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-module-jsonschema</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>module-configuration-jsonschema</goal>
-                        </goals>
-                        <configuration>
-                            <configurationFile>${project.basedir}/src/main/resources/META-INF/xorcery-defaults.yaml
-                            </configurationFile>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

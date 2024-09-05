@@ -56,4 +56,25 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-module-jsonschema</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>module-configuration-jsonschema</goal>
+                        </goals>
+                        <configuration>
+                            <configurationFile>${project.basedir}/src/main/resources/META-INF/xorcery-defaults.yaml
+                            </configurationFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
