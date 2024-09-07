@@ -6,6 +6,3 @@ jetty:
     ssl:
       port: "{{ CALCULATED.dynamicPorts.ssl }}"
     minThreads: 3
-    security:
-      jwt:
-        issuers:
