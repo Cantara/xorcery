@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.opensearch.client.search;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.opensearch.client.OpenSearchClient;
 import com.exoreaction.xorcery.opensearch.client.document.BulkResponse;
 import com.exoreaction.xorcery.opensearch.client.document.DocumentClientIT;
@@ -89,7 +89,7 @@ public class SearchClientIT {
 
     @BeforeAll
     public static void setup() throws IOException, ExecutionException, InterruptedException, TimeoutException {
-        configuration = new Configuration.Builder().with(new StandardConfigurationBuilder()::addTestDefaults).build();
+        configuration = new ConfigurationBuilder().addTestDefaults().build();;
 
         URI host = configuration.getURI("opensearch.url").orElseThrow();
         java.util.logging.Logger logger1 = java.util.logging.Logger.getLogger("client.opensearch");

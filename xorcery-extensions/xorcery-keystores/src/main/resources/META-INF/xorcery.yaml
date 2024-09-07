@@ -1,13 +1,7 @@
+$schema: ./xorcery-schema.json
+
 keystores:
   enabled: "{{ defaults.enabled }}"
   defaultPassword: "secret:password"
 
-  secrets:
-    template: "META-INF/secrets.p12"
-    path: "{{ instance.home }}/secrets.p12"
-    password: "{{ keystores.defaultPassword }}"
-
-secrets:
-  keystore:
-    enabled: "{{secrets.enabled}}"
-    name: "secrets"
+  stores: []

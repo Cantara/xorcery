@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.certificates.ca;
 
 import com.exoreaction.xorcery.certificates.spi.CertificatesProvider;
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.keystores.KeyStoreConfiguration;
 import com.exoreaction.xorcery.keystores.KeyStores;
 import com.exoreaction.xorcery.keystores.KeyStoresConfiguration;
 import com.exoreaction.xorcery.secrets.Secrets;
@@ -63,6 +64,7 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -87,13 +89,17 @@ public class IntermediateCACertificatesProvider
     private final KeyStoresConfiguration keyStoresConfiguration;
     private final KeyStores keyStores;
     private final Secrets secrets;
+    private final KeyStoreConfiguration sslKeyStoreConfiguration;
+    private final KeyStoreConfiguration caStoreConfiguration;
 
     @Inject
     public IntermediateCACertificatesProvider(Configuration configuration, KeyStores keyStores, Secrets secrets) throws NoSuchAlgorithmException {
         intermediateCaConfiguration = new IntermediateCaConfiguration(configuration.getConfiguration("intermediateca"));
         intermediateCaKeyStore = keyStores.getKeyStore(KEYSTORE_NAME);
         trustStore = keyStores.getKeyStore("truststore");
-        keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
+        keyStoresConfiguration = KeyStoresConfiguration.get(configuration);
+        sslKeyStoreConfiguration = keyStoresConfiguration.getKeyStoreConfiguration("ssl").orElseThrow(Configuration.missing("ssl"));
+        caStoreConfiguration = keyStoresConfiguration.getKeyStoreConfiguration(KEYSTORE_NAME).orElseThrow(Configuration.missing(KEYSTORE_NAME));
         this.keyStores = keyStores;
         this.secrets = secrets;
 
@@ -151,7 +157,7 @@ public class IntermediateCACertificatesProvider
             }
 
             JcaContentSignerBuilder csrBuilder = new JcaContentSignerBuilder("SHA256withECDSA").setProvider(PROVIDER_NAME);
-            char[] password = keyStoresConfiguration.getKeyStoreConfiguration("ssl").getPassword()
+            char[] password = sslKeyStoreConfiguration.getPassword()
                     .map(secrets::getSecretString).map(String::toCharArray).orElse(null);
             ContentSigner csrContentSigner = csrBuilder.build((PrivateKey) intermediateCaKeyStore.getKey(caCertAlias, password));
             X509CertificateHolder issuedCertHolder = issuedCertBuilder.build(csrContentSigner);
@@ -177,7 +183,7 @@ public class IntermediateCACertificatesProvider
 
         {
             X509Certificate signingCert = (X509Certificate) intermediateCaKeyStore.getCertificate(caCertAlias);
-            char[] password = keyStoresConfiguration.getKeyStoreConfiguration(KEYSTORE_NAME).getPassword()
+            char[] password = caStoreConfiguration.getPassword()
                     .map(secrets::getSecretString).map(String::toCharArray).orElse(null);
             X509CRL crl = createEmptyCRL((PrivateKey) intermediateCaKeyStore.getKey(caCertAlias, password), signingCert);
 
@@ -191,7 +197,7 @@ public class IntermediateCACertificatesProvider
             KeyStore rootStore = keyStores.getKeyStore("rootstore");
 
             X509Certificate signingCert = (X509Certificate) rootStore.getCertificate("root");
-            char[] password = keyStoresConfiguration.getKeyStoreConfiguration("rootstore").getPassword()
+            char[] password = keyStoresConfiguration.getKeyStoreConfiguration("rootstore").orElseThrow().getPassword()
                     .map(secrets::getSecretString).map(String::toCharArray).orElse(null);
             X509CRL crl = createEmptyCRL((PrivateKey) rootStore.getKey("root", password), signingCert);
             PemWriter pWrt = new PemWriter(stringWriter);

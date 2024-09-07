@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.certificates.ca.test;
 
 import com.exoreaction.xorcery.certificates.ca.IntermediateCACertificatesProvider;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import org.junit.jupiter.api.Test;
 
@@ -29,8 +29,9 @@ public class GenerateEmptyCRLTest {
 
     @Test
     public void testGenerateEmptyCRL() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+        Configuration configuration = new ConfigurationBuilder()
+                .addTestDefaults()
+                .addYaml(config)
                 .build();
         System.out.println(configuration);
         try (Xorcery xorcery = new Xorcery(configuration))

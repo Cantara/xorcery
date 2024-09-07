@@ -4,6 +4,10 @@ array:
   - 5
   - 6
 
+samearray:
+  - "some"
+  - "value"
+
 objectarray:
   - id: blah2
     type: xyzzy2

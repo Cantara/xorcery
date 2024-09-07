@@ -4,11 +4,13 @@
   "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-keystores/schema",
   "title" : "xorcery-keystores configuration JSON Schema",
   "properties" : {
+    "$schema" : {
+      "type" : "string",
+      "default" : "./xorcery-schema.json",
+      "description" : "Default: ./xorcery-schema.json"
+    },
     "keystores" : {
       "$ref" : "#/$defs/keystores"
-    },
-    "secrets" : {
-      "$ref" : "#/$defs/secrets"
     }
   },
   "$defs" : {
@@ -26,46 +28,26 @@
           "default" : "secret:password",
           "description" : "Default: secret:password"
         },
-        "secrets" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "template" : {
-              "type" : "string",
-              "default" : "META-INF/secrets.p12",
-              "description" : "Default: META-INF/secrets.p12"
-            },
-            "path" : {
-              "type" : "string",
-              "default" : "{{ instance.home }}/secrets.p12",
-              "description" : "Default: {{ instance.home }}/secrets.p12"
-            },
-            "password" : {
-              "type" : "string",
-              "default" : "{{ keystores.defaultPassword }}",
-              "description" : "Default: {{ keystores.defaultPassword }} (secret:password)"
-            }
-          }
-        }
-      }
-    },
-    "secrets" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "keystore" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{secrets.enabled}}",
-              "description" : "Default: {{secrets.enabled}} (true)"
-            },
-            "name" : {
-              "type" : "string",
-              "default" : "secrets",
-              "description" : "Default: secrets"
+        "stores" : {
+          "type" : "array",
+          "items" : {
+            "properties" : {
+              "name" : {
+                "type" : "string"
+              },
+              "path" : {
+                "type" : "string"
+              },
+              "password" : {
+                "type" : "string"
+              },
+              "addRootCa" : {
+                "type" : [ "boolean", "string" ],
+                "default" : false
+              },
+              "template" : {
+                "type" : "string"
+              }
             }
           }
         }

@@ -6,6 +6,11 @@
   "properties" : {
     "jetty" : {
       "$ref" : "#/$defs/jetty"
+    },
+    "$schema" : {
+      "type" : "string",
+      "default" : "./xorcery-schema.json",
+      "description" : "Default: ./xorcery-schema.json"
     }
   },
   "$defs" : {
@@ -140,6 +145,10 @@
                   "type" : "string",
                   "default" : "self",
                   "description" : "Default: self"
+                },
+                "crls" : {
+                  "default" : null,
+                  "description" : "Default: null"
                 }
               }
             },
@@ -227,19 +236,7 @@
                       "description" : "Default: token"
                     },
                     "issuers" : {
-                      "type" : "object",
-                      "additionalProperties" : true,
-                      "properties" : {
-                        "default" : {
-                          "type" : "object",
-                          "additionalProperties" : false,
-                          "properties" : {
-                            "keys" : {
-                              "type" : "array"
-                            }
-                          }
-                        }
-                      }
+                      "type" : "array"
                     }
                   }
                 }

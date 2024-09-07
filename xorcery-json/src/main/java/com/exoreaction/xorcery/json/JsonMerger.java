@@ -113,6 +113,10 @@ public class JsonMerger
                             currentArray.add(addingValue);
                         }
                     } else {
+                        for (JsonNode jsonNode : currentArray) {
+                            if (jsonNode.equals(addingValue))
+                                return;
+                        }
                         currentArray.add(addingValue);
                     }
                 });

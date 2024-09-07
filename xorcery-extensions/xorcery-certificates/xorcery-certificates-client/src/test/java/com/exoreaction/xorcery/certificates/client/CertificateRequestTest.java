@@ -55,10 +55,10 @@ public class CertificateRequestTest {
 
         //System.setProperty("javax.net.debug", "ssl,handshake");
 
-        Configuration configuration1 = new ConfigurationBuilder().addTestDefaults().addYaml(config).with(b -> b
-                        .add("jetty.server.http.port", 80)
-                        .add("jetty.server.ssl.port", managerPort)
-                        .add("certificates.server.enabled", true))
+        Configuration configuration1 = new ConfigurationBuilder().addTestDefaults().addYaml(config).builder()
+                .add("jetty.server.http.port", 80)
+                .add("jetty.server.ssl.port", managerPort)
+                .add("certificates.server.enabled", true)
                 .build();
 
         System.out.println(configuration1);

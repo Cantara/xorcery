@@ -18,7 +18,6 @@ package com.exoreaction.xorcery.runner;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationLogger;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,8 +75,7 @@ public class Main
     }
 
     public Configuration loadConfiguration() {
-        StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
-        ConfigurationBuilder builder = new ConfigurationBuilder().addDefaults().with(standardConfigurationBuilder.addFile(configuration));
+        ConfigurationBuilder builder = new ConfigurationBuilder().addDefaults().addFile(configuration);
 
         // Log final and resolved configuration
         ConfigurationLogger.getLogger().log(builder.builder().toString());

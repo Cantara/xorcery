@@ -30,7 +30,11 @@
     <dependencies>
         <dependency>
             <groupId>com.exoreaction.xorcery</groupId>
-            <artifactId>xorcery-configuration</artifactId>
+            <artifactId>xorcery-configuration-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-configuration-validation</artifactId>
         </dependency>
 
         <!-- Dependency Injection through HK2 -->

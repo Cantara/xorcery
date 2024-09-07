@@ -119,11 +119,13 @@ public class ClientBuilderFactory
 
         jerseyClientConfiguration.getKeyStoreName().ifPresentOrElse(name ->
         {
-            KeyStoresConfiguration keyStoresConfiguration = KeyStoresConfiguration.get(configuration);
-            KeyStores ks = Objects.requireNonNull(keyStoresProvider.get(), "KeyStores service not available");
-            Secrets secrets = Objects.requireNonNull(secretsProvider.get(), "Secrets service not available");
-            String password = keyStoresConfiguration.getKeyStoreConfiguration(name).getPassword().map(secrets::getSecretString).orElse(null);
-            builder.keyStore(Objects.requireNonNull(ks.getKeyStore(name), "No such KeyStore:"+name),password );
+            KeyStoresConfiguration.get(configuration).getKeyStoreConfiguration(name).ifPresent(keyStoreConfiguration ->
+            {
+                KeyStores ks = Objects.requireNonNull(keyStoresProvider.get(), "KeyStores service not available");
+                Secrets secrets = Objects.requireNonNull(secretsProvider.get(), "Secrets service not available");
+                String password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).orElse(null);
+                builder.keyStore(Objects.requireNonNull(ks.getKeyStore(name), "No such KeyStore:"+name),password );
+            });
         }, ()->
         {
             logger.warn("SSL enabled but no keystore specified");

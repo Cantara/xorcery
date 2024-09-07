@@ -37,7 +37,7 @@ public class ClientSslContextFactoryFactory {
         factory = new SslContextFactory.Client();
 
         JettyClientSslConfiguration jettyClientSslConfiguration = new JettyClientSslConfiguration(configuration.getConfiguration("jetty.client.ssl"));
-        KeyStoresConfiguration keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
+        KeyStoresConfiguration keyStoresConfiguration = KeyStoresConfiguration.get(configuration);
 
         // Client settings
         keyStores.ifPresentOrElse(ks ->
@@ -45,7 +45,7 @@ public class ClientSslContextFactoryFactory {
             jettyClientSslConfiguration.getKeyStoreName().ifPresentOrElse(name ->
             {
                 factory.setKeyStore(Objects.requireNonNull(ks.getKeyStore(name), "No such KeyStore:"+name));
-                factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration(name).getPassword().map(secrets::getSecretString).orElse(null));
+                factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration(name).orElseThrow().getPassword().map(secrets::getSecretString).orElse(null));
                 factory.setCertAlias(jettyClientSslConfiguration.getAlias());
             }, ()->
             {

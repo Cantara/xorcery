@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.keystores.providers;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.keystores.KeyStoreConfiguration;
 import com.exoreaction.xorcery.keystores.KeyStores;
+import com.exoreaction.xorcery.keystores.KeyStoresConfiguration;
 import com.exoreaction.xorcery.secrets.Secrets;
 import com.exoreaction.xorcery.secrets.spi.SecretsProvider;
 
@@ -41,7 +42,7 @@ public class KeyStoreSecretsProvider
         keyStoreName = config.getKeyStoreName();
         this.keyStore = keyStores.getKeyStore(config.getKeyStoreName());
         factory = SecretKeyFactory.getInstance("PBE");
-        KeyStoreConfiguration keyStoreConfiguration = new KeyStoreConfiguration(config.getKeyStoreName(), configuration.getConfiguration("keystores." + config.getKeyStoreName()));
+        KeyStoreConfiguration keyStoreConfiguration = KeyStoresConfiguration.get(configuration).getKeyStoreConfiguration(config.getKeyStoreName()).orElseThrow(Configuration.missing(config.getKeyStoreName()));
         char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
         keyStorePP = new KeyStore.PasswordProtection(password);
     }

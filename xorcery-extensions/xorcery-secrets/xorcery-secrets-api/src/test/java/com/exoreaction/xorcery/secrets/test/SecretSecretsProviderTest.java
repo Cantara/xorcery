@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.secrets.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.secrets.Secrets;
 import org.junit.jupiter.api.Assertions;
@@ -26,8 +26,8 @@ public class SecretSecretsProviderTest {
 
     @Test
     public void getSecretStringTest() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder()::addTestDefaults)
+        Configuration configuration = new ConfigurationBuilder()
+                .addTestDefaults()
                 .build();
 
         try (Xorcery xorcery = new Xorcery(configuration)) {

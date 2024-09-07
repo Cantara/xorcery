@@ -41,6 +41,8 @@ public class ConfigurationSchemaBuilder {
         Properties.Builder properties = new Properties.Builder();
         Definitions.Builder definitions = new Definitions.Builder();
         for (Map.Entry<String, JsonNode> property : configuration.properties()) {
+            if (property.getKey().startsWith("$"))
+                continue;
             JsonNode defaultValue = configuration.get(property.getKey());
             JsonNode value = resolvedConfiguration.get(property.getKey());
             JsonNode effectiveValue = value == null ? defaultValue : value;

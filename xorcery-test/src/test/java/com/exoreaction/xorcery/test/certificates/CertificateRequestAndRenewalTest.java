@@ -47,7 +47,8 @@ public class CertificateRequestAndRenewalTest {
             """;
 
     static {
-        //System.setProperty("javax.net.debug", "ssl,handshake");
+        System.setProperty("javax.net.debug", "ssl,handshake");
+        System.setProperty("port", caPort);
     }
 
     @RegisterExtension
@@ -55,11 +56,7 @@ public class CertificateRequestAndRenewalTest {
     static XorceryExtension caServer = XorceryExtension.xorcery()
             .id("xorcery1")
             .configuration(ConfigurationBuilder::addTestDefaults)
-            .configuration(c -> c.addYaml(config).addYaml(String.format("""
-                    certificates.server.enabled: true
-                    intermediateca.enabled: true
-                    jetty.server.ssl.port: %s
-                    """, caPort)))
+            .configuration(c -> c.addResource("certificaterenewal/caserver.yaml"))
             .build();
 
     @RegisterExtension
@@ -67,28 +64,7 @@ public class CertificateRequestAndRenewalTest {
     static XorceryExtension server = XorceryExtension.xorcery()
             .id("xorcery2")
             .configuration(ConfigurationBuilder::addTestDefaults)
-            .configuration(c -> c.addYaml(config).addYaml(String.format("""
-                    instance.id: xorcery2
-                    instance.host: server2
-                    jetty.client.enabled: true
-                    certificates.enabled: true
-                    certificates.renewOnStartup: true
-                    certificates.client.enabled: true
-                    keystores.ssl.path: "{{ instance.home }}/ssl.p12"
-                    dns.client.hosts:
-                        server.xorcery.test: 127.0.0.1
-                        server2.xorcery.test: 127.0.0.1
-                        _certificates._sub._https._tcp: "https://server.xorcery.test:%s/api"
-                    jetty.server.ssl.needClientAuth: true
-                    jetty.server.security:
-                        type: CLIENT-CERT
-                        constraints:
-                            - name: clientcert
-                        mappings:
-                        - path: "/api/service"
-                          constraint: clientcert
-                    clienttester.enabled: true
-                    """, caPort)))
+            .configuration(c -> c.addResource("certificaterenewal/server1.yaml"))
             .build();
 
 

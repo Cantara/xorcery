@@ -1,5 +1,6 @@
 keystores:
-  letsencrypt:
+  stores:
+  - name: letsencrypt
     template: "META-INF/letsencrypt.p12"
     path: "{{ instance.home }}/letsencrypt.p12"
     password: "{{ keystores.defaultPassword }}"

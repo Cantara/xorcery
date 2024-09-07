@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.admin.servlet;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
 import jakarta.ws.rs.client.Client;
@@ -30,9 +30,8 @@ public class AdminTest {
 
     @Test
     void testHealth() throws Exception {
-        Configuration.Builder builder = new Configuration.Builder();
-        new StandardConfigurationBuilder().addTestDefaults(builder);
-        Configuration configuration = builder.add("id", "xorcery2")
+        ConfigurationBuilder builder = new ConfigurationBuilder().addTestDefaults();
+        Configuration configuration = builder.builder().add("id", "xorcery2")
                 .add("host", "Bd35HecvTTB.xorcery.test")
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.enabled", false)

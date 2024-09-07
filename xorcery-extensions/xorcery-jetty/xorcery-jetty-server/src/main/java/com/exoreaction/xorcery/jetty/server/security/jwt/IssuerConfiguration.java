@@ -25,6 +25,11 @@ import static com.exoreaction.xorcery.configuration.Configuration.missing;
 
 public record IssuerConfiguration(Configuration configuration) {
 
+    public String getName()
+    {
+         return configuration.getString("name").orElseThrow(Configuration.missing("name"));
+    }
+
     public Optional<String> getJWKS() {
         return configuration.getString("jwks");
     }

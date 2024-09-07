@@ -30,7 +30,7 @@ import java.util.Map;
 public class CalculatedConfigurationProvider
         implements ConfigurationProvider {
 
-    private Map<String, NumericNode> nextFreePorts = new HashMap<>();
+    private Map<String, NumericNode> dynamicPorts = new HashMap<>();
 
     @Override
     public String getNamespace() {
@@ -99,13 +99,13 @@ public class CalculatedConfigurationProvider
         }
     }
 
-    public ContainerNode<?> nextFreePort()
+    public ContainerNode<?> dynamicPorts()
     {
         return new ObjectNode(JsonNodeFactory.instance)
         {
             @Override
             public JsonNode get(String name) {
-                return nextFreePorts.computeIfAbsent(name, n -> JsonNodeFactory.instance.numberNode(Sockets.nextFreePort()));
+                return dynamicPorts.computeIfAbsent(name, n -> JsonNodeFactory.instance.numberNode(Sockets.nextFreePort()));
             }
         };
     }

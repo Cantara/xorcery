@@ -80,7 +80,7 @@ public class Auth0JwtAuthenticator
         KeyFactory rsaKeyFactory = KeyFactory.getInstance("RSA");
         KeyFactory ecKeyFactory = KeyFactory.getInstance("EC");
 
-        jwtConfiguration.getIssuers().forEach((issuer, config) ->
+        jwtConfiguration.getIssuers().forEach(config ->
         {
             try {
                 Map<String, JWTVerifier> issuerVerifiers = new HashMap<>();
@@ -124,7 +124,7 @@ public class Auth0JwtAuthenticator
                     }
                     issuerVerifiers.put(keyId, verifier);
                 }
-                verifiers.put(issuer, issuerVerifiers);
+                verifiers.put(config.getName(), issuerVerifiers);
             } catch (InvalidKeySpecException e) {
                 throw new IllegalArgumentException("Could not initialize JWT algorithms", e);
             }

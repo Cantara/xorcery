@@ -1,3 +1,11 @@
-jetty.server.http.port: "{{ CALCULATED.nextFreePort.http }}"
-jetty.server.ssl.port: "{{ CALCULATED.nextFreePort.ssl }}"
-jetty.server.minThreads: 3
+$schema: ./xorcery-schema.json
+jetty:
+  server:
+    http:
+      port: "{{ CALCULATED.dynamicPorts.http }}"
+    ssl:
+      port: "{{ CALCULATED.dynamicPorts.ssl }}"
+    minThreads: 3
+    security:
+      jwt:
+        issuers:

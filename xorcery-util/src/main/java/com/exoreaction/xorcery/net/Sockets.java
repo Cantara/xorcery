@@ -24,6 +24,7 @@ public interface Sockets {
 
     /**
      * Find free port to use in the range 49152-65535.
+     * Use "{{ CALCULATED.dynamicPorts.myportname }}" in configurations instead of calling this manually.
      */
     static int nextFreePort() {
         return nextFreePort(49152, 65535);

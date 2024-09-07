@@ -16,7 +16,7 @@
 package com.exoreaction.xorcery.server.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.net.Sockets;
 import org.apache.logging.log4j.LogManager;
@@ -41,8 +41,10 @@ public class ServerTest {
 
     @Test
     public void thatBasicWiringWorks() throws Exception {
-        Configuration configuration = new Configuration.Builder()
-                .with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config))
+        Configuration configuration = new ConfigurationBuilder()
+                .addTestDefaults()
+                .addYaml(config)
+                .builder()
                 .add("jetty.server.http.port", Sockets.nextFreePort())
                 .add("jetty.server.ssl.port", Sockets.nextFreePort())
                 .build();

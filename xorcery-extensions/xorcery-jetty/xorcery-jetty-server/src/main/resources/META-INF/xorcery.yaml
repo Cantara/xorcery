@@ -1,3 +1,4 @@
+$schema: ./xorcery-schema.json
 jetty:
   server:
     enabled: "{{ defaults.enabled }}"
@@ -30,6 +31,7 @@ jetty:
       sniRequired: false
       sniHostCheck: false
       alias: "self"
+      crls: null
 
     srv:
       priority: 2 # By default, so that other servers can use 1 or 3 for higher and lower priority
@@ -57,13 +59,16 @@ jetty:
         enabled: "{{ jetty.server.security.enabled }}"
         cookie: "token"
         issuers:
-          default:
-            keys: [ ]
-      #    someissuer:
-      #       keys:
-      #         - kid: 1234
-      #           alg: ES256
-      #           publicKey: MII...
+        - name: default
+          keys:
+          - kid: "asd"
+            alg: "foo"
+            publicKey: "MII"
+      #    - name: someissuer
+      #      keys:
+      #      - kid: 1234
+      #        alg: ES256
+      #        publicKey: MII...
       #
 
     websockets:

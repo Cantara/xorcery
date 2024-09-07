@@ -20,14 +20,15 @@ import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public record JwtConfiguration(Configuration configuration) {
 
-    public Map<String,IssuerConfiguration> getIssuers()
+    public List<IssuerConfiguration> getIssuers()
     {
-        return configuration.getObjectAs("issuers",JsonElement.toMap(json -> new IssuerConfiguration(new Configuration((ObjectNode)json))) ).orElse(Collections.emptyMap());
+        return configuration.getObjectListAs("issuers",json -> new IssuerConfiguration(new Configuration(json))).orElse(Collections.emptyList());
     }
 
     public Optional<String> getLoginPage() {

@@ -32,11 +32,12 @@ class KeyStoresTest {
     static String config = """
             keystores:
               enabled: "{{ defaults.enabled }}"
-              teststore:
+              stores:
+              - name: teststore
                 path: "{{ instance.home }}/teststore.p12"
                 template: "META-INF/teststore.p12"
                 password: "{{ keystores.defaultPassword }}"
-              emptystore:
+              - name: emptystore 
                 path: "{{ instance.home }}/emptystore.p12"
                 password: "{{ keystores.defaultPassword }}"
                         """;

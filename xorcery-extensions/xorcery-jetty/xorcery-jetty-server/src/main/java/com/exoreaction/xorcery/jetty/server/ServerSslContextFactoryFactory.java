@@ -51,7 +51,7 @@ public class ServerSslContextFactoryFactory
     public ServerSslContextFactoryFactory(Configuration configuration, KeyStores keyStores, Secrets secrets) throws Exception {
 
         JettyServerSslConfiguration jettyServerSslConfiguration = new JettyServerSslConfiguration(configuration.getConfiguration("jetty.server.ssl"));
-        KeyStoresConfiguration keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
+        KeyStoresConfiguration keyStoresConfiguration = KeyStoresConfiguration.get(configuration);
 
         Collection<? extends CRL> crls = jettyServerSslConfiguration.getCRLs()
                 .<Collection<? extends CRL>>map(url ->
@@ -83,7 +83,7 @@ public class ServerSslContextFactoryFactory
         jettyServerSslConfiguration.getKeyStoreName().ifPresentOrElse(name ->
         {
             factory.setKeyStore(keyStores.getKeyStore(name));
-            factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration(name).getPassword().map(secrets::getSecretString).orElse(null));
+            factory.setKeyManagerPassword(keyStoresConfiguration.getKeyStoreConfiguration(name).orElseThrow().getPassword().map(secrets::getSecretString).orElse(null));
             factory.setCertAlias(jettyServerSslConfiguration.getAlias());
         }, ()->
         {

@@ -1,5 +1,0 @@
-$defs.instance.properties.environment.enum:
-  - development
-  - qa
-  - production
-$defs.system.additionalProperties: true

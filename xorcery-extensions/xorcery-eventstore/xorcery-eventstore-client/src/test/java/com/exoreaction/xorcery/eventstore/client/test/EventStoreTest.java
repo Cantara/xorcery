@@ -17,7 +17,7 @@ package com.exoreaction.xorcery.eventstore.client.test;
 
 import com.eventstore.dbclient.*;
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.eventstore.EventStoreService;
 import com.exoreaction.xorcery.log4j.LoggerContextFactory;
@@ -45,8 +45,9 @@ import java.util.stream.Collectors;
 @Testcontainers(disabledWithoutDocker = true)
 public class EventStoreTest {
 
-    private static Configuration configuration = new Configuration.Builder()
-            .with(new StandardConfigurationBuilder()::addTestDefaults)
+    private static Configuration configuration = new ConfigurationBuilder()
+            .addTestDefaults()
+            .builder()
             .add("jetty.server.http.port", Sockets.nextFreePort())
             .add("jetty.server.ssl.port", Sockets.nextFreePort())
             .add("eventstore.uri", "esdb://localhost:2115?tls=false"

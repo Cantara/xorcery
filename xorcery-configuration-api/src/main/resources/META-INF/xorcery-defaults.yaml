@@ -1,4 +1,5 @@
 ---
+$schema: ./xorcery-schema.json
 instance:
   id: "{{ instance.host}}.{{ application.name}}"
   host: "{{ CALCULATED.hostName }}"

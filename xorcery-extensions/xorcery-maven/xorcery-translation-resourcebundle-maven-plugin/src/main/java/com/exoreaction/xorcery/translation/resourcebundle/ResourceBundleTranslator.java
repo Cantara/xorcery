@@ -2,7 +2,6 @@ package com.exoreaction.xorcery.translation.resourcebundle;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.translation.api.Translation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,12 +32,11 @@ public class ResourceBundleTranslator {
 
             System.out.println("Translation paths:" + translationPaths);
 
-            Configuration.Builder builder = new Configuration.Builder();
+            ConfigurationBuilder builder = new ConfigurationBuilder();
             // Load existing result, if any
             if (result.exists()) {
-                StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
                 try (FileInputStream inputStream = new FileInputStream(result)) {
-                    standardConfigurationBuilder.addYaml(inputStream).accept(builder);
+                    builder.addFile(result);
                 }
             }
             Configuration resultBundle = builder.build();

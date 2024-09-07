@@ -1,3 +1,4 @@
+$schema: "./xorcery-schema.json"
 jersey:
   server:
     enabled: "{{ jetty.server.enabled }}"

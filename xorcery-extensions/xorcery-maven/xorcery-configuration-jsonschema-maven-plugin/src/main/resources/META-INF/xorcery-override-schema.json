@@ -1,9 +1,13 @@
 {
-  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "$id" : "http://xorcery.exoreaction.com/applications/com.exoreaction.xorcery/xorcery-configuration-jsonschema-maven-plugin/override-schema",
+  "title" : "xorcery-configuration-jsonschema-maven-plugin configuration override JSON Schema",
   "type" : "object",
-  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-configuration-api/schema",
-  "title" : "xorcery-configuration-api configuration JSON Schema",
   "properties" : {
+    "$schema" : {
+      "type" : "string",
+      "default" : "./xorcery-schema.json",
+      "description" : "Default: ./xorcery-schema.json"
+    },
     "instance" : {
       "$ref" : "#/$defs/instance"
     },
@@ -82,7 +86,9 @@
         },
         "locale" : {
           "default" : null,
-          "description" : "Default: null"
+          "description" : "Default: null",
+          "type" : "string",
+          "example" : "en-GB"
         }
       }
     },

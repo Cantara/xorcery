@@ -17,10 +17,13 @@ package com.exoreaction.xorcery.keystores;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 public record KeyStoresConfiguration(Configuration configuration) {
 
-    public static KeyStoresConfiguration get(Configuration configuration)
-    {
+    public static KeyStoresConfiguration get(Configuration configuration) {
         return new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
     }
 
@@ -28,8 +31,17 @@ public record KeyStoresConfiguration(Configuration configuration) {
         return configuration.getBoolean("enabled").orElse(false);
     }
 
-    public KeyStoreConfiguration getKeyStoreConfiguration(String name)
-    {
-        return new KeyStoreConfiguration(name, configuration.getConfiguration(name));
+    public List<KeyStoreConfiguration> getKeyStoreConfigurations() {
+        return configuration.getObjectListAs("stores", on -> new KeyStoreConfiguration(new Configuration(on)))
+                .orElse(Collections.emptyList());
+    }
+
+    public Optional<KeyStoreConfiguration> getKeyStoreConfiguration(String name) {
+        for (KeyStoreConfiguration keyStoreConfiguration : getKeyStoreConfigurations()) {
+            if (keyStoreConfiguration.getName().equals(name)) {
+                return Optional.of(keyStoreConfiguration);
+            }
+        }
+        return Optional.empty();
     }
 }

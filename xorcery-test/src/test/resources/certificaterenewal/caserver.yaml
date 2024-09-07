@@ -1,0 +1,15 @@
+$schema: ../../../main/resources/xorcery-schema.json
+
+jetty:
+  server:
+    enabled: true
+    http:
+      enabled: false
+    ssl:
+      enabled: true
+      port: "{{ SYSTEM.port }}"
+certificates:
+  server:
+    enabled: true
+intermediateca:
+  enabled: true

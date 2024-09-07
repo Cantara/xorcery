@@ -2,15 +2,12 @@ package com.exoreaction.xorcery.translation.resourcebundle.maven;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.secrets.Secrets;
-import com.exoreaction.xorcery.secrets.SecretsHK2;
 import com.exoreaction.xorcery.secrets.providers.EnvSecretsProvider;
 import com.exoreaction.xorcery.secrets.providers.SecretSecretsProvider;
 import com.exoreaction.xorcery.translation.api.Translation;
 import com.exoreaction.xorcery.translation.deepl.DeepLTranslationProvider;
 import com.exoreaction.xorcery.translation.resourcebundle.ResourceBundleTranslator;
-import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import org.apache.maven.artifact.Artifact;
@@ -29,15 +26,12 @@ import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.apache.maven.repository.RepositorySystem;
-import org.apache.maven.shared.dependency.graph.DependencyCollectorBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
 import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
 import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
-import org.eclipse.aether.RepositorySystemSession;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
@@ -79,8 +73,7 @@ public class ResourceBundleTranslatorMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         try {
-            Configuration.Builder moduleWithDependenciesBuilder = new Configuration.Builder();
-            StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
+            ConfigurationBuilder moduleWithDependenciesBuilder = new ConfigurationBuilder();
             List<File> dependencyJarFiles = getDependencyJarFiles();
             List<URL> dependencyJarURLs = new ArrayList<>(dependencyJarFiles.size());
             for (File dependencyJarFile : dependencyJarFiles) {
@@ -92,7 +85,7 @@ public class ResourceBundleTranslatorMojo extends AbstractMojo {
             try (URLClassLoader dependenciesClassLoader = new URLClassLoader(dependencyJarURLs.toArray(new URL[0]), getClass().getClassLoader()))
             {
                 Thread.currentThread().setContextClassLoader(dependenciesClassLoader);
-                standardConfigurationBuilder.addDefaults(moduleWithDependenciesBuilder);
+                moduleWithDependenciesBuilder.addDefaults();
 
 
                 Configuration configuration = moduleWithDependenciesBuilder.build();

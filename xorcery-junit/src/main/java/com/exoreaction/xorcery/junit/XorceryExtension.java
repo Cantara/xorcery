@@ -108,7 +108,7 @@ public class XorceryExtension
         public XorceryExtension build() {
 
             if (instanceId != null)
-                configurationBuilder.with(b -> b.add("instance.id", instanceId));
+                configurationBuilder.builder().add("instance.id", instanceId);
 
             try {
                 File tempDir;
@@ -132,7 +132,7 @@ public class XorceryExtension
                     }
                 }
 
-                configurationBuilder.with(b -> b.add("instance.home", tempDir.getAbsolutePath()));
+                configurationBuilder.builder().add("instance.home", tempDir.getAbsolutePath());
 
                 return new XorceryExtension(archiveFileName != null, tempDir, services, configurationBuilder.build());
             } catch (IOException e) {

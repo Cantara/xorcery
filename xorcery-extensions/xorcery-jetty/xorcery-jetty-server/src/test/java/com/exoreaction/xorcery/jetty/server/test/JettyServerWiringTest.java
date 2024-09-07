@@ -16,10 +16,10 @@
 package com.exoreaction.xorcery.jetty.server.test;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.hk2.Services;
-import com.exoreaction.xorcery.net.Sockets;
+import org.apache.logging.log4j.LogManager;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Server;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -32,21 +32,19 @@ public class JettyServerWiringTest {
     @Test
     void testServerStartup() throws Exception {
 
-        Configuration.Builder builder = new Configuration.Builder();
-        new StandardConfigurationBuilder().addTestDefaults(builder);
-        Configuration configuration = builder.add("instance.id", "xorcery2")
-                .add("instance.host", "Bd35HecvTTB.xorcery.test")
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.enabled", false)
-                .add("certificates.enabled", false)
-                .add("hk2.runLevel", "20")
+        Configuration configuration = new ConfigurationBuilder().addTestDefaults()
+                .addYaml("""
+                jetty.server.http.port: "{{ CALCULATED.dynamicPorts.http }}"
+                jetty.server.ssl.port: "{{ CALCULATED.dynamicPorts.ssl }}"
+                """)
                 .build();
 
-//        LogManager.getLogger().info(configuration);
-
-        Xorcery xorcery = new Xorcery(configuration);
-        ServiceLocator serviceLocator = xorcery.getServiceLocator();
-        assertNotNull(serviceLocator.getService(Server.class));
-        assertNotNull(Services.ofType(serviceLocator, ServletContextHandler.class).orElse(null));
+        try (Xorcery xorcery = new Xorcery(configuration))
+        {
+            LogManager.getLogger().info(configuration);
+            ServiceLocator serviceLocator = xorcery.getServiceLocator();
+            assertNotNull(serviceLocator.getService(Server.class));
+            assertNotNull(Services.ofType(serviceLocator, ServletContextHandler.class).orElse(null));
+        }
     }
 }

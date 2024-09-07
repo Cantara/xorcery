@@ -16,8 +16,8 @@
 package com.exoreaction.xorcery.certificates.provisioning;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.keystores.KeyStoreConfiguration;
 import com.exoreaction.xorcery.keystores.KeyStores;
+import com.exoreaction.xorcery.keystores.KeyStoresConfiguration;
 import com.exoreaction.xorcery.secrets.Secrets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,9 +72,9 @@ public class CertificateProvisioningService
         this.keyStores = keyStores;
 
         this.alias = certificatesConfiguration.getAlias();
-        password = new KeyStoreConfiguration(certificatesConfiguration.getCertificateStoreName(), configuration.getConfiguration("keystores").
-                getConfiguration(certificatesConfiguration.getCertificateStoreName()))
-                .getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
+
+        password = KeyStoresConfiguration.get(configuration).getKeyStoreConfiguration(certificatesConfiguration.getCertificateStoreName())
+                .orElseThrow().getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
 
         // Create private key
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("EC", PROVIDER_NAME);
@@ -111,7 +111,7 @@ public class CertificateProvisioningService
 
     private boolean isCertificateConfigurationChanged(X509Certificate certificate) {
         // Check subject
-        if (!certificate.getSubjectX500Principal().getName().equals("CN="+certificatesConfiguration.getSubject().toLowerCase()))
+        if (!certificate.getSubjectX500Principal().getName().equals("CN=" + certificatesConfiguration.getSubject().toLowerCase()))
             return true;
 
         // Check domain names and IPs

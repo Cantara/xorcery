@@ -45,8 +45,8 @@ public class Neo4jBoltSSL {
                         Secrets secrets) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, IOException, CertificateEncodingException {
 
         // Save SSL cert files for Bolt to use
-        KeyStoresConfiguration keyStoresConfiguration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
-        KeyStoreConfiguration sslKeyStoreConfiguration = keyStoresConfiguration.getKeyStoreConfiguration("ssl");
+        KeyStoresConfiguration keyStoresConfiguration = KeyStoresConfiguration.get(configuration);
+        KeyStoreConfiguration sslKeyStoreConfiguration = keyStoresConfiguration.getKeyStoreConfiguration("ssl").orElseThrow(Configuration.missing("ssl"));
 
         KeyStore sslKeyStore = keyStores.getKeyStore("ssl");
         String alias = configuration.getString("jetty.server.ssl.alias").orElse("self");

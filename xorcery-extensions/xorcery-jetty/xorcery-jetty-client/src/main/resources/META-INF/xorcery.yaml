@@ -14,8 +14,8 @@ jetty:
       enabled: "{{ jetty.client.enabled }}"
       # Client
       alias: "self"
-      #      keystore: null
-      #      truststore: null
+      keystore: null
+      truststore: null
       #Server
       endpointIdentificationAlgorithm: "HTTPS"
       trustAll: false

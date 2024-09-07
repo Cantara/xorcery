@@ -54,7 +54,7 @@ public class KeyStores {
     private final KeyPairGenerator keyGen;
 
     public KeyStores(Configuration configuration, Secrets secrets) throws NoSuchAlgorithmException, NoSuchProviderException {
-        this.configuration = new KeyStoresConfiguration(configuration.getConfiguration("keystores"));
+        this.configuration = KeyStoresConfiguration.get(configuration);
         this.secrets = secrets;
 
         Provider p = new org.bouncycastle.jce.provider.BouncyCastleProvider();
@@ -84,7 +84,7 @@ public class KeyStores {
         for (Map.Entry<String, KeyStore> stringKeyStoreEntry : keyStores.entrySet()) {
             if (stringKeyStoreEntry.getValue() == keyStore) {
                 String name = stringKeyStoreEntry.getKey();
-                KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(name);
+                KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(name).orElseThrow();
                 URL keyStoreUrl = keyStoreConfiguration.getURL();
                 File file = new File(keyStoreUrl.getFile()).getCanonicalFile();
                 try (FileOutputStream outputStream = new FileOutputStream(file)) {
@@ -114,7 +114,7 @@ public class KeyStores {
     private KeyStore loadKeyStore(String keyStoreName) {
         URL keyStoreUrl = null;
         try {
-            KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName);
+            KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName).orElseThrow(Configuration.missing(keyStoreName));
             KeyStore keyStore = KeyStore.getInstance(keyStoreConfiguration.getType());
 
             if (!keyStoreConfiguration.configuration().getJson("template").orElse(MissingNode.getInstance()).isMissingNode()) {
@@ -217,7 +217,7 @@ public class KeyStores {
 
     // Utility methods
     public KeyPair getOrCreateKeyPair(String alias, String keyStoreName) throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, CertificateException, IOException, OperatorCreationException {
-        KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName);
+        KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName).orElseThrow(Configuration.missing(keyStoreName));
         KeyStore keyStore = getKeyStore(keyStoreName);
         char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
 

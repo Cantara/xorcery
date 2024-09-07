@@ -15,8 +15,7 @@
  */
 package com.exoreaction.xorcery.dns;
 
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.dns.client.providers.DnsLookupService;
 import org.junit.jupiter.api.AfterAll;
@@ -50,7 +49,7 @@ public class DnsLookupTest {
     @BeforeAll
     public static void setup() throws Exception {
 
-        xorcery = new Xorcery(new Configuration.Builder().with(new StandardConfigurationBuilder().addTestDefaultsWithYaml(config)).build());
+        xorcery = new Xorcery(new ConfigurationBuilder().addTestDefaults().addYaml(config).build());
 
         dnsLookupService = xorcery.getServiceLocator().getService(DnsLookupService.class);
     }

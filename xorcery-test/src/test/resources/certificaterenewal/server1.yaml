@@ -1,0 +1,31 @@
+$schema: ../../../main/resources/xorcery-schema.json
+
+jetty:
+  server:
+    enabled: true
+    http:
+      enabled: false
+    ssl:
+      enabled: true
+      needClientAuth: true
+    security:
+      type: CLIENT-CERT
+      constraints:
+        - name: clientcert
+      mappings:
+        - path: "/api/service"
+          constraint: clientcert
+
+instance.host: server2
+jetty.client.enabled: true
+certificates.enabled: true
+certificates.renewOnStartup: true
+certificates.client.enabled: true
+keystores.stores:
+  - name: ssl
+    path: "{{ instance.home }}/ssl.p12"
+dns.client.hosts:
+  server.xorcery.test: 127.0.0.1
+  server2.xorcery.test: 127.0.0.1
+  _certificates._sub._https._tcp: "https://server.xorcery.test:{{ SYSTEM.port }}/api"
+clienttester.enabled: true

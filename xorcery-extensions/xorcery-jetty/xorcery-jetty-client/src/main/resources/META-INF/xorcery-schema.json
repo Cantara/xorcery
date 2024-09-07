@@ -72,6 +72,14 @@
                   "default" : "self",
                   "description" : "Default: self"
                 },
+                "keystore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "truststore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
                 "endpointIdentificationAlgorithm" : {
                   "type" : "string",
                   "default" : "HTTPS",

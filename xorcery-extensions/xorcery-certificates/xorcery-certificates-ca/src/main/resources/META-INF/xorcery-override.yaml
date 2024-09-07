@@ -1,8 +1,9 @@
 keystores:
-  castore:
+  stores:
+  - name: castore
     path: "META-INF/intermediatecakeystore.p12"
     password: "{{ keystores.defaultPassword }}"
-  rootstore:
+  - name: rootstore
     path: "{{ instance.home }}/rootcakeystore.p12"
     password: "{{ keystores.defaultPassword }}"
 

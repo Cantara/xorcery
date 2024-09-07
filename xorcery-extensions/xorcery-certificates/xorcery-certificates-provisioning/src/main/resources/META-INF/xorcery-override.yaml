@@ -1,10 +1,11 @@
 # $schema: ./xorcery-schema.json
 keystores:
-  ssl:
+  stores:
+  - name: ssl
     template: "META-INF/ssl.p12"
     path: "{{ instance.home }}/ssl.p12"
     password: "{{ keystores.defaultPassword }}"
-  truststore:
+  - name: truststore
     template: "META-INF/truststore.p12"
     path: "{{ instance.home }}/truststore.p12"
     password: "{{ keystores.defaultPassword }}"

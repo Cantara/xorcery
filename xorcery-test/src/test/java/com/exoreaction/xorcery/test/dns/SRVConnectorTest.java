@@ -17,7 +17,6 @@ package com.exoreaction.xorcery.test.dns;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.jsonapi.MediaTypes;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
@@ -44,26 +43,25 @@ public class SRVConnectorTest {
     public void testClientSRVConnectorLoadBalancing() throws Exception {
         System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
         Configuration server1Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""                        
-                        instance.host: server1
-                        servicetest.srv.weight: 50
-                        dns:
-                            server:
-                                enabled: true
-                        """).build();
+                instance.host: server1
+                servicetest.srv.weight: 50
+                dns:
+                    server:
+                        enabled: true
+                """).build();
         System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
         Configuration server2Configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).addYaml("""
-                        instance.host: server2
-                        jetty.client.enabled: true
-                        jetty.client.ssl.trustAll: true
-                        """).build();
+                instance.host: server2
+                jetty.client.enabled: true
+                jetty.client.ssl.trustAll: true
+                """).build();
 
         try (Xorcery server1 = new Xorcery(server1Configuration)) {
             try (Xorcery server2 = new Xorcery(server2Configuration)) {
 //                LogManager.getLogger().info("Server 1 configuration:\n" + server1Configuration);
 //                LogManager.getLogger().info("Server 2 configuration:\n" + server2Configuration);
                 ClientBuilder clientConfig = server2.getServiceLocator().getService(ClientBuilder.class);
-                try (Client httpClient = clientConfig.register(JsonElementMessageBodyReader.class).build())
-                {
+                try (Client httpClient = clientConfig.register(JsonElementMessageBodyReader.class).build()) {
                     for (int i = 0; i < 10; i++) {
                         ResourceDocument resourceDocument = httpClient.target("srv://_servicetest._sub._https._tcp/")
                                 .request(MediaTypes.APPLICATION_JSON_API).get().readEntity(ResourceDocument.class);
@@ -78,9 +76,9 @@ public class SRVConnectorTest {
     @Test
     @Disabled
     public void testClientSRVResolverFailover() throws Exception {
-        StandardConfigurationBuilder standardConfigurationBuilder = new StandardConfigurationBuilder();
-        Configuration configuration2 = new Configuration.Builder()
-                .with(standardConfigurationBuilder.addTestDefaultsWithYaml("""
+        Configuration configuration2 = new ConfigurationBuilder()
+                .addTestDefaults()
+                .addYaml("""
                         name: xorcery1
                         jetty.server.http.port: 8888
                         dns:
@@ -91,7 +89,7 @@ public class SRVConnectorTest {
                                     - 127.0.0.1:8080
                             server:
                                 enabled: true
-                        """)).build();
+                        """).build();
 //        logger.info("Resolved configuration2:\n" + standardConfigurationBuilder.toYaml(configuration2));
 
         try (Xorcery xorcery2 = new Xorcery(configuration2)) {

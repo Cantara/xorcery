@@ -1,7 +1,7 @@
 package com.exoreaction.xorcery.configuration.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.StandardConfigurationBuilder;
+import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.configuration.resourcebundle.ResourceBundles;
 import com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
 import com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvider;
@@ -11,8 +11,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigurationResourceBundlesProvider
-    implements ResourceBundlesProvider
-{
+        implements ResourceBundlesProvider {
     private final Map<String, Configuration> configurations = new ConcurrentHashMap<>();
     private final Map<Locale, ResourceBundle> resourceBundles = new ConcurrentHashMap<>();
     private final List<ResourceBundleTranslationProvider> resourceBundleTranslationProviders = new ArrayList<>();
@@ -24,7 +23,7 @@ public class ConfigurationResourceBundlesProvider
                 ResourceBundleTranslationProvider provider = providerIterator.next();
                 resourceBundleTranslationProviders.add(provider);
             } catch (Throwable e) {
-                LogManager.getLogger().warn("Could not instantiate translator:"+e.getMessage());
+                LogManager.getLogger().warn("Could not instantiate translator:" + e.getMessage());
             }
 
         }
@@ -43,10 +42,9 @@ public class ConfigurationResourceBundlesProvider
             return null;
     }
 
-    protected Configuration getConfiguration(String moduleName)
-    {
+    protected Configuration getConfiguration(String moduleName) {
         return configurations.computeIfAbsent(moduleName, name ->
-                new Configuration.Builder().with(new StandardConfigurationBuilder(moduleName)::addDefaults).build());
+                new ConfigurationBuilder(name).addDefaults().build());
     }
 
     public void reload() {
