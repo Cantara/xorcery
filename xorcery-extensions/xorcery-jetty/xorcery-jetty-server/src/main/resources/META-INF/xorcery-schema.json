@@ -4,13 +4,13 @@
   "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-jetty-server/schema",
   "title" : "xorcery-jetty-server configuration JSON Schema",
   "properties" : {
-    "jetty" : {
-      "$ref" : "#/$defs/jetty"
-    },
     "$schema" : {
       "type" : "string",
       "default" : "./xorcery-schema.json",
       "description" : "Default: ./xorcery-schema.json"
+    },
+    "jetty" : {
+      "$ref" : "#/$defs/jetty"
     }
   },
   "$defs" : {

@@ -34,15 +34,16 @@ public class CertificateRequestTest {
 
     Logger LOG = LogManager.getLogger(getClass());
 
-    int managerPort = Sockets.nextFreePort();
     String config = """
             instance.id: xorcery1
             instance.host: server1
             instance.domain: exoreaction.dev
             jetty.server.enabled: true
-            jetty.server.ssl.enabled: true    
+            jetty.server.ssl.enabled: true
+            jetty.server.ssl.port: "{{ CALCULATED.dynamicPorts.ssl }}"    
             keystores.enabled: true
             dns.client.discovery.enabled: false
+            certificates.server.enabled: true
             certificates.client.enabled: true
             certificates.client.uri: http://localhost:80
             certificates.subject: \"*.exoreaction.dev\"
@@ -55,11 +56,7 @@ public class CertificateRequestTest {
 
         //System.setProperty("javax.net.debug", "ssl,handshake");
 
-        Configuration configuration1 = new ConfigurationBuilder().addTestDefaults().addYaml(config).builder()
-                .add("jetty.server.http.port", 80)
-                .add("jetty.server.ssl.port", managerPort)
-                .add("certificates.server.enabled", true)
-                .build();
+        Configuration configuration1 = new ConfigurationBuilder().addTestDefaults().addYaml(config).build();
 
         System.out.println(configuration1);
         try (Xorcery xorcery = new Xorcery(configuration1)) {

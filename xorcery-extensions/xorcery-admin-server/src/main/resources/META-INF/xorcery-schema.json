@@ -4,6 +4,11 @@
   "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-admin-server/schema",
   "title" : "xorcery-admin-server configuration JSON Schema",
   "properties" : {
+    "$schema" : {
+      "type" : "string",
+      "default" : "./xorcery-schema.json",
+      "description" : "Default: ./xorcery-schema.json"
+    },
     "adminservlet" : {
       "$ref" : "#/$defs/adminservlet"
     },

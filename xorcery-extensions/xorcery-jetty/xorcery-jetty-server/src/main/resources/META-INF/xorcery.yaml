@@ -60,10 +60,7 @@ jetty:
         cookie: "token"
         issuers:
         - name: default
-          keys:
-          - kid: "asd"
-            alg: "foo"
-            publicKey: "MII"
+          keys: []
       #    - name: someissuer
       #      keys:
       #      - kid: 1234

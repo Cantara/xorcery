@@ -19,7 +19,6 @@ import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
 import com.exoreaction.xorcery.core.Xorcery;
-import com.exoreaction.xorcery.net.Sockets;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.MediaType;
@@ -30,15 +29,12 @@ public class AdminTest {
 
     @Test
     void testHealth() throws Exception {
-        ConfigurationBuilder builder = new ConfigurationBuilder().addTestDefaults();
-        Configuration configuration = builder.builder().add("id", "xorcery2")
-                .add("host", "Bd35HecvTTB.xorcery.test")
-                .add("jetty.server.http.port", Sockets.nextFreePort())
-                .add("jetty.server.ssl.enabled", false)
-                .add("jetty.client.ssl.enabled", false)
-                //.add("hk2.threadPolicy", "USE_NO_THREADS")
-                .add("hk2.runLevel", "20")
-                .build();
+        Configuration configuration = new ConfigurationBuilder().addTestDefaults()
+                .addYaml("""
+                        jetty.server.http.port: "{{ CALCULATED.dynamicPorts.http }}"
+                        jetty.server.ssl.enabled: false
+                        jety.client.ssl.enabled: false
+                        """).build();
 
         Xorcery xorcery = new Xorcery(configuration);
         ServiceLocator serviceLocator = xorcery.getServiceLocator();

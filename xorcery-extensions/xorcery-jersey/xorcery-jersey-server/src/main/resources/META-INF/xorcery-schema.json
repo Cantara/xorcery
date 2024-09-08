@@ -4,6 +4,11 @@
   "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-jersey-server/schema",
   "title" : "xorcery-jersey-server configuration JSON Schema",
   "properties" : {
+    "$schema" : {
+      "type" : "string",
+      "default" : "./xorcery-schema.json",
+      "description" : "Default: ./xorcery-schema.json"
+    },
     "jersey" : {
       "$ref" : "#/$defs/jersey"
     }
