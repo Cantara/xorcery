@@ -40,6 +40,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-secrets-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-log4j</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.bouncycastle</groupId>
@@ -50,10 +54,6 @@
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk18on</artifactId>
             <version>1.78.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
         </dependency>
 
         <dependency>

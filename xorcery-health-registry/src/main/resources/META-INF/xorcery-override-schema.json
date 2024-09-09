@@ -22,6 +22,12 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
+    },
     "health" : {
       "$ref" : "#/$defs/health"
     }
@@ -195,6 +201,89 @@
           "type" : [ "boolean", "string" ],
           "default" : true,
           "description" : "Default: true"
+        }
+      }
+    },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            }
+          }
+        }
+      }
+    },
+    "log4j2" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "Configuration" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "Xorcery",
+              "description" : "Default: Xorcery"
+            },
+            "status" : {
+              "type" : "string",
+              "default" : "warn",
+              "description" : "Default: warn"
+            },
+            "properties" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "thresholdFilter" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "level" : {
+                  "type" : "string",
+                  "default" : "info",
+                  "description" : "Default: info"
+                }
+              }
+            },
+            "appenders" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "Loggers" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "logger" : {
+                  "type" : [ "array", "string" ]
+                },
+                "Root" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "level" : {
+                      "type" : "string",
+                      "default" : "info",
+                      "description" : "Default: info"
+                    },
+                    "AppenderRef" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },

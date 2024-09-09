@@ -25,6 +25,9 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
     "health" : {
       "$ref" : "#/$defs/health"
     },
@@ -253,6 +256,23 @@
           "type" : [ "boolean", "string" ],
           "default" : true,
           "description" : "Default: true"
+        }
+      }
+    },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            }
+          }
         }
       }
     },
@@ -710,7 +730,7 @@
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
@@ -721,7 +741,7 @@
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }

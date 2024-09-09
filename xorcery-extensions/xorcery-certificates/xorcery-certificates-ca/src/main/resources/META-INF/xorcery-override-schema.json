@@ -22,6 +22,9 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
     "jersey" : {
       "$ref" : "#/$defs/jersey"
     },
@@ -210,6 +213,23 @@
         }
       }
     },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            }
+          }
+        }
+      }
+    },
     "jersey" : {
       "type" : "object",
       "properties" : {
@@ -293,7 +313,7 @@
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
@@ -304,7 +324,7 @@
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }

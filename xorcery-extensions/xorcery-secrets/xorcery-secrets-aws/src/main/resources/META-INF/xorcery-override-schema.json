@@ -25,6 +25,9 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
     "log4j2" : {
       "$ref" : "#/$defs/log4j2"
     },
@@ -251,6 +254,23 @@
         }
       }
     },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            }
+          }
+        }
+      }
+    },
     "log4j2" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -336,7 +356,7 @@
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
@@ -347,7 +367,7 @@
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "string",
+              "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }

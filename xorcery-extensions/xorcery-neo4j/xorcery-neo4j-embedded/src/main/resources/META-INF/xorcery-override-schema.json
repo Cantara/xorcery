@@ -22,6 +22,9 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
     "log4j2" : {
       "$ref" : "#/$defs/log4j2"
     },
@@ -201,6 +204,23 @@
           "type" : [ "boolean", "string" ],
           "default" : true,
           "description" : "Default: true"
+        }
+      }
+    },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            }
+          }
         }
       }
     },
