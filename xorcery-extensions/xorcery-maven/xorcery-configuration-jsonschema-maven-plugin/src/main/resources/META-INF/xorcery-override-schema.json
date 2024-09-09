@@ -3,11 +3,6 @@
   "title" : "xorcery-configuration-jsonschema-maven-plugin configuration override JSON Schema",
   "type" : "object",
   "properties" : {
-    "$schema" : {
-      "type" : "string",
-      "default" : "./xorcery-schema.json",
-      "description" : "Default: ./xorcery-schema.json"
-    },
     "instance" : {
       "$ref" : "#/$defs/instance"
     },

@@ -4,11 +4,6 @@
   "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-configuration-api/schema",
   "title" : "xorcery-configuration-api configuration JSON Schema",
   "properties" : {
-    "$schema" : {
-      "type" : "string",
-      "default" : "./xorcery-schema.json",
-      "description" : "Default: ./xorcery-schema.json"
-    },
     "instance" : {
       "$ref" : "#/$defs/instance"
     },
