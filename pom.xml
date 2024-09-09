@@ -988,7 +988,7 @@
                 <plugin>
                     <groupId>com.exoreaction.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.128.9</version>
+                    <version>0.128.10</version>
                 </plugin>
 <!--
                 <plugin>
@@ -1031,7 +1031,7 @@
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>generate-module-jsonschema</id>
+                        <id>generate-jsonschema</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>module-configuration-jsonschema</goal>

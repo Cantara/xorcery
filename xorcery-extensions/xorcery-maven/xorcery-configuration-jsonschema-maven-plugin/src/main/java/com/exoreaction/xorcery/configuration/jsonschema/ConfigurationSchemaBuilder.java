@@ -107,7 +107,7 @@ public class ConfigurationSchemaBuilder {
             switch (effectiveValue.getNodeType()) {
                 case ARRAY -> {
                     properties.property(property.getKey(), new JsonSchema.Builder()
-                            .type(Types.Array)
+                            .types(Types.Array,Types.String)
                             .build());
                 }
                 case BINARY -> {

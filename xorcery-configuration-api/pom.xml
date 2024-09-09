@@ -63,7 +63,7 @@
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>generate-module-jsonschema</id>
+                        <id>generate-jsonschema</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>module-configuration-jsonschema</goal>

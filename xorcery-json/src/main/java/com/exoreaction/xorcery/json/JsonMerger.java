@@ -124,11 +124,54 @@ public class JsonMerger
                     currentValue instanceof NumericNode ||
                     currentValue instanceof BooleanNode) {
                 ArrayNode arrayCopy = addingarray.deepCopy();
-                arrayCopy.add(currentValue);
+                boolean alreadyInArray = false;
+                for (JsonNode jsonNode : arrayCopy) {
+                    if (jsonNode.equals(currentValue))
+                    {
+                        alreadyInArray = true;
+                        break;
+                    }
+                }
+                if (!alreadyInArray)
+                {
+                    arrayCopy.add(currentValue);
+                }
                 currentObject.set(key, arrayCopy);
             }
         } else {
-            currentObject.set(key, value);
+            JsonNode currentValue = currentObject.path(key);
+            if (currentValue.isMissingNode()) {
+                currentObject.set(key, value);
+            } else if (currentValue instanceof ArrayNode currentArray) {
+                    if (value instanceof ObjectNode addingObject) {
+                        // Check if object with this identity exists in array
+                        boolean updatedObject = false;
+                        for (JsonNode jsonNode : currentArray) {
+                            if (jsonNode instanceof ObjectNode currentArrayObject) {
+                                // Merge it
+                                Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
+                                Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
+                                if (currentIdField.getKey().equals(addingIdField.getKey()) && currentIdField.getValue().equals(addingIdField.getValue())) {
+                                    merge0(currentArrayObject, addingObject, false);
+                                    updatedObject = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!updatedObject) {
+                            currentArray.add(value);
+                        }
+                    } else {
+                        for (JsonNode jsonNode : currentArray) {
+                            if (jsonNode.equals(value))
+                                return;
+                        }
+                        currentArray.add(value);
+                    }
+            } else
+            {
+                currentObject.set(key, value);
+            }
         }
     }
 }

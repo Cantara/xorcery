@@ -104,4 +104,70 @@ class JsonMergerTest {
 //        System.out.println(result);
     }
 
+    @Test
+    public void testMergeStringIntoArray() throws Throwable {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+
+        ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
+                jersey:
+                    server:
+                        register:  
+                        - foo
+                        - bar
+                """);
+        ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
+                jersey:
+                    server:
+                        register: bar
+                """);
+        ObjectNode merged = new JsonMerger().apply(test1, test2);
+
+        String result = objectMapper.writeValueAsString(merged);
+
+        String expectedResult = """
+                ---
+                jersey:
+                  server:
+                    register:
+                    - "foo"
+                    - "bar"
+                """;
+
+        assertThat(result, equalTo(expectedResult));
+//        System.out.println(result);
+    }
+
+    @Test
+    public void testMergeArrayIntoString() throws Throwable {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+
+        ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
+                jersey:
+                    server:
+                        register: bar  
+                """);
+        ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
+                jersey:
+                    server:
+                        register: 
+                        - foo
+                        - bar
+                """);
+        ObjectNode merged = new JsonMerger().apply(test1, test2);
+
+        String result = objectMapper.writeValueAsString(merged);
+
+        String expectedResult = """
+                ---
+                jersey:
+                  server:
+                    register:
+                    - "foo"
+                    - "bar"
+                """;
+
+        assertThat(result, equalTo(expectedResult));
+//        System.out.println(result);
+    }
+
 }

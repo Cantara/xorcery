@@ -147,6 +147,8 @@
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>generate-jsonschema</id>
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>module-configuration-jsonschema</goal>
                             <goal>application-configuration-jsonschema</goal>

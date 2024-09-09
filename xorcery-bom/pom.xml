@@ -100,6 +100,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-translation-resourcebundle-maven-plugin</artifactId>
+                <version>0.128.11-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration-api</artifactId>
                 <version>0.128.11-SNAPSHOT</version>
             </dependency>
