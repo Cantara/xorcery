@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-opentelemetry</artifactId>
-        <version>0.128.10</version>
+        <version>0.128.11-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-opentelemetry-jmx</artifactId>
