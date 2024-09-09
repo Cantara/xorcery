@@ -18,7 +18,11 @@
           "default" : "{{ defaults.enabled }}",
           "description" : "Default: {{ defaults.enabled }} (true)"
         },
-        "path" : "",
+        "path" : {
+          "type" : "string",
+          "default" : "{{ instance.home }}/neo4j",
+          "description" : "Default: {{ instance.home }}/neo4j"
+        },
         "startup" : {
           "type" : "array"
         },

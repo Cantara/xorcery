@@ -31,11 +31,11 @@
     "keystores" : {
       "$ref" : "#/$defs/keystores"
     },
-    "log4j2" : {
-      "$ref" : "#/$defs/log4j2"
-    },
     "secrets" : {
       "$ref" : "#/$defs/secrets"
+    },
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
     },
     "jetty" : {
       "$ref" : "#/$defs/jetty"
@@ -299,8 +299,62 @@
                 "default" : false
               },
               "template" : {
-                "type" : "string"
+                "type" : [ "string", "null" ]
               }
+            }
+          }
+        }
+      }
+    },
+    "secrets" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "keystore" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{secrets.enabled}}",
+              "description" : "Default: {{secrets.enabled}} (true)"
+            },
+            "name" : {
+              "type" : "string",
+              "default" : "secrets",
+              "description" : "Default: secrets"
+            }
+          }
+        },
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{defaults.enabled}}",
+          "description" : "Default: {{defaults.enabled}} (true)"
+        },
+        "default" : {
+          "type" : "string",
+          "default" : "secret",
+          "description" : "Default: secret"
+        },
+        "env" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
+        },
+        "system" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
           }
         }
@@ -367,44 +421,6 @@
                   }
                 }
               }
-            }
-          }
-        }
-      }
-    },
-    "secrets" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{defaults.enabled}}",
-          "description" : "Default: {{defaults.enabled}} (true)"
-        },
-        "default" : {
-          "type" : "string",
-          "default" : "secret",
-          "description" : "Default: secret"
-        },
-        "env" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} (true)"
-            }
-          }
-        },
-        "system" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} (true)"
             }
           }
         }
@@ -604,7 +620,19 @@
                   "type" : "array"
                 },
                 "mappings" : {
-                  "type" : "array"
+                  "type" : "array",
+                  "items" : {
+                    "required" : [ "path" ],
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "path" : {
+                        "type" : "string"
+                      },
+                      "constraint" : {
+                        "type" : "string"
+                      }
+                    }
+                  }
                 },
                 "certificate" : {
                   "type" : "object",

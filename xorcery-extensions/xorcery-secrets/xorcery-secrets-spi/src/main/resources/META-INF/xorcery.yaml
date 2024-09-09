@@ -1,0 +1,6 @@
+$schema: ./xorcery-schema.json
+secrets:
+  env:
+    enabled: "{{ secrets.enabled }}"
+  system:
+    enabled: "{{ secrets.enabled }}"

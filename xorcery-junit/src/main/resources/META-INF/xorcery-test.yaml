@@ -1,4 +1,5 @@
 ---
+$schema: ./xorcery-override-schema.json
 jetty.client.ssl.keystore: "ssl"
 jetty.client.ssl.truststore: "truststore"
 
@@ -9,11 +10,11 @@ jetty.server.ssl.crls: "META-INF/crls.pem"
 
 keystores:
   stores:
-  - name: ssl
-    template: null
-    path: "META-INF/test-ssl.p12"
-    password: "{{ keystores.defaultPassword }}"
-  - name: truststore
-    template: null
-    path: "META-INF/test-truststore.p12"
-    password: "{{ keystores.defaultPassword }}"
+    - name: ssl
+      template: null
+      path: "META-INF/test-ssl.p12"
+      password: "{{ keystores.defaultPassword }}"
+    - name: truststore
+      template: null
+      path: "META-INF/test-truststore.p12"
+      password: "{{ keystores.defaultPassword }}"

@@ -1,3 +1,4 @@
+$schema: ./xorcery-schema.json
 persistentsubscribers:
   enabled: "{{ defaults.enabled }}"
   defaultCheckpointProvider: "file"

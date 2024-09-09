@@ -1,3 +1,4 @@
+$schema: ./xorcery-override-schema.json
 jersey.server.register:
     - com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter
     - com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader

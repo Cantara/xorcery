@@ -1,3 +1,4 @@
+$schema: ./xorcery-schema.json
 disruptor:
   standard:
     size: 512

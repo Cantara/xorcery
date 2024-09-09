@@ -22,28 +22,6 @@
           "type" : "string",
           "default" : "secret",
           "description" : "Default: secret"
-        },
-        "env" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} (true)"
-            }
-          }
-        },
-        "system" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} (true)"
-            }
-          }
         }
       }
     }

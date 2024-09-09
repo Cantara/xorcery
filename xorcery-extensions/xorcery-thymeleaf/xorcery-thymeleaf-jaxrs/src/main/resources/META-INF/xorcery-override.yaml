@@ -1,2 +1,5 @@
-jersey.server.register:
-  - com.exoreaction.xorcery.thymeleaf.providers.ThymeleafHtmlMessageBodyWriter
+$schema: ./xorcery-override-schema.json
+jersey:
+  server:
+    register:
+      - com.exoreaction.xorcery.thymeleaf.providers.ThymeleafHtmlMessageBodyWriter

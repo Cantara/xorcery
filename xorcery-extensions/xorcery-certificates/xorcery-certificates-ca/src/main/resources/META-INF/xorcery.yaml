@@ -1,3 +1,4 @@
+$schema: ./xorcery-schema.json
 intermediateca:
   enabled: "{{ defaults.enabled }}"
   alias: "intermediate"

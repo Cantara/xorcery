@@ -35,6 +35,10 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-jaxrs-server</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-jersey-server</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.thymeleaf</groupId>

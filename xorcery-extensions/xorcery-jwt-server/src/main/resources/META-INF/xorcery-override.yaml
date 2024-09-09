@@ -1,2 +1,3 @@
+$schema: ./xorcery-override-schema.json
 jersey.server.register:
   - com.exoreaction.xorcery.jwt.server.api.JwtLoginResource

@@ -1,3 +1,4 @@
+$schema: ./xorcery-schema.json
 opensearch:
   enabled: "{{ defaults.enabled }}"
   uri: "http://localhost:9200"

@@ -70,21 +70,6 @@
           }
         }
       }
-    },
-    "jersey" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "server" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "register" : {
-              "type" : "array"
-            }
-          }
-        }
-      }
     }
   }
 }

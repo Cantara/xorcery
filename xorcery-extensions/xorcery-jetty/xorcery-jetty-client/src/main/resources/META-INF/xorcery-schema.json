@@ -74,11 +74,13 @@
                 },
                 "keystore" : {
                   "default" : null,
-                  "description" : "Default: null"
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
                 },
                 "truststore" : {
                   "default" : null,
-                  "description" : "Default: null"
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
                 },
                 "endpointIdentificationAlgorithm" : {
                   "type" : "string",

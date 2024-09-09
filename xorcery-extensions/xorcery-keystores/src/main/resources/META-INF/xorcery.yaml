@@ -3,5 +3,9 @@ $schema: ./xorcery-schema.json
 keystores:
   enabled: "{{ defaults.enabled }}"
   defaultPassword: "secret:password"
-
   stores: []
+
+secrets:
+  keystore:
+    enabled: "{{secrets.enabled}}"
+    name: "secrets"

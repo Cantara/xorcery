@@ -1,2 +1,3 @@
+$schema: ./xorcery-schema.json
 status:
   enabled: "{{ defaults.enabled }}"

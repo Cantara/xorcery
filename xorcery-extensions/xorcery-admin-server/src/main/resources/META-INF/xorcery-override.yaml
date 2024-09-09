@@ -1,5 +1,13 @@
-jersey.server.register:
-  - com.exoreaction.xorcery.admin.api.VisualeHealthResource
+$schema: ./xorcery-override-schema.json
 
-opentelemetry.sampler.excludes:
-  - name: "GET /health"
+jersey:
+  server:
+    register:
+    - com.exoreaction.xorcery.admin.api.VisualeHealthResource
+
+opentelemetry:
+  global:
+
+  sampler:
+    excludes:
+    - name: "GET /health"

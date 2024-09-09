@@ -1,3 +1,4 @@
+$schema: ./xorcery-override-schema.json
 defaults.enabled: false
 
 log4j2:

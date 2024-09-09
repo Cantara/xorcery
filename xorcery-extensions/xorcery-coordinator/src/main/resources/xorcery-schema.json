@@ -61,6 +61,9 @@
     "keystores" : {
       "$ref" : "#/$defs/keystores"
     },
+    "secrets" : {
+      "$ref" : "#/$defs/secrets"
+    },
     "log4j2" : {
       "$ref" : "#/$defs/log4j2"
     },
@@ -69,9 +72,6 @@
     },
     "reactivestreams" : {
       "$ref" : "#/$defs/reactivestreams"
-    },
-    "secrets" : {
-      "$ref" : "#/$defs/secrets"
     },
     "jmx" : {
       "$ref" : "#/$defs/jmx"
@@ -737,11 +737,13 @@
                 },
                 "keystore" : {
                   "default" : null,
-                  "description" : "Default: null"
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
                 },
                 "truststore" : {
                   "default" : null,
-                  "description" : "Default: null"
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
                 },
                 "endpointIdentificationAlgorithm" : {
                   "type" : "string",
@@ -947,7 +949,19 @@
                   "type" : "array"
                 },
                 "mappings" : {
-                  "type" : "array"
+                  "type" : "array",
+                  "items" : {
+                    "required" : [ "path" ],
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "path" : {
+                        "type" : "string"
+                      },
+                      "constraint" : {
+                        "type" : "string"
+                      }
+                    }
+                  }
                 },
                 "certificate" : {
                   "type" : "object",
@@ -1102,7 +1116,7 @@
                   "description" : "Default: /"
                 },
                 "domain" : {
-                  "type" : [ "null", "string" ],
+                  "type" : [ "null", "string", "string" ],
                   "default" : "{{ instance.domain }}",
                   "description" : "Default: {{ instance.domain }} (xorcery.test)"
                 }
@@ -1181,8 +1195,62 @@
                 "default" : false
               },
               "template" : {
-                "type" : "string"
+                "type" : [ "string", "null" ]
               }
+            }
+          }
+        }
+      }
+    },
+    "secrets" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "keystore" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{secrets.enabled}}",
+              "description" : "Default: {{secrets.enabled}} (true)"
+            },
+            "name" : {
+              "type" : "string",
+              "default" : "secrets",
+              "description" : "Default: secrets"
+            }
+          }
+        },
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{defaults.enabled}}",
+          "description" : "Default: {{defaults.enabled}} (true)"
+        },
+        "default" : {
+          "type" : "string",
+          "default" : "secret",
+          "description" : "Default: secret"
+        },
+        "env" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
+        },
+        "system" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : "string",
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
           }
         }
@@ -1562,7 +1630,7 @@
               "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
             },
             "host.ip" : {
-              "type" : "array"
+              "type" : [ "string", "array", "array" ]
             },
             "process.runtime.name" : {
               "type" : "string",
@@ -1819,44 +1887,6 @@
               "type" : "string",
               "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
               "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ (wss://service.xorcery.test:443/)"
-            }
-          }
-        }
-      }
-    },
-    "secrets" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{defaults.enabled}}",
-          "description" : "Default: {{defaults.enabled}} (true)"
-        },
-        "default" : {
-          "type" : "string",
-          "default" : "secret",
-          "description" : "Default: secret"
-        },
-        "env" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} (true)"
-            }
-          }
-        },
-        "system" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} (true)"
             }
           }
         }

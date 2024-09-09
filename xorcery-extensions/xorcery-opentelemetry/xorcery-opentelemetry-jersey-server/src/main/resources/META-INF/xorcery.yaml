@@ -1,3 +1,4 @@
+$schema: ./xorcery-schema.json
 opentelemetry:
   instrumentations:
     jersey:
@@ -9,8 +10,3 @@ opentelemetry:
         http.response.body.size: http.response.body.size
         enduser.id: enduser.id
         url.full: url.full
-
-jersey:
-  server:
-    register:
-      - "{{ opentelemetry.instrumentations.jersey.enabled ? \"com.exoreaction.xorcery.opentelemetry.jersey.server.resources.OpenTelemetryTracerFilter\" }}"

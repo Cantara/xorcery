@@ -1,4 +1,8 @@
-log4j2.Configuration.Loggers.logger:
+$schema: ./xorcery-override-schema.json
+log4j2:
+  Configuration:
+    Loggers:
+      logger:
       - name: org.apache.commons.beanutils.FluentPropertyBeanIntrospector
         level: warn
 

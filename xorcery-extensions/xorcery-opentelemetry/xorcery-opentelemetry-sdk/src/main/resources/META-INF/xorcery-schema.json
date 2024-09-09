@@ -53,7 +53,7 @@
               "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
             },
             "host.ip" : {
-              "type" : "array"
+              "type" : [ "string", "array", "array" ]
             },
             "process.runtime.name" : {
               "type" : "string",

@@ -1,7 +1,7 @@
+$schema: ./xorcery-schema.json
 dns:
-  enabled: "{{ defaults.enabled }}"
   server:
-    enabled: "{{ dns.enabled }}"
+    enabled: "{{ defaults.enabled }}"
     port: 8853
     zones:
       - name: xorcery.test

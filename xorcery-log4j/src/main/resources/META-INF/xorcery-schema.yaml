@@ -1,7 +1,0 @@
-$defs:
-  log4j2:
-    properties:
-      Configuration:
-        properties:
-          appenders:
-            additionalProperties : true

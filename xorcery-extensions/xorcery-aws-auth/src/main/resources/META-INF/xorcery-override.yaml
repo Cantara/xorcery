@@ -1,2 +1,3 @@
+$schema: ./xorcery-override-schema.json
 system:
   software.amazon.awssdk.http.service.impl: software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService

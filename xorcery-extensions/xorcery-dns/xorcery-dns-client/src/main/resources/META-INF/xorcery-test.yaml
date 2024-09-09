@@ -1,3 +1,4 @@
+$schema: ./xorcery-schema.json
 dns:
   client:
     timeout: 60s

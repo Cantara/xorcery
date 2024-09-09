@@ -1,3 +1,4 @@
+$schema: ./xorcery-schema.json
 neo4jdatabase:
   enabled: "{{ defaults.enabled }}"
   path: "{{ instance.home }}/neo4j"

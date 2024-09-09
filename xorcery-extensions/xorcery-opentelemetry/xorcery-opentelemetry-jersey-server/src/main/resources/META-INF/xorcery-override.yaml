@@ -1,0 +1,5 @@
+$schema: ./xorcery-override-schema.json
+jersey:
+  server:
+    register:
+      - "{{ opentelemetry.instrumentations.jersey.enabled ? \"com.exoreaction.xorcery.opentelemetry.jersey.server.resources.OpenTelemetryTracerFilter\" }}"

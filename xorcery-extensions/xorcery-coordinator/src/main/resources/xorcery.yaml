@@ -1,4 +1,4 @@
-# $schema: ./xorcery-schema.json
+$schema: ./xorcery-schema.json
 
 application:
   name: "xorcery-coordinator"
@@ -8,7 +8,8 @@ dns.client.nameServers:
   - localhost:8853
 
 certificates:
-  ipAddresses: "{{ CALCULATED.ipv4Addresses }}"
+  ipAddresses:
+  - "{{ CALCULATED.ipv4Addresses }}"
 
 letsencrypt.enabled: false
 
