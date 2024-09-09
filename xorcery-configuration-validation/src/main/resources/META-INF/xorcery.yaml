@@ -1,0 +1,4 @@
+$schema: ./xorcery-schema.json
+configuration:
+  validation:
+    enabled: "{{ defaults.enabled }}"
