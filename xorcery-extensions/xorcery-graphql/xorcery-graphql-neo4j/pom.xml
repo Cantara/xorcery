@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-graphql</artifactId>
-        <version>0.128.16</version>
+        <version>0.128.17-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-graphql-neo4j</artifactId>
