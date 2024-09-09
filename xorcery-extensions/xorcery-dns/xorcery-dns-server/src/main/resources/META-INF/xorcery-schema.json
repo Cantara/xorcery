@@ -28,10 +28,10 @@
               "description" : "Default: 53"
             },
             "zones" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "keys" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "tcp" : {
               "type" : "object",

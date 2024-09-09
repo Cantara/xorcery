@@ -39,7 +39,7 @@
           "description" : "Default: false"
         },
         "publishers" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     }

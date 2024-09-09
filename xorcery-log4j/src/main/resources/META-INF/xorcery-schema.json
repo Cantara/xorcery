@@ -53,7 +53,7 @@
               "additionalProperties" : false,
               "properties" : {
                 "logger" : {
-                  "type" : "array"
+                  "type" : [ "array", "string" ]
                 },
                 "Root" : {
                   "type" : "object",
@@ -65,7 +65,7 @@
                       "description" : "Default: info"
                     },
                     "AppenderRef" : {
-                      "type" : "array"
+                      "type" : [ "array", "string" ]
                     }
                   }
                 }

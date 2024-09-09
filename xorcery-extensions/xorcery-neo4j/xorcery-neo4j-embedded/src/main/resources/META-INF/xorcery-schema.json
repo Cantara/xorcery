@@ -24,7 +24,7 @@
           "description" : "Default: {{ instance.home }}/neo4j"
         },
         "startup" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "domain" : {
           "type" : "object",

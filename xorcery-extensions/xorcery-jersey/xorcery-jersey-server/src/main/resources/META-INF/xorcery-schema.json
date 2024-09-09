@@ -23,7 +23,7 @@
               "description" : "Default: {{ jetty.server.enabled }} (true)"
             },
             "register" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "mediaTypes" : {
               "type" : "object",

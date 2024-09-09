@@ -91,7 +91,7 @@
           "description" : "Default: development"
         },
         "tags" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "home" : {
           "type" : "string",
@@ -213,7 +213,7 @@
           }
         },
         "names" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -242,10 +242,10 @@
               "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "nameServers" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "search" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "hosts" : {
               "type" : "object",
@@ -297,7 +297,7 @@
               "description" : "Default: {{ jetty.server.enabled }} (true)"
             },
             "register" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "mediaTypes" : {
               "type" : "object",
@@ -608,10 +608,10 @@
                   "description" : "Default: jwt"
                 },
                 "constraints" : {
-                  "type" : "array"
+                  "type" : [ "array", "string" ]
                 },
                 "mappings" : {
-                  "type" : "array",
+                  "type" : [ "array", "string" ],
                   "items" : {
                     "required" : [ "path" ],
                     "additionalProperties" : false,
@@ -651,7 +651,7 @@
                       "description" : "Default: token"
                     },
                     "issuers" : {
-                      "type" : "array"
+                      "type" : [ "array", "string" ]
                     }
                   }
                 }
@@ -744,7 +744,7 @@
           "description" : "Default: secret:password"
         },
         "stores" : {
-          "type" : "array",
+          "type" : [ "array", "string" ],
           "items" : {
             "properties" : {
               "name" : {
@@ -866,7 +866,7 @@
               "additionalProperties" : false,
               "properties" : {
                 "logger" : {
-                  "type" : "array"
+                  "type" : [ "array", "string" ]
                 },
                 "Root" : {
                   "type" : "object",
@@ -878,7 +878,7 @@
                       "description" : "Default: info"
                     },
                     "AppenderRef" : {
-                      "type" : "array"
+                      "type" : [ "array", "string" ]
                     }
                   }
                 }
@@ -915,7 +915,7 @@
           "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "publishers" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     },

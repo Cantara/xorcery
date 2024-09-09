@@ -23,7 +23,7 @@
               "description" : "Default: {{ eventstore.enabled }} (true)"
             },
             "projections" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             }
           }
         }

@@ -127,10 +127,10 @@
           "description" : "Default: {{ instance.fqdn | \"server\"}} (service.xorcery.test)"
         },
         "ipAddresses" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "dnsNames" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "server" : {
           "type" : "object",
@@ -184,7 +184,7 @@
           "description" : "Default: development"
         },
         "tags" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "home" : {
           "type" : "string",
@@ -306,7 +306,7 @@
           }
         },
         "names" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -335,10 +335,10 @@
               "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "nameServers" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "search" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "hosts" : {
               "type" : "object",
@@ -383,10 +383,10 @@
               "description" : "Default: 53"
             },
             "zones" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "keys" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "tcp" : {
               "type" : "object",
@@ -505,7 +505,7 @@
               "description" : "Default: {{ jetty.server.enabled }} (true)"
             },
             "register" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "mediaTypes" : {
               "type" : "object",
@@ -816,10 +816,10 @@
                   "description" : "Default: jwt"
                 },
                 "constraints" : {
-                  "type" : "array"
+                  "type" : [ "array", "string" ]
                 },
                 "mappings" : {
-                  "type" : "array",
+                  "type" : [ "array", "string" ],
                   "items" : {
                     "required" : [ "path" ],
                     "additionalProperties" : false,
@@ -859,7 +859,7 @@
                       "description" : "Default: token"
                     },
                     "issuers" : {
-                      "type" : "array"
+                      "type" : [ "array", "string" ]
                     }
                   }
                 }
@@ -952,7 +952,7 @@
           "description" : "Default: secret:password"
         },
         "stores" : {
-          "type" : "array",
+          "type" : [ "array", "string" ],
           "items" : {
             "properties" : {
               "name" : {
@@ -1074,7 +1074,7 @@
               "additionalProperties" : false,
               "properties" : {
                 "logger" : {
-                  "type" : "array"
+                  "type" : [ "array", "string" ]
                 },
                 "Root" : {
                   "type" : "object",
@@ -1086,7 +1086,7 @@
                       "description" : "Default: info"
                     },
                     "AppenderRef" : {
-                      "type" : "array"
+                      "type" : [ "array", "string" ]
                     }
                   }
                 }
@@ -1111,7 +1111,7 @@
           "description" : "Default: {{ instance.home }}/neo4j"
         },
         "startup" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "domain" : {
           "type" : "object",
@@ -1255,7 +1255,7 @@
               "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
             },
             "host.ip" : {
-              "type" : [ "string", "array", "array" ]
+              "type" : [ "array", "string" ]
             },
             "process.runtime.name" : {
               "type" : "string",
@@ -1413,10 +1413,10 @@
               "description" : "Default: {{ opentelemetry.enabled }} (true)"
             },
             "excludes" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "includes" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             }
           }
         },
@@ -1425,10 +1425,10 @@
           "additionalProperties" : false,
           "properties" : {
             "excludes" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "includes" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             }
           }
         }

@@ -19,7 +19,7 @@
           "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "publishers" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     }

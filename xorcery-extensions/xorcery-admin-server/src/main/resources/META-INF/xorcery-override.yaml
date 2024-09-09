@@ -6,8 +6,6 @@ jersey:
     - com.exoreaction.xorcery.admin.api.VisualeHealthResource
 
 opentelemetry:
-  global:
-
   sampler:
     excludes:
     - name: "GET /health"

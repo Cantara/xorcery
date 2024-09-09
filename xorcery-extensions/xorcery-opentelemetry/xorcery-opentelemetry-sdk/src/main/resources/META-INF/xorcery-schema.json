@@ -53,7 +53,7 @@
               "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
             },
             "host.ip" : {
-              "type" : [ "string", "array", "array" ]
+              "type" : [ "array", "string" ]
             },
             "process.runtime.name" : {
               "type" : "string",
@@ -211,10 +211,10 @@
               "description" : "Default: {{ opentelemetry.enabled }} (true)"
             },
             "excludes" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "includes" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             }
           }
         },
@@ -223,10 +223,10 @@
           "additionalProperties" : false,
           "properties" : {
             "excludes" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "includes" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             }
           }
         },

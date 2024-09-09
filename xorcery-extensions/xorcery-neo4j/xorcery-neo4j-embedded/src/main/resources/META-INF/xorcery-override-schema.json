@@ -67,7 +67,7 @@
           "description" : "Default: development"
         },
         "tags" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "home" : {
           "type" : "string",
@@ -189,7 +189,7 @@
           }
         },
         "names" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -248,7 +248,7 @@
               "additionalProperties" : false,
               "properties" : {
                 "logger" : {
-                  "type" : "array"
+                  "type" : [ "array", "string" ]
                 },
                 "Root" : {
                   "type" : "object",
@@ -260,7 +260,7 @@
                       "description" : "Default: info"
                     },
                     "AppenderRef" : {
-                      "type" : "array"
+                      "type" : [ "array", "string" ]
                     }
                   }
                 }
@@ -302,7 +302,7 @@
           "description" : "Default: {{ instance.home }}/neo4j"
         },
         "startup" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "domain" : {
           "type" : "object",

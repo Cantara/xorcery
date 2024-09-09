@@ -114,7 +114,7 @@
           "description" : "Default: development"
         },
         "tags" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "home" : {
           "type" : "string",
@@ -236,7 +236,7 @@
           }
         },
         "names" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -265,10 +265,10 @@
               "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "nameServers" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "search" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "hosts" : {
               "type" : "object",

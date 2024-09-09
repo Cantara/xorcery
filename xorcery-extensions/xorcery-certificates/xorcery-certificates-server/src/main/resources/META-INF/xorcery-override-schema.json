@@ -69,10 +69,10 @@
           "description" : "Default: {{ instance.fqdn | \"server\"}} (service.xorcery.test)"
         },
         "ipAddresses" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "dnsNames" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "server" : {
           "type" : "object",
@@ -126,7 +126,7 @@
           "description" : "Default: development"
         },
         "tags" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "home" : {
           "type" : "string",
@@ -248,7 +248,7 @@
           }
         },
         "names" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -287,7 +287,7 @@
           "description" : "Default: secret:password"
         },
         "stores" : {
-          "type" : "array",
+          "type" : [ "array", "string" ],
           "items" : {
             "properties" : {
               "name" : {
@@ -409,7 +409,7 @@
               "additionalProperties" : false,
               "properties" : {
                 "logger" : {
-                  "type" : "array"
+                  "type" : [ "array", "string" ]
                 },
                 "Root" : {
                   "type" : "object",
@@ -421,7 +421,7 @@
                       "description" : "Default: info"
                     },
                     "AppenderRef" : {
-                      "type" : "array"
+                      "type" : [ "array", "string" ]
                     }
                   }
                 }

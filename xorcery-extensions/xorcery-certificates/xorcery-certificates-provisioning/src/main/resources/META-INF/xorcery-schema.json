@@ -39,10 +39,10 @@
           "description" : "Default: {{ instance.fqdn | \"server\"}} (service.xorcery.test)"
         },
         "ipAddresses" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         },
         "dnsNames" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     }

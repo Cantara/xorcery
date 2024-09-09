@@ -29,7 +29,7 @@
           "description" : "Default: file"
         },
         "subscribers" : {
-          "type" : "array"
+          "type" : [ "array", "string" ]
         }
       }
     }

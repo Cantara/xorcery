@@ -27,7 +27,7 @@
           "description" : "Default: secret:password"
         },
         "stores" : {
-          "type" : "array",
+          "type" : [ "array", "string" ],
           "items" : {
             "properties" : {
               "name" : {

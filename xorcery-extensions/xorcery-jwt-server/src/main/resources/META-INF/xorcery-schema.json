@@ -58,14 +58,14 @@
                   "description" : "Default: /"
                 },
                 "domain" : {
-                  "type" : [ "null", "string", "string" ],
+                  "type" : [ "null", "string" ],
                   "default" : "{{ instance.domain }}",
                   "description" : "Default: {{ instance.domain }} (xorcery.test)"
                 }
               }
             },
             "keys" : {
-              "type" : "array",
+              "type" : [ "array", "string" ],
               "items" : {
                 "type" : "object",
                 "additionalProperties" : false,

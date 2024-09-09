@@ -23,10 +23,10 @@
               "description" : "Default: {{ defaults.enabled }} (true)"
             },
             "nameServers" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "search" : {
-              "type" : "array"
+              "type" : [ "array", "string" ]
             },
             "hosts" : {
               "type" : "object",

@@ -1255,7 +1255,7 @@
               "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
             },
             "host.ip" : {
-              "type" : [ "string", "array", "array" ]
+              "type" : [ "string", "array" ]
             },
             "process.runtime.name" : {
               "type" : "string",
