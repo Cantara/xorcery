@@ -547,7 +547,7 @@
                         "type" : "string"
                       },
                       "constraint" : {
-                        "type" : "string"
+                        "type" : [ "string", "null" ]
                       }
                     }
                   }
@@ -578,7 +578,34 @@
                       "description" : "Default: token"
                     },
                     "issuers" : {
-                      "type" : [ "array", "string" ]
+                      "type" : [ "array", "string" ],
+                      "items" : {
+                        "type" : "object",
+                        "properties" : {
+                          "name" : {
+                            "type" : "string"
+                          },
+                          "keys" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "object",
+                              "properties" : {
+                                "kid" : {
+                                  "type" : "string",
+                                  "description" : "Key id, usually a UUID"
+                                },
+                                "alg" : {
+                                  "type" : "string",
+                                  "enum" : [ "ES256", "ES384", "ES512", "RS256", "RS384", "RS512" ]
+                                },
+                                "publicKey" : {
+                                  "type" : "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }

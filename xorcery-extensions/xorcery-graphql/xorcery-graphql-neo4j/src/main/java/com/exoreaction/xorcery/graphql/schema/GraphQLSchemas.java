@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.jsonapi.server.graphql.schema;
+package com.exoreaction.xorcery.graphql.schema;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.jsonapi.server.graphql.GraphQLExecutor;
-import com.exoreaction.xorcery.jsonapi.server.graphql.cypher.CypherWiringFactory;
+import com.exoreaction.xorcery.graphql.GraphQLExecutor;
+import com.exoreaction.xorcery.graphql.neo4j.cypher.CypherWiringFactory;
 import com.exoreaction.xorcery.util.Resources;
 import graphql.execution.preparsed.PreparsedDocumentProvider;
 import graphql.execution.preparsed.persisted.ApolloPersistedQuerySupport;

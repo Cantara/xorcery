@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.configuration.builder;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.ConfigurationLogger;
 import com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
 import com.exoreaction.xorcery.json.JsonMerger;
 import com.exoreaction.xorcery.util.Resources;
@@ -185,6 +186,8 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
     }
 
     public ConfigurationBuilder addApplication() throws UncheckedIOException {
+        // Remove any existing $schema reference, they would only be for partial schemas anyway
+        builder.builder().remove("$schema");
         // Load application config file
         return addResources(baseName+".yaml");
     }

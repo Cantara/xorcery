@@ -16,9 +16,9 @@
 package com.exoreaction.xorcery.junit;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.ConfigurationLogger;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.ConfigurationLogger;
 import com.exoreaction.xorcery.core.Xorcery;
 import com.exoreaction.xorcery.io.ZipFiles;
 import com.exoreaction.xorcery.log4j.LoggerContextFactory;
@@ -169,14 +169,11 @@ public class XorceryExtension
                 }
             }
             xorcery = new Xorcery(configuration, serviceLocator);
-        } catch (Exception e) {
-
+        } finally {
             List<String> messages = ConfigurationLogger.getLogger().drain();
             for (String message : messages) {
                 System.out.println(message);
             }
-
-            throw new RuntimeException(e);
         }
 
         ExtensionContext.Store store = extensionContext.getRoot().getStore(NAMESPACE);

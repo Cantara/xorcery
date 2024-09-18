@@ -11,16 +11,23 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Signal;
 import reactor.core.publisher.Sinks;
+import reactor.util.context.ContextView;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
 
 @Service(name = "neo4jprojections.updates")
 public class Neo4jProjectionUpdates
         implements Publisher<Metadata>,
-        Function<MetadataEvents, MetadataEvents>,
+        BiFunction<Flux<MetadataEvents>, ContextView, Publisher<MetadataEvents>>,
         PreDestroy {
     private final Map<String, SinkFlux> sinkFluxes = new ConcurrentHashMap<>();
 
@@ -46,17 +53,41 @@ public class Neo4jProjectionUpdates
     }
 
     @Override
-    public MetadataEvents apply(MetadataEvents metadataEvents) {
-        metadataEvents.metadata().getString("projectionId")
-                .ifPresent(id -> sinkFluxes.computeIfAbsent(id, Neo4jProjectionUpdates::createSinkFlux).sink.tryEmitNext(metadataEvents.metadata()));
+    public Publisher<MetadataEvents> apply(Flux<MetadataEvents> projectionFlux, ContextView contextView) {
 
-        return metadataEvents;
+        return new ContextViewElement(contextView).getString(ProjectionStreamContext.projectionId).map(pid ->
+        {
+            SinkFlux sinkFlux = sinkFluxes.computeIfAbsent(pid, Neo4jProjectionUpdates::createSinkFlux);
+            return projectionFlux.doOnEach(this.onEach(sinkFlux.sink()));
+        }).orElse(projectionFlux);
+    }
+
+    private Consumer<? super Signal<MetadataEvents>> onEach(Sinks.Many<Metadata> sink) {
+        return signal ->
+        {
+            switch (requireNonNull(signal.getType())) {
+                case CANCEL -> {
+                    sink.tryEmitComplete();
+                }
+                case ON_NEXT -> {
+                    sink.tryEmitNext(requireNonNull(signal.get()).metadata());
+                }
+                case ON_ERROR -> {
+                    sink.tryEmitError(requireNonNull(signal.getThrowable()));
+                }
+                case ON_COMPLETE -> {
+                    sink.tryEmitComplete();
+                }
+                default -> {
+                }
+            };
+        };
     }
 
     private static SinkFlux createSinkFlux(String projectionId) {
         Sinks.Many<Metadata> sink = Sinks.many().replay().limit(1);
-            Flux<Metadata> projectionUpdatesFlux = sink.asFlux();
-            return new SinkFlux(sink, projectionUpdatesFlux);
+        Flux<Metadata> projectionUpdatesFlux = sink.asFlux();
+        return new SinkFlux(sink, projectionUpdatesFlux);
     }
 
     @Override

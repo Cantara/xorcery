@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.jsonapi.server.graphql.schema;
+package com.exoreaction.xorcery.graphql.schema;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.fasterxml.jackson.databind.JsonNode;

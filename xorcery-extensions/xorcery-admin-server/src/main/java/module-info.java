@@ -19,6 +19,7 @@ module xorcery.admin.server {
     exports com.exoreaction.xorcery.admin.jmx;
 
     requires xorcery.core;
+    requires xorcery.configuration;
     requires xorcery.health.registry;
 
     requires jakarta.inject;

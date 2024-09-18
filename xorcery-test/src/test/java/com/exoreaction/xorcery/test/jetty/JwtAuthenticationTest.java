@@ -39,7 +39,9 @@ import java.util.Date;
 import java.util.UUID;
 
 public class JwtAuthenticationTest {
-    String config = """
+    String conxfig = """
+            $schema: META-INF/xorcery-override-schema.json
+            
             jetty.server.enabled: true
             jetty.client.enabled: true
             jetty.server.security.enabled: true
@@ -70,7 +72,7 @@ public class JwtAuthenticationTest {
         System.setProperty("kid", keyId);
         System.setProperty("key", publicKey);
         System.setProperty("port", Integer.toString(Sockets.nextFreePort()));
-        Configuration serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(config).build();
+        Configuration serverConfiguration = new ConfigurationBuilder().addTestDefaults().addResource("JwtAuthenticationTest.yaml").build();
         System.out.println(serverConfiguration);
         try (Xorcery server = new Xorcery(serverConfiguration)) {
 

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.jsonapi.server.graphql.cypher;
+package com.exoreaction.xorcery.graphql.neo4j.cypher;
 
-import com.exoreaction.xorcery.jsonapi.server.graphql.schema.TypeNameTypeResolver;
+import com.exoreaction.xorcery.graphql.schema.TypeNameTypeResolver;
 import graphql.schema.DataFetcher;
 import graphql.schema.TypeResolver;
 import graphql.schema.idl.FieldWiringEnvironment;

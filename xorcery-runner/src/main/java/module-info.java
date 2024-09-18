@@ -18,6 +18,8 @@ module xorcery.runner {
     opens com.exoreaction.xorcery.runner;
 
     requires transitive xorcery.core;
+    requires xorcery.configuration;
 
     requires transitive info.picocli;
+    requires org.apache.logging.log4j.core;
 }

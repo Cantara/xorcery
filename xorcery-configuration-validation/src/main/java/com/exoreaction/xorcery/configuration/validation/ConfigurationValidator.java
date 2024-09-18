@@ -1,36 +1,84 @@
 package com.exoreaction.xorcery.configuration.validation;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.InstanceConfiguration;
+import com.exoreaction.xorcery.json.JsonElement;
 import com.exoreaction.xorcery.util.Resources;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
+import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Set;
 
 public class ConfigurationValidator {
-    final private String schemaName;
-
-    public ConfigurationValidator(String schemaName) {
-        this.schemaName = schemaName;
-    }
+    final private ObjectMapper objectMapper = new ObjectMapper();
 
     public ConfigurationValidator() {
-        this("xorcery-schema.json");
     }
 
     public Set<ValidationMessage> validate(Configuration configuration) {
-        com.networknt.schema.JsonSchemaFactory factory = com.networknt.schema.JsonSchemaFactory.getInstance(com.networknt.schema.SpecVersion.VersionFlag.V4);
-        return Resources.getResource(schemaName).map(url ->
+        return configuration.getString("$schema").map(schemaReference ->
         {
+            String schemaString = null;
+            URL schemaUrl = null;
             try {
-                JsonSchema jsonSchema = factory.getSchema(url.toURI());
-                JsonNode jsonNode = configuration.json();
-                return jsonSchema.validate(jsonNode);
-            } catch (URISyntaxException e) {
-                return Set.of(ValidationMessage.builder().message(e.getMessage()).build());
+                URI home = new File(InstanceConfiguration.get(configuration).getHome()).toURI();
+                schemaUrl = home.resolve(schemaReference).toURL();
+                InputStream schemaInputStream = null;
+                int from = schemaReference.length();
+                do {
+                    try {
+                        schemaInputStream = schemaUrl.openStream();
+                    } catch (IOException e) {
+                        from = schemaReference.lastIndexOf('/', from - 1);
+                        if (from != -1)
+                        {
+                            String classPathResource = schemaReference.substring(from);
+                            schemaUrl = Resources.getResource(classPathResource).orElse(schemaUrl);
+                        }
+                    }
+                } while (schemaInputStream == null && from != -1);
+
+                if (schemaInputStream == null)
+                {
+                    return Collections.<ValidationMessage>emptySet();
+                }
+
+                schemaString = new String(schemaInputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+                JsonNode jsonSchema = objectMapper.readTree(schemaString);
+                if (jsonSchema.isMissingNode())
+                {
+                    return Collections.<ValidationMessage>emptySet();
+                }
+
+                JsonElement jsonSchemaElement = () -> jsonSchema;
+                return jsonSchemaElement.getString("$schema").map(schemaSchemaUrl ->
+                {
+                    SpecVersion.VersionFlag versionFlag = SpecVersion.VersionFlag.fromId(schemaSchemaUrl).orElse(SpecVersion.VersionFlag.V202012);
+                    com.networknt.schema.JsonSchemaFactory factory = com.networknt.schema.JsonSchemaFactory.getInstance(versionFlag);
+                    JsonSchema schema = factory.getSchema(jsonSchema);
+                    JsonNode jsonNode = configuration.json();
+                    return schema.validate(jsonNode);
+                }).orElse(Collections.emptySet());
+            } catch (JsonParseException e) {
+                throw new RuntimeException(String.format("Invalid schema(%s):%s",schemaUrl,schemaString));
+            } catch (RuntimeException e) {
+                throw e;
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
             }
         }).orElse(Collections.emptySet());
     }

@@ -73,6 +73,11 @@
             <artifactId>xorcery-junit</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-configuration</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest</artifactId>
             <scope>test</scope>

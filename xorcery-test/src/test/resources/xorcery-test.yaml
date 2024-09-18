@@ -1,4 +1,4 @@
-$schema: ../../main/resources/xorcery-schema.json
+#$schema: ../../main/resources/xorcery-schema.json
 
 defaults.enabled: false
 dns:

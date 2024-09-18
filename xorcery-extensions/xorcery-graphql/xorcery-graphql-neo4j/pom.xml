@@ -73,6 +73,11 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-junit</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-configuration</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

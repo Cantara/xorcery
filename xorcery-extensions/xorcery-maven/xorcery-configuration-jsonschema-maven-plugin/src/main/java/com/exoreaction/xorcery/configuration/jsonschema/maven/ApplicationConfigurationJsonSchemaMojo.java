@@ -74,6 +74,12 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                 }
             }
 
+            // Check if empty
+            if (uberSchema.size() == 2)
+            {
+                return;
+            }
+
             File xorceryConfigJsonSchemaFile = new File(generatedSchemaFile);
             getLog().debug("xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(" + xorceryConfigJsonSchemaFile.exists() + ")");
 

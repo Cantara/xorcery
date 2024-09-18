@@ -33,14 +33,14 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery.yaml")
     private String configurationFile;
 
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-schema.yaml", readonly = true)
-    private String schemaExtensionsFile;
-
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-schema.json", required = true, readonly = true)
     private String generatedSchemaFile;
 
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-override-schema.json", readonly = true)
     private String generatedOverrideSchemaFile;
+
+    @Parameter(defaultValue = "${project.basedir}/src/test/resources/META-INF/xorcery-override-schema.json", readonly = true)
+    private String generatedTestOverrideSchemaFile;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
 
@@ -62,15 +62,13 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
     private void generateModuleSchema(List<File> dependencyJarFiles) throws IOException {
         File xorceryConfigFile = new File(configurationFile);
-        File xorceryConfigJsonSchemaExtensionFile = new File(schemaExtensionsFile);
 
-        if (!xorceryConfigFile.exists() && !xorceryConfigJsonSchemaExtensionFile.exists()) {
+        if (!xorceryConfigFile.exists()) {
             return; // Nothing here
         }
 
         File xorceryConfigJsonSchemaFile = new File(generatedSchemaFile);
         getLog().debug("META-INF/xorcery.yaml: " + xorceryConfigFile + "(" + xorceryConfigFile.exists() + ")");
-        getLog().debug("META-INF/xorcery-schema.yaml: " + xorceryConfigJsonSchemaExtensionFile + "(exists:" + xorceryConfigJsonSchemaExtensionFile.exists() + ")");
         getLog().debug("META-INF/xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(exists:" + xorceryConfigJsonSchemaFile.exists() + ")");
 
         ConfigurationBuilder moduleBuilder = new ConfigurationBuilder();
@@ -109,13 +107,6 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 .generateJsonSchema(moduleBuilder.builder().builder(), moduleWithDependenciesBuilder.build().json());
 
         ObjectNode schemaJson = schema.json();
-
-        // Add extensions
-        if (xorceryConfigJsonSchemaExtensionFile.exists()) {
-            YAMLMapper yamlMapper = new YAMLMapper();
-            JsonNode extensions = yamlMapper.readTree(xorceryConfigJsonSchemaExtensionFile);
-            schemaJson = new JsonMerger().merge(schemaJson, (ObjectNode) extensions);
-        }
 
         JsonMapper jsonMapper = new JsonMapper();
 
@@ -171,7 +162,9 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         }
 
         File xorceryConfigOverrideJsonSchemaFile = new File(generatedOverrideSchemaFile);
+        File xorceryTestConfigOverrideJsonSchemaFile = new File(generatedTestOverrideSchemaFile);
         getLog().debug("xorcery-override-schema.json: " + xorceryConfigOverrideJsonSchemaFile + "(" + xorceryConfigOverrideJsonSchemaFile.exists() + ")");
+        getLog().debug("test xorcery-override-schema.json: " + xorceryTestConfigOverrideJsonSchemaFile + "(" + xorceryTestConfigOverrideJsonSchemaFile.exists() + ")");
 
         // Merge in own module schema
         File xorceryConfigJsonSchemaFile = new File(generatedSchemaFile);
@@ -206,6 +199,8 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
         xorceryConfigOverrideJsonSchemaFile.getParentFile().mkdirs();
         jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigOverrideJsonSchemaFile, uberSchema);
+        xorceryTestConfigOverrideJsonSchemaFile.getParentFile().mkdirs();
+        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryTestConfigOverrideJsonSchemaFile, uberSchema);
         getLog().info("Updated module configuration override JSON Schema definition: "+xorceryConfigOverrideJsonSchemaFile);
     }
 

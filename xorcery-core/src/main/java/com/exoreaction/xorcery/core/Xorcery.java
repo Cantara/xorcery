@@ -16,8 +16,8 @@
 package com.exoreaction.xorcery.core;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.ConfigurationLogger;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.configuration.builder.ConfigurationLogger;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
@@ -31,6 +31,7 @@ import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;

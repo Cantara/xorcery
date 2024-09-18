@@ -40,7 +40,7 @@ public class Neo4jProjections {
             return projectionHandler;
         } else
         {
-            return projectionHandler.andThen(publisher -> Flux.from(publisher).map(projectionUpdates));
+            return projectionHandler.andThen(publisher -> Flux.from(publisher).transformDeferredContextual(projectionUpdates));
         }
     }
 }

@@ -16,8 +16,8 @@
 package com.exoreaction.xorcery.runner;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.configuration.ConfigurationLogger;
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.builder.ConfigurationLogger;
 import com.exoreaction.xorcery.core.Xorcery;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

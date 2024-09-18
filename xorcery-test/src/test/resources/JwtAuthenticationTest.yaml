@@ -1,0 +1,24 @@
+#$schema: ../../main/resources/META-INF/xorcery-override-schema.json
+
+jetty:
+  client:
+    enabled: true
+  server:
+    enabled: true
+    security:
+      enabled: true
+      type: "jwt"
+      jwt:
+        enabled: true
+        issuers:
+          - name: "authentication.xorcery.test"
+            keys:
+              - kid: "{{SYSTEM.kid}}"
+                alg: "ES256"
+                publicKey: "secret:{{SYSTEM.key}}"
+
+opentelemetry:
+  enabled: true
+  instrumentations:
+    jersey:
+      enabled: true
