@@ -1,0 +1,9 @@
+$schema: xorcery-jersey-server-override-schema.json
+jersey:
+  server:
+    mediaTypes:
+      html: "text/html"
+      txt: "text/plain"
+      json: "application/json"
+      yaml: "application/yaml"
+      schema: "application/schema+json"

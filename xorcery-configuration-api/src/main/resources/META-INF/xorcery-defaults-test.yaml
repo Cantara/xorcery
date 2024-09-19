@@ -1,4 +1,6 @@
 ---
+$schema: xorcery-configuration-api-schema.json
+
 instance:
   host: "server"
   domain: "xorcery.test"

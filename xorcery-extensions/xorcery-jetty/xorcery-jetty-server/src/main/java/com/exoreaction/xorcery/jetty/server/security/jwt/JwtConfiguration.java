@@ -16,12 +16,9 @@
 package com.exoreaction.xorcery.jetty.server.security.jwt;
 
 import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.json.JsonElement;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public record JwtConfiguration(Configuration configuration) {

@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-jwt-server-schema.json
 jwt:
   server:
     enabled: "{{ defaults.enabled }}"
@@ -15,8 +15,4 @@ jwt:
   configuration:
     enabled: "{{ defaults.enabled }}"
 
-  users: {}
-#    someuser:
-#      password: "secret"
-#      claims:
-#        tenant: "tenant1"
+  users: []

@@ -15,13 +15,6 @@
  */
 package com.exoreaction.xorcery.configuration;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-
 /**
  * Configuration wrapper for application configuration
  *

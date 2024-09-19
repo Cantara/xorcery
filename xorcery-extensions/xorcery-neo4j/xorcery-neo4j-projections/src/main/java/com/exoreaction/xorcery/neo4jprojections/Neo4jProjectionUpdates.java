@@ -16,11 +16,9 @@ import reactor.core.publisher.Sinks;
 import reactor.util.context.ContextView;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
 

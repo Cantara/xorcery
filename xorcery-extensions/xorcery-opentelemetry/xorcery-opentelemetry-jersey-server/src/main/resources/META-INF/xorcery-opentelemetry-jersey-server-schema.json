@@ -1,0 +1,72 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-opentelemetry-jersey-server/schema",
+  "title" : "xorcery-opentelemetry-jersey-server configuration JSON Schema",
+  "properties" : {
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    }
+  },
+  "$defs" : {
+    "opentelemetry" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "instrumentations" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "jersey" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ defaults.enabled }}",
+                  "description" : "Default: {{ defaults.enabled }} (true)"
+                },
+                "attributes" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "http.request.method" : {
+                      "type" : "string",
+                      "default" : "http.request.method",
+                      "description" : "Default: http.request.method"
+                    },
+                    "http.route" : {
+                      "type" : "string",
+                      "default" : "http.route",
+                      "description" : "Default: http.route"
+                    },
+                    "http.response.status_code" : {
+                      "type" : "string",
+                      "default" : "http.response.status_code",
+                      "description" : "Default: http.response.status_code"
+                    },
+                    "http.response.body.size" : {
+                      "type" : "string",
+                      "default" : "http.response.body.size",
+                      "description" : "Default: http.response.body.size"
+                    },
+                    "enduser.id" : {
+                      "type" : "string",
+                      "default" : "enduser.id",
+                      "description" : "Default: enduser.id"
+                    },
+                    "url.full" : {
+                      "type" : "string",
+                      "default" : "url.full",
+                      "description" : "Default: url.full"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

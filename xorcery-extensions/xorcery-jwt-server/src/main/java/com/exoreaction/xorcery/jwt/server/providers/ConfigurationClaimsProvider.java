@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.jwt.server.providers;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.jwt.server.UserConfiguration;
 import com.exoreaction.xorcery.jwt.server.spi.ClaimsProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,19 +32,20 @@ import java.util.Map;
 @ContractsProvided(ClaimsProvider.class)
 public class ConfigurationClaimsProvider
         implements ClaimsProvider {
-    private final Configuration users;
+    private final UserConfiguration users;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     public ConfigurationClaimsProvider(Configuration configuration) {
-        users = configuration.getConfiguration("jwt.users");
+        users = UserConfiguration.get(configuration);
     }
 
     @Override
     public Map<String, ?> getClaims(String userName) {
-        return users.getJson(userName).map(node -> {
+
+        return users.getUser(userName).map(node -> {
             try {
-                return objectMapper.treeToValue(node.path("claims"), Map.class);
+                return (Map<String, ?>)objectMapper.treeToValue(node.getClaims(), Map.class);
             } catch (JsonProcessingException e) {
                 throw new UncheckedIOException(e);
             }

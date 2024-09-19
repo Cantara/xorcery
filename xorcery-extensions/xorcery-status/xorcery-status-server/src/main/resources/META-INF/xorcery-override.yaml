@@ -1,4 +1,4 @@
-$schema: ./xorcery-override-schema.json
+$schema: xorcery-status-server-override-schema.json
 jetty:
   server:
     security:

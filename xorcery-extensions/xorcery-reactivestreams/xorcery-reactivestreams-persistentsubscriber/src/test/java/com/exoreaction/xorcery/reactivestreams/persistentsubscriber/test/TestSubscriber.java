@@ -15,7 +15,6 @@
  */
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
 
-import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers.BasePersistentSubscriber;
 import com.fasterxml.jackson.databind.node.ArrayNode;

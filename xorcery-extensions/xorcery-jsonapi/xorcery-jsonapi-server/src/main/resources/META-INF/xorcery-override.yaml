@@ -1,4 +1,4 @@
-$schema: ./xorcery-override-schema.json
+$schema: xorcery-jsonapi-server-override-schema.json
 jersey.server.register:
   - com.exoreaction.xorcery.jsonapi.server.providers.JsonApiExceptionMapper
   - com.exoreaction.xorcery.jsonapi.server.resources.ApiResource

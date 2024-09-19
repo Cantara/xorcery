@@ -1,4 +1,7 @@
-jersey.server.register:
-  - com.exoreaction.xorcery.thymeleaf.jsonapi.resources.UriTemplateResource
-  - com.exoreaction.xorcery.thymeleaf.jsonapi.providers.ThymeleafJsonApiMessageBodyWriter
-  - com.exoreaction.xorcery.thymeleaf.jsonapi.providers.ResourceObjectFormProvider
+$schema: xorcery-thymeleaf-jsonapi-override-schema.json
+jersey:
+  server:
+    register:
+    - com.exoreaction.xorcery.thymeleaf.jsonapi.resources.UriTemplateResource
+    - com.exoreaction.xorcery.thymeleaf.jsonapi.providers.ThymeleafJsonApiMessageBodyWriter
+    - com.exoreaction.xorcery.thymeleaf.jsonapi.providers.ResourceObjectFormProvider

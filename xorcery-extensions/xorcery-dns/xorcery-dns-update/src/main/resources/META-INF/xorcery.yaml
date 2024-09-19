@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-dns-update-schema.json
 dns:
   dyndns:
     enabled: "{{ dns.client.enabled }}"

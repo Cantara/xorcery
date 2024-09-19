@@ -15,11 +15,8 @@
  */
 package com.exoreaction.xorcery.neo4j.client;
 
-import com.exoreaction.xorcery.collections.Element;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.neo4j.graphdb.Node;
-
-import java.util.Optional;
 
 public record NodeModel(Node node)
     implements NodeElement

@@ -1,11 +1,6 @@
-$schema: "./xorcery-schema.json"
+$schema: xorcery-jersey-server-schema.json
 jersey:
   server:
     enabled: "{{ jetty.server.enabled }}"
     register: [ ]
-    mediaTypes:
-      html: "text/html"
-      txt: "text/plain"
-      json: "application/json"
-      yaml: "application/yaml"
-      schema: "application/schema+json"
+    mediaTypes: { }

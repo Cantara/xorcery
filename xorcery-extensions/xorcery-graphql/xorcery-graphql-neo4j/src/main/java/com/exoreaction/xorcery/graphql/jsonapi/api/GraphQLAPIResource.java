@@ -15,10 +15,10 @@
  */
 package com.exoreaction.xorcery.graphql.jsonapi.api;
 
+import com.exoreaction.xorcery.graphql.schema.GraphQLSchemas;
 import com.exoreaction.xorcery.jaxrs.server.resources.BaseResource;
 import com.exoreaction.xorcery.jsonapi.Error;
 import com.exoreaction.xorcery.jsonapi.*;
-import com.exoreaction.xorcery.graphql.schema.GraphQLSchemas;
 import com.exoreaction.xorcery.jsonapi.server.resources.JsonApiResource;
 import com.exoreaction.xorcery.jsonapischema.ResourceDocumentSchema;
 import com.exoreaction.xorcery.jsonschema.JsonSchema;

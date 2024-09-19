@@ -258,21 +258,22 @@
         "id" : {
           "type" : "string",
           "default" : "{{ instance.host}}.{{ application.name}}",
-          "description" : "Default: {{ instance.host}}.{{ application.name}} (.application)"
+          "description" : "Default: {{ instance.host}}.{{ application.name}} (service.application)"
         },
         "host" : {
           "type" : "string",
           "default" : "{{ CALCULATED.hostName }}",
-          "description" : "Default: {{ CALCULATED.hostName }} ({{ CALCULATED.hostName }})"
+          "description" : "Default: {{ CALCULATED.hostName }} (service)"
         },
         "fqdn" : {
           "type" : "string",
           "default" : "{{ instance.host }}.{{ instance.domain }}",
-          "description" : "Default: {{ instance.host }}.{{ instance.domain }} (.xorcery.test)"
+          "description" : "Default: {{ instance.host }}.{{ instance.domain }} (service.xorcery.test)"
         },
         "ip" : {
+          "type" : "string",
           "default" : "{{ CALCULATED.ip | null }}",
-          "description" : "Default: null"
+          "description" : "Default: {{ CALCULATED.ip | null }} (192.168.0.2)"
         },
         "domain" : {
           "type" : "string",
@@ -300,12 +301,12 @@
         "uri" : {
           "type" : "string",
           "default" : "http://{{ instance.fqdn }}/",
-          "description" : "Default: http://{{ instance.fqdn }}/ (http://.xorcery.test/)"
+          "description" : "Default: http://{{ instance.fqdn }}/ (http://service.xorcery.test/)"
         },
         "api" : {
           "type" : "string",
           "default" : "{{ instance.uri }}api/",
-          "description" : "Default: {{ instance.uri }}api/ (http://.xorcery.test/api/)"
+          "description" : "Default: {{ instance.uri }}api/ (http://service.xorcery.test/api/)"
         },
         "locale" : {
           "default" : null,
@@ -432,8 +433,8 @@
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
-              "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} (true)"
+              "default" : true,
+              "description" : "Default: true"
             }
           }
         }
@@ -622,11 +623,13 @@
             },
             "keystore" : {
               "default" : null,
-              "description" : "Default: null"
+              "description" : "Default: null",
+              "type" : [ "string", "null" ]
             },
             "truststore" : {
               "default" : null,
-              "description" : "Default: null"
+              "description" : "Default: null",
+              "type" : [ "string", "null" ]
             },
             "connectTimeout" : {
               "type" : "string",
@@ -660,33 +663,7 @@
             "mediaTypes" : {
               "type" : "object",
               "additionalProperties" : true,
-              "properties" : {
-                "html" : {
-                  "type" : "string",
-                  "default" : "text/html",
-                  "description" : "Default: text/html"
-                },
-                "txt" : {
-                  "type" : "string",
-                  "default" : "text/plain",
-                  "description" : "Default: text/plain"
-                },
-                "json" : {
-                  "type" : "string",
-                  "default" : "application/json",
-                  "description" : "Default: application/json"
-                },
-                "yaml" : {
-                  "type" : "string",
-                  "default" : "application/yaml",
-                  "description" : "Default: application/yaml"
-                },
-                "schema" : {
-                  "type" : "string",
-                  "default" : "application/schema+json",
-                  "description" : "Default: application/schema+json"
-                }
-              }
+              "properties" : { }
             }
           }
         }
@@ -871,11 +848,13 @@
                 },
                 "keystore" : {
                   "default" : null,
-                  "description" : "Default: null"
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
                 },
                 "truststore" : {
                   "default" : null,
-                  "description" : "Default: null"
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
                 },
                 "trustAll" : {
                   "type" : [ "boolean", "string" ],
@@ -909,7 +888,8 @@
                 },
                 "crls" : {
                   "default" : null,
-                  "description" : "Default: null"
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
                 }
               }
             },
@@ -1204,9 +1184,22 @@
           }
         },
         "users" : {
-          "type" : "object",
-          "additionalProperties" : true,
-          "properties" : { }
+          "type" : [ "array", "string" ],
+          "items" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "properties" : {
+              "name" : {
+                "type" : "string"
+              },
+              "password" : {
+                "type" : "string"
+              },
+              "claims" : {
+                "type" : "object"
+              }
+            }
+          }
         }
       }
     },
@@ -1284,7 +1277,7 @@
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : [ "boolean", "string" ],
+              "type" : "string",
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
@@ -1295,7 +1288,7 @@
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : [ "boolean", "string" ],
+              "type" : "string",
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
@@ -1319,7 +1312,8 @@
             "status" : {
               "type" : "string",
               "default" : "warn",
-              "description" : "Default: warn"
+              "description" : "Default: warn",
+              "enum" : [ "trace", "debug", "info", "warn", "error" ]
             },
             "properties" : {
               "type" : "object",
@@ -1333,7 +1327,8 @@
                 "level" : {
                   "type" : "string",
                   "default" : "info",
-                  "description" : "Default: info"
+                  "description" : "Default: info",
+                  "enum" : [ "trace", "debug", "info", "warn", "error" ]
                 }
               }
             },
@@ -1347,7 +1342,24 @@
               "additionalProperties" : false,
               "properties" : {
                 "logger" : {
-                  "type" : [ "array", "string" ]
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "properties" : {
+                      "name" : {
+                        "type" : "string"
+                      },
+                      "level" : {
+                        "type" : "string",
+                        "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                      },
+                      "additivity" : {
+                        "type" : "boolean"
+                      },
+                      "AppenderRef" : {
+                        "type" : [ "array", "string" ]
+                      }
+                    }
+                  }
                 },
                 "Root" : {
                   "type" : "object",
@@ -1356,7 +1368,8 @@
                     "level" : {
                       "type" : "string",
                       "default" : "info",
-                      "description" : "Default: info"
+                      "description" : "Default: info",
+                      "enum" : [ "trace", "debug", "info", "warn", "error" ]
                     },
                     "AppenderRef" : {
                       "type" : [ "array", "string" ]

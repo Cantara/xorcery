@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-secrets-spi-schema.json
 secrets:
   env:
     enabled: "{{ secrets.enabled }}"

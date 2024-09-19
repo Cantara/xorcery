@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-eventstore-client-schema.json
 eventstore:
   enabled: "{{ defaults.enabled }}"
   uri: "esdb://localhost:2113?tls=false"

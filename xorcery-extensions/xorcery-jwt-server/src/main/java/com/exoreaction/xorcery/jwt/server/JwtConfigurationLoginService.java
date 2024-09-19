@@ -28,18 +28,19 @@ import org.jvnet.hk2.annotations.Service;
 import javax.security.auth.Subject;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 @Service(name = "jwt.server.configuration")
 @ContractsProvided({LoginService.class, JwtConfigurationLoginService.class})
 public class JwtConfigurationLoginService
         extends AbstractLoginService {
-    private final Configuration users;
+    private final UserConfiguration users;
     private final Secrets secrets;
 
     @Inject
     public JwtConfigurationLoginService(Configuration configuration, Secrets secrets) {
-        this.users = configuration.getConfiguration("jwt.users");
+        this.users = UserConfiguration.get(configuration);
         this.secrets = secrets;
     }
 
@@ -51,26 +52,19 @@ public class JwtConfigurationLoginService
     @Override
     public UserIdentity login(String username, Object credentials, Request request, Function<Boolean, Session> getOrCreateSession) {
 
-        if (credentials instanceof String password)
+        return users.getUser(username).flatMap(user ->
         {
+            // Check password
+            if (!user.getPassword().map(secrets::getSecretString).orElse("").equals(credentials.toString()))
+                return Optional.empty();
 
-        }
+            UserPrincipal userPrincipal = new UserPrincipal(username, new Password(credentials.toString()));
+            Subject subject = new Subject();
+            userPrincipal.configureSubject(subject);
+            subject.setReadOnly();
 
-        if (username == null || !users.has(username))
-            return null;
-
-        Configuration user = users.getConfiguration(username);
-
-        // Check password
-        if (!user.getString("password").map(secrets::getSecretString).orElse("").equals(credentials.toString()))
-            return null;
-
-        UserPrincipal userPrincipal = new UserPrincipal(username, new Password(credentials.toString()));
-        Subject subject = new Subject();
-        userPrincipal.configureSubject(subject);
-        subject.setReadOnly();
-
-        return UserIdentity.from(subject, userPrincipal, new String[0]);
+            return Optional.of(UserIdentity.from(subject, userPrincipal, new String[0]));
+        }).orElse(null);
     }
 
     @Override

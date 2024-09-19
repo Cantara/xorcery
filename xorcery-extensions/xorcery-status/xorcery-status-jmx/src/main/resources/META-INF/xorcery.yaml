@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-status-jmx-schema.json
 jmx:
   status:
     enabled: "{{ defaults.enabled }}"

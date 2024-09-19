@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-thymeleaf-jaxrs-schema.json
 thymeleaf:
   enabled: "{{ defaults.enabled }}"
   development: "{{ defaults.development }}"

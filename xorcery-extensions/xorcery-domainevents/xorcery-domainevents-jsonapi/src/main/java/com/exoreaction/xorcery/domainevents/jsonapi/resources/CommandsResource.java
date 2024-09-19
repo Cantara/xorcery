@@ -15,9 +15,9 @@
  */
 package com.exoreaction.xorcery.domainevents.jsonapi.resources;
 
+import com.exoreaction.xorcery.domainevents.context.CommandMetadata;
 import com.exoreaction.xorcery.domainevents.context.CommandResult;
 import com.exoreaction.xorcery.domainevents.context.DomainContext;
-import com.exoreaction.xorcery.domainevents.context.CommandMetadata;
 import com.exoreaction.xorcery.domainevents.entity.Command;
 import com.exoreaction.xorcery.jsonapi.Error;
 import com.exoreaction.xorcery.jsonapi.*;

@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-opentelemetry-jersey-server-schema.json
 opentelemetry:
   instrumentations:
     jersey:

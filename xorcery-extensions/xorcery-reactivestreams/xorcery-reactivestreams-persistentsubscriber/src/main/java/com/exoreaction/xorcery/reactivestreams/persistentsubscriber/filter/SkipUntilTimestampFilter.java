@@ -16,7 +16,6 @@
 package com.exoreaction.xorcery.reactivestreams.persistentsubscriber.filter;
 
 import com.exoreaction.xorcery.metadata.CommonMetadata;
-import com.exoreaction.xorcery.metadata.WithMetadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataJsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 

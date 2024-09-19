@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-reactivestreams-disruptor-schema.json
 disruptor:
   standard:
     size: 512

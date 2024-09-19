@@ -16,11 +16,11 @@
 package com.exoreaction.xorcery.jsonapi.server.test;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
+import com.exoreaction.xorcery.graphql.schema.GraphQLSchemas;
 import com.exoreaction.xorcery.jsonapi.Attributes;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;
 import com.exoreaction.xorcery.jsonapi.ResourceObject;
 import com.exoreaction.xorcery.jsonapi.ResourceObjects;
-import com.exoreaction.xorcery.graphql.schema.GraphQLSchemas;
 import com.exoreaction.xorcery.junit.XorceryExtension;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;

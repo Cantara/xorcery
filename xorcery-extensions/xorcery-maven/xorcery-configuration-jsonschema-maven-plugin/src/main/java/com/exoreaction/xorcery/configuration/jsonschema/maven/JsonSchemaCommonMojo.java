@@ -18,7 +18,6 @@ import org.apache.maven.shared.dependency.graph.DependencyNode;
 import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
 import org.eclipse.aether.RepositorySystemSession;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -49,7 +48,7 @@ public abstract class JsonSchemaCommonMojo
     @Component(hint = "default")
     DependencyGraphBuilder dependencyGraphBuilder;
 
-    List<File> getDependencyJarFiles() throws DependencyGraphBuilderException {
+    List<Artifact> getDependencies() throws DependencyGraphBuilderException {
         ProjectBuildingRequest buildingRequest =
                 new DefaultProjectBuildingRequest(session.getProjectBuildingRequest());
 
@@ -57,7 +56,7 @@ public abstract class JsonSchemaCommonMojo
 
         DependencyNode rootNode = dependencyGraphBuilder.buildDependencyGraph(buildingRequest, null);
 
-        final List<File> artifactJars = new ArrayList<>();
+        final List<Artifact> artifacts = new ArrayList<>();
         rootNode.accept(new DependencyNodeVisitor() {
             @Override
             public boolean visit(DependencyNode dependencyNode) {
@@ -67,9 +66,9 @@ public abstract class JsonSchemaCommonMojo
                 for (Artifact artifact : result.getArtifacts()) {
                     if (rootNode.getArtifact().equals(artifact))
                         continue; // Skip self
-                    getLog().debug("Using JSON Schema from:" + artifact.getArtifactId() + ":" + artifact.getFile());
-                    if (artifact.getFile() != null) {
-                        artifactJars.add(artifact.getFile());
+                    if (artifact.getFile() != null && !artifacts.contains(artifact)) {
+                        getLog().debug("Using JSON Schema from:" + artifact.getArtifactId() + ":" + artifact.getFile());
+                        artifacts.add(artifact);
                     }
                 }
                 return true;
@@ -80,7 +79,7 @@ public abstract class JsonSchemaCommonMojo
                 return true;
             }
         });
-        artifactJars.sort(Comparator.comparing(File::getName));
-        return artifactJars;
+        artifacts.sort(Comparator.comparing(Artifact::getArtifactId));
+        return artifacts;
     }
 }

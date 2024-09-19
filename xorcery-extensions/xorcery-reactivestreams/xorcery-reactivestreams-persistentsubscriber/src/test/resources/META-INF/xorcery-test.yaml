@@ -1,6 +1,11 @@
-log4j2.Configuration.thresholdFilter.level: trace
-log4j2.Configuration.Loggers.logger:
-  - name: "com.exoreaction.xorcery.core"
-    level: "debug"
-  - name: "com.exoreaction.xorcery.reactivestreams"
-    level: "trace"
+$schema: xorcery-reactivestreams-persistentsubscriber-override-schema.json
+log4j2:
+  Configuration:
+    thresholdFilter:
+      level: trace
+    Loggers:
+      logger:
+      - name: "com.exoreaction.xorcery.core"
+        level: "debug"
+      - name: "com.exoreaction.xorcery.reactivestreams"
+        level: "trace"

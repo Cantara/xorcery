@@ -1,3 +1,4 @@
+$schema: META-INF/xorcery-certificates-client-override-schema.json
 log4j2:
   Configuration:
     Loggers:

@@ -1,0 +1,64 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-neo4j-embedded/schema",
+  "title" : "xorcery-neo4j-embedded configuration JSON Schema",
+  "properties" : {
+    "neo4jdatabase" : {
+      "$ref" : "#/$defs/neo4jdatabase"
+    }
+  },
+  "$defs" : {
+    "neo4jdatabase" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "path" : {
+          "type" : "string",
+          "default" : "{{ instance.home }}/neo4j",
+          "description" : "Default: {{ instance.home }}/neo4j (C:\\Users\\ricka\\IdeaProjects\\xorcery/neo4j)"
+        },
+        "startup" : {
+          "type" : [ "array", "string" ]
+        },
+        "domain" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "version" : {
+              "type" : "string",
+              "default" : "1.0.0",
+              "description" : "Default: 1.0.0"
+            },
+            "wipeOnBreakingChange" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        },
+        "settings" : {
+          "type" : "object",
+          "additionalProperties" : true,
+          "properties" : { }
+        },
+        "metrics" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

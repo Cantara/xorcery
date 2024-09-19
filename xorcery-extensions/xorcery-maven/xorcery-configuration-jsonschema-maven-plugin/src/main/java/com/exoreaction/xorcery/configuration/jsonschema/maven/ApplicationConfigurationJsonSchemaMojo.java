@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.jsonschema.JsonSchema;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -31,7 +32,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
 
         try {
 
-            List<File> artifactJars = getDependencyJarFiles();
+            List<Artifact> dependencies = getDependencies();
 
             JsonSchema schema = new JsonSchema.Builder()
                     .id("http://xorcery.exoreaction.com/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
@@ -41,9 +42,9 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
             ObjectNode uberSchema = schema.json();
             JsonMapper jsonMapper = new JsonMapper();
             JsonMerger jsonMerger = new JsonMerger();
-            for (File artifactJar : artifactJars) {
-                try (JarFile jarFile = new JarFile(artifactJar)) {
-                    ZipEntry zipEntry = jarFile.getEntry("META-INF/xorcery-schema.json");
+            for (Artifact dependency : dependencies) {
+                try (JarFile jarFile = new JarFile(dependency.getFile())) {
+                    ZipEntry zipEntry = jarFile.getEntry("META-INF/"+dependency.getArtifactId()+"-schema.json");
                     if (zipEntry != null) {
                         try (InputStream configStream = jarFile.getInputStream(zipEntry))
                         {

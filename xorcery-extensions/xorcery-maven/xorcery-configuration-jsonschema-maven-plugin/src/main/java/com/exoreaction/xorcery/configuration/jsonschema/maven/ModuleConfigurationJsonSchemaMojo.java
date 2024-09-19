@@ -7,7 +7,7 @@ import com.exoreaction.xorcery.jsonschema.JsonSchema;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -33,13 +33,13 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
     @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery.yaml")
     private String configurationFile;
 
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-schema.json", required = true, readonly = true)
+    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/${project.artifactId}-schema.json", required = true, readonly = true)
     private String generatedSchemaFile;
 
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-override-schema.json", readonly = true)
+    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/${project.artifactId}-override-schema.json", readonly = true)
     private String generatedOverrideSchemaFile;
 
-    @Parameter(defaultValue = "${project.basedir}/src/test/resources/META-INF/xorcery-override-schema.json", readonly = true)
+    @Parameter(defaultValue = "${project.basedir}/src/test/resources/META-INF/${project.artifactId}-override-schema.json", readonly = true)
     private String generatedTestOverrideSchemaFile;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -51,16 +51,16 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         }
 
         try {
-            List<File> dependencyJarFiles = getDependencyJarFiles();
-            generateModuleSchema(dependencyJarFiles);
-            generateModuleOverrideSchema(dependencyJarFiles);
+            List<Artifact> dependencies = getDependencies();
+            generateModuleSchema(dependencies);
+            generateModuleOverrideSchema(dependencies);
 
         } catch (Throwable e) {
             throw new MojoFailureException("Could not create JSON Schema for xorcery.yaml configuration", e);
         }
     }
 
-    private void generateModuleSchema(List<File> dependencyJarFiles) throws IOException {
+    private void generateModuleSchema(List<Artifact> dependencies) throws IOException {
         File xorceryConfigFile = new File(configurationFile);
 
         if (!xorceryConfigFile.exists()) {
@@ -69,15 +69,15 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
         File xorceryConfigJsonSchemaFile = new File(generatedSchemaFile);
         getLog().debug("META-INF/xorcery.yaml: " + xorceryConfigFile + "(" + xorceryConfigFile.exists() + ")");
-        getLog().debug("META-INF/xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(exists:" + xorceryConfigJsonSchemaFile.exists() + ")");
+        getLog().debug("Module schema: " + xorceryConfigJsonSchemaFile + "(exists:" + xorceryConfigJsonSchemaFile.exists() + ")");
 
         ConfigurationBuilder moduleBuilder = new ConfigurationBuilder();
         ConfigurationBuilder moduleWithDependenciesBuilder = new ConfigurationBuilder();
 
         if (!xorceryConfigFile.getName().equals("xorcery-defaults.yaml")) {
-            List<URL> dependencyJarURLs = new ArrayList<>(dependencyJarFiles.size());
-            for (File dependencyJarFile : dependencyJarFiles) {
-                dependencyJarURLs.add(dependencyJarFile.toURI().toURL());
+            List<URL> dependencyJarURLs = new ArrayList<>(dependencies.size());
+            for (Artifact dependency : dependencies) {
+                dependencyJarURLs.add(dependency.getFile().toURI().toURL());
             }
             try (URLClassLoader dependenciesClassLoader = new URLClassLoader(dependencyJarURLs.toArray(new URL[0]), getClass().getClassLoader())) {
                 Thread.currentThread().setContextClassLoader(dependenciesClassLoader);
@@ -91,15 +91,15 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
             }
         }
 
-        moduleWithDependenciesBuilder.addYaml("""
-                    instance.host: "service"
-                    instance.ip: "192.168.0.2"
-                    """);
-
         if (xorceryConfigFile.exists()) {
             moduleBuilder.addFile(xorceryConfigFile);
             moduleWithDependenciesBuilder.addFile(xorceryConfigFile);
         }
+
+        moduleWithDependenciesBuilder.addYaml("""
+                    instance.host: "service"
+                    instance.ip: "192.168.0.2"
+                    """);
 
         JsonSchema schema = new ConfigurationSchemaBuilder()
                 .id("http://xorcery.exoreaction.com/modules/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
@@ -129,7 +129,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         getLog().info("Updated module configuration JSON Schema definition: " + xorceryConfigJsonSchemaFile);
     }
 
-    private void generateModuleOverrideSchema(List<File> artifactJars) throws IOException {
+    private void generateModuleOverrideSchema(List<Artifact> dependencies) throws IOException {
         JsonSchema schema = new JsonSchema.Builder()
                 .id("http://xorcery.exoreaction.com/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/override-schema")
                 .title(project.getArtifactId() + " configuration override JSON Schema")
@@ -138,9 +138,9 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         ObjectNode uberSchema = schema.json();
         JsonMapper jsonMapper = new JsonMapper();
         JsonMerger jsonMerger = new JsonMerger();
-        for (File artifactJar : artifactJars) {
-            try (JarFile jarFile = new JarFile(artifactJar)) {
-                ZipEntry zipEntry = jarFile.getEntry("META-INF/xorcery-schema.json");
+        for (Artifact dependency : dependencies) {
+            try (JarFile jarFile = new JarFile(dependency.getFile())) {
+                ZipEntry zipEntry = jarFile.getEntry("META-INF/"+dependency.getArtifactId()+"-schema.json");
                 if (zipEntry != null) {
                     try (InputStream configStream = jarFile.getInputStream(zipEntry))
                     {
@@ -163,8 +163,8 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
         File xorceryConfigOverrideJsonSchemaFile = new File(generatedOverrideSchemaFile);
         File xorceryTestConfigOverrideJsonSchemaFile = new File(generatedTestOverrideSchemaFile);
-        getLog().debug("xorcery-override-schema.json: " + xorceryConfigOverrideJsonSchemaFile + "(" + xorceryConfigOverrideJsonSchemaFile.exists() + ")");
-        getLog().debug("test xorcery-override-schema.json: " + xorceryTestConfigOverrideJsonSchemaFile + "(" + xorceryTestConfigOverrideJsonSchemaFile.exists() + ")");
+        getLog().debug("Module override JSON schema: " + xorceryConfigOverrideJsonSchemaFile + "(" + xorceryConfigOverrideJsonSchemaFile.exists() + ")");
+        getLog().debug("Module test override JSON schema: " + xorceryTestConfigOverrideJsonSchemaFile + "(" + xorceryTestConfigOverrideJsonSchemaFile.exists() + ")");
 
         // Merge in own module schema
         File xorceryConfigJsonSchemaFile = new File(generatedSchemaFile);

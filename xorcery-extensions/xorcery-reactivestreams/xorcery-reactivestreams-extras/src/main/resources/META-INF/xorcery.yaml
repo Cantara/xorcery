@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-reactivestreams-extras-schema.json
 yamlfilepublisher:
   enabled: "{{ defaults.enabled }}"
   publishers: []

@@ -23,7 +23,6 @@ import com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi.Persiste
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.logging.log4j.Logger;
 import org.reactivestreams.Publisher;
-import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
 

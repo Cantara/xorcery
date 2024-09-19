@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-log4j-override-schema.json
 log4j2:
   Configuration:
     name: Xorcery tests

@@ -1,2 +1,3 @@
+$schema: xorcery-opentelemetry-sdk-override-schema.json
 opentelemetry:
   install: false

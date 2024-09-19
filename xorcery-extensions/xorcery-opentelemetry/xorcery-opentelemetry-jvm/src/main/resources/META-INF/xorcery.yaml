@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-opentelemetry-jvm-schema.json
 opentelemetry:
   instrumentations:
     jvm:

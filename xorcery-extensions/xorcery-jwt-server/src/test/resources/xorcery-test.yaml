@@ -1,4 +1,4 @@
-# $schema: ./../../main/resources/META-INF/xorcery-schema.json
+$schema: META-INF/xorcery-jwt-server-override-schema.json
 jwt:
   server:
     keys:
@@ -7,7 +7,7 @@ jwt:
         publicKey: "secret:MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEd7L6zz97U1MMaj9MSN325SZ15htR26mec0/1A0vt1b8Yfcu0QuiN9E4ijSfMRiof+B57P/hkrb+OuRSYLL854Q=="
         privateKey: "secret:MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCCSHC362NTeBZYTkYGXK3vfRvoqQum+Uo6DFUDzvX7MuA=="
   users:
-    someuser:
+    - name: "someuser"
       password: "secret:secret"
       claims:
         tenant: "tenant1"

@@ -1,4 +1,4 @@
-$schema: ./xorcery-schema.json
+$schema: xorcery-opentelemetry-log4j-schema.json
 opentelemetry:
   instrumentations:
     log4j:

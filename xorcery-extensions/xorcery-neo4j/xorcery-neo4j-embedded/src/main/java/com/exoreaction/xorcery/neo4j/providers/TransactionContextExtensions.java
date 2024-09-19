@@ -2,7 +2,6 @@ package com.exoreaction.xorcery.neo4j.providers;
 
 import com.exoreaction.xorcery.neo4j.TransactionContext;
 import com.exoreaction.xorcery.neo4j.spi.Neo4jProvider;
-import org.glassfish.hk2.api.ServiceLocator;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.procedure.Context;
 import org.neo4j.procedure.Name;

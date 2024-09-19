@@ -1,0 +1,122 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-jwt-server/schema",
+  "title" : "xorcery-jwt-server configuration JSON Schema",
+  "properties" : {
+    "jwt" : {
+      "$ref" : "#/$defs/jwt"
+    }
+  },
+  "$defs" : {
+    "jwt" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "token" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "duration" : {
+                  "type" : "string",
+                  "default" : "P7D",
+                  "description" : "Default: P7D"
+                },
+                "issuer" : {
+                  "type" : "string",
+                  "default" : "{{ instance.fqdn }}",
+                  "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
+                }
+              }
+            },
+            "cookie" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "duration" : {
+                  "type" : "string",
+                  "default" : "P7D",
+                  "description" : "Default: P7D"
+                },
+                "name" : {
+                  "type" : "string",
+                  "default" : "token",
+                  "description" : "Default: token"
+                },
+                "path" : {
+                  "type" : "string",
+                  "default" : "/",
+                  "description" : "Default: /"
+                },
+                "domain" : {
+                  "type" : [ "null", "string" ],
+                  "default" : "{{ instance.domain }}",
+                  "description" : "Default: {{ instance.domain }} (xorcery.test)"
+                }
+              }
+            },
+            "keys" : {
+              "type" : [ "array", "string" ],
+              "items" : {
+                "type" : "object",
+                "additionalProperties" : false,
+                "properties" : {
+                  "kid" : {
+                    "type" : "string"
+                  },
+                  "alg" : {
+                    "type" : "string"
+                  },
+                  "publicKey" : {
+                    "type" : "string"
+                  },
+                  "privateKey" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "configuration" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            }
+          }
+        },
+        "users" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "type" : "object",
+            "additionalProperties" : false,
+            "properties" : {
+              "name" : {
+                "type" : "string"
+              },
+              "password" : {
+                "type" : "string"
+              },
+              "claims" : {
+                "type" : "object"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

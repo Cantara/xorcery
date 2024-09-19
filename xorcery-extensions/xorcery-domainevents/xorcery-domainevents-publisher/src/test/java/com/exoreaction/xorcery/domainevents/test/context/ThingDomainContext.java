@@ -4,12 +4,9 @@ import com.exoreaction.xorcery.domainevents.context.CommandMetadata;
 import com.exoreaction.xorcery.domainevents.context.CommandResult;
 import com.exoreaction.xorcery.domainevents.context.DomainContext;
 import com.exoreaction.xorcery.domainevents.entity.Command;
-import com.exoreaction.xorcery.metadata.Metadata;
-import jakarta.validation.ValidatorFactory;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 public class ThingDomainContext
     implements DomainContext
