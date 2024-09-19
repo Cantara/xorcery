@@ -1,6 +1,6 @@
 $schema: xorcery-neo4j-browser-override-schema.json
 neo4jdatabase:
-    settings:
+  settings:
     server:
       bolt:
         enabled: "{{ neo4jbrowser.enabled }}"
