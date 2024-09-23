@@ -66,10 +66,9 @@ public class CypherEventProjection
                     metadataMap = Cypher.toMap(events.metadata().metadata());
 
                 Map<String, Object> parameters = Cypher.toMap(eventJson);
-                parameters.put("metadata", metadataMap);
 
                 for (String stmt : statement) {
-                    transaction.execute(stmt, parameters);
+                    transaction.execute(stmt, Map.of("event", parameters, "metadata", metadataMap));
                 }
             }
         }

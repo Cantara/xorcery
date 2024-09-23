@@ -101,7 +101,15 @@
                     <groupId>org.eclipse.jetty.http2</groupId>
                     <artifactId>jetty-alpn-java-server</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>net.java.dev.jna</groupId>
+                    <artifactId>jna</artifactId>
+                </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-jpms</artifactId>
         </dependency>
 
         <dependency>

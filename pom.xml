@@ -817,7 +817,16 @@
                         <groupId>org.hamcrest</groupId>
                         <artifactId>hamcrest-core</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>net.java.dev.jna</groupId>
+                        <artifactId>jna</artifactId>
+                    </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna-jpms</artifactId>
+                <version>5.14.0</version>
             </dependency>
 
 

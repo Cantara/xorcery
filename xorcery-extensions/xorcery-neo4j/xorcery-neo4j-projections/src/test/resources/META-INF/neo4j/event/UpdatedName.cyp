@@ -1,2 +1,2 @@
-MERGE (entity:Person {id:$updated.id})
-SET entity.name=$attributes.name
+MERGE (entity:Person {id:$event.updated.id})
+SET entity.name=$event.attributes.name
