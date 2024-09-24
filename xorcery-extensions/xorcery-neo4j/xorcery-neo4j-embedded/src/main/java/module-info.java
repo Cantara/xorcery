@@ -36,5 +36,5 @@ module xorcery.neo4j.embedded {
     requires org.apache.commons.lang3;
     requires com.sun.jna;
 
-    provides Neo4jProvider with TransactionContextExtensions;
+    provides com.exoreaction.xorcery.neo4j.spi.Neo4jProvider with com.exoreaction.xorcery.neo4j.providers.TransactionContextExtensions;
 }
