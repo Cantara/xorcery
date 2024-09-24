@@ -76,6 +76,15 @@ class JsonResolverTest {
             namespace:
               missing:
                 enabled: "{{ namespace.enabled ? false | true }}"
+                
+            arrayref:
+              - foo
+              - bar
+            somearray:
+              "{{ arrayref }}"
+            someotherarray:
+              - "xyzzy"
+              - "{{ arrayref }}"        
                         """;
 
     private static ObjectMapper objectMapper;
@@ -155,5 +164,12 @@ class JsonResolverTest {
     @Test
     public void testConditionalWithMissing() {
         assertThat(result.get("namespace").get("missing").get("enabled").asBoolean(), equalTo(true));
+    }
+
+    @Test
+    public void testArrayReferences() {
+        System.out.println(result.toPrettyString());
+        assertThat(result.get("somearray").toPrettyString(), equalTo("[ \"foo\", \"bar\" ]"));
+        assertThat(result.get("someotherarray").toPrettyString(), equalTo("[ \"xyzzy\", \"foo\", \"bar\" ]"));
     }
 }

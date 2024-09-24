@@ -139,6 +139,14 @@ public class JsonMerger
                 currentObject.set(key, arrayCopy);
             }
         } else {
+
+            if (value.asText().startsWith("{{") && value.asText().endsWith("}}"))
+            {
+                // This value is a reference, don't try to merge, just replace it
+                currentObject.set(key, value);
+                return;
+            }
+
             JsonNode currentValue = currentObject.path(key);
             if (currentValue.isMissingNode()) {
                 currentObject.set(key, value);

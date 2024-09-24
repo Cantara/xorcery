@@ -97,7 +97,15 @@ public class JsonResolver
                 try {
                     JsonNode newValue = resolveValue(source, textNode);
                     if (!newValue.isNull() && !newValue.isMissingNode())
-                        result.add(newValue);
+                    {
+                        if (newValue instanceof ArrayNode arrayNode)
+                        {
+                            arrayNode.forEach(result::add);
+                        } else
+                        {
+                            result.add(newValue);
+                        }
+                    }
                 } catch (Throwable e) {
                     throw new IllegalArgumentException("Could not resolve variables: " + textNode.textValue(), e);
                 }

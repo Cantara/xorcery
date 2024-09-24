@@ -170,4 +170,35 @@ class JsonMergerTest {
 //        System.out.println(result);
     }
 
+    @Test
+    public void testMergeReferenceIntoArray() throws Throwable {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+
+        ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
+                jersey:
+                    server:
+                        register:
+                        - bar  
+                """);
+        ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
+                jersey:
+                    server:
+                        register: "{{ foo }}"
+                """);
+        ObjectNode merged = new JsonMerger().apply(test1, test2);
+
+        String result = objectMapper.writeValueAsString(merged);
+
+        String expectedResult = """
+                ---
+                jersey:
+                  server:
+                    register: "{{ foo }}"
+                """;
+
+        assertThat(result, equalTo(expectedResult));
+        System.out.println(result);
+    }
+
+
 }
