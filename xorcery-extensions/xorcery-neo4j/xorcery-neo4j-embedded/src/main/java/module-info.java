@@ -15,7 +15,7 @@
  */
 
 module xorcery.neo4j.embedded {
-    uses Neo4jProvider;
+    uses com.exoreaction.xorcery.neo4j.spi.Neo4jProvider;
 
     exports com.exoreaction.xorcery.neo4j.client;
     exports com.exoreaction.xorcery.neo4j;
