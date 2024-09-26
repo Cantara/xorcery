@@ -37,7 +37,7 @@
         <jersey.version>3.1.8</jersey.version>
         <opentelemetry.version>1.42.1</opentelemetry.version>
         <eventstore.version>5.4.1</eventstore.version>
-        <grpc.version>1.68.0</grpc.version>
+        <grpc.version>1.66.0</grpc.version>
         <hk2.version>3.1.1</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
@@ -45,7 +45,7 @@
         <asm.version>9.7</asm.version>
         <projectreactor.version>2023.0.10</projectreactor.version>
         <aws.java.sdk.version>2.28.9</aws.java.sdk.version>
-        <netty.version>4.1.113.Final</netty.version>
+        <netty.version>4.1.100.Final</netty.version>
 
         <junit.version>5.11.0</junit.version>
         <junit.platform.version>1.11.0</junit.platform.version>
