@@ -86,6 +86,7 @@ public class EventStoreProjectionsService {
                         try {
                             client.update(projectionName, projectionQuery, UpdateProjectionOptions.get()
                                     .emitEnabled(projection.isEmitEnabled())).join();
+                            logger.error("Updated projection " + projectionName);
                             updatedProjections.add(projectionDetails);
                         } catch (Exception e) {
                             logger.error("Could not update projection " + projectionName, e);
@@ -97,6 +98,12 @@ public class EventStoreProjectionsService {
                     try {
                         client.create(projectionName, projectionQuery, CreateProjectionOptions.get()
                                 .emitEnabled(projection.isEmitEnabled())).join();
+                        logger.error("Created projection " + projectionName);
+
+                        if (projection.isEnabled())
+                        {
+                            client.enable(projectionName).join();
+                        }
                     } catch (Exception e) {
                         logger.error("Could not create projection " + projectionName, e);
                     }
@@ -108,7 +115,7 @@ public class EventStoreProjectionsService {
                         .filter(details -> details.getName().equals(projection.getName()) && !details.getStatus().equals("Running"))
                         .findFirst().ifPresent(details ->
                                 {
-                                    System.out.println("ENABLED:"+details);
+                                    logger.error("Enabled projection " + projectionName);
                                     client.enable(details.getName()).join();
                                 }
                         );
@@ -118,7 +125,7 @@ public class EventStoreProjectionsService {
                         .filter(details -> details.getName().equals(projection.getName()) && details.getStatus().equals("Running"))
                         .findFirst().ifPresent(details ->
                                 {
-                                    System.out.println("DISABLE:"+details);
+                                    logger.error("Disabled projection " + details);
                                     client.disable(details.getName()).join();
                                 }
                         );
@@ -135,6 +142,7 @@ public class EventStoreProjectionsService {
             try {
                 client.disable(projectionDetails.getName()).join();
                 client.delete(projectionDetails.getName()).join();
+                logger.error("Deleted projection " + projectionDetails.getName());
             } catch (Exception e) {
                 logger.error("Could not delete projection " + projectionDetails.getName(), e);
             }
