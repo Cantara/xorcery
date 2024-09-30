@@ -34,7 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service(name="eventstore.projections")
+@Service(name = "eventstore.projections")
 @RunLevel(4)
 public class EventStoreProjectionsService {
 
@@ -54,49 +54,74 @@ public class EventStoreProjectionsService {
         for (Projection projection : cfg.getProjections()) {
 
             String projectionName = projection.getName();
-            logger.info("Loading projection:" + projectionName);
 
-            String projectionQuery = null;
-            try {
-                URI queryUri = URI.create(projection.getQuery());
-                projectionQuery = new String(queryUri.toURL().openStream().readAllBytes(), StandardCharsets.UTF_8);
-            } catch (IllegalArgumentException | IOException e) {
-                // Just load from classpath
-                try (InputStream in = ClassLoader.getSystemResourceAsStream(projection.getQuery())) {
-                    if (in == null) {
-                        logger.error("Could not find projection query " + projection.getQuery());
-                    } else {
-                        projectionQuery = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-                    }
-                } catch (IOException ex) {
-                    logger.error("Could not load projection query " + projectionName, ex);
-                }
-            }
-            if (projectionQuery == null)
-                continue;
+            projection.getQuery().ifPresent(file ->
+            {
+                logger.info("Loading projection:" + projectionName);
 
-            boolean exists = false;
-            for (ProjectionDetails projectionDetails : projectionsList) {
-                if (projectionDetails.getName().equals(projectionName)) {
-                    // Update
-                    exists = true;
-                    try {
-                        client.update(projectionName, projectionQuery, UpdateProjectionOptions.get()
-                                .emitEnabled(projection.isEmitEnabled())).join();
-                        updatedProjections.add(projectionDetails);
-                    } catch (Exception e) {
-                        logger.error("Could not update projection " + projectionName, e);
-                    }
-                }
-            }
-            if (!exists) {
-                // Create
+                String projectionQuery = null;
                 try {
-                    client.create(projectionName, projectionQuery, CreateProjectionOptions.get()
-                            .emitEnabled(projection.isEmitEnabled())).join();
-                } catch (Exception e) {
-                    logger.error("Could not create projection " + projectionName, e);
+                    URI queryUri = URI.create(file);
+                    projectionQuery = new String(queryUri.toURL().openStream().readAllBytes(), StandardCharsets.UTF_8);
+                } catch (IllegalArgumentException | IOException e) {
+                    // Just load from classpath
+                    try (InputStream in = ClassLoader.getSystemResourceAsStream(file)) {
+                        if (in == null) {
+                            logger.error("Could not find projection query " + projection.getQuery());
+                        } else {
+                            projectionQuery = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                        }
+                    } catch (IOException ex) {
+                        logger.error("Could not load projection query " + projectionName, ex);
+                    }
                 }
+                if (projectionQuery == null)
+                    return;
+
+                boolean exists = false;
+                for (ProjectionDetails projectionDetails : projectionsList) {
+                    if (projectionDetails.getName().equals(projectionName)) {
+                        // Update
+                        exists = true;
+                        try {
+                            client.update(projectionName, projectionQuery, UpdateProjectionOptions.get()
+                                    .emitEnabled(projection.isEmitEnabled())).join();
+                            updatedProjections.add(projectionDetails);
+                        } catch (Exception e) {
+                            logger.error("Could not update projection " + projectionName, e);
+                        }
+                    }
+                }
+                if (!exists) {
+                    // Create
+                    try {
+                        client.create(projectionName, projectionQuery, CreateProjectionOptions.get()
+                                .emitEnabled(projection.isEmitEnabled())).join();
+                    } catch (Exception e) {
+                        logger.error("Could not create projection " + projectionName, e);
+                    }
+                }
+            });
+
+            if (projection.isEnabled()) {
+                projectionsList.stream()
+                        .filter(details -> details.getName().equals(projection.getName()) && !details.getStatus().equals("Running"))
+                        .findFirst().ifPresent(details ->
+                                {
+                                    System.out.println("ENABLED:"+details);
+                                    client.enable(details.getName()).join();
+                                }
+                        );
+
+            } else {
+                projectionsList.stream()
+                        .filter(details -> details.getName().equals(projection.getName()) && details.getStatus().equals("Running"))
+                        .findFirst().ifPresent(details ->
+                                {
+                                    System.out.println("DISABLE:"+details);
+                                    client.disable(details.getName()).join();
+                                }
+                        );
             }
         }
         projectionsList.removeAll(updatedProjections);
@@ -108,6 +133,7 @@ public class EventStoreProjectionsService {
                 continue;
             }
             try {
+                client.disable(projectionDetails.getName()).join();
                 client.delete(projectionDetails.getName()).join();
             } catch (Exception e) {
                 logger.error("Could not delete projection " + projectionDetails.getName(), e);

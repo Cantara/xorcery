@@ -18,14 +18,20 @@ package com.exoreaction.xorcery.eventstore.projections;
 import com.exoreaction.xorcery.json.JsonElement;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.util.Optional;
+
 public record Projection(ObjectNode json)
         implements JsonElement {
     String getName() {
         return getString("name").orElseThrow();
     }
 
-    String getQuery() {
-        return getString("query").orElseThrow();
+    boolean isEnabled() {
+        return getBoolean("enabled").orElse(true);
+    }
+
+    Optional<String> getQuery() {
+        return getString("query");
     }
 
     public boolean isEmitEnabled() {

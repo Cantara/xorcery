@@ -58,6 +58,8 @@ public class EventStoreProjectionsTest {
                         projections:
                             - name: testprojection
                               query: testprojections.js
+                            - name: $by_category
+                              enabled: true
                 """;
 
         Configuration configuration = new ConfigurationBuilder().addTestDefaults().addYaml(config).build();
@@ -79,6 +81,11 @@ public class EventStoreProjectionsTest {
             CountState state = projectionsService.getProjectionManagementClient().getState("testprojection", CountState.class).join();
 
             System.out.println("Count:" + state.count());
+
+            List<ProjectionDetails> projections = projectionsService.getProjectionManagementClient().list().join();
+            for (ProjectionDetails projection : projections) {
+                System.out.println(projection);
+            }
         }
     }
 
