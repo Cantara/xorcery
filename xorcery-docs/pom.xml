@@ -22,11 +22,11 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-project</artifactId>
-        <version>0.130.9</version>
+        <version>0.130.10-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-docs</artifactId>
-    <version>0.130.9</version>
+    <version>0.130.10-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <build>
