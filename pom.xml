@@ -44,7 +44,7 @@
         <jackson.version>2.18.0</jackson.version>
         <asm.version>9.7.1</asm.version>
         <projectreactor.version>2023.0.10</projectreactor.version>
-        <aws.java.sdk.version>2.28.22</aws.java.sdk.version>
+        <aws.java.sdk.version>2.28.23</aws.java.sdk.version>
         <netty.version>4.1.100.Final</netty.version>
 
         <junit.version>5.11.2</junit.version>
