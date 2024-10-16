@@ -36,7 +36,7 @@
         <jetty.version>12.0.13</jetty.version>
         <jersey.version>3.1.8</jersey.version>
         <opentelemetry.version>1.43.0</opentelemetry.version>
-        <eventstore.version>5.4.1</eventstore.version>
+        <eventstore.version>5.4.2</eventstore.version>
         <grpc.version>1.66.0</grpc.version>
         <hk2.version>3.1.1</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
