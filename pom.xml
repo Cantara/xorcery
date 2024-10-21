@@ -77,7 +77,6 @@
         <module>xorcery-configuration</module>
         <module>xorcery-configuration-validation</module>
         <module>xorcery-metadata</module>
-        <module>xorcery-service-api</module>
         <module>xorcery-health-api</module>
 
         <module>xorcery-core</module>
@@ -287,6 +286,11 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-jsonapi-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -444,11 +448,6 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-secrets-aws</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
-                <artifactId>xorcery-service-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

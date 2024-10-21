@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.server.api;
+package com.exoreaction.xorcery.jsonapi.service;
 
-import com.exoreaction.xorcery.jsonapi.ResourceObject;
+import com.exoreaction.xorcery.jsonapi.Attributes;
 
-public record ServiceLinkReference(ServiceIdentifier service, String rel) {
+import java.util.Optional;
 
-    public ServiceLinkReference(ResourceObject resourceObject, String rel) {
-        this(new ServiceIdentifier(resourceObject.getResourceObjectIdentifier()), rel);
+public record ServiceAttributes(Attributes attributes) {
+
+    public Optional<String> getVersion()
+    {
+        return attributes.getString("version");
     }
 
-    @Override
-    public String toString() {
-        return service.toString()+":"+rel;
-    }
 }

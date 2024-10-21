@@ -10,7 +10,7 @@ module xorcery.eventstore.jsonapi {
     requires xorcery.reactivestreams.api;
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.runlevel;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires com.lmax.disruptor;
     requires io.opentelemetry.api;
     requires xorcery.domainevents.api;

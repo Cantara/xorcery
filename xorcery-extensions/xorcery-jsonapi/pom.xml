@@ -30,6 +30,7 @@
     <modules>
         <module>xorcery-jsonapi-api</module>
         <module>xorcery-jsonapi-jaxrs</module>
+        <module>xorcery-jsonapi-service</module>
         <module>xorcery-jsonapi-server</module>
         <module>xorcery-jsonapi-server-neo4j</module>
         <module>xorcery-jsonapi-client</module>

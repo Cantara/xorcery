@@ -16,7 +16,7 @@
 module xorcery.dns.registration {
     exports com.exoreaction.xorcery.dns.registration;
 
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.configuration.api;
     requires xorcery.dns.client;
     requires xorcery.dns.update;

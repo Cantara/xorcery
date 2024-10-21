@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module xorcery.service.api {
-    exports com.exoreaction.xorcery.server.api;
+package com.exoreaction.xorcery.jsonapi.service;
 
-    requires transitive xorcery.configuration.api;
-    requires transitive xorcery.jsonapi.api;
+import com.exoreaction.xorcery.jsonapi.ResourceObject;
 
-    requires transitive jakarta.ws.rs;
-    requires org.glassfish.hk2.api;
+public record ServiceLinkReference(ServiceIdentifier service, String rel) {
 
-    requires jakarta.inject;
+    public ServiceLinkReference(ResourceObject resourceObject, String rel) {
+        this(new ServiceIdentifier(resourceObject.getResourceObjectIdentifier()), rel);
+    }
+
+    @Override
+    public String toString() {
+        return service.toString()+":"+rel;
+    }
 }

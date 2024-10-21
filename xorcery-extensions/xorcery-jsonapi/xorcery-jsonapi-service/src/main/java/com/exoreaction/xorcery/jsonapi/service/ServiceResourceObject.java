@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.server.api;
+package com.exoreaction.xorcery.jsonapi.service;
 
 import com.exoreaction.xorcery.builders.With;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
@@ -85,44 +85,6 @@ public record ServiceResourceObject(ResourceObject resourceObject) {
                 throw new RuntimeException(e);
             }
             links.link(rel, resolvedUri);
-            return this;
-        }
-
-        public Builder publisher(String streamName) {
-            URI resolvedUri;
-            try {
-                resolvedUri = new URI(
-                        baseServerUri.getScheme().equals("https") ? "wss" : "ws",
-                        baseServerUri.getUserInfo(),
-                        baseServerUri.getHost(),
-                        baseServerUri.getPort(),
-                        "/streams/publishers/"+streamName,
-                        baseServerUri.getQuery(),
-                        baseServerUri.getFragment()
-                );
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-            links.link(streamName+" publisher", resolvedUri);
-            return this;
-        }
-
-        public Builder subscriber(String streamName) {
-            URI resolvedUri;
-            try {
-                resolvedUri = new URI(
-                        baseServerUri.getScheme().equals("https") ? "wss" : "ws",
-                        baseServerUri.getUserInfo(),
-                        baseServerUri.getHost(),
-                        baseServerUri.getPort(),
-                        "/streams/subscribers/"+streamName,
-                        baseServerUri.getQuery(),
-                        baseServerUri.getFragment()
-                );
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
-            links.link(streamName+" subscriber", resolvedUri);
             return this;
         }
 

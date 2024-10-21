@@ -20,7 +20,7 @@ module xorcery.status.server {
     requires xorcery.status.spi;
     requires xorcery.jsonapi.api;
     requires xorcery.jsonapi.server;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
 
     requires jakarta.ws.rs;
     requires org.glassfish.hk2.api;

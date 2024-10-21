@@ -18,7 +18,7 @@ module xorcery.reactivestreams.server {
 
     requires transitive xorcery.reactivestreams.api;
 
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.dns.client;
     requires xorcery.jetty.server;
     requires xorcery.jetty.client;

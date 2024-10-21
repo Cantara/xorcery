@@ -21,7 +21,7 @@ module xorcery.test {
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
     requires xorcery.configuration.api;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
     requires xorcery.keystores;

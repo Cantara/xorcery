@@ -35,7 +35,7 @@ module xorcery.jwt.server {
     requires xorcery.domainevents.jsonapi;
     requires xorcery.jetty.server;
     requires com.auth0.jwt;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires org.bouncycastle.provider;
     requires org.bouncycastle.pkix;
     requires xorcery.secrets.api;

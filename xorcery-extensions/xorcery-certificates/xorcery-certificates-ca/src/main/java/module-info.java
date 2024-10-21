@@ -29,6 +29,6 @@ module xorcery.certificates.ca {
     requires org.bouncycastle.provider;
     requires org.bouncycastle.pkix;
     requires jakarta.ws.rs;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.secrets.api;
 }

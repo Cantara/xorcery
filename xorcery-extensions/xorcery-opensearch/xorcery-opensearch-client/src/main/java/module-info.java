@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.opensearch.client {
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.configuration.api;
     requires xorcery.reactivestreams.api;
     requires xorcery.reactivestreams.disruptor;

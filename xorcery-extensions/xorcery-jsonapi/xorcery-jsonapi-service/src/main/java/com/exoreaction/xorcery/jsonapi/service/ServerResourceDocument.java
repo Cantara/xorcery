@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.server.api;
+package com.exoreaction.xorcery.jsonapi.service;
 
 import com.exoreaction.xorcery.jsonapi.Link;
 import com.exoreaction.xorcery.jsonapi.ResourceDocument;

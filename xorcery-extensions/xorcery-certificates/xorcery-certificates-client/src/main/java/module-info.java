@@ -33,7 +33,7 @@ module xorcery.certificates.client {
     requires jakarta.inject;
     requires jakarta.ws.rs;
     requires xorcery.keystores;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.jsonapi.jaxrs;
     requires xorcery.jsonapi.client;
 }

@@ -18,7 +18,7 @@ module xorcery.neo4j.browser {
     exports com.exoreaction.xorcery.neo4j.browser;
 
     requires xorcery.configuration.api;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.keystores;
     requires xorcery.secrets.api;
 

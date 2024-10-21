@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.exoreaction.xorcery.server.api;
+module xorcery.jsonapi.service {
+    exports com.exoreaction.xorcery.jsonapi.service;
 
-import com.exoreaction.xorcery.jsonapi.Attributes;
+    requires transitive xorcery.configuration.api;
+    requires transitive xorcery.jsonapi.api;
 
-import java.util.Optional;
+    requires transitive jakarta.ws.rs;
+    requires org.glassfish.hk2.api;
 
-public record ServiceAttributes(Attributes attributes) {
-
-    public Optional<String> getVersion()
-    {
-        return attributes.getString("version");
-    }
-
+    requires jakarta.inject;
 }

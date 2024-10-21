@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-import com.exoreaction.xorcery.neo4jprojections.providers.CypherEventProjection;
-import com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
-
 open module xorcery.neo4j.projections {
-    uses Neo4jEventProjection;
+    uses com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 
     exports com.exoreaction.xorcery.neo4jprojections;
     exports com.exoreaction.xorcery.neo4jprojections.api;
     exports com.exoreaction.xorcery.neo4jprojections.providers;
     exports com.exoreaction.xorcery.neo4jprojections.spi;
 
-    requires xorcery.service.api;
+    requires xorcery.domainevents.api;
     requires xorcery.neo4j.embedded;
     requires xorcery.neo4j.shaded;
     requires xorcery.reactivestreams.api;
+    requires xorcery.reactivestreams.extras;
+    requires xorcery.opentelemetry.api;
 
     requires reactor.core;
     requires org.glassfish.hk2.api;
@@ -37,10 +36,7 @@ open module xorcery.neo4j.projections {
     requires org.glassfish.hk2.runlevel;
     requires io.opentelemetry.api;
     requires io.opentelemetry.semconv;
-    requires xorcery.domainevents.api;
-    requires xorcery.reactivestreams.extras;
-    requires xorcery.opentelemetry.api;
     requires io.opentelemetry.context;
 
-    provides Neo4jEventProjection with CypherEventProjection;
+    provides com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection with com.exoreaction.xorcery.neo4jprojections.providers.CypherEventProjection;
 }

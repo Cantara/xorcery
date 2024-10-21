@@ -18,8 +18,6 @@ module xorcery.jersey.server {
     exports com.exoreaction.xorcery.jersey.server.resources;
 
     requires transitive xorcery.configuration.api;
-    requires xorcery.jsonapi.api;
-    requires xorcery.service.api;
 
     requires jersey.common;
     requires jersey.server;

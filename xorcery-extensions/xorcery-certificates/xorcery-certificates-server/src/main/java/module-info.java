@@ -21,7 +21,7 @@ module xorcery.certificates.server {
     requires xorcery.keystores;
     requires xorcery.jsonapi.server;
     requires xorcery.jsonapi.jaxrs;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.configuration.api;
 
     requires jakarta.inject;

@@ -20,7 +20,7 @@ module xorcery.dns.server {
 
     requires xorcery.configuration.api;
     requires xorcery.jsonapi.api;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.jetty.server;
 
     requires org.dnsjava;

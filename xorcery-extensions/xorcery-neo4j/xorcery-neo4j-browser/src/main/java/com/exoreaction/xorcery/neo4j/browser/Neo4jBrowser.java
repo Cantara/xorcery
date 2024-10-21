@@ -17,8 +17,8 @@ package com.exoreaction.xorcery.neo4j.browser;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.InstanceConfiguration;
-import com.exoreaction.xorcery.server.api.ServiceResourceObject;
-import com.exoreaction.xorcery.server.api.ServiceResourceObjects;
+import com.exoreaction.xorcery.jsonapi.service.ServiceResourceObject;
+import com.exoreaction.xorcery.jsonapi.service.ServiceResourceObjects;
 import com.exoreaction.xorcery.util.Resources;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;

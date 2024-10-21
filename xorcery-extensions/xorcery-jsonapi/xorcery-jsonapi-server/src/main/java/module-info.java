@@ -20,7 +20,7 @@ module xorcery.jsonapi.server {
     exports com.exoreaction.xorcery.jsonschema.server.resources;
 
     requires transitive xorcery.jsonapi.api;
-    requires xorcery.service.api;
+    requires xorcery.jsonapi.service;
     requires xorcery.jaxrs.server;
 
     requires org.apache.logging.log4j;
