@@ -56,4 +56,3 @@ opentelemetry:
     # Excludes are processed first, then includes. Matching is done using name.contains(excludes/includes). By default all scopes are included
     excludes: []
     includes: []
-  instrumentations: {}

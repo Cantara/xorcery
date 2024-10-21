@@ -100,8 +100,9 @@ public final class Xorcery
             LoggerContext loggerContext = serviceLocator.getService(LoggerContext.class);
             xorceryLogger = loggerContext.getLogger(Xorcery.class);
             xorceryMarker = MarkerManager.getMarker(instanceConfiguration.getId());
+            List<String> messages = ConfigurationLogger.getLogger().drain();
             if (xorceryLogger.isDebugEnabled()) {
-                for (String msg : ConfigurationLogger.getLogger().drain()) {
+                for (String msg : messages) {
                     xorceryLogger.debug(msg);
                 }
             }

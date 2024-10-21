@@ -19,6 +19,8 @@
  */
 
 module xorcery.opentelemetry.log4j {
+    exports com.exoreaction.xorcery.opentelemetry.log4j;
+
     requires xorcery.opentelemetry.api;
 
     requires org.apache.logging.log4j;

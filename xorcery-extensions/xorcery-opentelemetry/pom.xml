@@ -35,6 +35,8 @@
         <module>xorcery-opentelemetry-log4j</module>
         <module>xorcery-opentelemetry-system</module>
         <module>xorcery-opentelemetry-jersey-server</module>
+        <module>xorcery-opentelemetry-exporter-websocket</module>
+        <module>xorcery-opentelemetry-collector-websocket</module>
     </modules>
 
 </project>

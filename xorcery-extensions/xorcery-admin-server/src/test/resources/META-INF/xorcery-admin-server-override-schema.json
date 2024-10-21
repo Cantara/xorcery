@@ -999,7 +999,7 @@
         },
         "resource" : {
           "type" : "object",
-          "additionalProperties" : false,
+          "additionalProperties" : true,
           "properties" : {
             "service.namespace" : {
               "type" : "string",
@@ -1203,11 +1203,6 @@
               "type" : [ "array", "string" ]
             }
           }
-        },
-        "instrumentations" : {
-          "type" : "object",
-          "additionalProperties" : true,
-          "properties" : { }
         }
       }
     },

@@ -1,0 +1,20 @@
+$schema: xorcery-opentelemetry-exporter-websocket-schema.json
+opentelemetry:
+  exporters:
+    websocket:
+      enabled: "{{ defaults.enabled }}"
+      logs:
+        enabled: "{{ opentelemetry.exporters.websocket.enabled }}"
+      traces:
+        enabled: "{{ opentelemetry.exporters.websocket.enabled }}"
+      metrics:
+        enabled: "{{ opentelemetry.exporters.websocket.enabled }}"
+        interval: "30s"
+      attach:
+        enabled: "{{ opentelemetry.exporters.websocket.enabled }}"
+        host: "wss://localhost/"
+        optimizeResource: false
+      listen:
+        enabled: "{{ opentelemetry.exporters.websocket.enabled }}"
+        path: "exporter/v1"
+        uri: "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/{{ opentelemetry.exporters.websocket.listen.path }}"

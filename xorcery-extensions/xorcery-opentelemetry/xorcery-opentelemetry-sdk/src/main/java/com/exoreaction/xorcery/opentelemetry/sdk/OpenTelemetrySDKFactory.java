@@ -51,7 +51,7 @@ public class OpenTelemetrySDKFactory
 
         // This allows us to turn off individual instrumentation scopes
         List<String> excludes = openTelemetryConfiguration.getExcludedMeters();
-        List<String> includes = openTelemetryConfiguration.getExcludedMeters();
+        List<String> includes = openTelemetryConfiguration.getIncludedMeters();
 
         MeterProvider filteredMeterProvider = instrumentationScopeName -> excludes.isEmpty()
                 ? (includes.isEmpty()

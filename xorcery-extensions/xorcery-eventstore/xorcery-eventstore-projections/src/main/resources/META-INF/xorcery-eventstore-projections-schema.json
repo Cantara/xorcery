@@ -25,18 +25,18 @@
             "projections" : {
               "type" : [ "array", "string" ],
               "items" : {
-                "properties": {
+                "properties" : {
                   "enabled" : {
-                    "type": ["boolean","string"]
+                    "type" : [ "boolean", "string" ]
                   },
                   "name" : {
-                    "type": "string"
+                    "type" : "string"
                   },
                   "query" : {
-                    "type": "string"
+                    "type" : "string"
                   },
                   "emitenabled" : {
-                    "type": ["boolean","string"]
+                    "type" : [ "boolean", "string" ]
                   }
                 }
               }

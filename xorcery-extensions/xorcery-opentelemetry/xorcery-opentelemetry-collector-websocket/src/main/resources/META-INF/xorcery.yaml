@@ -1,0 +1,10 @@
+$schema: xorcery-opentelemetry-collector-websocket-schema.json
+opentelemetry:
+  collectors:
+    websocket:
+      attach:
+        enabled: "{{ defaults.enabled }}"
+      listen:
+        enabled: "{{ defaults.enabled }}"
+        path: "collector/v1"
+        uri: "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/{{ opentelemetry.collectors.websocket.listen.path }}"

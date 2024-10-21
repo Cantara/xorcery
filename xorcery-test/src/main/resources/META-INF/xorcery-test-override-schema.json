@@ -1211,7 +1211,7 @@
         },
         "instrumentations" : {
           "type" : "object",
-          "additionalProperties" : true,
+          "additionalProperties" : false,
           "properties" : {
             "jersey" : {
               "type" : "object",
@@ -1274,7 +1274,7 @@
         },
         "resource" : {
           "type" : "object",
-          "additionalProperties" : false,
+          "additionalProperties" : true,
           "properties" : {
             "service.namespace" : {
               "type" : "string",

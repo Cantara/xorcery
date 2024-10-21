@@ -322,7 +322,23 @@
               "description" : "Default: {{ eventstore.enabled }} (true)"
             },
             "projections" : {
-              "type" : [ "array", "string" ]
+              "type" : [ "array", "string" ],
+              "items" : {
+                "properties" : {
+                  "enabled" : {
+                    "type" : [ "boolean", "string" ]
+                  },
+                  "name" : {
+                    "type" : "string"
+                  },
+                  "query" : {
+                    "type" : "string"
+                  },
+                  "emitenabled" : {
+                    "type" : [ "boolean", "string" ]
+                  }
+                }
+              }
             }
           }
         }

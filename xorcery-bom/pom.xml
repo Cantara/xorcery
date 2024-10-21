@@ -292,6 +292,16 @@
             </dependency>
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-collector-websocket</artifactId>
+                <version>0.130.13-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-exporter-websocket</artifactId>
+                <version>0.130.13-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-log4j</artifactId>
                 <version>0.130.13-SNAPSHOT</version>
             </dependency>

@@ -1,0 +1,63 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-opentelemetry-collector-websocket/schema",
+  "title" : "xorcery-opentelemetry-collector-websocket configuration JSON Schema",
+  "properties" : {
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    }
+  },
+  "$defs" : {
+    "opentelemetry" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "collectors" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "websocket" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "attach" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ defaults.enabled }}",
+                      "description" : "Default: {{ defaults.enabled }} (true)"
+                    }
+                  }
+                },
+                "listen" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ defaults.enabled }}",
+                      "description" : "Default: {{ defaults.enabled }} (true)"
+                    },
+                    "path" : {
+                      "type" : "string",
+                      "default" : "collector/v1",
+                      "description" : "Default: collector/v1"
+                    },
+                    "uri" : {
+                      "type" : "string",
+                      "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/{{ opentelemetry.collectors.websocket.listen.path }}",
+                      "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/{{ opentelemetry.collectors.websocket.listen.path }} (wss://service.xorcery.test:443/collector/v1)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

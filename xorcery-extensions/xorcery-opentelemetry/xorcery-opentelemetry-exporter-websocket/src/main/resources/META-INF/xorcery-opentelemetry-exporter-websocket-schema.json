@@ -1,0 +1,116 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-opentelemetry-exporter-websocket/schema",
+  "title" : "xorcery-opentelemetry-exporter-websocket configuration JSON Schema",
+  "properties" : {
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    }
+  },
+  "$defs" : {
+    "opentelemetry" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "exporters" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "websocket" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ defaults.enabled }}",
+                  "description" : "Default: {{ defaults.enabled }} (true)"
+                },
+                "logs" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.websocket.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.websocket.enabled }} (true)"
+                    }
+                  }
+                },
+                "traces" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.websocket.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.websocket.enabled }} (true)"
+                    }
+                  }
+                },
+                "metrics" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.websocket.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.websocket.enabled }} (true)"
+                    },
+                    "interval" : {
+                      "type" : "string",
+                      "default" : "30s",
+                      "description" : "Default: 30s"
+                    }
+                  }
+                },
+                "attach" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.websocket.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.websocket.enabled }} (true)"
+                    },
+                    "host" : {
+                      "type" : "string",
+                      "default" : "wss://localhost/",
+                      "description" : "Default: wss://localhost/"
+                    },
+                    "optimizeResource" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : false,
+                      "description" : "Default: false"
+                    }
+                  }
+                },
+                "listen" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.websocket.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.websocket.enabled }} (true)"
+                    },
+                    "path" : {
+                      "type" : "string",
+                      "default" : "exporter/v1",
+                      "description" : "Default: exporter/v1"
+                    },
+                    "uri" : {
+                      "type" : "string",
+                      "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/{{ opentelemetry.exporters.websocket.listen.path }}",
+                      "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/{{ opentelemetry.exporters.websocket.listen.path }} (://service.xorcery.test:/exporter/v1)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
