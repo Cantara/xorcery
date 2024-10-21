@@ -65,12 +65,6 @@
             <artifactId>jetty-http2-client-transport</artifactId>
         </dependency>
 
-        <!-- HTTP/3 -->
-        <dependency>
-            <groupId>org.eclipse.jetty.http3</groupId>
-            <artifactId>jetty-http3-client-transport</artifactId>
-        </dependency>
-
         <!-- Logging -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
