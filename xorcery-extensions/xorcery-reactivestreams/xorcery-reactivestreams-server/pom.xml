@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-reactivestreams</artifactId>
-        <version>0.130.13-SNAPSHOT</version>
+        <version>0.131.0</version>
     </parent>
 
     <artifactId>xorcery-reactivestreams-server</artifactId>
