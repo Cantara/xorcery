@@ -38,7 +38,8 @@ public class LoadBalancerTest {
                             jetty.server.enabled: false
                             reactivestreams.server.enabled: false
                             dns.client.hosts:
-                                _servicetest._sub._https._tcp:
+                                - name: "_servicetest._sub._https._tcp"
+                                  url:
                                     - "wss://localhost:{{ SYSTEM.port1 }}/numbers"
                                     - "wss://localhost:{{ SYSTEM.port2 }}/numbers"
                                     - "wss://localhost:{{ SYSTEM.port3 }}/numbers"

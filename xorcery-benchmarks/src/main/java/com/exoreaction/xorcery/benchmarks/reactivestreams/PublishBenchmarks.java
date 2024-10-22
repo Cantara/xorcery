@@ -56,14 +56,15 @@ public class PublishBenchmarks {
             secrets.enabled: true
             keystores.enabled: true
             dns.client.enabled: true
-                        
+            
             dns.client.hosts:
-                server.xorcery.test: "{{ instance.ip }}"
-                        
+                - name: server.xorcery.test
+                  url: "{{ instance.ip }}"
+            
             jetty.client.enabled: true
             jetty.client.ssl.enabled: true
 
-            reactivestreams.enabled: true            
+            reactivestreams.enabled: true
 
             log4j2.Configuration.thresholdFilter: debug
             
@@ -81,7 +82,7 @@ public class PublishBenchmarks {
                   level: info
 
                 - name: org.eclipse.jetty.websocket.core.internal.FrameFlusher
-                  level: info                       
+                  level: info
             """;
 
     private static final String serverConfig = """

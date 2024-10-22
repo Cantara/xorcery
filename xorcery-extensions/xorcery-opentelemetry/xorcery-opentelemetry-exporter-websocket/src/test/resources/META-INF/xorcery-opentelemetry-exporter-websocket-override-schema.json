@@ -257,9 +257,24 @@
               "type" : [ "array", "string" ]
             },
             "hosts" : {
-              "type" : "object",
+              "type" : [ "array", "string" ],
               "additionalProperties" : true,
-              "properties" : { }
+              "items" : {
+                "type" : "object",
+                "properties" : {
+                  "name" : {
+                    "description" : "Host name",
+                    "type" : "string"
+                  },
+                  "url" : {
+                    "description" : "IP or URL",
+                    "type" : [ "array", "string" ],
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              }
             },
             "timeout" : {
               "type" : "string",

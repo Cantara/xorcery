@@ -84,7 +84,8 @@ public class SRVConnectorTest {
                         dns:
                             enabled: true
                             hosts:
-                                analytics:
+                                - name: analytics
+                                  url:
                                     - 127.0.0.1:8888
                                     - 127.0.0.1:8080
                             server:

@@ -39,9 +39,12 @@ public class DnsLookupTest {
             dns.client.search:
                 - "xorcery.test"
             dns.client.hosts:
-                "_certificates._sub._https._tcp.xorcery.test": "https://127.0.0.1:8080/api/path"
-                "xorcery1.xorcery.test": "127.0.0.1"
-                "certificates.xorcery.test":
+                - name: "_certificates._sub._https._tcp.xorcery.test"
+                  url: "https://127.0.0.1:8080/api/path"
+                - name: "xorcery1.xorcery.test"
+                  url: "127.0.0.1"
+                - name: "certificates.xorcery.test"
+                  url:
                     - "127.0.0.1"
                     - "127.0.1.1"
             """;

@@ -4,6 +4,6 @@ dns:
     enabled: "{{ defaults.enabled }}"
     nameServers: []
     search: []
-    hosts: {}
+    hosts: []
     timeout: 10s
     forceTcp: false

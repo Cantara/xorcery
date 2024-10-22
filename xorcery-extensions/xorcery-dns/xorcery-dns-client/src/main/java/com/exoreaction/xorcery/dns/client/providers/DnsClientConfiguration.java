@@ -18,8 +18,8 @@ package com.exoreaction.xorcery.dns.client.providers;
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.TextParseException;
 
@@ -31,8 +31,8 @@ import java.util.Optional;
 
 public record DnsClientConfiguration(Configuration context)
         implements ServiceConfiguration {
-    public ObjectNode getHosts() {
-        return (ObjectNode) context().getJson("hosts").orElseGet(JsonNodeFactory.instance::objectNode);
+    public ArrayNode getHosts() {
+        return (ArrayNode) context().getJson("hosts").orElseGet(JsonNodeFactory.instance::arrayNode);
     }
 
     public Optional<List<String>> getNameServers() {

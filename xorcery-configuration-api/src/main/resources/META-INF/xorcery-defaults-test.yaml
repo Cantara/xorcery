@@ -16,4 +16,5 @@ hk2:
     - xorcerytest
 
 dns.client.hosts:
-  server.xorcery.test: 127.0.0.1
+  - name: server.xorcery.test
+    url: 127.0.0.1

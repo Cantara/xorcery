@@ -1,9 +1,9 @@
 package com.exoreaction.xorcery.configuration.jsonschema.maven;
 
 import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.configuration.jsonschema.ConfigurationSchemaBuilder;
 import com.exoreaction.xorcery.json.JsonMerger;
 import com.exoreaction.xorcery.jsonschema.JsonSchema;
+import com.exoreaction.xorcery.jsonschema.generator.SchemaByExampleGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -101,7 +101,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                     instance.ip: "192.168.0.2"
                     """);
 
-        JsonSchema schema = new ConfigurationSchemaBuilder()
+        JsonSchema schema = new SchemaByExampleGenerator()
                 .id("http://xorcery.exoreaction.com/modules/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
                 .title(project.getArtifactId() + " configuration JSON Schema")
                 .generateJsonSchema(moduleBuilder.builder().builder(), moduleWithDependenciesBuilder.build().json());

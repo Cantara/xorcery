@@ -57,7 +57,8 @@ public class SubscribeBenchmarks {
             dns.client.enabled: true
                         
             dns.client.hosts:
-                server.xorcery.test: "{{ instance.ip }}"
+                - name: server.xorcery.test
+                  url: "{{ instance.ip }}"
                         
             jetty.client.enabled: true
             jetty.client.ssl.enabled: true

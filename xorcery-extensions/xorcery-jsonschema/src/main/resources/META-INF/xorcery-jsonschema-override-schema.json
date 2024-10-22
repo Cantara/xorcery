@@ -1,8 +1,8 @@
 {
+  "$id" : "http://xorcery.exoreaction.com/applications/com.exoreaction.xorcery/xorcery-jsonschema/override-schema",
+  "title" : "xorcery-jsonschema configuration override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.exoreaction.com/testschema",
-  "title" : "Configuration schema",
   "properties" : {
     "instance" : {
       "$ref" : "#/$defs/instance"
@@ -22,6 +22,9 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
     "log4j2" : {
       "$ref" : "#/$defs/log4j2"
     }
@@ -29,26 +32,27 @@
   "$defs" : {
     "instance" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "id" : {
           "type" : "string",
           "default" : "{{ instance.host}}.{{ application.name}}",
-          "description" : "Default: {{ instance.host}}.{{ application.name}}"
+          "description" : "Default: {{ instance.host}}.{{ application.name}} (service.application)"
         },
         "host" : {
           "type" : "string",
           "default" : "{{ CALCULATED.hostName }}",
-          "description" : "Default: {{ CALCULATED.hostName }}"
+          "description" : "Default: {{ CALCULATED.hostName }} (service)"
         },
         "fqdn" : {
           "type" : "string",
           "default" : "{{ instance.host }}.{{ instance.domain }}",
-          "description" : "Default: {{ instance.host }}.{{ instance.domain }}"
+          "description" : "Default: {{ instance.host }}.{{ instance.domain }} (service.xorcery.test)"
         },
         "ip" : {
           "type" : "string",
           "default" : "{{ CALCULATED.ip | null }}",
-          "description" : "Default: {{ CALCULATED.ip | null }}"
+          "description" : "Default: {{ CALCULATED.ip | null }} (192.168.0.2)"
         },
         "domain" : {
           "type" : "string",
@@ -58,38 +62,45 @@
         "environment" : {
           "type" : "string",
           "default" : "development",
-          "description" : "Default: development",
-          "enum" : [ "development", "qa", "production" ]
+          "description" : "Default: development"
+        },
+        "tags" : {
+          "type" : [ "array", "string" ]
         },
         "home" : {
           "type" : "string",
           "default" : "{{ SYSTEM.user_dir }}",
-          "description" : "Default: {{ SYSTEM.user_dir }}"
+          "description" : "Default: {{ SYSTEM.user_dir }} ({{ SYSTEM.user_dir }})"
         },
         "resources" : {
           "type" : "string",
           "default" : "{{ instance.home }}",
-          "description" : "Default: {{ instance.home }}"
+          "description" : "Default: {{ instance.home }} ({{ instance.home }})"
         },
         "uri" : {
           "type" : "string",
-          "default" : "{{ jetty.server.uri | \"http://localhost/\"}}",
-          "description" : "Default: {{ jetty.server.uri | \"http://localhost/\"}}"
+          "default" : "http://{{ instance.fqdn }}/",
+          "description" : "Default: http://{{ instance.fqdn }}/ (http://service.xorcery.test/)"
         },
         "api" : {
           "type" : "string",
           "default" : "{{ instance.uri }}api/",
-          "description" : "Default: {{ instance.uri }}api/"
+          "description" : "Default: {{ instance.uri }}api/ (http://service.xorcery.test/api/)"
+        },
+        "locale" : {
+          "default" : null,
+          "description" : "Default: null"
         }
       }
     },
     "application" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "name" : {
           "type" : "string",
-          "default" : "genericserver",
-          "description" : "Default: genericserver"
+          "default" : "application",
+          "description" : "Default: application"
         },
         "version" : {
           "type" : "string",
@@ -100,29 +111,15 @@
     },
     "system" : {
       "type" : "object",
-      "properties" : {
-        "java.util.logging.manager" : {
-          "type" : "string",
-          "default" : "org.apache.logging.log4j.jul.LogManager",
-          "description" : "Default: org.apache.logging.log4j.jul.LogManager"
-        },
-        "log4j2.isThreadContextMapInheritable" : {
-          "type" : "number",
-          "default" : true,
-          "description" : "Default: true"
-        },
-        "Log4jContextSelector" : {
-          "type" : "string",
-          "default" : "org.apache.logging.log4j.core.selector.BasicContextSelector",
-          "description" : "Default: org.apache.logging.log4j.core.selector.BasicContextSelector"
-        }
-      }
+      "additionalProperties" : true,
+      "properties" : { }
     },
     "defaults" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "enabled" : {
-          "type" : "number",
+          "type" : [ "boolean", "string" ],
           "default" : true,
           "description" : "Default: true"
         },
@@ -137,7 +134,7 @@
           "description" : "Default: -1s"
         },
         "development" : {
-          "type" : "number",
+          "type" : [ "boolean", "string" ],
           "default" : false,
           "description" : "Default: false"
         }
@@ -145,6 +142,7 @@
     },
     "hk2" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "threadPolicy" : {
           "type" : "string",
@@ -152,20 +150,21 @@
           "description" : "Default: FULLY_THREADED"
         },
         "threadCount" : {
-          "type" : "number",
-          "default" : 5,
-          "description" : "Default: 5"
+          "type" : [ "number", "string" ],
+          "default" : 1,
+          "description" : "Default: 1"
         },
         "runLevel" : {
-          "type" : "number",
+          "type" : [ "number", "string" ],
           "default" : 20,
           "description" : "Default: 20"
         },
         "immediateScope" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "number",
+              "type" : [ "boolean", "string" ],
               "default" : true,
               "description" : "Default: true"
             },
@@ -178,9 +177,41 @@
         },
         "threadScope" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "enabled" : {
-              "type" : "number",
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        },
+        "names" : {
+          "type" : [ "array", "string" ]
+        }
+      }
+    },
+    "DefaultRunLevelContext" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        }
+      }
+    },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
               "default" : true,
               "description" : "Default: true"
             }
@@ -188,21 +219,13 @@
         }
       }
     },
-    "DefaultRunLevelContext" : {
-      "type" : "object",
-      "properties" : {
-        "enabled" : {
-          "type" : "number",
-          "default" : true,
-          "description" : "Default: true"
-        }
-      }
-    },
     "log4j2" : {
       "type" : "object",
+      "additionalProperties" : false,
       "properties" : {
         "Configuration" : {
           "type" : "object",
+          "additionalProperties" : false,
           "properties" : {
             "name" : {
               "type" : "string",
@@ -212,36 +235,67 @@
             "status" : {
               "type" : "string",
               "default" : "warn",
-              "description" : "Default: warn"
+              "description" : "Default: warn",
+              "enum" : [ "trace", "debug", "info", "warn", "error" ]
             },
             "properties" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             },
             "thresholdFilter" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
                 "level" : {
                   "type" : "string",
                   "default" : "info",
-                  "description" : "Default: info"
+                  "description" : "Default: info",
+                  "enum" : [ "trace", "debug", "info", "warn", "error" ]
                 }
               }
             },
             "appenders" : {
               "type" : "object",
+              "additionalProperties" : true,
               "properties" : { }
             },
             "Loggers" : {
               "type" : "object",
+              "additionalProperties" : false,
               "properties" : {
+                "logger" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "properties" : {
+                      "name" : {
+                        "type" : "string"
+                      },
+                      "level" : {
+                        "type" : "string",
+                        "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                      },
+                      "additivity" : {
+                        "type" : "boolean"
+                      },
+                      "AppenderRef" : {
+                        "type" : [ "array", "string" ]
+                      }
+                    }
+                  }
+                },
                 "Root" : {
                   "type" : "object",
+                  "additionalProperties" : false,
                   "properties" : {
                     "level" : {
                       "type" : "string",
                       "default" : "info",
-                      "description" : "Default: info"
+                      "description" : "Default: info",
+                      "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                    },
+                    "AppenderRef" : {
+                      "type" : [ "array", "string" ]
                     }
                   }
                 }

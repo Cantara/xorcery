@@ -51,8 +51,11 @@ public class ClientCertificateAuthenticationTest {
 
     String clientConfig = """
             dns.client.hosts:
-                server.xorcery.test: 127.0.0.1
-                wrongserver.xorcery.test: 127.0.0.1
+                - name: server.xorcery.test
+                  url: "127.0.0.1"
+                - name: wrongserver.xorcery.test
+                  url: "127.0.0.1"
+                  
             clienttester.enabled: true
             jetty.client:
                 enabled: true

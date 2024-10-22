@@ -35,7 +35,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class HostsConfigurationLookup
         implements DnsLookup {
-    private final ObjectNode hosts;
+    private final ArrayNode hosts;
     private final DnsClientConfiguration dnsClientConfiguration;
 
     public HostsConfigurationLookup(Configuration configuration) {
@@ -54,7 +54,7 @@ public class HostsConfigurationLookup
             try {
                 Iterable<String> hostNames = getHostNames(host, uri.getScheme());
                 for (String hostName : hostNames) {
-                    JsonNode lookup = hosts.get(hostName);
+                    JsonNode lookup = lookup(hostName);
                     if (lookup instanceof TextNode) {
                         URI newUri = toURI(lookup.textValue(), uri);
                         return CompletableFuture.completedFuture(List.of(newUri));
@@ -72,6 +72,18 @@ public class HostsConfigurationLookup
             }
         }
         return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    private JsonNode lookup(String hostName)
+    {
+        for (JsonNode host : hosts) {
+            if (host instanceof ObjectNode hostsEntry)
+            {
+                if (hostsEntry.get("name").textValue().equals(hostName))
+                    return host.get("url");
+            }
+        }
+        return null;
     }
 
     private Iterable<String> getHostNames(String host, String scheme) {

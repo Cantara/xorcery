@@ -1,4 +1,4 @@
-$schema: ../../../main/resources/xorcery-schema.json
+$schema: ../META-INF/xorcery-test-override-schema.json
 
 jetty:
   server:
@@ -24,8 +24,14 @@ certificates.client.enabled: true
 keystores.stores:
   - name: ssl
     path: "{{ instance.home }}/ssl.p12"
-dns.client.hosts:
-  server.xorcery.test: 127.0.0.1
-  server2.xorcery.test: 127.0.0.1
-  _certificates._sub._https._tcp: "https://server.xorcery.test:{{ SYSTEM.port }}/api"
+
+dns:
+  client:
+    hosts:
+      - name: server.xorcery.test
+        url: 127.0.0.1
+      - name: server2.xorcery.test
+        url: 127.0.0.1
+      - name: _certificates._sub._https._tcp
+        url: "https://server.xorcery.test:{{ SYSTEM.port }}/api"
 clienttester.enabled: true
