@@ -594,7 +594,7 @@
             <dependency>
                 <groupId>org.neo4j.client</groupId>
                 <artifactId>neo4j-browser</artifactId>
-                <version>5.21.0</version>
+                <version>5.24.0</version>
             </dependency>
 
             <!-- CLI -->
