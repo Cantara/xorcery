@@ -1026,7 +1026,7 @@
                 <plugin>
                     <groupId>com.exoreaction.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.130.12</version>
+                    <version>0.131.1</version>
                 </plugin>
 <!--
                 <plugin>
