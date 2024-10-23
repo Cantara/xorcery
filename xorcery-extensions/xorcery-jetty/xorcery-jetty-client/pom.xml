@@ -22,7 +22,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-jetty</artifactId>
-        <version>0.131.3-SNAPSHOT</version>
+        <version>0.131.3</version>
     </parent>
 
     <artifactId>xorcery-jetty-client</artifactId>
