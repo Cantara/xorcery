@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.neo4jprojections;
 
 import com.exoreaction.xorcery.configuration.Configuration;
 import com.exoreaction.xorcery.configuration.ServiceConfiguration;
+import org.neo4j.io.ByteUnit;
 
 public record Neo4jProjectionsConfiguration(Configuration context)
         implements ServiceConfiguration {
@@ -29,5 +30,15 @@ public record Neo4jProjectionsConfiguration(Configuration context)
 
     public int getMaxThreadCount() {
         return context.getInteger("maxThreadCount").orElse(-1);
+    }
+
+    public long getMaxTransactionSize()
+    {
+        return ByteUnit.parse(context.getString("maxTransactionSize").orElse("1G"));
+    }
+
+    public long getTransactionMemoryUsageMargin()
+    {
+        return ByteUnit.parse(context.getString("transactionMemoryUsageMargin").orElse("1M"));
     }
 }

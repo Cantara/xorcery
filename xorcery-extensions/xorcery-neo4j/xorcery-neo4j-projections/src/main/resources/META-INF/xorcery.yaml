@@ -4,3 +4,8 @@ neo4jprojections:
   eventBatchSize: 1024
   # Use Reactor "bounded elastic" by default, set this to specific nr if there are too many projections at the same time
   maxThreadCount: -1
+
+  # This allows us to safely set any batch size, because as soon as transaction memory usage gets close to maxed out
+  # we can start a new one
+  maxTransactionSize: "{{ neo4jdatabase.settings.db.memory.transaction.max | \"1G\" }}"
+  transactionMemoryUsageMargin: "1M"

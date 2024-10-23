@@ -24,7 +24,9 @@ import org.jvnet.hk2.annotations.Service;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.TransientTransactionFailureException;
+import org.neo4j.kernel.impl.coreapi.InternalTransaction;
 import org.neo4j.memory.MemoryLimitExceededException;
+import org.neo4j.memory.MemoryTracker;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
@@ -56,6 +58,7 @@ public class Neo4jProjectionHandler
     private final DoubleHistogram projectionLatencyHistogram;
     private final DoubleHistogram commitLatencyHistogram;
     private final Meter meter;
+    private final long highestSafeUsage;
 
     @Inject
     public Neo4jProjectionHandler(
@@ -81,6 +84,8 @@ public class Neo4jProjectionHandler
                 .setUnit(OpenTelemetryUnits.SECONDS).build();
         commitLatencyHistogram = meter.histogramBuilder("neo4j.projection.commitLatency")
                 .setUnit(OpenTelemetryUnits.SECONDS).build();
+
+        highestSafeUsage = projectionsConfiguration.getMaxTransactionSize()-projectionsConfiguration.getTransactionMemoryUsageMargin();
     }
 
     @Override
@@ -186,6 +191,8 @@ public class Neo4jProjectionHandler
             int committed = 0;
             Iterator<MetadataEvents> metadataEventsIterator = events.iterator();
             Transaction tx = database.beginTx();
+            MemoryTracker memoryTracker = tx instanceof InternalTransaction it ? it.kernelTransaction().memoryTracker() : null;
+
             MetadataEvents metadataEvents = null;
             while (true) {
                 try {
@@ -202,7 +209,7 @@ public class Neo4jProjectionHandler
                             projection.write(metadataEvents, tx);
                         }
 
-                        if (++eventCount == maxEvents || !metadataEventsIterator.hasNext()) {
+                        if (++eventCount == maxEvents || !metadataEventsIterator.hasNext() || (memoryTracker != null && memoryTracker.estimatedHeapMemory() > highestSafeUsage)) {
 
                             double projectDuration = System.nanoTime() - startProjection;
                             projectionLatencyHistogram.record(projectDuration / 1_000_000_000.0, attributes);

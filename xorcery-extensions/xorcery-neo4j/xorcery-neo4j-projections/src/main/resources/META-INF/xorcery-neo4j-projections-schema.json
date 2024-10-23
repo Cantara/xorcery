@@ -27,6 +27,16 @@
           "type" : [ "number", "string" ],
           "default" : -1,
           "description" : "Default: -1"
+        },
+        "maxTransactionSize" : {
+          "type" : "string",
+          "default" : "{{ neo4jdatabase.settings.db.memory.transaction.max | \"1G\" }}",
+          "description" : "Default: {{ neo4jdatabase.settings.db.memory.transaction.max | \"1G\" }} (1G)"
+        },
+        "transactionMemoryUsageMargin" : {
+          "type" : "string",
+          "default" : "1M",
+          "description" : "Default: 1M"
         }
       }
     }
