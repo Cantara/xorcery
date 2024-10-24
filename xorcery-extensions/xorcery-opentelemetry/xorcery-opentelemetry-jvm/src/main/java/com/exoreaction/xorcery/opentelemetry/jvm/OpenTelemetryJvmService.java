@@ -42,6 +42,7 @@ import javax.management.openmbean.CompositeData;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -174,7 +175,7 @@ public class OpenTelemetryJvmService
 
     private void jvmCpuTime(ObservableDoubleMeasurement observableDoubleMeasurement) {
         if (ManagementFactory.getOperatingSystemMXBean() instanceof OperatingSystemMXBean osmxbean) {
-            observableDoubleMeasurement.record(osmxbean.getProcessCpuTime());
+            observableDoubleMeasurement.record(Duration.ofNanos(osmxbean.getProcessCpuTime()).toSeconds());
         }
     }
 

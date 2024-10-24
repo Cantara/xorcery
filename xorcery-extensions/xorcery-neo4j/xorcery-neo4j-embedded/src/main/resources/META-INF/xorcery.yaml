@@ -9,3 +9,14 @@ neo4jdatabase:
   settings: {}
   metrics:
     enabled: "{{ defaults.enabled }}"
+    attributes:
+      "neo4j.transaction.active": neo4j.transaction.active
+      "neo4j.transaction.committed": neo4j.transaction.committed
+      "neo4j.transaction.rolledback": neo4j.transaction.rolledback
+      "neo4j.transaction.peakConcurrent": neo4j.transaction.peakConcurrent
+      "neo4j.checkpoint.count": neo4j.checkpoint.count
+      "neo4j.checkpoint.flushed": neo4j.checkpoint.flushed
+      "neo4j.checkpoint.totalTime": neo4j.checkpoint.totalTime
+      "neo4j.pagecache.hits": neo4j.pagecache.hits
+      "neo4j.pagecache.hitRatio": neo4j.pagecache.hitRatio
+      "neo4j.pagecache.flushes": neo4j.pagecache.flushes

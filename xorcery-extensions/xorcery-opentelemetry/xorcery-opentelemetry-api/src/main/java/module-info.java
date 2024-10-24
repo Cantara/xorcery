@@ -20,5 +20,6 @@ module xorcery.opentelemetry.api {
     requires transitive io.opentelemetry.api;
     requires io.opentelemetry.semconv;
     requires org.glassfish.hk2.api;
+    requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
 }

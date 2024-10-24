@@ -97,6 +97,17 @@
             <groupId>com.exoreaction.xorcery</groupId>
             <artifactId>xorcery-secrets-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.exoreaction.xorcery</groupId>
+            <artifactId>xorcery-configuration</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

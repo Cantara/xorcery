@@ -26,7 +26,7 @@ import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="opentelemetry.exporters.jmx")
 public class JMXMetricReaderFactory
         implements Factory<MetricReader> {
     private final MetricReader metricReader;

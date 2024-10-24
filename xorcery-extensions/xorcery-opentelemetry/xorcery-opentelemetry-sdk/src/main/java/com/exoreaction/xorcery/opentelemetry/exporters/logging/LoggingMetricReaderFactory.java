@@ -25,7 +25,7 @@ import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="opentelemetry.exporters.logging")
 public class LoggingMetricReaderFactory
         implements Factory<MetricReader> {
     private final MetricReader metricReader;

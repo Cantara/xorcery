@@ -16,6 +16,7 @@
 package com.exoreaction.xorcery.opentelemetry;
 
 public interface OpenTelemetryUnits {
+    String UNIT = "1";
     String BYTES = "By";
     String SECONDS = "s";
 }

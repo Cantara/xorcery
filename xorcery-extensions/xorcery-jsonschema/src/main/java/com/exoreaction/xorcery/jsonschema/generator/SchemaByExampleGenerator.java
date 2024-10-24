@@ -88,7 +88,7 @@ public class SchemaByExampleGenerator {
                 }
                 case STRING -> {
                     properties.property(property.getKey(), new JsonSchema.Builder()
-                            .type(Types.String)
+                            .types(Types.String, Types.Null)
                             .with(b -> b.builder().set("default", defaultValue))
                             .description("Default: " + defaultValue.asText() + (defaultValue.asText().contains("{{") ? " (" + effectiveValue.asText() + ")" : ""))
                             .build());

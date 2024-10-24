@@ -24,7 +24,7 @@ import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="opentelemetry.exporters.logging")
 public class LoggingSpanExporterFactory
         implements Factory<SpanProcessor> {
     private final SpanProcessor spanProcessor;

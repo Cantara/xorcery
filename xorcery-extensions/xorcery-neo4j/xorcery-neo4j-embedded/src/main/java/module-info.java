@@ -25,6 +25,7 @@ module xorcery.neo4j.embedded {
     requires xorcery.configuration.api;
 
     requires xorcery.neo4j.shaded;
+
     requires jdk.unsupported;
     requires org.apache.logging.log4j;
     requires org.glassfish.hk2.api;
@@ -35,6 +36,8 @@ module xorcery.neo4j.embedded {
     requires org.glassfish.hk2.runlevel;
     requires org.apache.commons.lang3;
     requires com.sun.jna;
+    requires xorcery.opentelemetry.api;
+    requires com.fasterxml.jackson.databind;
 
     provides com.exoreaction.xorcery.neo4j.spi.Neo4jProvider with com.exoreaction.xorcery.neo4j.providers.TransactionContextExtensions;
 }

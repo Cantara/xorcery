@@ -55,6 +55,62 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
               "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "attributes" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : {
+                "neo4j.transaction.active" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.transaction.active",
+                  "description" : "Default: neo4j.transaction.active"
+                },
+                "neo4j.transaction.committed" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.transaction.committed",
+                  "description" : "Default: neo4j.transaction.committed"
+                },
+                "neo4j.transaction.rolledback" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.transaction.rolledback",
+                  "description" : "Default: neo4j.transaction.rolledback"
+                },
+                "neo4j.transaction.peakConcurrent" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.transaction.peakConcurrent",
+                  "description" : "Default: neo4j.transaction.peakConcurrent"
+                },
+                "neo4j.checkpoint.count" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.checkpoint.count",
+                  "description" : "Default: neo4j.checkpoint.count"
+                },
+                "neo4j.checkpoint.flushed" : {
+                  "type" : "string",
+                  "default" : "neo4j.checkpoint.flushed",
+                  "description" : "Default: neo4j.checkpoint.flushed"
+                },
+                "neo4j.checkpoint.totalTime" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.checkpoint.totalTime",
+                  "description" : "Default: neo4j.checkpoint.totalTime"
+                },
+                "neo4j.pagecache.hits" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.pagecache.hits",
+                  "description" : "Default: neo4j.pagecache.hits"
+                },
+                "neo4j.pagecache.hitRatio" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.pagecache.hitRatio",
+                  "description" : "Default: neo4j.pagecache.hitRatio"
+                },
+                "neo4j.pagecache.flushes" : {
+                  "type" : [ "string", "null" ],
+                  "default" : "neo4j.pagecache.flushes",
+                  "description" : "Default: neo4j.pagecache.flushes"
+                }
+              }
             }
           }
         }

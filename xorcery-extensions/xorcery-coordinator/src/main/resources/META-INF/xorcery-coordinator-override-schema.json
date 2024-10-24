@@ -1728,6 +1728,22 @@
           "type" : "object",
           "additionalProperties" : false,
           "properties" : {
+            "local" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
+                },
+                "interval" : {
+                  "type" : "string",
+                  "default" : "10s",
+                  "description" : "Default: 10s"
+                }
+              }
+            },
             "logging" : {
               "type" : "object",
               "additionalProperties" : false,

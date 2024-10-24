@@ -29,6 +29,7 @@ import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.jvnet.hk2.annotations.Service;
 import org.neo4j.configuration.Config;
@@ -58,14 +59,12 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 
-@Service
-@Named(Neo4jService.SERVICE_TYPE)
-public class Neo4jService
+@Service(name="neo4jdatabase")
+@RunLevel(4)
+public class Neo4jDatabaseService
         implements Factory<GraphDatabase>, PreDestroy {
 
-    private static final Logger logger = LogManager.getLogger(Neo4jService.class);
-
-    public static final String SERVICE_TYPE = "neo4jdatabase";
+    private static final Logger logger = LogManager.getLogger(Neo4jDatabaseService.class);
 
     private final DatabaseManagementService managementService;
     private final GraphDatabase graphDatabase;
@@ -73,9 +72,9 @@ public class Neo4jService
     private final LoggerContext loggerContext;
 
     @Inject
-    public Neo4jService(ServiceLocator serviceLocator,
-                        Configuration configuration,
-                        LoggerContext loggerContext
+    public Neo4jDatabaseService(ServiceLocator serviceLocator,
+                                Configuration configuration,
+                                LoggerContext loggerContext
     ) throws IOException {
         this.loggerContext = loggerContext;
         Neo4jConfiguration neo4jConfiguration = new Neo4jConfiguration(configuration.getConfiguration("neo4jdatabase"));
@@ -257,7 +256,7 @@ public class Neo4jService
 
     @Override
     @Singleton
-    @Named(Neo4jService.SERVICE_TYPE)
+    @Named("neo4jdatabase")
     public GraphDatabase provide() {
         return graphDatabase;
     }
