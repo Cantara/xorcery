@@ -1,7 +1,9 @@
 package com.exoreaction.xorcery.neo4jprojections;
 
 import com.exoreaction.xorcery.configuration.Configuration;
+import com.exoreaction.xorcery.domainevents.api.DomainEvent;
 import com.exoreaction.xorcery.domainevents.api.DomainEventMetadata;
+import com.exoreaction.xorcery.domainevents.api.JsonDomainEvent;
 import com.exoreaction.xorcery.domainevents.api.MetadataEvents;
 import com.exoreaction.xorcery.neo4j.client.GraphDatabase;
 import com.exoreaction.xorcery.neo4jprojections.api.ProjectionStreamContext;
@@ -37,6 +39,7 @@ import reactor.util.context.ContextView;
 
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -172,15 +175,15 @@ public class Neo4jProjectionHandler
         private final ObservableLongGauge positionGauge;
         private final List<Neo4jEventProjection> projections;
         private final String projectionId;
-        long position = -1;
+        private final AtomicLong position = new AtomicLong(-1);
 
         public Handler(List<Neo4jEventProjection> projections, String projectionId, Attributes attributes, Meter meter, long currentPosition) {
             this.projections = projections;
             this.projectionId = projectionId;
-            this.position = currentPosition;
+            this.position.set(currentPosition);
             this.attributes = attributes;
             this.positionGauge = meter.gaugeBuilder("neo4j.projection.position")
-                    .ofLongs().setUnit("{count}").buildWithCallback(callback -> callback.record(position, attributes));
+                    .ofLongs().setUnit("{count}").buildWithCallback(callback -> callback.record(position.get(), attributes));
         }
 
         @Override
@@ -214,11 +217,11 @@ public class Neo4jProjectionHandler
                             double projectDuration = System.nanoTime() - startProjection;
                             projectionLatencyHistogram.record(projectDuration / 1_000_000_000.0, attributes);
 
-                            position = ((Number) metadataEvents
+                            position.set(((Number) metadataEvents
                                     .metadata()
                                     .getLong(DomainEventMetadata.streamPosition)
-                                    .orElse(position + eventsSize))
-                                    .longValue();
+                                    .orElse(position.get() + eventsSize))
+                                    .longValue());
                             long timestamp = ((Number) metadataEvents
                                     .metadata()
                                     .getLong(DomainEventMetadata.timestamp)
@@ -226,7 +229,7 @@ public class Neo4jProjectionHandler
                                     .longValue();
                             Map<String, Object> updateParameters = new HashMap<>();
                             updateParameters.put(Projection.projectionId.name(), projectionId);
-                            updateParameters.put(Projection.projectionPosition.name(), position);
+                            updateParameters.put(Projection.projectionPosition.name(), position.get());
                             updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
                             tx.execute("""
                                     MATCH (projection:Projection {id:$projectionId}) SET 
@@ -271,13 +274,38 @@ public class Neo4jProjectionHandler
 
                     maxEvents /= 2;
 
-                    if (maxEvents == 0) {
-                        logger.error("Transaction too large even with just one event, stopping projection");
-                        sink.error(e);
-                        return;
-                    } else {
-                        logger.warn("Transaction too large, trying again with smaller batch size:" + maxEvents);
-                        tx = database.beginTx();
+                    // Gather debug info
+                    {
+                        metadataEventsIterator = events.iterator();
+                        // Remove already processed items
+                        for (int i = 0; i < committed; i++) {
+                            metadataEventsIterator.next();
+                        }
+                        // Collect remaining command and event names
+                        Set<String> commandNames = new HashSet<>();
+                        Set<String> eventNames = new HashSet<>();
+                        int eventCount = 0;
+                        while (metadataEventsIterator.hasNext())
+                        {
+                            MetadataEvents event = metadataEventsIterator.next();
+                            event.metadata().getString("commandName").ifPresent(commandNames::add);
+                            for (DomainEvent domainEvent : event.data()) {
+                                if (domainEvent instanceof JsonDomainEvent jsonDomainEvent)
+                                {
+                                    eventNames.add(jsonDomainEvent.getName());
+                                    eventCount++;
+                                }
+                            }
+                        }
+
+                        if (maxEvents == 0) {
+                            logger.error("Transaction too large even with just one event, stopping projection");
+                            sink.error(e);
+                            return;
+                        } else {
+                            logger.warn("Transaction too large, trying again with smaller batch size:{}, position:{}, commands:{}, events:{}, event count:{}",maxEvents, position.get(), commandNames, eventNames, eventCount);
+                            tx = database.beginTx();
+                        }
                     }
                     metadataEventsIterator = events.iterator();
                     // Remove already processed items
