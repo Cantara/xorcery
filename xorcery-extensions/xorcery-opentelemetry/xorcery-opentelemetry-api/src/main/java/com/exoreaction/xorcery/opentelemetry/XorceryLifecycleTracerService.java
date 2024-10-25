@@ -39,7 +39,7 @@ public class XorceryLifecycleTracerService
 
             if (currentJob.isUp()) {
                 if (levelAchieved == -1) {
-                    startup = tracer.spanBuilder("server start")
+                    startup = tracer.spanBuilder("server started")
                             .setSpanKind(SpanKind.INTERNAL)
                             .setAttribute(AttributeKey.stringKey("server.configuration"), configuration.toString())
                             .startSpan();
@@ -50,7 +50,7 @@ public class XorceryLifecycleTracerService
                     ActiveDescriptor<?> activeDescriptor = service.getActiveDescriptor();
                     Class<?> implementationClass = activeDescriptor.getImplementationClass();
                     if (implementationClass.getAnnotation(RunLevel.class).value() == levelAchieved) {
-                        startup.addEvent("service start " + implementationClass.getAnnotation(Service.class).name());
+                        startup.addEvent("service started " + implementationClass.getAnnotation(Service.class).name());
                     }
                 });
 
@@ -59,7 +59,7 @@ public class XorceryLifecycleTracerService
                 }
             } else if (currentJob.isDown()) {
                 if (shutdown == null) {
-                    shutdown = tracer.spanBuilder("server stop")
+                    shutdown = tracer.spanBuilder("server stopped")
                             .setSpanKind(SpanKind.INTERNAL)
                             .startSpan();
                 }
@@ -69,7 +69,7 @@ public class XorceryLifecycleTracerService
                     ActiveDescriptor<?> activeDescriptor = service.getActiveDescriptor();
                     Class<?> implementationClass = activeDescriptor.getImplementationClass();
                     if (implementationClass.getAnnotation(RunLevel.class).value() == levelAchieved) {
-                        shutdown.addEvent("service stop " + implementationClass.getAnnotation(Service.class).name());
+                        shutdown.addEvent("service stopped " + implementationClass.getAnnotation(Service.class).name());
                     }
                 });
 
