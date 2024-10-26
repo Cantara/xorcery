@@ -18,5 +18,6 @@ neo4jdatabase:
       "neo4j.checkpoint.flushed": neo4j.checkpoint.flushed
       "neo4j.checkpoint.totalTime": neo4j.checkpoint.totalTime
       "neo4j.pagecache.hits": neo4j.pagecache.hits
+      "neo4j.pagecache.faults": neo4j.pagecache.faults
       "neo4j.pagecache.hitRatio": neo4j.pagecache.hitRatio
       "neo4j.pagecache.flushes": neo4j.pagecache.flushes

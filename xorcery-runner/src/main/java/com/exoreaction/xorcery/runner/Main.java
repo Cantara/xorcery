@@ -64,10 +64,7 @@ public class Main
             }
         }));
 
-        synchronized (xorcery)
-        {
-            xorcery.wait();
-        }
+        xorcery.getClosed().join();
         mainLogger.info("Shutdown");
         LogManager.shutdown();
 

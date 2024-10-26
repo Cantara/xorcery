@@ -39,7 +39,7 @@ public class XorceryLifecycleTracerService
 
             if (currentJob.isUp()) {
                 if (levelAchieved == -1) {
-                    startup = tracer.spanBuilder("server started")
+                    startup = tracer.spanBuilder("instance started")
                             .setSpanKind(SpanKind.INTERNAL)
                             .setAttribute(AttributeKey.stringKey("server.configuration"), configuration.toString())
                             .startSpan();
@@ -59,7 +59,7 @@ public class XorceryLifecycleTracerService
                 }
             } else if (currentJob.isDown()) {
                 if (shutdown == null) {
-                    shutdown = tracer.spanBuilder("server stopped")
+                    shutdown = tracer.spanBuilder("instance stopped")
                             .setSpanKind(SpanKind.INTERNAL)
                             .startSpan();
                 }
@@ -88,7 +88,7 @@ public class XorceryLifecycleTracerService
 
     @Override
     public void onError(RunLevelFuture currentJob, ErrorInformation errorInformation) {
-        Span startupFailed = tracer.spanBuilder("server failed")
+        Span startupFailed = tracer.spanBuilder("instance failed")
                 .setSpanKind(SpanKind.INTERNAL)
                 .setAttribute(AttributeKey.stringKey("server.configuration"), configuration.toString())
                 .startSpan();

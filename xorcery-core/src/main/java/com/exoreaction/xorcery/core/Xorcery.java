@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Xorcery run level values:
@@ -55,6 +56,7 @@ public final class Xorcery
 
     private final Logger logger;
     private final Marker marker;
+    private final CompletableFuture<Void> closed = new CompletableFuture<>();
 
     public Xorcery(Configuration configuration) throws Exception {
         this(configuration, null);
@@ -100,6 +102,8 @@ public final class Xorcery
             LoggerContext loggerContext = serviceLocator.getService(LoggerContext.class);
             xorceryLogger = loggerContext.getLogger(Xorcery.class);
             xorceryMarker = MarkerManager.getMarker(instanceConfiguration.getId());
+            this.logger = xorceryLogger;
+            this.marker = xorceryMarker;
             List<String> messages = ConfigurationLogger.getLogger().drain();
             if (xorceryLogger.isDebugEnabled()) {
                 for (String msg : messages) {
@@ -127,8 +131,6 @@ public final class Xorcery
             }
 
             xorceryLogger.info(xorceryMarker, "Started");
-            this.logger = xorceryLogger;
-            this.marker = xorceryMarker;
         } catch (MultiException e) {
             if (xorceryLogger != null && !xorceryLogger.isDebugEnabled()) {
                 List<ServiceHandle<?>> services = serviceLocator.getAllServiceHandles(configurationFilter);
@@ -150,17 +152,25 @@ public final class Xorcery
     public void close() {
 
         if (!serviceLocator.isShutdown()) {
-            logger.info(marker, "Stopping");
+            if (logger != null)
+                logger.info(marker, "Stopping");
             RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
             runLevelController.proceedTo(-1);
             serviceLocator.shutdown();
-            logger.info(marker, "Stopped");
+            if (logger != null)
+                logger.info(marker, "Stopped");
 
             // Notify anyone waiting for this instance to close
+            closed.complete(null);
             synchronized (this) {
                 this.notifyAll();
             }
         }
+    }
+
+    public CompletableFuture<Void> getClosed()
+    {
+        return closed;
     }
 
     private Filter getEnabledServicesFilter(Configuration configuration) {
