@@ -149,7 +149,8 @@ public final class Xorcery
         return serviceLocator;
     }
 
-    public void close() {
+    public void close(Throwable throwable)
+    {
 
         if (!serviceLocator.isShutdown()) {
             if (logger != null)
@@ -161,11 +162,18 @@ public final class Xorcery
                 logger.info(marker, "Stopped");
 
             // Notify anyone waiting for this instance to close
-            closed.complete(null);
+            if (throwable == null)
+                closed.complete(null);
+            else
+                closed.completeExceptionally(throwable);
             synchronized (this) {
                 this.notifyAll();
             }
         }
+    }
+
+    public void close() {
+        close(null);
     }
 
     public CompletableFuture<Void> getClosed()

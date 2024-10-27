@@ -28,11 +28,13 @@ open module xorcery.configuration {
     requires com.fasterxml.jackson.dataformat.javaprop;
     requires com.fasterxml.jackson.dataformat.yaml;
     requires org.apache.logging.log4j;
+    requires java.desktop;
 
     provides com.exoreaction.xorcery.configuration.spi.ConfigurationProvider with
             com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigurationProvider,
             com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider,
-            com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider;
+            com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider,
+            com.exoreaction.xorcery.configuration.providers.ResourceConfigurationProvider;
 
     provides com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider
             with com.exoreaction.xorcery.configuration.providers.ConfigurationResourceBundlesProvider;
