@@ -151,37 +151,34 @@ public final class Xorcery
     }
 
     public void close(Throwable throwable) {
-        CompletableFuture.runAsync(() ->
-        {
-            synchronized (this) {
-                if (!serviceLocator.isShutdown()) {
-                    if (logger != null)
-                        logger.info(marker, "Stopping");
-                    RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
-                    RunLevelFuture currentProceeding = runLevelController.getCurrentProceeding();
-                    if (currentProceeding != null)
-                    {
-                        // Wait for current to finish
-                        try {
-                            currentProceeding.get();
-                        } catch (Throwable t) {
-                            // Ignore
-                        }
+        synchronized (this) {
+            if (!closed.isDone()) {
+                if (logger != null)
+                    logger.info(marker, "Stopping");
+                RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
+                RunLevelFuture currentProceeding = runLevelController.getCurrentProceeding();
+                if (currentProceeding != null)
+                {
+                    // Wait for current to finish
+                    try {
+                        currentProceeding.get();
+                    } catch (Throwable t) {
+                        // Ignore
                     }
-                    runLevelController.proceedTo(-1);
-                    serviceLocator.shutdown();
-                    if (logger != null)
-                        logger.info(marker, "Stopped");
-
-                    // Notify anyone waiting for this instance to close
-                    if (throwable == null)
-                        closed.complete(null);
-                    else
-                        closed.completeExceptionally(throwable);
-                    this.notifyAll();
                 }
+                runLevelController.proceedTo(-1);
+                serviceLocator.shutdown();
+                if (logger != null)
+                    logger.info(marker, "Stopped");
+
+                // Notify anyone waiting for this instance to close
+                if (throwable == null)
+                    closed.complete(null);
+                else
+                    closed.completeExceptionally(throwable);
+                this.notifyAll();
             }
-        });
+        }
     }
 
     public void close() {
