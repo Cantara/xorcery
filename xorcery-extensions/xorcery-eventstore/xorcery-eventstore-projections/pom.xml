@@ -21,7 +21,7 @@
     <parent>
         <groupId>com.exoreaction.xorcery</groupId>
         <artifactId>xorcery-eventstore</artifactId>
-        <version>0.132.3</version>
+        <version>0.132.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-eventstore-projections</artifactId>
