@@ -41,7 +41,7 @@
         <hk2.version>3.1.1</hk2.version>
         <jakartaee.version>9.0.0-RC3</jakartaee.version>
         <javax.activation.version>1.2.0</javax.activation.version>
-        <jackson.version>2.18.0</jackson.version>
+        <jackson.version>2.18.1</jackson.version>
         <asm.version>9.7.1</asm.version>
         <projectreactor.version>2023.0.11</projectreactor.version>
         <aws.java.sdk.version>2.29.2</aws.java.sdk.version>
