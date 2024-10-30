@@ -100,7 +100,6 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
     private final Logger logger;
     private final Marker marker;
-    private final Span span;
     private final Tracer tracer;
     private final TextMapPropagator textMapPropagator;
 
@@ -207,15 +206,10 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
 
-        span = tracer.spanBuilder(serverUri.toASCIIString() + " client")
-                .setSpanKind(SpanKind.CLIENT)
-                .setAllAttributes(attributes)
-                .startSpan();
-
         downstreamSink.onCancel(this::upstreamCancel);
 // TODO Should we handle this callback? downstreamSink.onDispose(someCallback);
 
-        try (Scope scope = span.makeCurrent()) {
+        try {
             start();
         } catch (CompletionException e) {
             if (e.getCause() instanceof RuntimeException re)
@@ -466,6 +460,14 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
         this.session = session;
 
+        tracer.spanBuilder("stream " + subProtocol + " connected " + serverUri.toASCIIString())
+                .setSpanKind(SpanKind.CLIENT)
+                .setAllAttributes(attributes)
+                .startSpan()
+                .setAttribute("server", session.getRemoteSocketAddress().toString())
+                .setAttribute("client", session.getLocalSocketAddress().toString())
+                .end();
+
         String serverContentType = session.getUpgradeResponse().getHeader(HttpHeader.CONTENT_TYPE.asString());
         String serverAcceptType = session.getUpgradeResponse().getHeader(HttpHeader.ACCEPT.asString());
         switch (subProtocol) {
@@ -714,7 +716,16 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 sink.error(new ServerStreamException(statusCode, reason, error));
             }
         }
-        span.end();
+
+        tracer.spanBuilder("stream " + subProtocol + " disconnected " + serverUri.toASCIIString())
+                .setSpanKind(SpanKind.CLIENT)
+                .setAllAttributes(attributes)
+                .startSpan()
+                .setAttribute("reason", reason)
+                .setAttribute("statusCode", statusCode)
+                .setAttribute("server", session.getRemoteSocketAddress().toString())
+                .setAttribute("client", session.getLocalSocketAddress().toString())
+                .end();
     }
 
     private void upstreamCancel() {

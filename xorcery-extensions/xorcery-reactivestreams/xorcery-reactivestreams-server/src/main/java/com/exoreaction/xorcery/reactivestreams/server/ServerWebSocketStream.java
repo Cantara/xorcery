@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -97,7 +96,6 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
     private final AtomicLong connectionCounter;
     private final Context requestContext;
-    private final Span span;
 
     private final ByteBufferPool byteBufferPool;
 
@@ -179,11 +177,6 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 .setUnit("{request}").ofLongs().build();
         this.flushHistogram = writer == null ? null : meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
-        this.span = tracer.spanBuilder(path + " server")
-                .setParent(requestContext)
-                .setSpanKind(SpanKind.SERVER)
-                .setAllAttributes(attributes)
-                .startSpan();
     }
 
     private void upstreamCancel() {
@@ -347,6 +340,15 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         this.session = session;
         session.setMaxOutgoingFrames(options.maxOutgoingFrames());
         connectionCounter.incrementAndGet();
+
+        tracer.spanBuilder("stream "+requestSubProtocol+" connected "+path)
+                .setParent(requestContext)
+                .setSpanKind(SpanKind.SERVER)
+                .setAllAttributes(attributes)
+                .startSpan()
+                .setAttribute("remote", session.getRemoteSocketAddress().toString())
+                .setAttribute("local", session.getLocalSocketAddress().toString())
+                .end();
     }
 
     @Override
@@ -499,7 +501,16 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             if (upstream != null)
                 upstream.cancel();
         } finally {
-            span.end();
+            tracer.spanBuilder("stream "+requestSubProtocol+" disconnected "+path)
+                    .setParent(requestContext)
+                    .setSpanKind(SpanKind.SERVER)
+                    .setAllAttributes(attributes)
+                    .startSpan()
+                    .setAttribute("reason", reason)
+                    .setAttribute("statusCode", statusCode)
+                    .setAttribute("client", session.getRemoteSocketAddress().toString())
+                    .setAttribute("server", session.getLocalSocketAddress().toString())
+                    .end();
             connectionCounter.decrementAndGet();
         }
     }
