@@ -57,7 +57,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                         }
                     }
                 } catch (Throwable e) {
-                    getLog().error(e);
+                    getLog().error("Could not read schema from "+dependency.getFile().toString(), e);
                 }
             }
 
