@@ -19,6 +19,7 @@ import com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
 import com.exoreaction.xorcery.util.Resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,8 +34,8 @@ import java.util.function.Function;
 public class ResourceConfigurationProvider
         implements ConfigurationProvider {
 
-    private final JsonMapper jsonMapper = new JsonMapper();
-    private final YAMLMapper yamlMapper = new YAMLMapper();
+    private final ObjectMapper jsonMapper = new JsonMapper().findAndRegisterModules();
+    private final ObjectMapper yamlMapper = new YAMLMapper().findAndRegisterModules();
 
     @Override
     public String getNamespace() {

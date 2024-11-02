@@ -42,6 +42,7 @@ public class WithMetadataMessageReaderFactory
 
     public WithMetadataMessageReaderFactory(Supplier<MessageWorkers> messageWorkers) {
         jsonMapper = new JsonMapper()
+                .findAndRegisterModules()
                 .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.messageWorkers = messageWorkers;

@@ -18,6 +18,7 @@ package com.exoreaction.xorcery.reactivestreams.util;
 import com.exoreaction.xorcery.metadata.Metadata;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,7 +35,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public interface ReactiveStreams {
-    JsonMapper jsonMapper = new JsonMapper();
+    ObjectMapper jsonMapper = new JsonMapper().findAndRegisterModules();
 
     static <T> BiConsumer<T, Throwable> onErrorDispose(Disposable disposable) {
         return (v, t) ->

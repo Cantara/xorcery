@@ -685,6 +685,11 @@
                   "default" : "neo4j.pagecache.hits",
                   "description" : "Default: neo4j.pagecache.hits"
                 },
+                "neo4j.pagecache.faults" : {
+                  "type" : "string",
+                  "default" : "neo4j.pagecache.faults",
+                  "description" : "Default: neo4j.pagecache.faults"
+                },
                 "neo4j.pagecache.hitRatio" : {
                   "type" : [ "string", "null" ],
                   "default" : "neo4j.pagecache.hitRatio",

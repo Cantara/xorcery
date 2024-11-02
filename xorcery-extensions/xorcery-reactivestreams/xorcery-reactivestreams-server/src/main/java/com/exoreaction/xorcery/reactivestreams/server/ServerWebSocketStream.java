@@ -10,6 +10,7 @@ import com.exoreaction.xorcery.reactivestreams.api.server.ServerWebSocketOptions
 import com.exoreaction.xorcery.reactivestreams.spi.MessageReader;
 import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NumericNode;
@@ -63,7 +64,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         extends BaseSubscriber<OUTPUT>
         implements Session.Listener.AutoDemanding {
 
-    private final static JsonMapper jsonMapper = new JsonMapper();
+    private final static ObjectMapper jsonMapper = new JsonMapper().findAndRegisterModules();
 
     private final static long CANCEL = Long.MIN_VALUE;
     private final static long COMPLETE = -1L;

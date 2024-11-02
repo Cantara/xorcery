@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ReadStreamSubscription
         extends SubscriptionListener {
 
-    private static final JsonMapper jsonMapper = new JsonMapper();
+    private static final JsonMapper jsonMapper = (JsonMapper) new JsonMapper().findAndRegisterModules();
 
     private final EventStoreDBClient client;
     private final FluxSink<MetadataByteBuffer> sink;

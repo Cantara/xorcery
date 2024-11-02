@@ -15,6 +15,7 @@ import com.exoreaction.xorcery.reactivestreams.spi.MessageWriter;
 import com.exoreaction.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NumericNode;
@@ -77,7 +78,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
             (carrier, key, value) -> carrier.setHeader(key, value);
 
-    private final static JsonMapper jsonMapper = new JsonMapper();
+    private final static ObjectMapper jsonMapper = new JsonMapper().findAndRegisterModules();
 
     private final static long CANCEL = Long.MIN_VALUE;
     private final static long COMPLETE = -1L;

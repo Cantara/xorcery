@@ -43,6 +43,8 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
             JsonMapper jsonMapper = new JsonMapper();
             JsonMerger jsonMerger = new JsonMerger();
             for (Artifact dependency : dependencies) {
+                if (!dependency.getFile().getName().endsWith(".jar"))
+                    continue;
                 try (JarFile jarFile = new JarFile(dependency.getFile())) {
                     ZipEntry zipEntry = jarFile.getEntry("META-INF/"+dependency.getArtifactId()+"-schema.json");
                     if (zipEntry != null) {

@@ -5,6 +5,7 @@ import com.exoreaction.xorcery.reactivestreams.api.ContextViewElement;
 import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
 import com.exoreaction.xorcery.reactivestreams.api.ReactiveStreamsContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -26,7 +27,7 @@ import static com.exoreaction.xorcery.reactivestreams.api.ContextViewElement.mis
 
 class BaseAppendHandler {
 
-    static final JsonMapper jsonMapper = new JsonMapper();
+    static final ObjectMapper jsonMapper = new JsonMapper().findAndRegisterModules();
 
     final EventStoreDBClient client;
     final Consumer<AppendToStreamOptions> options;

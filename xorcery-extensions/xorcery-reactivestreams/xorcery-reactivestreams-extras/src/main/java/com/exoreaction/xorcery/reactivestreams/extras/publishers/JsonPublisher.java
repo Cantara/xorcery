@@ -15,7 +15,7 @@ import java.net.URL;
 public class JsonPublisher<T>
         implements Publisher<T> {
 
-    private static final ObjectReader jsonReader = new JsonMapper().reader();
+    private static final ObjectReader jsonReader = new JsonMapper().findAndRegisterModules().reader();
     private final Class<? super T> itemType;
 
     public JsonPublisher(Class<? super T> itemType) {

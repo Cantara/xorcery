@@ -48,7 +48,7 @@ public class GraphQLAPIResource
         extends BaseResource
         implements JsonApiResource, JsonSchemaResource {
 
-    private static final JsonMapper jsonMapper = new JsonMapper();
+    private static final JsonMapper jsonMapper = (JsonMapper) new JsonMapper().findAndRegisterModules();
 
     private final GraphQLSchemas graphQLSchemas;
 

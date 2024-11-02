@@ -33,7 +33,10 @@ public class JsonMessageReaderFactory implements MessageReader.Factory {
     private final ObjectMapper jsonMapper;
 
     public JsonMessageReaderFactory() {
-        jsonMapper = new JsonMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        jsonMapper = new JsonMapper()
+                .findAndRegisterModules()
+                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
