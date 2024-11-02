@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.certificates.client {
-    exports com.exoreaction.xorcery.certificates.client;
-    exports com.exoreaction.xorcery.certificates.client.resources;
+    exports dev.xorcery.certificates.client;
+    exports dev.xorcery.certificates.client.resources;
 
     requires xorcery.certificates.spi;
     requires xorcery.jetty.client;

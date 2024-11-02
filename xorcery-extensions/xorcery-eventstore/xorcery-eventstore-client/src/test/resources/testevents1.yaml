@@ -6,8 +6,7 @@
     tenant: "1234"
   data:
     #Test Value as attribute
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedAddress"
+    - event: "UpdatedAddress"
       created:
         type: "Person"
         id: "1234"
@@ -27,15 +26,13 @@
     aggregateType: "Tenant"
     tenant: "1234"
   data:
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedName"
+    - event: "UpdatedName"
       updated:
         type: "Person"
         id: "1234"
       attributes:
         name: "John Smith"
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedEmail"
+    - event: "UpdatedEmail"
       updated:
         type: "Person"
         id: "1234"
@@ -49,8 +46,7 @@
     tenant: "1234"
   data:
     #Test update Value as attribute
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedAddress"
+    - event: "UpdatedAddress"
       updated:
         type: "Person"
         id: "1234"

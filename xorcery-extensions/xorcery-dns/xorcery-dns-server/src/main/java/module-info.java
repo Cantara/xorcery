@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 module xorcery.dns.server {
-    exports com.exoreaction.xorcery.dns.server;
-    exports com.exoreaction.xorcery.dns.server.tcp;
-    exports com.exoreaction.xorcery.dns.server.udp;
+    exports dev.xorcery.dns.server;
+    exports dev.xorcery.dns.server.tcp;
+    exports dev.xorcery.dns.server.udp;
 
     requires xorcery.configuration.api;
     requires xorcery.jsonapi.api;

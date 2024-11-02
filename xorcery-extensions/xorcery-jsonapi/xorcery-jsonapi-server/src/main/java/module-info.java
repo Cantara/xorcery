@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 module xorcery.jsonapi.server {
-    exports com.exoreaction.xorcery.jsonapi.server.providers;
-    exports com.exoreaction.xorcery.jsonapi.server.resources;
-    exports com.exoreaction.xorcery.jsonschema.server.annotations;
-    exports com.exoreaction.xorcery.jsonschema.server.resources;
+    exports dev.xorcery.jsonapi.server.providers;
+    exports dev.xorcery.jsonapi.server.resources;
+    exports dev.xorcery.jsonschema.server.annotations;
+    exports dev.xorcery.jsonschema.server.resources;
 
     requires transitive xorcery.jsonapi.api;
     requires xorcery.jsonapi.service;

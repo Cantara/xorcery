@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.exoreaction.xorcery</groupId>
+        <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-domainevents</artifactId>
         <version>0.132.6-SNAPSHOT</version>
     </parent>
@@ -29,27 +29,27 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-domainevents-publisher</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-domainevents-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-metadata</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-neo4j-embedded</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-neo4j-projections</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-json</artifactId>
         </dependency>
 

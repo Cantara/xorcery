@@ -7,5 +7,5 @@ jetty:
         constraint: "{{ defaults.development ? null | \"admin\"}}"
 
 jersey.server.register:
-  - com.exoreaction.xorcery.status.api.StatusResource
-  - com.exoreaction.xorcery.status.api.StatusProviderResource
+  - dev.xorcery.status.api.StatusResource
+  - dev.xorcery.status.api.StatusProviderResource

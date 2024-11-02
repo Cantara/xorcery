@@ -1,5 +1,5 @@
 {
-  "$id" : "http://xorcery.exoreaction.com/applications/com.exoreaction.xorcery/xorcery-opentelemetry-log4j/override-schema",
+  "$id" : "http://xorcery.exoreaction.com/applications/dev.xorcery/xorcery-opentelemetry-log4j/override-schema",
   "title" : "xorcery-opentelemetry-log4j configuration override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",

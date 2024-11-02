@@ -1,5 +1,5 @@
 module xorcery.dns.update.routefiftythree {
-    exports com.exoreaction.xorcery.dns.update.route53;
+    exports dev.xorcery.dns.update.route53;
 
     requires xorcery.configuration.api;
     requires xorcery.dns.update;

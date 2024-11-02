@@ -1,6 +1,6 @@
 module xorcery.eventstore.client {
-    exports com.exoreaction.xorcery.eventstore;
-    exports com.exoreaction.xorcery.eventstore.client.api;
+    exports dev.xorcery.eventstore;
+    exports dev.xorcery.eventstore.client.api;
 
     requires xorcery.util;
     requires xorcery.metadata;

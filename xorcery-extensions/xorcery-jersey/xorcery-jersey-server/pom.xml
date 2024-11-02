@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.exoreaction.xorcery</groupId>
+        <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-jersey</artifactId>
         <version>0.132.6-SNAPSHOT</version>
     </parent>
@@ -34,15 +34,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-jetty-server</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-util</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-configuration-api</artifactId>
         </dependency>
 
@@ -85,7 +85,7 @@
 
         <!-- Testing -->
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-junit</artifactId>
 
             <scope>test</scope>

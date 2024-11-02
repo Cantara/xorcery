@@ -19,7 +19,7 @@
  */
 
 module xorcery.opentelemetry.log4j {
-    exports com.exoreaction.xorcery.opentelemetry.log4j;
+    exports dev.xorcery.opentelemetry.log4j;
 
     requires xorcery.opentelemetry.api;
 

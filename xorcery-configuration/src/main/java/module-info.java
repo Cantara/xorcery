@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 open module xorcery.configuration {
-    uses com.exoreaction.xorcery.configuration.spi.ConfigurationProvider;
-    uses com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvider;
-    exports com.exoreaction.xorcery.configuration.builder;
-    exports com.exoreaction.xorcery.configuration.providers;
-    exports com.exoreaction.xorcery.configuration.spi;
+    uses dev.xorcery.configuration.spi.ConfigurationProvider;
+    uses dev.xorcery.configuration.spi.ResourceBundleTranslationProvider;
+    exports dev.xorcery.configuration.builder;
+    exports dev.xorcery.configuration.providers;
+    exports dev.xorcery.configuration.spi;
 
     requires transitive xorcery.configuration.api;
 
@@ -30,12 +30,12 @@ open module xorcery.configuration {
     requires org.apache.logging.log4j;
     requires java.desktop;
 
-    provides com.exoreaction.xorcery.configuration.spi.ConfigurationProvider with
-            com.exoreaction.xorcery.configuration.providers.SystemPropertiesConfigurationProvider,
-            com.exoreaction.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider,
-            com.exoreaction.xorcery.configuration.providers.CalculatedConfigurationProvider,
-            com.exoreaction.xorcery.configuration.providers.ResourceConfigurationProvider;
+    provides dev.xorcery.configuration.spi.ConfigurationProvider with
+            dev.xorcery.configuration.providers.SystemPropertiesConfigurationProvider,
+            dev.xorcery.configuration.providers.EnvironmentVariablesConfigurationProvider,
+            dev.xorcery.configuration.providers.CalculatedConfigurationProvider,
+            dev.xorcery.configuration.providers.ResourceConfigurationProvider;
 
-    provides com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider
-            with com.exoreaction.xorcery.configuration.providers.ConfigurationResourceBundlesProvider;
+    provides dev.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider
+            with dev.xorcery.configuration.providers.ConfigurationResourceBundlesProvider;
 }

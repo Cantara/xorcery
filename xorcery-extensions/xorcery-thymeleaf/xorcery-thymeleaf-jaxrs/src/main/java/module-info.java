@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 module xorcery.thymeleaf.jaxrs {
-    exports com.exoreaction.xorcery.thymeleaf;
-    exports com.exoreaction.xorcery.thymeleaf.providers;
-    exports com.exoreaction.xorcery.thymeleaf.resources;
+    exports dev.xorcery.thymeleaf;
+    exports dev.xorcery.thymeleaf.providers;
+    exports dev.xorcery.thymeleaf.resources;
 
     requires xorcery.configuration.api;
     requires xorcery.jaxrs.server;

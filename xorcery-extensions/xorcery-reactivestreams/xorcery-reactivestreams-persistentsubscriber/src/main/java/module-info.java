@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 module xorcery.reactivestreams.persistentsubscriber {
-    exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber;
-    exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.spi;
-    exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.providers;
-    exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.filter;
+    exports dev.xorcery.reactivestreams.persistentsubscriber;
+    exports dev.xorcery.reactivestreams.persistentsubscriber.spi;
+    exports dev.xorcery.reactivestreams.persistentsubscriber.providers;
+    exports dev.xorcery.reactivestreams.persistentsubscriber.filter;
 
     requires xorcery.reactivestreams.client;
     requires xorcery.configuration.api;

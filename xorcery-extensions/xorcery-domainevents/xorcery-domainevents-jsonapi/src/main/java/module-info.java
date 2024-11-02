@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.domainevents.jsonapi {
-    exports com.exoreaction.xorcery.domainevents.jsonapi.resources;
+    exports dev.xorcery.domainevents.jsonapi.resources;
 
     requires transitive xorcery.jsonapi.server;
     requires transitive xorcery.metadata;

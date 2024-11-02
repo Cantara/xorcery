@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.keystores {
-    exports com.exoreaction.xorcery.keystores;
-    exports com.exoreaction.xorcery.keystores.providers;
+    exports dev.xorcery.keystores;
+    exports dev.xorcery.keystores.providers;
 
     requires xorcery.configuration.api;
     requires xorcery.secrets.api;

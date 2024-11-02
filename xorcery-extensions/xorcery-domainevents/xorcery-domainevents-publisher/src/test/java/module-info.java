@@ -1,6 +1,6 @@
 open module xorcery.domainevents.publisher.test {
 
-    exports com.exoreaction.xorcery.domainevents.test.context;
+    exports dev.xorcery.domainevents.test.context;
 
     requires xorcery.domainevents.publisher;
     requires xorcery.configuration;

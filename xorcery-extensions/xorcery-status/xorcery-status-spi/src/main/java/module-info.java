@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.status.spi {
-    exports com.exoreaction.xorcery.status.spi;
+    exports dev.xorcery.status.spi;
 
     requires transitive xorcery.jsonapi.api;
 

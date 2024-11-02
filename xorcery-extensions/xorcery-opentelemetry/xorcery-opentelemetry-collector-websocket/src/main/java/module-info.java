@@ -1,7 +1,7 @@
 module xorcery.opentelemetry.collector.websocket {
-    exports com.exoreaction.xorcery.opentelemetry.collectors.websocket.attach;
-    exports com.exoreaction.xorcery.opentelemetry.collectors.websocket.listen;
-    exports com.exoreaction.xorcery.opentelemetry.collectors.websocket;
+    exports dev.xorcery.opentelemetry.collectors.websocket.attach;
+    exports dev.xorcery.opentelemetry.collectors.websocket.listen;
+    exports dev.xorcery.opentelemetry.collectors.websocket;
 
     requires org.apache.logging.log4j;
     requires xorcery.reactivestreams.api;

@@ -19,7 +19,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.exoreaction.xorcery</groupId>
+    <groupId>dev.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
     <version>0.132.6-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -98,390 +98,390 @@
         <dependencies>
             <!-- Xorcery dependencies -->
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-admin-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-aws-auth</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-ca</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-letsencrypt</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-provisioning</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-validation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-coordinator</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-multicast</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-registration</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-update</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-update-route53</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-jsonapi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-neo4jprojection</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-publisher</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-eventstore-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-eventstore-projections</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-eventstore-jsonapi</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-disruptor</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-health-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-health-registry</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jaxrs-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jersey-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jersey-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jetty-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jetty-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-jaxrs</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-server-neo4j</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonschema</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-junit</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jwt-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-log4j</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-collector-websocket</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-exporter-websocket</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-sdk</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-log4j</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jvm</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jersey-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jmx</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-system</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-keystores</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-metadata</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-status-jmx</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-neo4j-embedded</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-neo4j-projections</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-neo4j-browser</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opensearch-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-extras</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-runner</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-secrets-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-secrets-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-secrets-aws</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-status-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-status-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-thymeleaf-jaxrs</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-thymeleaf-jsonapi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-translation-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-translation-deepl</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-util</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1030,7 +1030,7 @@
                 </plugin>
 <!--
                 <plugin>
-                    <groupId>com.exoreaction.xorcery</groupId>
+                    <groupId>dev.xorcery</groupId>
                     <artifactId>xorcery-translation-resourcebundle-maven-plugin</artifactId>
                     <version>0.127.3</version>
                 </plugin>
@@ -1064,9 +1064,11 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.8.1</version>
             </plugin>
+<!--
             <plugin>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
+                <version>0.132.5</version>
                 <executions>
                     <execution>
                         <id>generate-jsonschema</id>
@@ -1077,6 +1079,7 @@
                     </execution>
                 </executions>
             </plugin>
+-->
         </plugins>
     </build>
 
@@ -1138,7 +1141,7 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.exoreaction.xorcery</groupId>
+                        <groupId>dev.xorcery</groupId>
                         <artifactId>xorcery-translation-resourcebundle-maven-plugin</artifactId>
                         <executions>
                             <execution>

@@ -15,7 +15,7 @@
  */
 module xorcery.opentelemetry.system {
 
-    exports com.exoreaction.xorcery.opentelemetry.system;
+    exports dev.xorcery.opentelemetry.system;
 
     requires xorcery.configuration.api;
 

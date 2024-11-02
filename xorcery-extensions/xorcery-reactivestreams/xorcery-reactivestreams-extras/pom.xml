@@ -19,7 +19,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.exoreaction.xorcery</groupId>
+        <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-reactivestreams</artifactId>
         <version>0.132.6-SNAPSHOT</version>
     </parent>
@@ -28,15 +28,15 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-dns-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-jetty-client</artifactId>
         </dependency>
 
@@ -59,17 +59,17 @@
         </dependency>
 
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-server</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-client</artifactId>
             <scope>test</scope>
         </dependency>

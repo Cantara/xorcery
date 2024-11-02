@@ -1,5 +1,5 @@
 module xorcery.configuration.validation {
-    exports com.exoreaction.xorcery.configuration.validation;
+    exports dev.xorcery.configuration.validation;
 
     requires xorcery.configuration.api;
 

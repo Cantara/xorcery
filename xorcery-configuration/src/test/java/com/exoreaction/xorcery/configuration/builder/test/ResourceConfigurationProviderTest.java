@@ -1,7 +1,7 @@
-package com.exoreaction.xorcery.configuration.builder.test;
+package dev.xorcery.configuration.builder.test;
 
-import com.exoreaction.xorcery.configuration.Configuration;
-import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
+import dev.xorcery.configuration.Configuration;
+import dev.xorcery.configuration.builder.ConfigurationBuilder;
 import org.junit.jupiter.api.Test;
 
 public class ResourceConfigurationProviderTest {

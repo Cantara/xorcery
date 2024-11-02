@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.health.registry {
-    exports com.exoreaction.xorcery.health.registry;
+    exports dev.xorcery.health.registry;
 
     requires xorcery.configuration.api;
     requires transitive xorcery.health.api;

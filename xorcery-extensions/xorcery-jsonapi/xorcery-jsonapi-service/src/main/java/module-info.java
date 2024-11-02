@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.jsonapi.service {
-    exports com.exoreaction.xorcery.jsonapi.service;
+    exports dev.xorcery.jsonapi.service;
 
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.jsonapi.api;

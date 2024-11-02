@@ -7,4 +7,4 @@ keystores:
     password: "{{ keystores.defaultPassword }}"
 
 jersey.server.register:
-  - com.exoreaction.xorcery.certificates.letsencrypt.resources.HttpChallengeResource
+  - dev.xorcery.certificates.letsencrypt.resources.HttpChallengeResource

@@ -1,10 +1,10 @@
 $schema: xorcery-jsonapi-jaxrs-override-schema.json
 jersey.server.register:
-    - com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyWriter
-    - com.exoreaction.xorcery.jsonapi.providers.JsonElementMessageBodyReader
-    - com.exoreaction.xorcery.jsonapi.providers.JsonNodeMessageBodyWriter
-    - com.exoreaction.xorcery.jsonapi.providers.JsonNodeMessageBodyReader
-    - com.exoreaction.xorcery.jsonapi.providers.JsonMessageBodyWriter
-    - com.exoreaction.xorcery.jsonapi.providers.JsonMessageBodyReader
-    - com.exoreaction.xorcery.jsonapi.providers.ByteBufferMessageBodyWriter
-    - com.exoreaction.xorcery.jsonapi.providers.ByteBufferMessageBodyReader
+    - dev.xorcery.jsonapi.providers.JsonElementMessageBodyWriter
+    - dev.xorcery.jsonapi.providers.JsonElementMessageBodyReader
+    - dev.xorcery.jsonapi.providers.JsonNodeMessageBodyWriter
+    - dev.xorcery.jsonapi.providers.JsonNodeMessageBodyReader
+    - dev.xorcery.jsonapi.providers.JsonMessageBodyWriter
+    - dev.xorcery.jsonapi.providers.JsonMessageBodyReader
+    - dev.xorcery.jsonapi.providers.ByteBufferMessageBodyWriter
+    - dev.xorcery.jsonapi.providers.ByteBufferMessageBodyReader

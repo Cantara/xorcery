@@ -19,7 +19,7 @@
  */
 
 module xorcery.opentelemetry.jersey.server {
-    exports com.exoreaction.xorcery.opentelemetry.jersey.server.resources;
+    exports dev.xorcery.opentelemetry.jersey.server.resources;
 
     requires io.opentelemetry.api;
     requires io.opentelemetry.context;

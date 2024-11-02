@@ -9,4 +9,4 @@ keystores:
     password: "{{ keystores.defaultPassword }}"
 
 jersey.server.register:
-  - com.exoreaction.xorcery.certificates.ca.resources.CertificateAuthorityResource
+  - dev.xorcery.certificates.ca.resources.CertificateAuthorityResource

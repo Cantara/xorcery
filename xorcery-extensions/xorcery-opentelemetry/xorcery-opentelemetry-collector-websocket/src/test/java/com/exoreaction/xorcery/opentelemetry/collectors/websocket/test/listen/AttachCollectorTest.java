@@ -1,10 +1,10 @@
-package com.exoreaction.xorcery.opentelemetry.collectors.websocket.test.listen;
+package dev.xorcery.opentelemetry.collectors.websocket.test.listen;
 
-import com.exoreaction.xorcery.configuration.builder.ConfigurationBuilder;
-import com.exoreaction.xorcery.junit.XorceryExtension;
-import com.exoreaction.xorcery.opentelemetry.collectors.websocket.WebsocketCollectorService;
-import com.exoreaction.xorcery.opentelemetry.collectors.websocket.attach.AttachCollectorService;
-import com.exoreaction.xorcery.reactivestreams.api.MetadataByteBuffer;
+import dev.xorcery.configuration.builder.ConfigurationBuilder;
+import dev.xorcery.junit.XorceryExtension;
+import dev.xorcery.opentelemetry.collectors.websocket.WebsocketCollectorService;
+import dev.xorcery.opentelemetry.collectors.websocket.attach.AttachCollectorService;
+import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import org.apache.logging.log4j.spi.LoggerContext;

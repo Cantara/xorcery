@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 open module xorcery.core {
-    exports com.exoreaction.xorcery.core;
+    exports dev.xorcery.core;
 
     requires transitive xorcery.configuration.api;
     requires transitive jakarta.inject;

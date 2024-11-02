@@ -44,7 +44,7 @@
   "properties": {
     "@class": {
       "type": "string",
-      "const": "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent",
+      "const": "dev.xorcery.domainevents.api.JsonDomainEvent",
       "description": "Java class to use for deserialization"
     },
     "event": {

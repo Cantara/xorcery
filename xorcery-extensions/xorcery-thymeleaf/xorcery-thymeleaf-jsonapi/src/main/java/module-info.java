@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.thymeleaf.jsonapi {
-    exports com.exoreaction.xorcery.thymeleaf.jsonapi.resources;
-    exports com.exoreaction.xorcery.thymeleaf.jsonapi.providers;
+    exports dev.xorcery.thymeleaf.jsonapi.resources;
+    exports dev.xorcery.thymeleaf.jsonapi.providers;
 
     requires xorcery.configuration.api;
     requires xorcery.jsonapi.server;

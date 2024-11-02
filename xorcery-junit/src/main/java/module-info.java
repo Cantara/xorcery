@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.junit {
-    exports com.exoreaction.xorcery.junit;
+    exports dev.xorcery.junit;
 
     requires transitive xorcery.configuration.api;
     requires transitive xorcery.configuration;

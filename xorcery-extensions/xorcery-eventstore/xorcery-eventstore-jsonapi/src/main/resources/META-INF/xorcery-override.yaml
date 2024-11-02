@@ -2,5 +2,5 @@ $schema: xorcery-eventstore-jsonapi-override-schema.json
 jersey:
   server:
     register:
-      - com.exoreaction.xorcery.eventstore.resources.EventStoreResource
-      - com.exoreaction.xorcery.eventstore.resources.StreamResource
+      - dev.xorcery.eventstore.resources.EventStoreResource
+      - dev.xorcery.eventstore.resources.StreamResource

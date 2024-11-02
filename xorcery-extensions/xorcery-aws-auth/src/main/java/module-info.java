@@ -1,5 +1,5 @@
 module xorcery.aws.auth {
-    exports com.exoreaction.xorcery.aws.auth;
+    exports dev.xorcery.aws.auth;
 
     requires xorcery.configuration.api;
 

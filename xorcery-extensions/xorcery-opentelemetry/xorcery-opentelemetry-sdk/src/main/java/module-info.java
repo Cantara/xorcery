@@ -15,12 +15,12 @@
  */
 module xorcery.opentelemetry.sdk {
 
-    exports com.exoreaction.xorcery.opentelemetry.sdk;
-    exports com.exoreaction.xorcery.opentelemetry.exporters.jmx;
-    exports com.exoreaction.xorcery.opentelemetry.exporters.local;
-    exports com.exoreaction.xorcery.opentelemetry.exporters.logging;
-    exports com.exoreaction.xorcery.opentelemetry.exporters.otlphttp;
-    exports com.exoreaction.xorcery.opentelemetry.exporters.otlphttp.jdk;
+    exports dev.xorcery.opentelemetry.sdk;
+    exports dev.xorcery.opentelemetry.exporters.jmx;
+    exports dev.xorcery.opentelemetry.exporters.local;
+    exports dev.xorcery.opentelemetry.exporters.logging;
+    exports dev.xorcery.opentelemetry.exporters.otlphttp;
+    exports dev.xorcery.opentelemetry.exporters.otlphttp.jdk;
 
     requires xorcery.configuration.api;
     requires xorcery.secrets.api;
@@ -45,5 +45,5 @@ module xorcery.opentelemetry.sdk {
     requires java.net.http;
     requires java.management;
 
-    provides io.opentelemetry.exporter.internal.http.HttpSenderProvider with com.exoreaction.xorcery.opentelemetry.exporters.otlphttp.jdk.JdkHttpSenderProvider;
+    provides io.opentelemetry.exporter.internal.http.HttpSenderProvider with dev.xorcery.opentelemetry.exporters.otlphttp.jdk.JdkHttpSenderProvider;
 }

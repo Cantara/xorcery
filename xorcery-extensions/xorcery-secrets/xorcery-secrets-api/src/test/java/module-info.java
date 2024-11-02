@@ -1,5 +1,5 @@
 module xorcery.secrets.api.test {
-    exports com.exoreaction.xorcery.secrets.test;
+    exports dev.xorcery.secrets.test;
 
     requires xorcery.secrets.api;
     requires xorcery.configuration;

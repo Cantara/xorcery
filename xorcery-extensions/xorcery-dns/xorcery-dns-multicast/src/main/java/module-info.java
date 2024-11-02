@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.dns.multicast {
-    exports com.exoreaction.xorcery.dns.multicast;
-    exports com.exoreaction.xorcery.dns.multicast.provider;
+    exports dev.xorcery.dns.multicast;
+    exports dev.xorcery.dns.multicast.provider;
 
     requires xorcery.configuration.api;
     requires xorcery.dns.update;

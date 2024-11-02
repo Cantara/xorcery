@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.jsonapi.client {
-    exports com.exoreaction.xorcery.jsonapi.client;
-    exports com.exoreaction.xorcery.hyperschema.client;
+    exports dev.xorcery.jsonapi.client;
+    exports dev.xorcery.hyperschema.client;
 
     requires transitive xorcery.jsonapi.api;
     requires jakarta.ws.rs;

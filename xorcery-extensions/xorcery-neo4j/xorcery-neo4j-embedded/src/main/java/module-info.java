@@ -15,12 +15,12 @@
  */
 
 module xorcery.neo4j.embedded {
-    uses com.exoreaction.xorcery.neo4j.spi.Neo4jProvider;
+    uses dev.xorcery.neo4j.spi.Neo4jProvider;
 
-    exports com.exoreaction.xorcery.neo4j.client;
-    exports com.exoreaction.xorcery.neo4j;
-    exports com.exoreaction.xorcery.neo4j.providers;
-    exports com.exoreaction.xorcery.neo4j.spi;
+    exports dev.xorcery.neo4j.client;
+    exports dev.xorcery.neo4j;
+    exports dev.xorcery.neo4j.providers;
+    exports dev.xorcery.neo4j.spi;
 
     requires xorcery.configuration.api;
 
@@ -39,5 +39,5 @@ module xorcery.neo4j.embedded {
     requires xorcery.opentelemetry.api;
     requires com.fasterxml.jackson.databind;
 
-    provides com.exoreaction.xorcery.neo4j.spi.Neo4jProvider with com.exoreaction.xorcery.neo4j.providers.TransactionContextExtensions;
+    provides dev.xorcery.neo4j.spi.Neo4jProvider with dev.xorcery.neo4j.providers.TransactionContextExtensions;
 }

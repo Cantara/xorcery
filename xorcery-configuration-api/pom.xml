@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.exoreaction.xorcery</groupId>
+        <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-project</artifactId>
         <version>0.132.6-SNAPSHOT</version>
     </parent>
@@ -29,11 +29,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-json</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-util</artifactId>
         </dependency>
         <dependency>
@@ -58,7 +58,7 @@
 
     <build>
         <plugins>
-            <plugin>
+<!--            <plugin>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
                 <executions>
@@ -74,7 +74,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin>-->
         </plugins>
     </build>
 </project>

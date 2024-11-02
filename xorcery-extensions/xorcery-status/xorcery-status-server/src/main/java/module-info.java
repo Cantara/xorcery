@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.status.server {
-    exports com.exoreaction.xorcery.status;
-    exports com.exoreaction.xorcery.status.api;
+    exports dev.xorcery.status;
+    exports dev.xorcery.status.api;
 
     requires xorcery.status.spi;
     requires xorcery.jsonapi.api;

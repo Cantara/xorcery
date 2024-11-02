@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.certificates.provisioning {
-    exports com.exoreaction.xorcery.certificates.provisioning;
+    exports dev.xorcery.certificates.provisioning;
 
     requires xorcery.configuration.api;
     requires xorcery.certificates.spi;

@@ -1,5 +1,5 @@
 module xorcery.eventstore.projections {
-    exports com.exoreaction.xorcery.eventstore.projections;
+    exports dev.xorcery.eventstore.projections;
 
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;

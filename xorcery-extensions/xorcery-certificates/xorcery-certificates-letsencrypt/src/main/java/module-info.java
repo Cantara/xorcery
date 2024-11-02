@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.certificates.letsencrypt {
-    exports com.exoreaction.xorcery.certificates.letsencrypt;
-    exports com.exoreaction.xorcery.certificates.letsencrypt.resources;
+    exports dev.xorcery.certificates.letsencrypt;
+    exports dev.xorcery.certificates.letsencrypt.resources;
 
     requires xorcery.certificates.spi;
     requires xorcery.keystores;

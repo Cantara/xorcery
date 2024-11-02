@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.benchmarks {
-    exports com.exoreaction.xorcery.benchmarks.reactivestreams;
-    exports com.exoreaction.xorcery.benchmarks.reactivestreams.jmh_generated;
+    exports dev.xorcery.benchmarks.reactivestreams;
+    exports dev.xorcery.benchmarks.reactivestreams.jmh_generated;
 
     requires xorcery.configuration;
     requires xorcery.configuration.api;

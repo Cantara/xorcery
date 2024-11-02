@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.certificates.ca {
-    exports com.exoreaction.xorcery.certificates.ca;
-    exports com.exoreaction.xorcery.certificates.ca.resources;
+    exports dev.xorcery.certificates.ca;
+    exports dev.xorcery.certificates.ca.resources;
 
     requires xorcery.certificates.spi;
     requires xorcery.keystores;

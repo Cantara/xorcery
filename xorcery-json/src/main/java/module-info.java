@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.json {
-    exports com.exoreaction.xorcery.json;
+    exports dev.xorcery.json;
 
     requires transitive com.fasterxml.jackson.databind;
     requires xorcery.util;

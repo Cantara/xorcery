@@ -1,5 +1,5 @@
 open module xorcery.eventstore.projections.test {
-    exports com.exoreaction.xorcery.eventstore.projections.test;
+    exports dev.xorcery.eventstore.projections.test;
 
     requires xorcery.eventstore.projections;
     requires junit.jupiter;

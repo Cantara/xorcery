@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 module xorcery.jsonschema {
-    exports com.exoreaction.xorcery.jsonschema.generator;
-    exports com.exoreaction.xorcery.jsonschema;
-    exports com.exoreaction.xorcery.hyperschema;
+    exports dev.xorcery.jsonschema.generator;
+    exports dev.xorcery.jsonschema;
+    exports dev.xorcery.hyperschema;
 
     requires transitive xorcery.json;
     requires transitive xorcery.util;

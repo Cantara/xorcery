@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 module xorcery.configuration.api {
-    exports com.exoreaction.xorcery.configuration;
-    exports com.exoreaction.xorcery.configuration.resourcebundle;
-    exports com.exoreaction.xorcery.configuration.resourcebundle.spi;
+    exports dev.xorcery.configuration;
+    exports dev.xorcery.configuration.resourcebundle;
+    exports dev.xorcery.configuration.resourcebundle.spi;
 
     requires transitive xorcery.json;
     requires transitive xorcery.util;
     requires transitive com.fasterxml.jackson.dataformat.yaml;
     requires transitive org.yaml.snakeyaml;
 
-    uses com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
+    uses dev.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
 }

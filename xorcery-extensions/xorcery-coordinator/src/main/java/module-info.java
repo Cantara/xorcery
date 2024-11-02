@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.coordinator {
-    exports com.exoreaction.xorcery.coordinator;
+    exports dev.xorcery.coordinator;
 
     requires info.picocli;
     requires transitive xorcery.runner;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.secrets.api {
-    exports com.exoreaction.xorcery.secrets;
+    exports dev.xorcery.secrets;
 
     requires xorcery.configuration.api;
     requires xorcery.secrets.spi;

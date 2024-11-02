@@ -1,1 +1,1 @@
-com.exoreaction.xorcery.opentelemetry.exporters.otlphttp.jdk.JdkHttpSenderProvider
+dev.xorcery.opentelemetry.exporters.otlphttp.jdk.JdkHttpSenderProvider

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 open module xorcery.metadata {
-    exports com.exoreaction.xorcery.metadata;
+    exports dev.xorcery.metadata;
 
     requires transitive xorcery.configuration.api;
     requires com.fasterxml.jackson.databind;

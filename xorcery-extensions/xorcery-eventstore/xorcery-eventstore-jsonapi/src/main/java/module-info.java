@@ -14,7 +14,7 @@ module xorcery.eventstore.jsonapi {
     requires com.lmax.disruptor;
     requires io.opentelemetry.api;
     requires xorcery.domainevents.api;
-    exports com.exoreaction.xorcery.eventstore.api;
-    exports com.exoreaction.xorcery.eventstore.streams;
-    exports com.exoreaction.xorcery.eventstore.resources;
+    exports dev.xorcery.eventstore.api;
+    exports dev.xorcery.eventstore.streams;
+    exports dev.xorcery.eventstore.resources;
 }

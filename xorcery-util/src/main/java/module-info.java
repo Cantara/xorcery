@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 module xorcery.util {
-    exports com.exoreaction.xorcery.concurrent;
-    exports com.exoreaction.xorcery.util;
-    exports com.exoreaction.xorcery.function;
-    exports com.exoreaction.xorcery.builders;
-    exports com.exoreaction.xorcery.process;
-    exports com.exoreaction.xorcery.lang;
-    exports com.exoreaction.xorcery.io;
-    exports com.exoreaction.xorcery.net;
-    exports com.exoreaction.xorcery.collections;
-    exports com.exoreaction.xorcery.hk2;
+    exports dev.xorcery.concurrent;
+    exports dev.xorcery.util;
+    exports dev.xorcery.function;
+    exports dev.xorcery.builders;
+    exports dev.xorcery.process;
+    exports dev.xorcery.lang;
+    exports dev.xorcery.io;
+    exports dev.xorcery.net;
+    exports dev.xorcery.collections;
+    exports dev.xorcery.hk2;
 
     requires org.glassfish.hk2.api;
     requires jakarta.annotation;

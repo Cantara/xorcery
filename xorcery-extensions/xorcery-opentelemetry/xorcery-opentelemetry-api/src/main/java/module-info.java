@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.opentelemetry.api {
-    exports com.exoreaction.xorcery.opentelemetry;
+    exports dev.xorcery.opentelemetry;
 
     requires xorcery.configuration.api;
     requires transitive io.opentelemetry.api;

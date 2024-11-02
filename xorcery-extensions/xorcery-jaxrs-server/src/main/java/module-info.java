@@ -1,6 +1,6 @@
 module xorcery.jaxrs.server {
-    exports com.exoreaction.xorcery.jaxrs.server.resources;
-    opens com.exoreaction.xorcery.jaxrs.server.resources;
+    exports dev.xorcery.jaxrs.server.resources;
+    opens dev.xorcery.jaxrs.server.resources;
 
     requires jakarta.ws.rs;
     requires jakarta.servlet;

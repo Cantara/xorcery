@@ -1,5 +1,5 @@
 {
-  "$id" : "http://xorcery.exoreaction.com/applications/com.exoreaction.xorcery/xorcery-dns-multicast/override-schema",
+  "$id" : "http://xorcery.exoreaction.com/applications/dev.xorcery/xorcery-dns-multicast/override-schema",
   "title" : "xorcery-dns-multicast configuration override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",

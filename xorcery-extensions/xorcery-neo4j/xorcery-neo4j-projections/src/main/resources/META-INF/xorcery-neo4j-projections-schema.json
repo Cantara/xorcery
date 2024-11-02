@@ -1,7 +1,7 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-neo4j-projections/schema",
+  "$id" : "http://xorcery.exoreaction.com/modules/dev.xorcery/xorcery-neo4j-projections/schema",
   "title" : "xorcery-neo4j-projections configuration JSON Schema",
   "properties" : {
     "neo4jprojections" : {

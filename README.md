@@ -21,7 +21,7 @@ Note that we use our own artifact repository, so make sure to include that as we
 <dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>com.exoreaction.xorcery</groupId>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-bom</artifactId>
             <version>${xorcery.version}</version>
             <type>pom</type>
@@ -34,7 +34,7 @@ Note that we use our own artifact repository, so make sure to include that as we
 <dependencies>
     ...
     <dependency>
-        <groupId>com.exoreaction.xorcery</groupId>
+        <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-dns-client</artifactId>
     </dependency>
     ...

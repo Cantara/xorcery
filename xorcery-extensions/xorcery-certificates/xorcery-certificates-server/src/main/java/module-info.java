@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.certificates.server {
-    exports com.exoreaction.xorcery.certificates.server;
-    exports com.exoreaction.xorcery.certificates.server.resources;
+    exports dev.xorcery.certificates.server;
+    exports dev.xorcery.certificates.server.resources;
 
     requires xorcery.certificates.spi;
     requires xorcery.keystores;

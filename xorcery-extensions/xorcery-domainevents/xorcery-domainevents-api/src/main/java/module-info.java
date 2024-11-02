@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 module xorcery.domainevents.api {
-    exports com.exoreaction.xorcery.domainevents.api;
-    opens com.exoreaction.xorcery.domainevents.api;
+    exports dev.xorcery.domainevents.api;
+    opens dev.xorcery.domainevents.api;
 
     requires transitive xorcery.json;
     requires transitive xorcery.metadata;
 
     requires com.fasterxml.jackson.annotation;
+
+    provides com.fasterxml.jackson.databind.Module with
+            dev.xorcery.domainevents.jackson.DomainEventsModule;
 }

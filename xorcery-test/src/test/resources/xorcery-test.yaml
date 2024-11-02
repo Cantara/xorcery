@@ -11,20 +11,20 @@ keystores.enabled: true
 jersey:
   server:
     register:
-      - com.exoreaction.xorcery.test.resources.SubjectResource
-      - com.exoreaction.xorcery.test.resources.ServiceResource
+      - dev.xorcery.test.resources.SubjectResource
+      - dev.xorcery.test.resources.ServiceResource
 
 log4j2.Configuration.thresholdFilter.level: debug
 log4j2.Configuration.Loggers.logger:
-  - name: "com.exoreaction.xorcery.test"
+  - name: "dev.xorcery.test"
     level: "debug"
-  - name: "com.exoreaction.xorcery.core"
+  - name: "dev.xorcery.core"
     level: "info"
-  - name: "com.exoreaction.xorcery.dns.update"
+  - name: "dev.xorcery.dns.update"
     level: "debug"
-  - name: "com.exoreaction.xorcery.dns.server"
+  - name: "dev.xorcery.dns.server"
     level: "debug"
-#  - name: "com.exoreaction.xorcery.dns.server.tcp"
+#  - name: "dev.xorcery.dns.server.tcp"
 #    level: "debug"
 #  - name: "org.xbill.DNS"
 #    level: "trace"

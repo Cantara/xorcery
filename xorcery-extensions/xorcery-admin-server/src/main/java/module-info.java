@@ -15,8 +15,8 @@
  */
 module xorcery.admin.server {
 
-    exports com.exoreaction.xorcery.admin.api;
-    exports com.exoreaction.xorcery.admin.jmx;
+    exports dev.xorcery.admin.api;
+    exports dev.xorcery.admin.jmx;
 
     requires xorcery.core;
     requires xorcery.configuration;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.reactivestreams.server {
-    exports com.exoreaction.xorcery.reactivestreams.server;
+    exports dev.xorcery.reactivestreams.server;
 
     requires transitive xorcery.reactivestreams.api;
 

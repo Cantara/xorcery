@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.reactivestreams.disruptor {
-    exports com.exoreaction.xorcery.reactivestreams.disruptor;
+    exports dev.xorcery.reactivestreams.disruptor;
 
     requires xorcery.configuration.api;
 

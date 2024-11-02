@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.certificates.spi {
-    exports com.exoreaction.xorcery.certificates.spi;
+    exports dev.xorcery.certificates.spi;
 
     requires org.bouncycastle.pkix;
 }

@@ -1,6 +1,6 @@
 module xorcery.secrets.aws {
 
-    exports com.exoreaction.xorcery.secrets.aws.provider;
+    exports dev.xorcery.secrets.aws.provider;
 
     requires xorcery.secrets.spi;
     requires xorcery.configuration.api;

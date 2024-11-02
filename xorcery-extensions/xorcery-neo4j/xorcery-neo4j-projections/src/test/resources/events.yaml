@@ -5,8 +5,7 @@
     tenant: "1234"
   data:
     #Test Value as attribute
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "CreatedPerson"
+    - event: "CreatedPerson"
       created:
         type: "Person"
         id: "1234"
@@ -25,15 +24,13 @@
     aggregateType: "Tenant"
     tenant: "1234"
   data:
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedName"
+    - event: "UpdatedName"
       updated:
         type: "Person"
         id: "1234"
       attributes:
         name: "John Smith"
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedEmail"
+    - event: "UpdatedEmail"
       updated:
         type: "Person"
         id: "1234"
@@ -46,8 +43,7 @@
     tenant: "1234"
   data:
     #Test update Value as attribute
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedAddress"
+    - event: "UpdatedAddress"
       updated:
         type: "Person"
         id: "1234"
@@ -67,8 +63,7 @@
     tenant: "1234"
   data:
     #Test remove Value as attribute
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedAddress"
+    - event: "UpdatedAddress"
       updated:
         type: "Person"
         id: "1234"
@@ -81,8 +76,7 @@
     tenant: "1234"
   data:
     #Test update scalars
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedAge"
+    - event: "UpdatedAge"
       updated:
         type: "Person"
         id: "1234"
@@ -97,8 +91,7 @@
     tenant: "1234"
   data:
     #Test add Value as list attribute
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "AddedFriends"
+    - event: "AddedFriends"
       updated:
         type: "Person"
         id: "1234"
@@ -128,8 +121,7 @@
                 type: "Person"
                 id: "4321"
 
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "AddedKnowsPerson"
+    - event: "AddedKnowsPerson"
       updated:
         type: "Person"
         id: "1234"
@@ -144,8 +136,7 @@
     tenant: "1234"
   data:
     #Test update Value as list attribute
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedFriend"
+    - event: "UpdatedFriend"
       updated:
         type: "Person"
         id: "1234"
@@ -173,8 +164,7 @@
     tenant: "1234"
   data:
     #Test move Value with index as list attribute
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "UpdatedFriend"
+    - event: "UpdatedFriend"
       updated:
         type: "Person"
         id: "1234"
@@ -201,8 +191,7 @@
     aggregateType: "Tenant"
     tenant: "1234"
   data:
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "RedactedState"
+    - event: "RedactedState"
       updated:
         type: "Person"
         id: "1234"
@@ -215,8 +204,7 @@
     aggregateType: "Tenant"
     tenant: "1234"
   data:
-    - '@class': "com.exoreaction.xorcery.domainevents.api.JsonDomainEvent"
-      event: "DeletedPerson"
+    - event: "DeletedPerson"
       deleted:
         type: "Person"
         id: "1234"

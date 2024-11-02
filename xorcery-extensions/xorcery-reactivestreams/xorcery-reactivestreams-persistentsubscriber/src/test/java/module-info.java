@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 open module xorcery.reactivestreams.persistentsubscriber.test {
-    exports com.exoreaction.xorcery.reactivestreams.persistentsubscriber.test;
+    exports dev.xorcery.reactivestreams.persistentsubscriber.test;
 
     requires xorcery.reactivestreams.persistentsubscriber;
 

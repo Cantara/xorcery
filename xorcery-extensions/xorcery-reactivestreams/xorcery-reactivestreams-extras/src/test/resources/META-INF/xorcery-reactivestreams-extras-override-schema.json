@@ -1,5 +1,5 @@
 {
-  "$id" : "http://xorcery.exoreaction.com/applications/com.exoreaction.xorcery/xorcery-reactivestreams-extras/override-schema",
+  "$id" : "http://xorcery.exoreaction.com/applications/dev.xorcery/xorcery-reactivestreams-extras/override-schema",
   "title" : "xorcery-reactivestreams-extras configuration override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",

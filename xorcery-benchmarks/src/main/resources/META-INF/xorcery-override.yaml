@@ -22,19 +22,19 @@ log4j2:
           AppenderRef:
             ref: STDOUT
 
-        - name: com.exoreaction.xorcery.log4jsubscriber
+        - name: dev.xorcery.log4jsubscriber
           level: debug
           additivity: false
           AppenderRef:
             ref: STDOUT
 
-        - name: com.exoreaction.xorcery.core
+        - name: dev.xorcery.core
           level: debug
 
-        - name: com.exoreaction.xorcery.dns.server
+        - name: dev.xorcery.dns.server
           level: info
 
-        - name: com.exoreaction.xorcery.reactivestreams
+        - name: dev.xorcery.reactivestreams
           level: debug
 
         - name: javax

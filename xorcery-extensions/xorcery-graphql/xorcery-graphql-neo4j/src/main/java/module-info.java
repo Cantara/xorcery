@@ -1,8 +1,8 @@
 module xorcery.graphql.neo4j {
-    exports com.exoreaction.xorcery.graphql.jsonapi.api;
-    exports com.exoreaction.xorcery.graphql.neo4j.cypher;
-    exports com.exoreaction.xorcery.graphql.schema;
-    exports com.exoreaction.xorcery.graphql;
+    exports dev.xorcery.graphql.server.jsonapi.api;
+    exports dev.xorcery.graphql.server.neo4j.cypher;
+    exports dev.xorcery.graphql.server.schema;
+    exports dev.xorcery.graphql;
 
     requires xorcery.jsonapi.server;
     requires xorcery.jaxrs.server;

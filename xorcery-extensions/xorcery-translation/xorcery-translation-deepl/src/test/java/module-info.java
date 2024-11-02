@@ -1,6 +1,6 @@
 open module xorcery.translation.deepl.test {
 
-    uses com.exoreaction.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
+    uses dev.xorcery.configuration.resourcebundle.spi.ResourceBundlesProvider;
 
     requires xorcery.translation.deepl;
     requires xorcery.configuration;

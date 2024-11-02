@@ -1,6 +1,6 @@
 module xorcery.translation.deepl {
-    exports com.exoreaction.xorcery.translation.deepl;
-    exports com.exoreaction.xorcery.translation.deepl.providers;
+    exports dev.xorcery.translation.deepl;
+    exports dev.xorcery.translation.deepl.providers;
 
     requires xorcery.configuration;
     requires xorcery.configuration.api;
@@ -13,6 +13,6 @@ module xorcery.translation.deepl {
     requires jakarta.inject;
     requires org.glassfish.hk2.api;
 
-    provides com.exoreaction.xorcery.configuration.spi.ResourceBundleTranslationProvider
-            with com.exoreaction.xorcery.translation.deepl.providers.DeepLResourceBundleTranslationProvider;
+    provides dev.xorcery.configuration.spi.ResourceBundleTranslationProvider
+            with dev.xorcery.translation.deepl.providers.DeepLResourceBundleTranslationProvider;
 }

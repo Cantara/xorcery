@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.opentelemetry.jvm {
-    exports com.exoreaction.xorcery.opentelemetry.jvm;
+    exports dev.xorcery.opentelemetry.jvm;
 
     requires xorcery.configuration.api;
 

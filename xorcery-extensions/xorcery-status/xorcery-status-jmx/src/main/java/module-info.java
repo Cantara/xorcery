@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 module xorcery.status.jmx {
-    exports com.exoreaction.xorcery.status.jmx.providers;
+    exports dev.xorcery.status.jmx.providers;
 
     requires xorcery.metadata;
     requires xorcery.reactivestreams.api;

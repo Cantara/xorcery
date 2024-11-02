@@ -15,4 +15,4 @@
 #
 $schema: xorcery-graphql-neo4j-override-schema.json
 jersey.server.register:
-    - com.exoreaction.xorcery.jsonapi.server.graphql.api.GraphQLAPIResource
+    - dev.xorcery.graphql.server.jsonapi.apiGraphQLAPIResource

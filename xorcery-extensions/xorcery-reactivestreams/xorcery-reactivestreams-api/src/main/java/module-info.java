@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 open module xorcery.reactivestreams.api {
-    exports com.exoreaction.xorcery.reactivestreams.api;
-    exports com.exoreaction.xorcery.reactivestreams.api.client;
-    exports com.exoreaction.xorcery.reactivestreams.api.server;
-    exports com.exoreaction.xorcery.reactivestreams.spi;
-    exports com.exoreaction.xorcery.reactivestreams.providers;
-    exports com.exoreaction.xorcery.reactivestreams.util;
+    exports dev.xorcery.reactivestreams.api;
+    exports dev.xorcery.reactivestreams.api.client;
+    exports dev.xorcery.reactivestreams.api.server;
+    exports dev.xorcery.reactivestreams.spi;
+    exports dev.xorcery.reactivestreams.providers;
+    exports dev.xorcery.reactivestreams.util;
 
     requires transitive reactor.core;
     requires transitive org.reactivestreams;

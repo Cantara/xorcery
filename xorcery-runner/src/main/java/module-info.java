@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 module xorcery.runner {
-    exports com.exoreaction.xorcery.runner;
-    opens com.exoreaction.xorcery.runner;
+    exports dev.xorcery.runner;
+    opens dev.xorcery.runner;
 
     requires transitive xorcery.core;
     requires xorcery.configuration;

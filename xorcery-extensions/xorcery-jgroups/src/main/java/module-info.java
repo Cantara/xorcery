@@ -1,5 +1,5 @@
 module xorcery.jgroups {
-    exports com.exoreaction.xorcery.jgroups;
+    exports dev.xorcery.jgroups;
 
     requires xorcery.configuration.api;
 

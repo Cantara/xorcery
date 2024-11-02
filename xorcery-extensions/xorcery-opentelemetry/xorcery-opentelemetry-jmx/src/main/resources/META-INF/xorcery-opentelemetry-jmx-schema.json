@@ -1,7 +1,7 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.exoreaction.com/modules/com.exoreaction.xorcery/xorcery-opentelemetry-jmx/schema",
+  "$id" : "http://xorcery.exoreaction.com/modules/dev.xorcery/xorcery-opentelemetry-jmx/schema",
   "title" : "xorcery-opentelemetry-jmx configuration JSON Schema",
   "properties" : {
     "opentelemetry" : {

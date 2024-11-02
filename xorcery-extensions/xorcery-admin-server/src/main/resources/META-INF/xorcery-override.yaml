@@ -3,7 +3,7 @@ $schema: xorcery-admin-server-override-schema.json
 jersey:
   server:
     register:
-    - com.exoreaction.xorcery.admin.api.VisualeHealthResource
+    - dev.xorcery.admin.api.VisualeHealthResource
 
 opentelemetry:
   sampler:

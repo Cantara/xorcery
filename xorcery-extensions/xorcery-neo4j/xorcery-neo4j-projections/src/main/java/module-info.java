@@ -15,12 +15,12 @@
  */
 
 open module xorcery.neo4j.projections {
-    uses com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection;
+    uses dev.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 
-    exports com.exoreaction.xorcery.neo4jprojections;
-    exports com.exoreaction.xorcery.neo4jprojections.api;
-    exports com.exoreaction.xorcery.neo4jprojections.providers;
-    exports com.exoreaction.xorcery.neo4jprojections.spi;
+    exports dev.xorcery.neo4jprojections;
+    exports dev.xorcery.neo4jprojections.api;
+    exports dev.xorcery.neo4jprojections.providers;
+    exports dev.xorcery.neo4jprojections.spi;
 
     requires xorcery.domainevents.api;
     requires xorcery.neo4j.embedded;
@@ -38,5 +38,5 @@ open module xorcery.neo4j.projections {
     requires io.opentelemetry.semconv;
     requires io.opentelemetry.context;
 
-    provides com.exoreaction.xorcery.neo4jprojections.spi.Neo4jEventProjection with com.exoreaction.xorcery.neo4jprojections.providers.CypherEventProjection;
+    provides dev.xorcery.neo4jprojections.spi.Neo4jEventProjection with dev.xorcery.neo4jprojections.providers.CypherEventProjection;
 }

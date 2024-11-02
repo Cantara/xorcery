@@ -1,6 +1,6 @@
-package com.exoreaction.xorcery.configuration.builder.test;
+package dev.xorcery.configuration.builder.test;
 
-import com.exoreaction.xorcery.configuration.resourcebundle.ResourceBundles;
+import dev.xorcery.configuration.resourcebundle.ResourceBundles;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

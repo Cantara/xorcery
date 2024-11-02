@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 module xorcery.domainevents.publisher {
-    exports com.exoreaction.xorcery.domainevents.entity;
-    exports com.exoreaction.xorcery.domainevents.entity.annotation;
-    exports com.exoreaction.xorcery.domainevents.context;
-    exports com.exoreaction.xorcery.domainevents.publisher;
-    exports com.exoreaction.xorcery.domainevents.validation;
+    exports dev.xorcery.domainevents.entity;
+    exports dev.xorcery.domainevents.entity.annotation;
+    exports dev.xorcery.domainevents.context;
+    exports dev.xorcery.domainevents.publisher;
+    exports dev.xorcery.domainevents.validation;
 
     requires transitive xorcery.jsonapi.server;
     requires transitive xorcery.metadata;
