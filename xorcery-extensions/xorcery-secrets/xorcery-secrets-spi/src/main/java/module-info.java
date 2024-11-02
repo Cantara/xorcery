@@ -5,5 +5,8 @@ module xorcery.secrets.spi {
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
 
-    provides SecretsProvider with EnvSecretsProvider, SecretSecretsProvider, SystemPropertiesSecretsProvider;
+    provides dev.xorcery.secrets.spi.SecretsProvider with
+            dev.xorcery.secrets.providers.EnvSecretsProvider,
+            dev.xorcery.secrets.providers.SecretSecretsProvider,
+            dev.xorcery.secrets.providers.SystemPropertiesSecretsProvider;
 }
