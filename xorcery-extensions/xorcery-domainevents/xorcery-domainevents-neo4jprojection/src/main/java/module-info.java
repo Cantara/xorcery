@@ -32,6 +32,6 @@ module xorcery.domainevents.neo4jprojection {
     requires xorcery.domainevents.publisher;
     requires xorcery.reactivestreams.api;
 
-    provides Neo4jProvider with ApplyJsonDomainEvent;
-    provides Neo4jEventProjection with JsonDomainEventNeo4jEventProjection;
+    provides Neo4jProvider with dev.xorcery.domainevents.neo4jprojections.ApplyJsonDomainEvent;
+    provides Neo4jEventProjection with dev.xorcery.domainevents.neo4jprojections.JsonDomainEventNeo4jEventProjection;
 }
