@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-project</artifactId>
-        <version>0.150.1</version>
+        <version>0.150.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-health-registry</artifactId>
