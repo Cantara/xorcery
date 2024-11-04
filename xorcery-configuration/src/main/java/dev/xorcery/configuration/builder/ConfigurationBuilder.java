@@ -129,6 +129,7 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
         addModuleOverrides();
         addApplication();
 
+        addEtc();
         addHome();
         addUserDirectory();
 
@@ -205,6 +206,22 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
                 FileInputStream userYamlStream = new FileInputStream(userYamlFile);
                 addYaml(userYamlStream);
                 logger.log("Loaded " + userYamlFile);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return this;
+    }
+
+    public ConfigurationBuilder addEtc() throws UncheckedIOException {
+        // Load user home overrides
+        try {
+            String applicationName = builder.builder().path("application").path("name").asText();
+            File etcApplicationYamlFile = new File("/etc/"+ applicationName, applicationName+".yaml");
+            if (etcApplicationYamlFile.exists()) {
+                FileInputStream etcApplicationYamlStream = new FileInputStream(etcApplicationYamlFile);
+                addYaml(etcApplicationYamlStream);
+                logger.log("Loaded " + etcApplicationYamlFile);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 module xorcery.jsonapi.server.neo4j {
+    exports dev.xorcery.neo4j.jsonapi.resources;
+
     requires xorcery.jsonapi.server;
     requires xorcery.domainevents.api;
     requires xorcery.neo4j.embedded;

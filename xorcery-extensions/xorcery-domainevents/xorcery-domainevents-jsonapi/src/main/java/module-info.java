@@ -15,6 +15,7 @@
  */
 module xorcery.domainevents.jsonapi {
     exports dev.xorcery.domainevents.jsonapi.resources;
+    exports dev.xorcery.domainevents.jsonapi.resources.model;
 
     requires transitive xorcery.jsonapi.server;
     requires transitive xorcery.metadata;

@@ -18,22 +18,19 @@ package dev.xorcery.runner;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.ConfigurationLogger;
 import dev.xorcery.configuration.builder.ConfigurationBuilder;
-import dev.xorcery.core.Xorcery;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import picocli.CommandLine;
 
 import java.io.File;
-import java.util.concurrent.Callable;
 
 /**
+ * Default Main which loads an optional given configuration file and starts the app.
+ *
  * @author rickardoberg
  * @since 12/04/2022
  */
-
 @CommandLine.Command(name = "xorcery", versionProvider = ConfigurationVersionProvider.class)
 public class Main
-        implements Callable<Integer> {
+    extends BaseMain {
 
     public static void main(String[] args) {
         System.exit(new CommandLine(new Main()).execute(args));
@@ -42,33 +39,10 @@ public class Main
     @CommandLine.Parameters(index = "0", arity = "0..1", description = "Configuration file")
     private File configuration;
 
-    @CommandLine.Option(names = "-id", description = "Server id")
-    private String id;
-
-    private volatile Xorcery xorcery;
-
     @Override
     public Integer call() throws Exception {
-        Configuration configuration = loadConfiguration();
-
-        Xorcery xorcery = new Xorcery(configuration);
-        this.xorcery = xorcery;
-        Logger mainLogger = LogManager.getLogger(Main.class);
-        Runtime.getRuntime().addShutdownHook(new Thread(() ->
-        {
-            mainLogger.info("Shutting down");
-            try {
-                xorcery.close();
-            } catch (Exception e) {
-                mainLogger.warn("Error during shutdown", e);
-            }
-        }));
-
-        xorcery.getClosed().join();
-        mainLogger.info("Shutdown");
-        LogManager.shutdown();
-
-        return 0;
+        setConfiguration(loadConfiguration());
+        return super.call();
     }
 
     public Configuration loadConfiguration() {
@@ -80,9 +54,5 @@ public class Main
         ConfigurationLogger.getLogger().log(configuration.toString());
 
         return configuration;
-    }
-
-    public Xorcery getXorcery() {
-        return xorcery;
     }
 }

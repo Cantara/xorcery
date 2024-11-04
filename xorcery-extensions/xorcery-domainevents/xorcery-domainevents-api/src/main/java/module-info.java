@@ -15,6 +15,7 @@
  */
 module xorcery.domainevents.api {
     exports dev.xorcery.domainevents.api;
+    exports dev.xorcery.domainevents.jackson;
     opens dev.xorcery.domainevents.api;
 
     requires transitive xorcery.json;
