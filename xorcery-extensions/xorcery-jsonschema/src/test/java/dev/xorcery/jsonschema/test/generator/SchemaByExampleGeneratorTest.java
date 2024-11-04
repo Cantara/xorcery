@@ -33,7 +33,7 @@ public class SchemaByExampleGeneratorTest {
 
             // When
             JsonSchema schema = new SchemaByExampleGenerator()
-                    .id("http://xorcery.exoreaction.com/testschema")
+                    .id("http://xorcery.dev/testschema")
                     .title("Example schema")
                     .generateJsonSchema(exampleJson);
 

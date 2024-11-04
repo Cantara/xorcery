@@ -102,7 +102,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                     """);
 
         JsonSchema schema = new SchemaByExampleGenerator()
-                .id("http://xorcery.exoreaction.com/modules/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
+                .id("http://xorcery.dev/modules/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
                 .title(project.getArtifactId() + " configuration JSON Schema")
                 .generateJsonSchema(moduleBuilder.builder().builder(), moduleWithDependenciesBuilder.build().json());
 
@@ -131,7 +131,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
     private void generateModuleOverrideSchema(List<Artifact> dependencies) throws IOException {
         JsonSchema schema = new JsonSchema.Builder()
-                .id("http://xorcery.exoreaction.com/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/override-schema")
+                .id("http://xorcery.dev/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/override-schema")
                 .title(project.getArtifactId() + " configuration override JSON Schema")
                 .build();
 

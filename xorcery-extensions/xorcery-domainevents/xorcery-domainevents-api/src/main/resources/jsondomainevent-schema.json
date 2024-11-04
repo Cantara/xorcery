@@ -1,5 +1,5 @@
 {
-  "$id": "https://xorcery.exoreaction.com/jsondomainevent/2024-06/schema",
+  "$id": "https://xorcery.dev/jsondomainevent/2024-06/schema",
   "title": "JsonDomainEvent JSON Schema",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",

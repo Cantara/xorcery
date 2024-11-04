@@ -35,7 +35,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
             List<Artifact> dependencies = getDependencies();
 
             JsonSchema schema = new JsonSchema.Builder()
-                    .id("http://xorcery.exoreaction.com/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
+                    .id("http://xorcery.dev/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
                     .title(project.getArtifactId() + " configuration JSON Schema")
                     .build();
 

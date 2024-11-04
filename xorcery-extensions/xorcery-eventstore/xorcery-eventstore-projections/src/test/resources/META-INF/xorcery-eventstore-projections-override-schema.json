@@ -1,5 +1,5 @@
 {
-  "$id" : "http://xorcery.exoreaction.com/applications/dev.xorcery/xorcery-eventstore-projections/override-schema",
+  "$id" : "http://xorcery.dev/applications/dev.xorcery/xorcery-eventstore-projections/override-schema",
   "title" : "xorcery-eventstore-projections configuration override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",

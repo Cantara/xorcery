@@ -1,5 +1,5 @@
 {
-  "$id" : "http://xorcery.exoreaction.com/applications/dev.xorcery/xorcery-configuration-jsonschema-maven-plugin/override-schema",
+  "$id" : "http://xorcery.dev/applications/dev.xorcery/xorcery-configuration-jsonschema-maven-plugin/override-schema",
   "title" : "xorcery-configuration-jsonschema-maven-plugin configuration override JSON Schema",
   "type" : "object",
   "properties" : {

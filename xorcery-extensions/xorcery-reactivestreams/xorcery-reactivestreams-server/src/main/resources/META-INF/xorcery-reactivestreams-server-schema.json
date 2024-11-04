@@ -1,7 +1,7 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.exoreaction.com/modules/dev.xorcery/xorcery-reactivestreams-server/schema",
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-reactivestreams-server/schema",
   "title" : "xorcery-reactivestreams-server configuration JSON Schema",
   "properties" : {
     "reactivestreams" : {

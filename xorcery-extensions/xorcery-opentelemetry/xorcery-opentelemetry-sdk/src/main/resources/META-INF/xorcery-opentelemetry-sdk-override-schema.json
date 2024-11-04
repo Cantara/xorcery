@@ -1,5 +1,5 @@
 {
-  "$id" : "http://xorcery.exoreaction.com/applications/dev.xorcery/xorcery-opentelemetry-sdk/override-schema",
+  "$id" : "http://xorcery.dev/applications/dev.xorcery/xorcery-opentelemetry-sdk/override-schema",
   "title" : "xorcery-opentelemetry-sdk configuration override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
