@@ -39,9 +39,11 @@ public class WithMetadataMessageWriterFactory
     private final Supplier<MessageWorkers> messageWorkersSupplier;
 
     public WithMetadataMessageWriterFactory(Supplier<MessageWorkers> messageWorkersSupplier) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        ObjectMapper objectMapper = new ObjectMapper()
+                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .findAndRegisterModules();
+
         objectWriter = objectMapper.writer();
         this.messageWorkersSupplier = messageWorkersSupplier;
     }

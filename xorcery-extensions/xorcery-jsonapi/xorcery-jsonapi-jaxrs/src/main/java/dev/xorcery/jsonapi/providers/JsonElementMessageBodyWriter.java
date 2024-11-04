@@ -49,7 +49,7 @@ public class JsonElementMessageBodyWriter
     private final ObjectMapper yamlObjectMapper;
 
     public JsonElementMessageBodyWriter() {
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper().findAndRegisterModules();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         this.yamlObjectMapper = new ObjectMapper(new YAMLFactory());
         yamlObjectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);

@@ -44,7 +44,7 @@ public class JsonNodeMessageBodyWriter
 
     @Inject
     public JsonNodeMessageBodyWriter() {
-        objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper().findAndRegisterModules();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }

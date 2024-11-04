@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
 public class JsonResolver
         implements BiFunction<ObjectNode, ObjectNode, ObjectNode> {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     /**
      * Resolve variables in root object values from source object. These may or may not be the same.

@@ -43,7 +43,7 @@ public class JsonNodeMessageBodyReader
 
     @Inject
     public JsonNodeMessageBodyReader() {
-        objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper().findAndRegisterModules();
         objectMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }

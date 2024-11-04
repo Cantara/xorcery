@@ -1,6 +1,7 @@
 package dev.xorcery.reactivestreams.extras.test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import dev.xorcery.reactivestreams.extras.publishers.YamlPublisher;
@@ -21,7 +22,7 @@ import java.util.Map;
 
 public class CopyFileTest {
 
-    YAMLMapper mapper = new YAMLMapper();
+    ObjectMapper mapper = new YAMLMapper().findAndRegisterModules();
 
     @Test
     void copyFile(@TempDir File tempDirectory) {

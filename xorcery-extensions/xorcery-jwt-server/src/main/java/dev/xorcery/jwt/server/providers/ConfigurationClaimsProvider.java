@@ -33,7 +33,7 @@ import java.util.Map;
 public class ConfigurationClaimsProvider
         implements ClaimsProvider {
     private final UserConfiguration users;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @Inject
     public ConfigurationClaimsProvider(Configuration configuration) {

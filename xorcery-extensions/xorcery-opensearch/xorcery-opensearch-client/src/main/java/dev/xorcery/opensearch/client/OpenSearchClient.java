@@ -44,7 +44,8 @@ public record OpenSearchClient(Client client, URI host)
                 .register(JsonNodeMessageBodyReader.class)
                 .register(JsonNodeMessageBodyWriter.class)
                 .register(new BulkRequestMessageBodyWriter(new ObjectMapper()
-                        .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)))
+                        .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                        .findAndRegisterModules()))
                 .build(), host);
     }
 

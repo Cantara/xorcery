@@ -17,6 +17,7 @@ package dev.xorcery.configuration.providers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.xorcery.configuration.spi.ConfigurationProvider;
@@ -27,10 +28,10 @@ import java.util.Optional;
 public class EnvironmentVariablesConfigurationProvider
         implements ConfigurationProvider {
 
-    private final YAMLMapper yamlMapper;
+    private final ObjectMapper yamlMapper;
 
     public EnvironmentVariablesConfigurationProvider() {
-        yamlMapper = new YAMLMapper();
+        yamlMapper = new YAMLMapper().findAndRegisterModules();
     }
 
     @Override

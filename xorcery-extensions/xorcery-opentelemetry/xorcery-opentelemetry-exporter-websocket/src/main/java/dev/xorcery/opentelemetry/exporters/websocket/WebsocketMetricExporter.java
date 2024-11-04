@@ -29,7 +29,7 @@ public class WebsocketMetricExporter
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final WebsocketExporterService websocketExporterService;
     private final Map<Resource, JsonNode> resourceJson = new HashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     public WebsocketMetricExporter(WebsocketExporterService websocketExporterService, AggregationTemporality aggregationTemporality, ExtendedLogger logger) {
         this.websocketExporterService = websocketExporterService;

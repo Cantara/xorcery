@@ -25,7 +25,7 @@ public class WebsocketSpanExporter
     private final WebsocketExporterService attachSender;
     private final Logger logger;
     private final Map<Resource, JsonNode> resourceJson = new HashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     public WebsocketSpanExporter(WebsocketExporterService attachSender, Logger logger) {
         this.attachSender = attachSender;

@@ -41,7 +41,7 @@ public class JsonElementMessageBodyReader
     private final ObjectMapper objectMapper;
 
     public JsonElementMessageBodyReader() {
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = new ObjectMapper().findAndRegisterModules();
     }
 
     @Override

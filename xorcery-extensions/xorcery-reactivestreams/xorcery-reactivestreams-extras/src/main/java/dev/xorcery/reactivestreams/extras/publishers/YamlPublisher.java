@@ -21,7 +21,7 @@ import java.net.URL;
 public class YamlPublisher<T>
         implements Publisher<T> {
 
-    private static final ObjectReader yamlReader = new YAMLMapper().reader();
+    private static final ObjectReader yamlReader = new YAMLMapper().findAndRegisterModules().reader();
     private final Class<? super T> itemType;
 
     public YamlPublisher(Class<? super T> itemType) {

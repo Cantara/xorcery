@@ -32,7 +32,8 @@ public class JsonElementMessageWriterFactory
     public JsonElementMessageWriterFactory() {
         jsonMapper = new ObjectMapper()
                 .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .findAndRegisterModules();
     }
 
     @Override

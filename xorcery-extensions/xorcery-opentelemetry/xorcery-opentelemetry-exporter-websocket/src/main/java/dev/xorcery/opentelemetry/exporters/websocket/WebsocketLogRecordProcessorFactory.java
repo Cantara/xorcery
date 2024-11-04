@@ -20,7 +20,7 @@ public class WebsocketLogRecordProcessorFactory
 
     @Inject
     public WebsocketLogRecordProcessorFactory(WebsocketExporterService exporterService) {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
         SimpleModule module = new SimpleModule();
         module.addSerializer(LogRecordData.class, new LogRecordDataSerializer());
         objectMapper.registerModule(module);
