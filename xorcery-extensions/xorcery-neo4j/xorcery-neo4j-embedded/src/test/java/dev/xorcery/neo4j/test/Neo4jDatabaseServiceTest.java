@@ -30,13 +30,16 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class Neo4JDatabaseServiceTest {
+public class Neo4jDatabaseServiceTest {
 
     @RegisterExtension
     static XorceryExtension xorceryExtension = XorceryExtension.xorcery()
             .configuration(ConfigurationBuilder::addTestDefaults)
             .addYaml("""
 defaults.development: true
+neo4jdatabase.warmup.queries:
+    - "MATCH (n) RETURN count(n)"
+      
 log4j2.Configuration.thresholdFilter.level: debug
 log4j2.Configuration.Loggers.logger:
   - name: "dev.xorcery.test"

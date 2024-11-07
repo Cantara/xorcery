@@ -3,6 +3,9 @@ neo4jdatabase:
   enabled: "{{ defaults.enabled }}"
   path: "{{ instance.home }}/neo4j"
   startup: []
+  warmup:
+    enabled: "{{ neo4jdatabase.enabled }}"
+    queries: []
   domain:
     version: "1.0.0"
     wipeOnBreakingChange: true
