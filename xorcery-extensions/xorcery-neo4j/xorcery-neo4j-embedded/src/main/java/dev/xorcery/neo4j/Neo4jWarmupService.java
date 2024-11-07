@@ -3,6 +3,7 @@ package dev.xorcery.neo4j;
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.neo4j.client.GraphDatabase;
+import dev.xorcery.neo4j.client.GraphResult;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -33,8 +34,8 @@ public class Neo4jWarmupService {
         if (!warmupQueries.isEmpty())
         {
             for (String warmupQuery : warmupQueries) {
-                try {
-                    graphDatabase.execute(warmupQuery, Collections.emptyMap(), 90).toCompletableFuture().join();
+                try(GraphResult result = graphDatabase.execute(warmupQuery, Collections.emptyMap(), 90).toCompletableFuture().join()) {
+                    result.getResult().accept(row -> true);
                 } catch (Exception e) {
                     logger.warn("Warmup script failed", e);
                 }
