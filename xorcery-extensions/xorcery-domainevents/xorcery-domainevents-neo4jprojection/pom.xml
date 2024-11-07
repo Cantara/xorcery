@@ -34,7 +34,7 @@
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-domainevents-api</artifactId>
+            <artifactId>xorcery-domainevents-entity</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>

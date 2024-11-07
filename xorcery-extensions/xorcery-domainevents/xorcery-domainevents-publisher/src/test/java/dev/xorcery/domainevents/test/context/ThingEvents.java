@@ -5,23 +5,25 @@ import dev.xorcery.domainevents.api.JsonDomainEvent.StateBuilder;
 
 public interface ThingEvents {
 
-    default StateBuilder createdThing(String id, String foo)
+    String id();
+
+    default StateBuilder createdThing(String foo)
     {
         return JsonDomainEvent.event("CreatedThing" )
-                .created("Thing", id)
+                .created("Thing", id())
                 .updatedAttribute("foo", foo);
     }
 
-    default StateBuilder updatedThing(String id, String foo)
+    default StateBuilder updatedThing(String foo)
     {
         return JsonDomainEvent.event("UpdatedThing" )
-                .updated("Thing", id)
+                .updated("Thing", id())
                 .updatedAttribute("foo", foo);
     }
 
-    default JsonDomainEvent deletedThing(String id)
+    default JsonDomainEvent deletedThing()
     {
         return JsonDomainEvent.event("DeletedThing" )
-                .deleted("Thing", id);
+                .deleted("Thing", id());
     }
 }

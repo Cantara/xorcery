@@ -22,9 +22,6 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
-    "domainevents" : {
-      "$ref" : "#/$defs/domainevents"
-    },
     "neo4jdatabase" : {
       "$ref" : "#/$defs/neo4jdatabase"
     },
@@ -205,27 +202,6 @@
         }
       }
     },
-    "domainevents" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} (true)"
-        },
-        "eventstore" : {
-          "type" : "string",
-          "default" : "{{ instance.api }}eventstore",
-          "description" : "Default: {{ instance.api }}eventstore (http://service.xorcery.test/api/eventstore)"
-        },
-        "projections" : {
-          "type" : "string",
-          "default" : "{{ instance.api }}projections",
-          "description" : "Default: {{ instance.api }}projections (http://service.xorcery.test/api/projections)"
-        }
-      }
-    },
     "neo4jdatabase" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -242,6 +218,20 @@
         },
         "startup" : {
           "type" : [ "array", "string" ]
+        },
+        "warmup" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ neo4jdatabase.enabled }}",
+              "description" : "Default: {{ neo4jdatabase.enabled }} (true)"
+            },
+            "queries" : {
+              "type" : [ "array", "string" ]
+            }
+          }
         },
         "domain" : {
           "type" : "object",

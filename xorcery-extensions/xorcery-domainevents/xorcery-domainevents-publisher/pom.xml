@@ -38,7 +38,7 @@
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-domainevents-api</artifactId>
+            <artifactId>xorcery-domainevents-entity</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
@@ -73,20 +73,6 @@
             <artifactId>hk2-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.validation</groupId>
-            <artifactId>jakarta.validation-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>8.0.1.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.expressly</groupId>
-            <artifactId>expressly</artifactId>
-            <version>5.0.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
         </dependency>
@@ -96,6 +82,7 @@
             <artifactId>xorcery-junit</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
 </project>

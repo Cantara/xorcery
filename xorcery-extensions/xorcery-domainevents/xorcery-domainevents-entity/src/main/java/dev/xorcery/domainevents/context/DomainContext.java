@@ -15,8 +15,7 @@
  */
 package dev.xorcery.domainevents.context;
 
-import dev.xorcery.domainevents.entity.Command;
-import jakarta.ws.rs.NotFoundException;
+import dev.xorcery.domainevents.command.Command;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +36,6 @@ public interface DomainContext {
     }
 
     default <T extends Command> CompletableFuture<CommandResult<T>> handle(CommandMetadata metadata, T command) {
-        return CompletableFuture.failedFuture(new NotFoundException());
+        return CompletableFuture.failedFuture(new EntityNotFoundException());
     }
 }

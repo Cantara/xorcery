@@ -611,6 +611,20 @@
         "startup" : {
           "type" : [ "array", "string" ]
         },
+        "warmup" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ neo4jdatabase.enabled }}",
+              "description" : "Default: {{ neo4jdatabase.enabled }} (true)"
+            },
+            "queries" : {
+              "type" : [ "array", "string" ]
+            }
+          }
+        },
         "domain" : {
           "type" : "object",
           "additionalProperties" : false,

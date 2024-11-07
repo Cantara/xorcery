@@ -23,6 +23,7 @@ module xorcery.domainevents.neo4jprojection {
 
     requires xorcery.neo4j.embedded;
     requires xorcery.domainevents.api;
+    requires xorcery.domainevents.entity;
 
     requires org.glassfish.hk2.api;
     requires org.apache.logging.log4j;

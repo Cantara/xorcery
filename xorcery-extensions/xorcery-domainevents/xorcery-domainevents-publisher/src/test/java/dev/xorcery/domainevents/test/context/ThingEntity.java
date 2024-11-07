@@ -1,28 +1,41 @@
 package dev.xorcery.domainevents.test.context;
 
+import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.domainevents.entity.Entity;
+import jakarta.inject.Inject;
 
 import static dev.xorcery.domainevents.test.context.ThingCommands.*;
 
 public class ThingEntity
-    extends Entity<ThingEntity.ThingSnapshot>
+    extends Entity
     implements ThingEvents
 {
-    public record ThingSnapshot(String id, String foo){
+    private ThingModel snapshot;
+
+    @Inject
+    public ThingEntity() {
+    }
+
+    @Override
+    protected void before(Command command) throws Exception {
+        snapshot = new ThingModel(super.snapshot);
     }
 
     public void handle(CreateThing command)
     {
-        add(createdThing(command.id(), command.foo()).build());
+        add(createdThing(command.foo()).build());
     }
 
     public void handle(UpdateThing command)
     {
-        add(updatedThing(command.id(), command.foo()).build());
+        if (snapshot.getFoo().equals(command.foo()))
+            return;
+
+        add(updatedThing(command.foo()).build());
     }
 
     public void handle(DeleteThing command)
     {
-        add(deletedThing(command.id()));
+        add(deletedThing());
     }
 }

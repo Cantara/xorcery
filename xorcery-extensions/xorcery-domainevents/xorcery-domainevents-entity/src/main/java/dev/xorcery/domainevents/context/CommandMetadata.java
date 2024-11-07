@@ -17,7 +17,7 @@ package dev.xorcery.domainevents.context;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.xorcery.domainevents.api.DomainEventMetadata;
-import dev.xorcery.domainevents.entity.Command;
+import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.metadata.CommonMetadata;
 import dev.xorcery.metadata.DeploymentMetadata;
 import dev.xorcery.metadata.Metadata;

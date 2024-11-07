@@ -6,8 +6,7 @@ open module xorcery.domainevents.publisher.test {
     requires xorcery.configuration;
     requires xorcery.core;
     requires org.junit.jupiter.api;
-    requires jakarta.validation;
-    requires xorcery.domainevents.api;
     requires org.glassfish.hk2.api;
-
+    requires xorcery.domainevents.entity;
+    requires xorcery.domainevents.api;
 }

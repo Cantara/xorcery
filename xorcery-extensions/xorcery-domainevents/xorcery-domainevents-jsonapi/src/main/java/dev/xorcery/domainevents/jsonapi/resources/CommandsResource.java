@@ -18,10 +18,10 @@ package dev.xorcery.domainevents.jsonapi.resources;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.domainevents.context.CommandMetadata;
 import dev.xorcery.domainevents.context.CommandResult;
 import dev.xorcery.domainevents.context.DomainContext;
-import dev.xorcery.domainevents.entity.Command;
 import dev.xorcery.jsonapi.Error;
 import dev.xorcery.jsonapi.*;
 import dev.xorcery.metadata.Metadata;
@@ -173,20 +173,8 @@ public interface CommandsResource
                             .ifPresent(id -> commandResult.metadata().metadata().set("aggregateId", commandResult.metadata().metadata().textNode(id)));
                     return commandResult;
                 })
-                .thenCompose(commandResult -> ok(commandResult))
-                .exceptionallyCompose(throwable ->
-                {
-                    while (throwable.getCause() != null) {
-                        throwable = throwable.getCause();
-                    }
-
-                    // Todo integrate with Bean Validation 3.0 here
-                    if (throwable instanceof ConstraintViolationException cve) {
-                        return error(cve);
-                    }
-
-                    return CompletableFuture.failedStage(throwable);
-                });
+                .thenCompose(this::ok)
+                .exceptionallyCompose(this::error);
     }
 
     default Predicate<Command> isCommandByName(String name) {
@@ -197,6 +185,26 @@ public interface CommandsResource
 
     default <T extends Command> CompletionStage<Response> ok(CommandResult<T> commandResult) {
         return get(null).thenApply(rd -> Response.ok(rd).build());
+    }
+
+    default CompletionStage<Response> error(Throwable throwable)
+    {
+        while (throwable.getCause() != null) {
+            throwable = throwable.getCause();
+        }
+
+        if (throwable instanceof ConstraintViolationException cve) {
+            return error(cve);
+        } else if (throwable instanceof IllegalArgumentException iae)
+        {
+            return CompletableFuture.completedStage(Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ResourceDocument.Builder().errors(new Errors.Builder()
+                            .error(new Error.Builder().title(iae.getMessage()).build())
+                            .build()).build())
+                    .build());
+        }
+
+        return CompletableFuture.failedStage(throwable);
     }
 
     default CompletionStage<Response> error(ConstraintViolationException e) {

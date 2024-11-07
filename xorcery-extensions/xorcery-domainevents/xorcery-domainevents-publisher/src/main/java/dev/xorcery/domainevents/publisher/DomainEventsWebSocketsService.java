@@ -18,6 +18,7 @@ package dev.xorcery.domainevents.publisher;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.domainevents.api.MetadataEvents;
 import dev.xorcery.domainevents.context.CommandMetadata;
+import dev.xorcery.domainevents.publisher.api.DomainEventPublisher;
 import dev.xorcery.metadata.DeploymentMetadata;
 import dev.xorcery.metadata.Metadata;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;

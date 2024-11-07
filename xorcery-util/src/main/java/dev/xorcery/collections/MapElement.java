@@ -6,6 +6,11 @@ import java.util.Optional;
 public interface MapElement<K,V>
     extends Element
 {
+    static <K,V> MapElement<K,V> element(Map<K,V> map)
+    {
+        return () -> map;
+    }
+
     Map<K,V> map();
 
     @Override

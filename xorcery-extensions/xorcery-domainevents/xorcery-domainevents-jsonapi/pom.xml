@@ -30,7 +30,7 @@
     <dependencies>
         <dependency>
             <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-domainevents-publisher</artifactId>
+            <artifactId>xorcery-domainevents-entity</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>

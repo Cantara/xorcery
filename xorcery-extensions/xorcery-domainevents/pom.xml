@@ -29,6 +29,7 @@
 
     <modules>
         <module>xorcery-domainevents-api</module>
+        <module>xorcery-domainevents-entity</module>
         <module>xorcery-domainevents-jsonapi</module>
         <module>xorcery-domainevents-publisher</module>
         <module>xorcery-domainevents-neo4jprojection</module>

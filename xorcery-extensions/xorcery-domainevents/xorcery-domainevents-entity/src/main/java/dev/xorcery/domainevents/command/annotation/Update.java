@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.domainevents.entity.annotation;
+package dev.xorcery.domainevents.command.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -22,12 +22,12 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.TYPE;
 
 /**
- * Used to annotate commands that delete entities
+ * Used to annotate commands that are updates
  *
  * @author rickardoberg
 \ */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( value = {TYPE} )
-public @interface Delete
+public @interface Update
 {
 }

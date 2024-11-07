@@ -15,7 +15,9 @@
  */
 package dev.xorcery.domainevents.entity;
 
+import dev.xorcery.collections.Element;
 import dev.xorcery.domainevents.api.DomainEvent;
+import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.domainevents.context.CommandMetadata;
 import dev.xorcery.domainevents.context.CommandResult;
 
@@ -25,14 +27,20 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class Entity<SNAPSHOT> {
+public abstract class Entity {
 
     private static final Map<Class<?>, Map<Class<?>, Method>> handleMethods = new ConcurrentHashMap<>();
 
     private List<DomainEvent> events = null;
 
     protected CommandMetadata metadata;
-    protected SNAPSHOT snapshot;
+    protected Command command;
+    protected Element snapshot;
+
+    public String id()
+    {
+        return command.id();
+    }
 
     protected void before(Command command)
             throws Exception {
@@ -42,8 +50,9 @@ public abstract class Entity<SNAPSHOT> {
             throws Exception {
     }
 
-    public <T extends Command> CompletableFuture<CommandResult<T>> handle(CommandMetadata metadata, SNAPSHOT snapshot, T command) {
+    public <T extends Command> CompletableFuture<CommandResult<T>> handle(CommandMetadata metadata, Element snapshot, T command) {
         this.metadata = metadata;
+        this.command = command;
         this.snapshot = snapshot;
 
         // Handle command

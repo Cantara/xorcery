@@ -1,30 +1,29 @@
 package dev.xorcery.domainevents.test.context;
 
-import dev.xorcery.domainevents.entity.Command;
-import dev.xorcery.domainevents.entity.annotation.Create;
-import dev.xorcery.domainevents.entity.annotation.Delete;
-import dev.xorcery.domainevents.entity.annotation.Update;
-import jakarta.validation.constraints.NotBlank;
+import dev.xorcery.domainevents.command.Command;
+import dev.xorcery.domainevents.command.annotation.Create;
+import dev.xorcery.domainevents.command.annotation.Delete;
+import dev.xorcery.domainevents.command.annotation.Update;
 
 public interface ThingCommands {
 
     @Create
-    record CreateThing(@NotBlank String id, @NotBlank String foo)
+    record CreateThing(String id, String foo)
             implements Command {
     }
 
     @Update
-    record UpdateThing(@NotBlank String id, @NotBlank String foo)
+    record UpdateThing(String id, String foo)
             implements Command {
     }
 
     @Update
-    record UpdateBar(@NotBlank String id, @NotBlank String bar)
+    record UpdateBar(String id, String bar)
             implements Command {
     }
 
     @Delete
-    record DeleteThing(@NotBlank String id)
+    record DeleteThing(String id)
             implements Command {
     }
 }

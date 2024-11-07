@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.domainevents.entity;
+package dev.xorcery.domainevents.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.xorcery.domainevents.entity.annotation.Create;
-import dev.xorcery.domainevents.entity.annotation.Delete;
-import dev.xorcery.domainevents.entity.annotation.Update;
+import dev.xorcery.domainevents.command.annotation.Create;
+import dev.xorcery.domainevents.command.annotation.Delete;
+import dev.xorcery.domainevents.command.annotation.Update;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY)
 @JsonIgnoreProperties({"create", "update", "delete"})

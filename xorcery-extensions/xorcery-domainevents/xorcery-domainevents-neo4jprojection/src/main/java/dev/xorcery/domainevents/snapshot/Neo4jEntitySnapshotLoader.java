@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import dev.xorcery.collections.Element;
+import dev.xorcery.collections.MapElement;
 import dev.xorcery.domainevents.context.CommandMetadata;
 import dev.xorcery.domainevents.entity.Entity;
 import dev.xorcery.neo4j.client.Cypher;
@@ -32,7 +34,6 @@ import org.neo4j.graphdb.Result;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.lang.reflect.ParameterizedType;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -54,7 +55,7 @@ public class Neo4jEntitySnapshotLoader {
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
     }
 
-    public <T> T load(CommandMetadata metadata, String entityId, Entity<T> entity)
+    public Element load(CommandMetadata metadata, String entityId, Entity entity)
             throws IOException {
 
         String cypher = cypherCache.computeIfAbsent(entity.getClass(),
@@ -78,7 +79,7 @@ public class Neo4jEntitySnapshotLoader {
                 .thenCompose(result ->
                 {
                     try (result) {
-                        AtomicReference<T> snapshot = new AtomicReference<>();
+                        AtomicReference<Element> snapshot = new AtomicReference<>();
                         result.getResult().accept(new Result.ResultVisitor<Exception>() {
                             @Override
                             public boolean visit(Result.ResultRow resultRow) throws Exception {
@@ -87,8 +88,7 @@ public class Neo4jEntitySnapshotLoader {
                                 for (String columnName : result.getResult().columns()) {
                                     json.set(columnName, rowModel.getJsonNode(columnName));
                                 }
-                                Class<?> snapshotClass = (Class<?>) ((ParameterizedType) entity.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-                                snapshot.set((T) objectMapper.treeToValue(json, snapshotClass));
+                                snapshot.set(MapElement.element((Map<String, Object>)objectMapper.treeToValue(json, Map.class)));
                                 return false;
                             }
                         });

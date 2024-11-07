@@ -13,21 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.domainevents.entity.annotation;
+package dev.xorcery.domainevents.publisher.api;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import dev.xorcery.domainevents.api.MetadataEvents;
+import dev.xorcery.metadata.Metadata;
 
-import static java.lang.annotation.ElementType.TYPE;
+import java.util.concurrent.CompletableFuture;
 
-/**
- * Used to annotate commands that create entities
- *
- * @author rickardoberg
- */
-@Retention( RetentionPolicy.RUNTIME )
-@Target( value = {TYPE} )
-public @interface Create
+public interface DomainEventPublisher
 {
+    CompletableFuture<Metadata> publish(MetadataEvents metadataEvents);
 }

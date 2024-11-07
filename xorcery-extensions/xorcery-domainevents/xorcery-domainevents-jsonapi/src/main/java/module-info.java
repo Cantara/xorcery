@@ -21,8 +21,7 @@ module xorcery.domainevents.jsonapi {
     requires transitive xorcery.metadata;
 
     requires xorcery.domainevents.api;
-    requires xorcery.domainevents.publisher;
-    requires xorcery.reactivestreams.api;
+    requires xorcery.domainevents.entity;
     requires xorcery.configuration.api;
     requires xorcery.jaxrs.server;
 

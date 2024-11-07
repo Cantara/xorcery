@@ -21,9 +21,6 @@
     },
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
-    },
-    "domainevents" : {
-      "$ref" : "#/$defs/domainevents"
     }
   },
   "$defs" : {
@@ -196,27 +193,6 @@
           "type" : [ "boolean", "string" ],
           "default" : true,
           "description" : "Default: true"
-        }
-      }
-    },
-    "domainevents" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} (true)"
-        },
-        "eventstore" : {
-          "type" : "string",
-          "default" : "{{ instance.api }}eventstore",
-          "description" : "Default: {{ instance.api }}eventstore (http://service.xorcery.test/api/eventstore)"
-        },
-        "projections" : {
-          "type" : "string",
-          "default" : "{{ instance.api }}projections",
-          "description" : "Default: {{ instance.api }}projections (http://service.xorcery.test/api/projections)"
         }
       }
     }

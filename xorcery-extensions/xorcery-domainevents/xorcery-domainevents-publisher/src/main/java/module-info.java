@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 module xorcery.domainevents.publisher {
-    exports dev.xorcery.domainevents.entity;
-    exports dev.xorcery.domainevents.entity.annotation;
-    exports dev.xorcery.domainevents.context;
     exports dev.xorcery.domainevents.publisher;
-    exports dev.xorcery.domainevents.validation;
+    exports dev.xorcery.domainevents.publisher.api;
 
     requires transitive xorcery.jsonapi.server;
     requires transitive xorcery.metadata;
 
+    requires xorcery.domainevents.api;
+    requires xorcery.domainevents.entity;
     requires xorcery.reactivestreams.api;
     requires xorcery.configuration.api;
 
     requires org.apache.logging.log4j;
     requires com.fasterxml.jackson.annotation;
     requires jakarta.inject;
-    requires jakarta.validation;
     requires org.glassfish.hk2.api;
-    requires xorcery.domainevents.api;
     requires jakarta.ws.rs;
 }

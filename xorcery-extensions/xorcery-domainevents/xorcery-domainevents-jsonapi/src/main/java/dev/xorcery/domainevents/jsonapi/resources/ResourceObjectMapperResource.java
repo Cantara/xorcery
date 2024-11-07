@@ -15,8 +15,8 @@
  */
 package dev.xorcery.domainevents.jsonapi.resources;
 
+import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.domainevents.context.DomainContext;
-import dev.xorcery.domainevents.entity.Command;
 import dev.xorcery.domainevents.jsonapi.resources.model.EntityModel;
 import dev.xorcery.domainevents.jsonapi.resources.model.Model;
 import dev.xorcery.jsonapi.*;

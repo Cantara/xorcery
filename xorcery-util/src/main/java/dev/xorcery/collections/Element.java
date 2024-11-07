@@ -2,6 +2,7 @@ package dev.xorcery.collections;
 
 import java.net.URI;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * This represents a map of values which can be accessed through these helper methods.
@@ -9,6 +10,10 @@ import java.util.Optional;
  * on what they want to assert about the values rather than messing with what is actually in the map.
  */
 public interface Element {
+
+    static Supplier<RuntimeException> missing(String name) {
+        return () -> new IllegalArgumentException("Missing '" + name + "'");
+    }
 
     <T> Optional<T> get(String name);
 
