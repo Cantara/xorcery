@@ -1,7 +1,6 @@
 package dev.xorcery.neo4jprojections;
 
 import dev.xorcery.domainevents.api.MetadataEvents;
-import dev.xorcery.metadata.Metadata;
 import dev.xorcery.neo4jprojections.api.ProjectionStreamContext;
 import dev.xorcery.reactivestreams.api.ContextViewElement;
 import jakarta.inject.Inject;
@@ -24,7 +23,7 @@ import static java.util.Objects.requireNonNull;
 
 @Service(name = "neo4jprojections.updates")
 public class Neo4jProjectionUpdates
-        implements Publisher<Metadata>,
+        implements Publisher<MetadataEvents>,
         BiFunction<Flux<MetadataEvents>, ContextView, Publisher<MetadataEvents>>,
         PreDestroy {
     private final Map<String, SinkFlux> sinkFluxes = new ConcurrentHashMap<>();
@@ -34,8 +33,8 @@ public class Neo4jProjectionUpdates
     }
 
     @Override
-    public void subscribe(Subscriber<? super Metadata> s) {
-        if (s instanceof CoreSubscriber<? super Metadata> coreSubscriber) {
+    public void subscribe(Subscriber<? super MetadataEvents> s) {
+        if (s instanceof CoreSubscriber<? super MetadataEvents> coreSubscriber) {
             new ContextViewElement(coreSubscriber.currentContext())
                     .getString(ProjectionStreamContext.projectionId)
                     .ifPresentOrElse(pid ->
@@ -60,7 +59,7 @@ public class Neo4jProjectionUpdates
         }).orElse(projectionFlux);
     }
 
-    private Consumer<? super Signal<MetadataEvents>> onEach(Sinks.Many<Metadata> sink) {
+    private Consumer<? super Signal<MetadataEvents>> onEach(Sinks.Many<MetadataEvents> sink) {
         return signal ->
         {
             switch (requireNonNull(signal.getType())) {
@@ -68,7 +67,7 @@ public class Neo4jProjectionUpdates
                     sink.tryEmitComplete();
                 }
                 case ON_NEXT -> {
-                    sink.tryEmitNext(requireNonNull(signal.get()).metadata());
+                    sink.tryEmitNext(requireNonNull(signal.get()));
                 }
                 case ON_ERROR -> {
                     sink.tryEmitError(requireNonNull(signal.getThrowable()));
@@ -83,8 +82,8 @@ public class Neo4jProjectionUpdates
     }
 
     private static SinkFlux createSinkFlux(String projectionId) {
-        Sinks.Many<Metadata> sink = Sinks.many().replay().limit(1);
-        Flux<Metadata> projectionUpdatesFlux = sink.asFlux();
+        Sinks.Many<MetadataEvents> sink = Sinks.many().replay().limit(1);
+        Flux<MetadataEvents> projectionUpdatesFlux = sink.asFlux();
         return new SinkFlux(sink, projectionUpdatesFlux);
     }
 
@@ -93,6 +92,6 @@ public class Neo4jProjectionUpdates
         sinkFluxes.values().forEach(sinkFlux -> sinkFlux.sink().tryEmitComplete());
     }
 
-    record SinkFlux(Sinks.Many<Metadata> sink, Flux<Metadata> flux) {
+    record SinkFlux(Sinks.Many<MetadataEvents> sink, Flux<MetadataEvents> flux) {
     }
 }

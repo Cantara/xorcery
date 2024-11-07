@@ -16,6 +16,7 @@
 package dev.xorcery.neo4jprojections.api;
 
 import dev.xorcery.domainevents.api.DomainEventMetadata;
+import dev.xorcery.domainevents.api.MetadataEvents;
 import dev.xorcery.metadata.Metadata;
 import dev.xorcery.reactivestreams.api.ReactiveStreamsContext;
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WaitForProjectionUpdate
-        extends BaseSubscriber<Metadata>
+        extends BaseSubscriber<MetadataEvents>
         implements AutoCloseable {
 
     record ProjectionWaiter(Long position, Long timestamp, CompletableFuture<Metadata> future) {
@@ -87,24 +88,25 @@ public class WaitForProjectionUpdate
     }
 
     @Override
-    protected void hookOnNext(Metadata item) {
-        if (item.getString(ProjectionStreamContext.projectionId).map(id -> id.equals(projectionId)).orElse(false)) {
+    protected void hookOnNext(MetadataEvents item) {
+        Metadata metadata = item.metadata();
+        if (metadata.getString(ProjectionStreamContext.projectionId).map(id -> id.equals(projectionId)).orElse(false)) {
             if (logger.isDebugEnabled())
-                logger.debug("Received projection update: " + item.getString(ProjectionStreamContext.projectionId).orElse("") + ":" + item.getLong(ReactiveStreamsContext.streamPosition).orElse(0L));
+                logger.debug("Received projection update: " + metadata.getString(ProjectionStreamContext.projectionId).orElse("") + ":" + metadata.getLong(ReactiveStreamsContext.streamPosition).orElse(0L));
 
-            currentCommit.set(item);
-            item.getLong(ReactiveStreamsContext.streamPosition).ifPresent(currentPosition::set);
-            item.getLong(DomainEventMetadata.timestamp).ifPresent(currentTimestamp::set);
+            currentCommit.set(metadata);
+            metadata.getLong(ReactiveStreamsContext.streamPosition).ifPresent(currentPosition::set);
+            metadata.getLong(DomainEventMetadata.timestamp).ifPresent(currentTimestamp::set);
 
             do {
                 ProjectionWaiter waiter = queue.peek();
                 if (waiter != null) {
                     if (waiter.position() != null && waiter.position() <= currentPosition.get()) {
                         waiter = queue.poll();
-                        waiter.future().complete(item);
+                        waiter.future().complete(metadata);
                     } else if (waiter.timestamp() != null && waiter.timestamp() <= currentTimestamp.get()) {
                         waiter = queue.poll();
-                        waiter.future().complete(item);
+                        waiter.future().complete(metadata);
                     } else {
                         break;
                     }
