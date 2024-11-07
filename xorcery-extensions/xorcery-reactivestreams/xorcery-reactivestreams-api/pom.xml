@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-reactivestreams</artifactId>
-        <version>0.150.7</version>
+        <version>0.150.8-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-reactivestreams-api</artifactId>
