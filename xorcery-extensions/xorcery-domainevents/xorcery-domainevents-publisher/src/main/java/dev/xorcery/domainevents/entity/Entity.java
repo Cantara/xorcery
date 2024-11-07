@@ -18,14 +18,10 @@ package dev.xorcery.domainevents.entity;
 import dev.xorcery.domainevents.api.DomainEvent;
 import dev.xorcery.domainevents.context.CommandMetadata;
 import dev.xorcery.domainevents.context.CommandResult;
-import jakarta.validation.ValidationException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,7 +29,7 @@ public abstract class Entity<SNAPSHOT> {
 
     private static final Map<Class<?>, Map<Class<?>, Method>> handleMethods = new ConcurrentHashMap<>();
 
-    private final List<DomainEvent> events = new ArrayList<>();
+    private List<DomainEvent> events = null;
 
     protected CommandMetadata metadata;
     protected SNAPSHOT snapshot;
@@ -50,35 +46,37 @@ public abstract class Entity<SNAPSHOT> {
         this.metadata = metadata;
         this.snapshot = snapshot;
 
-        Method handleMethod = handleMethods.computeIfAbsent(getClass(), this::calculateCommandHandlers).get(command.getClass());
-
-        if (handleMethod == null) {
-            throw new IllegalArgumentException("No handle method for command type " +
-                    command.getClass().getName());
-        }
-
         // Handle command
         try {
+            Method handleMethod = handleMethods.computeIfAbsent(getClass(), this::calculateCommandHandlers).get(command.getClass());
+
+            if (handleMethod == null) {
+                return CompletableFuture.failedFuture(new IllegalArgumentException("No handle method for command type " +
+                        command.getClass().getName()));
+            }
+
             before(command);
             handleMethod.invoke(this, command);
             after(command);
         } catch (InvocationTargetException e) {
-            if (e.getTargetException() instanceof IllegalArgumentException iae) {
-                return CompletableFuture.failedFuture(iae);
-            } else if (e.getTargetException() instanceof ValidationException ve) {
-                return CompletableFuture.failedFuture(ve);
-            }
-
-            return CompletableFuture.failedFuture(new IllegalArgumentException(e.getCause().getMessage(), e.getCause()));
-        } catch (Exception e) {
-            return CompletableFuture.failedFuture(new IllegalArgumentException(e));
+            return CompletableFuture.failedFuture(e.getTargetException());
+        } catch (Throwable e) {
+            return CompletableFuture.failedFuture(e);
         }
 
-        return CompletableFuture.completedFuture(new CommandResult<>(command, events, metadata.context()));
+        try {
+            return CompletableFuture.completedFuture(new CommandResult<>(command, events != null ? events : Collections.emptyList(), metadata.context()));
+        } finally {
+            events = null;
+        }
     }
 
     protected void add(DomainEvent event) {
         if (event != null) {
+            if (events == null)
+            {
+                events = new ArrayList<>();
+            }
             events.add(event);
         }
     }
