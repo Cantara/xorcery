@@ -1024,9 +1024,9 @@
                     </configuration>
                 </plugin>
                 <plugin>
-                    <groupId>com.exoreaction.xorcery</groupId>
+                    <groupId>dev.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.132.5</version>
+                    <version>0.150.5</version>
                 </plugin>
 <!--
                 <plugin>
@@ -1064,11 +1064,10 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.8.1</version>
             </plugin>
-<!--
             <plugin>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                <version>0.132.5</version>
+                <version>0.150.5</version>
                 <executions>
                     <execution>
                         <id>generate-jsonschema</id>
@@ -1079,7 +1078,6 @@
                     </execution>
                 </executions>
             </plugin>
--->
         </plugins>
     </build>
 

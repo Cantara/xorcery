@@ -142,9 +142,8 @@
 
     <build>
         <plugins>
-<!--
             <plugin>
-                <groupId>com.exoreaction.xorcery</groupId>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
                 <executions>
                     <execution>
@@ -157,7 +156,6 @@
                     </execution>
                 </executions>
             </plugin>
--->
         </plugins>
     </build>
 </project>
