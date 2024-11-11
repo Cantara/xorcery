@@ -15,6 +15,8 @@
  */
 package dev.xorcery.lang;
 
+import java.util.Optional;
+
 public interface Exceptions {
 
     static Throwable unwrap(Throwable throwable)
@@ -37,5 +39,18 @@ public interface Exceptions {
             throwable = throwable.getCause();
         } while (throwable != null);
         return false;
+    }
+
+    static <T extends Throwable> Optional<T> getCause(Throwable throwable, Class<T> exceptionClass)
+    {
+        do {
+            if (exceptionClass.isInstance(throwable))
+            {
+                //noinspection unchecked
+                return Optional.of((T)throwable);
+            }
+        } while ((throwable = throwable.getCause()) != null);
+
+        return Optional.empty();
     }
 }

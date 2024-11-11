@@ -50,7 +50,7 @@ public abstract class Entity {
             throws Exception {
     }
 
-    public <T extends Command> CompletableFuture<CommandResult<T>> handle(CommandMetadata metadata, Element snapshot, T command) {
+    public CompletableFuture<CommandResult> handle(CommandMetadata metadata, Element snapshot, Command command) {
         this.metadata = metadata;
         this.command = command;
         this.snapshot = snapshot;
@@ -74,7 +74,7 @@ public abstract class Entity {
         }
 
         try {
-            return CompletableFuture.completedFuture(new CommandResult<>(command, events != null ? events : Collections.emptyList(), metadata.context()));
+            return CompletableFuture.completedFuture(new CommandResult(command, events != null ? events : Collections.emptyList(), metadata.context()));
         } finally {
             events = null;
         }

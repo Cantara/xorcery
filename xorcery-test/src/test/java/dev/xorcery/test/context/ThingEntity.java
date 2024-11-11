@@ -1,10 +1,10 @@
-package dev.xorcery.domainevents.test.context;
+package dev.xorcery.test.context;
 
 import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.domainevents.entity.Entity;
 import jakarta.inject.Inject;
 
-import static dev.xorcery.domainevents.test.context.ThingCommands.*;
+import static dev.xorcery.test.context.ThingCommands.*;
 
 public class ThingEntity
     extends Entity

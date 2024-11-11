@@ -15,24 +15,23 @@
  */
 
 import dev.xorcery.neo4j.spi.Neo4jProvider;
-import dev.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 
 module xorcery.domainevents.neo4jprojection {
-    exports dev.xorcery.domainevents.neo4jprojections;
-    exports dev.xorcery.domainevents.snapshot;
+    exports dev.xorcery.domainevents.neo4jprojection;
+    exports dev.xorcery.domainevents.neo4jprojection.providers;
 
     requires xorcery.neo4j.embedded;
     requires xorcery.domainevents.api;
     requires xorcery.domainevents.entity;
-
-    requires org.glassfish.hk2.api;
-    requires org.apache.logging.log4j;
     requires xorcery.neo4j.shaded;
     requires xorcery.neo4j.projections;
-    requires jakarta.ws.rs;
     requires xorcery.domainevents.publisher;
     requires xorcery.reactivestreams.api;
 
-    provides Neo4jProvider with dev.xorcery.domainevents.neo4jprojections.ApplyJsonDomainEvent;
-    provides Neo4jEventProjection with dev.xorcery.domainevents.neo4jprojections.JsonDomainEventNeo4jEventProjection;
+    requires org.glassfish.hk2.api;
+    requires org.apache.logging.log4j;
+    requires jakarta.ws.rs;
+    requires jakarta.inject;
+
+    provides Neo4jProvider with dev.xorcery.domainevents.neo4jprojection.providers.ApplyJsonDomainEvent;
 }

@@ -34,7 +34,7 @@ public class Neo4jWarmupService {
         if (!warmupQueries.isEmpty())
         {
             for (String warmupQuery : warmupQueries) {
-                try(GraphResult result = graphDatabase.execute(warmupQuery, Collections.emptyMap(), 90).toCompletableFuture().join()) {
+                try(GraphResult result = graphDatabase.execute(warmupQuery, Collections.emptyMap(), 90).join()) {
                     result.getResult().accept(row -> true);
                 } catch (Exception e) {
                     logger.warn("Warmup script failed", e);

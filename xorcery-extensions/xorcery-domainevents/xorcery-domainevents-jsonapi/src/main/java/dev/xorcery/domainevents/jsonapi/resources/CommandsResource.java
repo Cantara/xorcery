@@ -22,6 +22,10 @@ import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.domainevents.context.CommandMetadata;
 import dev.xorcery.domainevents.context.CommandResult;
 import dev.xorcery.domainevents.context.DomainContext;
+import dev.xorcery.domainevents.entity.EntityAlreadyExistsException;
+import dev.xorcery.domainevents.entity.EntityException;
+import dev.xorcery.domainevents.entity.EntityNotFoundException;
+import dev.xorcery.domainevents.entity.EntityWrongVersionException;
 import dev.xorcery.jsonapi.Error;
 import dev.xorcery.jsonapi.*;
 import dev.xorcery.metadata.Metadata;
@@ -30,6 +34,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.ServerErrorException;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
@@ -41,6 +46,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static dev.xorcery.jsonapi.JsonApiRels.self;
+import static dev.xorcery.lang.Exceptions.getCause;
 
 public interface CommandsResource
         extends CommandsJsonSchemaResource {
@@ -52,8 +58,7 @@ public interface CommandsResource
         };
     }
 
-    default Consumer<Links.Builder> commandSelfLink()
-    {
+    default Consumer<Links.Builder> commandSelfLink() {
         return links ->
         {
             links.link(self, getUriInfo().getRequestUri().toASCIIString());
@@ -119,8 +124,7 @@ public interface CommandsResource
         ObjectNode result = objectMapper.valueToTree(command);
         result.remove("@class");
         JsonNode jsonId = result.remove("id");
-        if (jsonId != null && jsonId.isTextual())
-        {
+        if (jsonId != null && jsonId.isTextual()) {
             id = jsonId.textValue();
         }
 
@@ -158,15 +162,14 @@ public interface CommandsResource
 
         // Transfer over ResourceObject.id as aggregate id if not already set
         CommandMetadata commandMetadata;
-        if (!metadata.has("aggregateId"))
-        {
+        if (!metadata.has("aggregateId")) {
             String id = resourceObject.getId() != null ? resourceObject.getId() : UUIDs.newId();
             commandMetadata = CommandMetadata.Builder.aggregateId(id, metadata);
         } else {
             commandMetadata = new CommandMetadata(metadata);
         }
 
-        return context.handle(commandMetadata, command)
+        return context.apply(commandMetadata, command)
                 .thenApply(commandResult ->
                 {
                     metadata.getString("aggregateId")
@@ -181,33 +184,20 @@ public interface CommandsResource
         return c -> name.equals(Command.getName(c));
     }
 
-    CompletionStage<ResourceDocument> get(String rel);
+    CompletableFuture<ResourceDocument> get(String rel);
 
-    default <T extends Command> CompletionStage<Response> ok(CommandResult<T> commandResult) {
+    default <T extends Command> CompletableFuture<Response> ok(CommandResult commandResult) {
         return get(null).thenApply(rd -> Response.ok(rd).build());
     }
 
-    default CompletionStage<Response> error(Throwable throwable)
-    {
-        while (throwable.getCause() != null) {
-            throwable = throwable.getCause();
-        }
-
-        if (throwable instanceof ConstraintViolationException cve) {
-            return error(cve);
-        } else if (throwable instanceof IllegalArgumentException iae)
-        {
-            return CompletableFuture.completedStage(Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ResourceDocument.Builder().errors(new Errors.Builder()
-                            .error(new Error.Builder().title(iae.getMessage()).build())
-                            .build()).build())
-                    .build());
-        }
-
-        return CompletableFuture.failedStage(throwable);
+    default CompletableFuture<Response> error(Throwable throwable) {
+        return getCause(throwable, ConstraintViolationException.class).map(this::error)
+                .orElseGet(() -> getCause(throwable, IllegalArgumentException.class).map(this::error)
+                        .orElseGet(() -> getCause(throwable, EntityException.class).map(this::error)
+                                .orElseThrow(() -> new ServerErrorException(Response.Status.INTERNAL_SERVER_ERROR, throwable))));
     }
 
-    default CompletionStage<Response> error(ConstraintViolationException e) {
+    default CompletableFuture<Response> error(ConstraintViolationException e) {
         Errors.Builder errors = new Errors.Builder();
         if (!e.getMessage().equals("")) {
             errors.error(
@@ -221,8 +211,27 @@ public interface CommandsResource
                     .build());
         }
 
-        return CompletableFuture.completedStage(Response.status(Response.Status.BAD_REQUEST)
+        return CompletableFuture.completedFuture(Response.status(Response.Status.BAD_REQUEST)
                 .entity(new ResourceDocument.Builder().errors(errors.build()).build())
                 .build());
+    }
+
+    default CompletableFuture<Response> error(IllegalArgumentException iae) {
+        return CompletableFuture.completedFuture(Response.status(Response.Status.BAD_REQUEST)
+                .entity(new ResourceDocument.Builder().errors(new Errors.Builder()
+                        .error(new Error.Builder().title(iae.getMessage()).build())
+                        .build()).build())
+                .build());
+    }
+
+    default CompletableFuture<Response> error(EntityException entityException) {
+        if (entityException instanceof EntityNotFoundException)
+            return CompletableFuture.completedFuture(Response.status(Response.Status.NOT_FOUND).build());
+        else if (entityException instanceof EntityAlreadyExistsException)
+            return CompletableFuture.completedFuture(Response.status(Response.Status.CONFLICT).build());
+        else if (entityException instanceof EntityWrongVersionException)
+            return CompletableFuture.completedFuture(Response.status(Response.Status.PRECONDITION_FAILED).build());
+        else
+            return CompletableFuture.completedFuture(Response.serverError().build());
     }
 }

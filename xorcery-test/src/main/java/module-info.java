@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module xorcery.test {
+open module xorcery.test {
     exports dev.xorcery.test;
     exports dev.xorcery.test.resources;
 
-    requires org.glassfish.hk2.api;
-    requires org.glassfish.hk2.runlevel;
-    requires jakarta.inject;
+    requires xorcery.metadata;
+    requires xorcery.keystores;
     requires xorcery.configuration.api;
     requires xorcery.jsonapi.service;
     requires xorcery.jsonapi.client;
     requires xorcery.jsonapi.jaxrs;
-    requires xorcery.keystores;
     requires xorcery.jsonapi.server;
-    requires org.apache.logging.log4j;
-    requires jakarta.servlet;
-    requires io.opentelemetry.context;
     requires xorcery.jaxrs.server;
     requires xorcery.reactivestreams.disruptor;
     requires xorcery.util;
     requires xorcery.configuration;
+    requires xorcery.domainevents.api;
+
+    requires org.glassfish.hk2.api;
+    requires org.glassfish.hk2.runlevel;
+    requires jakarta.inject;
+    requires org.apache.logging.log4j;
+    requires jakarta.servlet;
+    requires io.opentelemetry.context;
 }

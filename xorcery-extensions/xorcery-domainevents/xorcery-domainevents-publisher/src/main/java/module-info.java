@@ -16,6 +16,7 @@
 module xorcery.domainevents.publisher {
     exports dev.xorcery.domainevents.publisher;
     exports dev.xorcery.domainevents.publisher.api;
+    exports dev.xorcery.domainevents.publisher.spi;
 
     requires transitive xorcery.jsonapi.server;
     requires transitive xorcery.metadata;

@@ -1,4 +1,4 @@
-package dev.xorcery.domainevents.test.context;
+package dev.xorcery.test.context;
 
 import dev.xorcery.domainevents.api.JsonDomainEvent;
 import dev.xorcery.domainevents.api.JsonDomainEvent.StateBuilder;

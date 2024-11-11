@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.domainevents.neo4jprojections;
+package dev.xorcery.domainevents.neo4jprojection.providers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 import dev.xorcery.domainevents.api.DomainEvent;
 import dev.xorcery.domainevents.api.JsonDomainEvent;
 import dev.xorcery.domainevents.api.MetadataEvents;
-import dev.xorcery.neo4j.client.Cypher;
+import dev.xorcery.domainevents.neo4jprojection.Neo4jJsonDomainEvent;
+import dev.xorcery.metadata.Metadata;
 import dev.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import org.apache.logging.log4j.LogManager;
 import org.jvnet.hk2.annotations.ContractsProvided;
@@ -28,7 +29,6 @@ import org.jvnet.hk2.annotations.Service;
 import org.neo4j.graphdb.*;
 
 import java.util.Iterator;
-import java.util.Map;
 
 @Service(name = "jsondomaineventprojection")
 @ContractsProvided({Neo4jEventProjection.class})
@@ -40,16 +40,16 @@ public class JsonDomainEventNeo4jEventProjection
 
     @Override
     public void write(MetadataEvents events, Transaction transaction) throws Throwable {
-        Map<String, Object> metadataMap = Cypher.toMap(events.metadata().metadata());
+        Metadata metadata = events.metadata();
 
         for (DomainEvent domainEvent : events.data()) {
             if (domainEvent instanceof JsonDomainEvent jsonDomainEvent)
             {
 
             Neo4jJsonDomainEvent neo4jJsonDomainEvent = new Neo4jJsonDomainEvent(jsonDomainEvent);
-            Object timestamp = metadataMap.get("timestamp");
-            Object aggregateId = metadataMap.get("aggregateId");
-            String aggregateType = metadataMap.get("aggregateType").toString();
+            long timestamp = metadata.getLong("timestamp").orElse(System.currentTimeMillis());
+            String aggregateId = metadata.getString("aggregateId").orElse(null);
+            String aggregateType = metadata.getString("aggregateType").orElse(null);
             if (jsonDomainEvent.isCreated()) {
                 JsonDomainEvent.JsonEntity entity = jsonDomainEvent.getEntity();
                 Node node = transaction.createNode(Label.label(entity.getType()), ENTITY_LABEL);
@@ -63,7 +63,7 @@ public class JsonDomainEventNeo4jEventProjection
                 String id = entity.getId();
                 node.setProperty("id", id);
                 if (aggregateId != null) {
-                    node.setProperty("aggregate_id", aggregateId);
+                    node.setProperty("aggregateId", aggregateId);
                 }
 
                 attributes(jsonDomainEvent.json(), node);

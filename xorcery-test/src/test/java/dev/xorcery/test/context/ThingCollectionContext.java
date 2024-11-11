@@ -1,24 +1,25 @@
-package dev.xorcery.domainevents.test.context;
+package dev.xorcery.test.context;
 
-import dev.xorcery.collections.MapElement;
 import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.domainevents.context.CommandMetadata;
 import dev.xorcery.domainevents.context.CommandResult;
 import dev.xorcery.domainevents.context.DomainContext;
+import dev.xorcery.domainevents.publisher.api.CommandHandler;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class ThingCollectionContext
         implements DomainContext {
     private final ServiceLocator thingSupplier;
+    private final CommandHandler commandHandler;
 
     @Inject
-    public ThingCollectionContext(ServiceLocator thingSupplier) {
+    public ThingCollectionContext(ServiceLocator thingSupplier, CommandHandler commandHandler) {
         this.thingSupplier = thingSupplier;
+        this.commandHandler = commandHandler;
     }
 
 
@@ -28,7 +29,7 @@ public class ThingCollectionContext
     }
 
     @Override
-    public <T extends Command> CompletableFuture<CommandResult<T>> handle(CommandMetadata metadata, T command) {
-        return thingSupplier.create(ThingEntity.class).handle(metadata, MapElement.element(Collections.emptyMap()), command);
+    public CompletableFuture<CommandResult> apply(CommandMetadata metadata, Command command) {
+        return commandHandler.handle(thingSupplier.createAndInitialize(ThingEntity.class), metadata, command);
     }
 }

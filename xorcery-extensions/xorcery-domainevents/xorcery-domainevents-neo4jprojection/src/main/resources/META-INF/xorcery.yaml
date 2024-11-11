@@ -1,3 +1,7 @@
 $schema: xorcery-domainevents-neo4jprojection-schema.json
 jsondomaineventprojection:
   enabled: "{{ defaults.enabled }}"
+neo4jeventpublisherprovider:
+  projectionId: "default"
+neo4jeventprojectionprovider:
+  projectionId: "{{ neo4jeventpublisherprovider.projectionId }}"

@@ -15,6 +15,16 @@ public interface Element {
         return () -> new IllegalArgumentException("Missing '" + name + "'");
     }
 
+    static Element empty()
+    {
+        return new Element() {
+            @Override
+            public <T> Optional<T> get(String name) {
+                return Optional.empty();
+            }
+        };
+    }
+
     <T> Optional<T> get(String name);
 
     default <T> Optional<T> get(Enum<?> name)

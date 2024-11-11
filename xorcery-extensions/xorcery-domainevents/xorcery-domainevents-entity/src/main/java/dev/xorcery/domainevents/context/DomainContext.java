@@ -21,9 +21,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiFunction;
 
-public interface DomainContext {
-
+public interface DomainContext
+    extends BiFunction<CommandMetadata, Command, CompletableFuture<CommandResult>>
+{
     default List<Command> commands() {
         return Collections.emptyList();
     }
@@ -35,7 +37,7 @@ public interface DomainContext {
                 .findFirst();
     }
 
-    default <T extends Command> CompletableFuture<CommandResult<T>> handle(CommandMetadata metadata, T command) {
-        return CompletableFuture.failedFuture(new EntityNotFoundException());
+    default CompletableFuture<CommandResult> apply(CommandMetadata metadata, Command command) {
+        return CompletableFuture.failedFuture(new IllegalStateException("This context has no commands"));
     }
 }

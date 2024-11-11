@@ -51,7 +51,7 @@ log4j2.Configuration.Loggers.logger:
 
     @Test
     public void startupNeo4j(Neo4jDatabaseService neo4JDatabaseService) throws Exception {
-        try (GraphResult graphResult = neo4JDatabaseService.provide().execute("MATCH (n) RETURN count(n)", Collections.emptyMap(), 10).toCompletableFuture().join())
+        try (GraphResult graphResult = neo4JDatabaseService.provide().execute("MATCH (n) RETURN count(n)", Collections.emptyMap(), 10).join())
         {
             System.out.println(graphResult.getResult().resultAsString());
         }
@@ -60,7 +60,7 @@ log4j2.Configuration.Loggers.logger:
     @Test
     public void testMetrics(LocalMetricReader localMetricReader, GraphDatabase graphDatabase) throws Exception {
         for (int i = 0; i < 10000; i++) {
-            graphDatabase.execute("CREATE (node:Node) SET node.foo='bar'", Collections.emptyMap(), 90).toCompletableFuture().join().close();
+            graphDatabase.execute("CREATE (node:Node) SET node.foo='bar'", Collections.emptyMap(), 90).join().close();
         }
 
         localMetricReader.getMetric("neo4j.checkpoint.count").orElseThrow().getLongGaugeData().getPoints().forEach(point -> assertTrue(point.getValue() > 0));

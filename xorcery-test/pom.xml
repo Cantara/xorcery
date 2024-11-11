@@ -91,6 +91,14 @@
             <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-util</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.xorcery</groupId>
+            <artifactId>xorcery-domainevents-publisher</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.xorcery</groupId>
+            <artifactId>xorcery-domainevents-neo4jprojection</artifactId>
+        </dependency>
 
     </dependencies>
 

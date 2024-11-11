@@ -1,4 +1,4 @@
-package dev.xorcery.domainevents.test.context;
+package dev.xorcery.test.context;
 
 import dev.xorcery.domainevents.command.Command;
 import dev.xorcery.domainevents.command.annotation.Create;

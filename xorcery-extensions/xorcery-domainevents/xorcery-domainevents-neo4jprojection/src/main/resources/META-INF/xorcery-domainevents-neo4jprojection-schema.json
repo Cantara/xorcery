@@ -6,6 +6,12 @@
   "properties" : {
     "jsondomaineventprojection" : {
       "$ref" : "#/$defs/jsondomaineventprojection"
+    },
+    "neo4jeventpublisherprovider" : {
+      "$ref" : "#/$defs/neo4jeventpublisherprovider"
+    },
+    "neo4jeventprojectionprovider" : {
+      "$ref" : "#/$defs/neo4jeventprojectionprovider"
     }
   },
   "$defs" : {
@@ -17,6 +23,28 @@
           "type" : [ "boolean", "string" ],
           "default" : "{{ defaults.enabled }}",
           "description" : "Default: {{ defaults.enabled }} (true)"
+        }
+      }
+    },
+    "neo4jeventpublisherprovider" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "projectionId" : {
+          "type" : "string",
+          "default" : "default",
+          "description" : "Default: default"
+        }
+      }
+    },
+    "neo4jeventprojectionprovider" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "projectionId" : {
+          "type" : "string",
+          "default" : "{{ neo4jeventpublisherprovider.projectionId }}",
+          "description" : "Default: {{ neo4jeventpublisherprovider.projectionId }} (default)"
         }
       }
     }

@@ -6,5 +6,5 @@ import dev.xorcery.metadata.Metadata;
 
 import java.util.List;
 
-public record CommandResult<T extends Command>(T command, List<DomainEvent> events, Metadata metadata) {
+public record CommandResult(Command command, List<DomainEvent> events, Metadata metadata) {
 }

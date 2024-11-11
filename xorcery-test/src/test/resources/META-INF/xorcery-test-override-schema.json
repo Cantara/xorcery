@@ -34,6 +34,18 @@
     "dns" : {
       "$ref" : "#/$defs/dns"
     },
+    "jsondomaineventprojection" : {
+      "$ref" : "#/$defs/jsondomaineventprojection"
+    },
+    "neo4jeventpublisherprovider" : {
+      "$ref" : "#/$defs/neo4jeventpublisherprovider"
+    },
+    "neo4jeventprojectionprovider" : {
+      "$ref" : "#/$defs/neo4jeventprojectionprovider"
+    },
+    "domainevents" : {
+      "$ref" : "#/$defs/domainevents"
+    },
     "health" : {
       "$ref" : "#/$defs/health"
     },
@@ -55,11 +67,17 @@
     "neo4jdatabase" : {
       "$ref" : "#/$defs/neo4jdatabase"
     },
+    "neo4jprojections" : {
+      "$ref" : "#/$defs/neo4jprojections"
+    },
     "opentelemetry" : {
       "$ref" : "#/$defs/opentelemetry"
     },
     "disruptor" : {
       "$ref" : "#/$defs/disruptor"
+    },
+    "yamlfilepublisher" : {
+      "$ref" : "#/$defs/yamlfilepublisher"
     }
   },
   "$defs" : {
@@ -473,6 +491,60 @@
               "description" : "Default: 60s"
             }
           }
+        }
+      }
+    },
+    "jsondomaineventprojection" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        }
+      }
+    },
+    "neo4jeventpublisherprovider" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "projectionId" : {
+          "type" : "string",
+          "default" : "default",
+          "description" : "Default: default"
+        }
+      }
+    },
+    "neo4jeventprojectionprovider" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "projectionId" : {
+          "type" : "string",
+          "default" : "{{ neo4jeventpublisherprovider.projectionId }}",
+          "description" : "Default: {{ neo4jeventpublisherprovider.projectionId }} (default)"
+        }
+      }
+    },
+    "domainevents" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "eventstore" : {
+          "type" : "string",
+          "default" : "{{ instance.api }}eventstore",
+          "description" : "Default: {{ instance.api }}eventstore (http://service.xorcery.test/api/eventstore)"
+        },
+        "projections" : {
+          "type" : "string",
+          "default" : "{{ instance.api }}projections",
+          "description" : "Default: {{ instance.api }}projections (http://service.xorcery.test/api/projections)"
         }
       }
     },
@@ -1284,6 +1356,37 @@
         }
       }
     },
+    "neo4jprojections" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ neo4jdatabase.enabled }}",
+          "description" : "Default: {{ neo4jdatabase.enabled }} (true)"
+        },
+        "eventBatchSize" : {
+          "type" : [ "number", "string" ],
+          "default" : 1024,
+          "description" : "Default: 1024"
+        },
+        "maxThreadCount" : {
+          "type" : [ "number", "string" ],
+          "default" : -1,
+          "description" : "Default: -1"
+        },
+        "maxTransactionSize" : {
+          "type" : "string",
+          "default" : "{{ neo4jdatabase.settings.db.memory.transaction.max | \"1G\" }}",
+          "description" : "Default: {{ neo4jdatabase.settings.db.memory.transaction.max | \"1G\" }} (1G)"
+        },
+        "transactionMemoryUsageMargin" : {
+          "type" : "string",
+          "default" : "1M",
+          "description" : "Default: 1M"
+        }
+      }
+    },
     "opentelemetry" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -1606,6 +1709,20 @@
               "description" : "Default: 60s"
             }
           }
+        }
+      }
+    },
+    "yamlfilepublisher" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "publishers" : {
+          "type" : [ "array", "string" ]
         }
       }
     }

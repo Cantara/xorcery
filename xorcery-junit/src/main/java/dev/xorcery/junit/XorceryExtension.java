@@ -198,12 +198,18 @@ public class XorceryExtension
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-        return xorcery.getServiceLocator().getService(parameterContext.getParameter().getType()) != null;
+        Class<?> type = parameterContext.getParameter().getType();
+        return xorcery.getServiceLocator().getService(type) != null ||
+                type.getConstructors().length > 0;
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
-        return xorcery.getServiceLocator().getService(parameterContext.getParameter().getType());
+        Class<?> type = parameterContext.getParameter().getType();
+        Object result =  xorcery.getServiceLocator().getService(type);
+        if (result == null)
+            result = xorcery.getServiceLocator().createAndInitialize(type);
+        return result;
     }
 
     @Override

@@ -131,7 +131,7 @@ public class WaitForProjectionUpdate
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         cancel();
     }
 }

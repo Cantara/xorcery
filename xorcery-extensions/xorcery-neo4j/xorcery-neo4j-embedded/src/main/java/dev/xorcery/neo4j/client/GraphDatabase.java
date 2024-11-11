@@ -25,7 +25,6 @@ import org.neo4j.graphdb.Transaction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -59,7 +58,7 @@ public class GraphDatabase {
         });
     }
 
-    public CompletionStage<GraphResult> execute(String cypherQuery, Map<String, Object> parameters, long timeout) {
+    public CompletableFuture<GraphResult> execute(String cypherQuery, Map<String, Object> parameters, long timeout) {
 
         CompletableFuture<GraphResult> future = new CompletableFuture<>();
 
