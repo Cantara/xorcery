@@ -67,7 +67,7 @@ public class DomainContextTest {
 
             // Update thing
             Map<String, Object> snapshot = Map.of("foo", "Bar");
-            ThingContext thingContext = xorcery.getServiceLocator().create(ThingContext.Factory.class).bind("1234", new ThingModel(MapElement.element(snapshot)));
+            ThingContext thingContext = xorcery.getServiceLocator().getService(ThingContext.Factory.class).bind("1234", new ThingModel(MapElement.element(snapshot)));
             ThingCommands.UpdateThing updateThing = thingContext.command(ThingCommands.UpdateThing.class).orElseThrow();
             updateThing = applyFromAPI(updateThing, """
                     {"foo":"Foo"}

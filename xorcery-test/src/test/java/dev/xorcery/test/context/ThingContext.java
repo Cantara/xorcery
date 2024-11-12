@@ -7,6 +7,7 @@ import dev.xorcery.domainevents.context.DomainContext;
 import dev.xorcery.domainevents.publisher.api.CommandHandler;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -14,9 +15,15 @@ import java.util.concurrent.CompletableFuture;
 public record ThingContext(String id, ThingModel model, ServiceLocator thingSupplier, CommandHandler commandHandler)
         implements DomainContext {
 
-    public record Factory(ServiceLocator thingSupplier, CommandHandler commandHandler) {
+    @Service
+    public static class Factory {
+        private final ServiceLocator thingSupplier;
+        private final CommandHandler commandHandler;
+
         @Inject
-        public Factory {
+        public Factory(ServiceLocator thingSupplier, CommandHandler commandHandler) {
+            this.thingSupplier = thingSupplier;
+            this.commandHandler = commandHandler;
         }
 
         ThingContext bind(String id, ThingModel model)

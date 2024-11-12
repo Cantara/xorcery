@@ -7,10 +7,12 @@ import dev.xorcery.domainevents.context.DomainContext;
 import dev.xorcery.domainevents.publisher.api.CommandHandler;
 import jakarta.inject.Inject;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.jvnet.hk2.annotations.Service;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+@Service
 public class ThingCollectionContext
         implements DomainContext {
     private final ServiceLocator thingSupplier;
