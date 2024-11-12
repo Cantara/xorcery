@@ -185,7 +185,7 @@ public interface CommandsResource
 
     CompletableFuture<ResourceDocument> get(String rel);
 
-    default <T extends Command> CompletableFuture<Response> ok(CommandResult commandResult) {
+    default CompletableFuture<Response> ok(CommandResult commandResult) {
         return get(null).thenApply(rd -> Response.ok(rd).build());
     }
 
