@@ -41,7 +41,6 @@ import jakarta.ws.rs.core.UriBuilder;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -117,7 +116,7 @@ public interface CommandsResource
         };
     }
 
-    default CompletionStage<ResourceDocument> commandResourceDocument(String rel, String id, DomainContext context) {
+    default CompletableFuture<ResourceDocument> commandResourceDocument(String rel, String id, DomainContext context) {
         Command command = context.commands().stream().filter(isCommandByName(rel))
                 .findFirst().orElseThrow(jakarta.ws.rs.NotFoundException::new);
 
@@ -128,7 +127,7 @@ public interface CommandsResource
             id = jsonId.textValue();
         }
 
-        return CompletableFuture.completedStage(new ResourceDocument.Builder()
+        return CompletableFuture.completedFuture(new ResourceDocument.Builder()
                 .links(new Links.Builder().with(commandSelfLink(), schemaLink()))
                 .data(new ResourceObject.Builder(Command.getName(command), id)
                         .attributes(new Attributes.Builder().with(a ->
@@ -138,11 +137,11 @@ public interface CommandsResource
                 .build());
     }
 
-    default CompletionStage<ResourceDocument> commandResourceDocument(String rel, DomainContext context) {
+    default CompletableFuture<ResourceDocument> commandResourceDocument(String rel, DomainContext context) {
         return commandResourceDocument(rel, null, context);
     }
 
-    default CompletionStage<Response> execute(ResourceObject resourceObject, DomainContext context, Metadata metadata) {
+    default CompletableFuture<Response> execute(ResourceObject resourceObject, DomainContext context, Metadata metadata) {
 
         // Find command based on simple name of class and type in ResourceObject
         String commandName = resourceObject.getType();

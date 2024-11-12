@@ -21,8 +21,8 @@ import dev.xorcery.lang.Enums;
 import org.neo4j.graphdb.Result;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -51,12 +51,12 @@ public class GraphQuery
     private String baseQuery;
     private BiConsumer<GraphQuery, StringBuilder> where;
     private Function<Enum<?>, String> fieldMapping;
-    private final Function<GraphQuery, CompletionStage<GraphResult>> applyQuery;
+    private final Function<GraphQuery, CompletableFuture<GraphResult>> applyQuery;
     private Function<Stream<Object>, Stream<Object>> streamOperator = UnaryOperator.identity();
 
     public GraphQuery(String baseQuery,
                       Function<Enum<?>, String> fieldMapping,
-                      Function<GraphQuery, CompletionStage<GraphResult>> applyQuery) {
+                      Function<GraphQuery, CompletableFuture<GraphResult>> applyQuery) {
         this.baseQuery = baseQuery;
         this.fieldMapping = fieldMapping;
         this.applyQuery = applyQuery;
@@ -183,11 +183,11 @@ public class GraphQuery
         return limit;
     }
 
-    public <T> CompletionStage<GraphResult> execute() {
+    public <T> CompletableFuture<GraphResult> execute() {
         return applyQuery.apply(this);
     }
 
-    public <T> CompletionStage<Stream<T>> stream(Function<RowModel, T> mapper) {
+    public <T> CompletableFuture<Stream<T>> stream(Function<RowModel, T> mapper) {
         return applyQuery.apply(this).thenApply(gr ->
         {
             List<T> results = new ArrayList<>();
@@ -208,7 +208,7 @@ public class GraphQuery
         });
     }
 
-    public <T> CompletionStage<Optional<T>> first(Function<RowModel, T> mapper) {
+    public <T> CompletableFuture<Optional<T>> first(Function<RowModel, T> mapper) {
         return applyQuery.apply(this).thenApply(gr ->
         {
             List<T> results = new ArrayList<>();
@@ -227,7 +227,7 @@ public class GraphQuery
         });
     }
 
-    public CompletionStage<Long> count() {
+    public CompletableFuture<Long> count() {
         count = true;
         return applyQuery.apply(this).thenApply(gr ->
         {

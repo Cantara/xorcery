@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-eventstore</artifactId>
-        <version>0.151.0-SNAPSHOT</version>
+        <version>0.151.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-eventstore-jsonapi</artifactId>
