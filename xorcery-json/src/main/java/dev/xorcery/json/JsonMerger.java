@@ -18,8 +18,10 @@ package dev.xorcery.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 
 /**
@@ -58,8 +60,7 @@ public class JsonMerger
                     JsonNode nextNode = currentNode.path(keys[i]);
                     if (nextNode.isMissingNode()) {
                         nextNode = current.objectNode();
-                        if (currentNode instanceof ObjectNode on)
-                        {
+                        if (currentNode instanceof ObjectNode on) {
                             on.set(keys[i], nextNode);
                         }
                     }
@@ -71,8 +72,7 @@ public class JsonMerger
             if (!currentNode.isObject())
                 continue;
 
-            if (currentNode instanceof ObjectNode currentObject)
-            {
+            if (currentNode instanceof ObjectNode currentObject) {
                 setValue(currentObject, key, entry.getValue());
             }
         }
@@ -92,6 +92,7 @@ public class JsonMerger
             if (currentValue.isMissingNode()) {
                 currentObject.set(key, addingarray);
             } else if (currentValue instanceof ArrayNode currentArray) {
+                Set<JsonNode> updatedObjects = new HashSet<>();
                 addingarray.forEach(addingValue ->
                 {
                     if (addingValue instanceof ObjectNode addingObject) {
@@ -102,15 +103,19 @@ public class JsonMerger
                                 // Merge it
                                 Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
                                 Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
-                                if (currentIdField.getKey().equals(addingIdField.getKey()) && currentIdField.getValue().equals(addingIdField.getValue())) {
+                                if (currentIdField.getKey().equals(addingIdField.getKey())
+                                        && currentIdField.getValue().equals(addingIdField.getValue())
+                                        && !updatedObjects.contains(currentArrayObject)) {
                                     merge0(currentArrayObject, addingObject, false);
                                     updatedObject = true;
+                                    updatedObjects.add(currentArrayObject);
                                     break;
                                 }
                             }
                         }
                         if (!updatedObject) {
                             currentArray.add(addingValue);
+                            updatedObjects.add(addingValue);
                         }
                     } else {
                         for (JsonNode jsonNode : currentArray) {
@@ -126,22 +131,19 @@ public class JsonMerger
                 ArrayNode arrayCopy = addingarray.deepCopy();
                 boolean alreadyInArray = false;
                 for (JsonNode jsonNode : arrayCopy) {
-                    if (jsonNode.equals(currentValue))
-                    {
+                    if (jsonNode.equals(currentValue)) {
                         alreadyInArray = true;
                         break;
                     }
                 }
-                if (!alreadyInArray)
-                {
+                if (!alreadyInArray) {
                     arrayCopy.add(currentValue);
                 }
                 currentObject.set(key, arrayCopy);
             }
         } else {
 
-            if (value.asText().startsWith("{{") && value.asText().endsWith("}}"))
-            {
+            if (value.asText().startsWith("{{") && value.asText().endsWith("}}")) {
                 // This value is a reference, don't try to merge, just replace it
                 currentObject.set(key, value);
                 return;
@@ -151,33 +153,32 @@ public class JsonMerger
             if (currentValue.isMissingNode()) {
                 currentObject.set(key, value);
             } else if (currentValue instanceof ArrayNode currentArray) {
-                    if (value instanceof ObjectNode addingObject) {
-                        // Check if object with this identity exists in array
-                        boolean updatedObject = false;
-                        for (JsonNode jsonNode : currentArray) {
-                            if (jsonNode instanceof ObjectNode currentArrayObject) {
-                                // Merge it
-                                Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
-                                Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
-                                if (currentIdField.getKey().equals(addingIdField.getKey()) && currentIdField.getValue().equals(addingIdField.getValue())) {
-                                    merge0(currentArrayObject, addingObject, false);
-                                    updatedObject = true;
-                                    break;
-                                }
+                if (value instanceof ObjectNode addingObject) {
+                    // Check if object with this identity exists in array
+                    boolean updatedObject = false;
+                    for (JsonNode jsonNode : currentArray) {
+                        if (jsonNode instanceof ObjectNode currentArrayObject) {
+                            // Merge it
+                            Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
+                            Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
+                            if (currentIdField.getKey().equals(addingIdField.getKey()) && currentIdField.getValue().equals(addingIdField.getValue())) {
+                                merge0(currentArrayObject, addingObject, false);
+                                updatedObject = true;
+                                break;
                             }
                         }
-                        if (!updatedObject) {
-                            currentArray.add(value);
-                        }
-                    } else {
-                        for (JsonNode jsonNode : currentArray) {
-                            if (jsonNode.equals(value))
-                                return;
-                        }
+                    }
+                    if (!updatedObject) {
                         currentArray.add(value);
                     }
-            } else
-            {
+                } else {
+                    for (JsonNode jsonNode : currentArray) {
+                        if (jsonNode.equals(value))
+                            return;
+                    }
+                    currentArray.add(value);
+                }
+            } else {
                 currentObject.set(key, value);
             }
         }

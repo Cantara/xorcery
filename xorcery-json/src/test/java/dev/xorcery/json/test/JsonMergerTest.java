@@ -200,5 +200,36 @@ class JsonMergerTest {
         System.out.println(result);
     }
 
+    @Test
+    public void testMergeObjectListWithSameIdKey() throws Throwable {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+
+        ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
+                list: []
+                """);
+        ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
+                list:
+                  - name: foo
+                    value: bar1
+                  - name: foo
+                    value: bar2
+                """);
+        ObjectNode merged = new JsonMerger().apply(test1, test2);
+
+        String result = objectMapper.writeValueAsString(merged);
+
+        String expectedResult = """
+                ---
+                list:
+                - name: "foo"
+                  value: "bar1"
+                - name: "foo"
+                  value: "bar2"
+                """;
+
+        assertThat(result, equalTo(expectedResult));
+        System.out.println(result);
+    }
+
 
 }
