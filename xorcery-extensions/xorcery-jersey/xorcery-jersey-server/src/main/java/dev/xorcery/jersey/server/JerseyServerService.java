@@ -50,7 +50,7 @@ public class JerseyServerService
 
         List<String> mediaTypesList = new ArrayList<>();
         jerseyConfiguration.getMediaTypes().ifPresent(mappings ->
-                mappings.forEach((suffix, mediaType) -> mediaTypesList.add(suffix + ":" + mediaType.textValue())));
+                mappings.forEach((suffix, mediaType) -> mediaTypesList.add(suffix + ":" + mediaType)));
         String mediaTypesString = String.join(",", mediaTypesList);
         resourceConfig.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
 
