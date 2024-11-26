@@ -30,6 +30,12 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
 
     public void execute() throws MojoExecutionException, MojoFailureException {
 
+        if (!project.getPackaging().equals("jar"))
+        {
+            getLog().info("Packaging is not a jar, skipping JSON schema generation");
+            return;
+        }
+
         try {
 
             List<Artifact> dependencies = getDependencies();
