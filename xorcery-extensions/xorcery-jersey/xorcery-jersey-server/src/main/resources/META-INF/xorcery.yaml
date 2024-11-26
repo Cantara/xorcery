@@ -4,3 +4,17 @@ jersey:
     enabled: "{{ jetty.server.enabled }}"
     register: [ ]
     mediaTypes: { }
+    properties:
+      jersey:
+        config:
+          server:
+            unwrap:
+              completion:
+                stage:
+                  writer:
+                    enable: true
+            wadl:
+              disableWadl: true
+
+  config:
+    server:

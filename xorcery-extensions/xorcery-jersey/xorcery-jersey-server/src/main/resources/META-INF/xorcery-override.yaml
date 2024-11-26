@@ -7,3 +7,8 @@ jersey:
       json: "application/json"
       yaml: "application/yaml"
       schema: "application/schema+json"
+
+jetty:
+  server:
+    mediaTypes:
+      - "{{ jersey.server.mediaTypes }}"

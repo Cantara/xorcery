@@ -15,9 +15,13 @@
  */
 package dev.xorcery.jetty.server;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import dev.xorcery.configuration.Configuration;
+import dev.xorcery.json.JsonElement;
 
 import java.time.Duration;
+import java.util.Map;
+import java.util.Optional;
 
 public record JettyServerConfiguration(Configuration configuration) {
 
@@ -47,5 +51,9 @@ public record JettyServerConfiguration(Configuration configuration) {
 
     public int getRequestHeaderSize() {
         return configuration.getInteger("requestHeaderSize").orElse(16384);
+    }
+
+    public Optional<Map<String, String>> getMediaTypes() {
+        return configuration.getObjectAs("mediaTypes", objectNode -> JsonElement.toMap(objectNode, JsonNode::textValue));
     }
 }

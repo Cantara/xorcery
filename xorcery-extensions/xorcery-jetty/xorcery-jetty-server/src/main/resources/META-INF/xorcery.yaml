@@ -83,4 +83,13 @@ jetty:
 
     gzip:
       enabled: "{{ jetty.server.enabled }}"
-
+      minGzipSize: 32
+      syncFlush: false
+      excluded:
+        mediatypes: []
+        methods: []
+        paths: []
+      included:
+        mediatypes: []
+        methods: []
+        paths: []

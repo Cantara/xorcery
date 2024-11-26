@@ -15,7 +15,6 @@
  */
 module xorcery.jersey.server {
     exports dev.xorcery.jersey.server;
-    exports dev.xorcery.jersey.server.resources;
 
     requires transitive xorcery.configuration.api;
 

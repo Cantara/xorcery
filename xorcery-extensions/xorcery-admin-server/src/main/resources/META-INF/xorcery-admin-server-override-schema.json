@@ -378,6 +378,80 @@
               "type" : "object",
               "additionalProperties" : true,
               "properties" : { }
+            },
+            "properties" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "jersey" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "config" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "server" : {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "properties" : {
+                            "unwrap" : {
+                              "type" : "object",
+                              "additionalProperties" : false,
+                              "properties" : {
+                                "completion" : {
+                                  "type" : "object",
+                                  "additionalProperties" : false,
+                                  "properties" : {
+                                    "stage" : {
+                                      "type" : "object",
+                                      "additionalProperties" : false,
+                                      "properties" : {
+                                        "writer" : {
+                                          "type" : "object",
+                                          "additionalProperties" : false,
+                                          "properties" : {
+                                            "enable" : {
+                                              "type" : [ "boolean", "string" ],
+                                              "default" : true,
+                                              "description" : "Default: true"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "wadl" : {
+                              "type" : "object",
+                              "additionalProperties" : false,
+                              "properties" : {
+                                "disableWadl" : {
+                                  "type" : [ "boolean", "string" ],
+                                  "default" : true,
+                                  "description" : "Default: true"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "config" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "server" : {
+              "default" : null,
+              "description" : "Default: null"
             }
           }
         }
@@ -801,6 +875,46 @@
                   "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
                   "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "minGzipSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 32,
+                  "description" : "Default: 32"
+                },
+                "syncFlush" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "excluded" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "mediatypes" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "methods" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "paths" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                },
+                "included" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "mediatypes" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "methods" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "paths" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
                 }
               }
             }

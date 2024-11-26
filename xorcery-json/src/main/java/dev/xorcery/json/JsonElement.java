@@ -85,18 +85,7 @@ public interface JsonElement
     // Element
     @Override
     default <T> Optional<T> get(String name) {
-        return lookup(object(), name).map(json ->
-                (T) switch (json.getNodeType()) {
-                    case ARRAY -> toList((ArrayNode) json);
-                    case OBJECT -> toMap((ObjectNode) json);
-                    case STRING -> json.textValue();
-                    case NUMBER -> json.numberValue();
-                    case BINARY -> null;
-                    case BOOLEAN -> json.booleanValue();
-                    case MISSING -> null;
-                    case NULL -> null;
-                    case POJO -> null;
-                });
+        return lookup(object(), name).map(JsonElement::toObject);
     }
 
     default Boolean getFalsy(String name) {
@@ -192,6 +181,21 @@ public interface JsonElement
                 result.put(next.getKey(), valueMapper.apply(next.getValue()));
             }
             return result;
+        };
+    }
+
+    static <T> T toObject(JsonNode json)
+    {
+        return (T) switch (json.getNodeType()) {
+            case ARRAY -> toList((ArrayNode) json);
+            case OBJECT -> toMap((ObjectNode) json);
+            case STRING -> json.textValue();
+            case NUMBER -> json.numberValue();
+            case BINARY -> null;
+            case BOOLEAN -> json.booleanValue();
+            case MISSING -> null;
+            case NULL -> null;
+            case POJO -> null;
         };
     }
 

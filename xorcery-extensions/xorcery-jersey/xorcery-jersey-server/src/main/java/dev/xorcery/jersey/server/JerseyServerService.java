@@ -17,7 +17,6 @@ package dev.xorcery.jersey.server;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.xorcery.configuration.Configuration;
-import dev.xorcery.jersey.server.resources.ServerApplication;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +24,12 @@ import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.jvnet.hk2.annotations.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service(name = "jersey.server")
 @RunLevel(6)
@@ -39,13 +43,24 @@ public class JerseyServerService
     public JerseyServerService(Configuration configuration,
                                ServletContextHandler servletContextHandler) {
 
-        ServerApplication app = new ServerApplication(configuration);
+        JerseyConfiguration jerseyConfiguration = JerseyConfiguration.get(configuration);
+        ResourceConfig resourceConfig = new ResourceConfig();
+
+        resourceConfig.addProperties(jerseyConfiguration.getProperties());
+
+        List<String> mediaTypesList = new ArrayList<>();
+        jerseyConfiguration.getMediaTypes().ifPresent(mappings ->
+                mappings.forEach((suffix, mediaType) -> mediaTypesList.add(suffix + ":" + mediaType.textValue())));
+        String mediaTypesString = String.join(",", mediaTypesList);
+        resourceConfig.property(ServerProperties.MEDIA_TYPE_MAPPINGS, mediaTypesString);
+
+        LogManager.getLogger(getClass()).debug("Media types:\n" + mediaTypesString.replace(',', '\n'));
 
         configuration.getList("jersey.server.register").ifPresent(jsonNodes ->
         {
             for (JsonNode jsonNode : jsonNodes) {
                 try {
-                    app.register(getClass().getClassLoader().loadClass(jsonNode.asText()));
+                    resourceConfig.register(getClass().getClassLoader().loadClass(jsonNode.asText()));
                     logger.debug("Registered " + jsonNode.asText());
                 } catch (ClassNotFoundException e) {
                     logger.error("Could not load JAX-RS provider " + jsonNode.asText(), e);
@@ -54,7 +69,7 @@ public class JerseyServerService
             }
         });
 
-        servletContainer = new JerseyServletContainer(app);
+        servletContainer = new JerseyServletContainer(resourceConfig);
         ServletHolder servletHolder = new ServletHolder("jersey", servletContainer);
         servletHolder.setInitOrder(1);
         servletContextHandler.addServlet(servletHolder, "/*");

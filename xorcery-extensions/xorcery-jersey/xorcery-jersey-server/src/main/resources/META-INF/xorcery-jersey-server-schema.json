@@ -29,6 +29,80 @@
               "type" : "object",
               "additionalProperties" : true,
               "properties" : { }
+            },
+            "properties" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "jersey" : {
+                  "type" : "object",
+                  "additionalProperties" : true,
+                  "properties" : {
+                    "config" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "server" : {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "properties" : {
+                            "unwrap" : {
+                              "type" : "object",
+                              "additionalProperties" : false,
+                              "properties" : {
+                                "completion" : {
+                                  "type" : "object",
+                                  "additionalProperties" : false,
+                                  "properties" : {
+                                    "stage" : {
+                                      "type" : "object",
+                                      "additionalProperties" : false,
+                                      "properties" : {
+                                        "writer" : {
+                                          "type" : "object",
+                                          "additionalProperties" : false,
+                                          "properties" : {
+                                            "enable" : {
+                                              "type" : [ "boolean", "string" ],
+                                              "default" : true,
+                                              "description" : "Default: true"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "wadl" : {
+                              "type" : "object",
+                              "additionalProperties" : false,
+                              "properties" : {
+                                "disableWadl" : {
+                                  "type" : [ "boolean", "string" ],
+                                  "default" : true,
+                                  "description" : "Default: true"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "config" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "server" : {
+              "default" : null,
+              "description" : "Default: null"
             }
           }
         }

@@ -56,6 +56,9 @@ public class JettyServerFactory
         // Create server
         server = new Server(jettyConnectorThreadPool);
 
+        // Register mime type extension mappings
+        jettyConfig.getMediaTypes().ifPresent(types -> types.forEach((ext,type)->server.getMimeTypes().addMimeMapping(ext, type)));
+
         // Setup protocols
 
         // Clear-text protocols

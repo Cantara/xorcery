@@ -728,6 +728,46 @@
                   "type" : [ "boolean", "string" ],
                   "default" : "{{ jetty.server.enabled }}",
                   "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "minGzipSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 32,
+                  "description" : "Default: 32"
+                },
+                "syncFlush" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "excluded" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "mediatypes" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "methods" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "paths" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                },
+                "included" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "mediatypes" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "methods" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "paths" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
                 }
               }
             }

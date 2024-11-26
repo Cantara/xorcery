@@ -31,7 +31,15 @@ public class GzipHandlerFactory
     @Inject
     public GzipHandlerFactory(Configuration configuration) {
         gzipHandler = new GzipHandler();
-        // TODO Add configuration
+        GzipConfiguration gzipConfiguration = GzipConfiguration.get(configuration);
+        gzipConfiguration.getExcludedMediaTypes().forEach(gzipHandler::addExcludedMimeTypes);
+        gzipConfiguration.getExcludedMethods().forEach(gzipHandler::addExcludedMethods);
+        gzipConfiguration.getExcludedPaths().forEach(gzipHandler::addExcludedPaths);
+        gzipConfiguration.getIncludedMediaTypes().forEach(gzipHandler::addIncludedMimeTypes);
+        gzipConfiguration.getIncludedMethods().forEach(gzipHandler::addIncludedMethods);
+        gzipConfiguration.getIncludedPaths().forEach(gzipHandler::addIncludedPaths);
+        gzipConfiguration.getMinGzipSize().ifPresent(gzipHandler::setMinGzipSize);
+        gzipConfiguration.isSyncFlush().ifPresent(gzipHandler::setSyncFlush);
     }
 
     @Override
