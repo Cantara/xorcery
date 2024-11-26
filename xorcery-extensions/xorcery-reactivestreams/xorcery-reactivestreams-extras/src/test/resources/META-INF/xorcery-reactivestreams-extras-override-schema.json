@@ -444,6 +444,11 @@
               "default" : 16384,
               "description" : "Default: 16384"
             },
+            "mediaTypes" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
             "idleTimeout" : {
               "type" : "string",
               "default" : "{{ defaults.idleTimeout }}",

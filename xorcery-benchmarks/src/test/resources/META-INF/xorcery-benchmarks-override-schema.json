@@ -379,7 +379,7 @@
               "properties" : {
                 "jersey" : {
                   "type" : "object",
-                  "additionalProperties" : false,
+                  "additionalProperties" : true,
                   "properties" : {
                     "config" : {
                       "type" : "object",
@@ -581,6 +581,11 @@
               "type" : [ "number", "string" ],
               "default" : 16384,
               "description" : "Default: 16384"
+            },
+            "mediaTypes" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
             },
             "idleTimeout" : {
               "type" : "string",

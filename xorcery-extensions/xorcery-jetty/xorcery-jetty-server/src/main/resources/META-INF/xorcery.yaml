@@ -11,6 +11,8 @@ jetty:
     outputBufferSize: 32768
     requestHeaderSize : 16384
 
+    mediaTypes: {}
+
     idleTimeout: "{{ defaults.idleTimeout }}"
 
     http:

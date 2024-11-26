@@ -10,5 +10,4 @@ jersey:
 
 jetty:
   server:
-    mediaTypes:
-      - "{{ jersey.server.mediaTypes }}"
+    mediaTypes: "{{ jersey.server.mediaTypes }}"
