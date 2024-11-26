@@ -1,3 +1,5 @@
+import java.net.spi.URLStreamHandlerProvider;
+
 /*
  * Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
  *
@@ -27,4 +29,6 @@ module xorcery.util {
 
     requires org.glassfish.hk2.api;
     requires jakarta.annotation;
+
+    provides URLStreamHandlerProvider with dev.xorcery.util.ResourceURLStreamHandlerProvider;
 }
