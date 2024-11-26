@@ -58,7 +58,7 @@
               "description" : "Default: 16384"
             },
             "mediaTypes" : {
-              "type" : "object",
+              "type" : [ "object", "string" ],
               "additionalProperties" : true,
               "properties" : { }
             },
