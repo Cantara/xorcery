@@ -1031,7 +1031,7 @@
                 <plugin>
                     <groupId>dev.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.151.4</version>
+                    <version>0.151.5</version>
                 </plugin>
 <!--
                 <plugin>
@@ -1072,7 +1072,7 @@
             <plugin>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                <version>0.151.4</version>
+                <version>0.151.5</version>
                 <executions>
                     <execution>
                         <id>generate-jsonschema</id>
