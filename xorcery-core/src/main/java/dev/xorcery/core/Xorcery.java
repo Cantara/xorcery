@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -80,6 +81,8 @@ public final class Xorcery
         InstanceConfiguration instanceConfiguration = InstanceConfiguration.get(configuration);
         // Set locale
         instanceConfiguration.getLocale().ifPresent(Locale::setDefault);
+        // Set time zone
+        instanceConfiguration.getTimeZone().ifPresent(TimeZone::setDefault);
 
         // Ensure home directory exists
         boolean createdHome = false;

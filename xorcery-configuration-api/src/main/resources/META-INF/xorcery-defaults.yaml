@@ -13,6 +13,7 @@ instance:
   uri: "http://{{ instance.fqdn }}/"
   api: "{{ instance.uri }}api/"
   locale: null
+  timeZone: null
 
 application:
   name: "application"

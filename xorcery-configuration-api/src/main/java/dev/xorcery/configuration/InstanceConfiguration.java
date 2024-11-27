@@ -23,10 +23,7 @@ import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
 import static dev.xorcery.configuration.Configuration.missing;
 
@@ -109,5 +106,10 @@ public record InstanceConfiguration(Configuration configuration) {
     public Optional<Locale> getLocale() {
         return configuration.getString("locale")
                 .map(Locale::forLanguageTag);
+    }
+
+    public Optional<TimeZone> getTimeZone() {
+        return configuration.getString("timeZone")
+                .map(TimeZone::getTimeZone);
     }
 }

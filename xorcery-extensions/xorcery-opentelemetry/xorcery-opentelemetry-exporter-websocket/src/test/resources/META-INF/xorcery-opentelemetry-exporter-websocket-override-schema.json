@@ -108,6 +108,10 @@
         "locale" : {
           "default" : null,
           "description" : "Default: null"
+        },
+        "timeZone" : {
+          "default" : null,
+          "description" : "Default: null"
         }
       }
     },
