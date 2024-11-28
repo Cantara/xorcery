@@ -1,0 +1,80 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.dev/testschema",
+  "title" : "Example schema",
+  "properties" : {
+    "instance" : {
+      "$ref" : "#/$defs/instance"
+    }
+  },
+  "$defs" : {
+    "instance" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "environment" : {
+          "type" : "string",
+          "default" : "development",
+          "description" : "Default: development",
+          "enum" : [ "development", "qa", "production" ]
+        },
+        "listofthings" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string",
+                  "default" : "foo",
+                  "description" : "Default: foo"
+                },
+                "obj" : {
+                  "$ref" : "#/$defs/object"
+                },
+                "foo1" : {
+                  "type" : "string",
+                  "default" : "bar",
+                  "description" : "Default: bar"
+                }
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string",
+                  "default" : "bar",
+                  "description" : "Default: bar"
+                },
+                "bar1" : {
+                  "type" : "string",
+                  "default" : "foo",
+                  "description" : "Default: foo"
+                }
+              }
+            } ]
+          }
+        }
+      }
+    },
+    "object" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "default" : "value",
+          "description" : "Default: value"
+        },
+        "name2" : {
+          "type" : "string",
+          "default" : "value2",
+          "description" : "Default: value2"
+        }
+      }
+    }
+  }
+}

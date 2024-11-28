@@ -7,6 +7,7 @@ import dev.xorcery.configuration.builder.ConfigurationBuilder;
 import dev.xorcery.json.JsonMerger;
 import dev.xorcery.jsonschema.JsonSchema;
 import dev.xorcery.jsonschema.generator.SchemaByExampleGenerator;
+import dev.xorcery.jsonschema.generator.SchemaMerger;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -21,9 +22,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -106,26 +105,24 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 .title(project.getArtifactId() + " configuration JSON Schema")
                 .generateJsonSchema(moduleBuilder.builder().builder(), moduleWithDependenciesBuilder.build().json());
 
-        ObjectNode schemaJson = schema.json();
-
         JsonMapper jsonMapper = new JsonMapper();
 
         // Read existing schema and see if it has changed
         if (xorceryConfigJsonSchemaFile.exists()) {
             if (jsonMapper.readTree(xorceryConfigJsonSchemaFile) instanceof ObjectNode existingSchema) {
-                if (existingSchema.equals(schemaJson))
+                if (existingSchema.equals(schema.json()))
                     return;
 
-                // Remove properties in existing schema that are not in the generated schema
-                pruneExistingSchema(existingSchema, schemaJson);
+                schema = new SchemaMerger().merge(new JsonSchema(existingSchema), schema);
 
-                // Merge existing schema into generated schema
-                schemaJson = new JsonMerger().merge(schemaJson, existingSchema);
+                // Check post-merge as well
+                if (schema.json().equals(existingSchema))
+                    return;
             }
         }
 
         xorceryConfigJsonSchemaFile.getParentFile().mkdirs();
-        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, schemaJson);
+        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, schema.json());
         getLog().info("Updated module configuration JSON Schema definition: " + xorceryConfigJsonSchemaFile);
     }
 
@@ -206,39 +203,4 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         getLog().info("Updated module configuration override JSON Schema definition: "+xorceryConfigOverrideJsonSchemaFile);
     }
 
-    private void pruneExistingSchema(ObjectNode existingSchema, ObjectNode generatedSchema) {
-        JsonNode generatedSchemaRootProperties = generatedSchema.path("properties");
-        for (Map.Entry<String, JsonNode> property : new HashSet<>(existingSchema.path("properties").properties())) {
-            if (generatedSchemaRootProperties.get(property.getKey()) instanceof ObjectNode) {
-                if (existingSchema.path("$defs").path(property.getKey()) instanceof ObjectNode existingObject) {
-                    if (generatedSchema.path("$defs").path(property.getKey()) instanceof ObjectNode generatedObject) {
-                        pruneExistingSchema0(existingObject, generatedObject);
-                    }
-                }
-            } else {
-                existingSchema.remove(property.getKey());
-                if (existingSchema.path("$defs") instanceof ObjectNode defs) {
-                    defs.remove(property.getKey());
-                }
-            }
-        }
-    }
-
-    // Prune properties from existing schema that are missing in the generated schema
-    private void pruneExistingSchema0(ObjectNode existingObject, ObjectNode generatedObject) {
-        if (existingObject.path("properties") instanceof ObjectNode existingProperties) {
-            for (Map.Entry<String, JsonNode> property : new HashSet<>(existingProperties.properties())) {
-                if (generatedObject.path("properties").get(property.getKey()) instanceof ObjectNode propertyNode) {
-                    if (propertyNode.has("properties")) {
-                        if (property.getValue() instanceof ObjectNode existingChildProperty)
-                        {
-                            pruneExistingSchema0(existingChildProperty, propertyNode);
-                        }
-                    }
-                } else {
-                    existingProperties.remove(property.getKey());
-                }
-            }
-        }
-    }
 }

@@ -76,12 +76,27 @@ public record JsonSchema(ObjectNode json)
             return this;
         }
 
+        public Builder allOf(Collection<JsonSchema> schemas) {
+            builder.set("allOf", JsonElement.toArray(schemas));
+            return this;
+        }
+
         public Builder anyOf(JsonSchema... schemas) {
             builder.set("anyOf", JsonElement.toArray(schemas));
             return this;
         }
 
+        public Builder anyOf(Collection<JsonSchema> schemas) {
+            builder.set("anyOf", JsonElement.toArray(schemas));
+            return this;
+        }
+
         public Builder oneOf(JsonSchema... schemas) {
+            builder.set("oneOf", JsonElement.toArray(schemas));
+            return this;
+        }
+
+        public Builder oneOf(Collection<JsonSchema> schemas) {
             builder.set("oneOf", JsonElement.toArray(schemas));
             return this;
         }
@@ -93,6 +108,11 @@ public record JsonSchema(ObjectNode json)
 
         public Builder type(Types value) {
             builder.set("type", builder.textNode(value.name().toLowerCase()));
+            return this;
+        }
+
+        public Builder types(Collection<Types> value) {
+            builder.set("type", builder.arrayNode().addAll(value.stream().map(t -> t.name().toLowerCase()).map(builder::textNode).toList()));
             return this;
         }
 

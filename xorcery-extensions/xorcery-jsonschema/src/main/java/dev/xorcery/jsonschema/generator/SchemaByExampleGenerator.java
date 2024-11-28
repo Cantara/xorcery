@@ -1,6 +1,7 @@
 package dev.xorcery.jsonschema.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.xorcery.jsonschema.Definitions;
@@ -8,12 +9,14 @@ import dev.xorcery.jsonschema.JsonSchema;
 import dev.xorcery.jsonschema.Properties;
 import dev.xorcery.jsonschema.Types;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  * This generator takes a best-effort approach to generate a JSON Schema based on
  * a JSON example document and optional resolved JSON example document (if using JsonResolver).
- *
+ * <p>
  * It is recommended to use this in combination with JsonResolver and JsonMerger for best results, such as applying
  * any existing schema afterward using JsonMerger as it may have been manually edited.
  */
@@ -37,8 +40,7 @@ public class SchemaByExampleGenerator {
         return this;
     }
 
-    public JsonSchema generateJsonSchema(ObjectNode example)
-    {
+    public JsonSchema generateJsonSchema(ObjectNode example) {
         return generateJsonSchema(example, example);
     }
 
@@ -113,8 +115,16 @@ public class SchemaByExampleGenerator {
             JsonNode effectiveValue = value == null ? defaultValue : value;
             switch (effectiveValue.getNodeType()) {
                 case ARRAY -> {
+                    List<JsonSchema> itemSchemas = new ArrayList<>();
+                    ArrayNode effectiveArray = (ArrayNode) effectiveValue;
+                    for (JsonNode jsonNode : effectiveArray) {
+                        if (jsonNode instanceof ObjectNode objectItem) {
+                            itemSchemas.add(createSchema(rootSchema, objectItem, objectItem));
+                        }
+                    }
                     properties.property(property.getKey(), new JsonSchema.Builder()
                             .types(Types.Array, Types.String)
+                            .items(new JsonSchema.Builder().anyOf(itemSchemas).build())
                             .build());
                 }
                 case BINARY -> {

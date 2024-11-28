@@ -18,6 +18,13 @@ public class SchemaByExampleGeneratorTest {
             String example = """
                     instance:
                         environment: development
+                        listofthings:
+                        - name: foo
+                          obj:
+                            name: value
+                            name2: value2
+                        - name: bar
+                          bar1: foo
                     """;
 
             String extensions = """
