@@ -21,6 +21,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.xorcery.json.JsonMerger;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -214,7 +216,11 @@ class JsonMergerTest {
                   - name: foo
                     value: bar2
                 """);
-        ObjectNode merged = new JsonMerger().apply(test1, test2);
+        ObjectNode merged = new JsonMerger(path ->
+        {
+            System.out.println(path);
+            return true;
+        }).apply(test1, test2);
 
         String result = objectMapper.writeValueAsString(merged);
 
@@ -231,5 +237,123 @@ class JsonMergerTest {
         System.out.println(result);
     }
 
+    @Test
+    public void testSkipMergeObjectListWithAnyOfType() throws Throwable {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
+        ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
+        "transmutejars" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "jar" : {
+                  "type" : "string",
+                  "default" : "flatten",
+                  "description" : "Default: flatten",
+                  "const" : "flatten"
+                }
+              }
+            }, {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "jar" : {
+                  "type" : "string",
+                  "default" : "rename",
+                  "description" : "Default: rename",
+                  "const" : "rename"
+                },
+                "metadata" : {
+                  "type" : "object",
+                  "additionalProperties" : true,
+                  "properties" : { }
+                },
+                "data" : {
+                  "type" : "object",
+                  "additionalProperties" : true,
+                  "properties" : { }
+                }
+              }
+            } ]
+          }
+        }
+                """);
+        ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
+        "transmutejars" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "jar" : {
+                  "type" : "string",
+                  "default" : "jslt",
+                  "description" : "Default: jslt",
+                  "const" : "jslt"
+                },
+                "jslt" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                }
+              }
+            } ]
+          }
+        }
+                """);
+        ObjectNode merged = new JsonMerger(path ->!Set.of("anyOf","allOf","oneOf").contains(path.peek())).apply(test1, test2);
+
+        String result = objectMapper.writeValueAsString(merged);
+
+        String expectedResult = """
+---
+transmutejars:
+  type:
+  - \"array\"
+  - \"string\"
+  items:
+    anyOf:
+    - type: \"object\"
+      additionalProperties: false
+      properties:
+        jar:
+          type: \"string\"
+          default: \"flatten\"
+          description: \"Default: flatten\"
+          const: \"flatten\"
+    - type: \"object\"
+      additionalProperties: false
+      properties:
+        jar:
+          type: \"string\"
+          default: \"rename\"
+          description: \"Default: rename\"
+          const: \"rename\"
+        metadata:
+          type: \"object\"
+          additionalProperties: true
+          properties: {}
+        data:
+          type: \"object\"
+          additionalProperties: true
+          properties: {}
+    - type: \"object\"
+      additionalProperties: false
+      properties:
+        jar:
+          type: \"string\"
+          default: \"jslt\"
+          description: \"Default: jslt\"
+          const: \"jslt\"
+        jslt:
+          default: null
+          description: \"Default: null\"
+                                """;
+
+        assertThat(result, equalTo(expectedResult));
+        System.out.println(result);
+    }
 }

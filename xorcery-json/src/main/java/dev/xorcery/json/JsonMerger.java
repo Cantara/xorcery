@@ -18,11 +18,9 @@ package dev.xorcery.json;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.*;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 /**
  * Given a JSON tree, merge in another JSON tree into it and return the new tree.
@@ -32,6 +30,18 @@ import java.util.function.BiFunction;
  */
 public class JsonMerger
         implements BiFunction<ObjectNode, ObjectNode, ObjectNode> {
+
+    private final Predicate<Stack<String>> mergeArrayItemsPredicate;
+
+    public JsonMerger() {
+        this(stack -> true);
+    }
+
+    public JsonMerger(Predicate<Stack<String>> mergeArrayItemsPredicate) {
+        this.mergeArrayItemsPredicate = mergeArrayItemsPredicate;
+    }
+
+
     @Override
     public ObjectNode apply(ObjectNode current, ObjectNode adding) {
         ObjectNode merged = current.deepCopy();
@@ -39,12 +49,11 @@ public class JsonMerger
     }
 
     public ObjectNode merge(ObjectNode current, ObjectNode adding) {
-        return merge0(current, adding, true);
+        return merge0(current, adding, true, new Stack<>());
     }
 
-    public ObjectNode merge0(ObjectNode current, ObjectNode adding, boolean isRoot) {
+    public ObjectNode merge0(ObjectNode current, ObjectNode adding, boolean isRoot, Stack<String> path) {
         Iterator<Map.Entry<String, JsonNode>> fields = adding.fields();
-        fields:
         while (fields.hasNext()) {
             JsonNode currentNode = current;
             Map.Entry<String, JsonNode> entry = fields.next();
@@ -73,19 +82,21 @@ public class JsonMerger
                 continue;
 
             if (currentNode instanceof ObjectNode currentObject) {
-                setValue(currentObject, key, entry.getValue());
+                setValue(currentObject, key, entry.getValue(), path);
             }
         }
         return current;
     }
 
-    private void setValue(ObjectNode currentObject, String key, JsonNode value) {
+    private void setValue(ObjectNode currentObject, String key, JsonNode value, Stack<String> path) {
+        path.push(key);
+        try {
         if (value instanceof ObjectNode addingObject) {
             JsonNode currentValue = currentObject.path(key);
             if (currentValue instanceof MissingNode) {
                 currentObject.set(key, value);
             } else if (currentValue instanceof ObjectNode currentValueObject) {
-                currentObject.set(key, merge0(currentValueObject, addingObject, false));
+                currentObject.set(key, merge0(currentValueObject, addingObject, false, path));
             }
         } else if (value instanceof ArrayNode addingarray) {
             JsonNode currentValue = currentObject.path(key);
@@ -96,20 +107,23 @@ public class JsonMerger
                 addingarray.forEach(addingValue ->
                 {
                     if (addingValue instanceof ObjectNode addingObject) {
-                        // Check if object with this identity exists in array
                         boolean updatedObject = false;
-                        for (JsonNode jsonNode : currentArray) {
-                            if (jsonNode instanceof ObjectNode currentArrayObject) {
-                                // Merge it
-                                Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
-                                Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
-                                if (currentIdField.getKey().equals(addingIdField.getKey())
-                                        && currentIdField.getValue().equals(addingIdField.getValue())
-                                        && !updatedObjects.contains(currentArrayObject)) {
-                                    merge0(currentArrayObject, addingObject, false);
-                                    updatedObject = true;
-                                    updatedObjects.add(currentArrayObject);
-                                    break;
+                        if (mergeArrayItemsPredicate.test(path))
+                        {
+                            // Check if object with this identity exists in array
+                            for (JsonNode jsonNode : currentArray) {
+                                if (jsonNode instanceof ObjectNode currentArrayObject) {
+                                    // Merge it
+                                    Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
+                                    Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
+                                    if (currentIdField.getKey().equals(addingIdField.getKey())
+                                            && currentIdField.getValue().equals(addingIdField.getValue())
+                                            && !updatedObjects.contains(currentArrayObject)) {
+                                        merge0(currentArrayObject, addingObject, false, path);
+                                        updatedObject = true;
+                                        updatedObjects.add(currentArrayObject);
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -162,7 +176,7 @@ public class JsonMerger
                             Map.Entry<String, JsonNode> currentIdField = currentArrayObject.fields().next();
                             Map.Entry<String, JsonNode> addingIdField = addingObject.fields().next();
                             if (currentIdField.getKey().equals(addingIdField.getKey()) && currentIdField.getValue().equals(addingIdField.getValue())) {
-                                merge0(currentArrayObject, addingObject, false);
+                                merge0(currentArrayObject, addingObject, false, path);
                                 updatedObject = true;
                                 break;
                             }
@@ -181,6 +195,9 @@ public class JsonMerger
             } else {
                 currentObject.set(key, value);
             }
+        }
+        } finally {
+            path.pop();
         }
     }
 }
