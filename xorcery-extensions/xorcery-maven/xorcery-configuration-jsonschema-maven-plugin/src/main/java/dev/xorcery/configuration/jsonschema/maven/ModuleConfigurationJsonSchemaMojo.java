@@ -113,7 +113,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 if (existingSchema.equals(schema.json()))
                     return;
 
-                schema = new SchemaMerger().merge(new JsonSchema(existingSchema), schema);
+                schema = new SchemaMerger().merge(new JsonSchema(existingSchema), schema, true);
 
                 // Check post-merge as well
                 if (schema.json().equals(existingSchema))

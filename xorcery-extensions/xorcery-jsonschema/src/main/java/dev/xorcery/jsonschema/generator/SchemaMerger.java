@@ -10,10 +10,13 @@ import dev.xorcery.jsonschema.JsonSchema;
 
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.function.Predicate;
 
 public class SchemaMerger {
 
-    public JsonSchema merge(JsonSchema existingSchema, JsonSchema generatedSchema) {
+    public JsonSchema merge(JsonSchema existingSchema, JsonSchema generatedSchema, boolean mergeArrayObjectItems) {
         ObjectNode existingSchemaJson = existingSchema.json().deepCopy();
         ObjectNode generatedSchemaJson = generatedSchema.json().deepCopy();
 
@@ -24,7 +27,9 @@ public class SchemaMerger {
         pruneExistingSchema(existingSchemaJson, generatedSchemaJson);
 
         // Merge existing schema into generated schema
-        ObjectNode mergedSchemaJson = new JsonMerger().merge(generatedSchemaJson, existingSchemaJson);
+        Set<String> exceptions = Set.of("anyOf", "allOf", "oneOf");
+        Predicate<Stack<String>> predicate = mergeArrayObjectItems ? path -> true : path -> !exceptions.contains(path.peek());
+        ObjectNode mergedSchemaJson = new JsonMerger(predicate).merge(generatedSchemaJson, existingSchemaJson);
         return new JsonSchema(mergedSchemaJson);
     }
 

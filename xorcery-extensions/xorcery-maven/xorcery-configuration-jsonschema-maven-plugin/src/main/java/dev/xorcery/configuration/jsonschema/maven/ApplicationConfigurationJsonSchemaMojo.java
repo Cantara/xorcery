@@ -3,8 +3,8 @@ package dev.xorcery.configuration.jsonschema.maven;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dev.xorcery.json.JsonMerger;
 import dev.xorcery.jsonschema.JsonSchema;
+import dev.xorcery.jsonschema.generator.SchemaMerger;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -45,9 +45,9 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                     .title(project.getArtifactId() + " configuration JSON Schema")
                     .build();
 
-            ObjectNode uberSchema = schema.json();
+            JsonSchema uberSchema = new JsonSchema.Builder().build();
             JsonMapper jsonMapper = new JsonMapper();
-            JsonMerger jsonMerger = new JsonMerger();
+            SchemaMerger schemaMerger = new SchemaMerger();
             for (Artifact dependency : dependencies) {
                 if (!dependency.getFile().getName().endsWith(".jar"))
                     continue;
@@ -60,7 +60,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                             {
                                 moduleSchema.remove("title");
                                 moduleSchema.remove("$id");
-                                uberSchema = jsonMerger.merge(uberSchema, moduleSchema);
+                                uberSchema = schemaMerger.merge(uberSchema, new JsonSchema(moduleSchema), false);
                             }
                         }
                     }
@@ -78,13 +78,13 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                     {
                         moduleSchema.remove("title");
                         moduleSchema.remove("$id");
-                        uberSchema = jsonMerger.merge(uberSchema, moduleSchema);
+                        uberSchema = schemaMerger.merge(uberSchema, new JsonSchema(moduleSchema), false);
                     }
                 }
             }
 
             // Check if empty
-            if (uberSchema.size() == 2)
+            if (uberSchema.json().size() == 2)
             {
                 return;
             }

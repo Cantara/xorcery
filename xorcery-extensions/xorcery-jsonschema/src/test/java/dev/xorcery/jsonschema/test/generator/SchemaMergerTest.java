@@ -19,7 +19,7 @@ public class SchemaMergerTest {
         YAMLMapper mapper = new YAMLMapper();
         JsonSchema existingSchema = new JsonSchema((ObjectNode) mapper.readTree(Resources.getResource("existingschema.json").orElseThrow()));
         JsonSchema generatedSchema = new JsonSchema((ObjectNode) mapper.readTree(Resources.getResource("generatedschema.json").orElseThrow()));
-        JsonSchema merged = schemaMerger.merge(existingSchema, generatedSchema);
+        JsonSchema merged = schemaMerger.merge(existingSchema, generatedSchema, true);
         System.out.println(merged.json().toPrettyString());
 
         Assertions.assertEquals(mapper.readTree(Resources.getResource("generatedschema.json").orElseThrow()).toPrettyString(), merged.json().toPrettyString());
