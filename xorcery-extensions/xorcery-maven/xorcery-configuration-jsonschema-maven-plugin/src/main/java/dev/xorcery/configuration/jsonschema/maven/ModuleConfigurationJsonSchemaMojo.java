@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.xorcery.configuration.builder.ConfigurationBuilder;
-import dev.xorcery.json.JsonMerger;
 import dev.xorcery.jsonschema.JsonSchema;
 import dev.xorcery.jsonschema.generator.SchemaByExampleGenerator;
 import dev.xorcery.jsonschema.generator.SchemaMerger;
@@ -132,9 +131,9 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 .title(project.getArtifactId() + " configuration override JSON Schema")
                 .build();
 
-        ObjectNode uberSchema = schema.json();
+        JsonSchema uberSchema = new JsonSchema.Builder().build();
         JsonMapper jsonMapper = new JsonMapper();
-        JsonMerger jsonMerger = new JsonMerger();
+        SchemaMerger schemaMerger = new SchemaMerger();
         for (Artifact dependency : dependencies) {
             if (!dependency.getFile().getName().endsWith(".jar"))
                 continue;
@@ -151,7 +150,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                             {
                                 properties.remove("$schema");
                             }
-                            uberSchema = jsonMerger.merge(uberSchema, moduleSchema);
+                            uberSchema = schemaMerger.merge(uberSchema, new JsonSchema(moduleSchema), false);
                         }
                     }
                 }
@@ -175,7 +174,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 {
                     moduleSchema.remove("title");
                     moduleSchema.remove("$id");
-                    uberSchema = jsonMerger.merge(uberSchema, moduleSchema);
+                    uberSchema = schemaMerger.merge(uberSchema, new JsonSchema(moduleSchema), true);
                 }
             }
         }
@@ -189,7 +188,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         }
 
         // Check if empty
-        if (uberSchema.path("properties").isEmpty())
+        if (uberSchema.json().path("properties").isEmpty())
         {
             // Don't write an empty schema
             getLog().info("No configuration found in dependencies, skipping module configuration override JSON Schema");
