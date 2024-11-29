@@ -183,7 +183,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         if (xorceryConfigOverrideJsonSchemaFile.exists())
         {
             JsonNode existingSchema = jsonMapper.readTree(xorceryConfigOverrideJsonSchemaFile);
-            if (existingSchema.equals(uberSchema))
+            if (existingSchema.equals(uberSchema.json()))
                 return;
         }
 
@@ -196,9 +196,9 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         }
 
         xorceryConfigOverrideJsonSchemaFile.getParentFile().mkdirs();
-        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigOverrideJsonSchemaFile, uberSchema);
+        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigOverrideJsonSchemaFile, uberSchema.json());
         xorceryTestConfigOverrideJsonSchemaFile.getParentFile().mkdirs();
-        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryTestConfigOverrideJsonSchemaFile, uberSchema);
+        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryTestConfigOverrideJsonSchemaFile, uberSchema.json());
         getLog().info("Updated module configuration override JSON Schema definition: "+xorceryConfigOverrideJsonSchemaFile);
     }
 

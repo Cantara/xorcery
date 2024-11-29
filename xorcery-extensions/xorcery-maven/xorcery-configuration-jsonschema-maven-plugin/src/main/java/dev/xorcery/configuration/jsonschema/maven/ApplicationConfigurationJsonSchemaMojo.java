@@ -100,7 +100,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                     return;
             }
 
-            jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, uberSchema);
+            jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, uberSchema.json());
             getLog().info("Updated application configuration JSON Schema definition: "+xorceryConfigJsonSchemaFile);
         } catch (Throwable e) {
             throw new MojoFailureException("Could not create JSON Schema for xorcery.yaml configuration", e);
