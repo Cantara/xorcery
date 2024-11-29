@@ -124,7 +124,11 @@ public class SchemaByExampleGenerator {
                     }
                     properties.property(property.getKey(), new JsonSchema.Builder()
                             .types(Types.Array, Types.String)
-                            .items(new JsonSchema.Builder().anyOf(itemSchemas).build())
+                            .with(builder -> {
+                                if (!itemSchemas.isEmpty()) {
+                                    builder.items(new JsonSchema.Builder().anyOf(itemSchemas).build());
+                                }
+                            })
                             .build());
                 }
                 case BINARY -> {

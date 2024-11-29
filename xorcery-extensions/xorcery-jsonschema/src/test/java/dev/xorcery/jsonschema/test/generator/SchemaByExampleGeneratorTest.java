@@ -25,6 +25,7 @@ public class SchemaByExampleGeneratorTest {
                             name2: value2
                         - name: bar
                           bar1: foo
+                        anotherlistofthings: []
                     """;
 
             String extensions = """
