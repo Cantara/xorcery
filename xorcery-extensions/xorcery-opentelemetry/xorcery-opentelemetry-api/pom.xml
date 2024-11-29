@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-opentelemetry</artifactId>
-        <version>0.151.11-SNAPSHOT</version>
+        <version>0.151.11</version>
     </parent>
 
     <artifactId>xorcery-opentelemetry-api</artifactId>
