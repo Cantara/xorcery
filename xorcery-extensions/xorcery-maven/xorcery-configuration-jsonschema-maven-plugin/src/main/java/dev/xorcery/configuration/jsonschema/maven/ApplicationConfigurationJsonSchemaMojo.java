@@ -96,7 +96,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
             if (xorceryConfigJsonSchemaFile.exists())
             {
                 JsonNode existingSchema = jsonMapper.readTree(xorceryConfigJsonSchemaFile);
-                if (existingSchema.equals(uberSchema))
+                if (existingSchema.equals(uberSchema.json()))
                     return;
             }
 
