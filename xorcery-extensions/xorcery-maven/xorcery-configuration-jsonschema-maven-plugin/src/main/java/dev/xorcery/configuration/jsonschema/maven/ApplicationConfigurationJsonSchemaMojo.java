@@ -60,7 +60,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                             {
                                 moduleSchema.remove("title");
                                 moduleSchema.remove("$id");
-                                uberSchema = schemaMerger.merge(uberSchema, new JsonSchema(moduleSchema), false);
+                                uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
                             }
                         }
                     }
@@ -78,7 +78,7 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                     {
                         moduleSchema.remove("title");
                         moduleSchema.remove("$id");
-                        uberSchema = schemaMerger.merge(uberSchema, new JsonSchema(moduleSchema), false);
+                        uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
                     }
                 }
             }

@@ -13,15 +13,28 @@ import java.io.IOException;
 public class SchemaMergerTest {
 
     @Test
-    public void testSchemaMerge() throws IOException {
+    public void testSchemaMergeGenerated() throws IOException {
         SchemaMerger schemaMerger = new SchemaMerger();
 
         YAMLMapper mapper = new YAMLMapper();
         JsonSchema existingSchema = new JsonSchema((ObjectNode) mapper.readTree(Resources.getResource("existingschema.json").orElseThrow()));
         JsonSchema generatedSchema = new JsonSchema((ObjectNode) mapper.readTree(Resources.getResource("generatedschema.json").orElseThrow()));
-        JsonSchema merged = schemaMerger.merge(existingSchema, generatedSchema, true);
+        JsonSchema merged = schemaMerger.mergeGenerated(existingSchema, generatedSchema);
         System.out.println(merged.json().toPrettyString());
 
-        Assertions.assertEquals(mapper.readTree(Resources.getResource("generatedschema.json").orElseThrow()).toPrettyString(), merged.json().toPrettyString());
+        Assertions.assertEquals(mapper.readTree(Resources.getResource("mergedgeneratedschema.json").orElseThrow()).toPrettyString(), merged.json().toPrettyString());
+    }
+
+    @Test
+    public void testSchemaMergeCombine() throws IOException {
+        SchemaMerger schemaMerger = new SchemaMerger();
+
+        YAMLMapper mapper = new YAMLMapper();
+        JsonSchema uberSchema = new JsonSchema((ObjectNode) mapper.readTree(Resources.getResource("uberschema.json").orElseThrow()));
+        JsonSchema addingSchema = new JsonSchema((ObjectNode) mapper.readTree(Resources.getResource("addingschema.json").orElseThrow()));
+        JsonSchema merged = schemaMerger.combine(uberSchema, addingSchema);
+        System.out.println(merged.json().toPrettyString());
+
+        Assertions.assertEquals(mapper.readTree(Resources.getResource("mergeduberschema.json").orElseThrow()).toPrettyString(), merged.json().toPrettyString());
     }
 }

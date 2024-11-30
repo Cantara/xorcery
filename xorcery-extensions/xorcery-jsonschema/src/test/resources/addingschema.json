@@ -1,0 +1,29 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-secrets-api/schema",
+  "title" : "xorcery-secrets-api configuration JSON Schema",
+  "properties" : {
+    "secrets" : {
+      "$ref" : "#/$defs/secrets"
+    }
+  },
+  "$defs" : {
+    "secrets" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{defaults.enabled}}",
+          "description" : "Default: {{defaults.enabled}} (true)"
+        },
+        "default" : {
+          "type" : "string",
+          "default" : "secret",
+          "description" : "Default: secret"
+        }
+      }
+    }
+  }
+}

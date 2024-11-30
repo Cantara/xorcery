@@ -112,7 +112,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 if (existingSchema.equals(schema.json()))
                     return;
 
-                schema = new SchemaMerger().merge(new JsonSchema(existingSchema), schema, true);
+                schema = new SchemaMerger().mergeGenerated(new JsonSchema(existingSchema), schema);
 
                 // Check post-merge as well
                 if (schema.json().equals(existingSchema))
@@ -126,12 +126,10 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
     }
 
     private void generateModuleOverrideSchema(List<Artifact> dependencies) throws IOException {
-        JsonSchema schema = new JsonSchema.Builder()
+        JsonSchema uberSchema = new JsonSchema.Builder()
                 .id("http://xorcery.dev/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/override-schema")
                 .title(project.getArtifactId() + " configuration override JSON Schema")
                 .build();
-
-        JsonSchema uberSchema = new JsonSchema.Builder().build();
         JsonMapper jsonMapper = new JsonMapper();
         SchemaMerger schemaMerger = new SchemaMerger();
         for (Artifact dependency : dependencies) {
@@ -150,7 +148,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                             {
                                 properties.remove("$schema");
                             }
-                            uberSchema = schemaMerger.merge(uberSchema, new JsonSchema(moduleSchema), false);
+                            uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
                         }
                     }
                 }
@@ -174,7 +172,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                 {
                     moduleSchema.remove("title");
                     moduleSchema.remove("$id");
-                    uberSchema = schemaMerger.merge(uberSchema, new JsonSchema(moduleSchema), true);
+                    uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
                 }
             }
         }

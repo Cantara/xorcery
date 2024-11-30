@@ -16,7 +16,18 @@ import java.util.function.Predicate;
 
 public class SchemaMerger {
 
-    public JsonSchema merge(JsonSchema existingSchema, JsonSchema generatedSchema, boolean mergeArrayObjectItems) {
+    public JsonSchema combine(JsonSchema uberSchema, JsonSchema addingSchema) {
+        ObjectNode uberSchemaJson = uberSchema.json().deepCopy();
+        ObjectNode addingSchemaJson = addingSchema.json().deepCopy();
+
+        // Add schema into uber schema
+        Set<String> exceptions = Set.of("anyOf", "allOf", "oneOf");
+        Predicate<Stack<String>> predicate = path -> !exceptions.contains(path.peek());
+        ObjectNode mergedSchemaJson = new JsonMerger(predicate).merge(uberSchemaJson, addingSchemaJson);
+        return new JsonSchema(mergedSchemaJson);
+    }
+
+    public JsonSchema mergeGenerated(JsonSchema existingSchema, JsonSchema generatedSchema) {
         ObjectNode existingSchemaJson = existingSchema.json().deepCopy();
         ObjectNode generatedSchemaJson = generatedSchema.json().deepCopy();
 
@@ -27,9 +38,7 @@ public class SchemaMerger {
         pruneExistingSchema(existingSchemaJson, generatedSchemaJson);
 
         // Merge existing schema into generated schema
-        Set<String> exceptions = Set.of("anyOf", "allOf", "oneOf");
-        Predicate<Stack<String>> predicate = mergeArrayObjectItems ? path -> true : path -> !exceptions.contains(path.peek());
-        ObjectNode mergedSchemaJson = new JsonMerger(predicate).merge(generatedSchemaJson, existingSchemaJson);
+        ObjectNode mergedSchemaJson = new JsonMerger().merge(generatedSchemaJson, existingSchemaJson);
         return new JsonSchema(mergedSchemaJson);
     }
 
