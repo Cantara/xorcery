@@ -1,0 +1,9 @@
+$schema: xorcery-opensearch-client-override-schema.json
+
+opensearch:
+  componentTemplates:
+  - id: "common"
+    resource: "resource://opensearch/templates/components/common.yaml"
+  indexTemplates:
+  - id: "numbers"
+    resource: "resource://numbers.yaml"

@@ -236,11 +236,6 @@
 
             <dependency>
                 <groupId>dev.xorcery</groupId>
-                <artifactId>xorcery-reactivestreams-disruptor</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -673,13 +668,6 @@
                 <version>1.79</version>
             </dependency>
 
-
-            <!-- Disruptor -->
-            <dependency>
-                <groupId>com.lmax</groupId>
-                <artifactId>disruptor</artifactId>
-                <version>4.0.0</version>
-            </dependency>
 
             <!-- EventStore service -->
             <dependency>

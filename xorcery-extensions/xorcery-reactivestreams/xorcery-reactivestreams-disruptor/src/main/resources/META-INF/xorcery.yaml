@@ -1,5 +1,0 @@
-$schema: xorcery-reactivestreams-disruptor-schema.json
-disruptor:
-  standard:
-    size: 512
-    shutdownTimeout: 60s

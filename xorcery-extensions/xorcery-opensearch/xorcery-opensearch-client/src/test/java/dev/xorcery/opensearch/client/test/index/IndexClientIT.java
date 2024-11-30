@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.opensearch.client.index;
+package dev.xorcery.opensearch.client.test.index;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -21,6 +21,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.builder.ConfigurationBuilder;
 import dev.xorcery.opensearch.client.OpenSearchClient;
+import dev.xorcery.opensearch.client.index.*;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,7 +57,7 @@ public class IndexClientIT {
         URI host = configuration.getURI("opensearch.url").orElseThrow();
         client = new OpenSearchClient(ClientBuilder.newBuilder()
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger("client.opensearch")).build()),
-                host);
+                host, null, null);
     }
 
     @Test

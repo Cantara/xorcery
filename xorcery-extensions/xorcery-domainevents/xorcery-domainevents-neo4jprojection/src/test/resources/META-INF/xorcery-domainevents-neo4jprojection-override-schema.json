@@ -52,9 +52,6 @@
     "opentelemetry" : {
       "$ref" : "#/$defs/opentelemetry"
     },
-    "disruptor" : {
-      "$ref" : "#/$defs/disruptor"
-    },
     "yamlfilepublisher" : {
       "$ref" : "#/$defs/yamlfilepublisher"
     },
@@ -773,28 +770,6 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ opentelemetry.enabled ? false | true }}",
               "description" : "Default: {{ opentelemetry.enabled ? false | true }} (true)"
-            }
-          }
-        }
-      }
-    },
-    "disruptor" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "standard" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "size" : {
-              "type" : [ "number", "string" ],
-              "default" : 512,
-              "description" : "Default: 512"
-            },
-            "shutdownTimeout" : {
-              "type" : "string",
-              "default" : "60s",
-              "description" : "Default: 60s"
             }
           }
         }

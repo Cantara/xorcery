@@ -25,7 +25,6 @@ open module xorcery.test {
     requires xorcery.jsonapi.jaxrs;
     requires xorcery.jsonapi.server;
     requires xorcery.jaxrs.server;
-    requires xorcery.reactivestreams.disruptor;
     requires xorcery.util;
     requires xorcery.configuration;
     requires xorcery.domainevents.api;

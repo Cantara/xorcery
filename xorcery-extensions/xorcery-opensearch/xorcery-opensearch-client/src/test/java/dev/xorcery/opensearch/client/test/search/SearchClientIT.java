@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.opensearch.client.search;
+package dev.xorcery.opensearch.client.test.search;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -22,10 +22,14 @@ import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.builder.ConfigurationBuilder;
 import dev.xorcery.opensearch.client.OpenSearchClient;
 import dev.xorcery.opensearch.client.document.BulkResponse;
-import dev.xorcery.opensearch.client.document.DocumentClientIT;
 import dev.xorcery.opensearch.client.document.IndexBulkRequest;
 import dev.xorcery.opensearch.client.index.CreateComponentTemplateRequest;
 import dev.xorcery.opensearch.client.index.CreateIndexTemplateRequest;
+import dev.xorcery.opensearch.client.search.Document;
+import dev.xorcery.opensearch.client.search.SearchQuery;
+import dev.xorcery.opensearch.client.search.SearchRequest;
+import dev.xorcery.opensearch.client.search.SearchResponse;
+import dev.xorcery.opensearch.client.test.document.DocumentClientIT;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -98,7 +102,7 @@ public class SearchClientIT {
                         .verbosity(LoggingFeature.Verbosity.PAYLOAD_ANY)
                         .level(Level.INFO)
                         .withLogger(logger1).build())
-                , host);
+                , host, null, null);
 
 
         List<String> testIndices = client.indices().getIndices().toCompletableFuture().get(10, TimeUnit.SECONDS)

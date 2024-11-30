@@ -33,6 +33,5 @@
         <module>xorcery-reactivestreams-server</module>
         <module>xorcery-reactivestreams-client</module>
         <module>xorcery-reactivestreams-persistentsubscriber</module>
-        <module>xorcery-reactivestreams-disruptor</module>
     </modules>
 </project>

@@ -24,10 +24,14 @@ import dev.xorcery.opensearch.client.document.DocumentClient;
 import dev.xorcery.opensearch.client.index.IndexClient;
 import dev.xorcery.opensearch.client.jaxrs.BulkRequestMessageBodyWriter;
 import dev.xorcery.opensearch.client.search.SearchClient;
+import io.opentelemetry.api.OpenTelemetry;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.InvocationCallback;
 import jakarta.ws.rs.client.WebTarget;
+import org.apache.logging.log4j.spi.LoggerContext;
+import org.jvnet.hk2.annotations.Service;
 
 import java.io.Closeable;
 import java.net.URI;
@@ -35,18 +39,45 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 
-public record OpenSearchClient(Client client, URI host)
-    implements Closeable
-{
+public record OpenSearchClient(Client client, URI host, LoggerContext logger, OpenTelemetry openTelemetry)
+        implements Closeable {
 
-    public OpenSearchClient(ClientBuilder clientBuilder, URI host) {
+    @Service
+    public static class Factory {
+        private final OpenTelemetry openTelemetry;
+        private final LoggerContext loggerContext;
+        private final Client client;
+
+        @Inject
+        public Factory(ClientBuilder clientBuilder, OpenTelemetry openTelemetry, LoggerContext loggerContext) {
+            this.openTelemetry = openTelemetry;
+            this.loggerContext = loggerContext;
+            this.client = clientBuilder
+                    .register(JsonNodeMessageBodyReader.class)
+                    .register(JsonNodeMessageBodyWriter.class)
+                    .register(new BulkRequestMessageBodyWriter(new ObjectMapper()
+                            .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                            .findAndRegisterModules()))
+                    .build();
+        }
+
+        public OpenSearchClient create(URI host) {
+            return new OpenSearchClient(client, host, loggerContext, openTelemetry);
+        }
+    }
+
+
+    public OpenSearchClient(ClientBuilder clientBuilder, URI host, LoggerContext logger, OpenTelemetry openTelemetry) {
         this(clientBuilder
-                .register(JsonNodeMessageBodyReader.class)
-                .register(JsonNodeMessageBodyWriter.class)
-                .register(new BulkRequestMessageBodyWriter(new ObjectMapper()
-                        .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
-                        .findAndRegisterModules()))
-                .build(), host);
+                        .register(JsonNodeMessageBodyReader.class)
+                        .register(JsonNodeMessageBodyWriter.class)
+                        .register(new BulkRequestMessageBodyWriter(new ObjectMapper()
+                                .configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false)
+                                .findAndRegisterModules()))
+                        .build(),
+                host,
+                logger,
+                openTelemetry);
     }
 
     public IndexClient indices() {

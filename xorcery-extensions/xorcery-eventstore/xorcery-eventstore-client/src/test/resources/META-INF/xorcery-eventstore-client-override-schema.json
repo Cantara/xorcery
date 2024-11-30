@@ -704,7 +704,23 @@
                   "description" : "Default: jwt"
                 },
                 "constraints" : {
-                  "type" : [ "array", "string" ]
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "anyOf" : [ {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "name" : {
+                          "type" : "string",
+                          "default" : "admin",
+                          "description" : "Default: admin"
+                        },
+                        "roles" : {
+                          "type" : [ "array", "string" ]
+                        }
+                      }
+                    } ]
+                  }
                 },
                 "mappings" : {
                   "type" : [ "array", "string" ],
@@ -749,6 +765,20 @@
                     "issuers" : {
                       "type" : [ "array", "string" ],
                       "items" : {
+                        "anyOf" : [ {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "properties" : {
+                            "name" : {
+                              "type" : "string",
+                              "default" : "default",
+                              "description" : "Default: default"
+                            },
+                            "keys" : {
+                              "type" : [ "array", "string" ]
+                            }
+                          }
+                        } ],
                         "type" : "object",
                         "properties" : {
                           "name" : {

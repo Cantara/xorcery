@@ -24,12 +24,12 @@
           "description" : "Default: http://localhost:9200"
         },
         "componentTemplates" : {
-          "type" : "object",
+          "type" : [ "array", "string", "object" ],
           "additionalProperties" : true,
           "properties" : { }
         },
         "indexTemplates" : {
-          "type" : "object",
+          "type" : [ "array", "string", "object" ],
           "additionalProperties" : true,
           "properties" : { }
         },
@@ -39,7 +39,63 @@
           "description" : "Default: false"
         },
         "publishers" : {
-          "type" : [ "array", "string" ]
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "server" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "uri" : {
+                      "type" : "string",
+                      "default" : "wss://somehost:someport",
+                      "description" : "Default: wss://somehost:someport"
+                    },
+                    "stream" : {
+                      "type" : "string",
+                      "default" : "somestream",
+                      "description" : "Default: somestream"
+                    },
+                    "configuration" : {
+                      "type" : "object",
+                      "additionalProperties" : true,
+                      "properties" : { }
+                    }
+                  }
+                },
+                "client" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "alias" : {
+                      "type" : "string",
+                      "default" : "somealias",
+                      "description" : "Default: somealias"
+                    },
+                    "index" : {
+                      "type" : "string",
+                      "default" : "anindexname",
+                      "description" : "Default: anindexname"
+                    },
+                    "configuration" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "bufferSize" : {
+                          "type" : [ "number", "string" ],
+                          "default" : 64,
+                          "description" : "Default: 64"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            } ]
+          }
         }
       }
     }

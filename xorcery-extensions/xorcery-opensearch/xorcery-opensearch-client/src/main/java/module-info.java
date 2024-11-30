@@ -14,17 +14,26 @@
  * limitations under the License.
  */
 module xorcery.opensearch.client {
-    requires xorcery.jsonapi.service;
-    requires xorcery.configuration.api;
+    exports dev.xorcery.opensearch.client.document;
+    exports dev.xorcery.opensearch.client.index;
+    exports dev.xorcery.opensearch.client.jaxrs;
+    exports dev.xorcery.opensearch.client.search;
+    exports dev.xorcery.opensearch.client;
+    exports dev.xorcery.opensearch;
+
+    opens opensearch.templates.components;
+    opens opensearch.templates;
+
+    requires xorcery.reactivestreams.extras;
     requires xorcery.reactivestreams.api;
-    requires xorcery.reactivestreams.disruptor;
+    requires xorcery.jersey.client;
     requires xorcery.jsonapi.jaxrs;
     requires xorcery.util;
 
-    requires com.fasterxml.jackson.dataformat.yaml;
+    requires io.opentelemetry.api;
     requires org.apache.logging.log4j;
-    requires jakarta.inject;
-    requires java.logging;
-    requires com.lmax.disruptor;
+    requires io.opentelemetry.context;
     requires org.glassfish.hk2.api;
+    requires org.glassfish.hk2.runlevel;
+    requires jakarta.ws.rs;
 }

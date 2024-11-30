@@ -11,7 +11,6 @@ module xorcery.eventstore.client {
     requires org.reactivestreams;
     requires reactor.core;
 
-    requires com.lmax.disruptor;
     requires com.fasterxml.jackson.databind;
     requires grpc.shaded.jpms;
     requires io.opentelemetry.semconv;

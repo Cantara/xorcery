@@ -23,6 +23,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -30,39 +31,39 @@ import java.util.function.Function;
 public record IndexClient(
         Function<BiConsumer<WebTarget, InvocationCallback<ObjectNode>>, CompletionStage<ObjectNode>> requests) {
 
-    public CompletionStage<AcknowledgedResponse> createComponentTemplate(String templateId, CreateComponentTemplateRequest request) {
+    public CompletableFuture<AcknowledgedResponse> createComponentTemplate(String templateId, CreateComponentTemplateRequest request) {
         return requests.apply((target, callback) -> target.path("_component_template").path(templateId)
                         .request(MediaType.APPLICATION_JSON_TYPE).async().put(Entity.json(request.json()), callback))
-                .thenApply(AcknowledgedResponse::new);
+                .thenApply(AcknowledgedResponse::new).toCompletableFuture();
     }
 
-    public CompletionStage<ComponentTemplatesResponse> getComponentTemplates() {
+    public CompletableFuture<ComponentTemplatesResponse> getComponentTemplates() {
         return requests.apply((target, callback) -> target.path("_component_template")
                         .request(MediaType.APPLICATION_JSON_TYPE).async().get(callback))
-                .thenApply(ComponentTemplatesResponse::new);
+                .thenApply(ComponentTemplatesResponse::new).toCompletableFuture();
     }
 
-    public CompletionStage<AcknowledgedResponse> createIndexTemplate(String templateId, CreateIndexTemplateRequest request) {
+    public CompletableFuture<AcknowledgedResponse> createIndexTemplate(String templateId, CreateIndexTemplateRequest request) {
         return requests.apply((target, callback) -> target.path("_index_template").path(templateId)
                         .request(MediaType.APPLICATION_JSON_TYPE).async().put(Entity.json(request.json()), callback))
-                .thenApply(AcknowledgedResponse::new);
+                .thenApply(AcknowledgedResponse::new).toCompletableFuture();
     }
 
-    public CompletionStage<IndexTemplatesResponse> getIndexTemplates() {
+    public CompletableFuture<IndexTemplatesResponse> getIndexTemplates() {
         return requests.apply((target, callback) -> target.path("_index_template")
                         .request(MediaType.APPLICATION_JSON_TYPE).async().get(callback))
-                .thenApply(IndexTemplatesResponse::new);
+                .thenApply(IndexTemplatesResponse::new).toCompletableFuture();
     }
 
-    public CompletionStage<Map<String, Index>> getIndices() {
+    public CompletableFuture<Map<String, Index>> getIndices() {
         return requests.apply((target, callback) -> target.path("*")
                         .request(MediaType.APPLICATION_JSON_TYPE).async().get(callback))
-                .thenApply(json -> JsonElement.toMap(json, Index::new));
+                .thenApply(json -> JsonElement.toMap(json, Index::new)).toCompletableFuture();
     }
 
-    public CompletionStage<AcknowledgedResponse> deleteIndex(String indexName) {
+    public CompletableFuture<AcknowledgedResponse> deleteIndex(String indexName) {
         return requests.apply((target, callback) -> target.path(indexName)
                         .request(MediaType.APPLICATION_JSON_TYPE).async().delete(callback))
-                .thenApply(AcknowledgedResponse::new);
+                .thenApply(AcknowledgedResponse::new).toCompletableFuture();
     }
 }

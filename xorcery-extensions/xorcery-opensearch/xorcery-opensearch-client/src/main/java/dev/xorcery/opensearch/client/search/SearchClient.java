@@ -22,6 +22,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -29,7 +30,7 @@ import java.util.function.Function;
 public record SearchClient(
         Function<BiConsumer<WebTarget, InvocationCallback<ObjectNode>>, CompletionStage<ObjectNode>> requests) {
 
-    public CompletionStage<SearchResponse> search(String indexId, SearchRequest request, Map<String, String> parameters) {
+    public CompletableFuture<SearchResponse> search(String indexId, SearchRequest request, Map<String, String> parameters) {
         return requests.apply((target, callback) ->
                 {
                     WebTarget webTarget = target.path(indexId).path("_search");
@@ -39,6 +40,7 @@ public record SearchClient(
                     webTarget.request(MediaType.APPLICATION_JSON_TYPE).async()
                             .post(Entity.json(request.json()), callback);
                 })
-                .thenApply(SearchResponse::new);
+                .thenApply(SearchResponse::new)
+                .toCompletableFuture();
     }
 }

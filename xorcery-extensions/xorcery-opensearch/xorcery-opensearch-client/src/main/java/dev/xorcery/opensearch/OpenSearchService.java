@@ -21,45 +21,54 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.opensearch.client.OpenSearchClient;
+import dev.xorcery.opensearch.client.document.DocumentUpdates;
 import dev.xorcery.opensearch.client.index.AcknowledgedResponse;
 import dev.xorcery.opensearch.client.index.CreateComponentTemplateRequest;
 import dev.xorcery.opensearch.client.index.CreateIndexTemplateRequest;
 import dev.xorcery.opensearch.client.index.IndexTemplate;
+import dev.xorcery.reactivestreams.api.MetadataJsonNode;
+import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.PreDestroy;
+import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Iterator;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
-@Service(name="opensearch")
+@Service(name = "opensearch")
+@RunLevel(4)
 public class OpenSearchService
         implements PreDestroy {
 
     private final OpenSearchClient client;
     private final ObjectMapper objectMapper;
     private final OpenSearchConfiguration openSearchConfiguration;
+    private final OpenSearchClient.Factory clientFactory;
     private final Logger logger;
+    private final OpenTelemetry openTelemetry;
 
     @Inject
     public OpenSearchService(Configuration configuration,
-                             ClientBuilder clientBuilder,
-                             Logger logger) {
+                             OpenSearchClient.Factory clientFactory,
+                             LoggerContext loggerContext,
+                             OpenTelemetry openTelemetry) {
 
-        this.openSearchConfiguration = new OpenSearchConfiguration(configuration.getConfiguration("opensearch"));
-        this.logger = logger;
+        this.openSearchConfiguration = OpenSearchConfiguration.get(configuration);
+        this.clientFactory = clientFactory;
+        this.logger = loggerContext.getLogger(getClass());
+        this.openTelemetry = openTelemetry;
         this.objectMapper = new ObjectMapper(new YAMLFactory());
 
         URI host = openSearchConfiguration.getURI();
-        client = new OpenSearchClient(clientBuilder, host);
+        client = clientFactory.create(host);
 
         loadComponentTemplates();
         loadIndexTemplates();
@@ -69,26 +78,6 @@ public class OpenSearchService
             for (String templateName : templates.keySet()) {
                 logger.info("Index template:" + templateName);
             }
-
-            /** None of this makes sense. This service should only handle the client, not the streams
-             OpenSearchCommitPublisher openSearchCommitPublisher = new OpenSearchCommitPublisher();
-
-             reactiveStreamsServer.<WithMetadata<JsonNode>>subscriber("opensearch", MediaType.APPLICATION_JSON, (Class)WithMetadata.class, flux->
-             {
-             flux.publish().autoConnect().subscribe(new OpenSearchSubscriber(client, openSearchCommitPublisher, new Configuration.Builder().build(), new Configuration.Builder().build()));
-             return flux;
-             });
-             Type publisherItemType = Classes.resolveActualTypeArgs(OpenSearchCommitPublisher.class, Publisher.class)[0];
-             reactiveStreamsServer.publisher("opensearchcommits", MediaType.APPLICATION_JSON, publisherItemType, openSearchCommitPublisher);
-
-             OpenSearchSubscriberConnector connector = new OpenSearchSubscriberConnector(client, reactiveStreamsClient, openSearchCommitPublisher);
-             openSearchConfiguration.getPublishers().ifPresent(publishers ->
-             {
-             for (OpenSearchConfiguration.Publisher publisher : publishers) {
-             connector.connect(publisher.getURI().orElse(null), publisher.getServerConfiguration().orElseGet(Configuration::empty), publisher.getClientConfiguration().orElseGet(Configuration::empty));
-             }
-             });
-             **/
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -98,82 +87,52 @@ public class OpenSearchService
         return client;
     }
 
+    public DocumentUpdates documentUpdates(Function<MetadataJsonNode<JsonNode>, String> documentIdSelector) {
+        return new DocumentUpdates(openSearchConfiguration, clientFactory, documentIdSelector, logger, openTelemetry);
+    }
+
     private void loadComponentTemplates() {
         // Upsert component templates
-        JsonNode jsonNode = openSearchConfiguration.getComponentTemplates();
-        Iterator<String> fieldNames = jsonNode.fieldNames();
+        List<OpenSearchConfiguration.Template> componentTemplates = openSearchConfiguration.getComponentTemplates();
 
-        while (fieldNames.hasNext()) {
-            String templateId = fieldNames.next();
-            String templateName = jsonNode.get(templateId).textValue();
-            logger.info("Loading OpenSearch component template from:" + templateName);
-            String templateSource = null;
-            try {
-                URI templateUri = URI.create(templateName);
-                templateSource = Files.readString(Path.of(templateUri));
-            } catch (IllegalArgumentException | IOException e) {
-                // Just load from classpath
-                try (InputStream in = ClassLoader.getSystemResourceAsStream(templateName)) {
-                    if (in != null)
-                        templateSource = new String(in.readAllBytes());
-                } catch (IOException ex) {
-                    logger.error("Could not load template " + templateName, ex);
+        for (OpenSearchConfiguration.Template componentTemplate : componentTemplates) {
+            String templateId = componentTemplate.getId();
+            URI templateName = componentTemplate.getResource();
+            logger.info("Loading component template '{}' from: ", templateId, templateName);
+            try (InputStream in = templateName.toURL().openStream()) {
+                String templateSource = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+
+                CreateComponentTemplateRequest request = new CreateComponentTemplateRequest.Builder((ObjectNode) objectMapper.readTree(templateSource)).build();
+
+                AcknowledgedResponse response = client.indices().createComponentTemplate(templateId, request).get(10, TimeUnit.SECONDS);
+                if (!response.isAcknowledged()) {
+                    logger.error("Could not upload template " + templateName + ":\n" + response.json().toPrettyString());
                 }
-            }
-
-            if (templateSource != null) {
-                try {
-                    CreateComponentTemplateRequest request = new CreateComponentTemplateRequest.Builder((ObjectNode) objectMapper.readTree(templateSource)).build();
-
-                    AcknowledgedResponse response = client.indices().createComponentTemplate(templateId, request).toCompletableFuture().get(10, TimeUnit.SECONDS);
-                    if (!response.isAcknowledged()) {
-                        logger.error("Could not load template " + templateName + ":\n" + response.json().toPrettyString());
-                    }
-                } catch (Throwable e) {
-                    logger.error("Could not load template " + templateName, e);
-                }
-            } else {
-                logger.error("Could not find template " + templateName);
+            } catch (Throwable ex) {
+                logger.error("Could not load template " + templateName, ex);
             }
         }
     }
 
     private void loadIndexTemplates() {
         // Upsert index templates
-        JsonNode jsonNode = openSearchConfiguration.getIndexTemplates();
-        Iterator<String> fieldNames = jsonNode.fieldNames();
+        List<OpenSearchConfiguration.Template> indexTemplates = openSearchConfiguration.getIndexTemplates();
 
-        while (fieldNames.hasNext()) {
-            String templateId = fieldNames.next();
-            String templateName = jsonNode.get(templateId).textValue();
-            logger.info("Loading OpenSearch index template from:" + templateName);
-            String templateSource = null;
-            try {
-                URI templateUri = URI.create(templateName);
-                templateSource = Files.readString(Path.of(templateUri));
-            } catch (IllegalArgumentException | IOException e) {
-                // Just load from classpath
-                try (InputStream in = ClassLoader.getSystemResourceAsStream(templateName)) {
-                    if (in != null)
-                        templateSource = new String(in.readAllBytes());
-                } catch (IOException ex) {
-                    logger.error("Could not load template " + templateName, ex);
+        for (OpenSearchConfiguration.Template indexTemplate : indexTemplates) {
+            String templateId = indexTemplate.getId();
+            URI templateName = indexTemplate.getResource();
+            logger.info("Loading index template '{} from: {}", templateId, templateName);
+            try (InputStream in = templateName.toURL().openStream()) {
+                String templateSource = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+
+                CreateIndexTemplateRequest createIndexTemplateRequest = new CreateIndexTemplateRequest.Builder((ObjectNode) objectMapper.readTree(templateSource)).build();
+
+                AcknowledgedResponse response = client.indices().createIndexTemplate(templateId, createIndexTemplateRequest).get(10, TimeUnit.SECONDS);
+                if (!response.isAcknowledged()) {
+                    logger.error("Could not load template " + templateName + ":\n" + response.json().toPrettyString());
                 }
-            }
-
-            if (templateSource != null) {
-                try {
-                    CreateIndexTemplateRequest createIndexTemplateRequest = new CreateIndexTemplateRequest.Builder((ObjectNode) objectMapper.readTree(templateSource)).build();
-
-                    AcknowledgedResponse response = client.indices().createIndexTemplate(templateId, createIndexTemplateRequest).toCompletableFuture().get(10, TimeUnit.SECONDS);
-                    if (!response.isAcknowledged()) {
-                        logger.error("Could not load template " + templateName + ":\n" + response.json().toPrettyString());
-                    }
-                } catch (Throwable e) {
-                    logger.error("Could not load template " + templateName, e);
-                }
-            } else {
-                logger.error("Could not find template " + templateName);
+            } catch (Throwable ex) {
+                logger.error("Could not load template " + templateName, ex);
             }
         }
     }

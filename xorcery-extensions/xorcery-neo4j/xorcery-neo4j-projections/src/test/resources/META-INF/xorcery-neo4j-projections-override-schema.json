@@ -52,9 +52,6 @@
     "reactivestreams" : {
       "$ref" : "#/$defs/reactivestreams"
     },
-    "disruptor" : {
-      "$ref" : "#/$defs/disruptor"
-    },
     "yamlfilepublisher" : {
       "$ref" : "#/$defs/yamlfilepublisher"
     },
@@ -608,7 +605,23 @@
                   "description" : "Default: jwt"
                 },
                 "constraints" : {
-                  "type" : [ "array", "string" ]
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "anyOf" : [ {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "name" : {
+                          "type" : "string",
+                          "default" : "admin",
+                          "description" : "Default: admin"
+                        },
+                        "roles" : {
+                          "type" : [ "array", "string" ]
+                        }
+                      }
+                    } ]
+                  }
                 },
                 "mappings" : {
                   "type" : [ "array", "string" ],
@@ -653,6 +666,20 @@
                     "issuers" : {
                       "type" : [ "array", "string" ],
                       "items" : {
+                        "anyOf" : [ {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "properties" : {
+                            "name" : {
+                              "type" : "string",
+                              "default" : "default",
+                              "description" : "Default: default"
+                            },
+                            "keys" : {
+                              "type" : [ "array", "string" ]
+                            }
+                          }
+                        } ],
                         "type" : "object",
                         "properties" : {
                           "name" : {
@@ -1196,28 +1223,6 @@
               "type" : "string",
               "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
               "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ (wss://service.xorcery.test:443/)"
-            }
-          }
-        }
-      }
-    },
-    "disruptor" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "standard" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "size" : {
-              "type" : [ "number", "string" ],
-              "default" : 512,
-              "description" : "Default: 512"
-            },
-            "shutdownTimeout" : {
-              "type" : "string",
-              "default" : "60s",
-              "description" : "Default: 60s"
             }
           }
         }

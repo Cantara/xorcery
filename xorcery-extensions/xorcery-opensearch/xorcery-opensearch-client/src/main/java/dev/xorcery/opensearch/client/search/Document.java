@@ -15,6 +15,7 @@
  */
 package dev.xorcery.opensearch.client.search;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.xorcery.json.JsonElement;
 
@@ -28,8 +29,18 @@ public record Document(ObjectNode json)
         return getString("_id");
     }
 
+    public Optional<String> index()
+    {
+        return getString("_index");
+    }
+
     public long timestamp()
     {
-        return json().path("_source").path("@timestamp").longValue();
+        return json.path("_source").path("@timestamp").longValue();
+    }
+
+    public JsonNode source()
+    {
+        return json.path("_source");
     }
 }

@@ -16,24 +16,26 @@
 package dev.xorcery.opensearch;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ContainerNode;
-import dev.xorcery.configuration.ComponentConfiguration;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.ServiceConfiguration;
 import dev.xorcery.json.JsonElement;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public record OpenSearchConfiguration(Configuration context)
         implements ServiceConfiguration {
-    public JsonNode getComponentTemplates() {
-        return context.getJson("componentTemplates").orElseThrow(missing("opensearch.componentTemplates"));
+    public static OpenSearchConfiguration get(Configuration configuration) {
+        return new OpenSearchConfiguration(configuration.getConfiguration("opensearch"));
     }
 
-    public JsonNode getIndexTemplates() {
-        return context.getJson("indexTemplates").orElseThrow(missing("opensearch.indexTemplates"));
+    public List<Template> getComponentTemplates() {
+        return context.getObjectListAs("componentTemplates", Template::new).orElse(Collections.emptyList());
+    }
+
+    public List<Template> getIndexTemplates() {
+        return context.getObjectListAs("indexTemplates", Template::new).orElse(Collections.emptyList());
     }
 
     public boolean isDeleteOnExit() {
@@ -44,22 +46,17 @@ public record OpenSearchConfiguration(Configuration context)
         return context.getURI("uri").orElseThrow(missing("opensearch.uri"));
     }
 
-    public Optional<List<Publisher>> getPublishers() {
-        return context.getObjectListAs("publishers", Publisher::new);
-    }
-
-    public record Publisher(ContainerNode<?> json)
-            implements JsonElement, ComponentConfiguration {
-        Optional<URI> getURI() {
-            return JsonElement.super.getURI("server.uri");
+    public record Template(JsonNode json)
+        implements JsonElement
+    {
+        public String getId()
+        {
+            return getString("id").orElseThrow(Configuration.missing("id"));
         }
 
-        Optional<Configuration> getServerConfiguration() {
-            return getObjectAs("server.configuration", Configuration::new);
-        }
-
-        Optional<Configuration> getClientConfiguration() {
-            return getObjectAs("client.configuration", Configuration::new);
+        public URI getResource()
+        {
+            return getString("resource").map(URI::create).orElseThrow(Configuration.missing("resource"));
         }
     }
 }

@@ -20,6 +20,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public record SearchRequest(ObjectNode json) {
 
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
     public record Builder(ObjectNode request) {
         public Builder() {
             this(JsonNodeFactory.instance.objectNode());
