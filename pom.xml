@@ -35,7 +35,7 @@
         <log4j.version>2.24.2</log4j.version>
         <jetty.version>12.0.15</jetty.version>
         <jersey.version>3.1.9</jersey.version>
-        <opentelemetry.version>1.44.1</opentelemetry.version>
+        <opentelemetry.version>1.45.0</opentelemetry.version>
         <eventstore.version>5.4.3</eventstore.version>
         <grpc.version>1.66.0</grpc.version>
         <hk2.version>3.1.1</hk2.version>
@@ -745,7 +745,7 @@
             <dependency>
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-exporter-sender-jdk</artifactId>
-                <version>1.44.1</version>
+                <version>1.45.0</version>
             </dependency>
             <dependency>
                 <groupId>io.opentelemetry</groupId>
