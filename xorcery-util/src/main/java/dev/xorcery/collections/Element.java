@@ -1,6 +1,9 @@
 package dev.xorcery.collections;
 
+import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -83,6 +86,22 @@ public interface Element {
 
     default Optional<URI> getURI(Enum<?> name) {
         return getString(name).map(s -> s.replace('\\', '/').replace(' ', '+')).map(URI::create);
+    }
+
+    default Optional<URL> getURL(String name) {
+
+        return getString(name).map(s -> s.replace('\\', '/').replace(' ', '+')).map(url -> {
+            try {
+                return new URL(url);
+            } catch (MalformedURLException e)
+            {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
+    default Optional<URL> getURL(Enum<?> name) {
+        return getURL(name.name());
     }
 
     default Optional<Short> getShort(String name) {
