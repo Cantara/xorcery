@@ -35,7 +35,7 @@ import org.neo4j.kernel.impl.transaction.stats.TransactionCounters;
 import java.time.Duration;
 import java.util.function.Function;
 
-@Service(name = "neo4j.metrics")
+@Service(name = "neo4jdatabase.metrics")
 @RunLevel(4)
 public class Neo4jMetricsService
     implements PreDestroy

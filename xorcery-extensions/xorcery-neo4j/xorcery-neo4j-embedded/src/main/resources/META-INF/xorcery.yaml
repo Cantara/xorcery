@@ -11,7 +11,7 @@ neo4jdatabase:
     wipeOnBreakingChange: true
   settings: {}
   metrics:
-    enabled: "{{ defaults.enabled }}"
+    enabled: "{{ neo4jdatabase.enabled }}"
     attributes:
       "neo4j.transaction.active": neo4j.transaction.active
       "neo4j.transaction.committed": neo4j.transaction.committed
