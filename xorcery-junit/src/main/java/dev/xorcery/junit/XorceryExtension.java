@@ -23,6 +23,7 @@ import dev.xorcery.core.Xorcery;
 import dev.xorcery.io.ZipFiles;
 import dev.xorcery.log4j.LoggerContextFactory;
 import dev.xorcery.util.Resources;
+import org.apache.logging.log4j.LogManager;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
@@ -155,13 +156,13 @@ public class XorceryExtension
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
 
         try {
-            // Log final configuration
-//            ConfigurationLogger.getLogger().log("Configuration:\n" + configuration);
             LoggerContextFactory.initialize(configuration);
 
+            // Log final configuration
+            LogManager.getLogger(getClass()).debug("Configuration:{}\n", configuration);
+
             ServiceLocator serviceLocator = null;
-            if (!services.isEmpty())
-            {
+            if (!services.isEmpty()) {
                 serviceLocator = ServiceLocatorFactory.getInstance().create(null);
                 for (Object service : services) {
                     serviceLocator.inject(service);
@@ -206,7 +207,7 @@ public class XorceryExtension
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
         Class<?> type = parameterContext.getParameter().getType();
-        Object result =  xorcery.getServiceLocator().getService(type);
+        Object result = xorcery.getServiceLocator().getService(type);
         if (result == null)
             result = xorcery.getServiceLocator().createAndInitialize(type);
         return result;
