@@ -23,14 +23,18 @@ import java.util.Optional;
 public record ProjectionModel(Map<String, Object> map)
         implements MapElement<String, Object> {
     public String getProjectionId() {
-        return getString(Projection.projectionId).orElseThrow();
+        return getString(Projection.id).orElseThrow();
+    }
+
+    public long getCreatedOn() {
+        return getLong(Projection.createdOn).orElseThrow();
     }
 
     public Optional<Long> getProjectionPosition() {
         return getLong(Projection.projectionPosition);
     }
 
-    public Optional<Long> getStreamId() {
-        return getLong(Projection.streamId);
+    public Optional<String> getResourceUrl() {
+        return getString(Projection.resourceUrl);
     }
 }

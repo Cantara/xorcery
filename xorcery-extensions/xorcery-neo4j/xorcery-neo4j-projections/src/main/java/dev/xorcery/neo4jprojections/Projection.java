@@ -19,8 +19,9 @@ package dev.xorcery.neo4jprojections;
  * Fields stored in Neo4j for each projection. Updated on each transaction commit when new events have been projected.
  */
 public enum Projection {
-    projectionId, // Name of projection
+    id, // Id of projection
+    createdOn, // Timestamp when projection was created
     projectionPosition, // Lastest position of event in incoming stream
     projectionTimestamp, // Lastest timestamp of event in incoming stream
-    streamId // Id of upstream source
+    resourceUrl // URL of upstream source
 }

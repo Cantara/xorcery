@@ -2,45 +2,137 @@ package dev.xorcery.neo4jprojections.api;
 
 import dev.xorcery.domainevents.api.MetadataEvents;
 import dev.xorcery.neo4jprojections.Neo4jProjectionHandler;
-import dev.xorcery.neo4jprojections.Neo4jProjectionUpdates;
+import dev.xorcery.neo4jprojections.ProjectionModel;
+import dev.xorcery.reactivestreams.api.ContextViewElement;
 import jakarta.inject.Inject;
-import org.jvnet.hk2.annotations.Optional;
+import org.glassfish.hk2.api.PreDestroy;
 import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Signal;
+import reactor.core.publisher.Sinks;
 import reactor.util.context.ContextView;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
+
 @Service
-public class Neo4jProjections {
+public class Neo4jProjections
+        implements PreDestroy {
     private final Neo4jProjectionHandler projectionHandler;
-    private final Neo4jProjectionUpdates projectionUpdates;
+
+    private final Map<String, SinkFlux> projectionSinks = new ConcurrentHashMap<>();
+    private final Sinks.Many<String> projectionIdSink = Sinks.many().replay().all();
 
     @Inject
-    public Neo4jProjections(
-            Neo4jProjectionHandler neo4jProjectionHandler,
-            @Optional Neo4jProjectionUpdates projectionUpdates
-    ) {
+    public Neo4jProjections(Neo4jProjectionHandler neo4jProjectionHandler) {
         this.projectionHandler = neo4jProjectionHandler;
-        this.projectionUpdates = projectionUpdates;
+
+        projectionHandler.getProjections().forEach(projection->{
+            projectionSinks.put(projection.getProjectionId(), createSinkFlux(projection.getProjectionId()));
+        });
     }
 
     /**
      * To be used with {@link Flux#transformDeferred(Function)}.
      * Subscribers must place {@link ProjectionStreamContext#projectionId} into their {@link CoreSubscriber#currentContext()}.
      * The projection will add {@link ProjectionStreamContext#projectionPosition} to the context if the projection already exists.
+     *
      * @return
      */
     public BiFunction<Flux<MetadataEvents>, ContextView, Publisher<MetadataEvents>> projection() {
-        if (projectionUpdates == null)
+        return projectionHandler.andThen(publisher ->
+                Flux.from(publisher)
+                        .transformDeferredContextual(this::updates));
+    }
+
+    // Current state
+    public Optional<ProjectionModel> getProjection(String projectionId) {
+        return projectionHandler.getProjection(projectionId);
+    }
+
+    public List<ProjectionModel> getProjections() {
+        return projectionHandler.getProjections();
+    }
+
+    // Updates
+    public Publisher<MetadataEvents> projectionUpdates(){
+        return subscriber -> {
+            if (subscriber instanceof CoreSubscriber<? super MetadataEvents> coreSubscriber) {
+                new ContextViewElement(coreSubscriber.currentContext())
+                        .getString(ProjectionStreamContext.projectionId)
+                        .ifPresentOrElse(pid ->
+                        {
+                            // Subscribe to particular projection
+                            projectionSinks.computeIfAbsent(pid, this::createSinkFlux)
+                                    .flux.subscribe(subscriber);
+                        }, () ->
+                        {
+                            subscriber.onError(new IllegalArgumentException("Must provide projectionId context key"));
+                        });
+            } else {
+                subscriber.onError(new IllegalArgumentException("Must implement CoreSubscriber"));
+            }
+        };
+    }
+
+    public Publisher<String> projectionIds()
+    {
+        return subscriber->{
+            projectionIdSink.asFlux().subscribe(subscriber);
+        };
+    }
+
+    private Publisher<MetadataEvents> updates(Flux<MetadataEvents> projectionFlux, ContextView contextView) {
+        return new ContextViewElement(contextView).getString(ProjectionStreamContext.projectionId).map(pid ->
         {
-            return projectionHandler;
-        } else
+            SinkFlux sinkFlux = projectionSinks.computeIfAbsent(pid, this::createSinkFlux);
+            return projectionFlux.doOnEach(onEach(sinkFlux.sink()));
+        }).orElse(projectionFlux);
+    }
+
+    private Consumer<Signal<MetadataEvents>> onEach(Sinks.Many<MetadataEvents> sink) {
+        return signal ->
         {
-            return projectionHandler.andThen(publisher -> Flux.from(publisher).transformDeferredContextual(projectionUpdates));
-        }
+            switch (requireNonNull(signal.getType())) {
+                case CANCEL -> {
+                    sink.tryEmitComplete();
+                }
+                case ON_NEXT -> {
+                    sink.tryEmitNext(requireNonNull(signal.get()));
+                }
+                case ON_ERROR -> {
+                    sink.tryEmitError(requireNonNull(signal.getThrowable()));
+                }
+                case ON_COMPLETE -> {
+                    sink.tryEmitComplete();
+                }
+                default -> {
+                }
+            }
+        };
+    }
+
+    private SinkFlux createSinkFlux(String projectionId) {
+        projectionIdSink.tryEmitNext(projectionId);
+        Sinks.Many<MetadataEvents> sink = Sinks.many().replay().limit(1);
+        Flux<MetadataEvents> projectionUpdatesFlux = sink.asFlux();
+        return new SinkFlux(sink, projectionUpdatesFlux);
+    }
+
+    @Override
+    public void preDestroy() {
+        projectionIdSink.tryEmitComplete();
+    }
+
+    record SinkFlux(Sinks.Many<MetadataEvents> sink, Flux<MetadataEvents> flux) {
     }
 }

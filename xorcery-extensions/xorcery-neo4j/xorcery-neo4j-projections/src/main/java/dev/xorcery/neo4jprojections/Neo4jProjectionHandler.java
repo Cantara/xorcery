@@ -98,7 +98,7 @@ public class Neo4jProjectionHandler
             String projectionId = new ContextViewElement(contextView).getString(ProjectionStreamContext.projectionId)
                     .orElseThrow(missing(ProjectionStreamContext.projectionId));
             logger.info("Starting Neo4j projection with id " + projectionId);
-            Optional<ProjectionModel> currentProjection = getCurrentProjection(projectionId);
+            Optional<ProjectionModel> currentProjection = getProjection(projectionId);
             Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
             List<Neo4jEventProjection> projections = new ArrayList<>();
             projectionProviders.forEach(projections::add);
@@ -128,7 +128,7 @@ public class Neo4jProjectionHandler
                         // Create projection in Neo4j
                         try (Transaction tx = database.beginTx()) {
                             Map<String, Object> createParameters = new HashMap<>();
-                            createParameters.put(Projection.projectionId.name(), projectionId);
+                            createParameters.put(Projection.id.name(), projectionId);
                             Map<String, String> props = new HashMap<>();
                             contextView.forEach((k, v) ->
                             {
@@ -136,13 +136,16 @@ public class Neo4jProjectionHandler
                                     props.put(k.toString(), v.toString());
                                 }
                             });
+                            createParameters.put("createdOn", System.currentTimeMillis());
                             createParameters.put("props", props);
                             tx.execute("""
-                                    MERGE (projection:Projection {id:$projectionId})
+                                    MERGE (projection:Projection {id:$id})
                                     ON CREATE SET
+                                    projection.createdOn = $createdOn,
                                     projection += $props
                                     ON MATCH SET
-                                    projection.projectionPosition = coalesce(projection.revision,null),
+                                    projection.projectionPosition = null,
+                                    projection.createdOn = $createdOn,
                                     projection += $props
                                     RETURN projection
                                     """, createParameters).close();
@@ -157,15 +160,31 @@ public class Neo4jProjectionHandler
         }
     }
 
-    public Optional<ProjectionModel> getCurrentProjection(String projectionId) {
-        // Check if we already have written data for this projection before
+    public Optional<ProjectionModel> getProjection(String projectionId) {
         return database.executeTransactionally("""
-                MATCH (projection:Projection {id:$projectionId})
-                RETURN coalesce(projection.projectionPosition, projection.revision) as projectionPosition, projection.id as projectionId, projection.streamId as streamId
-                """, Map.of(Projection.projectionId.name(), projectionId), result ->
-                result.hasNext()
-                        ? Optional.of(new ProjectionModel(result.next()))
+                MATCH (projection:Projection {id:$id})
+                RETURN properties(projection) as properties
+                """, Map.of(Projection.id.name(), projectionId), result ->
+                result.hasNext() && result.next().get("properties") instanceof Map properties
+                        ? Optional.of(new ProjectionModel(properties))
                         : Optional.empty());
+    }
+
+    public List<ProjectionModel> getProjections() {
+        return database.executeTransactionally("""
+                MATCH (projection:Projection)
+                RETURN properties(projection) as properties
+                """, Collections.emptyMap(), result -> {
+                    List<ProjectionModel> projections = new ArrayList<>();
+                    while (result.hasNext())
+                    {
+                        if (result.next().get("properties") instanceof Map properties)
+                        {
+                            projections.add(new ProjectionModel(properties));
+                        }
+                    }
+                    return projections;
+                });
     }
 
     private class Handler
@@ -228,11 +247,11 @@ public class Neo4jProjectionHandler
                                     .orElseGet(System::currentTimeMillis))
                                     .longValue();
                             Map<String, Object> updateParameters = new HashMap<>();
-                            updateParameters.put(Projection.projectionId.name(), projectionId);
+                            updateParameters.put(Projection.id.name(), projectionId);
                             updateParameters.put(Projection.projectionPosition.name(), position.get());
                             updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
                             tx.execute("""
-                                    MATCH (projection:Projection {id:$projectionId}) SET 
+                                    MATCH (projection:Projection {id:$id}) SET 
                                     projection.projectionPosition=$projectionPosition,
                                     projection.projectionTimestamp=$projectionTimestamp
                                     RETURN projection
