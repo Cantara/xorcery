@@ -3,13 +3,18 @@ $schema: ./xorcery-schema.json
 application:
   name: "xorcery-coordinator"
 
-dns.server.port: 8853
-dns.client.nameServers:
-  - localhost:8853
+#dns.server.port: 8853
+#dns.client.nameServers:
+#  - localhost:8853
 
 certificates:
   ipAddresses:
   - "{{ CALCULATED.ipv4Addresses }}"
+
+opentelemetry:
+  exporters:
+    logging:
+      enabled: false
 
 letsencrypt.enabled: false
 
@@ -32,13 +37,13 @@ log4j2:
           level: debug
           additivity: false
           AppenderRef:
-            ref: STDOUT
+          - ref: STDOUT
 
         - name: dev.xorcery.log4jsubscriber
           level: debug
           additivity: false
           AppenderRef:
-            ref: STDOUT
+          - ref: STDOUT
 
         - name: dev.xorcery.core
           level: debug

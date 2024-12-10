@@ -20,13 +20,13 @@ log4j2:
           level: debug
           additivity: false
           AppenderRef:
-            ref: STDOUT
+          - ref: STDOUT
 
         - name: dev.xorcery.log4jsubscriber
           level: debug
           additivity: false
           AppenderRef:
-            ref: STDOUT
+          - ref: STDOUT
 
         - name: dev.xorcery.core
           level: debug
