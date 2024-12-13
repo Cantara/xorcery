@@ -26,13 +26,13 @@ module xorcery.opensearch.client {
 
     requires xorcery.reactivestreams.extras;
     requires xorcery.reactivestreams.api;
-    requires xorcery.jersey.client;
+    requires transitive xorcery.jersey.client;
     requires xorcery.jsonapi.jaxrs;
     requires xorcery.util;
 
     requires io.opentelemetry.api;
-    requires org.apache.logging.log4j;
     requires io.opentelemetry.context;
+    requires org.apache.logging.log4j;
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.ws.rs;

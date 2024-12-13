@@ -1,0 +1,10 @@
+---
+version: 1
+template:
+  mappings:
+    properties:
+      metadata:
+        properties:
+          streamPosition:
+            type: long
+            index: true

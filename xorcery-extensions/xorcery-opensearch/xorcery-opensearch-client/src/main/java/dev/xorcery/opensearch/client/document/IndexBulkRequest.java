@@ -36,6 +36,16 @@ public record IndexBulkRequest(List<ObjectNode> requests) {
             return this;
         }
 
+        public Builder create(String index, String id, ObjectNode json) {
+            id = id == null ? UUID.randomUUID().toString() : id;
+            requests.add(JsonNodeFactory.instance.objectNode().set("create", JsonNodeFactory.instance.objectNode()
+                    .<ObjectNode>set("_index", JsonNodeFactory.instance.textNode(index))
+                    .set("_id", JsonNodeFactory.instance.textNode(id))
+            ));
+            requests.add(json);
+            return this;
+        }
+
         public IndexBulkRequest build() {
             return new IndexBulkRequest(requests);
         }

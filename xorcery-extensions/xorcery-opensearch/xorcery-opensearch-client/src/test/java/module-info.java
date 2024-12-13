@@ -9,4 +9,6 @@ open module xorcery.opensearch.client.test {
     requires testcontainers;
     requires junit.jupiter;
     requires org.hamcrest;
+    requires junit;
+    requires org.apache.commons.compress;
 }

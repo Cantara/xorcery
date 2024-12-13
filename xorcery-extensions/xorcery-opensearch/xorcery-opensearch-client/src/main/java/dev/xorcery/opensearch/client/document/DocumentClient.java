@@ -29,6 +29,15 @@ import java.util.function.Function;
 public record DocumentClient(
         Function<BiConsumer<WebTarget, InvocationCallback<ObjectNode>>, CompletionStage<ObjectNode>> requests) {
 
+    public CompletableFuture<BulkResponse> bulk(IndexBulkRequest request) {
+        return requests.apply((target, callback) -> target.path("_bulk")
+                        .request(MediaType.APPLICATION_JSON_TYPE).async()
+                        .put(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE), callback))
+//                        .put(Entity.entity(request, new Variant(MediaType.APPLICATION_JSON_TYPE, "en", "gzip")), callback))
+                .thenApply(BulkResponse::new)
+                .toCompletableFuture();
+    }
+
     public CompletableFuture<BulkResponse> bulk(String indexId, IndexBulkRequest request) {
         return requests.apply((target, callback) -> target.path(indexId).path("_bulk")
                         .request(MediaType.APPLICATION_JSON_TYPE).async()

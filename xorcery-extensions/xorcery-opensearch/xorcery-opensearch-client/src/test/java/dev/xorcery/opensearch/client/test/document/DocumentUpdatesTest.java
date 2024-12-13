@@ -13,7 +13,6 @@ import dev.xorcery.opensearch.client.search.SearchResponse;
 import dev.xorcery.reactivestreams.api.MetadataJsonNode;
 import dev.xorcery.util.UUIDs;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -31,9 +30,10 @@ import java.io.File;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
-@Disabled
+//@Disabled
 @Testcontainers(disabledWithoutDocker = true)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DocumentUpdatesTest {
@@ -58,8 +58,8 @@ public class DocumentUpdatesTest {
                                 .add("timestamp", System.currentTimeMillis())
                                 .build(),
                                 JsonNodeFactory.instance.objectNode().put("number", i)))
-                .transformDeferredContextual(openSearchService.documentUpdates(metadataJson -> UUIDs.newId()))
-                .contextWrite(Context.of("index", "numbers-%tF", "host", "http://localhost:9200"))
+                .transformDeferredContextual(openSearchService.documentUpdates(metadataJson -> UUIDs.newId(), Function.identity()))
+                .contextWrite(Context.of("index", "numbers", "host", "http://localhost:9200"))
                 .blockLast();
 
         // Wait to allow documents to be indexed properly

@@ -17,6 +17,8 @@ package dev.xorcery.opensearch.client.document;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import dev.xorcery.metadata.Metadata;
 import dev.xorcery.opensearch.OpenSearchConfiguration;
 import dev.xorcery.opensearch.client.OpenSearchClient;
 import dev.xorcery.opensearch.client.OpenSearchContext;
@@ -24,9 +26,7 @@ import dev.xorcery.reactivestreams.api.ContextViewElement;
 import dev.xorcery.reactivestreams.api.MetadataJsonNode;
 import dev.xorcery.reactivestreams.extras.operators.SmartBatchingOperator;
 import io.opentelemetry.api.OpenTelemetry;
-import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
-import org.jvnet.hk2.annotations.Service;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SynchronousSink;
@@ -48,29 +48,26 @@ import static io.opentelemetry.context.Context.taskWrapping;
  * @author rickardoberg
  * @since 18/04/2022
  */
-@Service
 public class DocumentUpdates
         implements BiFunction<Flux<MetadataJsonNode<JsonNode>>, ContextView, Publisher<MetadataJsonNode<JsonNode>>> {
 
     private final OpenSearchConfiguration configuration;
     private final OpenSearchClient.Factory clientFactory;
     private final Function<MetadataJsonNode<JsonNode>, String> documentIdSelector;
+    private final Function<ObjectNode, ObjectNode> jsonSelector;
     private Logger logger;
     private final OpenTelemetry openTelemetry;
 
-    private IndexBulkRequest.Builder bulkRequest;
-    private long lastTimestamp; // To ensure we don't reuse id's
-
-    @Inject
     public DocumentUpdates(
             OpenSearchConfiguration configuration,
             OpenSearchClient.Factory clientFactory,
             Function<MetadataJsonNode<JsonNode>, String> documentIdSelector,
-            Logger logger,
+            Function<ObjectNode, ObjectNode> jsonSelector, Logger logger,
             OpenTelemetry openTelemetry) {
         this.configuration = configuration;
         this.clientFactory = clientFactory;
         this.documentIdSelector = documentIdSelector;
+        this.jsonSelector = jsonSelector;
         this.logger = logger;
         this.openTelemetry = openTelemetry;
     }
@@ -79,13 +76,9 @@ public class DocumentUpdates
     public Publisher<MetadataJsonNode<JsonNode>> apply(Flux<MetadataJsonNode<JsonNode>> flux, ContextView contextView) {
 
         ContextViewElement cve = new ContextViewElement(contextView);
-        URI host = cve.getString(OpenSearchContext.host).map(URI::create).orElseGet(configuration::getURI);
+        URI host = cve.getURI(OpenSearchContext.serverUri).orElseGet(configuration::getURI);
         OpenSearchClient client = clientFactory.create(host);
         String index = cve.getString("index").orElse(null);
-        if (index == null) {
-            return Flux.error(new IllegalArgumentException("No 'index' context specified"));
-        }
-
         // TODO Implement this                .contextWrite(setStreamMetadata())
         return flux.transformDeferredContextual(SmartBatchingOperator.smartBatching(
                 handler(client.documents(), index),
@@ -123,31 +116,27 @@ public class DocumentUpdates
 
     private BiConsumer<Collection<MetadataJsonNode<JsonNode>>, SynchronousSink<Collection<MetadataJsonNode<JsonNode>>>> handler(DocumentClient client, String index) {
         return (metadataJsonNodes, sink) -> {
+
             IndexBulkRequest.Builder bulkRequest = new IndexBulkRequest.Builder();
 
-            for (MetadataJsonNode<JsonNode> event : metadataJsonNodes) {
-                ObjectNode document = event.metadata().metadata().objectNode();
-                JsonNode timestamp = event.metadata().getJson("timestamp").orElseGet(() -> document.numberNode(System.currentTimeMillis()));
-                // Ensure timestamps are always increasing
-                long eventTimestamp = timestamp.longValue();
-                if (eventTimestamp <= lastTimestamp) {
-                    eventTimestamp = lastTimestamp + 1;
-                    timestamp = document.numberNode(eventTimestamp);
-                }
-                lastTimestamp = eventTimestamp;
+            for (MetadataJsonNode<JsonNode> item : metadataJsonNodes) {
+                Metadata metadata = item.metadata();
+                ObjectNode document = metadata.metadata().objectNode();
+                JsonNode timestamp = metadata.getJson("timestamp").orElseGet(() -> document.numberNode(System.currentTimeMillis()));
 
                 document.set("@timestamp", timestamp);
-                document.set("metadata", event.metadata().metadata());
-                document.set("data", event.data());
+                document.set("metadata", metadata.metadata());
+                document.set("data", item.data());
 
-                // TODO allow event to carry the id in metadata
-                String eventId = documentIdSelector.apply(event);
-                bulkRequest.create(eventId, document);
+                String itemIndexName = metadata.metadata().remove("index") instanceof TextNode indexJson ? indexJson.textValue() : null;
+                String effectiveIndexName = itemIndexName != null ? itemIndexName : index;
+
+                // TODO allow item to carry the id in metadata
+                String eventId = documentIdSelector.apply(item);
+                bulkRequest.create(effectiveIndexName, eventId, jsonSelector.apply(document));
             }
 
-            String indexName = String.format(index, lastTimestamp);
-
-            BulkResponse bulkResponse = client.bulk(indexName, bulkRequest.build())
+            BulkResponse bulkResponse = client.bulk(bulkRequest.build())
                     .toCompletableFuture().orTimeout(10, TimeUnit.SECONDS).join();
             // TODO add index and revision to metadata
             if (bulkResponse.hasErrors()) {
