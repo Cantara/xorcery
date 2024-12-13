@@ -2,4 +2,12 @@ $schema: xorcery-opentelemetry-log4j-schema.json
 opentelemetry:
   instrumentations:
     log4j:
-      enabled: "{{ defaults.enabled }}"
+      enabled: "{{ opentelemetry.enabled }}"
+      config:
+        refs:
+          ref: "OpenTelemetryAppender"
+        appenders:
+          name: OpenTelemetryAppender
+          captureMapMessageAttributes: true
+          captureMarkerAttribute: true
+          captureContextDataAttributes: true
