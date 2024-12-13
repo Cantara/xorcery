@@ -1,0 +1,101 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-opentelemetry-exporter-opensearch/schema",
+  "title" : "xorcery-opentelemetry-exporter-opensearch configuration JSON Schema",
+  "properties" : {
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    }
+  },
+  "$defs" : {
+    "opentelemetry" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "exporters" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "reactivestreams" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ defaults.enabled }}",
+                  "description" : "Default: {{ defaults.enabled }} (true)"
+                },
+                "logs" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
+                    }
+                  }
+                },
+                "traces" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
+                    }
+                  }
+                },
+                "metrics" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
+                    },
+                    "interval" : {
+                      "type" : "string",
+                      "default" : "30s",
+                      "description" : "Default: 30s"
+                    }
+                  }
+                }
+              }
+            },
+            "opensearch" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opensearch.enabled }}",
+                  "description" : "Default: {{ opensearch.enabled }} (true)"
+                },
+                "attach" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.opensearch.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.opensearch.enabled }} (true)"
+                    },
+                    "host" : {
+                      "type" : "string",
+                      "default" : "http://localhost:9200/",
+                      "description" : "Default: http://localhost:9200/"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

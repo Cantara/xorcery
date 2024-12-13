@@ -1,0 +1,6 @@
+$schema: xorcery-opentelemetry-exporter-opensearch-override-schema.json
+
+opensearch:
+  indexTemplates:
+  - id: "metrics"
+    resource: "resource://META-INF/metrics-1.0.0.json"
