@@ -14,7 +14,7 @@ public record JerseyConfiguration(Configuration configuration) {
 
     public Map<String, Object> getProperties()
     {
-        return JsonElement.toFlatMap(configuration.getConfiguration("configuration").json(), JsonElement::toObject);
+        return JsonElement.toFlatMap(configuration.getConfiguration("properties").json(), JsonElement::toObject);
     }
 
     public Optional<Map<String, String>> getMediaTypes() {
