@@ -1,4 +1,5 @@
 $schema: xorcery-opentelemetry-api-schema.json
 opentelemetry:
+  enabled: "{{ defaults.enabled }}"
   global:
     enabled: "{{ opentelemetry.enabled ? false | true }}"

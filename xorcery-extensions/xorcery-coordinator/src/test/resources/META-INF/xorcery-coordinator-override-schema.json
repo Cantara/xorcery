@@ -67,11 +67,17 @@
     "log4j2" : {
       "$ref" : "#/$defs/log4j2"
     },
+    "opensearch" : {
+      "$ref" : "#/$defs/opensearch"
+    },
     "opentelemetry" : {
       "$ref" : "#/$defs/opentelemetry"
     },
     "reactivestreams" : {
       "$ref" : "#/$defs/reactivestreams"
+    },
+    "yamlfilepublisher" : {
+      "$ref" : "#/$defs/yamlfilepublisher"
     },
     "jmx" : {
       "$ref" : "#/$defs/jmx"
@@ -1526,10 +1532,105 @@
         }
       }
     },
+    "opensearch" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "uri" : {
+          "type" : "string",
+          "default" : "http://localhost:9200",
+          "description" : "Default: http://localhost:9200"
+        },
+        "componentTemplates" : {
+          "type" : [ "array", "string", "object" ],
+          "additionalProperties" : true,
+          "properties" : { }
+        },
+        "indexTemplates" : {
+          "type" : [ "array", "string", "object" ],
+          "additionalProperties" : true,
+          "properties" : { }
+        },
+        "deleteOnExit" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        },
+        "publishers" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "server" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "uri" : {
+                      "type" : "string",
+                      "default" : "wss://somehost:someport",
+                      "description" : "Default: wss://somehost:someport"
+                    },
+                    "stream" : {
+                      "type" : "string",
+                      "default" : "somestream",
+                      "description" : "Default: somestream"
+                    },
+                    "configuration" : {
+                      "type" : "object",
+                      "additionalProperties" : true,
+                      "properties" : { }
+                    }
+                  }
+                },
+                "client" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "alias" : {
+                      "type" : "string",
+                      "default" : "somealias",
+                      "description" : "Default: somealias"
+                    },
+                    "index" : {
+                      "type" : "string",
+                      "default" : "anindexname",
+                      "description" : "Default: anindexname"
+                    },
+                    "configuration" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "bufferSize" : {
+                          "type" : [ "number", "string" ],
+                          "default" : 64,
+                          "description" : "Default: 64"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            } ]
+          }
+        }
+      }
+    },
     "opentelemetry" : {
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
         "global" : {
           "type" : "object",
           "additionalProperties" : false,
@@ -1538,6 +1639,227 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ opentelemetry.enabled ? false | true }}",
               "description" : "Default: {{ opentelemetry.enabled ? false | true }} (true)"
+            }
+          }
+        },
+        "exporters" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "reactivestreams" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ defaults.enabled }}",
+                  "description" : "Default: {{ defaults.enabled }} (true)"
+                },
+                "logs" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
+                    }
+                  }
+                },
+                "traces" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
+                    }
+                  }
+                },
+                "metrics" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
+                    },
+                    "interval" : {
+                      "type" : "string",
+                      "default" : "30s",
+                      "description" : "Default: 30s"
+                    }
+                  }
+                }
+              }
+            },
+            "opensearch" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opensearch.enabled }}",
+                  "description" : "Default: {{ opensearch.enabled }} (true)"
+                },
+                "attach" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.opensearch.enabled }}",
+                      "description" : "Default: {{ opentelemetry.exporters.opensearch.enabled }} (true)"
+                    },
+                    "host" : {
+                      "type" : "string",
+                      "default" : "http://localhost:9200/",
+                      "description" : "Default: http://localhost:9200/"
+                    }
+                  }
+                }
+              }
+            },
+            "local" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
+                },
+                "interval" : {
+                  "type" : "string",
+                  "default" : "10s",
+                  "description" : "Default: 10s"
+                }
+              }
+            },
+            "logging" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} (true)"
+                },
+                "interval" : {
+                  "type" : "string",
+                  "default" : "10s",
+                  "description" : "Default: 10s"
+                }
+              }
+            },
+            "jmx" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
+                },
+                "interval" : {
+                  "type" : "string",
+                  "default" : "5s",
+                  "description" : "Default: 5s"
+                }
+              }
+            },
+            "otlp" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "endpoint" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "http" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint ? true | false }}",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? true | false }} (false)"
+                    },
+                    "port" : {
+                      "type" : [ "number", "string" ],
+                      "default" : 4318,
+                      "description" : "Default: 4318"
+                    },
+                    "compression" : {
+                      "type" : "string",
+                      "default" : "gzip",
+                      "description" : "Default: gzip"
+                    },
+                    "headers" : {
+                      "type" : "object",
+                      "additionalProperties" : true,
+                      "properties" : { }
+                    },
+                    "connectTimeout" : {
+                      "type" : "string",
+                      "default" : "{{ defaults.connectTimeout }}",
+                      "description" : "Default: {{ defaults.connectTimeout }} (5s)"
+                    },
+                    "timeout" : {
+                      "type" : "string",
+                      "default" : "10s",
+                      "description" : "Default: 10s"
+                    },
+                    "interval" : {
+                      "type" : "string",
+                      "default" : "10s",
+                      "description" : "Default: 10s"
+                    },
+                    "aggregationTemporality" : {
+                      "type" : "string",
+                      "default" : "alwaysCumulative",
+                      "description" : "Default: alwaysCumulative"
+                    },
+                    "scheduleDelay" : {
+                      "type" : "string",
+                      "default" : "5s",
+                      "description" : "Default: 5s"
+                    },
+                    "exporterTimeout" : {
+                      "type" : "string",
+                      "default" : "60s",
+                      "description" : "Default: 60s"
+                    },
+                    "maxExportBatchSize" : {
+                      "type" : [ "number", "string" ],
+                      "default" : 1000,
+                      "description" : "Default: 1000"
+                    },
+                    "maxQueueSize" : {
+                      "type" : [ "number", "string" ],
+                      "default" : 10000,
+                      "description" : "Default: 10000"
+                    },
+                    "logsEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs (null:4318/v1/logs)"
+                    },
+                    "tracesEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces (null:4318/v1/traces)"
+                    },
+                    "metricsEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics (null:4318/v1/metrics)"
+                    }
+                  }
+                }
+              }
             }
           }
         },
@@ -1767,6 +2089,49 @@
                   "type" : [ "boolean", "string" ],
                   "default" : "{{ defaults.enabled }}",
                   "description" : "Default: {{ defaults.enabled }} (true)"
+                },
+                "config" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "refs" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "ref" : {
+                          "type" : "string",
+                          "default" : "OpenTelemetryAppender",
+                          "description" : "Default: OpenTelemetryAppender"
+                        }
+                      }
+                    },
+                    "appenders" : {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "name" : {
+                          "type" : "string",
+                          "default" : "OpenTelemetryAppender",
+                          "description" : "Default: OpenTelemetryAppender"
+                        },
+                        "captureMapMessageAttributes" : {
+                          "type" : [ "boolean", "string" ],
+                          "default" : true,
+                          "description" : "Default: true"
+                        },
+                        "captureMarkerAttribute" : {
+                          "type" : [ "boolean", "string" ],
+                          "default" : true,
+                          "description" : "Default: true"
+                        },
+                        "captureContextDataAttributes" : {
+                          "type" : [ "boolean", "string" ],
+                          "default" : true,
+                          "description" : "Default: true"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },
@@ -1793,11 +2158,6 @@
               }
             }
           }
-        },
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "install" : {
           "type" : [ "boolean", "string" ],
@@ -1850,151 +2210,6 @@
               "type" : "string",
               "default" : "{{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}",
               "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }} (Amazon.com Inc. OpenJDK 64-Bit Server VM 17.0.8+7-LTS)"
-            }
-          }
-        },
-        "exporters" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "local" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
-                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
-                },
-                "interval" : {
-                  "type" : "string",
-                  "default" : "10s",
-                  "description" : "Default: 10s"
-                }
-              }
-            },
-            "logging" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
-                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} (true)"
-                },
-                "interval" : {
-                  "type" : "string",
-                  "default" : "10s",
-                  "description" : "Default: 10s"
-                }
-              }
-            },
-            "jmx" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
-                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
-                },
-                "interval" : {
-                  "type" : "string",
-                  "default" : "5s",
-                  "description" : "Default: 5s"
-                }
-              }
-            },
-            "otlp" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "endpoint" : {
-                  "default" : null,
-                  "description" : "Default: null"
-                },
-                "http" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "enabled" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : "{{ opentelemetry.exporters.otlp.endpoint ? true | false }}",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? true | false }} (false)"
-                    },
-                    "port" : {
-                      "type" : [ "number", "string" ],
-                      "default" : 4318,
-                      "description" : "Default: 4318"
-                    },
-                    "compression" : {
-                      "type" : "string",
-                      "default" : "gzip",
-                      "description" : "Default: gzip"
-                    },
-                    "headers" : {
-                      "type" : "object",
-                      "additionalProperties" : true,
-                      "properties" : { }
-                    },
-                    "connectTimeout" : {
-                      "type" : "string",
-                      "default" : "{{ defaults.connectTimeout }}",
-                      "description" : "Default: {{ defaults.connectTimeout }} (5s)"
-                    },
-                    "timeout" : {
-                      "type" : "string",
-                      "default" : "10s",
-                      "description" : "Default: 10s"
-                    },
-                    "interval" : {
-                      "type" : "string",
-                      "default" : "10s",
-                      "description" : "Default: 10s"
-                    },
-                    "aggregationTemporality" : {
-                      "type" : "string",
-                      "default" : "alwaysCumulative",
-                      "description" : "Default: alwaysCumulative"
-                    },
-                    "scheduleDelay" : {
-                      "type" : "string",
-                      "default" : "5s",
-                      "description" : "Default: 5s"
-                    },
-                    "exporterTimeout" : {
-                      "type" : "string",
-                      "default" : "60s",
-                      "description" : "Default: 60s"
-                    },
-                    "maxExportBatchSize" : {
-                      "type" : [ "number", "string" ],
-                      "default" : 1000,
-                      "description" : "Default: 1000"
-                    },
-                    "maxQueueSize" : {
-                      "type" : [ "number", "string" ],
-                      "default" : 10000,
-                      "description" : "Default: 10000"
-                    },
-                    "logsEndpoint" : {
-                      "type" : "string",
-                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs (null:4318/v1/logs)"
-                    },
-                    "tracesEndpoint" : {
-                      "type" : "string",
-                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces (null:4318/v1/traces)"
-                    },
-                    "metricsEndpoint" : {
-                      "type" : "string",
-                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics",
-                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics (null:4318/v1/metrics)"
-                    }
-                  }
-                }
-              }
             }
           }
         },
@@ -2109,6 +2324,20 @@
               "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ (wss://service.xorcery.test:443/)"
             }
           }
+        }
+      }
+    },
+    "yamlfilepublisher" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "publishers" : {
+          "type" : [ "array", "string" ]
         }
       }
     },

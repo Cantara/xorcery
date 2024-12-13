@@ -32,4 +32,5 @@ module xorcery.coordinator {
 
     requires org.apache.logging.log4j.core;
     requires java.net.http;
+    requires jdk.unsupported;
 }

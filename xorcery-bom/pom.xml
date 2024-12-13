@@ -307,6 +307,11 @@
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
+                <artifactId>xorcery-opentelemetry-exporter-opensearch</artifactId>
+                <version>0.151.18-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-log4j</artifactId>
                 <version>0.151.18-SNAPSHOT</version>
             </dependency>

@@ -37,6 +37,7 @@
         <module>xorcery-opentelemetry-jersey-server</module>
         <module>xorcery-opentelemetry-exporter-websocket</module>
         <module>xorcery-opentelemetry-collector-websocket</module>
+        <module>xorcery-opentelemetry-exporter-opensearch</module>
     </modules>
 
 </project>

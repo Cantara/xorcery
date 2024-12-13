@@ -130,6 +130,10 @@
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
+            <artifactId>xorcery-opentelemetry-exporter-opensearch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-log4j</artifactId>
         </dependency>
 
