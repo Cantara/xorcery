@@ -9,7 +9,7 @@ import java.util.function.Supplier;
  * @param <T>
  */
 public class LazySupplier<T>
-        implements Supplier<T>
+        implements Supplier<T>, AutoCloseable
 {
     private final Supplier<T> supplier;
     private final AtomicReference<T> value = new AtomicReference<>();
@@ -29,5 +29,16 @@ public class LazySupplier<T>
                 return v;
             return supplier.get();
         });
+    }
+
+    @Override
+    public void close() throws Exception {
+        try {
+            if (value.get() instanceof AutoCloseable closeable) {
+                closeable.close();
+            }
+        } finally {
+            value.set(null);
+        }
     }
 }
