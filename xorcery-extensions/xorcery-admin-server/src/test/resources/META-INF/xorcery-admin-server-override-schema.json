@@ -1155,11 +1155,6 @@
             }
           }
         },
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} (true)"
-        },
         "install" : {
           "type" : [ "boolean", "string" ],
           "default" : true,

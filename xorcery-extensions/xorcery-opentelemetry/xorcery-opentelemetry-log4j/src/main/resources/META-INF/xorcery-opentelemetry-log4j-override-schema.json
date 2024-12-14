@@ -316,11 +316,6 @@
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} (true)"
-        },
         "global" : {
           "type" : "object",
           "additionalProperties" : false,

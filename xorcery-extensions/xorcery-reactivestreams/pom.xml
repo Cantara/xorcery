@@ -32,6 +32,5 @@
         <module>xorcery-reactivestreams-extras</module>
         <module>xorcery-reactivestreams-server</module>
         <module>xorcery-reactivestreams-client</module>
-        <module>xorcery-reactivestreams-persistentsubscriber</module>
     </modules>
 </project>

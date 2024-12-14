@@ -25,8 +25,14 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
     "dns" : {
       "$ref" : "#/$defs/dns"
+    },
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
     },
     "secrets" : {
       "$ref" : "#/$defs/secrets"
@@ -256,6 +262,23 @@
         }
       }
     },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        }
+      }
+    },
     "dns" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -336,6 +359,92 @@
               "type" : "string",
               "default" : "aws-global",
               "description" : "Default: aws-global"
+            }
+          }
+        }
+      }
+    },
+    "log4j2" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "Configuration" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "Xorcery",
+              "description" : "Default: Xorcery"
+            },
+            "status" : {
+              "type" : "string",
+              "default" : "warn",
+              "description" : "Default: warn",
+              "enum" : [ "trace", "debug", "info", "warn", "error" ]
+            },
+            "properties" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "thresholdFilter" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "level" : {
+                  "type" : "string",
+                  "default" : "info",
+                  "description" : "Default: info",
+                  "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                }
+              }
+            },
+            "appenders" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "Loggers" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "logger" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "properties" : {
+                      "name" : {
+                        "type" : "string"
+                      },
+                      "level" : {
+                        "type" : "string",
+                        "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                      },
+                      "additivity" : {
+                        "type" : "boolean"
+                      },
+                      "AppenderRef" : {
+                        "type" : [ "array", "string" ]
+                      }
+                    }
+                  }
+                },
+                "Root" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "level" : {
+                      "type" : "string",
+                      "default" : "info",
+                      "description" : "Default: info",
+                      "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                    },
+                    "AppenderRef" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                }
+              }
             }
           }
         }

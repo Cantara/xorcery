@@ -392,17 +392,17 @@
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
-                <artifactId>xorcery-reactivestreams-persistentsubscriber</artifactId>
-                <version>0.151.18-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-runner</artifactId>
                 <version>0.151.18-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-secrets-api</artifactId>
+                <version>0.151.18-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.xorcery</groupId>
+                <artifactId>xorcery-secrets-spi</artifactId>
                 <version>0.151.18-SNAPSHOT</version>
             </dependency>
             <dependency>
