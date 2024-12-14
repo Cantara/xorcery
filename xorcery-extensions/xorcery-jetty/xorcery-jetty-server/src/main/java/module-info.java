@@ -22,8 +22,6 @@ module xorcery.jetty.server {
     requires transitive xorcery.configuration.api;
     requires xorcery.secrets.api;
     requires xorcery.keystores;
-    requires xorcery.health.api;
-    requires xorcery.health.registry;
     requires xorcery.util;
 
     requires jakarta.inject;

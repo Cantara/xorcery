@@ -78,11 +78,9 @@
         <module>xorcery-configuration</module>
         <module>xorcery-configuration-validation</module>
         <module>xorcery-metadata</module>
-        <module>xorcery-health-api</module>
 
         <module>xorcery-core</module>
         <module>xorcery-log4j</module>
-        <module>xorcery-health-registry</module>
         <module>xorcery-runner</module>
         <module>xorcery-junit</module>
 

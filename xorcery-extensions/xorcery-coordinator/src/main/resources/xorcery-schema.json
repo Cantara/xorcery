@@ -2,12 +2,6 @@
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
-    "adminservlet" : {
-      "$ref" : "#/$defs/adminservlet"
-    },
-    "serveradmin" : {
-      "$ref" : "#/$defs/serveradmin"
-    },
     "aws" : {
       "$ref" : "#/$defs/aws"
     },
@@ -43,9 +37,6 @@
     },
     "dns" : {
       "$ref" : "#/$defs/dns"
-    },
-    "health" : {
-      "$ref" : "#/$defs/health"
     },
     "jersey" : {
       "$ref" : "#/$defs/jersey"
@@ -88,28 +79,6 @@
     }
   },
   "$defs" : {
-    "adminservlet" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} (true)"
-        }
-      }
-    },
-    "serveradmin" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{ defaults.enabled }}",
-          "description" : "Default: {{ defaults.enabled }} (true)"
-        }
-      }
-    },
     "aws" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -585,23 +554,6 @@
               "type" : "string",
               "default" : "aws-global",
               "description" : "Default: aws-global"
-            }
-          }
-        }
-      }
-    },
-    "health" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "updater" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "interval" : {
-              "type" : "string",
-              "default" : "1S",
-              "description" : "Default: 1S"
             }
           }
         }

@@ -31,10 +31,6 @@
             <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-runner</artifactId>
         </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-admin-server</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>dev.xorcery</groupId>

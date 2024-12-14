@@ -48,11 +48,6 @@
         <dependencies>
             <dependency>
                 <groupId>dev.xorcery</groupId>
-                <artifactId>xorcery-admin-server</artifactId>
-                <version>0.151.18-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-aws-auth</artifactId>
                 <version>0.151.18-SNAPSHOT</version>
             </dependency>
@@ -192,17 +187,6 @@
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-eventstore-jsonapi</artifactId>
-                <version>0.151.18-SNAPSHOT</version>
-            </dependency>
-
-            <dependency>
-                <groupId>dev.xorcery</groupId>
-                <artifactId>xorcery-health-api</artifactId>
-                <version>0.151.18-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.xorcery</groupId>
-                <artifactId>xorcery-health-registry</artifactId>
                 <version>0.151.18-SNAPSHOT</version>
             </dependency>
             <dependency>

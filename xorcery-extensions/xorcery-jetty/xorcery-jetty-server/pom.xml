@@ -40,14 +40,6 @@
             <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-keystores</artifactId>
         </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-health-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-health-registry</artifactId>
-        </dependency>
 
         <!-- General -->
         <dependency>

@@ -31,9 +31,6 @@
     "eventstore" : {
       "$ref" : "#/$defs/eventstore"
     },
-    "health" : {
-      "$ref" : "#/$defs/health"
-    },
     "jersey" : {
       "$ref" : "#/$defs/jersey"
     },
@@ -328,23 +325,6 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ defaults.enabled }}",
               "description" : "Default: {{ defaults.enabled }} (true)"
-            }
-          }
-        }
-      }
-    },
-    "health" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "updater" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "interval" : {
-              "type" : "string",
-              "default" : "1S",
-              "description" : "Default: 1S"
             }
           }
         }

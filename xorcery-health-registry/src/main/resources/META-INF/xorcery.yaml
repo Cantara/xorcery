@@ -1,4 +1,0 @@
-$schema: xorcery-health-registry-schema.json
-health:
-  updater:
-    interval: 1S

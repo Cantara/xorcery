@@ -20,7 +20,7 @@ public class BaseResource
     private HttpServletResponse httpServletResponse;
 
     @Inject
-    private void bind(
+    private void init(
             ServiceLocator serviceLocator,
             ContainerRequestContext containerRequestContext,
             HttpServletRequest httpServletRequest,

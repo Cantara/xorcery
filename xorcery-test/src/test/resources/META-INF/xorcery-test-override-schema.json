@@ -46,9 +46,6 @@
     "domainevents" : {
       "$ref" : "#/$defs/domainevents"
     },
-    "health" : {
-      "$ref" : "#/$defs/health"
-    },
     "jersey" : {
       "$ref" : "#/$defs/jersey"
     },
@@ -546,23 +543,6 @@
           "type" : "string",
           "default" : "{{ instance.api }}projections",
           "description" : "Default: {{ instance.api }}projections (http://service.xorcery.test/api/projections)"
-        }
-      }
-    },
-    "health" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "updater" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "interval" : {
-              "type" : "string",
-              "default" : "1S",
-              "description" : "Default: 1S"
-            }
-          }
         }
       }
     },

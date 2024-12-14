@@ -1,6 +1,0 @@
-$schema: xorcery-admin-server-schema.json
-
-adminservlet:
-  enabled: "{{ defaults.enabled }}"
-serveradmin:
-  enabled: "{{ defaults.enabled }}"

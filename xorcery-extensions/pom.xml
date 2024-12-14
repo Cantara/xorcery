@@ -50,7 +50,6 @@
         <module>xorcery-neo4j</module>
         <module>xorcery-graphql</module>
         <module>xorcery-status</module>
-        <module>xorcery-admin-server</module>
         <module>xorcery-coordinator</module>
         <module>xorcery-maven</module>
     </modules>

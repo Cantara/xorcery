@@ -28,9 +28,6 @@
     "configuration" : {
       "$ref" : "#/$defs/configuration"
     },
-    "health" : {
-      "$ref" : "#/$defs/health"
-    },
     "jersey" : {
       "$ref" : "#/$defs/jersey"
     },
@@ -276,23 +273,6 @@
               "type" : [ "boolean", "string" ],
               "default" : true,
               "description" : "Default: true"
-            }
-          }
-        }
-      }
-    },
-    "health" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "updater" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "interval" : {
-              "type" : "string",
-              "default" : "1S",
-              "description" : "Default: 1S"
             }
           }
         }
