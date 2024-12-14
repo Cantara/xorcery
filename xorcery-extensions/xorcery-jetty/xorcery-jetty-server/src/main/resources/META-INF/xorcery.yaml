@@ -19,9 +19,6 @@ jetty:
       enabled: "{{ jetty.server.enabled }}"
       port: 80
 
-    http2:
-      enabled: "{{ jetty.server.enabled }}"
-
     ssl:
       enabled: "{{ jetty.server.enabled }}"
       port: 443
@@ -48,7 +45,7 @@ jetty:
 
     security:
       enabled: "{{ jetty.server.enabled }}"
-      type: "jwt"
+      type: null
       constraints:
         - name: admin
           roles:
@@ -57,18 +54,6 @@ jetty:
 
       certificate:
         enabled: "{{ jetty.server.security.enabled }}"
-      jwt:
-        enabled: "{{ jetty.server.security.enabled }}"
-        cookie: "token"
-        issuers:
-        - name: default
-          keys: []
-      #    - name: someissuer
-      #      keys:
-      #      - kid: 1234
-      #        alg: ES256
-      #        publicKey: MII...
-      #
 
     websockets:
       enabled: "{{ jetty.server.enabled }}"

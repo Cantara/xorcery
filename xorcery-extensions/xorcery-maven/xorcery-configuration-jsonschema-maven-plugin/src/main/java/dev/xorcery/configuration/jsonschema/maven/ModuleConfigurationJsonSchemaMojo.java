@@ -135,6 +135,8 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         for (Artifact dependency : dependencies) {
             if (!dependency.getFile().getName().endsWith(".jar"))
                 continue;
+            if (dependency.getScope().equals("test"))
+                continue;
             try (JarFile jarFile = new JarFile(dependency.getFile())) {
                 ZipEntry zipEntry = jarFile.getEntry("META-INF/"+dependency.getArtifactId()+"-schema.json");
                 if (zipEntry != null) {

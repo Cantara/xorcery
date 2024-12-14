@@ -451,17 +451,6 @@
                 }
               }
             },
-            "http2" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} (true)"
-                }
-              }
-            },
             "ssl" : {
               "type" : "object",
               "additionalProperties" : false,
@@ -571,9 +560,9 @@
                   "description" : "Default: {{ jetty.server.enabled }} (true)"
                 },
                 "type" : {
-                  "type" : "string",
-                  "default" : "jwt",
-                  "description" : "Default: jwt"
+                  "type" : [ "string", "null" ],
+                  "default" : null,
+                  "description" : "Default: null"
                 },
                 "constraints" : {
                   "type" : [ "array", "string" ],
@@ -617,66 +606,6 @@
                       "type" : [ "boolean", "string" ],
                       "default" : "{{ jetty.server.security.enabled }}",
                       "description" : "Default: {{ jetty.server.security.enabled }} (true)"
-                    }
-                  }
-                },
-                "jwt" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "enabled" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : "{{ jetty.server.security.enabled }}",
-                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
-                    },
-                    "cookie" : {
-                      "type" : "string",
-                      "default" : "token",
-                      "description" : "Default: token"
-                    },
-                    "issuers" : {
-                      "type" : [ "array", "string" ],
-                      "items" : {
-                        "anyOf" : [ {
-                          "type" : "object",
-                          "additionalProperties" : false,
-                          "properties" : {
-                            "name" : {
-                              "type" : "string",
-                              "default" : "default",
-                              "description" : "Default: default"
-                            },
-                            "keys" : {
-                              "type" : [ "array", "string" ]
-                            }
-                          }
-                        } ],
-                        "type" : "object",
-                        "properties" : {
-                          "name" : {
-                            "type" : "string"
-                          },
-                          "keys" : {
-                            "type" : "array",
-                            "items" : {
-                              "type" : "object",
-                              "properties" : {
-                                "kid" : {
-                                  "type" : "string",
-                                  "description" : "Key id, usually a UUID"
-                                },
-                                "alg" : {
-                                  "type" : "string",
-                                  "enum" : [ "ES256", "ES384", "ES512", "RS256", "RS384", "RS512" ]
-                                },
-                                "publicKey" : {
-                                  "type" : "string"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
                     }
                   }
                 }

@@ -17,7 +17,6 @@ module xorcery.jetty.server {
     exports dev.xorcery.jetty.server;
     exports dev.xorcery.jetty.server.providers;
     exports dev.xorcery.jetty.server.security;
-    exports dev.xorcery.jetty.server.security.jwt;
     exports dev.xorcery.jetty.server.security.clientcert;
 
     requires transitive xorcery.configuration.api;
@@ -42,10 +41,6 @@ module xorcery.jetty.server {
     // Websockets
     requires org.eclipse.jetty.websocket.server;
     requires org.eclipse.jetty.ee10.websocket.jetty.server;
-
-    // JWT Authenticator
-    requires com.auth0.jwt;
-    requires org.bouncycastle.provider;
 
     requires org.apache.logging.log4j;
 

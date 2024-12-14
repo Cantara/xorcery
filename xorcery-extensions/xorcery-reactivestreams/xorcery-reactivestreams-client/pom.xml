@@ -40,19 +40,7 @@
             <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-dns-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-configuration-api</artifactId>
-        </dependency>
 
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-core</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>jetty-websocket-jetty-client</artifactId>

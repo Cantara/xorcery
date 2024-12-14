@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$id": "http://xorcery.dev/modules/dev.xorcery/xorcery-jetty-server-jwt/schema",
+  "title": "xorcery-jetty-server-jwt configuration JSON Schema",
+  "properties": {
+    "jetty": {
+      "$ref": "#/$defs/jetty"
+    }
+  },
+  "$defs": {
+    "jetty": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "server": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "security": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "jwt": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "enabled": {
+                      "type": [
+                        "boolean",
+                        "string"
+                      ],
+                      "default": "{{ jetty.server.security.enabled }}",
+                      "description": "Default: {{ jetty.server.security.enabled }} (true)"
+                    },
+                    "cookie": {
+                      "type": "string",
+                      "default": "token",
+                      "description": "Default: token"
+                    },
+                    "issuers": {
+                      "type": [
+                        "array",
+                        "string"
+                      ],
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "default": "default",
+                                "description": "Default: default"
+                              },
+                              "keys": {
+                                "type": [
+                                  "array",
+                                  "string"
+                                ],
+                                "items": {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "kid": {
+                                      "type": "string",
+                                      "description": "Key id of issuer"
+                                    },
+                                    "alg": {
+                                      "type": "string",
+                                      "description": "Algorithm used (e.g. ES512)"
+                                    },
+                                    "publicKey": {
+                                      "type": "string",
+                                      "description": "Public key"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

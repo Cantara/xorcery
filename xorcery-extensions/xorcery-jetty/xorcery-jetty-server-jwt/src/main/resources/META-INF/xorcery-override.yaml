@@ -1,0 +1,6 @@
+$schema: xorcery-jetty-server-jwt-override-schema.json
+
+jetty:
+  server:
+    security:
+      type: "jwt"

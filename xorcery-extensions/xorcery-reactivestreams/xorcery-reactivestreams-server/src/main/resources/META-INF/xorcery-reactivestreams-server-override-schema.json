@@ -25,9 +25,6 @@
     "configuration" : {
       "$ref" : "#/$defs/configuration"
     },
-    "dns" : {
-      "$ref" : "#/$defs/dns"
-    },
     "jetty" : {
       "$ref" : "#/$defs/jetty"
     },
@@ -241,146 +238,10 @@
         }
       }
     },
-    "dns" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "client" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} (true)"
-            },
-            "nameServers" : {
-              "type" : [ "array", "string" ]
-            },
-            "search" : {
-              "type" : [ "array", "string" ]
-            },
-            "hosts" : {
-              "type" : [ "array", "string" ],
-              "additionalProperties" : true,
-              "items" : {
-                "type" : "object",
-                "properties" : {
-                  "name" : {
-                    "description" : "Host name",
-                    "type" : "string"
-                  },
-                  "url" : {
-                    "description" : "IP or URL",
-                    "type" : [ "array", "string" ],
-                    "items" : {
-                      "type" : "string"
-                    }
-                  }
-                }
-              }
-            },
-            "timeout" : {
-              "type" : "string",
-              "default" : "10s",
-              "description" : "Default: 10s"
-            },
-            "forceTcp" : {
-              "type" : [ "boolean", "string" ],
-              "default" : false,
-              "description" : "Default: false"
-            }
-          }
-        }
-      }
-    },
     "jetty" : {
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
-        "client" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} (true)"
-            },
-            "idleTimeout" : {
-              "type" : "string",
-              "default" : "{{ defaults.idleTimeout }}",
-              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
-            },
-            "connectTimeout" : {
-              "type" : "string",
-              "default" : "5s",
-              "description" : "Default: 5s"
-            },
-            "requestBufferSize" : {
-              "type" : [ "number", "string" ],
-              "default" : 4096,
-              "description" : "Default: 4096"
-            },
-            "reusePort" : {
-              "type" : [ "boolean", "string" ],
-              "default" : false,
-              "description" : "Default: false"
-            },
-            "http2" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : false,
-                  "description" : "Default: false"
-                },
-                "idleTimeout" : {
-                  "type" : "string",
-                  "default" : "{{ jetty.client.idleTimeout }}",
-                  "description" : "Default: {{ jetty.client.idleTimeout }} (-1s)"
-                }
-              }
-            },
-            "ssl" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ jetty.client.enabled }}",
-                  "description" : "Default: {{ jetty.client.enabled }} (true)"
-                },
-                "alias" : {
-                  "type" : "string",
-                  "default" : "self",
-                  "description" : "Default: self"
-                },
-                "keystore" : {
-                  "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
-                },
-                "truststore" : {
-                  "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
-                },
-                "endpointIdentificationAlgorithm" : {
-                  "type" : "string",
-                  "default" : "HTTPS",
-                  "description" : "Default: HTTPS"
-                },
-                "trustAll" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : false,
-                  "description" : "Default: false"
-                }
-              }
-            }
-          }
-        },
         "server" : {
           "type" : "object",
           "additionalProperties" : false,
@@ -448,17 +309,6 @@
                   "type" : [ "number", "string" ],
                   "default" : 80,
                   "description" : "Default: 80"
-                }
-              }
-            },
-            "http2" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ jetty.server.enabled }}",
-                  "description" : "Default: {{ jetty.server.enabled }} (true)"
                 }
               }
             },
@@ -571,9 +421,9 @@
                   "description" : "Default: {{ jetty.server.enabled }} (true)"
                 },
                 "type" : {
-                  "type" : "string",
-                  "default" : "jwt",
-                  "description" : "Default: jwt"
+                  "type" : [ "string", "null" ],
+                  "default" : null,
+                  "description" : "Default: null"
                 },
                 "constraints" : {
                   "type" : [ "array", "string" ],
@@ -617,66 +467,6 @@
                       "type" : [ "boolean", "string" ],
                       "default" : "{{ jetty.server.security.enabled }}",
                       "description" : "Default: {{ jetty.server.security.enabled }} (true)"
-                    }
-                  }
-                },
-                "jwt" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "enabled" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : "{{ jetty.server.security.enabled }}",
-                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
-                    },
-                    "cookie" : {
-                      "type" : "string",
-                      "default" : "token",
-                      "description" : "Default: token"
-                    },
-                    "issuers" : {
-                      "type" : [ "array", "string" ],
-                      "items" : {
-                        "anyOf" : [ {
-                          "type" : "object",
-                          "additionalProperties" : false,
-                          "properties" : {
-                            "name" : {
-                              "type" : "string",
-                              "default" : "default",
-                              "description" : "Default: default"
-                            },
-                            "keys" : {
-                              "type" : [ "array", "string" ]
-                            }
-                          }
-                        } ],
-                        "type" : "object",
-                        "properties" : {
-                          "name" : {
-                            "type" : "string"
-                          },
-                          "keys" : {
-                            "type" : "array",
-                            "items" : {
-                              "type" : "object",
-                              "properties" : {
-                                "kid" : {
-                                  "type" : "string",
-                                  "description" : "Key id, usually a UUID"
-                                },
-                                "alg" : {
-                                  "type" : "string",
-                                  "enum" : [ "ES256", "ES384", "ES512", "RS256", "RS384", "RS512" ]
-                                },
-                                "publicKey" : {
-                                  "type" : "string"
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
                     }
                   }
                 }

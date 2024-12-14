@@ -1,0 +1,7 @@
+jetty:
+  server:
+    security:
+      jwt:
+        enabled: "{{ jetty.server.security.enabled }}"
+        cookie: "token"
+        issuers: []

@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.jetty.server.security.jwt;
+package dev.xorcery.jetty.server.jwt.providers;
 
 import dev.xorcery.configuration.Configuration;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static dev.xorcery.configuration.Configuration.missing;
 
 public record IssuerConfiguration(Configuration configuration) {
 
@@ -47,12 +45,12 @@ public record IssuerConfiguration(Configuration configuration) {
 
         public String getAlg()
         {
-            return configuration.getString("alg").orElseThrow(missing("alg"));
+            return configuration.getString("alg").orElseThrow(Configuration.missing("alg"));
         }
 
         public String getPublicKey()
         {
-            return configuration.getString("publicKey").orElseThrow(missing("publicKey"));
+            return configuration.getString("publicKey").orElseThrow(Configuration.missing("publicKey"));
         }
 
     }

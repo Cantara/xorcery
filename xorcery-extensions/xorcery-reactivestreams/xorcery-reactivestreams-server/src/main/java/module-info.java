@@ -18,13 +18,9 @@ module xorcery.reactivestreams.server {
 
     requires transitive xorcery.reactivestreams.api;
 
-    requires xorcery.jsonapi.service;
-    requires xorcery.dns.client;
     requires xorcery.jetty.server;
-    requires xorcery.jetty.client;
-    requires xorcery.opentelemetry.api;
-    requires xorcery.util;
     requires static xorcery.status.spi;
+    requires xorcery.opentelemetry.api;
 
     requires reactor.core;
     requires org.eclipse.jetty.ee10.servlet;
@@ -32,13 +28,13 @@ module xorcery.reactivestreams.server {
     requires org.eclipse.jetty.ee10.websocket.jetty.server;
     requires org.eclipse.jetty.server;
 
-    requires jakarta.inject;
-    requires org.glassfish.hk2.api;
-    requires org.glassfish.hk2.runlevel;
     requires org.apache.logging.log4j;
 
     requires io.opentelemetry.api;
     requires io.opentelemetry.semconv;
     requires io.opentelemetry.semconv.incubating;
     requires io.opentelemetry.context;
+    requires org.glassfish.hk2.api;
+    requires org.glassfish.hk2.runlevel;
+    requires jakarta.inject;
 }

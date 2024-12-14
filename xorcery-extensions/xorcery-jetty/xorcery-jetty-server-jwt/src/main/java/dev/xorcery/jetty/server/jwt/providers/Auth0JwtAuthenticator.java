@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.jetty.server.security.jwt;
+package dev.xorcery.jetty.server.jwt.providers;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.JWTVerifier;
+import dev.xorcery.jetty.server.jwt.JwtCredential;
+import dev.xorcery.jetty.server.jwt.JwtUserPrincipal;
 import dev.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.LogManager;
@@ -48,8 +50,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
-
-import static org.eclipse.jetty.server.Request.getCookies;
 
 @Service(name = "jetty.server.security.jwt")
 @ContractsProvided(Authenticator.class)
@@ -193,7 +193,7 @@ public class Auth0JwtAuthenticator
         session.removeAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
 
         // Remove JWT token cookie
-        List<HttpCookie> cookies = getCookies(request);
+        List<HttpCookie> cookies = Request.getCookies(request);
         for (HttpCookie cookie : cookies) {
             if (cookie.getName().equals(jwtConfiguration.getTokenCookieName())) {
                 HttpCookie tokenCookie = HttpCookie.build(cookie).expires(Instant.now()).build();

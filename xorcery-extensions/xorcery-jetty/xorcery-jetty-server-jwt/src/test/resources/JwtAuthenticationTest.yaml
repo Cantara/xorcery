@@ -1,4 +1,4 @@
-#$schema: ../../main/resources/META-INF/xorcery-override-schema.json
+$schema: META-INF/xorcery-jetty-server-jwt-override-schema.json
 
 jetty:
   client:
@@ -16,9 +16,3 @@ jetty:
               - kid: "{{SYSTEM.kid}}"
                 alg: "ES256"
                 publicKey: "secret:{{SYSTEM.key}}"
-
-opentelemetry:
-  enabled: true
-  instrumentations:
-    jersey:
-      enabled: true

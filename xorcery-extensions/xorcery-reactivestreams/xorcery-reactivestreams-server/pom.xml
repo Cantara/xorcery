@@ -34,35 +34,7 @@
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-dns-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-jsonapi-service</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-jetty-server</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-jetty-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-metadata</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-configuration-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-util</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
@@ -79,25 +51,6 @@
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.hk2</groupId>
-            <artifactId>hk2-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.hk2</groupId>
-            <artifactId>hk2-runlevel</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-        </dependency>
-
     </dependencies>
 
 </project>

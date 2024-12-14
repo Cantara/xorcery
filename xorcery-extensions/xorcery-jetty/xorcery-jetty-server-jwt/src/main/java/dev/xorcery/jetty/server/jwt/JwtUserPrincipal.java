@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.jetty.server.security.jwt;
+package dev.xorcery.jetty.server.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.eclipse.jetty.security.UserPrincipal;

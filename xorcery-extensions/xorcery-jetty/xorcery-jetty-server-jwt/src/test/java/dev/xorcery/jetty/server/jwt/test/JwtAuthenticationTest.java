@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.test.jetty;
+package dev.xorcery.jetty.server.jwt.test;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -39,25 +39,6 @@ import java.util.Date;
 import java.util.UUID;
 
 public class JwtAuthenticationTest {
-    String conxfig = """
-            $schema: META-INF/xorcery-override-schema.json
-            
-            jetty.server.enabled: true
-            jetty.client.enabled: true
-            jetty.server.security.enabled: true
-            jetty.server.security.method: "jwt"
-            jetty.server.security.jwt:
-                enabled: true
-                issuers:
-                  authentication.xorcery.test:
-                    keys:
-                      - kid: "{{SYSTEM.kid}}"
-                        alg: "ES256"
-                        publicKey: "secret:{{SYSTEM.key}}"
-            opentelemetry.enabled: true
-            opentelemetry.instrumentations.jersey.enabled: true
-            """;
-
     @Inject
     ClientBuilder clientBuilder;
 
