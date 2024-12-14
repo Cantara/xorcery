@@ -20,7 +20,6 @@ import io.opentelemetry.exporter.logging.LoggingMetricExporter;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
@@ -43,7 +42,6 @@ public class LoggingMetricReaderFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry.exporters.logging")
     public MetricReader provide() {
         return metricReader;
     }

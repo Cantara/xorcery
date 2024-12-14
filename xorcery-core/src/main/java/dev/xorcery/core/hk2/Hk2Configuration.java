@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.core;
+package dev.xorcery.core.hk2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import dev.xorcery.configuration.Configuration;
@@ -22,7 +22,7 @@ import org.glassfish.hk2.runlevel.RunLevelController;
 
 import java.util.Collections;
 
-record Hk2Configuration(Configuration configuration) {
+public record Hk2Configuration(Configuration configuration) {
 
     public RunLevelController.ThreadingPolicy getThreadingPolicy() {
         return RunLevelController.ThreadingPolicy.valueOf(configuration.getString("threadPolicy").orElse("FULLY_THREADED"));

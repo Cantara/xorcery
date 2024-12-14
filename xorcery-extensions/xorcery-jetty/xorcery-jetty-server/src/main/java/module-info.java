@@ -15,6 +15,7 @@
  */
 module xorcery.jetty.server {
     exports dev.xorcery.jetty.server;
+    exports dev.xorcery.jetty.server.providers;
     exports dev.xorcery.jetty.server.security;
     exports dev.xorcery.jetty.server.security.jwt;
     exports dev.xorcery.jetty.server.security.clientcert;
@@ -36,10 +37,7 @@ module xorcery.jetty.server {
     requires transitive org.eclipse.jetty.server;
     requires org.eclipse.jetty.ee10.servlet;
     requires org.eclipse.jetty.util;
-
-    // HTTP/2
     requires org.eclipse.jetty.alpn.java.server;
-    requires org.eclipse.jetty.http2.server;
 
     // Websockets
     requires org.eclipse.jetty.websocket.server;

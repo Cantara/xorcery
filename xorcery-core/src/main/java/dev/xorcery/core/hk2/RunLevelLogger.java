@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.core;
+package dev.xorcery.core.hk2;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

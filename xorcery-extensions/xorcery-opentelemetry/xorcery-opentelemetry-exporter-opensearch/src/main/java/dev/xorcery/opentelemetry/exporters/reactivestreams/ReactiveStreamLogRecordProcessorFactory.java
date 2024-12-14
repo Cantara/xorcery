@@ -8,7 +8,6 @@ import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
@@ -32,7 +31,6 @@ public class ReactiveStreamLogRecordProcessorFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry.exporters.websocket.logs")
     public LogRecordProcessor provide() {
         return logRecordProcessor;
     }

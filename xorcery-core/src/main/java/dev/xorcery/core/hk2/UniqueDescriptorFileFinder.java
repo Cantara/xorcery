@@ -1,4 +1,4 @@
-package dev.xorcery.core;
+package dev.xorcery.core.hk2;
 
 import org.glassfish.hk2.api.DescriptorFileFinder;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
@@ -15,7 +15,7 @@ import java.util.Set;
  * This wrapper simply ensures the descriptors are deduped.
  * @param classpathDescriptorFileFinder
  */
-record UniqueDescriptorFileFinder(ClasspathDescriptorFileFinder classpathDescriptorFileFinder)
+public record UniqueDescriptorFileFinder(ClasspathDescriptorFileFinder classpathDescriptorFileFinder)
         implements DescriptorFileFinder {
     @Override
     public List<InputStream> findDescriptorFiles() throws IOException {

@@ -63,11 +63,6 @@
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-log4j</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-opentelemetry-log4j</artifactId>
             <scope>test</scope>
         </dependency>

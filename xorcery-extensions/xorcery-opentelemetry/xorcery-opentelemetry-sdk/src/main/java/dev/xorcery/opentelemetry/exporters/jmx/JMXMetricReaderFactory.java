@@ -20,7 +20,6 @@ import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.export.MetricReader;
 import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
@@ -44,7 +43,6 @@ public class JMXMetricReaderFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry.exporters.jmx")
     public MetricReader provide() {
         return metricReader;
     }

@@ -24,12 +24,11 @@ import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="opentelemetry.exporters.otlp.http")
 public class OtlpHttpSpanProcessorFactory
         implements Factory<SpanProcessor> {
     private final SpanProcessor spanProcessor;
@@ -63,7 +62,6 @@ public class OtlpHttpSpanProcessorFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry.exporters.otlp.http")
     public SpanProcessor provide() {
         return spanProcessor;
     }

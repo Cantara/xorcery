@@ -26,11 +26,6 @@
 
     <artifactId>xorcery-translation-deepl</artifactId>
 
-    <properties>
-        <maven.compiler.source>18</maven.compiler.source>
-        <maven.compiler.target>18</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>dev.xorcery</groupId>
@@ -47,6 +42,11 @@
         <dependency>
             <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-log4j</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
         </dependency>
 
         <dependency>

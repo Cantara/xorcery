@@ -20,7 +20,6 @@ import dev.xorcery.keystores.KeyStores;
 import dev.xorcery.keystores.KeyStoresConfiguration;
 import dev.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,7 +110,6 @@ public class ServerSslContextFactoryFactory
     }
 
     @Singleton
-    @Named("jetty.server.ssl")
     @Override
     public SslContextFactory.Server provide() {
         return factory;

@@ -25,6 +25,10 @@ import java.util.Optional;
 
 public record JettyServerConfiguration(Configuration configuration) {
 
+    public static JettyServerConfiguration get(Configuration configuration) {
+        return new JettyServerConfiguration(configuration.getConfiguration("jetty.server"));
+    }
+
     public Duration getIdleTimeout() {
         return Duration.parse("PT" + configuration.getString("idleTimeout").orElse("-1s"));
     }

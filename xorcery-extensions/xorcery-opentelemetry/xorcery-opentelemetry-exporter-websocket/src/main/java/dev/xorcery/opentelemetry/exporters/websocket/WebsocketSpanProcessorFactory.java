@@ -4,7 +4,6 @@ import dev.xorcery.configuration.Configuration;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
@@ -24,7 +23,6 @@ public class WebsocketSpanProcessorFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry.exporters.websocket.traces")
     public SpanProcessor provide() {
         return spanProcessor;
     }

@@ -19,7 +19,6 @@ package dev.xorcery.jetty.server;
 import dev.xorcery.configuration.Configuration;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.eclipse.jetty.ee10.servlet.ErrorHandler;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
@@ -30,7 +29,7 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="jetty.server.servlet")
 @Priority(8)
 public class ServletContextHandlerFactory
         implements Factory<ServletContextHandler> {
@@ -58,7 +57,6 @@ public class ServletContextHandlerFactory
     }
 
     @Override
-    @Named("jetty.server.servlet")
     @Singleton
     public ServletContextHandler provide() {
         return servletContextHandler;

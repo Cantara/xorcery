@@ -22,6 +22,11 @@ import java.util.Optional;
 
 public record JettyServerSslConfiguration(Configuration configuration) {
 
+    public static JettyServerSslConfiguration get(Configuration configuration)
+    {
+        return new JettyServerSslConfiguration(configuration.getConfiguration("jetty.server.ssl"));
+    }
+
     public boolean isEnabled() {
         return configuration.getBoolean("enabled").orElse(false);
     }

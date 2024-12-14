@@ -2,7 +2,6 @@ package dev.xorcery.thymeleaf;
 
 import dev.xorcery.configuration.Configuration;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import org.jvnet.hk2.annotations.Service;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
@@ -17,7 +16,6 @@ public class FileTemplateResolverFactory
     }
 
     @Override
-    @Named("thymeleaf.file")
     public ITemplateResolver provide() {
         return super.provide();
     }

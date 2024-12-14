@@ -13,11 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.jetty.server;
+package dev.xorcery.jetty.server.http2.providers;
 
 import dev.xorcery.configuration.Configuration;
 
 public record JettyServerHttp2Configuration(Configuration configuration) {
+
+    public JettyServerHttp2Configuration get(Configuration configuration)
+    {
+        return new JettyServerHttp2Configuration(configuration.getConfiguration("jetty.server.http2"));
+    }
 
     public boolean isEnabled()
     {

@@ -21,7 +21,6 @@ import dev.xorcery.neo4j.client.GraphDatabase;
 import dev.xorcery.neo4j.spi.Neo4jProvider;
 import dev.xorcery.util.Resources;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -256,7 +255,6 @@ public class Neo4jDatabaseService
 
     @Override
     @Singleton
-    @Named("neo4jdatabase")
     public GraphDatabase provide() {
         return graphDatabase;
     }

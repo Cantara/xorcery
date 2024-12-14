@@ -6,9 +6,9 @@ module xorcery.translation.deepl {
     requires xorcery.configuration.api;
     requires xorcery.translation.api;
     requires xorcery.secrets.api;
+    requires xorcery.secrets.spi;
 
     requires deepl.java;
-    requires xorcery.secrets.spi;
     requires org.apache.logging.log4j;
     requires jakarta.inject;
     requires org.glassfish.hk2.api;

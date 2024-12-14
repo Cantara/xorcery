@@ -25,12 +25,11 @@ import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service
+@Service(name="opentelemetry.exporters.otlp.http")
 public class OtlpHttpLogRecordProcessorFactory
         implements Factory<LogRecordProcessor> {
     private final BatchLogRecordProcessor logRecordProcessor;
@@ -62,7 +61,6 @@ public class OtlpHttpLogRecordProcessorFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry.exporters.otlp.http")
     public LogRecordProcessor provide() {
         return logRecordProcessor;
     }

@@ -5,7 +5,6 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.api.Factory;
@@ -25,7 +24,6 @@ public class ReactiveStreamSpanProcessorFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry.exporters.reactivestreams.traces")
     public SpanProcessor provide() {
         return spanProcessor;
     }

@@ -29,6 +29,8 @@
 
     <modules>
         <module>xorcery-jetty-server</module>
+        <module>xorcery-jetty-server-http2</module>
+
         <module>xorcery-jetty-client</module>
     </modules>
 

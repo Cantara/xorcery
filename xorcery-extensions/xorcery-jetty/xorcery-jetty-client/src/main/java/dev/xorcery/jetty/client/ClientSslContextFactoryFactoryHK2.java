@@ -19,7 +19,6 @@ import dev.xorcery.configuration.Configuration;
 import dev.xorcery.keystores.KeyStores;
 import dev.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -48,7 +47,6 @@ public class ClientSslContextFactoryFactoryHK2 extends ClientSslContextFactoryFa
     }
 
     @Singleton
-    @Named("jetty.client.ssl")
     @Override
     public SslContextFactory.Client provide() {
         return super.provide();

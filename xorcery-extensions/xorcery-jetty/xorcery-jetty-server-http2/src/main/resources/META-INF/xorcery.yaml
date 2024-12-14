@@ -1,0 +1,4 @@
+jetty:
+  server:
+    http2:
+      enabled: "{{ jetty.server.enabled }}"

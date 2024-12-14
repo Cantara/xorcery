@@ -27,7 +27,6 @@ import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
@@ -94,7 +93,6 @@ public class OpenTelemetrySDKFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry")
     public OpenTelemetry provide() {
         return openTelemetry;
     }

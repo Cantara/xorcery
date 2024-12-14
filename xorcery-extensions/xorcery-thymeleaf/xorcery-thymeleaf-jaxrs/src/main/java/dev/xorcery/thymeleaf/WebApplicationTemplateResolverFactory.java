@@ -3,7 +3,6 @@ package dev.xorcery.thymeleaf;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.hk2.Services;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 import org.eclipse.jetty.server.Handler;
 import org.glassfish.hk2.api.IterableProvider;
@@ -24,7 +23,6 @@ public class WebApplicationTemplateResolverFactory
     }
 
     @Override
-    @Named("thymeleaf.webapplication")
     public ITemplateResolver provide() {
         return super.provide();
     }

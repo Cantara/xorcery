@@ -15,6 +15,8 @@
  */
 open module xorcery.core {
     exports dev.xorcery.core;
+    exports dev.xorcery.core.hk2;
+    exports dev.xorcery.core.log4j;
 
     requires transitive xorcery.configuration.api;
     requires transitive jakarta.inject;

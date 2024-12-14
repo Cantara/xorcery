@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.core;
+package dev.xorcery.core.hk2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.json.JsonElement;
+import org.glassfish.hk2.api.DescriptorType;
 import org.glassfish.hk2.api.PopulatorPostProcessor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.DescriptorImpl;
@@ -34,11 +35,14 @@ import java.util.function.Function;
  *
  * @param configuration
  */
-record ConfigurationPostPopulatorProcessor(Configuration configuration, Consumer<String> monitor)
+public record ConfigurationPostPopulatorProcessor(Configuration configuration, Consumer<String> monitor)
         implements PopulatorPostProcessor {
 
     @Override
     public DescriptorImpl process(ServiceLocator serviceLocator, DescriptorImpl descriptorImpl) {
+
+        if (descriptorImpl.getDescriptorType().equals(DescriptorType.PROVIDE_METHOD))
+            return descriptorImpl;
 
         String name = descriptorImpl.getName();
         if (name != null) {

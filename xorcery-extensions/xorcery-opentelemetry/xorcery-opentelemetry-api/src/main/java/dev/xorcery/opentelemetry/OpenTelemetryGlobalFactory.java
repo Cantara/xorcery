@@ -18,7 +18,6 @@ package dev.xorcery.opentelemetry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
@@ -33,7 +32,6 @@ public class OpenTelemetryGlobalFactory
 
     @Override
     @Singleton
-    @Named("opentelemetry.global")
     public OpenTelemetry provide() {
         return GlobalOpenTelemetry.get();
     }
