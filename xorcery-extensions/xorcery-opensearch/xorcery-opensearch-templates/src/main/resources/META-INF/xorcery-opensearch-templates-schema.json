@@ -1,0 +1,36 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-opensearch-templates/schema",
+  "title" : "xorcery-opensearch-templates configuration JSON Schema",
+  "properties" : {
+    "opensearch" : {
+      "$ref" : "#/$defs/opensearch"
+    }
+  },
+  "$defs" : {
+    "opensearch" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "templates" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ opensearch.enabled }}",
+              "description" : "Default: {{ opensearch.enabled }} (true)"
+            },
+            "componentTemplates" : {
+              "type" : [ "array", "string" ]
+            },
+            "indexTemplates" : {
+              "type" : [ "array", "string" ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

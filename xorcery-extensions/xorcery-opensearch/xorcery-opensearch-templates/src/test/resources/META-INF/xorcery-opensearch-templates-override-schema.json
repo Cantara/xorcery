@@ -1,6 +1,6 @@
 {
-  "$id" : "http://xorcery.dev/applications/dev.xorcery/xorcery-opentelemetry-exporter-opensearch/override-schema",
-  "title" : "xorcery-opentelemetry-exporter-opensearch configuration override JSON Schema",
+  "$id" : "http://xorcery.dev/applications/dev.xorcery/xorcery-opensearch-templates/override-schema",
+  "title" : "xorcery-opensearch-templates configuration override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -623,6 +623,23 @@
           "type" : "string",
           "default" : "http://localhost:9200",
           "description" : "Default: http://localhost:9200"
+        },
+        "templates" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ opensearch.enabled }}",
+              "description" : "Default: {{ opensearch.enabled }} (true)"
+            },
+            "componentTemplates" : {
+              "type" : [ "array", "string" ]
+            },
+            "indexTemplates" : {
+              "type" : [ "array", "string" ]
+            }
+          }
         }
       }
     },
@@ -638,88 +655,6 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ opentelemetry.enabled ? false | true }}",
               "description" : "Default: {{ opentelemetry.enabled ? false | true }} (true)"
-            }
-          }
-        },
-        "exporters" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "reactivestreams" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} (true)"
-                },
-                "logs" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "enabled" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
-                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
-                    }
-                  }
-                },
-                "traces" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "enabled" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
-                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
-                    }
-                  }
-                },
-                "metrics" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "enabled" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : "{{ opentelemetry.exporters.reactivestreams.enabled }}",
-                      "description" : "Default: {{ opentelemetry.exporters.reactivestreams.enabled }} (true)"
-                    },
-                    "interval" : {
-                      "type" : "string",
-                      "default" : "30s",
-                      "description" : "Default: 30s"
-                    }
-                  }
-                }
-              }
-            },
-            "opensearch" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ opensearch.enabled }}",
-                  "description" : "Default: {{ opensearch.enabled }} (true)"
-                },
-                "attach" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "enabled" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : "{{ opentelemetry.exporters.opensearch.enabled }}",
-                      "description" : "Default: {{ opentelemetry.exporters.opensearch.enabled }} (true)"
-                    },
-                    "host" : {
-                      "type" : "string",
-                      "default" : "http://localhost:9200/",
-                      "description" : "Default: http://localhost:9200/"
-                    }
-                  }
-                }
-              }
             }
           }
         }

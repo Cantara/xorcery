@@ -1426,80 +1426,6 @@
           "type" : "string",
           "default" : "http://localhost:9200",
           "description" : "Default: http://localhost:9200"
-        },
-        "componentTemplates" : {
-          "type" : [ "array", "string", "object" ],
-          "additionalProperties" : true,
-          "properties" : { }
-        },
-        "indexTemplates" : {
-          "type" : [ "array", "string", "object" ],
-          "additionalProperties" : true,
-          "properties" : { }
-        },
-        "deleteOnExit" : {
-          "type" : [ "boolean", "string" ],
-          "default" : false,
-          "description" : "Default: false"
-        },
-        "publishers" : {
-          "type" : [ "array", "string" ],
-          "items" : {
-            "anyOf" : [ {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "server" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "uri" : {
-                      "type" : "string",
-                      "default" : "wss://somehost:someport",
-                      "description" : "Default: wss://somehost:someport"
-                    },
-                    "stream" : {
-                      "type" : "string",
-                      "default" : "somestream",
-                      "description" : "Default: somestream"
-                    },
-                    "configuration" : {
-                      "type" : "object",
-                      "additionalProperties" : true,
-                      "properties" : { }
-                    }
-                  }
-                },
-                "client" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "alias" : {
-                      "type" : "string",
-                      "default" : "somealias",
-                      "description" : "Default: somealias"
-                    },
-                    "index" : {
-                      "type" : "string",
-                      "default" : "anindexname",
-                      "description" : "Default: anindexname"
-                    },
-                    "configuration" : {
-                      "type" : "object",
-                      "additionalProperties" : false,
-                      "properties" : {
-                        "bufferSize" : {
-                          "type" : [ "number", "string" ],
-                          "default" : 64,
-                          "description" : "Default: 64"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            } ]
-          }
         }
       }
     },
@@ -2034,6 +1960,11 @@
               }
             }
           }
+        },
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
         },
         "install" : {
           "type" : [ "boolean", "string" ],
