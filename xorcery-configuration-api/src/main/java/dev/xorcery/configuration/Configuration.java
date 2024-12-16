@@ -48,7 +48,7 @@ public record Configuration(ObjectNode json)
         return new Configuration(JsonNodeFactory.instance.objectNode());
     }
 
-    public static Supplier<RuntimeException> missing(String name) {
+    public static Supplier<RuntimeException> missing(Object name) {
         return () -> new IllegalArgumentException("Missing configuration setting '" + name + "'");
     }
 

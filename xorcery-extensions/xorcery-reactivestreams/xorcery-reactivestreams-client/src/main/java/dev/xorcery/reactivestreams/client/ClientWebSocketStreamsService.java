@@ -1,5 +1,6 @@
 package dev.xorcery.reactivestreams.client;
 
+import dev.xorcery.collections.Element;
 import dev.xorcery.concurrent.NamedThreadFactory;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.InstanceConfiguration;
@@ -225,7 +226,7 @@ public class ClientWebSocketStreamsService
 
     private URI getServerUri(ContextView contextView) {
         Object serverUri = new ContextViewElement(contextView).get(ClientWebSocketStreamContext.serverUri)
-                .orElseThrow(ContextViewElement.missing(ClientWebSocketStreamContext.serverUri));
+                .orElseThrow(Element.missing(ClientWebSocketStreamContext.serverUri));
         return validateUri(serverUri instanceof URI uri ? uri : URI.create(serverUri.toString()));
     }
 

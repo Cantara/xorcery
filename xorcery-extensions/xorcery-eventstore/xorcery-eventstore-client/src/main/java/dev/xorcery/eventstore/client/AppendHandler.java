@@ -28,8 +28,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static dev.xorcery.collections.Element.missing;
 import static dev.xorcery.lang.Exceptions.unwrap;
-import static dev.xorcery.reactivestreams.api.ContextViewElement.missing;
 import static io.opentelemetry.context.Context.taskWrapping;
 
 public class AppendHandler

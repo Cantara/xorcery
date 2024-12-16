@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
-import static dev.xorcery.reactivestreams.api.ContextViewElement.missing;
+import static dev.xorcery.collections.Element.missing;
 import static io.opentelemetry.context.Context.taskWrapping;
 
 @Service

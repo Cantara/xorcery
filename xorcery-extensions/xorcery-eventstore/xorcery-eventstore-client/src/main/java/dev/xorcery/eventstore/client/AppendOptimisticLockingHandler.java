@@ -19,8 +19,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static dev.xorcery.collections.Element.missing;
 import static dev.xorcery.lang.Exceptions.unwrap;
-import static dev.xorcery.reactivestreams.api.ContextViewElement.missing;
 
 public class AppendOptimisticLockingHandler
     extends BaseAppendHandler

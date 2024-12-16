@@ -23,7 +23,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static dev.xorcery.reactivestreams.api.ContextViewElement.missing;
+import static dev.xorcery.collections.Element.missing;
+
 
 class BaseAppendHandler {
 

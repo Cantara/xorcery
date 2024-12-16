@@ -3,6 +3,7 @@ package dev.xorcery.reactivestreams.extras.publishers;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import dev.xorcery.collections.Element;
 import dev.xorcery.reactivestreams.api.ContextViewElement;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -35,7 +36,7 @@ public class YamlPublisher<T>
         {
             try {
                 Object resourceUrl = new ContextViewElement(coreSubscriber.currentContext()).get(ResourcePublisherContext.resourceUrl)
-                        .orElseThrow(ContextViewElement.missing(ResourcePublisherContext.resourceUrl));
+                        .orElseThrow(Element.missing(ResourcePublisherContext.resourceUrl));
                 URL yamlResource = resourceUrl instanceof URL url ? url : new URL(resourceUrl.toString());
                 InputStream resourceAsStream = new BufferedInputStream(yamlResource.openStream(), 32 * 1024);
                 LoaderOptions loaderOptions = new LoaderOptions();

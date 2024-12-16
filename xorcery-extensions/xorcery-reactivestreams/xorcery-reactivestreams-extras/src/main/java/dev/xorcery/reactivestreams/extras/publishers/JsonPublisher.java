@@ -3,6 +3,7 @@ package dev.xorcery.reactivestreams.extras.publishers;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import dev.xorcery.collections.Element;
 import dev.xorcery.reactivestreams.api.ContextViewElement;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
@@ -28,7 +29,7 @@ public class JsonPublisher<T>
         {
             try {
                 Object resourceUrl = new ContextViewElement(coreSubscriber.currentContext()).get(ResourcePublisherContext.resourceUrl)
-                        .orElseThrow(ContextViewElement.missing(ResourcePublisherContext.resourceUrl));
+                        .orElseThrow(Element.missing(ResourcePublisherContext.resourceUrl));
                 URL jsonResource = resourceUrl instanceof URL url ? url : new URL(resourceUrl.toString());
                 InputStream resourceAsStream = new BufferedInputStream(jsonResource.openStream(), 32 * 1024);
                 JsonFactory factory = JsonFactory.builder().build();

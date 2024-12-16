@@ -19,6 +19,7 @@ package dev.xorcery.eventstore.streams;
 import com.eventstore.dbclient.EventStoreDBClientSettings;
 import com.eventstore.dbclient.EventStoreDBConnectionString;
 import com.eventstore.dbclient.StreamMetadata;
+import dev.xorcery.collections.Element;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.InstanceConfiguration;
 import dev.xorcery.domainevents.api.DomainEventMetadata;
@@ -42,7 +43,7 @@ import reactor.core.publisher.Flux;
 
 import java.util.UUID;
 
-import static dev.xorcery.reactivestreams.api.ContextViewElement.missing;
+import static dev.xorcery.collections.Element.missing;
 import static dev.xorcery.reactivestreams.api.ReactiveStreamsContext.streamId;
 
 @Service(name = "eventstore.api")
@@ -68,7 +69,7 @@ public class EventStoreStreamsService
                 .build();
         serviceResourceObjects.add(sro);
 
-        EventStoreDBClientSettings settings = EventStoreDBConnectionString.parseOrThrow(configuration.getString("eventstore.uri").orElseThrow(Configuration.missing("eventstore.uri")));
+        EventStoreDBClientSettings settings = EventStoreDBConnectionString.parseOrThrow(configuration.getString("eventstore.uri").orElseThrow(Element.missing("eventstore.uri")));
         eventStoreClient = eventStoreClientFactory.create(settings);
 
         // Test connection

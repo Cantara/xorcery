@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  */
 public interface Element {
 
-    static Supplier<RuntimeException> missing(String name) {
+    static Supplier<RuntimeException> missing(Object name) {
         return () -> new IllegalArgumentException("Missing '" + name + "'");
     }
 

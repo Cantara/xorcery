@@ -32,12 +32,8 @@ import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
 public record Metadata(ObjectNode json)
         implements JsonElement {
 
-    public static Supplier<RuntimeException> missing(String name) {
+    public static Supplier<RuntimeException> missing(Object name) {
         return () -> new IllegalArgumentException("Missing metadata '" + name + "'");
-    }
-
-    public static Supplier<RuntimeException> missing(Enum<?> name) {
-        return missing(name.name());
     }
 
     public record Builder(ObjectNode builder)
