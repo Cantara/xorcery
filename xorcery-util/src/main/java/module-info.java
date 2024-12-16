@@ -29,6 +29,7 @@ module xorcery.util {
 
     requires org.glassfish.hk2.api;
     requires jakarta.annotation;
+    requires jakarta.inject;
 
     provides URLStreamHandlerProvider with dev.xorcery.util.ResourceURLStreamHandlerProvider;
 }
