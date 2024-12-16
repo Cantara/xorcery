@@ -29,6 +29,7 @@
 
     <modules>
         <module>xorcery-opensearch-client</module>
+        <module>xorcery-opensearch-templates</module>
     </modules>
 
 </project>

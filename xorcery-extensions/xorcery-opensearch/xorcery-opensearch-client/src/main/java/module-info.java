@@ -21,9 +21,6 @@ module xorcery.opensearch.client {
     exports dev.xorcery.opensearch.client;
     exports dev.xorcery.opensearch;
 
-    opens opensearch.templates.components;
-    opens opensearch.templates;
-
     requires xorcery.reactivestreams.extras;
     requires xorcery.reactivestreams.api;
     requires transitive xorcery.jersey.client;

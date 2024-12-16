@@ -107,7 +107,7 @@ public class DocumentClientIT {
                     .toCompletableFuture().get(10, TimeUnit.SECONDS);
         }
         {
-            ObjectNode template = (ObjectNode) objectMapper.readTree(DocumentClientIT.class.getResource("testindextemplate.json"));
+            ObjectNode template = (ObjectNode) objectMapper.readTree(DocumentClientIT.class.getResource("/testindextemplate.json"));
             client.indices().createIndexTemplate("test", new CreateIndexTemplateRequest(template))
                     .toCompletableFuture().get(10, TimeUnit.SECONDS);
         }

@@ -29,7 +29,6 @@ import dev.xorcery.opensearch.client.search.Document;
 import dev.xorcery.opensearch.client.search.SearchQuery;
 import dev.xorcery.opensearch.client.search.SearchRequest;
 import dev.xorcery.opensearch.client.search.SearchResponse;
-import dev.xorcery.opensearch.client.test.document.DocumentClientIT;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -118,7 +117,7 @@ public class SearchClientIT {
                     .toCompletableFuture().get(10, TimeUnit.SECONDS);
         }
         {
-            ObjectNode template = (ObjectNode) objectMapper.readTree(DocumentClientIT.class.getResource("testindextemplate.json"));
+            ObjectNode template = (ObjectNode) objectMapper.readTree(SearchClientIT.class.getResource("/testindextemplate.json"));
             client.indices().createIndexTemplate("test", new CreateIndexTemplateRequest(template))
                     .toCompletableFuture().get(10, TimeUnit.SECONDS);
         }

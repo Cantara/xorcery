@@ -15,14 +15,10 @@
  */
 package dev.xorcery.opensearch;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.ServiceConfiguration;
-import dev.xorcery.json.JsonElement;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
 
 public record OpenSearchConfiguration(Configuration context)
         implements ServiceConfiguration {
@@ -30,33 +26,7 @@ public record OpenSearchConfiguration(Configuration context)
         return new OpenSearchConfiguration(configuration.getConfiguration("opensearch"));
     }
 
-    public List<Template> getComponentTemplates() {
-        return context.getObjectListAs("componentTemplates", Template::new).orElse(Collections.emptyList());
-    }
-
-    public List<Template> getIndexTemplates() {
-        return context.getObjectListAs("indexTemplates", Template::new).orElse(Collections.emptyList());
-    }
-
-    public boolean isDeleteOnExit() {
-        return context.getBoolean("deleteOnExit").orElse(false);
-    }
-
     public URI getURI() {
         return context.getURI("uri").orElseThrow(missing("opensearch.uri"));
-    }
-
-    public record Template(JsonNode json)
-        implements JsonElement
-    {
-        public String getId()
-        {
-            return getString("id").orElseThrow(Configuration.missing("id"));
-        }
-
-        public URI getResource()
-        {
-            return getString("resource").map(URI::create).orElseThrow(Configuration.missing("resource"));
-        }
     }
 }

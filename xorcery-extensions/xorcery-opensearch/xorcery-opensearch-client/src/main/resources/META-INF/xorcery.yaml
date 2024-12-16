@@ -2,16 +2,3 @@ $schema: xorcery-opensearch-client-schema.json
 opensearch:
   enabled: "{{ defaults.enabled }}"
   uri: "http://localhost:9200"
-  componentTemplates: []
-  indexTemplates: []
-  deleteOnExit: false
-  publishers:
-    - server:
-        uri: "wss://somehost:someport"
-        stream: "somestream"
-        configuration: {}
-      client:
-        alias: "somealias"
-        index: "anindexname"
-        configuration:
-          bufferSize: 64

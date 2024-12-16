@@ -1,0 +1,5 @@
+opensearch:
+  templates:
+    enabled: "{{ opensearch.enabled }}"
+    componentTemplates: [ ]
+    indexTemplates: [ ]

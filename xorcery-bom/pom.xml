@@ -366,6 +366,11 @@
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
+                <artifactId>xorcery-opensearch-templates</artifactId>
+                <version>0.151.18-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-api</artifactId>
                 <version>0.152.3-SNAPSHOT</version>
             </dependency>
