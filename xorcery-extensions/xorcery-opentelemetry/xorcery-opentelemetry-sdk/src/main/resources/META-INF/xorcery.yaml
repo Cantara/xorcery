@@ -1,5 +1,6 @@
 $schema: xorcery-opentelemetry-sdk-schema.json
 opentelemetry:
+  enabled: "{{ defaults.enabled }}"
   install: true
   resource:
     service.namespace: "{{ instance.environment }}"
