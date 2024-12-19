@@ -1,4 +1,4 @@
-$schema: xorcery-neo4j-browser-schema.json
+$schema: xorcery-schema.json
 neo4jbrowser:
   enabled: "{{ neo4jdatabase.enabled | defaults.enabled }}"
   ssl:

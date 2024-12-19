@@ -1,4 +1,4 @@
-$schema: xorcery-translation-deepl-schema.json
+$schema: xorcery-schema.json
 deepl:
   enabled: true
   authkey: "env:deepl"

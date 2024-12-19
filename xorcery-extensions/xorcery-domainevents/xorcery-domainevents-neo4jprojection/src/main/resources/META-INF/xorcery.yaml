@@ -1,4 +1,4 @@
-$schema: xorcery-domainevents-neo4jprojection-schema.json
+$schema: xorcery-schema.json
 jsondomaineventprojection:
   enabled: "{{ defaults.enabled }}"
 neo4jeventpublisherprovider:

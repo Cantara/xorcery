@@ -1,4 +1,4 @@
-$schema: xorcery-certificates-client-override-schema.json
+$schema: xorcery-override-schema.json
 certificates:
   client:
     enabled: false

@@ -1,4 +1,4 @@
-$schema: xorcery-secrets-api-schema.json
+$schema: xorcery-schema.json
 secrets:
   enabled: "{{defaults.enabled}}"
   default: "secret"

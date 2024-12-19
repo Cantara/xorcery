@@ -1,4 +1,4 @@
-$schema: xorcery-jetty-server-schema.json
+$schema: xorcery-schema.json
 jetty:
   server:
     enabled: "{{ defaults.enabled }}"

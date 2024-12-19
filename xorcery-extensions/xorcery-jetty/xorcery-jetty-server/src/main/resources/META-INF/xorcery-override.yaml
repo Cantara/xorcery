@@ -1,2 +1,2 @@
-$schema: xorcery-jetty-server-override-schema.json
+$schema: xorcery-override-schema.json
 instance.uri: "{{ jetty.server.enabled ? jetty.server.uri | \"http://localhost/\"}}"

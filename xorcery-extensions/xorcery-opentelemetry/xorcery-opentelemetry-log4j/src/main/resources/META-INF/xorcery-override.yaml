@@ -1,4 +1,4 @@
-$schema: xorcery-opentelemetry-log4j-override-schema.json
+$schema: xorcery-schema.json
 log4j2:
   Configuration:
     appenders:

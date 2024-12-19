@@ -1,4 +1,4 @@
-$schema: xorcery-certificates-provisioning-override-schema.json
+$schema: xorcery-override-schema.json
 keystores:
   stores:
   - name: ssl

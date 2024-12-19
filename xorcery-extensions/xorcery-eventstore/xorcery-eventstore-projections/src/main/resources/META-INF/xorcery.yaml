@@ -1,4 +1,4 @@
-$schema: xorcery-eventstore-projections-schema.json
+$schema: xorcery-schema.json
 eventstore:
   projections:
     enabled: "{{ eventstore.enabled }}"

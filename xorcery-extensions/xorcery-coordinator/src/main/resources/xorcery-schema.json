@@ -261,12 +261,12 @@
         "home" : {
           "type" : "string",
           "default" : "{{ SYSTEM.user_dir }}",
-          "description" : "Default: {{ SYSTEM.user_dir }} ({{ SYSTEM.user_dir }})"
+          "description" : "Default: {{ SYSTEM.user_dir }} (C:\\Users\\ricka\\IdeaProjects\\xorcery)"
         },
         "resources" : {
           "type" : "string",
           "default" : "{{ instance.home }}",
-          "description" : "Default: {{ instance.home }} ({{ instance.home }})"
+          "description" : "Default: {{ instance.home }} (C:\\Users\\ricka\\IdeaProjects\\xorcery)"
         },
         "uri" : {
           "type" : "string",
@@ -329,6 +329,11 @@
           "description" : "Default: -1s"
         },
         "development" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        },
+        "test" : {
           "type" : [ "boolean", "string" ],
           "default" : false,
           "description" : "Default: false"
@@ -434,24 +439,7 @@
               "type" : [ "array", "string" ]
             },
             "hosts" : {
-              "type" : [ "array", "string" ],
-              "additionalProperties" : true,
-              "items" : {
-                "type" : "object",
-                "properties" : {
-                  "name" : {
-                    "description" : "Host name",
-                    "type" : "string"
-                  },
-                  "url" : {
-                    "description" : "IP or URL",
-                    "type" : [ "array", "string" ],
-                    "items" : {
-                      "type" : "string"
-                    }
-                  }
-                }
-              }
+              "type" : [ "array", "string" ]
             },
             "timeout" : {
               "type" : "string",
@@ -574,13 +562,11 @@
             },
             "keystore" : {
               "default" : null,
-              "description" : "Default: null",
-              "type" : [ "string", "null" ]
+              "description" : "Default: null"
             },
             "truststore" : {
               "default" : null,
-              "description" : "Default: null",
-              "type" : [ "string", "null" ]
+              "description" : "Default: null"
             },
             "connectTimeout" : {
               "type" : "string",
@@ -622,7 +608,7 @@
               "properties" : {
                 "jersey" : {
                   "type" : "object",
-                  "additionalProperties" : true,
+                  "additionalProperties" : false,
                   "properties" : {
                     "config" : {
                       "type" : "object",
@@ -759,13 +745,11 @@
                 },
                 "keystore" : {
                   "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
+                  "description" : "Default: null"
                 },
                 "truststore" : {
                   "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
+                  "description" : "Default: null"
                 },
                 "endpointIdentificationAlgorithm" : {
                   "type" : "string",
@@ -826,7 +810,7 @@
               "description" : "Default: 16384"
             },
             "mediaTypes" : {
-              "type" : [ "object", "string" ],
+              "type" : "object",
               "additionalProperties" : true,
               "properties" : { }
             },
@@ -867,13 +851,11 @@
                 },
                 "keystore" : {
                   "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
+                  "description" : "Default: null"
                 },
                 "truststore" : {
                   "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
+                  "description" : "Default: null"
                 },
                 "trustAll" : {
                   "type" : [ "boolean", "string" ],
@@ -907,8 +889,7 @@
                 },
                 "crls" : {
                   "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
+                  "description" : "Default: null"
                 }
               }
             },
@@ -960,7 +941,6 @@
                   "description" : "Default: {{ jetty.server.enabled }} (true)"
                 },
                 "type" : {
-                  "type" : [ "string", "null" ],
                   "default" : null,
                   "description" : "Default: null"
                 },
@@ -984,19 +964,7 @@
                   }
                 },
                 "mappings" : {
-                  "type" : [ "array", "string" ],
-                  "items" : {
-                    "required" : [ "path" ],
-                    "additionalProperties" : false,
-                    "properties" : {
-                      "path" : {
-                        "type" : "string"
-                      },
-                      "constraint" : {
-                        "type" : [ "string", "null" ]
-                      }
-                    }
-                  }
+                  "type" : [ "array", "string" ]
                 },
                 "certificate" : {
                   "type" : "object",
@@ -1172,32 +1140,14 @@
                   "description" : "Default: /"
                 },
                 "domain" : {
-                  "type" : [ "null", "string" ],
+                  "type" : "string",
                   "default" : "{{ instance.domain }}",
                   "description" : "Default: {{ instance.domain }} (xorcery.test)"
                 }
               }
             },
             "keys" : {
-              "type" : [ "array", "string" ],
-              "items" : {
-                "type" : "object",
-                "additionalProperties" : false,
-                "properties" : {
-                  "kid" : {
-                    "type" : "string"
-                  },
-                  "alg" : {
-                    "type" : "string"
-                  },
-                  "publicKey" : {
-                    "type" : "string"
-                  },
-                  "privateKey" : {
-                    "type" : "string"
-                  }
-                }
-              }
+              "type" : [ "array", "string" ]
             }
           }
         },
@@ -1213,22 +1163,7 @@
           }
         },
         "users" : {
-          "type" : [ "array", "string" ],
-          "items" : {
-            "type" : "object",
-            "additionalProperties" : false,
-            "properties" : {
-              "name" : {
-                "type" : "string"
-              },
-              "password" : {
-                "type" : "string"
-              },
-              "claims" : {
-                "type" : "object"
-              }
-            }
-          }
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -1247,27 +1182,7 @@
           "description" : "Default: secret:password"
         },
         "stores" : {
-          "type" : [ "array", "string" ],
-          "items" : {
-            "properties" : {
-              "name" : {
-                "type" : "string"
-              },
-              "path" : {
-                "type" : "string"
-              },
-              "password" : {
-                "type" : "string"
-              },
-              "addRootCa" : {
-                "type" : [ "boolean", "string" ],
-                "default" : false
-              },
-              "template" : {
-                "type" : [ "string", "null" ]
-              }
-            }
-          }
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -1307,8 +1222,8 @@
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+              "default" : "{{ secrets.enabled | true }}",
+              "description" : "Default: {{ secrets.enabled | true }} (true)"
             }
           }
         },
@@ -1318,8 +1233,8 @@
           "properties" : {
             "enabled" : {
               "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+              "default" : "{{ secrets.enabled | true }}",
+              "description" : "Default: {{ secrets.enabled | true }} (true)"
             }
           }
         }
@@ -1341,8 +1256,7 @@
             "status" : {
               "type" : "string",
               "default" : "warn",
-              "description" : "Default: warn",
-              "enum" : [ "trace", "debug", "info", "warn", "error" ]
+              "description" : "Default: warn"
             },
             "properties" : {
               "type" : "object",
@@ -1356,8 +1270,7 @@
                 "level" : {
                   "type" : "string",
                   "default" : "info",
-                  "description" : "Default: info",
-                  "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                  "description" : "Default: info"
                 }
               }
             },
@@ -1371,24 +1284,7 @@
               "additionalProperties" : false,
               "properties" : {
                 "logger" : {
-                  "type" : [ "array", "string" ],
-                  "items" : {
-                    "properties" : {
-                      "name" : {
-                        "type" : "string"
-                      },
-                      "level" : {
-                        "type" : "string",
-                        "enum" : [ "trace", "debug", "info", "warn", "error" ]
-                      },
-                      "additivity" : {
-                        "type" : "boolean"
-                      },
-                      "AppenderRef" : {
-                        "type" : [ "array", "string" ]
-                      }
-                    }
-                  }
+                  "type" : [ "array", "string" ]
                 },
                 "Root" : {
                   "type" : "object",
@@ -1397,8 +1293,7 @@
                     "level" : {
                       "type" : "string",
                       "default" : "info",
-                      "description" : "Default: info",
-                      "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                      "description" : "Default: info"
                     },
                     "AppenderRef" : {
                       "type" : [ "array", "string" ]
@@ -1886,9 +1781,9 @@
               "additionalProperties" : false,
               "properties" : {
                 "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ defaults.enabled }}",
-                  "description" : "Default: {{ defaults.enabled }} (true)"
+                  "type" : "string",
+                  "default" : "{{ opentelemetry.enabled }}",
+                  "description" : "Default: {{ opentelemetry.enabled }} ({{ opentelemetry.enabled }})"
                 },
                 "config" : {
                   "type" : "object",
@@ -1971,7 +1866,7 @@
         },
         "resource" : {
           "type" : "object",
-          "additionalProperties" : true,
+          "additionalProperties" : false,
           "properties" : {
             "service.namespace" : {
               "type" : "string",
@@ -2385,5 +2280,6 @@
         }
       }
     }
-  }
+  },
+  "title" : "xorcery application configuration JSON Schema"
 }

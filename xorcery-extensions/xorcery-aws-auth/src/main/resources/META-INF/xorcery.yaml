@@ -1,4 +1,4 @@
-$schema: xorcery-aws-auth-schema.json
+$schema: xorcery-schema.json
 aws:
   enabled: "{{ defaults.enabled }}"
   region: "{{ ENV:aws.region }}"

@@ -1,4 +1,4 @@
-$schema: xorcery-jwt-server-schema.json
+$schema: xorcery-schema.json
 jwt:
   server:
     enabled: "{{ defaults.enabled }}"

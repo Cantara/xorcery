@@ -1,4 +1,4 @@
-$schema: xorcery-reactivestreams-client-schema.json
+$schema: xorcery-schema.json
 reactivestreams:
   client:
     enabled: "{{ jetty.client.enabled }}"

@@ -1,4 +1,4 @@
-$schema: xorcery-jersey-server-override-schema.json
+$schema: xorcery-override-schema.json
 jersey:
   server:
     mediaTypes:

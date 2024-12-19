@@ -1,4 +1,4 @@
-$schema: xorcery-configuration-validation-schema.json
+$schema: xorcery-schema.json
 configuration:
   validation:
     enabled: true

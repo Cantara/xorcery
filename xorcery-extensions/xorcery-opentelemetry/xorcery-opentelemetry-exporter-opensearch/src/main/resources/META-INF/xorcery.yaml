@@ -1,4 +1,4 @@
-$schema: xorcery-opentelemetry-exporter-opensearch-schema.json
+$schema: xorcery-schema.json
 opentelemetry:
   exporters:
     reactivestreams:

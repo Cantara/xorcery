@@ -1,4 +1,4 @@
-$schema: xorcery-log4j-schema.json
+$schema: xorcery-schema.json
 log4j2:
   Configuration:
     name: Xorcery

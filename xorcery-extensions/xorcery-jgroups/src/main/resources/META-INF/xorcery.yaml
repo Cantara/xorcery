@@ -1,4 +1,4 @@
-$schema: xorcery-jgroups-schema.json
+$schema: xorcery-schema.json
 jgroups:
   enabled: "{{ defaults.enabled }}"
   channels: {}

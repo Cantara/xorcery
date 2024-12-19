@@ -1,4 +1,4 @@
-$schema: xorcery-dns-multicast-schema.json
+$schema: xorcery-schema.json
 dns:
   multicast:
     enabled: "{{ defaults.enabled }}"

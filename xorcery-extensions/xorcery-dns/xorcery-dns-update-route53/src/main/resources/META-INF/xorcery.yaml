@@ -1,4 +1,4 @@
-$schema: xorcery-dns-update-route53-schema.json
+$schema: xorcery-schema.json
 dns:
   route53:
     region: "aws-global"

@@ -1,4 +1,4 @@
-$schema: xorcery-certificates-letsencrypt-schema.json
+$schema: xorcery-schema.json
 letsencrypt:
   enabled: "{{ defaults.enabled }}"
   url: "acme://letsencrypt.org"

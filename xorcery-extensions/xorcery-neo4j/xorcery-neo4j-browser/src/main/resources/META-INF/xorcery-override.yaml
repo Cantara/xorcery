@@ -1,4 +1,4 @@
-$schema: xorcery-neo4j-browser-override-schema.json
+$schema: xorcery-override-schema.json
 neo4jdatabase:
   settings:
     server:

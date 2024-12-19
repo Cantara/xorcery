@@ -1,4 +1,4 @@
-$schema: xorcery-dns-client-schema.json
+$schema: xorcery-schema.json
 dns:
   client:
     timeout: 60s

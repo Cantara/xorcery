@@ -1,4 +1,4 @@
-$schema: xorcery-secrets-aws-schema.json
+$schema: xorcery-schema.json
 secrets:
   aws:
     enabled: "{{ aws.auth.enabled }}"

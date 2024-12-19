@@ -1,4 +1,4 @@
-$schema: xorcery-neo4j-embedded-override-schema.json
+$schema: xorcery-override-schema.json
 log4j2:
   Configuration:
     Loggers:

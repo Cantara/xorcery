@@ -1,4 +1,4 @@
-$schema: xorcery-jersey-client-schema.json
+$schema: xorcery-schema.json
 jersey:
   client:
     enabled: "{{ jetty.client.enabled }}"

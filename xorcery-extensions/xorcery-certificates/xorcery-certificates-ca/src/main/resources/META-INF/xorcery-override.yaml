@@ -1,4 +1,4 @@
-$schema: xorcery-certificates-ca-override-schema.json
+$schema: xorcery-override-schema.json
 keystores:
   stores:
   - name: castore

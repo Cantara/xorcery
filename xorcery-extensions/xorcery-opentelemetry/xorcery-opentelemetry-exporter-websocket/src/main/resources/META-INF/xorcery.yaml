@@ -1,4 +1,4 @@
-$schema: xorcery-opentelemetry-exporter-websocket-schema.json
+$schema: xorcery-schema.json
 opentelemetry:
   exporters:
     websocket:

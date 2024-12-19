@@ -1,4 +1,4 @@
-$schema: xorcery-thymeleaf-jsonapi-override-schema.json
+$schema: xorcery-override-schema.json
 jersey:
   server:
     register:

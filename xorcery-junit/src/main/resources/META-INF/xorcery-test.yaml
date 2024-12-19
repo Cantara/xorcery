@@ -1,4 +1,4 @@
-$schema: xorcery-junit-override-schema.json
+$schema: xorcery-override-schema.json
 jetty.client.ssl.keystore: "ssl"
 jetty.client.ssl.truststore: "truststore"
 

@@ -1,4 +1,4 @@
-$schema: xorcery-certificates-client-schema.json
+$schema: xorcery-schema.json
 certificates:
   client:
     enabled: "{{ defaults.enabled }}"

@@ -1,4 +1,4 @@
-$schema: xorcery-certificates-provisioning-schema.json
+$schema: xorcery-schema.json
 certificates:
   enabled: "{{ defaults.enabled }}"
   keystore: "ssl"

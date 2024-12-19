@@ -1,4 +1,4 @@
-$schema: xorcery-dns-server-schema.json
+$schema: xorcery-schema.json
 dns:
   server:
     enabled: "{{ defaults.enabled }}"

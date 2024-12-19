@@ -1,0 +1,518 @@
+{
+  "$id" : "http://xorcery.dev/applications/dev.xorcery/xorcery-eventstore-client/override-schema",
+  "title" : "xorcery-eventstore-client configuration override JSON Schema",
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "properties" : {
+    "instance" : {
+      "$ref" : "#/$defs/instance"
+    },
+    "application" : {
+      "$ref" : "#/$defs/application"
+    },
+    "system" : {
+      "$ref" : "#/$defs/system"
+    },
+    "defaults" : {
+      "$ref" : "#/$defs/defaults"
+    },
+    "hk2" : {
+      "$ref" : "#/$defs/hk2"
+    },
+    "DefaultRunLevelContext" : {
+      "$ref" : "#/$defs/DefaultRunLevelContext"
+    },
+    "dns" : {
+      "$ref" : "#/$defs/dns"
+    },
+    "jetty" : {
+      "$ref" : "#/$defs/jetty"
+    },
+    "keystores" : {
+      "$ref" : "#/$defs/keystores"
+    },
+    "secrets" : {
+      "$ref" : "#/$defs/secrets"
+    },
+    "opentelemetry" : {
+      "$ref" : "#/$defs/opentelemetry"
+    },
+    "yamlfilepublisher" : {
+      "$ref" : "#/$defs/yamlfilepublisher"
+    },
+    "eventstore" : {
+      "$ref" : "#/$defs/eventstore"
+    }
+  },
+  "$defs" : {
+    "instance" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "id" : {
+          "type" : "string",
+          "default" : "{{ instance.host}}.{{ application.name}}",
+          "description" : "Default: {{ instance.host}}.{{ application.name}} (service.application)"
+        },
+        "host" : {
+          "type" : "string",
+          "default" : "{{ CALCULATED.hostName }}",
+          "description" : "Default: {{ CALCULATED.hostName }} (service)"
+        },
+        "fqdn" : {
+          "type" : "string",
+          "default" : "{{ instance.host }}.{{ instance.domain }}",
+          "description" : "Default: {{ instance.host }}.{{ instance.domain }} (service.xorcery.test)"
+        },
+        "ip" : {
+          "type" : "string",
+          "default" : "{{ CALCULATED.ip | null }}",
+          "description" : "Default: {{ CALCULATED.ip | null }} (192.168.0.2)"
+        },
+        "domain" : {
+          "type" : "string",
+          "default" : "xorcery.test",
+          "description" : "Default: xorcery.test"
+        },
+        "environment" : {
+          "type" : "string",
+          "default" : "development",
+          "description" : "Default: development"
+        },
+        "tags" : {
+          "type" : [ "array", "string" ]
+        },
+        "home" : {
+          "type" : "string",
+          "default" : "{{ SYSTEM.user_dir }}",
+          "description" : "Default: {{ SYSTEM.user_dir }} ({{ SYSTEM.user_dir }})"
+        },
+        "resources" : {
+          "type" : "string",
+          "default" : "{{ instance.home }}",
+          "description" : "Default: {{ instance.home }} ({{ instance.home }})"
+        },
+        "uri" : {
+          "type" : "string",
+          "default" : "http://{{ instance.fqdn }}/",
+          "description" : "Default: http://{{ instance.fqdn }}/ (http://service.xorcery.test/)"
+        },
+        "api" : {
+          "type" : "string",
+          "default" : "{{ instance.uri }}api/",
+          "description" : "Default: {{ instance.uri }}api/ (http://service.xorcery.test/api/)"
+        },
+        "locale" : {
+          "default" : null,
+          "description" : "Default: null"
+        },
+        "timeZone" : {
+          "default" : null,
+          "description" : "Default: null"
+        }
+      }
+    },
+    "application" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "default" : "application",
+          "description" : "Default: application"
+        },
+        "version" : {
+          "type" : "string",
+          "default" : "unknown",
+          "description" : "Default: unknown"
+        }
+      }
+    },
+    "system" : {
+      "type" : "object",
+      "additionalProperties" : true,
+      "properties" : { }
+    },
+    "defaults" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        },
+        "connectTimeout" : {
+          "type" : "string",
+          "default" : "5s",
+          "description" : "Default: 5s"
+        },
+        "idleTimeout" : {
+          "type" : "string",
+          "default" : "-1s",
+          "description" : "Default: -1s"
+        },
+        "development" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        }
+      }
+    },
+    "hk2" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "threadPolicy" : {
+          "type" : "string",
+          "default" : "FULLY_THREADED",
+          "description" : "Default: FULLY_THREADED"
+        },
+        "threadCount" : {
+          "type" : [ "number", "string" ],
+          "default" : 1,
+          "description" : "Default: 1"
+        },
+        "runLevel" : {
+          "type" : [ "number", "string" ],
+          "default" : 20,
+          "description" : "Default: 20"
+        },
+        "immediateScope" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "state" : {
+              "type" : "string",
+              "default" : "RUNNING",
+              "description" : "Default: RUNNING"
+            }
+          }
+        },
+        "threadScope" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        },
+        "names" : {
+          "type" : [ "array", "string" ]
+        }
+      }
+    },
+    "DefaultRunLevelContext" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        }
+      }
+    },
+    "dns" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "nameServers" : {
+              "type" : [ "array", "string" ]
+            },
+            "search" : {
+              "type" : [ "array", "string" ]
+            },
+            "hosts" : {
+              "type" : [ "array", "string" ],
+              "additionalProperties" : true,
+              "items" : {
+                "type" : "object",
+                "properties" : {
+                  "name" : {
+                    "description" : "Host name",
+                    "type" : "string"
+                  },
+                  "url" : {
+                    "description" : "IP or URL",
+                    "type" : [ "array", "string" ],
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              }
+            },
+            "timeout" : {
+              "type" : "string",
+              "default" : "10s",
+              "description" : "Default: 10s"
+            },
+            "forceTcp" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            }
+          }
+        }
+      }
+    },
+    "jetty" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
+            },
+            "connectTimeout" : {
+              "type" : "string",
+              "default" : "5s",
+              "description" : "Default: 5s"
+            },
+            "requestBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            },
+            "reusePort" : {
+              "type" : [ "boolean", "string" ],
+              "default" : false,
+              "description" : "Default: false"
+            },
+            "http2" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ jetty.client.idleTimeout }}",
+                  "description" : "Default: {{ jetty.client.idleTimeout }} (-1s)"
+                }
+              }
+            },
+            "ssl" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.client.enabled }}",
+                  "description" : "Default: {{ jetty.client.enabled }} (true)"
+                },
+                "alias" : {
+                  "type" : "string",
+                  "default" : "self",
+                  "description" : "Default: self"
+                },
+                "keystore" : {
+                  "default" : null,
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
+                },
+                "truststore" : {
+                  "default" : null,
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
+                },
+                "endpointIdentificationAlgorithm" : {
+                  "type" : "string",
+                  "default" : "HTTPS",
+                  "description" : "Default: HTTPS"
+                },
+                "trustAll" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "keystores" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "defaultPassword" : {
+          "type" : "string",
+          "default" : "secret:password",
+          "description" : "Default: secret:password"
+        },
+        "stores" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "properties" : {
+              "name" : {
+                "type" : "string"
+              },
+              "path" : {
+                "type" : "string"
+              },
+              "password" : {
+                "type" : "string"
+              },
+              "addRootCa" : {
+                "type" : [ "boolean", "string" ],
+                "default" : false
+              },
+              "template" : {
+                "type" : [ "string", "null" ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "secrets" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "keystore" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{secrets.enabled}}",
+              "description" : "Default: {{secrets.enabled}} (true)"
+            },
+            "name" : {
+              "type" : "string",
+              "default" : "secrets",
+              "description" : "Default: secrets"
+            }
+          }
+        },
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{defaults.enabled}}",
+          "description" : "Default: {{defaults.enabled}} (true)"
+        },
+        "default" : {
+          "type" : "string",
+          "default" : "secret",
+          "description" : "Default: secret"
+        },
+        "env" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
+        },
+        "system" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
+        }
+      }
+    },
+    "opentelemetry" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "global" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ opentelemetry.enabled ? false | true }}",
+              "description" : "Default: {{ opentelemetry.enabled ? false | true }} (true)"
+            }
+          }
+        }
+      }
+    },
+    "yamlfilepublisher" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "publishers" : {
+          "type" : [ "array", "string" ]
+        }
+      }
+    },
+    "eventstore" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "uri" : {
+          "type" : "string",
+          "default" : "esdb://localhost:2113?tls=false",
+          "description" : "Default: esdb://localhost:2113?tls=false"
+        },
+        "client" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

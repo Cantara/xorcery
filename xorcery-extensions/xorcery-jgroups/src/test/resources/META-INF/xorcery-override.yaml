@@ -1,0 +1,13 @@
+$schema: xorcery-override-schema.json
+
+log4j2:
+  Configuration:
+    thresholdFilter:
+      level: debug
+    Loggers:
+      logger:
+      - name: "dev.xorcery.core"
+        level: "debug"
+
+system:
+  "org.jvnet.hk2.properties.debug.descriptor.file.finder": true

@@ -1,4 +1,4 @@
-$schema: xorcery-opentelemetry-exporter-opensearch-override-schema.json
+$schema: xorcery-override-schema.json
 
 opensearch:
   indexTemplates:

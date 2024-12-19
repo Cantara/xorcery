@@ -35,6 +35,10 @@
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-opensearch-client</artifactId>
     </dependency>
+    <dependency>
+        <groupId>dev.xorcery</groupId>
+        <artifactId>xorcery-opensearch-templates</artifactId>
+    </dependency>
 
     <dependency>
         <groupId>io.opentelemetry</groupId>

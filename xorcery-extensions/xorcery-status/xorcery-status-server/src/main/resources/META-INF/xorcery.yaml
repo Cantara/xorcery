@@ -1,3 +1,3 @@
-$schema: xorcery-status-server-schema.json
+$schema: xorcery-schema.json
 status:
   enabled: "{{ defaults.enabled }}"

@@ -1,4 +1,4 @@
-$schema: xorcery-certificates-ca-schema.json
+$schema: xorcery-schema.json
 intermediateca:
   enabled: "{{ defaults.enabled }}"
   alias: "intermediate"

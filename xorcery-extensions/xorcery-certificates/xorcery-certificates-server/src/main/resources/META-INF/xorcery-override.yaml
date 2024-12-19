@@ -1,3 +1,3 @@
-$schema: xorcery-certificates-server-override-schema.json
+$schema: xorcery-override-schema.json
 jersey.server.register:
   - dev.xorcery.certificates.server.resources.CertificateRequestResource

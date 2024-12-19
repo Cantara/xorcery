@@ -1,4 +1,4 @@
-$schema: xorcery-opentelemetry-sdk-schema.json
+$schema: xorcery-schema.json
 opentelemetry:
   enabled: "{{ defaults.enabled }}"
   install: true

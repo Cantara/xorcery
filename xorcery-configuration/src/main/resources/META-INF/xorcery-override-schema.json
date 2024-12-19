@@ -1,6 +1,5 @@
 {
-  "$id" : "http://xorcery.dev/applications/dev.xorcery/xorcery-configuration/override-schema",
-  "title" : "xorcery-configuration configuration override JSON Schema",
+  "title" : "xorcery.yaml override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -31,21 +30,22 @@
         "id" : {
           "type" : "string",
           "default" : "{{ instance.host}}.{{ application.name}}",
-          "description" : "Default: {{ instance.host}}.{{ application.name}} (.application)"
+          "description" : "Default: {{ instance.host}}.{{ application.name}} (service.application)"
         },
         "host" : {
           "type" : "string",
           "default" : "{{ CALCULATED.hostName }}",
-          "description" : "Default: {{ CALCULATED.hostName }} ({{ CALCULATED.hostName }})"
+          "description" : "Default: {{ CALCULATED.hostName }} (service)"
         },
         "fqdn" : {
           "type" : "string",
           "default" : "{{ instance.host }}.{{ instance.domain }}",
-          "description" : "Default: {{ instance.host }}.{{ instance.domain }} (.xorcery.test)"
+          "description" : "Default: {{ instance.host }}.{{ instance.domain }} (service.xorcery.test)"
         },
         "ip" : {
+          "type" : "string",
           "default" : "{{ CALCULATED.ip | null }}",
-          "description" : "Default: null"
+          "description" : "Default: {{ CALCULATED.ip | null }} (192.168.0.2)"
         },
         "domain" : {
           "type" : "string",
@@ -63,24 +63,28 @@
         "home" : {
           "type" : "string",
           "default" : "{{ SYSTEM.user_dir }}",
-          "description" : "Default: {{ SYSTEM.user_dir }} ({{ SYSTEM.user_dir }})"
+          "description" : "Default: {{ SYSTEM.user_dir }} (C:\\Users\\ricka\\IdeaProjects\\xorcery)"
         },
         "resources" : {
           "type" : "string",
           "default" : "{{ instance.home }}",
-          "description" : "Default: {{ instance.home }} ({{ instance.home }})"
+          "description" : "Default: {{ instance.home }} (C:\\Users\\ricka\\IdeaProjects\\xorcery)"
         },
         "uri" : {
           "type" : "string",
           "default" : "http://{{ instance.fqdn }}/",
-          "description" : "Default: http://{{ instance.fqdn }}/ (http://.xorcery.test/)"
+          "description" : "Default: http://{{ instance.fqdn }}/ (http://service.xorcery.test/)"
         },
         "api" : {
           "type" : "string",
           "default" : "{{ instance.uri }}api/",
-          "description" : "Default: {{ instance.uri }}api/ (http://.xorcery.test/api/)"
+          "description" : "Default: {{ instance.uri }}api/ (http://service.xorcery.test/api/)"
         },
         "locale" : {
+          "default" : null,
+          "description" : "Default: null"
+        },
+        "timeZone" : {
           "default" : null,
           "description" : "Default: null"
         }
@@ -127,6 +131,11 @@
           "description" : "Default: -1s"
         },
         "development" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        },
+        "test" : {
           "type" : [ "boolean", "string" ],
           "default" : false,
           "description" : "Default: false"

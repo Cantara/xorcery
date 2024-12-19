@@ -13,6 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-$schema: xorcery-graphql-neo4j-override-schema.json
+$schema: xorcery-override-schema.json
 jersey.server.register:
     - dev.xorcery.graphql.server.jsonapi.apiGraphQLAPIResource
