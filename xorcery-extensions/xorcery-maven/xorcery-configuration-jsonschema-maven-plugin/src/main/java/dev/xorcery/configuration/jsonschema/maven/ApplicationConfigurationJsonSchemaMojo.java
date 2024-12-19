@@ -22,16 +22,18 @@ import java.util.zip.ZipEntry;
 @Mojo(name = "application-configuration-jsonschema", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
 
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/xorcery-schema.json")
-    private String applicationSchemaFile;
+    @Parameter(defaultValue = "xorcery")
+    public String baseName;
 
-    @Parameter(defaultValue = "${project.basedir}/src/main/resources/xorcery-schema.json")
-    private String generatedSchemaFile;
+    @Parameter(defaultValue = "${project.basedir}/src/main/resources/META-INF/")
+    private String mainMetaInf;
+
+    @Parameter(defaultValue = "${project.basedir}/src/main/resources/")
+    private String mainResources;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
 
-        if (!project.getPackaging().equals("jar"))
-        {
+        if (!project.getPackaging().equals("jar")) {
             getLog().info("Packaging is not a jar, skipping JSON schema generation");
             return;
         }
@@ -40,11 +42,6 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
 
             List<Artifact> dependencies = getDependencies();
 
-            JsonSchema schema = new JsonSchema.Builder()
-                    .id("http://xorcery.dev/applications/" + project.getGroupId() + "/" + project.getArtifactId() + "/schema")
-                    .title(project.getArtifactId() + " configuration JSON Schema")
-                    .build();
-
             JsonSchema uberSchema = new JsonSchema.Builder().build();
             JsonMapper jsonMapper = new JsonMapper();
             SchemaMerger schemaMerger = new SchemaMerger();
@@ -52,12 +49,10 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                 if (!dependency.getFile().getName().endsWith(".jar"))
                     continue;
                 try (JarFile jarFile = new JarFile(dependency.getFile())) {
-                    ZipEntry zipEntry = jarFile.getEntry("META-INF/"+dependency.getArtifactId()+"-schema.json");
+                    ZipEntry zipEntry = jarFile.getEntry("META-INF/" + baseName + "-schema.json");
                     if (zipEntry != null) {
-                        try (InputStream configStream = jarFile.getInputStream(zipEntry))
-                        {
-                            if (jsonMapper.readTree(configStream) instanceof ObjectNode moduleSchema)
-                            {
+                        try (InputStream configStream = jarFile.getInputStream(zipEntry)) {
+                            if (jsonMapper.readTree(configStream) instanceof ObjectNode moduleSchema) {
                                 moduleSchema.remove("title");
                                 moduleSchema.remove("$id");
                                 uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
@@ -65,17 +60,20 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
                         }
                     }
                 } catch (Throwable e) {
-                    getLog().error("Could not read schema from "+dependency.getFile().toString(), e);
+                    getLog().error("Could not read schema from " + dependency.getFile().toString(), e);
                 }
             }
 
-            File applicationSchemaFile = new File(this.applicationSchemaFile);
-            if (applicationSchemaFile.exists())
-            {
-                try (InputStream configStream = new FileInputStream(applicationSchemaFile))
-                {
-                    if (jsonMapper.readTree(configStream) instanceof ObjectNode moduleSchema)
-                    {
+            uberSchema = new JsonSchema.Builder(uberSchema.json())
+                    .title(baseName + " application configuration JSON Schema")
+                    .build();
+
+
+            // Merge in own schema
+            File customApplicationSchemaFile = new File(mainMetaInf+baseName+"-schema.json");
+            if (customApplicationSchemaFile.exists()) {
+                try (InputStream configStream = new FileInputStream(customApplicationSchemaFile)) {
+                    if (jsonMapper.readTree(configStream) instanceof ObjectNode moduleSchema) {
                         moduleSchema.remove("title");
                         moduleSchema.remove("$id");
                         uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
@@ -84,26 +82,24 @@ public class ApplicationConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo
             }
 
             // Check if empty
-            if (uberSchema.json().size() == 2)
-            {
+            if (uberSchema.json().size() == 2) {
                 return;
             }
 
-            File xorceryConfigJsonSchemaFile = new File(generatedSchemaFile);
-            getLog().debug("xorcery-schema.json: " + xorceryConfigJsonSchemaFile + "(" + xorceryConfigJsonSchemaFile.exists() + ")");
+            File applicationConfigJsonSchemaFile = new File(mainResources+baseName+"-schema.json");
+            getLog().debug(baseName+"-schema.json: " + applicationConfigJsonSchemaFile + "(" + applicationConfigJsonSchemaFile.exists() + ")");
 
             // Read existing schema and see if it has changed
-            if (xorceryConfigJsonSchemaFile.exists())
-            {
-                JsonNode existingSchema = jsonMapper.readTree(xorceryConfigJsonSchemaFile);
+            if (applicationConfigJsonSchemaFile.exists()) {
+                JsonNode existingSchema = jsonMapper.readTree(applicationConfigJsonSchemaFile);
                 if (existingSchema.equals(uberSchema.json()))
                     return;
             }
 
-            jsonMapper.writerWithDefaultPrettyPrinter().writeValue(xorceryConfigJsonSchemaFile, uberSchema.json());
-            getLog().info("Updated application configuration JSON Schema definition: "+xorceryConfigJsonSchemaFile);
+            jsonMapper.writerWithDefaultPrettyPrinter().writeValue(applicationConfigJsonSchemaFile, uberSchema.json());
+            getLog().info("Updated application configuration JSON Schema definition: " + applicationConfigJsonSchemaFile);
         } catch (Throwable e) {
-            throw new MojoFailureException("Could not create JSON Schema for xorcery.yaml configuration", e);
+            throw new MojoFailureException("Could not create JSON Schema for "+baseName+".yaml configuration", e);
         }
     }
 }
