@@ -15,11 +15,9 @@
  */
 package dev.xorcery.log4j;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.core.Xorcery;
-import dev.xorcery.util.Resources;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
@@ -32,7 +30,6 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 @Service(name = "log4j2", metadata = "enabled=log4j2")
@@ -44,8 +41,7 @@ public class LoggerContextFactory
             final LoggerContext loggerContext;
             String yaml = new YAMLMapper().writeValueAsString(configuration.getConfiguration("log4j2").json());
             byte[] log4j2YamlConfig = yaml.getBytes(StandardCharsets.UTF_8);
-            URL baseConfigUrl = Resources.getResource("META-INF/xorcery-defaults.yaml").orElseThrow();
-            ConfigurationSource configurationSource = new ConfigurationSource(new ByteArrayInputStream(log4j2YamlConfig), baseConfigUrl);
+            ConfigurationSource configurationSource = new ConfigurationSource(new ByteArrayInputStream(log4j2YamlConfig));
 
             // Reconfigure or initialize as appropriate
             if (LogManager.getFactory().hasContext(Configurator.class.getName(), LoggerContextFactory.class.getClassLoader(), false)) {
@@ -56,7 +52,7 @@ public class LoggerContextFactory
                 loggerContext = Configurator.initialize(null, configurationSource, null);
             }
             return loggerContext;
-        } catch (JsonProcessingException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
