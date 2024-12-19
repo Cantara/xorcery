@@ -67,7 +67,7 @@ public class EventStoreProjectionsService {
                     // Just load from classpath
                     try (InputStream in = ClassLoader.getSystemResourceAsStream(file)) {
                         if (in == null) {
-                            logger.error("Could not find projection query " + projection.getQuery());
+                            logger.info("Could not find projection query " + projection.getQuery());
                         } else {
                             projectionQuery = new String(in.readAllBytes(), StandardCharsets.UTF_8);
                         }
@@ -86,7 +86,7 @@ public class EventStoreProjectionsService {
                         try {
                             client.update(projectionName, projectionQuery, UpdateProjectionOptions.get()
                                     .emitEnabled(projection.isEmitEnabled())).join();
-                            logger.error("Updated projection " + projectionName);
+                            logger.info("Updated projection " + projectionName);
                             updatedProjections.add(projectionDetails);
                         } catch (Exception e) {
                             logger.error("Could not update projection " + projectionName, e);
@@ -98,7 +98,7 @@ public class EventStoreProjectionsService {
                     try {
                         client.create(projectionName, projectionQuery, CreateProjectionOptions.get()
                                 .emitEnabled(projection.isEmitEnabled())).join();
-                        logger.error("Created projection " + projectionName);
+                        logger.info("Created projection " + projectionName);
 
                         if (projection.isEnabled())
                         {
@@ -115,7 +115,7 @@ public class EventStoreProjectionsService {
                         .filter(details -> details.getName().equals(projection.getName()) && !details.getStatus().equals("Running"))
                         .findFirst().ifPresent(details ->
                                 {
-                                    logger.error("Enabled projection " + projectionName);
+                                    logger.info("Enabled projection " + projectionName);
                                     client.enable(details.getName()).join();
                                 }
                         );
@@ -125,7 +125,7 @@ public class EventStoreProjectionsService {
                         .filter(details -> details.getName().equals(projection.getName()) && details.getStatus().equals("Running"))
                         .findFirst().ifPresent(details ->
                                 {
-                                    logger.error("Disabled projection " + details);
+                                    logger.info("Disabled projection " + details.getName());
                                     client.disable(details.getName()).join();
                                 }
                         );
@@ -142,7 +142,7 @@ public class EventStoreProjectionsService {
             try {
                 client.disable(projectionDetails.getName()).join();
                 client.delete(projectionDetails.getName()).join();
-                logger.error("Deleted projection " + projectionDetails.getName());
+                logger.info("Deleted projection " + projectionDetails.getName());
             } catch (Exception e) {
                 logger.error("Could not delete projection " + projectionDetails.getName(), e);
             }
