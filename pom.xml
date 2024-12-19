@@ -634,7 +634,7 @@
                 <plugin>
                     <groupId>dev.xorcery</groupId>
                     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.152.7</version>
+                    <version>0.153.0</version>
                 </plugin>
 <!--
                 <plugin>
