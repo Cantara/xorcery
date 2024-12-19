@@ -153,13 +153,13 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
             }
         }
 
-        File configOverrideJsonSchemaFile = new File(mainMetaInf+baseName+"-override-schema.yaml");
-        File testConfigOverrideJsonSchemaFile = new File(mainMetaInf+baseName+"-test-override-schema.yaml");
+        File configOverrideJsonSchemaFile = new File(mainMetaInf+baseName+"-override-schema.json");
+        File testConfigOverrideJsonSchemaFile = new File(testMetaInf+baseName+"-test-override-schema.json");
         getLog().debug("Module override JSON schema: " + configOverrideJsonSchemaFile + "(" + configOverrideJsonSchemaFile.exists() + ")");
         getLog().debug("Module test override JSON schema: " + testConfigOverrideJsonSchemaFile + "(" + testConfigOverrideJsonSchemaFile.exists() + ")");
 
         // Merge in own module schema
-        File configJsonSchemaFile = new File(mainMetaInf+baseName+".yaml");
+        File configJsonSchemaFile = new File(mainMetaInf+baseName+"-schema.json");
         if (configJsonSchemaFile.exists())
         {
             try (InputStream configStream = new FileInputStream(configJsonSchemaFile))
