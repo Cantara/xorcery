@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-reactivestreams</artifactId>
-        <version>0.153.0</version>
+        <version>0.153.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-reactivestreams-extras</artifactId>
