@@ -632,25 +632,25 @@
                         <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter" />
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>dev.xorcery</groupId>
-                    <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                    <version>0.152.4</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.maven.shared</groupId>
-                            <artifactId>maven-dependency-tree</artifactId>
-                            <version>3.3.0</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
-<!--
-                <plugin>
-                    <groupId>dev.xorcery</groupId>
-                    <artifactId>xorcery-translation-resourcebundle-maven-plugin</artifactId>
-                    <version>0.127.3</version>
-                </plugin>
--->
+                <!--
+                                <plugin>
+                                    <groupId>dev.xorcery</groupId>
+                                    <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
+                                    <version>0.152.4</version>
+                                    <dependencies>
+                                        <dependency>
+                                            <groupId>org.apache.maven.shared</groupId>
+                                            <artifactId>maven-dependency-tree</artifactId>
+                                            <version>3.3.0</version>
+                                        </dependency>
+                                    </dependencies>
+                                </plugin>
+                                <plugin>
+                                    <groupId>dev.xorcery</groupId>
+                                    <artifactId>xorcery-translation-resourcebundle-maven-plugin</artifactId>
+                                    <version>0.127.3</version>
+                                </plugin>
+                -->
             </plugins>
         </pluginManagement>
         <plugins>
@@ -680,6 +680,7 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>3.8.1</version>
             </plugin>
+<!--
             <plugin>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
@@ -693,6 +694,7 @@
                     </execution>
                 </executions>
             </plugin>
+-->
         </plugins>
     </build>
 
