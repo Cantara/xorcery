@@ -26,6 +26,7 @@ defaults:
   connectTimeout: 5s
   idleTimeout: -1s
   development: false
+  test: false
 
 hk2:
   threadPolicy: "FULLY_THREADED"

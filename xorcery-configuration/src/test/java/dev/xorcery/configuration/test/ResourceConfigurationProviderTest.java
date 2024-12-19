@@ -1,4 +1,4 @@
-package dev.xorcery.configuration.builder.test;
+package dev.xorcery.configuration.test;
 
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.builder.ConfigurationBuilder;

@@ -1,4 +1,4 @@
-package dev.xorcery.configuration.builder.test;
+package dev.xorcery.configuration.test;
 
 import dev.xorcery.configuration.resourcebundle.ResourceBundles;
 import org.junit.jupiter.api.Assertions;

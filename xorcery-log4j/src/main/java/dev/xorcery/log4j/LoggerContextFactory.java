@@ -49,7 +49,7 @@ public class LoggerContextFactory
                 Configurator.reconfigure(new YamlConfiguration(context, configurationSource));
                 loggerContext = context;
             } else {
-                loggerContext = Configurator.initialize(null, configurationSource, null);
+                loggerContext = Configurator.initialize(null, new YamlConfiguration(null, configurationSource), null);
             }
             return loggerContext;
         } catch (IOException e) {

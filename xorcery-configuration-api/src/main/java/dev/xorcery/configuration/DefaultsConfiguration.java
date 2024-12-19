@@ -21,6 +21,10 @@ import java.time.Duration;
  * Configuration wrapper for standard defaults.
  */
 public record DefaultsConfiguration(Configuration configuration) {
+    public static DefaultsConfiguration get(Configuration configuration){
+        return new DefaultsConfiguration(configuration.getConfiguration("defaults"));
+    }
+
     public boolean isEnabled() {
         return configuration.getBoolean("enabled").orElse(false);
     }
@@ -36,5 +40,10 @@ public record DefaultsConfiguration(Configuration configuration) {
     public boolean isDevelopment()
     {
         return configuration.getBoolean("development").orElse(false);
+    }
+
+    public boolean isTest()
+    {
+        return configuration.getBoolean("test").orElse(false);
     }
 }

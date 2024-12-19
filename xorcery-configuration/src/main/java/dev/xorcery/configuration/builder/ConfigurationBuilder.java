@@ -124,7 +124,6 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
 
     public ConfigurationBuilder addDefaults()
     {
-        addDefault();
         addModules();
         addModuleOverrides();
         addApplication();
@@ -140,13 +139,11 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
     public ConfigurationBuilder addTestDefaults()
     {
         // First add the standard configuration
-        addDefault();
         addModules();
         addModuleOverrides();
         addApplication();
 
         // Then add the test configuration on top
-        addTestDefault();
         addModulesTest();
         addApplicationTest();
 
@@ -164,12 +161,6 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
 
         return this;
     }
-
-    public ConfigurationBuilder addDefault() throws UncheckedIOException {
-        // Load default
-        return addResource("META-INF/"+baseName+"-defaults.yaml");
-    }
-
 
     public ConfigurationBuilder addModules() throws UncheckedIOException {
         // Load modules
@@ -241,20 +232,6 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return this;
-    }
-
-    public ConfigurationBuilder addTestDefault() throws UncheckedIOException {
-        // Load test defaults
-        Resources.getResource("META-INF/"+baseName+"-defaults-test.yaml").ifPresent(resource ->
-        {
-            try (InputStream in = resource.openStream()) {
-                addYaml(in);
-                logger.log("Loaded " + resource);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        });
         return this;
     }
 
