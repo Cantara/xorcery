@@ -1,6 +1,5 @@
 {
-  "$id" : "http://xorcery.dev/applications/dev.xorcery/xorcery-jsonapi-jaxrs/override-schema",
-  "title" : "xorcery-jsonapi-jaxrs configuration override JSON Schema",
+  "title" : "xorcery.yaml override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -70,12 +69,12 @@
         "home" : {
           "type" : "string",
           "default" : "{{ SYSTEM.user_dir }}",
-          "description" : "Default: {{ SYSTEM.user_dir }} ({{ SYSTEM.user_dir }})"
+          "description" : "Default: {{ SYSTEM.user_dir }} (C:\\Users\\ricka\\IdeaProjects\\xorcery)"
         },
         "resources" : {
           "type" : "string",
           "default" : "{{ instance.home }}",
-          "description" : "Default: {{ instance.home }} ({{ instance.home }})"
+          "description" : "Default: {{ instance.home }} (C:\\Users\\ricka\\IdeaProjects\\xorcery)"
         },
         "uri" : {
           "type" : "string",
@@ -138,6 +137,11 @@
           "description" : "Default: -1s"
         },
         "development" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        },
+        "test" : {
           "type" : [ "boolean", "string" ],
           "default" : false,
           "description" : "Default: false"

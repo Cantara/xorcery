@@ -1,4 +1,5 @@
 {
+  "title" : "xorcery.yaml override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -2407,6 +2408,5 @@
         }
       }
     }
-  },
-  "title" : "xorcery application configuration JSON Schema"
+  }
 }
