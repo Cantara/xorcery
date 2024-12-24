@@ -139,12 +139,13 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         JsonSchema uberSchema = new JsonSchema.Builder()
                 .title(baseName + ".yaml override JSON Schema")
                 .build();
+        JsonSchema uberTestSchema = new JsonSchema.Builder()
+                .title(baseName + ".yaml test override JSON Schema")
+                .build();
         JsonMapper jsonMapper = new JsonMapper();
         SchemaMerger schemaMerger = new SchemaMerger();
         for (Artifact dependency : dependencies) {
             if (!dependency.getFile().getName().endsWith(".jar"))
-                continue;
-            if (dependency.getScope().equals("test"))
                 continue;
             try (JarFile jarFile = new JarFile(dependency.getFile())) {
                 ZipEntry zipEntry = jarFile.getEntry("META-INF/"+baseName+"-schema.json");
@@ -159,7 +160,12 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                             {
                                 properties.remove("$schema");
                             }
-                            uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
+                            if (dependency.getScope().equals("test")) {
+                                uberTestSchema = schemaMerger.combine(uberTestSchema, new JsonSchema(moduleSchema));
+                            } else {
+                                uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
+                                uberTestSchema = schemaMerger.combine(uberTestSchema, new JsonSchema(moduleSchema));
+                            }
                         }
                     }
                 }
@@ -184,6 +190,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
                     moduleSchema.remove("title");
                     moduleSchema.remove("$id");
                     uberSchema = schemaMerger.combine(uberSchema, new JsonSchema(moduleSchema));
+                    uberTestSchema = schemaMerger.combine(uberTestSchema, new JsonSchema(moduleSchema));
                 }
             }
         }
@@ -192,22 +199,34 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
         if (configOverrideJsonSchemaFile.exists())
         {
             JsonNode existingSchema = jsonMapper.readTree(configOverrideJsonSchemaFile);
-            if (existingSchema.equals(uberSchema.json()))
-                return;
+            if (!existingSchema.equals(uberSchema.json()) && !uberSchema.json().path("properties").isEmpty()) {
+                configOverrideJsonSchemaFile.getParentFile().mkdirs();
+                jsonMapper.writerWithDefaultPrettyPrinter().writeValue(configOverrideJsonSchemaFile, uberSchema.json());
+                getLog().info("Updated module configuration override JSON Schema definition: "+configOverrideJsonSchemaFile);
+            }
+        } else{
+            if (!uberSchema.json().path("properties").isEmpty()) {
+                configOverrideJsonSchemaFile.getParentFile().mkdirs();
+                jsonMapper.writerWithDefaultPrettyPrinter().writeValue(configOverrideJsonSchemaFile, uberSchema.json());
+                getLog().info("Updated module configuration override JSON Schema definition: "+configOverrideJsonSchemaFile);
+            }
         }
 
-        // Check if empty
-        if (uberSchema.json().path("properties").isEmpty())
+        // Read existing schema and see if it has changed
+        if (testConfigOverrideJsonSchemaFile.exists())
         {
-            // Don't write an empty schema
-            getLog().info("No configuration found in dependencies, skipping module configuration override JSON Schema");
-            return;
+            JsonNode existingSchema = jsonMapper.readTree(testConfigOverrideJsonSchemaFile);
+            if (!existingSchema.equals(uberSchema.json()) && !uberTestSchema.json().path("properties").isEmpty()) {
+                testConfigOverrideJsonSchemaFile.getParentFile().mkdirs();
+                jsonMapper.writerWithDefaultPrettyPrinter().writeValue(testConfigOverrideJsonSchemaFile, uberTestSchema.json());
+                getLog().info("Updated module configuration test override JSON Schema definition: "+testConfigOverrideJsonSchemaFile);
+            }
+        } else{
+            if (!uberTestSchema.json().path("properties").isEmpty()) {
+                testConfigOverrideJsonSchemaFile.getParentFile().mkdirs();
+                jsonMapper.writerWithDefaultPrettyPrinter().writeValue(testConfigOverrideJsonSchemaFile, uberTestSchema.json());
+                getLog().info("Updated module configuration test override JSON Schema definition: "+testConfigOverrideJsonSchemaFile);
+            }
         }
-
-        configOverrideJsonSchemaFile.getParentFile().mkdirs();
-        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(configOverrideJsonSchemaFile, uberSchema.json());
-        testConfigOverrideJsonSchemaFile.getParentFile().mkdirs();
-        jsonMapper.writerWithDefaultPrettyPrinter().writeValue(testConfigOverrideJsonSchemaFile, uberSchema.json());
-        getLog().info("Updated module configuration override JSON Schema definition: "+configOverrideJsonSchemaFile);
     }
 }
