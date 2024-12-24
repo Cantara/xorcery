@@ -1,28 +1,37 @@
-defaults.enabled: false
+$schema: META-INF/xorcery-test-override-schema.json
+
+defaults:
+  enabled: false
 dns:
   client:
     enabled: true
     nameServers:
       - 127.0.0.1:8853
-secrets.enabled: true
-keystores.enabled: true
+secrets:
+  enabled: true
+keystores:
+  enabled: true
 jersey:
   server:
     register:
       - dev.xorcery.test.resources.SubjectResource
       - dev.xorcery.test.resources.ServiceResource
 
-log4j2.Configuration.thresholdFilter.level: debug
-log4j2.Configuration.Loggers.logger:
-  - name: "dev.xorcery.test"
-    level: "debug"
-  - name: "dev.xorcery.core"
-    level: "debug"
-  - name: "dev.xorcery.dns.update"
-    level: "debug"
-  - name: "dev.xorcery.dns.server"
-    level: "debug"
-#  - name: "dev.xorcery.dns.server.tcp"
-#    level: "debug"
-#  - name: "org.xbill.DNS"
-#    level: "trace"
+log4j2:
+  Configuration:
+    thresholdFilter:
+      level: debug
+    Loggers:
+      logger:
+      - name: "dev.xorcery.test"
+        level: "debug"
+      - name: "dev.xorcery.core"
+        level: "debug"
+      - name: "dev.xorcery.dns.update"
+        level: "debug"
+      - name: "dev.xorcery.dns.server"
+        level: "debug"
+    #  - name: "dev.xorcery.dns.server.tcp"
+    #    level: "debug"
+    #  - name: "org.xbill.DNS"
+    #    level: "trace"

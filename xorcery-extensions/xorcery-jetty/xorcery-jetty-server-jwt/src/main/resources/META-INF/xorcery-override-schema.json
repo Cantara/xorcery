@@ -24,14 +24,17 @@
     "configuration" : {
       "$ref" : "#/$defs/configuration"
     },
-    "log4j2" : {
-      "$ref" : "#/$defs/log4j2"
+    "jetty" : {
+      "$ref" : "#/$defs/jetty"
+    },
+    "keystores" : {
+      "$ref" : "#/$defs/keystores"
     },
     "secrets" : {
       "$ref" : "#/$defs/secrets"
     },
-    "jetty" : {
-      "$ref" : "#/$defs/jetty"
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
     }
   },
   "$defs" : {
@@ -233,6 +236,498 @@
         }
       }
     },
+    "jetty" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "server" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "scheme" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }} (https)"
+            },
+            "port" : {
+              "type" : [ "number", "string" ],
+              "default" : "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }} (443)"
+            },
+            "uri" : {
+              "type" : "string",
+              "default" : "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/",
+              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/ (https://service.xorcery.test:443/)"
+            },
+            "minThreads" : {
+              "type" : [ "number", "string" ],
+              "default" : 10,
+              "description" : "Default: 10"
+            },
+            "maxThreads" : {
+              "type" : [ "number", "string" ],
+              "default" : 150,
+              "description" : "Default: 150"
+            },
+            "outputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 32768,
+              "description" : "Default: 32768"
+            },
+            "requestHeaderSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 16384,
+              "description" : "Default: 16384"
+            },
+            "mediaTypes" : {
+              "type" : [ "object", "string" ],
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
+            },
+            "http" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "port" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 80,
+                  "description" : "Default: 80"
+                }
+              }
+            },
+            "ssl" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "port" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 443,
+                  "description" : "Default: 443"
+                },
+                "keystore" : {
+                  "default" : null,
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
+                },
+                "truststore" : {
+                  "default" : null,
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
+                },
+                "trustAll" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "needClientAuth" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "wantClientAuth" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "sniRequired" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "sniHostCheck" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "alias" : {
+                  "type" : "string",
+                  "default" : "self",
+                  "description" : "Default: self"
+                },
+                "crls" : {
+                  "default" : null,
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
+                }
+              }
+            },
+            "srv" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "priority" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 2,
+                  "description" : "Default: 2"
+                },
+                "weight" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 100,
+                  "description" : "Default: 100"
+                }
+              }
+            },
+            "log4j2" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                }
+              }
+            },
+            "sessions" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                }
+              }
+            },
+            "security" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "type" : {
+                  "type" : [ "string", "null" ],
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "constraints" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "anyOf" : [ {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "name" : {
+                          "type" : "string",
+                          "default" : "admin",
+                          "description" : "Default: admin"
+                        },
+                        "roles" : {
+                          "type" : [ "array", "string" ]
+                        }
+                      }
+                    } ]
+                  }
+                },
+                "mappings" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "required" : [ "path" ],
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "path" : {
+                        "type" : "string"
+                      },
+                      "constraint" : {
+                        "type" : [ "string", "null" ]
+                      }
+                    }
+                  }
+                },
+                "certificate" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ jetty.server.security.enabled }}",
+                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
+                    }
+                  }
+                },
+                "jwt" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ jetty.server.security.enabled }}",
+                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
+                    },
+                    "cookie" : {
+                      "type" : "string",
+                      "default" : "token",
+                      "description" : "Default: token"
+                    },
+                    "issuers" : {
+                      "type" : [ "array", "string" ],
+                      "items" : {
+                        "anyOf" : [ {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "properties" : {
+                            "name" : {
+                              "type" : "string",
+                              "default" : "default",
+                              "description" : "Default: default"
+                            },
+                            "keys" : {
+                              "type" : [ "array", "string" ],
+                              "items" : {
+                                "type" : "object",
+                                "additionalProperties" : false,
+                                "properties" : {
+                                  "kid" : {
+                                    "type" : "string",
+                                    "description" : "Key id of issuer"
+                                  },
+                                  "alg" : {
+                                    "type" : "string",
+                                    "description" : "Algorithm used (e.g. ES512)"
+                                  },
+                                  "publicKey" : {
+                                    "type" : "string",
+                                    "description" : "Public key"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        } ]
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "websockets" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "autoFragment" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.idleTimeout }}",
+                  "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
+                },
+                "inputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
+                "outputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
+                "maxFrameSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 65536,
+                  "description" : "Default: 65536"
+                },
+                "maxTextMessageSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 1048576,
+                  "description" : "Default: 1048576"
+                },
+                "maxBinaryMessageSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 1048576,
+                  "description" : "Default: 1048576"
+                }
+              }
+            },
+            "servlet" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                }
+              }
+            },
+            "gzip" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "minGzipSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 32,
+                  "description" : "Default: 32"
+                },
+                "syncFlush" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "excluded" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "mediatypes" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "methods" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "paths" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                },
+                "included" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "mediatypes" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "methods" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "paths" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "keystores" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "defaultPassword" : {
+          "type" : "string",
+          "default" : "secret:password",
+          "description" : "Default: secret:password"
+        },
+        "stores" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "properties" : {
+              "name" : {
+                "type" : "string"
+              },
+              "path" : {
+                "type" : "string"
+              },
+              "password" : {
+                "type" : "string"
+              },
+              "addRootCa" : {
+                "type" : [ "boolean", "string" ],
+                "default" : false
+              },
+              "template" : {
+                "type" : [ "string", "null" ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "secrets" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "keystore" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{secrets.enabled}}",
+              "description" : "Default: {{secrets.enabled}} (true)"
+            },
+            "name" : {
+              "type" : "string",
+              "default" : "secrets",
+              "description" : "Default: secrets"
+            }
+          }
+        },
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{defaults.enabled}}",
+          "description" : "Default: {{defaults.enabled}} (true)"
+        },
+        "default" : {
+          "type" : "string",
+          "default" : "secret",
+          "description" : "Default: secret"
+        },
+        "env" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
+        },
+        "system" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
+        }
+      }
+    },
     "log4j2" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -310,115 +805,6 @@
                     },
                     "AppenderRef" : {
                       "type" : [ "array", "string" ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "secrets" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "enabled" : {
-          "type" : [ "boolean", "string" ],
-          "default" : "{{defaults.enabled}}",
-          "description" : "Default: {{defaults.enabled}} (true)"
-        },
-        "default" : {
-          "type" : "string",
-          "default" : "secret",
-          "description" : "Default: secret"
-        },
-        "env" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
-            }
-          }
-        },
-        "system" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ secrets.enabled }}",
-              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
-            }
-          }
-        }
-      }
-    },
-    "jetty" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "server" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "security" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "jwt" : {
-                  "type" : "object",
-                  "additionalProperties" : false,
-                  "properties" : {
-                    "enabled" : {
-                      "type" : [ "boolean", "string" ],
-                      "default" : "{{ jetty.server.security.enabled }}",
-                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
-                    },
-                    "cookie" : {
-                      "type" : "string",
-                      "default" : "token",
-                      "description" : "Default: token"
-                    },
-                    "issuers" : {
-                      "type" : [ "array", "string" ],
-                      "items" : {
-                        "anyOf" : [ {
-                          "type" : "object",
-                          "additionalProperties" : false,
-                          "properties" : {
-                            "name" : {
-                              "type" : "string",
-                              "default" : "default",
-                              "description" : "Default: default"
-                            },
-                            "keys" : {
-                              "type" : [ "array", "string" ],
-                              "items" : {
-                                "type" : "object",
-                                "additionalProperties" : false,
-                                "properties" : {
-                                  "kid" : {
-                                    "type" : "string",
-                                    "description" : "Key id of issuer"
-                                  },
-                                  "alg" : {
-                                    "type" : "string",
-                                    "description" : "Algorithm used (e.g. ES512)"
-                                  },
-                                  "publicKey" : {
-                                    "type" : "string",
-                                    "description" : "Public key"
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        } ]
-                      }
                     }
                   }
                 }

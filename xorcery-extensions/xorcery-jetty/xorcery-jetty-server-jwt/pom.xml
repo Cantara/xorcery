@@ -42,25 +42,12 @@
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-secrets-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-http</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-security</artifactId>
+            <artifactId>xorcery-jetty-server</artifactId>
         </dependency>
 
         <dependency>
             <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-junit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-jetty-server</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>

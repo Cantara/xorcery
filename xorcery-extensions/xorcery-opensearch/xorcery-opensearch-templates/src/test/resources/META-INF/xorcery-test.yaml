@@ -1,9 +1,10 @@
-$schema: xorcery-override-schema.json
+$schema: xorcery-test-override-schema.json
 
 opensearch:
-  componentTemplates:
-  - id: "common"
-    resource: "resource://opensearch/templates/components/common.yaml"
-  indexTemplates:
-  - id: "numbers"
-    resource: "resource://numbers.yaml"
+  templates:
+    componentTemplates:
+    - id: "common"
+      resource: "resource://opensearch/templates/components/common.yaml"
+    indexTemplates:
+    - id: "numbers"
+      resource: "resource://numbers.yaml"

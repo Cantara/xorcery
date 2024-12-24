@@ -1,4 +1,4 @@
-$schema: xorcery-override-schema.json
+$schema: xorcery-test-override-schema.json
 log4j2:
   Configuration:
     Loggers:

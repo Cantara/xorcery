@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+$schema: META-INF/xorcery-test-override-schema.json
 
-graphql.server:
-  schemas:
-    testschema:
-      resources:
-        - testschema.gql
+graphql:
+  server:
+    schemas:
+      testschema:
+        resources:
+          - testschema.gql
 
 certificates:
   dnsNames:
