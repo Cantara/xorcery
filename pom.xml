@@ -84,6 +84,7 @@
         <module>xorcery-junit</module>
 
         <module>xorcery-extensions</module>
+        <module>xorcery-incubation</module>
 
         <module>xorcery-test</module>
         <module>xorcery-benchmarks</module>

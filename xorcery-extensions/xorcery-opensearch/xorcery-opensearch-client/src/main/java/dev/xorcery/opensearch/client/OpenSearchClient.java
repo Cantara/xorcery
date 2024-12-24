@@ -66,7 +66,6 @@ public record OpenSearchClient(Client client, URI host, LoggerContext logger, Op
         }
     }
 
-
     public OpenSearchClient(ClientBuilder clientBuilder, URI host, LoggerContext logger, OpenTelemetry openTelemetry) {
         this(clientBuilder
                         .register(JsonNodeMessageBodyReader.class)

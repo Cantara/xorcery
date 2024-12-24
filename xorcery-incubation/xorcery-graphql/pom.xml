@@ -20,40 +20,14 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>dev.xorcery</groupId>
-        <artifactId>xorcery-extensions</artifactId>
+        <artifactId>xorcery-incubation</artifactId>
         <version>0.153.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>xorcery-jgroups</artifactId>
+    <artifactId>xorcery-graphql</artifactId>
+    <packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-configuration-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jgroups</groupId>
-            <artifactId>jgroups</artifactId>
-            <version>5.3.13.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.hk2</groupId>
-            <artifactId>hk2-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.hk2</groupId>
-            <artifactId>hk2-runlevel</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-junit</artifactId>
-        </dependency>
-    </dependencies>
-
+    <modules>
+        <module>xorcery-graphql-neo4j</module>
+    </modules>
 </project>
