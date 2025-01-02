@@ -2,7 +2,8 @@ $schema: xorcery-override-schema.json
 keystores:
   stores:
   - name: castore
-    path: "META-INF/intermediatecakeystore.p12"
+    template: "META-INF/intermediatecakeystore.p12"
+    path: "{{ instance.home }}/intermediatecakeystore.p12"
     password: "{{ keystores.defaultPassword }}"
   - name: rootstore
     path: "{{ instance.home }}/rootcakeystore.p12"
