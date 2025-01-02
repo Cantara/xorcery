@@ -55,7 +55,6 @@ public class OpenTelemetryJMXService
 
         OpenTelemetryJMXConfiguration jmxConfiguration = OpenTelemetryJMXConfiguration.get(configuration);
         Map<String, OpenTelemetryJMXConfiguration.JmxAttributeConfiguration> attributes = jmxConfiguration.getAttributes();
-        logger.info(attributes);
         for (Map.Entry<String, OpenTelemetryJMXConfiguration.JmxAttributeConfiguration> entry : attributes.entrySet()) {
             OpenTelemetryJMXConfiguration.JmxAttributeConfiguration jmxAttributeConfiguration = entry.getValue();
             ObjectName objectName = ObjectName.getInstance(jmxAttributeConfiguration.getObjectName());
