@@ -64,7 +64,7 @@ public class Main
                 .build();
 
         Map<String, SecretsProvider> providers = Map.of("env", new EnvSecretsProvider(), "secret", new SecretSecretsProvider());
-        KeyStores keyStores = new KeyStores(config, new Secrets(providers::get, "secret"));
+        KeyStores keyStores = new KeyStores(config, new Secrets(providers::get, "secret"), LogManager.getLogger(KeyStores.class));
 
         System.setProperty("log4j2.configurationFile", "META-INF/letsencryptlog4j2.yaml");
         logger = LogManager.getLogger("letsencrypt");
