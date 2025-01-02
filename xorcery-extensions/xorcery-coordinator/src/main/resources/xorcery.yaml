@@ -3,27 +3,65 @@ $schema: xorcery-schema.json
 application:
   name: "xorcery-coordinator"
 
-#dns.server.port: 8853
-#dns.client.nameServers:
-#  - localhost:8853
+dns:
+  server:
+    port: 8853
+#  client:
+#    nameServers:
+#      - "coordinator:8853"
+  route53:
+    enabled: "{{ ENV.aws.accessKeyId ? true | false }}"
+  registration:
+    enabled: "{{ settings.dyndns }}"
 
 certificates:
   ipAddresses:
   - "{{ CALCULATED.ipv4Addresses }}"
 
 opentelemetry:
+  enabled: "{{ settings.opensearch ? true | false }}"
   exporters:
+    opensearch:
+      attach:
+        enabled: "{{ settings.opensearch ? true | false }}"
+        host: "{{ settings.opensearch }}"
     logging:
       enabled: false
 
-letsencrypt.enabled: false
+opensearch:
+  uri: "{{ settings.opensearch }}"
 
-jwt.server.enabled: false
+letsencrypt:
+  enabled: false
+
+jwt:
+  server:
+    enabled: false
+
+keystores:
+  stores:
+    - name: "rootstore"
+      path: "{{ instance.home }}/app/rootcakeystore.p12"
+    - name: "letsencrypt"
+      path: "{{ instance.home }}/app/letsencrypt.p12"
+    - name: "ssl"
+      path: "{{ instance.home }}/app/ssl.p12"
+    - name: "truststore"
+      path: "{{ instance.home }}/app/truststore.p12"
+    - name: "secrets"
+      path: "{{ instance.home }}/app/secrets.p12"
+
+jetty:
+  server:
+    http:
+      port: "{{ settings.port }}"
+    ssl:
+      enabled: false
 
 log4j2:
   Configuration:
     thresholdFilter:
-      level: debug
+      level: "{{ settings.level }}"
     appenders:
       Console:
         name: STDOUT

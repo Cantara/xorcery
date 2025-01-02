@@ -1,0 +1,5 @@
+settings:
+  level: "{{ ENV.LOG_LEVEL | \"info\" }}"
+  port: "{{ ENV.HTTP_PORT | 80 }}"
+  opensearch: "{{ ENV.OPENSEARCH | \"http://localhost:9200\" }}"
+  dyndns: "{{ ENV.DYNDNS_ENABLED | false }}"

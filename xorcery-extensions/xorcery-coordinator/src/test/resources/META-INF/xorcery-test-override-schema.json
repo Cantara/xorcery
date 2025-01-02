@@ -77,6 +77,9 @@
     },
     "thymeleaf" : {
       "$ref" : "#/$defs/thymeleaf"
+    },
+    "settings" : {
+      "$ref" : "#/$defs/settings"
     }
   },
   "$defs" : {
@@ -556,6 +559,11 @@
           "type" : "object",
           "additionalProperties" : false,
           "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
             "region" : {
               "type" : "string",
               "default" : "aws-global",
@@ -1012,6 +1020,59 @@
                       "type" : [ "boolean", "string" ],
                       "default" : "{{ jetty.server.security.enabled }}",
                       "description" : "Default: {{ jetty.server.security.enabled }} (true)"
+                    }
+                  }
+                },
+                "jwt" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ jetty.server.security.enabled }}",
+                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
+                    },
+                    "cookie" : {
+                      "type" : "string",
+                      "default" : "token",
+                      "description" : "Default: token"
+                    },
+                    "issuers" : {
+                      "type" : [ "array", "string" ],
+                      "items" : {
+                        "anyOf" : [ {
+                          "type" : "object",
+                          "additionalProperties" : false,
+                          "properties" : {
+                            "name" : {
+                              "type" : "string",
+                              "default" : "default",
+                              "description" : "Default: default"
+                            },
+                            "keys" : {
+                              "type" : [ "array", "string" ],
+                              "items" : {
+                                "type" : "object",
+                                "additionalProperties" : false,
+                                "properties" : {
+                                  "kid" : {
+                                    "type" : "string",
+                                    "description" : "Key id of issuer"
+                                  },
+                                  "alg" : {
+                                    "type" : "string",
+                                    "description" : "Algorithm used (e.g. ES512)"
+                                  },
+                                  "publicKey" : {
+                                    "type" : "string",
+                                    "description" : "Public key"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        } ]
+                      }
                     }
                   }
                 }
@@ -1540,6 +1601,16 @@
                       "type" : "string",
                       "default" : "http://localhost:9200/",
                       "description" : "Default: http://localhost:9200/"
+                    },
+                    "traceIndex" : {
+                      "type" : "string",
+                      "default" : "otel-v1-apm-span-{{ application.name }}",
+                      "description" : "Default: otel-v1-apm-span-{{ application.name }} (otel-v1-apm-span-application)"
+                    },
+                    "logIndex" : {
+                      "type" : "string",
+                      "default" : "otel-v1-apm-span-{{ application.name }}",
+                      "description" : "Default: otel-v1-apm-span-{{ application.name }} (otel-v1-apm-span-application)"
                     }
                   }
                 }
@@ -2405,6 +2476,32 @@
               "properties" : { }
             }
           }
+        }
+      }
+    },
+    "settings" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "level" : {
+          "type" : "string",
+          "default" : "{{ ENV.level | \"info\" }}",
+          "description" : "Default: {{ ENV.level | \"info\" }} (info)"
+        },
+        "port" : {
+          "type" : [ "number", "string" ],
+          "default" : "{{ ENV.port | 80 }}",
+          "description" : "Default: {{ ENV.port | 80 }} (80)"
+        },
+        "opensearch" : {
+          "type" : "string",
+          "default" : "{{ ENV.OPENSEARCH | \"http://localhost:9200\" }}",
+          "description" : "Default: {{ ENV.OPENSEARCH | \"http://localhost:9200\" }} (http://localhost:9200)"
+        },
+        "dyndns" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ ENV.dyndns | false }}",
+          "description" : "Default: {{ ENV.dyndns | false }} (false)"
         }
       }
     }

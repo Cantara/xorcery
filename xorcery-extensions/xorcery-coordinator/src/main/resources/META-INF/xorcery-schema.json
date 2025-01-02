@@ -1,0 +1,38 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "title" : "xorcery.yaml JSON Schema",
+  "properties" : {
+    "settings" : {
+      "$ref" : "#/$defs/settings"
+    }
+  },
+  "$defs" : {
+    "settings" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "level" : {
+          "type" : "string",
+          "default" : "{{ ENV.level | \"info\" }}",
+          "description" : "Default: {{ ENV.level | \"info\" }} (info)"
+        },
+        "port" : {
+          "type" : [ "number", "string" ],
+          "default" : "{{ ENV.port | 80 }}",
+          "description" : "Default: {{ ENV.port | 80 }} (80)"
+        },
+        "opensearch" : {
+          "type" : "string",
+          "default" : "{{ ENV.OPENSEARCH | \"http://localhost:9200\" }}",
+          "description" : "Default: {{ ENV.OPENSEARCH | \"http://localhost:9200\" }} (http://localhost:9200)"
+        },
+        "dyndns" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ ENV.dyndns | false }}",
+          "description" : "Default: {{ ENV.dyndns | false }} (false)"
+        }
+      }
+    }
+  }
+}

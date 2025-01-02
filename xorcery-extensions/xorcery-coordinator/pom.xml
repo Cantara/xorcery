@@ -20,11 +20,18 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>dev.xorcery</groupId>
-        <artifactId>xorcery-extensions</artifactId>
+        <artifactId>xorcery-executable-docker</artifactId>
         <version>0.153.1-SNAPSHOT</version>
+        <relativePath>../../xorcery-executable-docker</relativePath>
     </parent>
 
     <artifactId>xorcery-coordinator</artifactId>
+    <version>0.153.1</version>
+
+    <properties>
+        <mainjarversion>0.153.1</mainjarversion>
+        <mainclass>dev.xorcery.coordinator.Main</mainclass>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -46,6 +53,10 @@
         </dependency>
 
         <!-- Jetty/Jersey -->
+        <dependency>
+            <groupId>dev.xorcery</groupId>
+            <artifactId>xorcery-jetty-server-jwt</artifactId>
+        </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-jersey-server</artifactId>
@@ -139,23 +150,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>dev.xorcery</groupId>
-                <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>generate-jsonschema</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>module-configuration-jsonschema</goal>
-                            <goal>application-configuration-jsonschema</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
