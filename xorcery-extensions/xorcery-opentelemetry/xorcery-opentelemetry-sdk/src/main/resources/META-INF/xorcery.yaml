@@ -14,7 +14,7 @@ opentelemetry:
     process.runtime.description: "{{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}"
   exporters:
     local:
-      enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}"
+      enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.test }}"
       interval: 10s
     logging:
       enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}"

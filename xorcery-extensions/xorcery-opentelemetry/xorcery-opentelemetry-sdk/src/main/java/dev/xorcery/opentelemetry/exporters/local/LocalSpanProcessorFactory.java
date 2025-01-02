@@ -24,12 +24,12 @@ import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name="opentelemetry.exporters.local")
-public class LocalSpanExporterFactory
+public class LocalSpanProcessorFactory
         implements Factory<SpanProcessor> {
     private final SpanProcessor spanProcessor;
 
     @Inject
-    public LocalSpanExporterFactory(LocalSpanExporter localSpanExporter) {
+    public LocalSpanProcessorFactory(LocalSpanExporter localSpanExporter) {
         spanProcessor = SimpleSpanProcessor.create(localSpanExporter);
     }
 
