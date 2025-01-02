@@ -26,4 +26,5 @@ open module xorcery.core {
     requires org.glassfish.hk2.api;
     requires static org.glassfish.hk2.extras;
     requires org.glassfish.hk2.runlevel;
+    requires org.glassfish.hk2.locator;
 }
