@@ -175,11 +175,6 @@
 
         <profile>
             <id>docker</id>
-            <activation>
-                <file>
-                    <exists>${basedir}/Dockerfile</exists>
-                </file>
-            </activation>
             <build>
                 <plugins>
                     <plugin>
