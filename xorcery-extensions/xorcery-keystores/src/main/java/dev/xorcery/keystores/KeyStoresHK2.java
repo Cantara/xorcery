@@ -18,6 +18,7 @@ package dev.xorcery.keystores;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.messaging.Topic;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
@@ -33,8 +34,8 @@ public class KeyStoresHK2 extends KeyStores {
     private final Topic<KeyStore> keyStoreTopic;
 
     @Inject
-    public KeyStoresHK2(Configuration configuration, Secrets secrets,Topic<KeyStore> keyStoreTopic) throws NoSuchAlgorithmException, NoSuchProviderException {
-        super(configuration, secrets);
+    public KeyStoresHK2(Configuration configuration, Secrets secrets, Logger logger, Topic<KeyStore> keyStoreTopic) throws NoSuchAlgorithmException, NoSuchProviderException {
+        super(configuration, secrets, logger);
         this.keyStoreTopic = keyStoreTopic;
     }
 

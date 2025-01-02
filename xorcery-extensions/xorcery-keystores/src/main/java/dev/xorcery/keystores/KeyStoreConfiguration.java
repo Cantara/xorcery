@@ -17,6 +17,7 @@ package dev.xorcery.keystores;
 
 import dev.xorcery.configuration.Configuration;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Optional;
 
@@ -35,12 +36,8 @@ public record KeyStoreConfiguration(Configuration configuration) {
         return configuration.getString("type").orElse("PKCS12");
     }
 
-    public String getPath() {
-        return configuration.getString("path").orElseThrow(missing("path"));
-    }
-
-    public URL getURL() {
-        return configuration.getResourceURL("path").orElseThrow(missing("path"));
+    public File getPath() {
+        return configuration.getString("path").map(File::new).orElseThrow(missing("path"));
     }
 
     public boolean isAddRootCa() {

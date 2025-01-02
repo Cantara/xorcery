@@ -10,10 +10,10 @@ jetty.server.ssl.crls: "META-INF/crls.pem"
 keystores:
   stores:
     - name: ssl
-      template: null
-      path: "META-INF/test-ssl.p12"
+      template: "META-INF/test-ssl.p12"
+      path: "{{ instance.home }}/test-ssl.p12"
       password: "{{ keystores.defaultPassword }}"
     - name: truststore
-      template: null
-      path: "META-INF/test-truststore.p12"
+      template: "META-INF/test-ssl.p12"
+      path: "{{ instance.home }}/test-truststore.p12"
       password: "{{ keystores.defaultPassword }}"

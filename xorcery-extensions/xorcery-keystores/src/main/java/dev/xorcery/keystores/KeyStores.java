@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.MissingNode;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.secrets.Secrets;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.BasicConstraints;
@@ -50,12 +51,14 @@ public class KeyStores {
 
     private final KeyStoresConfiguration configuration;
     private final Secrets secrets;
+    private final Logger logger;
     private final Map<String, KeyStore> keyStores = new ConcurrentHashMap<>();
     private final KeyPairGenerator keyGen;
 
-    public KeyStores(Configuration configuration, Secrets secrets) throws NoSuchAlgorithmException, NoSuchProviderException {
+    public KeyStores(Configuration configuration, Secrets secrets, Logger logger) throws NoSuchAlgorithmException, NoSuchProviderException {
         this.configuration = KeyStoresConfiguration.get(configuration);
         this.secrets = secrets;
+        this.logger = logger;
 
         Provider p = new org.bouncycastle.jce.provider.BouncyCastleProvider();
         if (null == Security.getProvider(p.getName())) {
@@ -85,12 +88,18 @@ public class KeyStores {
             if (stringKeyStoreEntry.getValue() == keyStore) {
                 String name = stringKeyStoreEntry.getKey();
                 KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(name).orElseThrow();
-                URL keyStoreUrl = keyStoreConfiguration.getURL();
-                File file = new File(keyStoreUrl.getFile()).getCanonicalFile();
-                try (FileOutputStream outputStream = new FileOutputStream(file)) {
+                File keyStoreFile = keyStoreConfiguration.getPath();
+                File parentFile = keyStoreFile.getParentFile();
+                if (!parentFile.exists()) {
+                    logger.info("Creating keystore directory:" + parentFile);
+                    if (!parentFile.mkdirs()) {
+                        logger.warn("Could not create keystore directory");
+                    }
+                }
+                try (FileOutputStream outputStream = new FileOutputStream(keyStoreFile)) {
                     keyStore.store(outputStream, keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null));
                 }
-                LogManager.getLogger(getClass()).info("Saved keystore " + name + " to " + file);
+                logger.info("Saved keystore " + name + " to " + keyStoreFile);
                 publish(keyStore);
                 return;
             }
@@ -112,26 +121,24 @@ public class KeyStores {
     }
 
     private KeyStore loadKeyStore(String keyStoreName) {
-        URL keyStoreUrl = null;
+        KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName).orElseThrow(Configuration.missing(keyStoreName));
+        File keyStoreFile = keyStoreConfiguration.getPath();
         try {
-            KeyStoreConfiguration keyStoreConfiguration = configuration.getKeyStoreConfiguration(keyStoreName).orElseThrow(Configuration.missing(keyStoreName));
             KeyStore keyStore = KeyStore.getInstance(keyStoreConfiguration.getType());
 
-            if (!keyStoreConfiguration.configuration().getJson("template").orElse(MissingNode.getInstance()).isMissingNode()) {
-                File keyStoreOutput = new File(keyStoreConfiguration.getPath()).getCanonicalFile();
-                keyStoreUrl = keyStoreOutput.toURI().toURL();
-                if (!keyStoreOutput.exists()) {
+            if (!keyStoreFile.exists()) {
+                if (!keyStoreConfiguration.configuration().getJson("template").orElse(MissingNode.getInstance()).isMissingNode()) {
                     // Copy template to file
                     URL templateStoreUrl = keyStoreConfiguration.configuration().getResourceURL("template").orElseThrow(() -> new IllegalArgumentException("Template file does not exist for keystore " + keyStoreName));
                     char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
                     // Copy template to file
                     try (InputStream inputStream = templateStoreUrl.openStream()) {
-                        LogManager.getLogger(getClass()).info("Copying template keystore " + templateStoreUrl + " to local keystore file " + keyStoreOutput);
-                        File keyStoreDir = keyStoreOutput.getParentFile();
+                        LogManager.getLogger(getClass()).info("Copying template keystore " + templateStoreUrl + " to local keystore file " + keyStoreFile);
+                        File keyStoreDir = keyStoreFile.getParentFile();
                         if (!keyStoreDir.exists()) {
                             keyStoreDir.mkdirs();
                         }
-                        try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreOutput)) {
+                        try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFile)) {
                             fileOutputStream.write(inputStream.readAllBytes());
                         }
                     } catch (FileNotFoundException e) {
@@ -139,50 +146,39 @@ public class KeyStores {
                         LogManager.getLogger(getClass()).warn("Could not find template keystore, continuing with empty keystore " + keyStoreName, e);
                         // Create empty store
                         keyStore.load(null, password);
-                        File keyStoreDir = keyStoreOutput.getParentFile();
+                        File keyStoreDir = keyStoreFile.getParentFile();
                         if (!keyStoreDir.exists()) {
                             keyStoreDir.mkdirs();
                         }
-                        try (FileOutputStream outputStream = new FileOutputStream(keyStoreOutput)) {
+                        try (FileOutputStream outputStream = new FileOutputStream(keyStoreFile)) {
                             keyStore.store(outputStream, password);
                         }
-
                     } catch (IOException e) {
                         throw new UncheckedIOException("Could not copy template store:" + templateStoreUrl, e);
                     }
-                }
-            } else {
-                try {
-                    keyStoreUrl = keyStoreConfiguration.getURL();
-                } catch (IllegalArgumentException e) {
-                    // Check if path set but missing keyStore
-                    if (keyStoreConfiguration.configuration().getString("path").isPresent()) {
-                        File file = new File(keyStoreConfiguration.getPath());
-                        // Create empty store
-                        char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
-                        keyStore.load(null, password);
-                        File keyStoreDir = file.getParentFile();
-                        if (!keyStoreDir.exists()) {
-                            keyStoreDir.mkdirs();
-                        }
-                        try (FileOutputStream outputStream = new FileOutputStream(file)) {
-                            keyStore.store(outputStream, password);
-                        }
-                        LogManager.getLogger(getClass()).info("Created empty keystore " + keyStoreName);
-
-                        keyStoreUrl = keyStoreConfiguration.getURL();
+                } else {
+                    // Create empty store
+                    char[] password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null);
+                    keyStore.load(null, password);
+                    File keyStoreDir = keyStoreFile.getParentFile();
+                    if (!keyStoreDir.exists()) {
+                        keyStoreDir.mkdirs();
                     }
+                    try (FileOutputStream outputStream = new FileOutputStream(keyStoreFile)) {
+                        keyStore.store(outputStream, password);
+                    }
+                    LogManager.getLogger(getClass()).info("Created empty keystore " + keyStoreName);
                 }
             }
 
-            try (InputStream inStream = keyStoreUrl.openStream()) {
+            try (InputStream inStream = new FileInputStream(keyStoreFile)) {
                 keyStore.load(inStream, keyStoreConfiguration.getPassword().map(secrets::getSecretString).map(String::toCharArray).orElse(null));
 
                 if (keyStoreConfiguration.isAddRootCa()) {
                     addDefaultRootCaCertificates(keyStore);
                 }
 
-                LogManager.getLogger(getClass()).info("Loaded keystore " + keyStoreName + "(" + keyStoreUrl + ")");
+                LogManager.getLogger(getClass()).info("Loaded keystore " + keyStoreName + "(" + keyStoreFile + ")");
                 {
                     StringBuilder builder = new StringBuilder();
                     keyStore.aliases().asIterator().forEachRemaining(alias -> builder.append("\n").append(alias));
@@ -192,15 +188,15 @@ public class KeyStores {
                 return keyStore;
             } catch (Exception ex) {
                 URL templateStoreUrl = keyStoreConfiguration.getTemplate();
-                if (templateStoreUrl != null && keyStoreUrl.getProtocol().equals("file")) {
+                if (templateStoreUrl != null) {
                     // Copy template to file
-                    File keyStoreDir = new File(keyStoreUrl.getFile()).getParentFile();
+                    File keyStoreDir = keyStoreFile.getParentFile();
                     if (!keyStoreDir.exists()) {
                         keyStoreDir.mkdirs();
                     }
 
                     try (InputStream inputStream = templateStoreUrl.openStream()) {
-                        try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreUrl.getFile())) {
+                        try (FileOutputStream fileOutputStream = new FileOutputStream(keyStoreFile)) {
                             fileOutputStream.write(inputStream.readAllBytes());
                         }
                     }
@@ -211,7 +207,7 @@ public class KeyStores {
                 }
             }
         } catch (Throwable e) {
-            throw new RuntimeException("Could not load keystore '" + keyStoreName + "' from " + keyStoreUrl, unwrap(e));
+            throw new RuntimeException("Could not load keystore '" + keyStoreName + "' from " + keyStoreFile, unwrap(e));
         }
     }
 
