@@ -1,0 +1,28 @@
+---
+version: 1
+template:
+  mappings:
+    dynamic_templates:
+      - string_as_keywords:
+          match: string
+          mapping:
+            type: keyword
+      - indexed_longs:
+          match: long
+          mapping:
+            type: long
+            index: true
+      - indexed_doubles:
+          match: double
+          mapping:
+            type: double
+            index: true
+    properties:
+      "@timestamp":
+        type: date
+        format: epoch_millis
+      metadata:
+        properties:
+          timestamp:
+            type: date
+            format: epoch_millis

@@ -16,3 +16,5 @@ opentelemetry:
       attach:
         enabled: "{{ opentelemetry.exporters.opensearch.enabled }}"
         host: "http://localhost:9200/"
+        traceIndex: "otel-v1-apm-span-{{ application.name }}"
+        logIndex: "otel-v1-apm-span-{{ application.name }}"

@@ -19,6 +19,7 @@ package dev.xorcery.opentelemetry.exporters.opensearch.attach;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import dev.xorcery.configuration.ApplicationConfiguration;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.opensearch.OpenSearchService;
 import dev.xorcery.opensearch.client.OpenSearchContext;
@@ -53,14 +54,22 @@ public class AttachExporterService
         URL hostUrl = attachExporterConfiguration.getHost();
         ContextView openSearchContext = Context.of(OpenSearchContext.serverUri.name(), hostUrl.toExternalForm());
 
+        String traceIndex = "otel-v1-apm-span-"+ ApplicationConfiguration.get(configuration).getName();
+
         this.disposable = reactiveStreamExporterService.getCollector()
                 .<MetadataJsonNode<JsonNode>>handle((item, sink) ->
                 {
+                    String serviceName = null;
+                    String serviceNamespace = null;
+                    if (item.metadata().getJson("resource").orElse(null) instanceof ObjectNode resource){
+                        serviceName = resource.get("service.name").asText();
+                        serviceNamespace = resource.get("service.namespace").asText();
+                    }
                     String index = switch (item.metadata().getString("type").orElse("unknown"))
                     {
-                        case "log" -> "logs";
+                        case "log" -> "logs-otel";
                         case "metric" -> "ss4o_metrics-otel";
-                        case "trace" -> "traces";
+                        case "trace" -> "otel-v1-apm-span-"+serviceNamespace+"-"+serviceName;
                         default -> null;
                     };
                     if (index != null)

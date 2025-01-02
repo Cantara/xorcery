@@ -2,6 +2,15 @@ $schema: xorcery-override-schema.json
 
 opensearch:
   templates:
+    componentTemplates:
+      - id: "common"
+        resource: "resource://META-INF/common.yaml"
+      - id: "otel-traces"
+        resource: "resource://META-INF/otel-v1-apm-span-index-template.json"
     indexTemplates:
       - id: "metrics"
         resource: "resource://META-INF/metrics-1.0.0.json"
+      - id: "logs"
+        resource: "resource://META-INF/logs-1.0.0.yaml"
+      - id: "traces"
+        resource: "resource://META-INF/traces.yaml"

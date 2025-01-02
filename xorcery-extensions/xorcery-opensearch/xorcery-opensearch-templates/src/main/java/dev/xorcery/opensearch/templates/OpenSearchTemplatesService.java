@@ -31,6 +31,7 @@ import dev.xorcery.opensearch.client.index.IndexTemplate;
 import dev.xorcery.reactivestreams.api.MetadataJsonNode;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.ClientErrorException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.LoggerContext;
 import org.glassfish.hk2.runlevel.RunLevel;
@@ -43,6 +44,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+
+import static dev.xorcery.lang.Exceptions.unwrap;
 
 @Service(name = "opensearch.templates")
 @RunLevel(4)
@@ -139,7 +142,12 @@ public class OpenSearchTemplatesService {
                     logger.error("Could not load template " + templateName + ":\n" + response.json().toPrettyString());
                 }
             } catch (Throwable ex) {
-                logger.error("Could not load template " + templateName, ex);
+                if (unwrap(ex) instanceof ClientErrorException cee){
+                    String response = cee.getResponse().readEntity(String.class);
+                    logger.error("Could not load template " + templateName+":"+response, ex);
+                } else {
+                    logger.error("Could not load template " + templateName, ex);
+                }
             }
         }
     }

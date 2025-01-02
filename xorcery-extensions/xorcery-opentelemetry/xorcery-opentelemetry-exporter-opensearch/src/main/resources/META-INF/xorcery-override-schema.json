@@ -737,6 +737,16 @@
                       "type" : "string",
                       "default" : "http://localhost:9200/",
                       "description" : "Default: http://localhost:9200/"
+                    },
+                    "traceIndex" : {
+                      "type" : "string",
+                      "default" : "otel-v1-apm-span-{{ application.name }}",
+                      "description" : "Default: otel-v1-apm-span-{{ application.name }} (otel-v1-apm-span-application)"
+                    },
+                    "logIndex" : {
+                      "type" : "string",
+                      "default" : "otel-v1-apm-span-{{ application.name }}",
+                      "description" : "Default: otel-v1-apm-span-{{ application.name }} (otel-v1-apm-span-application)"
                     }
                   }
                 }

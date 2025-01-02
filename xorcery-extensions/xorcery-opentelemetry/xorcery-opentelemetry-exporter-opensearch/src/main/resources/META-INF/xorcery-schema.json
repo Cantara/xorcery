@@ -1,7 +1,6 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-opentelemetry-exporter-opensearch/schema",
   "title" : "xorcery-opentelemetry-exporter-opensearch configuration JSON Schema",
   "properties" : {
     "opentelemetry" : {
@@ -88,6 +87,16 @@
                       "type" : "string",
                       "default" : "http://localhost:9200/",
                       "description" : "Default: http://localhost:9200/"
+                    },
+                    "traceIndex" : {
+                      "type" : "string",
+                      "default" : "otel-v1-apm-span-{{ application.name }}",
+                      "description" : "Default: otel-v1-apm-span-{{ application.name }} (otel-v1-apm-span-application)"
+                    },
+                    "logIndex" : {
+                      "type" : "string",
+                      "default" : "otel-v1-apm-span-{{ application.name }}",
+                      "description" : "Default: otel-v1-apm-span-{{ application.name }} (otel-v1-apm-span-application)"
                     }
                   }
                 }
@@ -97,5 +106,6 @@
         }
       }
     }
-  }
+  },
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-opentelemetry-exporter-opensearch/schema"
 }

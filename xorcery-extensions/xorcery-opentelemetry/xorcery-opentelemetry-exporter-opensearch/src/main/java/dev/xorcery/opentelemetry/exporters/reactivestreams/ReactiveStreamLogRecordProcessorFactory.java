@@ -27,7 +27,7 @@ import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service(name="opentelemetry.exporters.websocket.logs")
+@Service(name="opentelemetry.exporters.reactivestreams.logs")
 public class ReactiveStreamLogRecordProcessorFactory
         implements Factory<LogRecordProcessor>
 {

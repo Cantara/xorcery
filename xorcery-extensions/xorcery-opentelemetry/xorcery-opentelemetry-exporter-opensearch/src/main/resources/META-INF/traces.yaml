@@ -1,0 +1,12 @@
+---
+version: 1
+index_patterns:
+  - otel-v1-apm-span*
+template:
+  aliases:
+    traces: {}
+  settings:
+    number_of_shards: 1
+    number_of_replicas: 0
+composed_of:
+  - otel-traces

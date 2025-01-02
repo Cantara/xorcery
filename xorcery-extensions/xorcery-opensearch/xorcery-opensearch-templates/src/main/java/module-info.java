@@ -25,4 +25,5 @@ module xorcery.opensearch.templates {
     requires xorcery.reactivestreams.api;
     requires org.glassfish.hk2.api;
     requires jakarta.inject;
+    requires jakarta.ws.rs;
 }
