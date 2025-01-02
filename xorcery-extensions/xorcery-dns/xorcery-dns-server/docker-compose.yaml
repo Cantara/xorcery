@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-version: "3.9"
 
 services:
   xorcery-bind9:

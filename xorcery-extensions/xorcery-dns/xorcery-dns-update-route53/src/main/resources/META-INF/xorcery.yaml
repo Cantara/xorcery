@@ -1,4 +1,5 @@
 $schema: xorcery-schema.json
 dns:
   route53:
+    enabled: "{{ defaults.enabled }}"
     region: "aws-global"
