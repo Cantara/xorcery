@@ -1,4 +1,4 @@
-ARG JDK_IMAGE=eclipse-temurin:17-ubi9-minimal
+ARG JDK_IMAGE=eclipse-temurin:21-ubi9-minimal
 FROM $JDK_IMAGE
 ENV JAVA_OPTS="-Xmx1G -Xms1G"
 ARG MAIN_JAR
