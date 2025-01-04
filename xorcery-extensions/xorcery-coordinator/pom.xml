@@ -26,11 +26,12 @@
     </parent>
 
     <artifactId>xorcery-coordinator</artifactId>
-    <version>0.153.1</version>
+    <version>0.153.1-SNAPSHOT</version>
 
     <properties>
         <mainjarversion>0.153.1</mainjarversion>
         <mainclass>dev.xorcery.coordinator.Main</mainclass>
+        <docker.tag>0.153.1</docker.tag>
     </properties>
 
     <dependencies>
