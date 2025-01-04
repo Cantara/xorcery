@@ -68,4 +68,17 @@
 
         <module>xorcery-docs</module>
     </modules>
+
+    <distributionManagement>
+        <repository>
+            <id>cantara</id>
+            <name>Cantara Release Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>cantara</id>
+            <name>Cantara Snapshot Repository</name>
+            <url>https://mvnrepo.cantara.no/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
