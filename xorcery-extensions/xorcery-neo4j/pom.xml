@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-extensions</artifactId>
-        <version>0.153.1-SNAPSHOT</version>
+        <version>0.155.0</version>
     </parent>
 
     <artifactId>xorcery-neo4j</artifactId>
