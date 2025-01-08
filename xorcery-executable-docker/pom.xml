@@ -30,17 +30,34 @@
 
     <properties>
         <mainclass>dev.xorcery.runner.Main</mainclass>
-        <mainjarversion>${project.version}</mainjarversion>
         <mainjar>${project.build.finalName}.jar</mainjar>
 
-        <!-- Override these in your settings.xml -->
-        <docker.namespace>${project.groupId}</docker.namespace>
-        <docker.repository>${project.artifactId}</docker.repository>
-        <docker.tag>${project.version}</docker.tag>
+        <!-- Override these in environment variables -->
         <docker.url>https://hub.docker.com/</docker.url>
-        <docker.user />
-        <docker.password />
+        <docker.user>xorcery</docker.user>
+        <docker.password>${env.DOCKER_PASSWORD}</docker.password>
+        <docker.namespace>xorcery</docker.namespace>
+        <docker.repository>${project.artifactId}</docker.repository>
+        <docker.tag>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</docker.tag>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>parse-version</id>
+                        <goals>
+                            <goal>parse-version</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <profiles>
         <profile>
@@ -176,6 +193,7 @@
                                         <manifestEntries>
                                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                            <key>value</key>
                                         </manifestEntries>
                                     </archive>
                                 </configuration>
@@ -209,7 +227,7 @@
                                     <arguments>
                                         <argument>rmi</argument>
                                         <argument>-f</argument>
-                                        <argument>${project.groupId}/${project.artifactId}:${project.version}</argument>
+                                        <argument>${docker.namespace}/${project.artifactId}:${docker.tag}</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
@@ -229,11 +247,9 @@
                                     <arguments>
                                         <argument>build</argument>
                                         <argument>-t</argument>
-                                        <argument>${project.groupId}/${project.artifactId}:${project.version}</argument>
+                                        <argument>${docker.namespace}/${project.artifactId}:${docker.tag}</argument>
                                         <argument>--build-arg</argument>
                                         <argument>MAIN_JAR=${mainjar}</argument>
-                                        <argument>--build-arg</argument>
-                                        <argument>MAIN_CLASS=${mainclass}</argument>
                                         <argument>.</argument>
                                     </arguments>
                                 </configuration>
