@@ -116,7 +116,12 @@ public class OpenSearchTemplatesService {
                     logger.error("Could not upload template " + templateName + ":\n" + response.json().toPrettyString());
                 }
             } catch (Throwable ex) {
-                logger.error("Could not load template " + templateName, ex);
+                if (unwrap(ex) instanceof ClientErrorException cee){
+                    String response = cee.getResponse().readEntity(String.class);
+                    logger.error("Could not load component template " + templateName+":"+response, ex);
+                } else {
+                    logger.error("Could not load component template " + templateName, ex);
+                }
             }
         }
     }
