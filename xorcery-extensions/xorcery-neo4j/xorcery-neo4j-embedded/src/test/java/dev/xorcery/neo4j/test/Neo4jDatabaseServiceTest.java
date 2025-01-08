@@ -20,7 +20,7 @@ import dev.xorcery.junit.XorceryExtension;
 import dev.xorcery.neo4j.Neo4jDatabaseService;
 import dev.xorcery.neo4j.client.GraphDatabase;
 import dev.xorcery.neo4j.client.GraphResult;
-import dev.xorcery.opentelemetry.exporters.local.LocalMetricReader;
+import dev.xorcery.opentelemetry.exporters.local.LocalMetricExporter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -36,6 +36,7 @@ public class Neo4jDatabaseServiceTest {
     static XorceryExtension xorceryExtension = XorceryExtension.xorcery()
             .configuration(ConfigurationBuilder::addTestDefaults)
             .addYaml("""
+neo4jdatabase.enabled: true
 defaults.development: true
 neo4jdatabase.warmup.queries:
     - "MATCH (n) RETURN count(n)"
@@ -58,12 +59,12 @@ log4j2.Configuration.Loggers.logger:
     }
 
     @Test
-    public void testMetrics(LocalMetricReader localMetricReader, GraphDatabase graphDatabase) throws Exception {
+    public void testMetrics(LocalMetricExporter localMetricExporter, GraphDatabase graphDatabase) throws Exception {
         for (int i = 0; i < 10000; i++) {
             graphDatabase.execute("CREATE (node:Node) SET node.foo='bar'", Collections.emptyMap(), 90).join().close();
         }
 
-        localMetricReader.getMetric("neo4j.checkpoint.count").orElseThrow().getLongGaugeData().getPoints().forEach(point -> assertTrue(point.getValue() > 0));
-        localMetricReader.getMetric("neo4j.pagecache.flushes").orElseThrow().getLongGaugeData().getPoints().forEach(point -> assertTrue(point.getValue() > 0));
+        localMetricExporter.getMetric("neo4j.checkpoint.count").orElseThrow().getLongGaugeData().getPoints().forEach(point -> assertTrue(point.getValue() > 0));
+        localMetricExporter.getMetric("neo4j.pagecache.flushes").orElseThrow().getLongGaugeData().getPoints().forEach(point -> assertTrue(point.getValue() > 0));
     }
 }
