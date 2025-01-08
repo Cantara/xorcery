@@ -15,46 +15,46 @@
  */
 package dev.xorcery.opentelemetry.exporters.local;
 
-import dev.xorcery.configuration.Configuration;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.InstrumentType;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
-import io.opentelemetry.sdk.metrics.export.CollectionRegistration;
-import io.opentelemetry.sdk.metrics.export.MetricReader;
+import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import jakarta.inject.Inject;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
-import java.time.Duration;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 @Service(name="opentelemetry.exporters.local")
-@ContractsProvided({MetricReader.class, LocalMetricReader.class})
-public class LocalMetricReader
-        implements MetricReader
+@ContractsProvided({MetricExporter.class, LocalMetricExporter.class})
+public class LocalMetricExporter
+        implements MetricExporter
 {
     private final CompletableResultCode isShutdown = new CompletableResultCode();
-    private final Configuration configuration;
-    private CollectionRegistration registration;
 
     private final ConcurrentHashMap<String, Optional<MetricData>> currentMetricData = new ConcurrentHashMap<>();
     private Collection<MetricData> lastCollectedMetricData = null;
 
+    private final Object updateNotification = new Object();
+
     @Inject
-    public LocalMetricReader(Configuration configuration) {
-        this.configuration = configuration;
+    public LocalMetricExporter() {
     }
 
     public Optional<MetricData> getMetric(String name)
     {
-        if (lastCollectedMetricData == null)
-            updateMetrics();
+        synchronized (updateNotification){
+            try {
+                updateNotification.wait(30000);
+            } catch (InterruptedException e) {
+                return Optional.empty();
+            }
+        }
 
         return currentMetricData.computeIfAbsent(name, n ->
         {
@@ -75,37 +75,37 @@ public class LocalMetricReader
     {
         if (lastCollectedMetricData == null)
         {
-            updateMetrics();
+            synchronized (updateNotification){
+                try {
+                    updateNotification.wait(30000);
+                } catch (InterruptedException e) {
+                    return Collections.emptyList();
+                }
+            }
         }
         return lastCollectedMetricData;
     }
 
-    // MetricReader implementation
+    // MetricExporter implementation
     @Override
-    public void register(CollectionRegistration registration) {
-        this.registration = registration;
-        CompletableFuture.delayedExecutor(Duration.parse("PT" + configuration.getString("opentelemetry.exporters.local.interval").orElse("10s")).getSeconds(), TimeUnit.SECONDS).execute(this::updateMetrics);
-    }
-
-    private void updateMetrics() {
-        lastCollectedMetricData = registration.collectAllMetrics();
+    public CompletableResultCode export(Collection<MetricData> metrics) {
+        lastCollectedMetricData = metrics;
         for (MetricData collectedMetricDatum : lastCollectedMetricData) {
             if (currentMetricData.containsKey(collectedMetricDatum.getName()))
             {
                 currentMetricData.put(collectedMetricDatum.getName(), Optional.of(collectedMetricDatum));
             }
         }
-        if (!isShutdown.isDone())
-        {
-            CompletableFuture.delayedExecutor(5, TimeUnit.SECONDS).execute(this::updateMetrics);
+        synchronized (updateNotification){
+            updateNotification.notifyAll();
         }
+        return CompletableResultCode.ofSuccess();
     }
 
     @Override
-    public CompletableResultCode forceFlush() {
-        return new CompletableResultCode().succeed();
+    public CompletableResultCode flush() {
+        return CompletableResultCode.ofSuccess();
     }
-
     @Override
     public CompletableResultCode shutdown() {
         return isShutdown.succeed();

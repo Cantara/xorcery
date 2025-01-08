@@ -21,6 +21,7 @@ import jakarta.inject.Inject;
 import org.jvnet.hk2.annotations.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.util.concurrent.Queues;
 
 @Service(name = "opentelemetry.exporters.reactivestreams")
 public class ReactiveStreamExporterService {
@@ -29,7 +30,7 @@ public class ReactiveStreamExporterService {
 
     @Inject
     public ReactiveStreamExporterService() {
-        collector = Sinks.many().unicast().onBackpressureBuffer();
+        collector = Sinks.many().unicast().onBackpressureBuffer(Queues.<MetadataJsonNode<JsonNode>>get(4096).get());
     }
 
     public void send(MetadataJsonNode<JsonNode> item) {

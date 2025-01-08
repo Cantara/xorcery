@@ -23,7 +23,10 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +36,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Service(name = "opentelemetry.exporters.websocket.traces")
+@ContractsProvided(SpanExporter.class)
 public class WebsocketSpanExporter
     implements SpanExporter
 {
@@ -42,6 +47,7 @@ public class WebsocketSpanExporter
     private final Map<Resource, JsonNode> resourceJson = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
+    @Inject
     public WebsocketSpanExporter(WebsocketExporterService attachSender, Logger logger) {
         this.attachSender = attachSender;
         this.logger = logger;

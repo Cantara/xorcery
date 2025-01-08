@@ -21,21 +21,18 @@ import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporter;
 import io.opentelemetry.exporter.otlp.http.metrics.OtlpHttpMetricExporterBuilder;
 import io.opentelemetry.sdk.common.export.RetryPolicy;
 import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
-import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import io.opentelemetry.sdk.metrics.export.MetricReader;
-import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name="opentelemetry.exporters.otlp.http")
-public class OtlpHttpMetricReaderFactory
-        implements Factory<MetricReader> {
-    private final MetricReader metricReader;
+public class OtlpHttpMetricExporterFactory
+        implements Factory<OtlpHttpMetricExporter> {
+    private final OtlpHttpMetricExporter metricExporter;
 
     @Inject
-    public OtlpHttpMetricReaderFactory(Configuration configuration, Secrets secrets) {
+    public OtlpHttpMetricExporterFactory(Configuration configuration, Secrets secrets) {
         OtlpHttpConfiguration otHttpConfiguration = OtlpHttpConfiguration.get(configuration);
 
         OtlpHttpMetricExporterBuilder builder = OtlpHttpMetricExporter.builder();
@@ -50,20 +47,16 @@ public class OtlpHttpMetricReaderFactory
         builder.setRetryPolicy(RetryPolicy.getDefault());
         otHttpConfiguration.getHeaders(secrets).forEach(builder::addHeader);
         otHttpConfiguration.getCompression().ifPresent(builder::setCompression);
-        MetricExporter metricExporter = builder.build();
-
-        metricReader = PeriodicMetricReader.builder(metricExporter)
-                .setInterval(otHttpConfiguration.getInterval())
-                .build();
+        metricExporter = builder.build();
     }
 
     @Override
     @Singleton
-    public MetricReader provide() {
-        return metricReader;
+    public OtlpHttpMetricExporter provide() {
+        return metricExporter;
     }
 
     @Override
-    public void dispose(MetricReader instance) {
+    public void dispose(OtlpHttpMetricExporter instance) {
     }
 }

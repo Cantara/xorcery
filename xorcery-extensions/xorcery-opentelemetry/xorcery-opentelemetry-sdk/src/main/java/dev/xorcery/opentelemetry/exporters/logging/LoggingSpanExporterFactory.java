@@ -16,8 +16,6 @@
 package dev.xorcery.opentelemetry.exporters.logging;
 
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
@@ -25,22 +23,21 @@ import org.jvnet.hk2.annotations.Service;
 
 @Service(name="opentelemetry.exporters.logging")
 public class LoggingSpanExporterFactory
-        implements Factory<SpanProcessor> {
-    private final SpanProcessor spanProcessor;
+        implements Factory<LoggingSpanExporter> {
+    private final LoggingSpanExporter spanExporter;
 
     @Inject
     public LoggingSpanExporterFactory() {
-        LoggingSpanExporter spanExporter = LoggingSpanExporter.create();
-        spanProcessor = SimpleSpanProcessor.create(spanExporter);
+        spanExporter = LoggingSpanExporter.create();
     }
 
     @Override
     @Singleton
-    public SpanProcessor provide() {
-        return spanProcessor;
+    public LoggingSpanExporter provide() {
+        return spanExporter;
     }
 
     @Override
-    public void dispose(SpanProcessor instance) {
+    public void dispose(LoggingSpanExporter instance) {
     }
 }

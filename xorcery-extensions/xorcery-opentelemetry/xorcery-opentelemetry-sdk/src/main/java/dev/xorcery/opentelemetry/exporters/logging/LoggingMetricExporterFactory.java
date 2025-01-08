@@ -13,33 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.opentelemetry.exporters.local;
+package dev.xorcery.opentelemetry.exporters.logging;
 
-
-import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import dev.xorcery.configuration.Configuration;
+import io.opentelemetry.exporter.logging.LoggingMetricExporter;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
-@Service(name="opentelemetry.exporters.local")
-public class LocalSpanProcessorFactory
-        implements Factory<SpanProcessor> {
-    private final SpanProcessor spanProcessor;
+@Service(name="opentelemetry.exporters.logging")
+public class LoggingMetricExporterFactory
+        implements Factory<LoggingMetricExporter> {
+    private final LoggingMetricExporter loggingMetricExporter;
 
     @Inject
-    public LocalSpanProcessorFactory(LocalSpanExporter localSpanExporter) {
-        spanProcessor = SimpleSpanProcessor.create(localSpanExporter);
+    public LoggingMetricExporterFactory(Configuration configuration) {
+        loggingMetricExporter = LoggingMetricExporter.create();
     }
 
     @Override
     @Singleton
-    public SpanProcessor provide() {
-        return spanProcessor;
+    public LoggingMetricExporter provide() {
+        return loggingMetricExporter;
     }
 
     @Override
-    public void dispose(SpanProcessor instance) {
+    public void dispose(LoggingMetricExporter instance) {
     }
 }

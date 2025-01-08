@@ -15,13 +15,10 @@ opentelemetry:
   exporters:
     local:
       enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.test }}"
-      interval: 10s
     logging:
       enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}"
-      interval: 10s
     jmx:
       enabled: "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}"
-      interval: 5s
     otlp:
       endpoint: null
       http:
@@ -31,31 +28,34 @@ opentelemetry:
         headers: {}
         connectTimeout: "{{ defaults.connectTimeout }}"
         timeout: "10s"
-        # Metrics
-        interval: 10s
-        aggregationTemporality: alwaysCumulative
-        # Logging
-        scheduleDelay: "5s"
-        exporterTimeout: "60s"
-        maxExportBatchSize: 1000
-        maxQueueSize: 10000
         logsEndpoint: "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs"
         tracesEndpoint: "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces"
         metricsEndpoint: "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics"
-  sampler:
-    enabled: "{{ opentelemetry.enabled }}"
-    # By default, all spans are included. They can be excluded by an exclude rule, and that can then be overridden by an include rule
-    # Example:
-    # excludes:
-    # - name: "GET /api/foo"
-    # includes:
-    # - name: "GET /api/foo"
-    #   attributes:
-    #     http.response.status_code: 500
-    excludes: []
-    includes: []
   meters:
+    interval: 10s
     # List of implementations names whose Meter instances should be included or excluded. Useful for turning off metrics that are not needed
     # Excludes are processed first, then includes. Matching is done using name.contains(excludes/includes). By default all scopes are included
     excludes: []
     includes: []
+  logging:
+    scheduleDelay: "5s"
+    exporterTimeout: "60s"
+    maxExportBatchSize: 1000
+    maxQueueSize: 10000
+  spans:
+    scheduleDelay: "5s"
+    exporterTimeout: "60s"
+    maxExportBatchSize: 1000
+    maxQueueSize: 10000
+    sampler:
+      enabled: "{{ opentelemetry.enabled }}"
+      # By default, all spans are included. They can be excluded by an exclude rule, and that can then be overridden by an include rule
+      # Example:
+      # excludes:
+      # - name: "GET /api/foo"
+      # includes:
+      # - name: "GET /api/foo"
+      #   attributes:
+      #     http.response.status_code: 500
+      excludes: []
+      includes: []

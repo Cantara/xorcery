@@ -15,8 +15,12 @@
  */
 package dev.xorcery.opentelemetry.sdk;
 
+import dev.xorcery.configuration.Configuration;
 import io.opentelemetry.sdk.logs.LogRecordProcessor;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
+import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
+import io.opentelemetry.sdk.logs.export.LogRecordExporter;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -31,10 +35,20 @@ public class LoggerProviderFactory
 
     @Inject
     public LoggerProviderFactory(Resource resource,
-                                 IterableProvider<LogRecordProcessor> logRecordProcessors) {
+                                 Configuration configuration,
+                                 IterableProvider<LogRecordExporter> logRecordExporters,
+                                 SdkMeterProvider meterProvider) {
+        OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
         var sdkLoggerProviderBuilder = SdkLoggerProvider.builder()
                 .setResource(resource);
-        for (LogRecordProcessor logRecordProcessor : logRecordProcessors) {
+        for (LogRecordExporter logRecordExporter : logRecordExporters) {
+            LogRecordProcessor logRecordProcessor = BatchLogRecordProcessor.builder(logRecordExporter)
+                    .setMeterProvider(meterProvider)
+                    .setScheduleDelay(openTelemetryConfiguration.getLoggingScheduleDelay())
+                    .setExporterTimeout(openTelemetryConfiguration.getLoggingExporterTimeout())
+                    .setMaxExportBatchSize(openTelemetryConfiguration.getLoggingMaxExportBatchSize())
+                    .setMaxQueueSize(openTelemetryConfiguration.getLoggingMaxQueueSize())
+                    .build();
             sdkLoggerProviderBuilder.addLogRecordProcessor(logRecordProcessor);
         }
         sdkLoggerProvider = sdkLoggerProviderBuilder.build();

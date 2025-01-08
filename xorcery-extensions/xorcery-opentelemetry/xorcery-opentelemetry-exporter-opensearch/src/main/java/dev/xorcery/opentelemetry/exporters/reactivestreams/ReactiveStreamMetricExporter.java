@@ -27,8 +27,11 @@ import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.resources.Resource;
-import org.apache.logging.log4j.spi.ExtendedLogger;
+import jakarta.inject.Inject;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.util.ByteArrayOutputStream2;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -37,19 +40,22 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Service(name="opentelemetry.exporters.reactivestreams.metrics")
+@ContractsProvided(MetricExporter.class)
 public class ReactiveStreamMetricExporter
         implements MetricExporter {
     private final AggregationTemporality aggregationTemporality;
     private final JsonNode resource;
-    private final ExtendedLogger logger;
+    private final Logger logger;
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final ReactiveStreamExporterService reactiveStreamExporterService;
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     private final ByteArrayOutputStream2 baos = new ByteArrayOutputStream2();
 
-    public ReactiveStreamMetricExporter(ReactiveStreamExporterService reactiveStreamExporterService, AggregationTemporality aggregationTemporality, Resource resource, ExtendedLogger logger) {
+    @Inject
+    public ReactiveStreamMetricExporter(ReactiveStreamExporterService reactiveStreamExporterService, Resource resource, Logger logger) {
         this.reactiveStreamExporterService = reactiveStreamExporterService;
-        this.aggregationTemporality = aggregationTemporality;
+        this.aggregationTemporality = AggregationTemporality.CUMULATIVE;
         this.logger = logger;
         Map<String, Object> resourceObject = resource.getAttributes().asMap().entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().getKey(), Map.Entry::getValue));
         this.resource = objectMapper.valueToTree(resourceObject);

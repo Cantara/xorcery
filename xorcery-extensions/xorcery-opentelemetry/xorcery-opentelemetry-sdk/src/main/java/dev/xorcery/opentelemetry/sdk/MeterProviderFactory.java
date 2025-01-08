@@ -15,14 +15,17 @@
  */
 package dev.xorcery.opentelemetry.sdk;
 
+import dev.xorcery.configuration.Configuration;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.MetricProducer;
-import io.opentelemetry.sdk.metrics.export.MetricReader;
+import io.opentelemetry.sdk.metrics.export.PeriodicMetricReader;
 import io.opentelemetry.sdk.resources.Resource;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.IterableProvider;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "opentelemetry")
@@ -32,11 +35,18 @@ public class MeterProviderFactory
 
     @Inject
     public MeterProviderFactory(Resource resource,
-                                IterableProvider<MetricReader> metricReaders,
+                                Configuration configuration,
+                                ServiceLocator serviceLocator,
+                                IterableProvider<MetricExporter> metricExporters,
                                 IterableProvider<MetricProducer> metricProducers) {
+
+        OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
         var sdkMeterProviderBuilder = SdkMeterProvider.builder().setResource(resource);
-        for (MetricReader metricReader : metricReaders) {
-            sdkMeterProviderBuilder.registerMetricReader(metricReader);
+        for (MetricExporter metricExporter : metricExporters) {
+            PeriodicMetricReader periodicMetricReader = PeriodicMetricReader.builder(metricExporter)
+                    .setInterval(openTelemetryConfiguration.getMetricReaderInterval())
+                    .build();
+            sdkMeterProviderBuilder.registerMetricReader(periodicMetricReader);
         }
         for (MetricProducer metricProducer : metricProducers) {
             sdkMeterProviderBuilder.registerMetricProducer(metricProducer);

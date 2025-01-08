@@ -20,6 +20,7 @@ import jakarta.inject.Inject;
 import org.jvnet.hk2.annotations.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.util.concurrent.Queues;
 
 @Service(name = "opentelemetry.exporters.websocket")
 public class WebsocketExporterService {
@@ -28,7 +29,7 @@ public class WebsocketExporterService {
 
     @Inject
     public WebsocketExporterService() {
-        collector = Sinks.many().unicast().onBackpressureBuffer();
+        collector = Sinks.many().unicast().onBackpressureBuffer(Queues.<MetadataByteBuffer>get(4096).get());
     }
 
     public void send(MetadataByteBuffer metadataByteBuffer) {

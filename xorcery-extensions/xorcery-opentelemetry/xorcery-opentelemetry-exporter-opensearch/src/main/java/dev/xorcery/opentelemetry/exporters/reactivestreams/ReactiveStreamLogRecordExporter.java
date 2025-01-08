@@ -18,6 +18,7 @@ package dev.xorcery.opentelemetry.exporters.reactivestreams;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.xorcery.metadata.Metadata;
 import dev.xorcery.reactivestreams.api.MetadataJsonNode;
 import io.opentelemetry.exporter.internal.otlp.logs.LogsRequestMarshaler;
@@ -25,7 +26,10 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.resources.Resource;
+import jakarta.inject.Inject;
 import org.eclipse.jetty.util.ByteArrayOutputStream2;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 
 import java.io.ByteArrayInputStream;
 import java.util.Collection;
@@ -33,6 +37,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Service(name="opentelemetry.exporters.reactivestreams.logs")
+@ContractsProvided(LogRecordExporter.class)
 public class ReactiveStreamLogRecordExporter
         implements LogRecordExporter {
     private final ReactiveStreamExporterService reactiveStreamExporterService;
@@ -41,9 +47,14 @@ public class ReactiveStreamLogRecordExporter
     private final ByteArrayOutputStream2 baos = new ByteArrayOutputStream2();
     private final JsonNode resource;
 
-    public ReactiveStreamLogRecordExporter(ReactiveStreamExporterService reactiveStreamExporterService, Resource resource, ObjectMapper objectMapper) {
+    @Inject
+    public ReactiveStreamLogRecordExporter(ReactiveStreamExporterService reactiveStreamExporterService, Resource resource) {
+        objectMapper = new ObjectMapper().findAndRegisterModules();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(LogRecordData.class, new LogRecordDataSerializer());
+        objectMapper.registerModule(module);
+
         this.reactiveStreamExporterService = reactiveStreamExporterService;
-        this.objectMapper = objectMapper;
         Map<String, Object> resourceObject = resource.getAttributes().asMap().entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().getKey(), Map.Entry::getValue));
         this.resource = objectMapper.valueToTree(resourceObject);
     }

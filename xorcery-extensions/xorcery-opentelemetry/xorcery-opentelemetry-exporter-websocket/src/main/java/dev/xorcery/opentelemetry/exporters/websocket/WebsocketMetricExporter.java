@@ -27,7 +27,9 @@ import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.resources.Resource;
-import org.apache.logging.log4j.spi.ExtendedLogger;
+import jakarta.inject.Inject;
+import org.apache.logging.log4j.Logger;
+import org.jvnet.hk2.annotations.Service;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -37,18 +39,20 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Service(name = "opentelemetry.exporters.websocket.metrics")
 public class WebsocketMetricExporter
         implements MetricExporter {
     private final AggregationTemporality aggregationTemporality;
-    private final ExtendedLogger logger;
+    private final Logger logger;
     private final AtomicBoolean isShutdown = new AtomicBoolean();
     private final WebsocketExporterService websocketExporterService;
     private final Map<Resource, JsonNode> resourceJson = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
-    public WebsocketMetricExporter(WebsocketExporterService websocketExporterService, AggregationTemporality aggregationTemporality, ExtendedLogger logger) {
+    @Inject
+    public WebsocketMetricExporter(WebsocketExporterService websocketExporterService, Logger logger) {
         this.websocketExporterService = websocketExporterService;
-        this.aggregationTemporality = aggregationTemporality;
+        this.aggregationTemporality = AggregationTemporality.CUMULATIVE;
         this.logger = logger;
     }
 

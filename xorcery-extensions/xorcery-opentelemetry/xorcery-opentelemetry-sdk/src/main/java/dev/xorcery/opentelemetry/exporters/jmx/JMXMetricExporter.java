@@ -21,7 +21,10 @@ import io.opentelemetry.sdk.metrics.InstrumentType;
 import io.opentelemetry.sdk.metrics.data.*;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.resources.Resource;
+import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 
 import javax.management.*;
 import javax.management.modelmbean.*;
@@ -33,6 +36,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Service(name="opentelemetry.exporters.jmx")
+@ContractsProvided(MetricExporter.class)
 public final class JMXMetricExporter implements MetricExporter {
     private final AtomicBoolean isShutdown;
     private final AggregationTemporality aggregationTemporality;
@@ -40,10 +45,11 @@ public final class JMXMetricExporter implements MetricExporter {
     private final Map<Resource, Map<List<Object>, ResourceDynamicMBean>> registeredMBeans = new HashMap<>();
     private final Logger logger;
 
-    public JMXMetricExporter(AggregationTemporality aggregationTemporality, Logger logger) {
+    @Inject
+    public JMXMetricExporter(Logger logger) {
         this.logger = logger;
         this.isShutdown = new AtomicBoolean();
-        this.aggregationTemporality = aggregationTemporality;
+        this.aggregationTemporality = AggregationTemporality.CUMULATIVE;
         this.managementServer = ManagementFactory.getPlatformMBeanServer();
     }
 

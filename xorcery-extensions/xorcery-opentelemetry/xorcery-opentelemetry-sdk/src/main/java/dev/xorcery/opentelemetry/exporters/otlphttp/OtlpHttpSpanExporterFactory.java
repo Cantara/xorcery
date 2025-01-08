@@ -21,22 +21,20 @@ import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter;
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder;
 import io.opentelemetry.sdk.common.export.RetryPolicy;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name="opentelemetry.exporters.otlp.http")
-public class OtlpHttpSpanProcessorFactory
-        implements Factory<SpanProcessor> {
-    private final SpanProcessor spanProcessor;
+public class OtlpHttpSpanExporterFactory
+        implements Factory<OtlpHttpSpanExporter> {
+    private final OtlpHttpSpanExporter spanExporter;
 
     @Inject
-    public OtlpHttpSpanProcessorFactory(Configuration configuration,
-                                        Secrets secrets,
-                                        SdkMeterProvider meterProvider) {
+    public OtlpHttpSpanExporterFactory(Configuration configuration,
+                                       Secrets secrets,
+                                       SdkMeterProvider meterProvider) {
         OtlpHttpConfiguration otHttpConfiguration = OtlpHttpConfiguration.get(configuration);
 
         OtlpHttpSpanExporterBuilder builder = OtlpHttpSpanExporter.builder();
@@ -48,25 +46,16 @@ public class OtlpHttpSpanProcessorFactory
         otHttpConfiguration.getCompression().ifPresent(builder::setCompression);
         builder.setMeterProvider(meterProvider);
 
-        OtlpHttpSpanExporter spanExporter = builder.build();
-
-        spanProcessor = BatchSpanProcessor.builder(spanExporter)
-                .setMeterProvider(meterProvider)
-                .setExporterTimeout(otHttpConfiguration.getExporterTimeout())
-                .setMaxExportBatchSize(otHttpConfiguration.getMaxExportBatchSize())
-                .setMaxQueueSize(otHttpConfiguration.getMaxQueueSize())
-                .setScheduleDelay(otHttpConfiguration.getScheduleDelay())
-                .setExportUnsampledSpans(false)
-                .build();
+        spanExporter = builder.build();
     }
 
     @Override
     @Singleton
-    public SpanProcessor provide() {
-        return spanProcessor;
+    public OtlpHttpSpanExporter provide() {
+        return spanExporter;
     }
 
     @Override
-    public void dispose(SpanProcessor instance) {
+    public void dispose(OtlpHttpSpanExporter instance) {
     }
 }

@@ -15,9 +15,13 @@
  */
 package dev.xorcery.opentelemetry.sdk;
 
+import dev.xorcery.configuration.Configuration;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -33,11 +37,21 @@ public class TracerProviderFactory
 
     @Inject
     public TracerProviderFactory(Resource resource,
+                                 Configuration configuration,
+                                 SdkMeterProvider meterProvider,
                                  @Optional Sampler parentSampler,
-                                 IterableProvider<SpanProcessor> spanProcessors) {
-        var sdkTracerProviderBuilder = SdkTracerProvider.builder()
-                .setResource(resource);
-        for (SpanProcessor spanProcessor : spanProcessors) {
+                                 IterableProvider<SpanExporter> spanExporters) {
+        OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
+        var sdkTracerProviderBuilder = SdkTracerProvider.builder().setResource(resource);
+        for (SpanExporter spanExporter : spanExporters) {
+            SpanProcessor spanProcessor = BatchSpanProcessor.builder(spanExporter)
+                    .setMeterProvider(meterProvider)
+                    .setExporterTimeout(openTelemetryConfiguration.getSpanExporterTimeout())
+                    .setMaxExportBatchSize(openTelemetryConfiguration.getSpanMaxExportBatchSize())
+                    .setMaxQueueSize(openTelemetryConfiguration.getSpanMaxQueueSize())
+                    .setScheduleDelay(openTelemetryConfiguration.getSpanScheduleDelay())
+                    .setExportUnsampledSpans(false)
+                    .build();
             sdkTracerProviderBuilder.addSpanProcessor(spanProcessor);
         }
 

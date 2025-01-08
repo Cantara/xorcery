@@ -20,9 +20,6 @@ import dev.xorcery.secrets.Secrets;
 import io.opentelemetry.exporter.otlp.http.logs.OtlpHttpLogRecordExporter;
 import io.opentelemetry.exporter.otlp.http.logs.OtlpHttpLogRecordExporterBuilder;
 import io.opentelemetry.sdk.common.export.RetryPolicy;
-import io.opentelemetry.sdk.logs.LogRecordProcessor;
-import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
-import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -30,14 +27,14 @@ import org.glassfish.hk2.api.Factory;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name="opentelemetry.exporters.otlp.http")
-public class OtlpHttpLogRecordProcessorFactory
-        implements Factory<LogRecordProcessor> {
-    private final BatchLogRecordProcessor logRecordProcessor;
+public class OtlpHttpLogRecordExporterFactory
+        implements Factory<OtlpHttpLogRecordExporter> {
+    private final OtlpHttpLogRecordExporter logRecordExporter;
 
     @Inject
-    public OtlpHttpLogRecordProcessorFactory(Configuration configuration,
-                                             Secrets secrets,
-                                             SdkMeterProvider meterProvider) {
+    public OtlpHttpLogRecordExporterFactory(Configuration configuration,
+                                            Secrets secrets,
+                                            SdkMeterProvider meterProvider) {
         OtlpHttpConfiguration otHttpConfiguration = OtlpHttpConfiguration.get(configuration);
 
         OtlpHttpLogRecordExporterBuilder builder = OtlpHttpLogRecordExporter.builder();
@@ -48,24 +45,16 @@ public class OtlpHttpLogRecordProcessorFactory
         otHttpConfiguration.getHeaders(secrets).forEach(builder::addHeader);
         otHttpConfiguration.getCompression().ifPresent(builder::setCompression);
         builder.setMeterProvider(meterProvider);
-        LogRecordExporter logRecordExporter = builder.build();
-
-        logRecordProcessor = BatchLogRecordProcessor.builder(logRecordExporter)
-                .setMeterProvider(meterProvider)
-                .setScheduleDelay(otHttpConfiguration.getScheduleDelay())
-                .setExporterTimeout(otHttpConfiguration.getExporterTimeout())
-                .setMaxExportBatchSize(otHttpConfiguration.getMaxExportBatchSize())
-                .setMaxQueueSize(otHttpConfiguration.getMaxQueueSize())
-                .build();
+        logRecordExporter = builder.build();
     }
 
     @Override
     @Singleton
-    public LogRecordProcessor provide() {
-        return logRecordProcessor;
+    public OtlpHttpLogRecordExporter provide() {
+        return logRecordExporter;
     }
 
     @Override
-    public void dispose(LogRecordProcessor instance) {
+    public void dispose(OtlpHttpLogRecordExporter instance) {
     }
 }

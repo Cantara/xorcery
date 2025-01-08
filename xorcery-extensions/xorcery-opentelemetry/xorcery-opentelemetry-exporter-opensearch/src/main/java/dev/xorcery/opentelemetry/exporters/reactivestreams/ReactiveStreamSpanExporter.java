@@ -27,8 +27,11 @@ import io.opentelemetry.sdk.common.export.MemoryMode;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.util.ByteArrayOutputStream2;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -37,6 +40,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Service(name = "opentelemetry.exporters.reactivestreams.traces")
+@ContractsProvided(SpanExporter.class)
 public class ReactiveStreamSpanExporter
     implements SpanExporter
 {
@@ -48,6 +53,7 @@ public class ReactiveStreamSpanExporter
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     private final SpanReusableDataMarshaler marshaler;
 
+    @Inject
     public ReactiveStreamSpanExporter(ReactiveStreamExporterService reactiveStreamExporterService, Resource resource, Logger logger) {
         this.reactiveStreamExporterService = reactiveStreamExporterService;
         this.logger = logger;

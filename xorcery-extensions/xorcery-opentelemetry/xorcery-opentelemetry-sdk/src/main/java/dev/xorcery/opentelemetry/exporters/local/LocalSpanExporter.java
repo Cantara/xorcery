@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import jakarta.inject.Inject;
+import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.util.Collection;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service(name="opentelemetry.exporters.local")
+@ContractsProvided({SpanExporter.class, LocalSpanExporter.class})
 public class LocalSpanExporter
     implements SpanExporter
 {

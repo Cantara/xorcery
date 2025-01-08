@@ -23,7 +23,7 @@ import java.util.List;
 public record RuleBasedSamplerConfiguration(Configuration configuration) {
 
     public static RuleBasedSamplerConfiguration get(Configuration configuration) {
-        return new RuleBasedSamplerConfiguration(configuration.getConfiguration("opentelemetry.sampler"));
+        return new RuleBasedSamplerConfiguration(configuration.getConfiguration("opentelemetry.spans.sampler"));
     }
 
     public List<SampleRule> getIncludes() {

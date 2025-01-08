@@ -23,6 +23,7 @@ import dev.xorcery.json.JsonElement;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.semconv.ResourceAttributes;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,11 @@ public record OpenTelemetryConfiguration(Configuration context)
                 .orElse(Collections.<AttributeKey<Object>, Object>emptyMap());
     }
 
+    // Metrics
+    public Duration getMetricReaderInterval() {
+        return Duration.parse("PT" + context.getString("meters.interval").orElse("30s"));
+    }
+
     public List<String> getIncludedMeters()
     {
         return context.getListAs("meters.includes", JsonNode::asText).orElse(Collections.emptyList());
@@ -57,6 +63,38 @@ public record OpenTelemetryConfiguration(Configuration context)
     public List<String> getExcludedMeters()
     {
         return context.getListAs("meters.excludes", JsonNode::asText).orElse(Collections.emptyList());
+    }
+
+    // Logging
+    public Duration getLoggingScheduleDelay() {
+        return Duration.parse("PT" + context.getString("logging.scheduleDelay").orElse("5s"));
+    }
+
+    public Duration getLoggingExporterTimeout() {
+        return Duration.parse("PT" + context.getString("logging.exporterTimeout").orElse("1h"));
+    }
+    public int getLoggingMaxExportBatchSize() {
+        return context.getInteger("logging.maxExportBatchSize").orElse(1000);
+    }
+
+    public int getLoggingMaxQueueSize() {
+        return context.getInteger("logging.maxQueueSize").orElse(10000);
+    }
+
+    // Spans
+    public Duration getSpanScheduleDelay() {
+        return Duration.parse("PT" + context.getString("spans.scheduleDelay").orElse("5s"));
+    }
+
+    public Duration getSpanExporterTimeout() {
+        return Duration.parse("PT" + context.getString("spans.exporterTimeout").orElse("1h"));
+    }
+    public int getSpanMaxExportBatchSize() {
+        return context.getInteger("spans.maxExportBatchSize").orElse(1000);
+    }
+
+    public int getSpanMaxQueueSize() {
+        return context.getInteger("spans.maxQueueSize").orElse(10000);
     }
 
     private Map.Entry<AttributeKey<Object>, Object> updateEntry(Map.Entry<String, Object> entry) {

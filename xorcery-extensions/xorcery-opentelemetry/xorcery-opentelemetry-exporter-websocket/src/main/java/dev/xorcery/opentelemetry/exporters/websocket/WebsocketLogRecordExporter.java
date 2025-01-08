@@ -17,12 +17,16 @@ package dev.xorcery.opentelemetry.exporters.websocket;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import dev.xorcery.metadata.Metadata;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.resources.Resource;
+import jakarta.inject.Inject;
+import org.jvnet.hk2.annotations.ContractsProvided;
+import org.jvnet.hk2.annotations.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,6 +37,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+@Service(name="opentelemetry.exporters.websocket.logs")
+@ContractsProvided(LogRecordExporter.class)
 public class WebsocketLogRecordExporter
         implements LogRecordExporter {
     private final WebsocketExporterService attachSender;
@@ -42,9 +48,13 @@ public class WebsocketLogRecordExporter
 
     private final Map<Resource, JsonNode> resourceJson = new HashMap<>();
 
-    public WebsocketLogRecordExporter(WebsocketExporterService attachSender, ObjectMapper objectMapper) {
+    @Inject
+    public WebsocketLogRecordExporter(WebsocketExporterService attachSender) {
+        objectMapper = new ObjectMapper().findAndRegisterModules();
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(LogRecordData.class, new LogRecordDataSerializer());
+        objectMapper.registerModule(module);
         this.attachSender = attachSender;
-        this.objectMapper = objectMapper;
         baos = new ByteArrayOutputStream();
     }
 

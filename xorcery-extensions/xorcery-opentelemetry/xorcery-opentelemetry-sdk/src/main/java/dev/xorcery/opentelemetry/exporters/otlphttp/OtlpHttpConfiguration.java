@@ -49,29 +49,8 @@ public record OtlpHttpConfiguration(Configuration configuration) {
                 .orElse(Collections.emptyMap());
     }
 
-    // Metrics
-    public Duration getInterval() {
-        return Duration.parse("PT" + configuration.getString("interval").orElse("30s"));
-    }
-
     public AggregationTemporalities getAggregationTemporality() {
         return configuration.getEnum("aggregationTemporality", AggregationTemporalities.class).orElse(AggregationTemporalities.alwaysCumulative);
-    }
-
-    // Logs
-    public Duration getScheduleDelay() {
-        return Duration.parse("PT" + configuration.getString("scheduleDelay").orElse("5s"));
-    }
-
-    public Duration getExporterTimeout() {
-        return Duration.parse("PT" + configuration.getString("exporterTimeout").orElse("1h"));
-    }
-    public int getMaxExportBatchSize() {
-        return configuration.getInteger("maxExportBatchSize").orElse(1000);
-    }
-
-    public int getMaxQueueSize() {
-        return configuration.getInteger("maxQueueSize").orElse(10000);
     }
 
     public String getLogsEndpoint()

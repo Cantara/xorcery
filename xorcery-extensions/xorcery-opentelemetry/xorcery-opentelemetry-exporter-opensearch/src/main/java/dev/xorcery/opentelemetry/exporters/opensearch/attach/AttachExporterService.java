@@ -84,6 +84,7 @@ public class AttachExporterService
                 {
                     logger.error(String.format("Attach to %s failed", hostUrl), throwable);
                 })
+                .doOnSubscribe(subscription -> logger.info("Attached to "+hostUrl))
                 .retryWhen(Retry.backoff(Long.MAX_VALUE, Duration.ofSeconds(10)))
                 .subscribe();
         logger.info("Exporting to " + hostUrl);
