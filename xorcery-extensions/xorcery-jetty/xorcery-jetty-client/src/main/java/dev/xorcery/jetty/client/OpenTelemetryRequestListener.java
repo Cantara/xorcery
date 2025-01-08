@@ -25,13 +25,14 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.semconv.ServerAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import org.eclipse.jetty.client.Request;
 
 import java.util.EventListener;
 
 public class OpenTelemetryRequestListener
-    implements Request.Listener, EventListener
-{
+        implements Request.Listener, EventListener {
     private static final TextMapSetter<? super Request> jettySetter =
             (carrier, key, value) -> carrier.headers(mutable -> mutable.add(key, value));
     private final Tracer tracer;
@@ -50,13 +51,16 @@ public class OpenTelemetryRequestListener
     public void onBegin(Request request) {
         Span span = tracer.spanBuilder(request.getMethod())
                 .setSpanKind(SpanKind.CLIENT)
-                        .startSpan();
-        request.onResponseSuccess( r ->
+                .setAttribute(HttpAttributes.HTTP_REQUEST_METHOD, request.getMethod())
+                .setAttribute(ServerAttributes.SERVER_ADDRESS, request.getHost())
+                .setAttribute(UrlAttributes.URL_FULL, request.getURI().toASCIIString())
+                .startSpan();
+        request.onResponseSuccess(r ->
         {
             span.setAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, r.getStatus());
             span.end();
         });
-        request.onResponseFailure( (r,f)->
+        request.onResponseFailure((r, f) ->
         {
             span.setAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, r.getStatus());
             span.end();
