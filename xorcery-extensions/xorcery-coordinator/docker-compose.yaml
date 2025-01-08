@@ -2,7 +2,7 @@ name: xorcery-coordinator
 
 services:
   coordinator:
-    image: dev.xorcery/xorcery-coordinator:0.153.1
+    image: xorcery/xorcery-coordinator:0.153.1
     environment:
       JAVA_OPTS: "-ms256m -mx512m"
       HTTP_PORT: 8080

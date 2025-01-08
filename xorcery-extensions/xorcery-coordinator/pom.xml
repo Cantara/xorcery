@@ -29,9 +29,7 @@
     <version>0.155.1-SNAPSHOT</version>
 
     <properties>
-        <mainjarversion>0.153.1</mainjarversion>
         <mainclass>dev.xorcery.coordinator.Main</mainclass>
-        <docker.tag>0.153.1</docker.tag>
     </properties>
 
     <dependencies>

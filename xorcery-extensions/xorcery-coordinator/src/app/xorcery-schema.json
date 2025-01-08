@@ -1600,6 +1600,16 @@
                       "type" : "string",
                       "default" : "http://localhost:9200/",
                       "description" : "Default: http://localhost:9200/"
+                    },
+                    "traceIndex" : {
+                      "type" : "string",
+                      "default" : "otel-v1-apm-span-{{ application.name }}",
+                      "description" : "Default: otel-v1-apm-span-{{ application.name }} (otel-v1-apm-span-application)"
+                    },
+                    "logIndex" : {
+                      "type" : "string",
+                      "default" : "otel-v1-apm-span-{{ application.name }}",
+                      "description" : "Default: otel-v1-apm-span-{{ application.name }} (otel-v1-apm-span-application)"
                     }
                   }
                 }
@@ -1613,11 +1623,6 @@
                   "type" : [ "boolean", "string" ],
                   "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
                   "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
-                },
-                "interval" : {
-                  "type" : "string",
-                  "default" : "10s",
-                  "description" : "Default: 10s"
                 }
               }
             },
@@ -1629,11 +1634,6 @@
                   "type" : [ "boolean", "string" ],
                   "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
                   "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} (true)"
-                },
-                "interval" : {
-                  "type" : "string",
-                  "default" : "10s",
-                  "description" : "Default: 10s"
                 }
               }
             },
@@ -1645,11 +1645,6 @@
                   "type" : [ "boolean", "string" ],
                   "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
                   "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
-                },
-                "interval" : {
-                  "type" : "string",
-                  "default" : "5s",
-                  "description" : "Default: 5s"
                 }
               }
             },
@@ -1694,36 +1689,6 @@
                       "type" : "string",
                       "default" : "10s",
                       "description" : "Default: 10s"
-                    },
-                    "interval" : {
-                      "type" : "string",
-                      "default" : "10s",
-                      "description" : "Default: 10s"
-                    },
-                    "aggregationTemporality" : {
-                      "type" : "string",
-                      "default" : "alwaysCumulative",
-                      "description" : "Default: alwaysCumulative"
-                    },
-                    "scheduleDelay" : {
-                      "type" : "string",
-                      "default" : "5s",
-                      "description" : "Default: 5s"
-                    },
-                    "exporterTimeout" : {
-                      "type" : "string",
-                      "default" : "60s",
-                      "description" : "Default: 60s"
-                    },
-                    "maxExportBatchSize" : {
-                      "type" : [ "number", "string" ],
-                      "default" : 1000,
-                      "description" : "Default: 1000"
-                    },
-                    "maxQueueSize" : {
-                      "type" : [ "number", "string" ],
-                      "default" : 10000,
-                      "description" : "Default: 10000"
                     },
                     "logsEndpoint" : {
                       "type" : "string",
@@ -2101,14 +2066,14 @@
             }
           }
         },
-        "sampler" : {
+        "meters" : {
           "type" : "object",
           "additionalProperties" : false,
           "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ opentelemetry.enabled }}",
-              "description" : "Default: {{ opentelemetry.enabled }} (true)"
+            "interval" : {
+              "type" : "string",
+              "default" : "10s",
+              "description" : "Default: 10s"
             },
             "excludes" : {
               "type" : [ "array", "string" ]
@@ -2118,15 +2083,72 @@
             }
           }
         },
-        "meters" : {
+        "logging" : {
           "type" : "object",
           "additionalProperties" : false,
           "properties" : {
-            "excludes" : {
-              "type" : [ "array", "string" ]
+            "scheduleDelay" : {
+              "type" : "string",
+              "default" : "5s",
+              "description" : "Default: 5s"
             },
-            "includes" : {
-              "type" : [ "array", "string" ]
+            "exporterTimeout" : {
+              "type" : "string",
+              "default" : "60s",
+              "description" : "Default: 60s"
+            },
+            "maxExportBatchSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1000,
+              "description" : "Default: 1000"
+            },
+            "maxQueueSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 10000,
+              "description" : "Default: 10000"
+            }
+          }
+        },
+        "spans" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "scheduleDelay" : {
+              "type" : "string",
+              "default" : "5s",
+              "description" : "Default: 5s"
+            },
+            "exporterTimeout" : {
+              "type" : "string",
+              "default" : "60s",
+              "description" : "Default: 60s"
+            },
+            "maxExportBatchSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1000,
+              "description" : "Default: 1000"
+            },
+            "maxQueueSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 10000,
+              "description" : "Default: 10000"
+            },
+            "sampler" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.enabled }}",
+                  "description" : "Default: {{ opentelemetry.enabled }} (true)"
+                },
+                "excludes" : {
+                  "type" : [ "array", "string" ]
+                },
+                "includes" : {
+                  "type" : [ "array", "string" ]
+                }
+              }
             }
           }
         }
