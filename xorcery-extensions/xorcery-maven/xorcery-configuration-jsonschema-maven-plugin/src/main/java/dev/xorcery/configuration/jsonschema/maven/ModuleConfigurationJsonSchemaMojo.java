@@ -107,6 +107,7 @@ public class ModuleConfigurationJsonSchemaMojo extends JsonSchemaCommonMojo {
             moduleWithDependenciesBuilder.addYaml("""
                     instance.host: "service"
                     instance.ip: "192.168.0.2"
+                    instance.home: ""
                     """);
         }
 
