@@ -15,7 +15,6 @@
  */
 package dev.xorcery.opentelemetry.exporters.otlphttp.jdk;
 
-import io.opentelemetry.exporter.internal.auth.Authenticator;
 import io.opentelemetry.exporter.internal.compression.Compressor;
 import io.opentelemetry.exporter.internal.http.HttpSender;
 import io.opentelemetry.sdk.common.export.ProxyOptions;
@@ -47,7 +46,6 @@ public class JdkHttpSenderProvider
             long connectTimeout,
             Supplier<Map<String, List<String>>> headerSupplier,
             ProxyOptions proxyOptions,
-            @Nullable Authenticator authenticator,
             @Nullable RetryPolicy retryPolicy,
             @Nullable SSLContext sslContext,
             @Nullable X509TrustManager trustManager) {
