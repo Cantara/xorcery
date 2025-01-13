@@ -110,25 +110,28 @@ public class Neo4jProjections
         return new ContextViewElement(contextView).getString(ProjectionStreamContext.projectionId).map(pid ->
         {
             SinkFlux sinkFlux = projectionSinks.computeIfAbsent(pid, this::createSinkFlux);
-            return projectionFlux.doOnEach(onEach(sinkFlux.sink()));
+            return projectionFlux.doOnEach(onEach(sinkFlux.sink(), pid));
         }).orElse(projectionFlux);
     }
 
-    private Consumer<Signal<MetadataEvents>> onEach(Sinks.Many<MetadataEvents> sink) {
+    private Consumer<Signal<MetadataEvents>> onEach(Sinks.Many<MetadataEvents> sink, String pid) {
         return signal ->
         {
             switch (requireNonNull(signal.getType())) {
                 case CANCEL -> {
                     sink.tryEmitComplete();
+                    projectionSinks.remove(pid);
                 }
                 case ON_NEXT -> {
                     sink.tryEmitNext(requireNonNull(signal.get()));
                 }
                 case ON_ERROR -> {
                     sink.tryEmitError(requireNonNull(signal.getThrowable()));
+                    projectionSinks.remove(pid);
                 }
                 case ON_COMPLETE -> {
                     sink.tryEmitComplete();
+                    projectionSinks.remove(pid);
                 }
                 default -> {
                 }
