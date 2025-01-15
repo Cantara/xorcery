@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-domainevents</artifactId>
-        <version>0.155.2-SNAPSHOT</version>
+        <version>0.155.2</version>
     </parent>
 
     <artifactId>xorcery-domainevents-publisher</artifactId>
