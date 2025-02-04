@@ -23,6 +23,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -50,6 +51,8 @@ public class SmartBatcher<T>
 
     private final List<T> batch = new ArrayList<>();
 
+    private final AtomicReference<RuntimeException> error = new AtomicReference<>();
+
     public SmartBatcher(Consumer<Collection<T>> handler, BlockingQueue<T> queue, Executor executor) {
         this.handler = handler;
         this.executor = executor;
@@ -72,6 +75,11 @@ public class SmartBatcher<T>
     private void scheduleDrain(){
         try {
             updateLock.lock();
+
+            if (error.get() instanceof IllegalStateException exception) {
+                throw exception;
+            }
+
             if (handlingLock.tryAcquire()) {
                 executor.execute(this::drainQueue);
             }
@@ -99,6 +107,7 @@ public class SmartBatcher<T>
         } catch (Throwable t) {
             System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "SmartBatcher handler failed", t);
             handlingLock.release();
+            error.set(new IllegalStateException(t));
         }
     }
 

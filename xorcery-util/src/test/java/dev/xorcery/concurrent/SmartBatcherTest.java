@@ -52,4 +52,27 @@ class SmartBatcherTest {
             throw new RuntimeException(e);
         }
     }
+
+    private void errorHandler(Collection<String> strings) {
+        int size = strings.size();
+        for (String string : strings) {
+            count++;
+            if (count%1000 == 0){
+                throw new IllegalArgumentException("Something went wrong");
+            }
+        }
+    }
+
+    @Test
+    public void testSmartBatcherException() throws InterruptedException{
+        Assertions.assertThrows(IllegalStateException.class, ()->
+        {
+            try (SmartBatcher<String> batcher = new SmartBatcher<>(this::errorHandler, new ArrayBlockingQueue<>(1024), Executors.newSingleThreadExecutor()))
+            {
+                for (int i = 0; i < 1000000; i++) {
+                    batcher.submit("value"+i);
+                }
+            }
+        });
+    }
 }
