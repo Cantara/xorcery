@@ -62,8 +62,14 @@ public class SmartBatcher<T>
         {
             if (closed.get())
                 throw new InterruptedException();
+
+            scheduleDrain();
         }
 
+        scheduleDrain();
+    }
+
+    private void scheduleDrain(){
         try {
             updateLock.lock();
             if (handlingLock.tryAcquire()) {
