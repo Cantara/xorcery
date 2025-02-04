@@ -112,7 +112,7 @@ public class Neo4jProjectionHandler
         try {
             String projectionId = new ContextViewElement(contextView).getString(ProjectionStreamContext.projectionId)
                     .orElseThrow(missing(ProjectionStreamContext.projectionId));
-            logger.info("Starting Neo4j projection with id " + projectionId);
+            logger.debug("Starting Neo4j projection with id " + projectionId);
             Optional<ProjectionModel> currentProjection = getProjection(projectionId);
             Attributes attributes = Attributes.of(AttributeKey.stringKey("neo4j.projection.projectionId"), projectionId);
             List<Neo4jEventProjection> projections = new ArrayList<>();
