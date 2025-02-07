@@ -77,6 +77,7 @@ public class Neo4jProjectionHandler
     private final DoubleHistogram commitLatencyHistogram;
     private final Meter meter;
     private final long highestSafeUsage;
+    private final Scheduler scheduler;
 
     @Inject
     public Neo4jProjectionHandler(
@@ -103,7 +104,14 @@ public class Neo4jProjectionHandler
         commitLatencyHistogram = meter.histogramBuilder("neo4j.projection.commitLatency")
                 .setUnit(OpenTelemetryUnits.SECONDS).build();
 
-        highestSafeUsage = projectionsConfiguration.getMaxTransactionSize()-projectionsConfiguration.getTransactionMemoryUsageMargin();
+        highestSafeUsage = projectionsConfiguration.getMaxTransactionSize() - projectionsConfiguration.getTransactionMemoryUsageMargin();
+
+        int maxThreadCount = projectionsConfiguration.getMaxThreadCount();
+        scheduler = maxThreadCount == -1
+                ? Schedulers.boundedElastic()
+                : maxThreadCount == 1
+                ? Schedulers.single()
+                : Schedulers.newBoundedElastic(maxThreadCount, 1024, "Neo4j Projection");
     }
 
     @Override
@@ -119,13 +127,6 @@ public class Neo4jProjectionHandler
             projectionProviders.forEach(projections::add);
             Handler handler = new Handler(projections, projectionId, attributes, meter, currentProjection.flatMap(ProjectionModel::getProjectionPosition).orElse(-1L));
             ArrayBlockingQueue<MetadataEvents> smartBatchingQueue = new ArrayBlockingQueue<>(projectionsConfiguration.eventBatchSize());
-            int maxThreadCount = projectionsConfiguration.getMaxThreadCount();
-            Scheduler scheduler = maxThreadCount == -1
-                    ? Schedulers.boundedElastic()
-                    :
-                    maxThreadCount == 1
-                            ? Schedulers.single()
-                            : Schedulers.newBoundedElastic(maxThreadCount, 1024, "Neo4j Projection");
             return Flux.from(currentProjection
                     .map(p -> SmartBatchingOperator.smartBatching(handler, () -> smartBatchingQueue, () -> taskWrapping(scheduler::schedule))
                             .apply(p.getProjectionPosition()
@@ -190,16 +191,14 @@ public class Neo4jProjectionHandler
                 MATCH (projection:Projection)
                 RETURN properties(projection) as properties
                 """, Collections.emptyMap(), result -> {
-                    List<ProjectionModel> projections = new ArrayList<>();
-                    while (result.hasNext())
-                    {
-                        if (result.next().get("properties") instanceof Map properties)
-                        {
-                            projections.add(new ProjectionModel(properties));
-                        }
-                    }
-                    return projections;
-                });
+            List<ProjectionModel> projections = new ArrayList<>();
+            while (result.hasNext()) {
+                if (result.next().get("properties") instanceof Map properties) {
+                    projections.add(new ProjectionModel(properties));
+                }
+            }
+            return projections;
+        });
     }
 
     private class Handler
@@ -319,13 +318,11 @@ public class Neo4jProjectionHandler
                         Set<String> commandNames = new HashSet<>();
                         Set<String> eventNames = new HashSet<>();
                         int eventCount = 0;
-                        while (metadataEventsIterator.hasNext())
-                        {
+                        while (metadataEventsIterator.hasNext()) {
                             MetadataEvents event = metadataEventsIterator.next();
                             event.metadata().getString("commandName").ifPresent(commandNames::add);
                             for (DomainEvent domainEvent : event.data()) {
-                                if (domainEvent instanceof JsonDomainEvent jsonDomainEvent)
-                                {
+                                if (domainEvent instanceof JsonDomainEvent jsonDomainEvent) {
                                     eventNames.add(jsonDomainEvent.getName());
                                     eventCount++;
                                 }
@@ -337,7 +334,7 @@ public class Neo4jProjectionHandler
                             sink.error(e);
                             return;
                         } else {
-                            logger.warn("Transaction too large, trying again with smaller batch size:{}, position:{}, commands:{}, events:{}, event count:{}",maxEvents, position.get(), commandNames, eventNames, eventCount);
+                            logger.warn("Transaction too large, trying again with smaller batch size:{}, position:{}, commands:{}, events:{}, event count:{}", maxEvents, position.get(), commandNames, eventNames, eventCount);
                             tx = database.beginTx();
                         }
                     }
