@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-status</artifactId>
-        <version>0.155.5-SNAPSHOT</version>
+        <version>0.155.5</version>
     </parent>
 
     <artifactId>xorcery-status-jmx</artifactId>
