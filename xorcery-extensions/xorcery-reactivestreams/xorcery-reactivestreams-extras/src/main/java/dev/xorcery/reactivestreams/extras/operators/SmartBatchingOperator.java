@@ -101,7 +101,7 @@ public final class SmartBatchingOperator {
         protected void hookOnNext(T value) {
             try {
                 smartBatcher.submit(value);
-            } catch (InterruptedException e) {
+            } catch (Throwable e) {
                 downstream.error(e);
             }
         }
