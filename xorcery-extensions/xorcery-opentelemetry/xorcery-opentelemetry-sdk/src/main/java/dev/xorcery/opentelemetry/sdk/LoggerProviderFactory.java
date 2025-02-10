@@ -16,6 +16,7 @@
 package dev.xorcery.opentelemetry.sdk;
 
 import dev.xorcery.configuration.Configuration;
+import dev.xorcery.hk2.Services;
 import io.opentelemetry.sdk.logs.LogRecordProcessor;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.export.BatchLogRecordProcessor;
@@ -25,7 +26,8 @@ import io.opentelemetry.sdk.resources.Resource;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.IterableProvider;
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.jvnet.hk2.annotations.Service;
 
 @Service(name = "opentelemetry")
@@ -36,12 +38,14 @@ public class LoggerProviderFactory
     @Inject
     public LoggerProviderFactory(Resource resource,
                                  Configuration configuration,
-                                 IterableProvider<LogRecordExporter> logRecordExporters,
+                                 ServiceLocator serviceLocator,
                                  SdkMeterProvider meterProvider) {
         OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
         var sdkLoggerProviderBuilder = SdkLoggerProvider.builder()
                 .setResource(resource);
-        for (LogRecordExporter logRecordExporter : logRecordExporters) {
+        for (LogRecordExporter logRecordExporter : Services.allOfTypeRanked(serviceLocator, LogRecordExporter.class)
+                .map(ServiceHandle::getService)
+                .toList()) {
             LogRecordProcessor logRecordProcessor = BatchLogRecordProcessor.builder(logRecordExporter)
                     .setMeterProvider(meterProvider)
                     .setScheduleDelay(openTelemetryConfiguration.getLoggingScheduleDelay())

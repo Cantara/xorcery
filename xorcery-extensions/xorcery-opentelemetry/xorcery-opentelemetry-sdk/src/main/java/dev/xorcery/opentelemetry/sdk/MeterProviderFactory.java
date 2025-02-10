@@ -16,6 +16,7 @@
 package dev.xorcery.opentelemetry.sdk;
 
 import dev.xorcery.configuration.Configuration;
+import dev.xorcery.hk2.Services;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.metrics.export.MetricProducer;
@@ -24,7 +25,7 @@ import io.opentelemetry.sdk.resources.Resource;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.IterableProvider;
+import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.jvnet.hk2.annotations.Service;
 
@@ -36,19 +37,21 @@ public class MeterProviderFactory
     @Inject
     public MeterProviderFactory(Resource resource,
                                 Configuration configuration,
-                                ServiceLocator serviceLocator,
-                                IterableProvider<MetricExporter> metricExporters,
-                                IterableProvider<MetricProducer> metricProducers) {
+                                ServiceLocator serviceLocator) {
 
         OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
         var sdkMeterProviderBuilder = SdkMeterProvider.builder().setResource(resource);
-        for (MetricExporter metricExporter : metricExporters) {
+        for (MetricExporter metricExporter : Services.allOfTypeRanked(serviceLocator, MetricExporter.class)
+                .map(ServiceHandle::getService)
+                .toList()) {
             PeriodicMetricReader periodicMetricReader = PeriodicMetricReader.builder(metricExporter)
                     .setInterval(openTelemetryConfiguration.getMetricReaderInterval())
                     .build();
             sdkMeterProviderBuilder.registerMetricReader(periodicMetricReader);
         }
-        for (MetricProducer metricProducer : metricProducers) {
+        for (MetricProducer metricProducer : Services.allOfTypeRanked(serviceLocator, MetricProducer.class)
+                .map(ServiceHandle::getService)
+                .toList()) {
             sdkMeterProviderBuilder.registerMetricProducer(metricProducer);
         }
 

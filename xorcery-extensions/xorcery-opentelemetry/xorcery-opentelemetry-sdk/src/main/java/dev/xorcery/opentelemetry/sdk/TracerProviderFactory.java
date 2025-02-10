@@ -16,6 +16,7 @@
 package dev.xorcery.opentelemetry.sdk;
 
 import dev.xorcery.configuration.Configuration;
+import dev.xorcery.hk2.Services;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -26,7 +27,8 @@ import io.opentelemetry.sdk.trace.samplers.Sampler;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.IterableProvider;
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
 import org.jvnet.hk2.annotations.Optional;
 import org.jvnet.hk2.annotations.Service;
 
@@ -40,10 +42,12 @@ public class TracerProviderFactory
                                  Configuration configuration,
                                  SdkMeterProvider meterProvider,
                                  @Optional Sampler parentSampler,
-                                 IterableProvider<SpanExporter> spanExporters) {
+                                 ServiceLocator serviceLocator) {
         OpenTelemetryConfiguration openTelemetryConfiguration = OpenTelemetryConfiguration.get(configuration);
         var sdkTracerProviderBuilder = SdkTracerProvider.builder().setResource(resource);
-        for (SpanExporter spanExporter : spanExporters) {
+        for (SpanExporter spanExporter : Services.allOfTypeRanked(serviceLocator, SpanExporter.class)
+                .map(ServiceHandle::getService)
+                .toList()) {
             SpanProcessor spanProcessor = BatchSpanProcessor.builder(spanExporter)
                     .setMeterProvider(meterProvider)
                     .setExporterTimeout(openTelemetryConfiguration.getSpanExporterTimeout())
