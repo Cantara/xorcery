@@ -221,143 +221,147 @@ public class Neo4jProjectionHandler
 
         @Override
         public void accept(Collection<MetadataEvents> events, SynchronousSink<Collection<MetadataEvents>> sink) {
-            final long start = System.nanoTime();
-            final int eventsSize = events.size();
-            int maxEvents = eventsSize;
-            int committed = 0;
-            Iterator<MetadataEvents> metadataEventsIterator = events.iterator();
-            Transaction tx = database.beginTx();
-            MemoryTracker memoryTracker = tx instanceof InternalTransaction it ? it.kernelTransaction().memoryTracker() : null;
+            try {
+                final long start = System.nanoTime();
+                final int eventsSize = events.size();
+                int maxEvents = eventsSize;
+                int committed = 0;
+                Iterator<MetadataEvents> metadataEventsIterator = events.iterator();
+                Transaction tx = database.beginTx();
+                MemoryTracker memoryTracker = tx instanceof InternalTransaction it ? it.kernelTransaction().memoryTracker() : null;
 
-            MetadataEvents metadataEvents = null;
-            while (true) {
-                try {
-                    int eventCount = 0;
-                    long startProjection = System.nanoTime();
-                    while (metadataEventsIterator.hasNext()) {
-                        metadataEvents = metadataEventsIterator.next();
+                MetadataEvents metadataEvents = null;
+                while (true) {
+                    try {
+                        int eventCount = 0;
+                        long startProjection = System.nanoTime();
+                        while (metadataEventsIterator.hasNext()) {
+                            metadataEvents = metadataEventsIterator.next();
 
-                        if (maxEvents == 1 && eventsSize > maxEvents) {
-                            logger.debug("Handling a single problematic event", metadataEvents);
-                        }
-                        metadataEvents.metadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
-                        for (Neo4jEventProjection projection : projections) {
-                            projection.write(metadataEvents, tx);
-                        }
+                            if (maxEvents == 1 && eventsSize > maxEvents) {
+                                logger.debug("Handling a single problematic event", metadataEvents);
+                            }
+                            metadataEvents.metadata().toBuilder().add(ProjectionStreamContext.projectionId, projectionId);
+                            for (Neo4jEventProjection projection : projections) {
+                                projection.write(metadataEvents, tx);
+                            }
 
-                        if (++eventCount == maxEvents || !metadataEventsIterator.hasNext() || (memoryTracker != null && memoryTracker.estimatedHeapMemory() > highestSafeUsage)) {
+                            if (++eventCount == maxEvents || !metadataEventsIterator.hasNext() || (memoryTracker != null && memoryTracker.estimatedHeapMemory() > highestSafeUsage)) {
 
-                            double projectDuration = System.nanoTime() - startProjection;
-                            projectionLatencyHistogram.record(projectDuration / 1_000_000_000.0, attributes);
+                                double projectDuration = System.nanoTime() - startProjection;
+                                projectionLatencyHistogram.record(projectDuration / 1_000_000_000.0, attributes);
 
-                            position.set(((Number) metadataEvents
-                                    .metadata()
-                                    .getLong(DomainEventMetadata.streamPosition)
-                                    .orElse(position.get() + eventsSize))
-                                    .longValue());
-                            long timestamp = ((Number) metadataEvents
-                                    .metadata()
-                                    .getLong(DomainEventMetadata.timestamp)
-                                    .orElseGet(System::currentTimeMillis))
-                                    .longValue();
-                            Map<String, Object> updateParameters = new HashMap<>();
-                            updateParameters.put(Projection.id.name(), projectionId);
-                            updateParameters.put(Projection.projectionPosition.name(), position.get());
-                            updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
-                            tx.execute("""
-                                    MATCH (projection:Projection {id:$id}) SET 
-                                    projection.projectionPosition=$projectionPosition,
-                                    projection.projectionTimestamp=$projectionTimestamp
-                                    RETURN projection
-                                    """, updateParameters).close();
+                                position.set(((Number) metadataEvents
+                                        .metadata()
+                                        .getLong(DomainEventMetadata.streamPosition)
+                                        .orElse(position.get() + eventsSize))
+                                        .longValue());
+                                long timestamp = ((Number) metadataEvents
+                                        .metadata()
+                                        .getLong(DomainEventMetadata.timestamp)
+                                        .orElseGet(System::currentTimeMillis))
+                                        .longValue();
+                                Map<String, Object> updateParameters = new HashMap<>();
+                                updateParameters.put(Projection.id.name(), projectionId);
+                                updateParameters.put(Projection.projectionPosition.name(), position.get());
+                                updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
+                                tx.execute("""
+                                        MATCH (projection:Projection {id:$id}) SET 
+                                        projection.projectionPosition=$projectionPosition,
+                                        projection.projectionTimestamp=$projectionTimestamp
+                                        RETURN projection
+                                        """, updateParameters).close();
 
-                            long startCommit = System.nanoTime();
-                            tx.commit();
-                            tx.close();
-                            double commitDuration = System.nanoTime() - startCommit;
-                            commitLatencyHistogram.record(commitDuration / 1_000_000_000.0, attributes);
+                                long startCommit = System.nanoTime();
+                                tx.commit();
+                                tx.close();
+                                double commitDuration = System.nanoTime() - startCommit;
+                                commitLatencyHistogram.record(commitDuration / 1_000_000_000.0, attributes);
 
-                            long stop = System.nanoTime();
-                            batchSizeHistogram.record(eventCount, attributes);
-                            double writeDuration = stop - start;
-                            writeLatencyHistogram.record(writeDuration / 1_000_000_000.0, attributes);
+                                long stop = System.nanoTime();
+                                batchSizeHistogram.record(eventCount, attributes);
+                                double writeDuration = stop - start;
+                                writeLatencyHistogram.record(writeDuration / 1_000_000_000.0, attributes);
 
-                            if (logger.isTraceEnabled())
-                                logger.trace("Committed " + eventsSize);
+                                if (logger.isTraceEnabled())
+                                    logger.trace("Committed " + eventsSize);
 
-                            if (metadataEventsIterator.hasNext()) {
-                                committed += eventCount;
-                                if (maxEvents < eventsSize - committed) {
-                                    logger.info("Resized batch complete");
-                                    maxEvents = eventsSize - committed;
+                                if (metadataEventsIterator.hasNext()) {
+                                    committed += eventCount;
+                                    if (maxEvents < eventsSize - committed) {
+                                        logger.info("Resized batch complete");
+                                        maxEvents = eventsSize - committed;
+                                    }
+                                    tx = database.beginTx();
+                                } else {
+                                    tx = null;
                                 }
-                                tx = database.beginTx();
-                            } else {
-                                tx = null;
                             }
                         }
-                    }
-                    if (tx != null) {
+                        if (tx != null) {
+                            tx.close();
+                        }
+                        break;
+                    } catch (MemoryLimitExceededException | TransientTransactionFailureException e) {
+                        tx.rollback();
                         tx.close();
-                    }
-                    break;
-                } catch (MemoryLimitExceededException | TransientTransactionFailureException e) {
-                    tx.rollback();
-                    tx.close();
 
-                    maxEvents /= 2;
+                        maxEvents /= 2;
 
-                    // Gather debug info
-                    {
+                        // Gather debug info
+                        {
+                            metadataEventsIterator = events.iterator();
+                            // Remove already processed items
+                            for (int i = 0; i < committed; i++) {
+                                metadataEventsIterator.next();
+                            }
+                            // Collect remaining command and event names
+                            Set<String> commandNames = new HashSet<>();
+                            Set<String> eventNames = new HashSet<>();
+                            int eventCount = 0;
+                            while (metadataEventsIterator.hasNext()) {
+                                MetadataEvents event = metadataEventsIterator.next();
+                                event.metadata().getString("commandName").ifPresent(commandNames::add);
+                                for (DomainEvent domainEvent : event.data()) {
+                                    if (domainEvent instanceof JsonDomainEvent jsonDomainEvent) {
+                                        eventNames.add(jsonDomainEvent.getName());
+                                        eventCount++;
+                                    }
+                                }
+                            }
+
+                            if (maxEvents == 0) {
+                                logger.error("Transaction too large even with just one event, stopping projection");
+                                sink.error(e);
+                                return;
+                            } else {
+                                logger.warn("Transaction too large, trying again with smaller batch size:{}, position:{}, commands:{}, events:{}, event count:{}", maxEvents, position.get(), commandNames, eventNames, eventCount);
+                                tx = database.beginTx();
+                            }
+                        }
                         metadataEventsIterator = events.iterator();
                         // Remove already processed items
                         for (int i = 0; i < committed; i++) {
                             metadataEventsIterator.next();
                         }
-                        // Collect remaining command and event names
-                        Set<String> commandNames = new HashSet<>();
-                        Set<String> eventNames = new HashSet<>();
-                        int eventCount = 0;
-                        while (metadataEventsIterator.hasNext()) {
-                            MetadataEvents event = metadataEventsIterator.next();
-                            event.metadata().getString("commandName").ifPresent(commandNames::add);
-                            for (DomainEvent domainEvent : event.data()) {
-                                if (domainEvent instanceof JsonDomainEvent jsonDomainEvent) {
-                                    eventNames.add(jsonDomainEvent.getName());
-                                    eventCount++;
-                                }
-                            }
+                    } catch (Throwable e) {
+                        long position = -1;
+                        if (metadataEvents != null) {
+                            position = ((Number) metadataEvents
+                                    .metadata()
+                                    .getLong(DomainEventMetadata.streamPosition)
+                                    .orElse(position + eventsSize))
+                                    .longValue();
                         }
 
-                        if (maxEvents == 0) {
-                            logger.error("Transaction too large even with just one event, stopping projection");
-                            sink.error(e);
-                            return;
-                        } else {
-                            logger.warn("Transaction too large, trying again with smaller batch size:{}, position:{}, commands:{}, events:{}, event count:{}", maxEvents, position.get(), commandNames, eventNames, eventCount);
-                            tx = database.beginTx();
-                        }
+                        sink.error(new IllegalArgumentException("Could not handle event for projection " + projectionId + " at stream position: " + position, e));
+                        return;
                     }
-                    metadataEventsIterator = events.iterator();
-                    // Remove already processed items
-                    for (int i = 0; i < committed; i++) {
-                        metadataEventsIterator.next();
-                    }
-                } catch (Throwable e) {
-                    long position = -1;
-                    if (metadataEvents != null) {
-                        position = ((Number) metadataEvents
-                                .metadata()
-                                .getLong(DomainEventMetadata.streamPosition)
-                                .orElse(position + eventsSize))
-                                .longValue();
-                    }
-
-                    sink.error(new IllegalArgumentException("Could not handle event at stream position: " + position, e));
-                    return;
                 }
+                sink.next(events);
+            } catch (Throwable e) {
+                sink.error(new IllegalArgumentException("Could not handle event for projection " + projectionId + " at stream position: " + position, e));
             }
-            sink.next(events);
         }
 
         @Override
