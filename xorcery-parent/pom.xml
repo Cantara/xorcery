@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.xorcery</groupId>
     <artifactId>xorcery-parent</artifactId>
-    <version>0.155.6</version>
+    <version>0.155.7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -56,7 +56,7 @@
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-bom</artifactId>
-                <version>0.155.6</version>
+                <version>0.155.7-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
