@@ -40,7 +40,6 @@ import java.util.function.Consumer;
  */
 public class SmartBatcher<T>
         implements AutoCloseable {
-    private final Consumer<Collection<T>> handler;
     private final Executor executor;
 
     private final BlockingQueue<T> queue;
@@ -50,13 +49,12 @@ public class SmartBatcher<T>
 
     private final AtomicReference<RuntimeException> error = new AtomicReference<>();
 
-    private final DrainQueue drainQueue;
+    private final DrainQueue<T> drainQueue;
 
     public SmartBatcher(Consumer<Collection<T>> handler, BlockingQueue<T> queue, Executor executor) {
-        this.handler = handler;
         this.executor = executor;
         this.queue = queue;
-        this.drainQueue = new DrainQueue(queue, updateLock, handlingLock, executor, handler, error);
+        this.drainQueue = new DrainQueue<T>(queue, updateLock, handlingLock, executor, handler, error);
     }
 
     public void submit(T item) throws InterruptedException {
@@ -93,7 +91,7 @@ public class SmartBatcher<T>
         if (closed.compareAndSet(false, true))
         {
             int tries = 0;
-            while ((handlingLock.availablePermits() == 0 || !queue.isEmpty()) && tries++ < 100) {
+            while (error.get() == null && ((handlingLock.availablePermits() == 0 || !queue.isEmpty()) && tries++ < 100)) {
 //            System.out.println("Wait to shutdown");
                 try {
                     Thread.sleep(100);

@@ -53,16 +53,6 @@ class SmartBatcherTest {
         }
     }
 
-    private void errorHandler(Collection<String> strings) {
-        int size = strings.size();
-        for (String string : strings) {
-            count++;
-            if (count%1000 == 0){
-                throw new IllegalArgumentException("Something went wrong");
-            }
-        }
-    }
-
     @Test
     public void testSmartBatcherException() throws InterruptedException{
         Assertions.assertThrows(IllegalStateException.class, ()->
@@ -74,5 +64,16 @@ class SmartBatcherTest {
                 }
             }
         });
+        System.out.println("Done");
+    }
+
+    private void errorHandler(Collection<String> strings) {
+        int size = strings.size();
+        for (String string : strings) {
+            count++;
+            if (count%1000 == 0){
+                throw new IllegalArgumentException("Something went wrong");
+            }
+        }
     }
 }
