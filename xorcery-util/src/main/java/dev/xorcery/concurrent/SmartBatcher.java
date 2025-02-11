@@ -44,19 +44,19 @@ public class SmartBatcher<T>
     private final Executor executor;
 
     private final BlockingQueue<T> queue;
-
     private final Lock updateLock = new ReentrantLock();
     private final Semaphore handlingLock = new Semaphore(1);
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    private final List<T> batch = new ArrayList<>();
-
     private final AtomicReference<RuntimeException> error = new AtomicReference<>();
+
+    private final DrainQueue drainQueue;
 
     public SmartBatcher(Consumer<Collection<T>> handler, BlockingQueue<T> queue, Executor executor) {
         this.handler = handler;
         this.executor = executor;
         this.queue = queue;
+        this.drainQueue = new DrainQueue(queue, updateLock, handlingLock, executor, handler, error);
     }
 
     public void submit(T item) throws InterruptedException {
@@ -81,33 +81,10 @@ public class SmartBatcher<T>
             }
 
             if (handlingLock.tryAcquire()) {
-                executor.execute(this::drainQueue);
+                executor.execute(drainQueue);
             }
         } finally {
             updateLock.unlock();
-        }
-    }
-
-    private void drainQueue() {
-        try {
-            queue.drainTo(batch, queue.size());
-            handler.accept(batch);
-            batch.clear();
-
-            try {
-                updateLock.lock();
-                if (queue.isEmpty()) {
-                    handlingLock.release();
-                } else {
-                    executor.execute(this::drainQueue);
-                }
-            } finally {
-                updateLock.unlock();
-            }
-        } catch (Throwable t) {
-            System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "SmartBatcher handler failed", t);
-            handlingLock.release();
-            error.set(new IllegalStateException(t));
         }
     }
 
@@ -123,6 +100,57 @@ public class SmartBatcher<T>
                 } catch (InterruptedException e) {
                     // Ignore
                 }
+            }
+        }
+    }
+
+    private static final class DrainQueue<T>
+        implements Runnable
+    {
+        private final BlockingQueue<T> queue;
+        private final Lock updateLock;
+        private final Semaphore handlingLock;
+        private final Executor executor;
+        private final Consumer<Collection<T>> handler;
+        private final AtomicReference<RuntimeException> error;
+        private final List<T> batch = new ArrayList<>();
+
+        DrainQueue(
+                BlockingQueue<T> queue,
+                Lock updateLock,
+                Semaphore handlingLock,
+                Executor executor,
+                Consumer<Collection<T>> handler,
+                AtomicReference<RuntimeException> error) {
+            this.queue = queue;
+            this.updateLock = updateLock;
+            this.handlingLock = handlingLock;
+            this.executor = executor;
+            this.handler = handler;
+            this.error = error;
+        }
+
+        @Override
+        public void run() {
+            try {
+                queue.drainTo(batch, queue.size());
+                handler.accept(batch);
+                batch.clear();
+
+                try {
+                    updateLock.lock();
+                    if (queue.isEmpty()) {
+                        handlingLock.release();
+                    } else {
+                        executor.execute(this);
+                    }
+                } finally {
+                    updateLock.unlock();
+                }
+            } catch (Throwable t) {
+                System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "SmartBatcher handler failed", t);
+                handlingLock.release();
+                error.set(new IllegalStateException(t));
             }
         }
     }
