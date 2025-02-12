@@ -60,6 +60,7 @@ import java.util.function.BiFunction;
 
 import static dev.xorcery.collections.Element.missing;
 import static io.opentelemetry.context.Context.taskWrapping;
+import static reactor.core.scheduler.Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE;
 
 @Service
 public class Neo4jProjectionHandler
@@ -111,7 +112,7 @@ public class Neo4jProjectionHandler
                 ? Schedulers.boundedElastic()
                 : maxThreadCount == 1
                 ? Schedulers.single()
-                : Schedulers.newBoundedElastic(maxThreadCount, 1024, "Neo4j Projection");
+                : Schedulers.newBoundedElastic(maxThreadCount, DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "Neo4j Projection");
     }
 
     @Override
@@ -168,7 +169,7 @@ public class Neo4jProjectionHandler
                             tx.commit();
                         }
 
-                        return SmartBatchingOperator.smartBatching(handler, () -> smartBatchingQueue, () -> taskWrapping(Schedulers.boundedElastic()::schedule))
+                        return SmartBatchingOperator.smartBatching(handler, () -> smartBatchingQueue, () -> taskWrapping(scheduler::schedule))
                                 .apply(metadataEventsFlux, contextView);
                     })).doAfterTerminate(handler::close);
         } catch (RuntimeException e) {
