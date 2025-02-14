@@ -68,6 +68,9 @@
     "yamlfilepublisher" : {
       "$ref" : "#/$defs/yamlfilepublisher"
     },
+    "runner" : {
+      "$ref" : "#/$defs/runner"
+    },
     "jmx" : {
       "$ref" : "#/$defs/jmx"
     },
@@ -2248,6 +2251,17 @@
         },
         "publishers" : {
           "type" : [ "array", "string" ]
+        }
+      }
+    },
+    "runner" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "keepRunning" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
         }
       }
     },

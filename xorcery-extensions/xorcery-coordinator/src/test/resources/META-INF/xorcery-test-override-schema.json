@@ -1,5 +1,5 @@
 {
-  "title" : "xorcery.yaml override JSON Schema",
+  "title" : "xorcery.yaml test override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -68,6 +68,9 @@
     },
     "yamlfilepublisher" : {
       "$ref" : "#/$defs/yamlfilepublisher"
+    },
+    "runner" : {
+      "$ref" : "#/$defs/runner"
     },
     "jmx" : {
       "$ref" : "#/$defs/jmx"
@@ -2249,6 +2252,17 @@
         },
         "publishers" : {
           "type" : [ "array", "string" ]
+        }
+      }
+    },
+    "runner" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "keepRunning" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
         }
       }
     },
