@@ -26,6 +26,9 @@
     },
     "log4j2" : {
       "$ref" : "#/$defs/log4j2"
+    },
+    "runner" : {
+      "$ref" : "#/$defs/runner"
     }
   },
   "$defs" : {
@@ -310,6 +313,17 @@
               }
             }
           }
+        }
+      }
+    },
+    "runner" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "keepRunning" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
         }
       }
     }

@@ -1,0 +1,23 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "title" : "xorcery.yaml JSON Schema",
+  "properties" : {
+    "runner" : {
+      "$ref" : "#/$defs/runner"
+    }
+  },
+  "$defs" : {
+    "runner" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "keepRunning" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        }
+      }
+    }
+  }
+}

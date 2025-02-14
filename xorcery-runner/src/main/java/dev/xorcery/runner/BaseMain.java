@@ -52,19 +52,25 @@ public class BaseMain
 
         Xorcery xorcery = new Xorcery(configuration);
         this.xorcery = xorcery;
-        Logger mainLogger = LogManager.getLogger(BaseMain.class);
-        Runtime.getRuntime().addShutdownHook(new Thread(() ->
-        {
-            mainLogger.info("Shutting down");
-            try {
-                xorcery.close();
-            } catch (Exception e) {
-                mainLogger.warn("Error during shutdown", e);
-            }
-        }));
 
-        xorcery.getClosed().join();
-        mainLogger.info("Shutdown");
+        if (configuration.getBoolean("runner.keepRunning").orElse(true))
+        {
+            Logger mainLogger = LogManager.getLogger(BaseMain.class);
+            Runtime.getRuntime().addShutdownHook(new Thread(() ->
+            {
+                mainLogger.info("Shutting down");
+                try {
+                    xorcery.close();
+                } catch (Exception e) {
+                    mainLogger.warn("Error during shutdown", e);
+                }
+            }));
+
+            xorcery.getClosed().join();
+            mainLogger.info("Shutdown");
+        } else {
+            xorcery.close();
+        }
         LogManager.shutdown();
 
         return 0;
