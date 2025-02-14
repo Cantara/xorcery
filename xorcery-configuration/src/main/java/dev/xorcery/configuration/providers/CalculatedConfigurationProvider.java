@@ -51,8 +51,7 @@ public class CalculatedConfigurationProvider
         }
     }
 
-    public JsonNode hostName()
-    {
+    public JsonNode hostName() {
         try {
             return JsonNodeFactory.instance.textNode(InetAddress.getLocalHost().getHostName().toLowerCase());
         } catch (UnknownHostException e) {
@@ -99,15 +98,17 @@ public class CalculatedConfigurationProvider
         }
     }
 
-    public ContainerNode<?> dynamicPorts()
-    {
-        return new ObjectNode(JsonNodeFactory.instance)
-        {
+    public ContainerNode<?> dynamicPorts() {
+        return new ObjectNode(JsonNodeFactory.instance) {
             @Override
             public JsonNode get(String name) {
                 return dynamicPorts.computeIfAbsent(name, n -> JsonNodeFactory.instance.numberNode(Sockets.nextFreePort()));
             }
         };
+    }
+
+    public JsonNode nrOfProcessors() {
+        return JsonNodeFactory.instance.numberNode(Runtime.getRuntime().availableProcessors());
     }
 
     @Override

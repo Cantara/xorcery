@@ -2,8 +2,8 @@ $schema: xorcery-schema.json
 neo4jprojections:
   enabled: "{{ neo4jdatabase.enabled }}"
   eventBatchSize: 1024
-  # Use Reactor "bounded elastic" by default, set this to specific nr if there are too many projections at the same time
-  maxThreadCount: -1
+  # Use nr of processors as reported by Runtime.getRuntime().availableProcessors() by default, set this to specific nr if there are too many projections at the same time
+  maxThreadCount: "{{ CALCULATED.nrOfProcessors }}"
 
   # This allows us to safely set any batch size, because as soon as transaction memory usage gets close to maxed out
   # we can start a new one
