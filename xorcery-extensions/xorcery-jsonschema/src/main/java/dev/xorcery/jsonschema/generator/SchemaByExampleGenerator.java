@@ -72,6 +72,8 @@ public class SchemaByExampleGenerator {
             JsonNode effectiveValue = value == null ? defaultValue : value;
             switch (effectiveValue.getNodeType()) {
                 case ARRAY -> {
+                    definitions.definition(property.getKey(), new JsonSchema.Builder().type(Types.Array).build());
+                    properties.property(property.getKey(), new JsonSchema.Builder().ref("#/$defs/" + property.getKey()).build());
                 }
                 case BINARY -> {
                 }
