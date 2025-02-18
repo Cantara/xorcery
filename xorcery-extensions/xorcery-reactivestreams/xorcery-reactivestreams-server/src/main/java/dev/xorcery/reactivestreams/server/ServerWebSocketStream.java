@@ -397,8 +397,13 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                     switch (value.getNodeType()) {
                         case STRING -> contextMap.put(property.getKey(), value.asText());
                         case BOOLEAN -> contextMap.put(property.getKey(), value.asBoolean());
-                        case NUMBER ->
-                                contextMap.put(property.getKey(), value.isIntegralNumber() ? value.asLong() : value.asDouble());
+                        case NUMBER -> {
+                            if (value.isIntegralNumber()){
+                                contextMap.put(property.getKey(), value.asLong());
+                            } else {
+                                contextMap.put(property.getKey(), value.asDouble());
+                            }
+                        }
                         case OBJECT ->
                             contextMap.put(property.getKey(), jsonMapper.treeToValue(value, Map.class));
                         case ARRAY ->
