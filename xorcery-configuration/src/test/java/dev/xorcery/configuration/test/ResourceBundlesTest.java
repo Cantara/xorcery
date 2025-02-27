@@ -70,6 +70,50 @@ public class ResourceBundlesTest {
     }
     
     @Test
+    public void testGetLocalesResourceBundle()
+    {
+        {
+            ResourceBundle bundle = ResourceBundle.getBundle(ResourceBundles.class.getName(), Locale.ENGLISH);
+            Assertions.assertEquals(ResourceBundles.class.getName(), bundle.getBaseBundleName());
+            Assertions.assertEquals("Title", bundle.getString("bar.title"));
+            Assertions.assertEquals("Color", bundle.getString("bar.color"));
+            Assertions.assertEquals("yyyy-MM-dd", bundle.getString("bar.dateFormat"));
+            Assertions.assertEquals(5, bundle.getObject("bar.setting"));
+            Assertions.assertEquals("{abc={list=[item1, item2, item3], bar=test, foo=3}}", bundle.getObject("bar.complexsetting").toString());
+        }
+
+        {
+            ResourceBundle bundle = ResourceBundle.getBundle(ResourceBundles.class.getName(), Locale.UK);
+            Assertions.assertEquals(ResourceBundles.class.getName(), bundle.getBaseBundleName());
+            Assertions.assertEquals("Title", bundle.getString("bar.title"));
+            Assertions.assertEquals("Colour", bundle.getString("bar.color"));
+            Assertions.assertEquals("dd/MM/yyyy", bundle.getString("bar.dateFormat"));
+        }
+
+        {
+            ResourceBundle bundle = ResourceBundle.getBundle(ResourceBundles.class.getName(), Locale.US);
+            Assertions.assertEquals(ResourceBundles.class.getName(), bundle.getBaseBundleName());
+            Assertions.assertEquals("Title", bundle.getString("bar.title"));
+            Assertions.assertEquals("Color", bundle.getString("bar.color"));
+            Assertions.assertEquals("MM-dd-yyyy", bundle.getString("bar.dateFormat"));
+        }
+
+        {
+            ResourceBundle bundle = ResourceBundle.getBundle(ResourceBundles.class.getName(), new Locale("sv"));
+            Assertions.assertEquals(ResourceBundles.class.getName(), bundle.getBaseBundleName());
+            Assertions.assertEquals("Titel", bundle.getString("bar.title"));
+            Assertions.assertEquals("Farg", bundle.getString("bar.color"));
+        }
+
+        {
+            ResourceBundle bundle = ResourceBundle.getBundle(ResourceBundles.class.getName(), new Locale("no"));
+            Assertions.assertEquals(ResourceBundles.class.getName(), bundle.getBaseBundleName());
+            Assertions.assertEquals("Titel", bundle.getString("bar.title"));
+            Assertions.assertEquals("Color", bundle.getString("bar.color"));
+        }
+    }
+
+    @Test
     public void testResourceBundles()
     {
         {

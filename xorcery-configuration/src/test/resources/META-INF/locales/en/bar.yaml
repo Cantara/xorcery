@@ -1,0 +1,17 @@
+#Translations
+title: "Title"
+color: "Color"
+
+# Country specific
+dateFormat: "yyyy-MM-dd"
+
+# General purpose configuration
+setting: 5
+complexsetting:
+  abc:
+    foo: 3
+    bar: "test"
+    list:
+      - item1
+      - item2
+      - item3

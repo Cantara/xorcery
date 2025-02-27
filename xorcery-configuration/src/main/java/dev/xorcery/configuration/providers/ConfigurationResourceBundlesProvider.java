@@ -52,14 +52,32 @@ public class ConfigurationResourceBundlesProvider
     @Override
     public ResourceBundle getBundle(String baseName, Locale locale) {
         if (baseName.equals(ResourceBundles.class.getName()))
-            return resourceBundles.computeIfAbsent(locale, l -> new ConfigurationResourceBundle(this::getConfiguration, locale, resourceBundleTranslationProviders));
+            return resourceBundles.computeIfAbsent(locale, l -> new ConfigurationResourceBundle(this::getConfigurationByModule, this::getConfigurationByLocaleAndModule, locale, resourceBundleTranslationProviders));
         else
             return null;
     }
 
-    protected Configuration getConfiguration(String moduleName) {
+    protected Configuration getConfigurationByModule(String moduleName) {
         return configurations.computeIfAbsent(moduleName, name ->
-                new ConfigurationBuilder(name).addDefaults().build());
+                new ConfigurationBuilder(name)
+                        .addModules()
+                        .addModuleOverrides()
+                        .addApplication()
+                        .build());
+    }
+
+    protected Configuration getConfigurationByLocaleAndModule(String locale, String moduleName) {
+        String configurationKey = locale + "/" + moduleName;
+        Configuration configuration = configurations.get(configurationKey);
+        if (configuration == null) {
+            configuration = new ConfigurationBuilder("locales/" + locale + "/" + moduleName)
+                    .addModules()
+                    .addModuleOverrides()
+                    .addApplication()
+                    .build();
+            configurations.put(configurationKey, configuration);
+        }
+        return configuration;
     }
 
     public void reload() {

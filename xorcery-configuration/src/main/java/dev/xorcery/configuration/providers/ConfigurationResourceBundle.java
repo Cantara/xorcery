@@ -22,20 +22,24 @@ import dev.xorcery.configuration.spi.ResourceBundleTranslationProvider;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class ConfigurationResourceBundle
         extends ResourceBundle {
-    private final Function<String, Configuration> configurations;
+    private final Function<String, Configuration> configurationsByModule;
+    private final BiFunction<String, String, Configuration> configurationsByLocaleAndModule;
     private final Map<String, Object> cachedLookups = new ConcurrentHashMap<>();
     private final Locale locale;
     private final List<ResourceBundleTranslationProvider> resourceBundleTranslationProvider;
 
     public ConfigurationResourceBundle(
-            Function<String, Configuration> configurations,
+            Function<String, Configuration> configurationsByModule,
+            BiFunction<String, String, Configuration> configurationsByLocaleAndModule,
             Locale locale,
             List<ResourceBundleTranslationProvider> resourceBundleTranslationProvider) {
-        this.configurations = configurations;
+        this.configurationsByModule = configurationsByModule;
+        this.configurationsByLocaleAndModule = configurationsByLocaleAndModule;
         this.locale = locale;
         this.resourceBundleTranslationProvider = resourceBundleTranslationProvider;
     }
@@ -45,11 +49,17 @@ public class ConfigurationResourceBundle
         return cachedLookups.computeIfAbsent(moduleKey, this::lookup);
     }
 
+    // This lookup strategy assumes all locales are in the same files
     private Object lookup(String moduleKey) {
         int dotIndex = moduleKey.indexOf('.');
         String module = moduleKey.substring(0, dotIndex);
         String key = moduleKey.substring(dotIndex + 1);
-        Configuration moduleConfiguration = configurations.apply(module);
+        Configuration moduleConfiguration = configurationsByModule.apply(module);
+        if (moduleConfiguration.json().isEmpty())
+        {
+            return lookupByLocaleAndModule(locale, module, key);
+        }
+
         Configuration keyConfiguration = moduleConfiguration.getConfiguration(key);
         if (keyConfiguration.object().isEmpty()) {
             // This is just a simple configuration
@@ -109,6 +119,34 @@ public class ConfigurationResourceBundle
             // key.default
             return keyConfiguration.get("default").orElse(null);
         }
+    }
+
+    // This lookup strategy assumes all locales are separate files
+    private Object lookupByLocaleAndModule(Locale locale, String module, String key) {
+        // Try with both language+country
+        Configuration localeModuleConfiguration = configurationsByLocaleAndModule.apply(locale.toLanguageTag(), module);
+        Object result = localeModuleConfiguration.get(key).orElse(null);
+        if (result != null)
+            return result;
+
+        // Try with just country
+        Configuration countryModuleConfiguration = configurationsByLocaleAndModule.apply(locale.getCountry(), module);
+        result = countryModuleConfiguration.get(key).orElse(null);
+        if (result != null)
+            return result;
+
+        // Try with just language
+        Configuration languageModuleConfiguration = configurationsByLocaleAndModule.apply(locale.getLanguage(), module);
+        result = languageModuleConfiguration.get(key).orElse(null);
+        if (result != null)
+            return result;
+
+        // Fallback to default locale
+        Locale defaultLocale = Locale.getDefault();
+        if (defaultLocale == locale)
+            return null; // Fail lookup
+
+        return lookupByLocaleAndModule(defaultLocale, module, key);
     }
 
     @Override
