@@ -42,7 +42,7 @@
         <javax.activation.version>1.2.0</javax.activation.version>
         <jackson.version>2.18.3</jackson.version>
         <asm.version>9.7.1</asm.version>
-        <projectreactor.version>2024.0.3</projectreactor.version>
+        <projectreactor.version>2024.0.4</projectreactor.version>
         <aws.java.sdk.version>2.30.33</aws.java.sdk.version>
         <netty.version>4.1.119.Final</netty.version>
 
