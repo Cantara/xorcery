@@ -32,7 +32,7 @@
 
         <slf4j.version>2.0.17</slf4j.version>
         <log4j.version>2.24.3</log4j.version>
-        <jetty.version>12.0.17</jetty.version>
+        <jetty.version>12.0.18</jetty.version>
         <jersey.version>3.1.10</jersey.version>
         <opentelemetry.version>1.47.0</opentelemetry.version>
         <eventstore.version>5.4.4</eventstore.version>
