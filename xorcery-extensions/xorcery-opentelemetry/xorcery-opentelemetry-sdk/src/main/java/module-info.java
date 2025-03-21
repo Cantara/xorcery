@@ -44,6 +44,7 @@ module xorcery.opentelemetry.sdk {
     requires jakarta.annotation;
     requires java.net.http;
     requires java.management;
+    requires io.opentelemetry.semconv.incubating;
 
     provides io.opentelemetry.exporter.internal.http.HttpSenderProvider with dev.xorcery.opentelemetry.exporters.otlphttp.jdk.JdkHttpSenderProvider;
 }

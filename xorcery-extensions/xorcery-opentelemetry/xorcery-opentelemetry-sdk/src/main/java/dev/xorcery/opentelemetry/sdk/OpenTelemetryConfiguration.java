@@ -21,7 +21,10 @@ import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.ServiceConfiguration;
 import dev.xorcery.json.JsonElement;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.ServiceAttributes;
+import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -98,10 +101,17 @@ public record OpenTelemetryConfiguration(Configuration context)
     }
 
     private Map.Entry<AttributeKey<Object>, Object> updateEntry(Map.Entry<String, Object> entry) {
-        try {
-            return Map.entry((AttributeKey<Object>)ResourceAttributes.class.getField(entry.getKey().toUpperCase().replace('.','_')).get(null), entry.getValue());
-        } catch (Throwable e) {
-            throw new IllegalArgumentException("No such resource attribute:"+entry.getKey(), e);
+        for (Class<?> attributeClass : List.of(
+                ServiceAttributes.class,
+                HostIncubatingAttributes.class,
+                ProcessIncubatingAttributes.class,
+                ServiceIncubatingAttributes.class)) {
+            try {
+                return Map.entry((AttributeKey<Object>)attributeClass.getField(entry.getKey().toUpperCase().replace('.','_')).get(null), entry.getValue());
+            } catch (Throwable e) {
+                // Try next class
+            }
         }
+        throw new IllegalArgumentException("No such resource attribute:"+entry.getKey());
     }
 }

@@ -15,17 +15,8 @@
  */
 package dev.xorcery.opentelemetry.exporters.otlphttp.jdk;
 
-import io.opentelemetry.exporter.internal.compression.Compressor;
 import io.opentelemetry.exporter.internal.http.HttpSender;
-import io.opentelemetry.sdk.common.export.ProxyOptions;
-import io.opentelemetry.sdk.common.export.RetryPolicy;
-import jakarta.annotation.Nullable;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509TrustManager;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
+import io.opentelemetry.exporter.internal.http.HttpSenderConfig;
 
 /**
  * This only exists because the official JDK HttpSender does not specify HTTP protocol
@@ -37,27 +28,16 @@ public class JdkHttpSenderProvider
         implements io.opentelemetry.exporter.internal.http.HttpSenderProvider {
 
     @Override
-    public HttpSender createSender(
-            String endpoint,
-            @Nullable Compressor compressor,
-            boolean exportAsJson,
-            String contentType,
-            long timeoutNanos,
-            long connectTimeout,
-            Supplier<Map<String, List<String>>> headerSupplier,
-            ProxyOptions proxyOptions,
-            @Nullable RetryPolicy retryPolicy,
-            @Nullable SSLContext sslContext,
-            @Nullable X509TrustManager trustManager) {
+    public HttpSender createSender(HttpSenderConfig httpSenderConfig) {
         return new JdkHttpSender(
-                endpoint,
-                compressor,
-                exportAsJson,
-                contentType,
-                timeoutNanos,
-                connectTimeout,
-                headerSupplier,
-                retryPolicy,
-                sslContext);
+                httpSenderConfig.getEndpoint(),
+                httpSenderConfig.getCompressor(),
+                httpSenderConfig.getExportAsJson(),
+                httpSenderConfig.getContentType(),
+                httpSenderConfig.getTimeoutNanos(),
+                httpSenderConfig.getConnectTimeoutNanos(),
+                httpSenderConfig.getHeadersSupplier(),
+                httpSenderConfig.getRetryPolicy(),
+                httpSenderConfig.getSslContext());
     }
 }
