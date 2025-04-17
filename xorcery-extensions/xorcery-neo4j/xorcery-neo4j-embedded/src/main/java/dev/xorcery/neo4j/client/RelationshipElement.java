@@ -17,6 +17,8 @@ package dev.xorcery.neo4j.client;
 
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.kernel.impl.core.NodeEntity;
 
 public interface RelationshipElement
         extends EntityElement
@@ -27,5 +29,10 @@ public interface RelationshipElement
     default Entity entity()
     {
         return relationship();
+    }
+
+    @Override
+    default Transaction getTransaction() {
+        return ((NodeEntity)relationship()).getTransaction();
     }
 }

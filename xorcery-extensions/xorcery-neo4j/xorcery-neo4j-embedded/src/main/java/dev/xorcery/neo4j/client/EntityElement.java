@@ -17,6 +17,7 @@ package dev.xorcery.neo4j.client;
 
 import dev.xorcery.collections.Element;
 import org.neo4j.graphdb.Entity;
+import org.neo4j.graphdb.Transaction;
 
 import java.util.Optional;
 
@@ -34,4 +35,6 @@ public interface EntityElement
     default boolean has(String name) {
         return entity().hasProperty(name);
     }
+
+    Transaction getTransaction();
 }

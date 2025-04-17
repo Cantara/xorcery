@@ -76,6 +76,7 @@ public class Neo4jProjectionHandler
     private final DoubleHistogram writeLatencyHistogram;
     private final DoubleHistogram projectionLatencyHistogram;
     private final DoubleHistogram commitLatencyHistogram;
+    private final LongHistogram txMemoryHistogram;
     private final Meter meter;
     private final long highestSafeUsage;
     private final Scheduler scheduler;
@@ -104,6 +105,8 @@ public class Neo4jProjectionHandler
                 .setUnit(OpenTelemetryUnits.SECONDS).build();
         commitLatencyHistogram = meter.histogramBuilder("neo4j.projection.commitLatency")
                 .setUnit(OpenTelemetryUnits.SECONDS).build();
+        txMemoryHistogram = meter.histogramBuilder("neo4j.projection.transactionMemoryUsage")
+                .ofLongs().setUnit(OpenTelemetryUnits.BYTES).build();
 
         highestSafeUsage = projectionsConfiguration.getMaxTransactionSize() - projectionsConfiguration.getTransactionMemoryUsageMargin();
 
@@ -229,12 +232,12 @@ public class Neo4jProjectionHandler
                 int committed = 0;
                 Iterator<MetadataEvents> metadataEventsIterator = events.iterator();
                 Transaction tx = database.beginTx();
-                MemoryTracker memoryTracker = tx instanceof InternalTransaction it ? it.kernelTransaction().memoryTracker() : null;
 
                 MetadataEvents metadataEvents = null;
                 while (true) {
+                    int eventCount = 0;
+                    MemoryTracker memoryTracker = tx instanceof InternalTransaction it ? it.kernelTransaction().memoryTracker() : null;
                     try {
-                        int eventCount = 0;
                         long startProjection = System.nanoTime();
                         while (metadataEventsIterator.hasNext()) {
                             metadataEvents = metadataEventsIterator.next();
@@ -252,11 +255,11 @@ public class Neo4jProjectionHandler
                                 double projectDuration = System.nanoTime() - startProjection;
                                 projectionLatencyHistogram.record(projectDuration / 1_000_000_000.0, attributes);
 
-                                position.set(((Number) metadataEvents
+                                long newPosition = ((Number) metadataEvents
                                         .metadata()
                                         .getLong(DomainEventMetadata.streamPosition)
-                                        .orElse(position.get() + eventsSize))
-                                        .longValue());
+                                        .orElse(position.get() + eventCount))
+                                        .longValue();
                                 long timestamp = ((Number) metadataEvents
                                         .metadata()
                                         .getLong(DomainEventMetadata.timestamp)
@@ -264,7 +267,7 @@ public class Neo4jProjectionHandler
                                         .longValue();
                                 Map<String, Object> updateParameters = new HashMap<>();
                                 updateParameters.put(Projection.id.name(), projectionId);
-                                updateParameters.put(Projection.projectionPosition.name(), position.get());
+                                updateParameters.put(Projection.projectionPosition.name(), newPosition);
                                 updateParameters.put(Projection.projectionTimestamp.name(), timestamp);
                                 tx.execute("""
                                         MATCH (projection:Projection {id:$id}) SET 
@@ -284,30 +287,32 @@ public class Neo4jProjectionHandler
                                 double writeDuration = stop - start;
                                 writeLatencyHistogram.record(writeDuration / 1_000_000_000.0, attributes);
 
+                                if (memoryTracker != null){
+                                    txMemoryHistogram.record(memoryTracker.estimatedHeapMemory(), attributes);
+                                }
+
                                 if (logger.isTraceEnabled())
                                     logger.trace("Committed " + eventsSize);
 
+                                position.set(newPosition);
+
                                 if (metadataEventsIterator.hasNext()) {
                                     committed += eventCount;
-                                    if (maxEvents < eventsSize - committed) {
-                                        logger.info("Resized batch complete");
-                                        maxEvents = eventsSize - committed;
-                                    }
                                     tx = database.beginTx();
+                                    eventCount = 0;
                                 } else {
                                     tx = null;
                                 }
                             }
                         }
                         if (tx != null) {
-                            tx.close();
+                            tx.commit();
                         }
                         break;
                     } catch (MemoryLimitExceededException | TransientTransactionFailureException e) {
                         tx.rollback();
-                        tx.close();
 
-                        maxEvents /= 2;
+                        maxEvents /= 16;
 
                         // Gather debug info
                         {
@@ -319,14 +324,14 @@ public class Neo4jProjectionHandler
                             // Collect remaining command and event names
                             Set<String> commandNames = new HashSet<>();
                             Set<String> eventNames = new HashSet<>();
-                            int eventCount = 0;
+                            int actualEventCount = 0;
                             while (metadataEventsIterator.hasNext()) {
                                 MetadataEvents event = metadataEventsIterator.next();
                                 event.metadata().getString("commandName").ifPresent(commandNames::add);
                                 for (DomainEvent domainEvent : event.data()) {
                                     if (domainEvent instanceof JsonDomainEvent jsonDomainEvent) {
                                         eventNames.add(jsonDomainEvent.getName());
-                                        eventCount++;
+                                        actualEventCount++;
                                     }
                                 }
                             }
@@ -336,7 +341,7 @@ public class Neo4jProjectionHandler
                                 sink.error(e);
                                 return;
                             } else {
-                                logger.warn("Transaction too large, trying again with smaller batch size:{}, position:{}, commands:{}, events:{}, event count:{}", maxEvents, position.get(), commandNames, eventNames, eventCount);
+                                logger.warn("Transaction too large, trying again with smaller batch size:{}, position:{}, commands:{}, events:{}, event count:{}", maxEvents, position.get(), commandNames, eventNames, actualEventCount);
                                 tx = database.beginTx();
                             }
                         }

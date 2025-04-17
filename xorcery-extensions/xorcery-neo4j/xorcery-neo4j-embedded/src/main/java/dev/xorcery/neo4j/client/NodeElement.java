@@ -17,6 +17,7 @@ package dev.xorcery.neo4j.client;
 
 
 import org.neo4j.graphdb.*;
+import org.neo4j.kernel.impl.core.NodeEntity;
 
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -40,5 +41,10 @@ public interface NodeElement
     @Override
     default Entity entity() {
         return node();
+    }
+
+    @Override
+    default Transaction getTransaction() {
+        return ((NodeEntity)node()).getTransaction();
     }
 }

@@ -11,3 +11,6 @@ neo4jdatabase:
     server:
       directories:
         data: "{{ neo4jdatabase.path }}/data"
+      logs:
+        debug:
+          enabled: false
