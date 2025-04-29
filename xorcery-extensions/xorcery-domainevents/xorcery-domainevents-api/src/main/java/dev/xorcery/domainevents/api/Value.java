@@ -94,7 +94,7 @@ public final class Value
         return relationship(relationship.name(), type.name(), id);
     }
 
-    public Value relationship(String relationship, String type, Collection<String> ids) {
+    public Value relationships(String relationship, String type, Collection<String> ids) {
 
         if (ids == null)
             return this;
@@ -118,8 +118,8 @@ public final class Value
         return this;
     }
 
-    public Value relationship(Enum<?> relationship, Enum<?> type, Collection<String> ids) {
-        return relationship(relationship.name(), type.name(), ids);
+    public Value relationships(Enum<?> relationship, Enum<?> type, Collection<String> ids) {
+        return relationships(relationship.name(), type.name(), ids);
     }
 
     @SuppressWarnings("unchecked")

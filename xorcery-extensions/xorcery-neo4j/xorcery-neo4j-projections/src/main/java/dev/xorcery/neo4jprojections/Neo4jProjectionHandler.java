@@ -277,8 +277,8 @@ public class Neo4jProjectionHandler
                                         """, updateParameters).close();
 
                                 long startCommit = System.nanoTime();
+                                long usedMemory = memoryTracker != null ? memoryTracker.estimatedHeapMemory() : -1;
                                 tx.commit();
-                                tx.close();
                                 double commitDuration = System.nanoTime() - startCommit;
                                 commitLatencyHistogram.record(commitDuration / 1_000_000_000.0, attributes);
 
@@ -287,8 +287,8 @@ public class Neo4jProjectionHandler
                                 double writeDuration = stop - start;
                                 writeLatencyHistogram.record(writeDuration / 1_000_000_000.0, attributes);
 
-                                if (memoryTracker != null){
-                                    txMemoryHistogram.record(memoryTracker.estimatedHeapMemory(), attributes);
+                                if (usedMemory != -1L){
+                                    txMemoryHistogram.record(usedMemory, attributes);
                                 }
 
                                 if (logger.isTraceEnabled())

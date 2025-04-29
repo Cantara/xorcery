@@ -27,6 +27,8 @@ import dev.xorcery.configuration.spi.ConfigurationProvider;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class ConfigurationProviderContainerNode
         extends ContainerNode<ConfigurationProviderContainerNode> {
@@ -36,6 +38,16 @@ public class ConfigurationProviderContainerNode
     public ConfigurationProviderContainerNode(ConfigurationProvider configurationProvider) {
         super(JsonNodeFactory.instance);
         this.configurationProvider = configurationProvider;
+    }
+
+    @Override
+    public Stream<JsonNode> valueStream() {
+        return Stream.empty();
+    }
+
+    @Override
+    public ConfigurationProviderContainerNode removeIf(Predicate<? super JsonNode> predicate) {
+        return this;
     }
 
     @Override
