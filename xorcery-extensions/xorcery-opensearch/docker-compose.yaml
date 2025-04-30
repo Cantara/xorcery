@@ -16,7 +16,7 @@
 
 services:
   xorcery-opensearch:
-    image: opensearchproject/opensearch:2.19.1
+    image: opensearchproject/opensearch:2.19.2
     environment:
       - cluster.name=opensearch-cluster
       - node.name=opensearch-node1
