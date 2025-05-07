@@ -35,6 +35,8 @@ public interface Instances {
     static String name(InstantiationService instantiationService)
     {
         Injectee parentInjectee = instantiationService.getInstantiationData().getParentInjectee();
+        if (parentInjectee == null)
+            return null;
         if (parentInjectee.getParent() instanceof Constructor<?> constructor)
         {
             for (Annotation annotation : constructor.getParameterAnnotations()[parentInjectee.getPosition()]) {

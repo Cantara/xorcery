@@ -44,8 +44,11 @@ import java.util.function.Consumer;
 /**
  * JUnit Extension to create Xorcery instances. It is possible to specify instance id (to easily look up the instance within tests), configuration,
  * and optionally provide a Zip archive name from src/test/resources which is unzipped into home directory data.
- * <p>
+ * <p/>
  * If an archive is provided the home directory data is not deleted after the test finishes to make subsequent tests with the same test data run faster.
+ * <p/>
+ * If used with @Nested test classes, then only the root XorceryExtension will be initialized, and all nested classes will use the root instance. This makes
+ * it easier to create large suites of tests running with the same Xorcery instance. This can be useful if it is relatively expensive to instantiate the Xorcery instance.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class XorceryExtension
@@ -155,6 +158,9 @@ public class XorceryExtension
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
 
+        if (!extensionContext.getEnclosingTestClasses().isEmpty())
+            return;
+
         try {
             LoggerContextFactory.initialize(configuration);
 
@@ -183,7 +189,10 @@ public class XorceryExtension
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext extensionContext) throws Exception {
+        if (!extensionContext.getEnclosingTestClasses().isEmpty())
+            return;
+
         if (xorcery != null) {
             xorcery.close();
 
