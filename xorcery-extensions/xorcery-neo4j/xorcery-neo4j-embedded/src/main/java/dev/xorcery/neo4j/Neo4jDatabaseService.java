@@ -100,12 +100,12 @@ public class Neo4jDatabaseService
         graphDb = createDatabase(managementService);
 
         boolean wipeOnBreakingChanges = neo4jConfiguration.isWipeOnBreakingChanges();
-        SemanticVersion targetVersion = neo4jConfiguration.getVersion();
-        SemanticVersion currentDatabaseVersion = getExistingDomainVersion(graphDb);
+        String targetVersion = neo4jConfiguration.getVersion();
+        String currentDatabaseVersion = getExistingDomainVersion(graphDb);
         if (currentDatabaseVersion == null) {
             logger.info("Domain schema version of database does not exist.");
             updateDomainVersionInDatabase(graphDb, targetVersion);
-        } else if (targetVersion.isBreakingChange(currentDatabaseVersion)) {
+        } else if (!targetVersion.equals(currentDatabaseVersion)) {
             logger.info("Attempting to update domain schema version of database from {} to {}, this is a breaking change.", currentDatabaseVersion, targetVersion);
             if (wipeOnBreakingChanges) {
                 logger.warn("WIPING all data in neo4j projection.");
@@ -119,9 +119,6 @@ public class Neo4jDatabaseService
                 logger.error(msg);
                 throw new IllegalStateException(msg);
             }
-        } else if (!currentDatabaseVersion.equals(targetVersion)) {
-            logger.info("Automatically updating domain version of database from {} to {}.", currentDatabaseVersion, targetVersion);
-            updateDomainVersionInDatabase(graphDb, targetVersion);
         } else {
             logger.info("Target domain schema version matches current database schema version {}", targetVersion);
         }
@@ -217,12 +214,12 @@ public class Neo4jDatabaseService
         return graphDb;
     }
 
-    private static SemanticVersion getExistingDomainVersion(GraphDatabaseService graphDb) {
+    private static String getExistingDomainVersion(GraphDatabaseService graphDb) {
         return graphDb.executeTransactionally("MATCH (n:XorceryProjectionDomainSchema) RETURN n.version AS ver", Map.of(), result -> {
             if (result.hasNext()) {
                 Map<String, Object> row = result.next();
                 String version = (String) row.get("ver");
-                return SemanticVersion.from(version);
+                return version;
             }
             return null;
         });
@@ -244,8 +241,8 @@ public class Neo4jDatabaseService
         }
     }
 
-    private static void updateDomainVersionInDatabase(GraphDatabaseService graphDb, SemanticVersion currentVersion) {
-        graphDb.executeTransactionally("MERGE (n:XorceryProjectionDomainSchema) SET n.version = $ver RETURN n", Map.of("ver", currentVersion.toString()));
+    private static void updateDomainVersionInDatabase(GraphDatabaseService graphDb, String currentVersion) {
+        graphDb.executeTransactionally("MERGE (n:XorceryProjectionDomainSchema) SET n.version = $ver RETURN n", Map.of("ver", currentVersion));
     }
 
     @Override

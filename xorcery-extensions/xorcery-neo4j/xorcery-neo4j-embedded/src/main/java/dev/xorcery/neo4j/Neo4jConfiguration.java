@@ -41,9 +41,8 @@ public record Neo4jConfiguration(Configuration context)
         return context.getBoolean("domain.wipeOnBreakingChange").orElseThrow();
     }
 
-    public SemanticVersion getVersion() {
+    public String getVersion() {
         return context.getString("domain.version")
-                .map(SemanticVersion::from)
                 .orElseThrow();
     }
 
