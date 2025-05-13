@@ -50,6 +50,7 @@ public class JsonPublisher<T>
                 JsonFactory factory = JsonFactory.builder().build();
                 coreSubscriber.onSubscribe(new ObjectReaderStreamer<>(coreSubscriber, factory.createParser(resourceAsStream), jsonReader.forType(itemType)));
             } catch (Throwable e) {
+                coreSubscriber.onSubscribe(new NoopSubscription());
                 coreSubscriber.onError(e);
             }
         } else

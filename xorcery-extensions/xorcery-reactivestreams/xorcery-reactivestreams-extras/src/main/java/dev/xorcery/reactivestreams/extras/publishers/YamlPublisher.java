@@ -59,6 +59,7 @@ public class YamlPublisher<T>
                 YAMLFactory factory = YAMLFactory.builder().loaderOptions(loaderOptions).build();
                 coreSubscriber.onSubscribe(new ObjectReaderStreamer<>(coreSubscriber, factory.createParser(resourceAsStream), yamlReader.forType(itemType)));
             } catch (Throwable e) {
+                coreSubscriber.onSubscribe(new NoopSubscription());
                 coreSubscriber.onError(e);
             }
         } else
