@@ -25,4 +25,6 @@ open module xorcery.neo4j.projections.test {
     requires xorcery.reactivestreams.api;
     requires xorcery.reactivestreams.server;
     requires jakarta.ws.rs;
+
+    provides dev.xorcery.neo4j.spi.Neo4jProvider with dev.xorcery.neo4jprojections.test.ProjectionTestExtensions;
 }

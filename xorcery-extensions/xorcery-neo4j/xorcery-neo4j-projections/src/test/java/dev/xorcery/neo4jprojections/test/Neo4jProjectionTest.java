@@ -91,6 +91,41 @@ public class Neo4jProjectionTest {
     }
 
     @Test
+    public void testProjectionIsolatedEventIsFirst(Neo4jProjections neo4jProjections) {
+        YamlPublisher<MetadataEvents> filePublisher = new YamlPublisher<>(MetadataEvents.class);
+        AtomicInteger timestamp = new AtomicInteger();
+        Flux.from(filePublisher)
+                .doOnNext(me -> me.metadata().toBuilder().add("timestamp", timestamp.incrementAndGet()))
+                .transformDeferredContextual(new SkipEventsUntil(ProjectionStreamContext.projectionPosition.name()))
+                .transformDeferredContextual(neo4jProjections.projection())
+                .doOnNext(System.out::println)
+                .contextWrite(Context.of(
+                        ProjectionStreamContext.projectionId.name(), "test",
+                        ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events_isolatedfirst.yaml").orElseThrow()))
+                .blockLast();
+
+        GraphDatabase service = xorceryExtension.getServiceLocator().getService(GraphDatabase.class);
+
+        System.out.println(service.query("MATCH (Person:Person)")
+                .results(Person.name).build());
+
+        List<JsonNode> result = service.query("MATCH (Person:Person)")
+                .results(Person.name)
+                .stream(row -> row.getJsonNode("person_name")).toCompletableFuture().join().toList();
+        System.out.println(result);
+
+        Map<String, Object> projection = service.getGraphDatabaseService().executeTransactionally("""
+                MATCH (projection:Projection)
+                RETURN properties(projection) as properties
+                """, Map.of(), res ->
+                res.hasNext()
+                        ? res.next()
+                        : Collections.emptyMap());
+
+        System.out.println(projection);
+    }
+
+    @Test
     public void testRemoteProjection() {
         // Server
         Neo4jProjections neo4jProjections = xorceryExtension.getServiceLocator().getService(Neo4jProjections.class);

@@ -20,9 +20,11 @@ import dev.xorcery.domainevents.api.DomainEvent;
 import dev.xorcery.domainevents.api.DomainEventMetadata;
 import dev.xorcery.domainevents.api.JsonDomainEvent;
 import dev.xorcery.domainevents.api.MetadataEvents;
+import dev.xorcery.neo4j.TransactionContext;
 import dev.xorcery.neo4j.client.GraphDatabase;
 import dev.xorcery.neo4jprojections.api.ProjectionStreamContext;
 import dev.xorcery.neo4jprojections.spi.Neo4jEventProjection;
+import dev.xorcery.neo4jprojections.spi.SignalProjectionIsolationException;
 import dev.xorcery.opentelemetry.OpenTelemetryUnits;
 import dev.xorcery.reactivestreams.api.ContextViewElement;
 import dev.xorcery.reactivestreams.extras.operators.SmartBatchingOperator;
@@ -59,12 +61,29 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import static dev.xorcery.collections.Element.missing;
+import static dev.xorcery.lang.Exceptions.unwrap;
 import static io.opentelemetry.context.Context.taskWrapping;
 import static reactor.core.scheduler.Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE;
 
 @Service
 public class Neo4jProjectionHandler
         implements BiFunction<Flux<MetadataEvents>, ContextView, Publisher<MetadataEvents>> {
+
+    private static final String ISOLATED_PROJECTION_MODE = "isolatedProjectionMode";
+
+    /**
+     * Event handlers may call this at beginning of their code to ensure that there are no other events in the same transaction.
+     * On first call an exception will be thrown, triggering the commit of existing events and starting a new transaction.
+     * On second call it will continue, as the transaction is marked as nonBatchMode
+     *
+     * @param transaction
+     * @throws SignalProjectionIsolationException
+     */
+    public static void ensureIsolatedProjection(Transaction transaction) {
+        if (!TransactionContext.<Boolean>getTransactionContext(transaction, ISOLATED_PROJECTION_MODE).orElse(false)) {
+            throw new SignalProjectionIsolationException();
+        }
+    }
 
     private final Neo4jProjectionsConfiguration projectionsConfiguration;
 
@@ -234,6 +253,8 @@ public class Neo4jProjectionHandler
                 Transaction tx = database.beginTx();
 
                 MetadataEvents metadataEvents = null;
+                boolean beforeIsolatedProjectionMode = false;
+                boolean isolatedProjectionMode = false;
                 while (true) {
                     int eventCount = 0;
                     MemoryTracker memoryTracker = tx instanceof InternalTransaction it ? it.kernelTransaction().memoryTracker() : null;
@@ -287,7 +308,7 @@ public class Neo4jProjectionHandler
                                 double writeDuration = stop - start;
                                 writeLatencyHistogram.record(writeDuration / 1_000_000_000.0, attributes);
 
-                                if (usedMemory != -1L){
+                                if (usedMemory != -1L) {
                                     txMemoryHistogram.record(usedMemory, attributes);
                                 }
 
@@ -300,6 +321,16 @@ public class Neo4jProjectionHandler
                                     committed += eventCount;
                                     tx = database.beginTx();
                                     eventCount = 0;
+
+                                    if (beforeIsolatedProjectionMode){
+                                        isolatedProjectionMode = true;
+                                        TransactionContext.setTransactionContext(tx, ISOLATED_PROJECTION_MODE, true);
+                                        maxEvents = 1;
+                                        beforeIsolatedProjectionMode = false;
+                                    } else if (isolatedProjectionMode){
+                                        maxEvents = eventsSize;
+                                        isolatedProjectionMode = false;
+                                    }
                                 } else {
                                     tx = null;
                                 }
@@ -345,23 +376,42 @@ public class Neo4jProjectionHandler
                                 tx = database.beginTx();
                             }
                         }
+
                         metadataEventsIterator = events.iterator();
                         // Remove already processed items
                         for (int i = 0; i < committed; i++) {
                             metadataEventsIterator.next();
                         }
                     } catch (Throwable e) {
-                        long position = -1;
-                        if (metadataEvents != null) {
-                            position = ((Number) metadataEvents
-                                    .metadata()
-                                    .getLong(DomainEventMetadata.streamPosition)
-                                    .orElse(position + eventsSize))
-                                    .longValue();
-                        }
+                        if (unwrap(e) instanceof SignalProjectionIsolationException){
+                            tx.rollback();
+                            tx = database.beginTx();
+                            if (eventCount > 0){
+                                beforeIsolatedProjectionMode = true;
+                                maxEvents = eventCount; // Replay events up until the non-batched event
+                            } else {
+                                isolatedProjectionMode = true;
+                                TransactionContext.setTransactionContext(tx, ISOLATED_PROJECTION_MODE, true);
+                                maxEvents = 1;
+                            }
+                            metadataEventsIterator = events.iterator();
+                            // Remove already processed items
+                            for (int i = 0; i < committed; i++) {
+                                metadataEventsIterator.next();
+                            }
+                        } else {
+                            long position = -1;
+                            if (metadataEvents != null) {
+                                position = ((Number) metadataEvents
+                                        .metadata()
+                                        .getLong(DomainEventMetadata.streamPosition)
+                                        .orElse(position + eventsSize))
+                                        .longValue();
+                            }
 
-                        sink.error(new IllegalArgumentException("Could not handle event for projection " + projectionId + " at stream position: " + position, e));
-                        return;
+                            sink.error(new IllegalArgumentException("Could not handle event for projection " + projectionId + " at stream position: " + position, e));
+                            return;
+                        }
                     }
                 }
                 sink.next(events);

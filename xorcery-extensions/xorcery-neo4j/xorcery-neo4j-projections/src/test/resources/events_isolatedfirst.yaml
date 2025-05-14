@@ -4,9 +4,19 @@
     aggregateType: "Tenant"
     tenant: "1234"
   data:
+    #Test triggering single event handling
+    - event: "SpecialSingleEvent"
+      created:
+        type: "Person"
+        id: "1234"
+- metadata:
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  data:
     #Test Value as attribute
     - event: "CreatedPerson"
-      created:
+      updated:
         type: "Person"
         id: "1234"
       attributes:
@@ -185,18 +195,6 @@
               friend:
                 type: "Person"
                 id: "4321"
-
-- metadata:
-    aggregateId: "1234"
-    aggregateType: "Tenant"
-    tenant: "1234"
-  data:
-    #Test triggering single event handling
-    - event: "SpecialSingleEvent"
-      updated:
-        type: "Person"
-        id: "1234"
-
 - metadata:
     aggregateId: "1234"
     aggregateType: "Tenant"
