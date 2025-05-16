@@ -24,6 +24,7 @@ import dev.xorcery.neo4jprojections.spi.Neo4jEventProjection;
 import dev.xorcery.util.Resources;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.glassfish.hk2.api.Rank;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 import org.neo4j.graphdb.Transaction;
@@ -41,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service(name = "cypherprojection")
 @ContractsProvided({Neo4jEventProjection.class})
+@Rank(10)
 public class CypherEventProjection
         implements Neo4jEventProjection {
     private final Logger logger = LogManager.getLogger(getClass());

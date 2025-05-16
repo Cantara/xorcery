@@ -82,9 +82,7 @@ public interface Services {
                 {
                     try {
                         Class<?> implClass = Class.forName(sh.getActiveDescriptor().getImplementation());
-                        sh.getActiveDescriptor().setRanking(Optional.ofNullable(implClass.getAnnotation(Priority.class))
-                                .map(Priority::value)
-                                .orElse(0));
+                        Optional.ofNullable(implClass.getAnnotation(Priority.class)).ifPresent(priority -> sh.getActiveDescriptor().setRanking(priority.value()));
                     } catch (ClassNotFoundException e) {
                         // Ignore
                     }

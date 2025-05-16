@@ -59,8 +59,7 @@ public class SmartBatcher<T>
 
     public void submit(T item) throws InterruptedException {
 
-        while (!queue.offer(item, 1, TimeUnit.SECONDS))
-        {
+        while (!queue.offer(item, 1, TimeUnit.SECONDS)) {
             if (closed.get())
                 throw new InterruptedException();
 
@@ -70,7 +69,7 @@ public class SmartBatcher<T>
         scheduleDrain();
     }
 
-    private void scheduleDrain(){
+    private void scheduleDrain() {
         try {
             updateLock.lock();
 
@@ -88,10 +87,8 @@ public class SmartBatcher<T>
 
     @Override
     public void close() {
-        if (closed.compareAndSet(false, true))
-        {
-            int tries = 0;
-            while (error.get() == null && ((handlingLock.availablePermits() == 0 || !queue.isEmpty()) && tries++ < 100)) {
+        if (closed.compareAndSet(false, true)) {
+            while (error.get() == null && ((handlingLock.availablePermits() == 0 || !queue.isEmpty()))) {
 //            System.out.println("Wait to shutdown");
                 try {
                     Thread.sleep(100);
@@ -103,8 +100,7 @@ public class SmartBatcher<T>
     }
 
     private static final class DrainQueue<T>
-        implements Runnable
-    {
+            implements Runnable {
         private final BlockingQueue<T> queue;
         private final Lock updateLock;
         private final Semaphore handlingLock;
