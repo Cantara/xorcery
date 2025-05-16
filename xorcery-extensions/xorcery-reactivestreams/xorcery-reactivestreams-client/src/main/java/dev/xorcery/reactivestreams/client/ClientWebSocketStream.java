@@ -573,6 +573,20 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     }
 
     @Override
+    protected Subscription upstream() {
+        Subscription s = super.upstream();
+        return s == null ? new Subscription() {
+            @Override
+            public void request(long n) {
+            }
+
+            @Override
+            public void cancel() {
+            }
+        } : s;
+    }
+
+    @Override
     public void onWebSocketText(String message) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketText {}", message);

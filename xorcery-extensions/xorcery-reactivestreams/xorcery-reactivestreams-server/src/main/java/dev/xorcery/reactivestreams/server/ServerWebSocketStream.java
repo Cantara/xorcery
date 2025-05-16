@@ -129,6 +129,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
     private final int queueSize = 1024;
     private final int clientMaxBinaryMessageSize;
+    private Map<String, List<String>> parameterMap;
 
     public ServerWebSocketStream(
             String path,
@@ -353,6 +354,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress());
 
+        this.parameterMap = session.getUpgradeRequest().getParameterMap();
         this.session = session;
         session.setMaxOutgoingFrames(options.maxOutgoingFrames());
         connectionCounter.incrementAndGet();
@@ -415,7 +417,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 contextMap.putAll(pathParameters);
 
                 // Add query parameters
-                session.getUpgradeRequest().getParameterMap().forEach((k, v) -> contextMap.put(k, v.get(0)));
+                parameterMap.forEach((k, v) -> contextMap.put(k, v.get(0)));
 
                 // Add request/response objects
                 contextMap.put("request", session.getUpgradeRequest());
@@ -448,8 +450,11 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
                     downstreamSink.onRequest(this::subscriberRequested);
                 }
+            } else {
+                logger.error("Unknown JSON type:"+json+"("+message+")");
             }
         } catch (Throwable e) {
+            logger.error("onWebSocketText error", e);
             if (downstreamSink != null)
                 downstreamSink.error(e);
         }
