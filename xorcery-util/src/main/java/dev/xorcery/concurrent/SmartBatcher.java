@@ -88,8 +88,13 @@ public class SmartBatcher<T>
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
+            int loopCount = 0;
             while (error.get() == null && ((handlingLock.availablePermits() == 0 || !queue.isEmpty()))) {
 //            System.out.println("Wait to shutdown");
+                loopCount++;
+                if (loopCount == 600){
+                    throw new IllegalStateException("Close of SmartBatcher hung");
+                }
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
