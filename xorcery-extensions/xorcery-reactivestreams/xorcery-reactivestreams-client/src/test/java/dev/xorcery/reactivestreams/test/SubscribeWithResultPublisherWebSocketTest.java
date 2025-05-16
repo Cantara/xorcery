@@ -31,6 +31,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -47,6 +48,7 @@ import java.util.stream.IntStream;
 
 import static dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions.instance;
 
+@Timeout(60)
 public class SubscribeWithResultPublisherWebSocketTest {
 
     private String clientConf = """
