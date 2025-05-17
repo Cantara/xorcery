@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.util;
+package dev.xorcery.util.test;
 
+import dev.xorcery.util.Streams;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

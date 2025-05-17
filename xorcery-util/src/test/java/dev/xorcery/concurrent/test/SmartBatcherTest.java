@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.concurrent;
+package dev.xorcery.concurrent.test;
 
+import dev.xorcery.concurrent.SmartBatcher;
 import org.apache.logging.log4j.jul.Log4jBridgeHandler;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

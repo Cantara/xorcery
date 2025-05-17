@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.function;
+package dev.xorcery.util.test;
 
 import org.junit.jupiter.api.Test;
 
-import static dev.xorcery.function.LazyReference.lazyReference;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
-class LazyReferenceTest {
-
-    LazyReference<String> someValue = lazyReference();
+public class ResourcesTest {
 
     @Test
-    public void testLazyReference()
-    {
-        assertEquals("This is an expensive value to calculate", getSomeValue());
-        assertEquals("This is an expensive value to calculate", getSomeValue());
-    }
+    public void testResourceURLStreamHandlerProvider() throws IOException {
+        try (InputStream in = new URL("resource://foo.txt").openStream())
+        {
+            System.out.println(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        }
 
-    String getSomeValue(){
-        return someValue.apply(()->"This is an expensive value to calculate");
+        try (InputStream in = new URL("resource://test/foo.txt").openStream())
+        {
+            System.out.println(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        }
     }
-
 }
