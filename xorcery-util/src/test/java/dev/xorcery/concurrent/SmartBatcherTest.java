@@ -15,6 +15,7 @@
  */
 package dev.xorcery.concurrent;
 
+import org.apache.logging.log4j.jul.Log4jBridgeHandler;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +23,11 @@ import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 class SmartBatcherTest {
-    
+
+    static {
+        Log4jBridgeHandler.install(true, "", true);
+    }
+
     @Test
     public void testSmartBatcher() throws InterruptedException {
         try (SmartBatcher<String> batcher = new SmartBatcher<>(this::handler, new ArrayBlockingQueue<>(1024), Executors.newSingleThreadExecutor()))
@@ -75,5 +80,28 @@ class SmartBatcherTest {
                 throw new IllegalArgumentException("Something went wrong");
             }
         }
+    }
+
+    @Test
+    public void testCloseWhileHandlingLargeBatches()
+            throws Exception
+    {
+        try (SmartBatcher<String> batcher = new SmartBatcher<>(this::slowHandler, new ArrayBlockingQueue<>(512), Executors.newSingleThreadExecutor()))
+        {
+            for (int i = 0; i < 2048; i++) {
+                batcher.submit("value"+i);
+            }
+            System.out.println("Close");
+        }
+    }
+
+    private void slowHandler(Collection<String> strings) {
+        System.out.println("Starting");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Done");
     }
 }

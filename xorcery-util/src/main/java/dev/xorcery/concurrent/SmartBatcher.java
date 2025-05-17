@@ -88,13 +88,12 @@ public class SmartBatcher<T>
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
-            while (error.get() == null && ((handlingLock.availablePermits() == 0 || !queue.isEmpty()))) {
-//            System.out.println("Wait to shutdown");
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    return;
+            try {
+                while (error.get() == null && (!handlingLock.tryAcquire(1000, TimeUnit.MILLISECONDS) || !queue.isEmpty())) {
+                    System.getLogger(getClass().getName()).log(System.Logger.Level.DEBUG,String.format("Wait to shutdown: %s, %s, %s", error.get(), handlingLock.availablePermits(), queue.size()));
                 }
+            } catch (InterruptedException e) {
+                // Ignore
             }
         }
     }
@@ -142,9 +141,9 @@ public class SmartBatcher<T>
                     updateLock.unlock();
                 }
             } catch (Throwable t) {
-                System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "SmartBatcher handler failed", t);
                 handlingLock.release();
                 error.set(new IllegalStateException(t));
+                System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "SmartBatcher handler failed", t);
             }
         }
     }
