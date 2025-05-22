@@ -30,6 +30,7 @@ import reactor.util.context.ContextView;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -77,6 +78,7 @@ public final class SmartBatchingOperator {
         private final FluxSink<T> downstream;
         private final ContextView contextView;
         private final BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler;
+        private final Executor executor;
         private final SmartBatcher<T> smartBatcher;
 
         public SmartBatchingSubscriber(
@@ -89,6 +91,7 @@ public final class SmartBatchingOperator {
             this.downstream = downstream;
             this.contextView = contextView;
             this.handler = handler;
+            this.executor = executor;
             smartBatcher = new SmartBatcher<>(this, queue, executor);
             upstream.subscribe(this);
 
@@ -119,11 +122,6 @@ public final class SmartBatchingOperator {
         }
 
         @Override
-        protected void hookOnCancel() {
-            smartBatcher.close();
-        }
-
-        @Override
         protected void hookOnSubscribe(Subscription subscription) {
 
         }
@@ -141,7 +139,9 @@ public final class SmartBatchingOperator {
 
         @Override
         public void error(Throwable e) {
-            downstream.error(e);
+            // This needs to be async, or else the dispose calling smartBatcher.close will deadlock since this call is coming
+            // from the SmartBatcher handler
+            CompletableFuture.runAsync(()->downstream.error(e));
         }
 
         @Override
