@@ -15,13 +15,17 @@
  */
 package dev.xorcery.neo4jprojections;
 
-import dev.xorcery.collections.MapElement;
-
 import java.util.Map;
 import java.util.Optional;
 
 public record ProjectionModel(Map<String, Object> map)
-        implements MapElement<String, Object> {
+        implements dev.xorcery.collections.Element {
+
+    @Override
+    public <T> Optional<T> get(String name) {
+        return Optional.ofNullable((T)map.get(name));
+    }
+
     public String getProjectionId() {
         return getString(Projection.id).orElseThrow();
     }

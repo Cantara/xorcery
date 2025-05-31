@@ -16,20 +16,31 @@
 package dev.xorcery.collections;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
-public interface MapElement<K,V>
-    extends Element
+public record MapElement(Map<String, Object> map)
+    implements Element
 {
-    static <K,V> MapElement<K,V> element(Map<K,V> map)
+    public static MapElement element(Map<String, Object> map)
     {
-        return () -> map;
+        return new MapElement(map);
     }
 
-    Map<K,V> map();
+    @Override
+    public <T> Optional<T> get(String name) {
+        return Optional.ofNullable((T)map.get(name));
+    }
 
     @Override
-    default <T> Optional<T> get(String name) {
-        return Optional.ofNullable((T)map().get(name));
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MapElement that)) return false;
+        return Objects.equals(map, that.map);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(map);
     }
 }
