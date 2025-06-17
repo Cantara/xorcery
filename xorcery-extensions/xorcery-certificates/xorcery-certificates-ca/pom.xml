@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-certificates</artifactId>
-        <version>0.161.13</version>
+        <version>0.161.14-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-certificates-ca</artifactId>
