@@ -43,5 +43,9 @@
             <groupId>io.opentelemetry.instrumentation</groupId>
             <artifactId>opentelemetry-log4j-appender-2.17</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-trace</artifactId>
+        </dependency>
     </dependencies>
 </project>

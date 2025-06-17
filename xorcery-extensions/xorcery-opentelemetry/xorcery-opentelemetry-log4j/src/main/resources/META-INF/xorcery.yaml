@@ -10,4 +10,4 @@ opentelemetry:
           name: OpenTelemetryAppender
           captureMapMessageAttributes: true
           captureMarkerAttribute: true
-          captureContextDataAttributes: true
+          captureContextDataAttributes: "*"

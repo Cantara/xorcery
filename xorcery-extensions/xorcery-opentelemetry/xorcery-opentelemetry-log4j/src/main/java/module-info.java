@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * @author rickardoberg
  * @since 19/01/2024
@@ -30,4 +31,7 @@ module xorcery.opentelemetry.log4j {
     requires org.glassfish.hk2.api;
     requires org.glassfish.hk2.runlevel;
     requires jakarta.inject;
+    requires io.opentelemetry.sdk.trace;
+
+    provides org.apache.logging.log4j.core.util.ContextDataProvider with dev.xorcery.opentelemetry.log4j.SpanContextDataProvider;
 }

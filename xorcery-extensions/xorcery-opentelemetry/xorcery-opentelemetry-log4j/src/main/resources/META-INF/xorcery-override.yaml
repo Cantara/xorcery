@@ -1,4 +1,6 @@
 $schema: xorcery-schema.json
+system:
+
 log4j2:
   Configuration:
     appenders:
