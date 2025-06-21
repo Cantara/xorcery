@@ -156,7 +156,7 @@
             <dependency>
                 <groupId>com.exoreaction.xorcery</groupId>
                 <artifactId>neo4j-shaded</artifactId>
-                <version>5.26.5.3</version>
+                <version>2025.05.0.0</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.scala-lang</groupId>
