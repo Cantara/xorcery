@@ -15,13 +15,15 @@
  */
 package dev.xorcery.neo4j.client;
 
+import org.neo4j.internal.kernel.api.LabelsSupplier;
 import org.neo4j.internal.kernel.api.connectioninfo.ClientConnectionInfo;
-import org.neo4j.internal.kernel.api.security.AbstractSecurityLog;
-import org.neo4j.internal.kernel.api.security.AuthSubject;
-import org.neo4j.internal.kernel.api.security.LoginContext;
-import org.neo4j.internal.kernel.api.security.SecurityContext;
+import org.neo4j.internal.kernel.api.security.*;
 import org.neo4j.kernel.database.PrivilegeDatabaseReference;
 import org.neo4j.kernel.impl.api.security.OverriddenAccessMode;
+import org.neo4j.storageengine.api.PropertySelection;
+
+import java.util.function.IntPredicate;
+import java.util.function.Supplier;
 
 /**
  * AccessMode that overrides FULL
@@ -35,8 +37,33 @@ public class LabelAccessMode
     }
 
     public LabelAccessMode(int labelId) {
-        super(Static.FULL, Static.FULL);
+        super(StaticAccessMode.FULL, StaticAccessMode.FULL);
         this.requiredLabelId = labelId;
+    }
+
+    @Override
+    public boolean allowsTraverseNode(LabelsSupplier labels, SelectedPropertiesProvider selectedPropertiesProvider) {
+        return labels.getLabels().contains(requiredLabelId);
+    }
+
+    @Override
+    public boolean allowsReadNodeProperties(LabelsSupplier labels, int[] propertyKeys, Supplier<SelectedPropertiesProvider> propertyProvider) {
+        return labels.getLabels().contains(requiredLabelId);
+    }
+
+    @Override
+    public boolean allowsTraverseAndReadAllMatchingNodeProperties(int[] labels, int[] propertyKeys) {
+        for (int label : labels) {
+            if (label == requiredLabelId)
+                return super.allowsTraverseAndReadAllMatchingNodeProperties(labels, propertyKeys);
+        }
+        return false;
+    }
+
+    @Override
+    public IntPredicate allowedToReadNodeProperties(LabelsSupplier labels, Supplier<SelectedPropertiesProvider> propertyProvider, PropertySelection selection) {
+        boolean allowed = labels.getLabels().contains(requiredLabelId);
+        return v -> allowed;
     }
 
     @Override
