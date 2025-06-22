@@ -1,0 +1,61 @@
+---
+- metadata:
+    timestamp: 1
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  data:
+    #Test Value as attribute
+    - event: "UpdatedAddress"
+      created:
+        type: "Person"
+        id: "1234"
+      attributes:
+        address:
+          attributes:
+            street: "Somewhere 123"
+            zip: "90111"
+            city:
+              attributes:
+                name: "Lost Angels"
+                population: 1
+
+- metadata:
+    timestamp: 2
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  data:
+    - event: "UpdatedName"
+      updated:
+        type: "Person"
+        id: "1234"
+      attributes:
+        name: "John Smith"
+    - event: "UpdatedEmail"
+      updated:
+        type: "Person"
+        id: "1234"
+      attributes:
+        email: "johnsmith@example.com"
+
+- metadata:
+    timestamp: 3
+    aggregateId: "1234"
+    aggregateType: "Tenant"
+    tenant: "1234"
+  data:
+    #Test update Value as attribute
+    - event: "UpdatedAddress"
+      updated:
+        type: "Person"
+        id: "1234"
+      attributes:
+        address:
+          attributes:
+            street: "Elseweyr 27"
+            zip: "42069"
+            city:
+              attributes:
+                name: "Capital Hole"
+                population: 2

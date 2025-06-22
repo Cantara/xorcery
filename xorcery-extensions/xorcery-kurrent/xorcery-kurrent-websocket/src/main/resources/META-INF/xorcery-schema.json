@@ -1,0 +1,44 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "title" : "xorcery.yaml JSON Schema",
+  "properties" : {
+    "kurrent" : {
+      "$ref" : "#/$defs/kurrent"
+    }
+  },
+  "$defs" : {
+    "kurrent" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "websockets" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "readClient" : {
+              "type" : "string",
+              "default" : "default",
+              "description" : "Default: default"
+            },
+            "writeClient" : {
+              "type" : "string",
+              "default" : "default",
+              "description" : "Default: default"
+            },
+            "prefetch" : {
+              "type" : [ "number", "string" ],
+              "default" : 1024,
+              "description" : "Default: 1024"
+            }
+          }
+        }
+      }
+    }
+  }
+}

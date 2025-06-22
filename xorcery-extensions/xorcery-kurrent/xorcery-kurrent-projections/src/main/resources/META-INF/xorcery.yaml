@@ -1,0 +1,5 @@
+$schema: xorcery-schema.json
+kurrent:
+  projections:
+    enabled: "{{ kurrent.enabled }}"
+    projections: []

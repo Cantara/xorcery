@@ -1,0 +1,45 @@
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "type" : "object",
+  "title" : "xorcery.yaml JSON Schema",
+  "properties" : {
+    "kurrent" : {
+      "$ref" : "#/$defs/kurrent"
+    }
+  },
+  "$defs" : {
+    "kurrent" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "clients" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "default" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ kurrent.enabled }}",
+                  "description" : "Default: {{ kurrent.enabled }} (true)"
+                },
+                "uri" : {
+                  "type" : "string",
+                  "default" : "kurrentdb://localhost:2113?tls=false",
+                  "description" : "Default: kurrentdb://localhost:2113?tls=false"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

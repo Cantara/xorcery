@@ -1,0 +1,6 @@
+$schema: xorcery-override-schema.json
+jersey:
+  server:
+    register:
+      - dev.xorcery.kurrent.jsonapi.resources.KurrentResource
+      - dev.xorcery.kurrent.jsonapi.resources.StreamResource

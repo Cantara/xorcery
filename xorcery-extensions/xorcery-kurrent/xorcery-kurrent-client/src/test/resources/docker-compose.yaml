@@ -1,0 +1,13 @@
+services:
+  kurrent:
+    image: docker.kurrent.io/kurrent-latest/kurrentdb:latest
+    environment:
+      - KURRENTDB_CLUSTER_SIZE=1
+      - KURRENTDB_RUN_PROJECTIONS=All
+      - KURRENTDB_START_STANDARD_PROJECTIONS=true
+      - KURRENTDB_NODE_PORT=2115
+      - KURRENTDB_REPLICATION_PORT=1115
+      - KURRENTDB_INSECURE=true
+    ports:
+      - "1115:1115"
+      - "2115:2115"

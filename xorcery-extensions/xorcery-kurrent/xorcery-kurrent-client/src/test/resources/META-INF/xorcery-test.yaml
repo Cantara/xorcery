@@ -1,0 +1,10 @@
+log4j2.Configuration.thresholdFilter.level: debug
+log4j2.Configuration.Loggers.logger:
+  - name: "dev.xorcery.test"
+    level: "debug"
+  - name: "dev.xorcery.core"
+    level: "debug"
+  - name: "dev.xorcery.dns.update"
+    level: "debug"
+  - name: "dev.xorcery.dns.server"
+    level: "debug"

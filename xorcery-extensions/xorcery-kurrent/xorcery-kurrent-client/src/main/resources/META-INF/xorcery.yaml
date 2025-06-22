@@ -1,0 +1,7 @@
+$schema: xorcery-schema.json
+kurrent:
+  enabled: "{{ defaults.enabled }}"
+  clients:
+    default:
+      enabled: "{{ kurrent.enabled }}"
+      uri: "kurrentdb://localhost:2113?tls=false"
