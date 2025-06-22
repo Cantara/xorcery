@@ -91,13 +91,13 @@ public class OpenTelemetrySystemService {
                         Attributes.of(
                                 SystemIncubatingAttributes.SYSTEM_DEVICE, fileStore.toString(),
                                 SystemIncubatingAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
-                                SystemIncubatingAttributes.SYSTEM_FILESYSTEM_STATE, SystemIncubatingAttributes.SystemFilesystemStateValues.FREE)
+                                SystemIncubatingAttributes.SYSTEM_FILESYSTEM_STATE, SystemIncubatingAttributes.SystemFilesystemStateIncubatingValues.FREE)
                 );
                 observableLongMeasurement.record(used,
                         Attributes.of(
                                 SystemIncubatingAttributes.SYSTEM_DEVICE, fileStore.toString(),
                                 SystemIncubatingAttributes.SYSTEM_FILESYSTEM_TYPE, fileStore.type().toLowerCase(),
-                                SystemIncubatingAttributes.SYSTEM_FILESYSTEM_STATE, SystemIncubatingAttributes.SystemFilesystemStateValues.USED)
+                                SystemIncubatingAttributes.SYSTEM_FILESYSTEM_STATE, SystemIncubatingAttributes.SystemFilesystemStateIncubatingValues.USED)
                 );
             } catch (IOException e) {
                 logger.error("Could not record filesystem stats for "+fileStore, e);

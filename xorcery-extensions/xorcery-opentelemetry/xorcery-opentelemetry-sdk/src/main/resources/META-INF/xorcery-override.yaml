@@ -1,3 +1,3 @@
 $schema: xorcery-override-schema.json
 system:
-  io.opentelemetry.exporter.internal.http.HttpSenderProvider: dev.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider
+  "io.opentelemetry.exporter.internal.http.HttpSenderProvider": dev.xorcery.opentelemetry.sdk.exporters.otlphttp.jdk.JdkHttpSenderProvider

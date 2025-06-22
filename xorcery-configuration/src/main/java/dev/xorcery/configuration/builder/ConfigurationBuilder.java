@@ -16,6 +16,7 @@
 package dev.xorcery.configuration.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -27,6 +28,8 @@ import dev.xorcery.util.Resources;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
 
@@ -43,11 +46,11 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
     private static final JavaPropsMapper javaPropsMapper = new JavaPropsMapper();
 
     public ConfigurationBuilder() {
-        this(new Configuration.Builder(), "xorcery");
+        this(Configuration.newConfiguration(), "xorcery");
     }
 
     public ConfigurationBuilder(String baseName) {
-        this(new Configuration.Builder(), baseName);
+        this(Configuration.newConfiguration(), baseName);
     }
 
     public ConfigurationBuilder addYaml(InputStream yamlStream) throws UncheckedIOException {
@@ -131,6 +134,7 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
         addEtc();
         addHome();
         addUserDirectory();
+        addEnvironmentVariables();
 
         addConfigurationProviders();
         return this;
@@ -233,6 +237,58 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
             throw new UncheckedIOException(e);
         }
         return this;
+    }
+
+    public ConfigurationBuilder addEnvironmentVariables() throws UncheckedIOException {
+        // Find environment variable overrides
+        Map<String, String> env = System.getenv();
+        env.forEach((name, value)->{
+            if (!name.startsWith("XORCERY_"))
+                return;
+
+            name = name.substring("XORCERY_".length());
+            String[] names = name.split("_");
+            override(names, value, builder.builder());
+            logger.log("Environment variable override: XORCERY_" + name+"="+value);
+        });
+        return this;
+    }
+
+    private void override(String[] names, String value, ObjectNode builder) {
+        String name = names[0].toLowerCase();
+        for (Map.Entry<String, JsonNode> property : builder.properties()) {
+            if (property.getKey().toLowerCase().equals(name)){
+                if (names.length > 1){
+                    if (property.getValue() instanceof ObjectNode objectNode){
+                        override(Arrays.copyOfRange(names, 1, names.length), value, objectNode);
+                        return;
+                    } else {
+                        throw new IllegalArgumentException("Unknown configuration setting:"+name);
+                    }
+                } else {
+                    if (value.equalsIgnoreCase("null")){
+                        builder.set(property.getKey(), JsonNodeFactory.instance.nullNode());
+                        return;
+                    }
+                    switch (property.getValue().getNodeType()){
+                        case BOOLEAN -> {
+                            builder.set(property.getKey(), JsonNodeFactory.instance.booleanNode(Boolean.parseBoolean(value)));
+                        }
+                        case NUMBER -> {
+                            builder.set(property.getKey(), property.getValue().isIntegralNumber()
+                                    ? JsonNodeFactory.instance.numberNode(Long.parseLong(value))
+                                    : JsonNodeFactory.instance.numberNode(Double.parseDouble(value)));
+                        }
+                        case NULL, STRING -> {
+                            builder.set(property.getKey(), JsonNodeFactory.instance.textNode(value));
+                        }
+                        default -> throw new IllegalArgumentException("Can't override property "+name+" with value of unknown type:"+property.getValue().getNodeType().name());
+                    }
+                    return;
+                }
+            }
+        }
+        throw new IllegalArgumentException("Unknown configuration setting:"+names[0]);
     }
 
     public ConfigurationBuilder addProperties(InputStream propertiesStream) throws UncheckedIOException {

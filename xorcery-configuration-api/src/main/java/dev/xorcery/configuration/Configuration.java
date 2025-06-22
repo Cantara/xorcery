@@ -52,6 +52,10 @@ public record Configuration(ObjectNode json)
         return () -> new IllegalArgumentException("Missing configuration setting '" + name + "'");
     }
 
+    public static Builder newConfiguration(){
+        return new Builder();
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder> {
 

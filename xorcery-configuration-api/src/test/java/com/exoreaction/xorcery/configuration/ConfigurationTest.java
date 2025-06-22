@@ -26,7 +26,7 @@ class ConfigurationTest {
 
     @Test
     void addArrayElements() {
-        Configuration.Builder builder = new Configuration.Builder();
+        Configuration.Builder builder = Configuration.newConfiguration();
         builder.add("root.fruits", JsonNodeFactory.instance.arrayNode());
         builder.add("root.fruits", "apple");
         builder.add("root.fruits", "orange");

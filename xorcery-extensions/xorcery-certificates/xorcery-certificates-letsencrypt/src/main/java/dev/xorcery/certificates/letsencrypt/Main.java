@@ -58,7 +58,7 @@ public class Main
     @Override
     public Integer call() throws Exception {
 
-        Configuration config = new Configuration.Builder()
+        Configuration config = Configuration.newConfiguration()
                 .add("keystores.letsencrypt.path", keyStoreFile.getAbsolutePath())
                 .add("keystores.letsencrypt.password", keyStorePassword)
                 .build();

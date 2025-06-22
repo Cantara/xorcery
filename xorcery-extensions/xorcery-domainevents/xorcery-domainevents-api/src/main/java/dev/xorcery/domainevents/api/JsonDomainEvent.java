@@ -64,6 +64,10 @@ public record JsonDomainEvent(ObjectNode json)
         return event(eventNamePrefix + capitalize(eventNameSuffix.name()));
     }
 
+    public static Builder newDomainEvent(String eventName){
+        return new Builder(eventName);
+    }
+
     public record Builder(ObjectNode builder)
         implements With<Builder>
     {

@@ -26,12 +26,12 @@ public record ClientConfiguration(Configuration configuration) {
 
     public static ClientConfiguration defaults()
     {
-        return new ClientConfiguration(new Configuration.Builder().build());
+        return new ClientConfiguration(Configuration.newConfiguration().build());
     }
 
     public record Builder(Configuration.Builder builder) {
         public Builder() {
-            this(new Configuration.Builder());
+            this(Configuration.newConfiguration());
         }
 
         public Builder isRetryEnabled(boolean value) {

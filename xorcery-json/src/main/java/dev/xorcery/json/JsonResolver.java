@@ -225,7 +225,7 @@ public class JsonResolver
                     case NUMBER -> value.numberValue().longValue() != 0;
                     case OBJECT -> true;
                     case POJO -> true;
-                    case STRING -> !value.textValue().equals("");
+                    case STRING -> !value.textValue().equals("") && !value.textValue().equalsIgnoreCase("false");
                 };
     }
 }

@@ -23,7 +23,7 @@ opentelemetry:
   exporters:
     opensearch:
       attach:
-        enabled: "{{ settings.opensearch ? true | false }}"
+        enabled: "{{ opensearch.enabled }}"
         host: "{{ settings.opensearch }}"
     logging:
       enabled: false
