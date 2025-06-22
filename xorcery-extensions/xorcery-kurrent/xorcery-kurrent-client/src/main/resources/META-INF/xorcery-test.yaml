@@ -1,0 +1,4 @@
+kurrent:
+  clients:
+    default:
+      uri: "kurrentdb://localhost:2115?tls=false"

@@ -1,0 +1,6 @@
+kurrent:
+  websockets:
+    enabled: "{{ defaults.enabled }}"
+    readClient: "default"
+    writeClient: "default"
+    prefetch: 1024
