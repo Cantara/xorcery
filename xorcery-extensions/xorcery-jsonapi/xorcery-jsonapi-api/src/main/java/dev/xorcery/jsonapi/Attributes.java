@@ -31,6 +31,10 @@ import java.util.*;
 public record Attributes(ObjectNode json)
         implements JsonElement {
 
+    public static Builder newAttributes(){
+        return new Builder();
+    }
+
     public record Builder(ObjectNode builder)
         implements With<Builder>
     {

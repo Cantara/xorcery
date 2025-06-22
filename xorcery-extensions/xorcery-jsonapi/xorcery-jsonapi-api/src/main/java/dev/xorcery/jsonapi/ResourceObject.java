@@ -28,6 +28,10 @@ import java.util.Objects;
 public record ResourceObject(ObjectNode json)
         implements JsonElement {
 
+    public static Builder newResource(String type, String id){
+        return new Builder(type, id);
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder>
     {

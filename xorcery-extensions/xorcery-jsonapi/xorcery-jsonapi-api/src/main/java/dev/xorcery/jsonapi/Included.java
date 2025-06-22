@@ -33,6 +33,10 @@ import java.util.function.Consumer;
 public record Included(ArrayNode json)
         implements JsonElement, Consumer<Included.Builder> {
 
+    public static Builder newIncluded(){
+        return new Builder();
+    }
+
     public record Builder(ArrayNode builder, Set<String> included)
             implements With<Builder>
     {

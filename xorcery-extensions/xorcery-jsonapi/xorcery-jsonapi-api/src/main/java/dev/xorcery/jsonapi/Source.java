@@ -25,6 +25,11 @@ import dev.xorcery.json.JsonElement;
  */
 public record Source(ObjectNode json)
         implements JsonElement {
+
+    public static Builder newSource(){
+        return new Builder();
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder>
     {

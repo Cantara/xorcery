@@ -33,6 +33,10 @@ import java.util.regex.Pattern;
 public record Links(ObjectNode json)
         implements JsonElement {
 
+    public static Builder newLinks(){
+        return new Builder();
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder> {
         public Builder() {

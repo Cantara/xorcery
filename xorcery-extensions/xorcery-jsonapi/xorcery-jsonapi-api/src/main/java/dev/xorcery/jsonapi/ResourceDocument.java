@@ -36,6 +36,10 @@ import java.util.stream.Stream;
 public record ResourceDocument(ObjectNode json)
         implements JsonElement {
 
+    public static Builder newResourceDocument(){
+        return new Builder();
+    }
+
     public record Builder(ObjectNode builder)
             implements With<ResourceDocument.Builder>
     {

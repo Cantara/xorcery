@@ -29,6 +29,10 @@ import java.util.*;
 public record Relationships(ObjectNode json)
         implements JsonElement {
 
+    public static Builder newRelationships(){
+        return new Builder();
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder>
     {

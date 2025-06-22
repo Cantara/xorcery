@@ -57,7 +57,7 @@ public class JettyLifecycleService
 
         Handler chain = null;
         for (ServiceHandle<Handler> serviceHandle : rankedHandlers) {
-            logger.info("Registering handler:" + Optional.ofNullable(serviceHandle.getActiveDescriptor().getName()).orElse(serviceHandle.getActiveDescriptor().getImplementation()));
+            logger.debug("Registering handler:" + Optional.ofNullable(serviceHandle.getActiveDescriptor().getName()).orElse(serviceHandle.getActiveDescriptor().getImplementation()));
             Handler handler = serviceHandle.getService();
 
             if (handler instanceof SessionHandler || handler instanceof ConstraintSecurityHandler || handler instanceof ErrorHandler)

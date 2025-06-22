@@ -31,6 +31,10 @@ import java.util.stream.Stream;
 public record ResourceObjects(ArrayNode json)
         implements JsonElement,Iterable<ResourceObject> {
 
+    public static Builder newResourceObjects(){
+        return new Builder();
+    }
+
     public static Collector<ResourceObject, Builder, ResourceObjects> toResourceObjects() {
         return Collector.of(Builder::new, (builder, ro) -> {
             if (ro != null) builder.resource(ro);

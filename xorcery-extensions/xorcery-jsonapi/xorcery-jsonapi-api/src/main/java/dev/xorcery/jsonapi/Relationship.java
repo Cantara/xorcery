@@ -33,6 +33,10 @@ import java.util.function.Consumer;
 public record Relationship(ObjectNode json)
         implements JsonElement, Consumer<Relationship.Builder> {
 
+    public static Builder newRelationship(){
+        return new Builder();
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder>
     {

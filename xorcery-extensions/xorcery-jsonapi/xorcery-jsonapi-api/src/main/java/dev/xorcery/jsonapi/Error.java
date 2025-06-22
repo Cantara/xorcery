@@ -27,6 +27,10 @@ import dev.xorcery.json.JsonElement;
 public record Error(ObjectNode json)
         implements JsonElement {
 
+    public static Builder newError(){
+        return new Builder();
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder>
     {

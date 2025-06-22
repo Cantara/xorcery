@@ -26,6 +26,10 @@ import dev.xorcery.json.JsonElement;
 public record ResourceObjectIdentifier(ObjectNode json)
         implements JsonElement {
 
+    public static Builder newResourceObjectIdentifier(String type, String id){
+        return new Builder(type, id);
+    }
+
     public record Builder(ObjectNode builder)
             implements With<Builder>
     {

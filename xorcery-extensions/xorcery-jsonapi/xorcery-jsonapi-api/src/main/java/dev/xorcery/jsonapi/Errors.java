@@ -31,6 +31,10 @@ import java.util.Map;
 public record Errors(ArrayNode json)
         implements JsonElement, Iterable<Error> {
 
+    public static Builder newErrors(){
+        return new Builder();
+    }
+
     public record Builder(ArrayNode builder)
             implements With<Builder>
     {
