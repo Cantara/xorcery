@@ -192,22 +192,22 @@
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-kurrent-client</artifactId>
-                <version>0.161.13-SNAPSHOT</version>
+                <version>0.161.14-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-kurrent-projections</artifactId>
-                <version>0.161.13-SNAPSHOT</version>
+                <version>0.161.14-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-kurrent-jsonapi</artifactId>
-                <version>0.161.13-SNAPSHOT</version>
+                <version>0.161.14-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-kurrent-websocket</artifactId>
-                <version>0.161.13-SNAPSHOT</version>
+                <version>0.161.14-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
