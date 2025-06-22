@@ -18,7 +18,7 @@ package dev.xorcery.configuration;
 import dev.xorcery.builders.WithContext;
 
 public interface ServiceConfiguration
-    extends WithContext<Configuration>, ComponentConfiguration
+    extends WithContext<Configuration>
 {
     default boolean isEnabled()
     {

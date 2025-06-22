@@ -30,10 +30,10 @@ import dev.xorcery.util.Resources;
 
 import java.io.UncheckedIOException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * @author rickardoberg
@@ -141,12 +141,13 @@ public record Configuration(ObjectNode json)
                 .orElseGet(() -> new Configuration(JsonNodeFactory.instance.objectNode()));
     }
 
-    public List<Configuration> getConfigurations(String name) {
+    public Stream<Configuration> getConfigurations(String name) {
         return getJson(name)
                 .filter(ArrayNode.class::isInstance)
                 .map(ArrayNode.class::cast)
                 .map(a -> JsonElement.getValuesAs(a, Configuration::new))
-                .orElseGet(Collections::emptyList);
+                .stream()
+                .flatMap(Collection::stream);
     }
 
     /**

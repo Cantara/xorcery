@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static dev.xorcery.configuration.Configuration.missing;
+
 public record CertificatesConfiguration(Configuration context)
         implements ServiceConfiguration {
 

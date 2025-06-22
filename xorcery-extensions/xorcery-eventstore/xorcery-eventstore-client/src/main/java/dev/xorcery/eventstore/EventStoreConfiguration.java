@@ -18,6 +18,8 @@ package dev.xorcery.eventstore;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.ServiceConfiguration;
 
+import static dev.xorcery.configuration.Configuration.missing;
+
 public record EventStoreConfiguration(Configuration context)
         implements ServiceConfiguration {
 

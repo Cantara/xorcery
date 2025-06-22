@@ -21,6 +21,8 @@ import org.eclipse.jetty.websocket.server.ServerWebSocketContainer;
 
 import java.time.Duration;
 
+import static dev.xorcery.configuration.Configuration.missing;
+
 public record WebSocketsConfiguration(Configuration context)
         implements ServiceConfiguration {
 

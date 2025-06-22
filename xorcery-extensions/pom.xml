@@ -46,6 +46,7 @@
         <module>xorcery-reactivestreams</module>
         <module>xorcery-domainevents</module>
         <module>xorcery-eventstore</module>
+        <module>xorcery-kurrent</module>
         <module>xorcery-opensearch</module>
         <module>xorcery-neo4j</module>
         <module>xorcery-status</module>

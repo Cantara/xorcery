@@ -45,7 +45,7 @@ import java.util.concurrent.CompletableFuture;
  * Xorcery run level values:
  * 0: Configuration refresh
  * 2: Certificate request/refresh
- * 4: Server
+ * 4: Servers and Clients
  * 6: Server publishers/subscribers
  * 8: Client publishers/subscribers
  * 18: Server start/stop

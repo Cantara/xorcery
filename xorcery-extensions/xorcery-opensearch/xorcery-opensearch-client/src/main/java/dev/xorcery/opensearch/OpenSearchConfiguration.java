@@ -20,6 +20,8 @@ import dev.xorcery.configuration.ServiceConfiguration;
 
 import java.net.URI;
 
+import static dev.xorcery.configuration.Configuration.missing;
+
 public record OpenSearchConfiguration(Configuration context)
         implements ServiceConfiguration {
     public static OpenSearchConfiguration get(Configuration configuration) {
