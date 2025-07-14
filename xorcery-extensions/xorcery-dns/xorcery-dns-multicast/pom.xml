@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-dns</artifactId>
-        <version>0.163.0</version>
+        <version>0.163.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-dns-multicast</artifactId>
