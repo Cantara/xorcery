@@ -242,14 +242,15 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
     public ConfigurationBuilder addEnvironmentVariables() throws UncheckedIOException {
         // Find environment variable overrides
         Map<String, String> env = System.getenv();
+        String prefix = baseName.toUpperCase();
         env.forEach((name, value)->{
-            if (!name.startsWith("XORCERY_"))
+            if (!name.startsWith(prefix+"_"))
                 return;
 
-            name = name.substring("XORCERY_".length());
+            name = name.substring((prefix+"_").length());
             String[] names = name.split("_");
             override(names, value, builder.builder());
-            logger.log("Environment variable override: XORCERY_" + name+"="+value);
+            logger.log("Environment variable override: "+prefix+"_" + name+"="+value);
         });
         return this;
     }
