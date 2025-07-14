@@ -3,7 +3,7 @@
 
     <groupId>dev.xorcery</groupId>
     <artifactId>xorcery-bom</artifactId>
-    <version>0.162.1-SNAPSHOT</version>
+    <version>0.163.0</version>
     <name>Xorcery BOM</name>
     <description>Xorcery BOM artifact</description>
     <packaging>pom</packaging>
@@ -49,420 +49,420 @@
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-aws-auth</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
 
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-spi</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-ca</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-letsencrypt</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-certificates-provisioning</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
 
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-translation-resourcebundle-maven-plugin</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-api</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-configuration-validation</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-coordinator</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-core</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-multicast</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-registration</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-update</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-dns-update-route53</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-api</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-entity</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-jsonapi</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-neo4jprojection</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-domainevents-publisher</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
 
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-eventstore-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-eventstore-projections</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-eventstore-jsonapi</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-kurrent-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-kurrent-projections</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-kurrent-jsonapi</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-kurrent-websocket</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jaxrs-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jersey-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jersey-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jetty-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jetty-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jetty-server-http2</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jetty-server-jwt</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-json</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-api</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-service</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-jaxrs</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonapi-server-neo4j</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jsonschema</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-junit</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-jwt-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-log4j</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-sdk</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-api</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-collector-websocket</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-exporter-websocket</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-exporter-opensearch</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-log4j</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jersey-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jvm</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-jmx</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opentelemetry-system</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-keystores</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-metadata</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-status-jmx</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-neo4j-embedded</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-neo4j-projections</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-neo4j-browser</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opensearch-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-opensearch-templates</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-api</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-client</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-reactivestreams-extras</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-runner</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-secrets-api</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-secrets-spi</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-secrets-aws</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-status-spi</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-status-server</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-thymeleaf-jaxrs</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-thymeleaf-jsonapi</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-translation-api</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-translation-deepl</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-util</artifactId>
-                <version>0.162.1-SNAPSHOT</version>
+                <version>0.163.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
