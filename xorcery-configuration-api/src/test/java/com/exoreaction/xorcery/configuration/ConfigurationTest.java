@@ -17,6 +17,7 @@ package com.exoreaction.xorcery.configuration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -55,7 +56,8 @@ class ConfigurationTest {
         builder.add("clients.client2.foo", JsonNodeFactory.instance.numberNode(7));
 
         Configuration config = builder.build();
-        String toString = config.toJsonString();
-        Assertions.assertEquals("d", toString);
+        String toString = new JsonMapper().writeValueAsString(config.json());
+        String expected = "{\"clients\":[{\"name\":\"client1\",\"foo\":3},{\"name\":\"client2\",\"foo\":7},{\"name\":\"client3\",\"foo\":5}]}";
+        Assertions.assertEquals(expected, toString);
     }
 }
