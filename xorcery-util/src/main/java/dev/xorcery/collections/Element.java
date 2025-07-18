@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -325,5 +326,9 @@ public interface Element {
             else
                 return false;
         }).orElse(false);
+    }
+
+    default <T,R> Optional<T> getMapped(String name, Function<R, T> wrapper){
+        return this.<R>get(name).map(wrapper);
     }
 }

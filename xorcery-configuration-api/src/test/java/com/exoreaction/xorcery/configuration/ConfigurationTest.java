@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dev.xorcery.configuration;
+package com.exoreaction.xorcery.configuration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import dev.xorcery.configuration.Configuration;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -33,5 +37,25 @@ class ConfigurationTest {
         Configuration config = builder.build();
         List<String> list = config.getListAs("root.fruits", JsonNode::textValue).orElseThrow();
         Assertions.assertEquals(List.of("apple", "orange"), list);
+    }
+
+    @Test
+    void overrideNamedArrayElements() throws JsonProcessingException {
+        JsonNode jsonNode = new YAMLMapper().readTree("""
+                clients:
+                - name: client1
+                  foo: 3
+                - name: client2
+                  foo: 4
+                - name: client3
+                  foo: 5
+                """);
+        Configuration.Builder builder = new Configuration.Builder((ObjectNode) jsonNode);
+
+        builder.add("clients.client2.foo", JsonNodeFactory.instance.numberNode(7));
+
+        Configuration config = builder.build();
+        String toString = config.toJsonString();
+        Assertions.assertEquals("d", toString);
     }
 }

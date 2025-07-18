@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.xorcery.builders.With;
 import dev.xorcery.json.JsonElement;
@@ -31,6 +32,7 @@ import dev.xorcery.util.Resources;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -63,33 +65,50 @@ public record Configuration(ObjectNode json)
             this(JsonNodeFactory.instance.objectNode());
         }
 
-        ObjectNode navigateToParentOfPropertyNameThenAdd(ObjectNode node, String name, JsonNode value) {
+        void navigateToParentOfPropertyNameThenAdd(JsonNode node, String name, JsonNode value) {
             int i = name.indexOf(".");
             if (i == -1) {
                 // name is the last element in path to navigate, navigation complete.
                 if (node.path(name).isArray()) {
                     ((ArrayNode) node.get(name)).add(value);
                 } else {
-                    node.set(name, value);
+                    if (node instanceof ObjectNode object){
+                        object.set(name, value);
+                    }
                 }
-                return node;
+                return;
             }
             String childElement = name.substring(0, i);
             String remainingName = name.substring(i + 1);
-            JsonNode child = node.get(childElement);
-            ObjectNode childObjectNode;
+            JsonNode child = switch (node){
+                case ObjectNode object -> object.get(childElement);
+                case ArrayNode array -> {
+                    for (JsonNode jsonNode : array) {
+                        Iterator<JsonNode> valueIterator = jsonNode.values();
+                        if (valueIterator.hasNext() && valueIterator.next() instanceof TextNode textNode){
+                            if (textNode.asText().equals(childElement) && jsonNode instanceof ObjectNode objectNode)
+                                yield objectNode;
+                        }
+                    }
+                    throw new IllegalArgumentException("No object found in array with identifying property valued:"+childElement);
+                }
+                default -> throw new RuntimeException("Attempted to navigate through json key that already exists, but is not a json-object that support navigation.");
+            };
             if (child == null || child.isNull()) {
                 // non-existent json-node, need to create child object node
-                childObjectNode = node.putObject(childElement);
+                ObjectNode childObjectNode = switch (node){
+                    case ObjectNode object -> object.putObject(childElement);
+                    case ArrayNode array -> {
+                        ObjectNode arrayChild = JsonNodeFactory.instance.objectNode();
+                        array.add(arrayChild);
+                        yield arrayChild;
+                    }
+                    default -> throw new IllegalArgumentException("Unknown node type:"+node);
+                };
+                navigateToParentOfPropertyNameThenAdd(childObjectNode, remainingName, value);
             } else {
-                // existing json-node, ensure that it can be navigated through
-                if (!child.isObject()) {
-                    throw new RuntimeException("Attempted to navigate through json key that already exists, but is not a json-object that support navigation.");
-                }
-                childObjectNode = (ObjectNode) child;
+                navigateToParentOfPropertyNameThenAdd(child, remainingName, value);
             }
-            // TODO support arrays, for now we only support object navigation
-            return navigateToParentOfPropertyNameThenAdd(childObjectNode, remainingName, value);
         }
 
         public Builder add(String name, JsonNode value) {
