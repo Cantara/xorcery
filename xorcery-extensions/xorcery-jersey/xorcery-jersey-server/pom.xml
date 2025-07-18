@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-jersey</artifactId>
-        <version>0.163.2-SNAPSHOT</version>
+        <version>0.163.2</version>
     </parent>
 
     <artifactId>xorcery-jersey-server</artifactId>
