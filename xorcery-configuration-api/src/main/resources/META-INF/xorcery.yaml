@@ -18,6 +18,8 @@ instance:
 application:
   name: "application"
   version: "unknown"
+  versions: # Add modules names whose versions you want logged on startup
+  - xorcery.core
 
 system: {}
 

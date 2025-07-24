@@ -1,4 +1,7 @@
 $schema: xorcery-override-schema.json
+application:
+  versions:
+    - org.apache.logging.log4j
 system:
   "java.util.logging.manager": "org.apache.logging.log4j.jul.LogManager"
   "log4j2.isThreadContextMapInheritable": true

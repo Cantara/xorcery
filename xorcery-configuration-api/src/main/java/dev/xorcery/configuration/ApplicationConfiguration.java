@@ -15,6 +15,10 @@
  */
 package dev.xorcery.configuration;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.List;
+
 /**
  * Configuration wrapper for application configuration
  *
@@ -32,5 +36,9 @@ public record ApplicationConfiguration(Configuration configuration) {
 
     public String getVersion() {
         return configuration.getString("version").orElse(null);
+    }
+
+    public List<String> getVersionPackages(){
+        return configuration.getListAs("versions", JsonNode::textValue).orElse(List.of());
     }
 }

@@ -1,0 +1,5 @@
+$schema: xorcery-override-schema.json
+
+application:
+  versions:
+    - jersey.client

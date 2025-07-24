@@ -1,4 +1,7 @@
 $schema: xorcery-override-schema.json
+application:
+  versions:
+    - xorcery.neo4j.shaded
 log4j2:
   Configuration:
     Loggers:

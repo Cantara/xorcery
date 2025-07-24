@@ -15,6 +15,7 @@
  */
 package dev.xorcery.core;
 
+import dev.xorcery.configuration.ApplicationConfiguration;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.ConfigurationLogger;
 import dev.xorcery.configuration.InstanceConfiguration;
@@ -40,6 +41,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * Xorcery run level values:
@@ -120,7 +122,17 @@ public final class Xorcery
 
             if (createdHome)
                 xorceryLogger.info(xorceryMarker, "Create home directory " + homeDir);
-            xorceryLogger.info(xorceryMarker, "Starting");
+            ApplicationConfiguration applicationConfiguration = ApplicationConfiguration.get(configuration);
+            xorceryLogger.info(xorceryMarker, "Starting {}({})", applicationConfiguration.getName(), applicationConfiguration.getVersion());
+            if (!applicationConfiguration.getVersionPackages().isEmpty()){
+                String moduleVersionMessage = applicationConfiguration.getVersionPackages().stream()
+                        .<String>mapMulti((moduleName, consumer) -> {
+                            ModuleLayer.boot().findModule(moduleName)
+                                    .map(module -> module.getDescriptor().toNameAndVersion()).ifPresent(consumer);
+                        })
+                        .collect(Collectors.joining("\n"));
+                xorceryLogger.info(xorceryMarker, "Versions:\n"+moduleVersionMessage);
+            }
 
             RunLevelController runLevelController = serviceLocator.getService(RunLevelController.class);
             runLevelController.setThreadingPolicy(hk2Configuration.getThreadingPolicy());

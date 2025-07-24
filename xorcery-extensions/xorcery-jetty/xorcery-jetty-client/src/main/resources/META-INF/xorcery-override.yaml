@@ -1,0 +1,4 @@
+$schema: xorcery-override-schema.json
+application:
+  versions:
+  - org.eclipse.jetty.client

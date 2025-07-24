@@ -1,2 +1,5 @@
 $schema: xorcery-override-schema.json
 instance.uri: "{{ jetty.server.enabled ? jetty.server.uri | \"http://localhost/\"}}"
+application:
+  versions:
+    - org.eclipse.jetty.server
