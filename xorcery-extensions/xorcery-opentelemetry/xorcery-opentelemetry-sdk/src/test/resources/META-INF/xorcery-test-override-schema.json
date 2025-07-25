@@ -1,5 +1,5 @@
 {
-  "title" : "xorcery.yaml override JSON Schema",
+  "title" : "xorcery.yaml test override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -20,6 +20,9 @@
     },
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
+    },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
     },
     "log4j2" : {
       "$ref" : "#/$defs/log4j2"
@@ -112,6 +115,9 @@
           "type" : "string",
           "default" : "unknown",
           "description" : "Default: unknown"
+        },
+        "versions" : {
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -210,6 +216,23 @@
           "type" : [ "boolean", "string" ],
           "default" : true,
           "description" : "Default: true"
+        }
+      }
+    },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
         }
       }
     },

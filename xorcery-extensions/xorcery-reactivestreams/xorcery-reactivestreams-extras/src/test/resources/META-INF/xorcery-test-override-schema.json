@@ -1,5 +1,5 @@
 {
-  "title" : "xorcery.yaml override JSON Schema",
+  "title" : "xorcery.yaml test override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -21,6 +21,9 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
     "dns" : {
       "$ref" : "#/$defs/dns"
     },
@@ -33,8 +36,14 @@
     "secrets" : {
       "$ref" : "#/$defs/secrets"
     },
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
+    },
     "opentelemetry" : {
       "$ref" : "#/$defs/opentelemetry"
+    },
+    "reactivestreams" : {
+      "$ref" : "#/$defs/reactivestreams"
     },
     "yamlfilepublisher" : {
       "$ref" : "#/$defs/yamlfilepublisher"
@@ -121,6 +130,9 @@
           "type" : "string",
           "default" : "unknown",
           "description" : "Default: unknown"
+        },
+        "versions" : {
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -222,6 +234,23 @@
         }
       }
     },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        }
+      }
+    },
     "dns" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -281,6 +310,8 @@
       "properties" : {
         "client" : {
           "type" : "object",
+          "default" : "{{ jetty.clients.default }}",
+          "description" : "Default: {{ jetty.clients.default }} ({{ jetty.clients.default }})",
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
@@ -357,6 +388,427 @@
                   "type" : [ "boolean", "string" ],
                   "default" : false,
                   "description" : "Default: false"
+                }
+              }
+            }
+          }
+        },
+        "clients" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string",
+                  "default" : "default",
+                  "description" : "Default: default"
+                },
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "-1s",
+                  "description" : "Default: -1s"
+                },
+                "connectTimeout" : {
+                  "type" : "string",
+                  "default" : "5s",
+                  "description" : "Default: 5s"
+                },
+                "requestBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
+                "reusePort" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "http2" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : false,
+                      "description" : "Default: false"
+                    }
+                  }
+                },
+                "ssl" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "alias" : {
+                      "type" : "string",
+                      "default" : "self",
+                      "description" : "Default: self"
+                    },
+                    "keystore" : {
+                      "default" : null,
+                      "description" : "Default: null"
+                    },
+                    "truststore" : {
+                      "default" : null,
+                      "description" : "Default: null"
+                    },
+                    "endpointIdentificationAlgorithm" : {
+                      "type" : "string",
+                      "default" : "HTTPS",
+                      "description" : "Default: HTTPS"
+                    },
+                    "trustAll" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : false,
+                      "description" : "Default: false"
+                    }
+                  }
+                }
+              }
+            } ]
+          }
+        },
+        "server" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ defaults.enabled }}",
+              "description" : "Default: {{ defaults.enabled }} (true)"
+            },
+            "scheme" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.ssl.enabled ? \"https\" | \"http\" }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"https\" | \"http\" }} (https)"
+            },
+            "port" : {
+              "type" : [ "number", "string" ],
+              "default" : "{{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? jetty.server.ssl.port | jetty.server.http.port }} (443)"
+            },
+            "uri" : {
+              "type" : "string",
+              "default" : "{{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/",
+              "description" : "Default: {{jetty.server.scheme}}://{{instance.fqdn}}:{{jetty.server.port}}/ (https://service.xorcery.test:443/)"
+            },
+            "minThreads" : {
+              "type" : [ "number", "string" ],
+              "default" : 10,
+              "description" : "Default: 10"
+            },
+            "maxThreads" : {
+              "type" : [ "number", "string" ],
+              "default" : 150,
+              "description" : "Default: 150"
+            },
+            "outputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 32768,
+              "description" : "Default: 32768"
+            },
+            "requestHeaderSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 16384,
+              "description" : "Default: 16384"
+            },
+            "mediaTypes" : {
+              "type" : [ "object", "string" ],
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
+            },
+            "http" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "port" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 80,
+                  "description" : "Default: 80"
+                }
+              }
+            },
+            "ssl" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "port" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 443,
+                  "description" : "Default: 443"
+                },
+                "keystore" : {
+                  "default" : null,
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
+                },
+                "truststore" : {
+                  "default" : null,
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
+                },
+                "trustAll" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "needClientAuth" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "wantClientAuth" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "sniRequired" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "sniHostCheck" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "alias" : {
+                  "type" : "string",
+                  "default" : "self",
+                  "description" : "Default: self"
+                },
+                "crls" : {
+                  "default" : null,
+                  "description" : "Default: null",
+                  "type" : [ "string", "null" ]
+                }
+              }
+            },
+            "srv" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "priority" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 2,
+                  "description" : "Default: 2"
+                },
+                "weight" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 100,
+                  "description" : "Default: 100"
+                }
+              }
+            },
+            "log4j2" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                }
+              }
+            },
+            "sessions" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                }
+              }
+            },
+            "security" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "type" : {
+                  "type" : [ "string", "null" ],
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "constraints" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "anyOf" : [ {
+                      "type" : "object",
+                      "additionalProperties" : false,
+                      "properties" : {
+                        "name" : {
+                          "type" : "string",
+                          "default" : "admin",
+                          "description" : "Default: admin"
+                        },
+                        "roles" : {
+                          "type" : [ "array", "string" ]
+                        }
+                      }
+                    } ]
+                  }
+                },
+                "mappings" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "required" : [ "path" ],
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "path" : {
+                        "type" : "string"
+                      },
+                      "constraint" : {
+                        "type" : [ "string", "null" ]
+                      }
+                    }
+                  }
+                },
+                "certificate" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ jetty.server.security.enabled }}",
+                      "description" : "Default: {{ jetty.server.security.enabled }} (true)"
+                    }
+                  }
+                }
+              }
+            },
+            "websockets" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "autoFragment" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "{{ defaults.idleTimeout }}",
+                  "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
+                },
+                "inputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
+                "outputBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
+                "maxFrameSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 65536,
+                  "description" : "Default: 65536"
+                },
+                "maxTextMessageSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 1048576,
+                  "description" : "Default: 1048576"
+                },
+                "maxBinaryMessageSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 1048576,
+                  "description" : "Default: 1048576"
+                }
+              }
+            },
+            "servlet" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                }
+              }
+            },
+            "gzip" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ jetty.server.enabled }}",
+                  "description" : "Default: {{ jetty.server.enabled }} (true)"
+                },
+                "minGzipSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 32,
+                  "description" : "Default: 32"
+                },
+                "syncFlush" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "excluded" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "mediatypes" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "methods" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "paths" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                },
+                "included" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "mediatypes" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "methods" : {
+                      "type" : [ "array", "string" ]
+                    },
+                    "paths" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
                 }
               }
             }
@@ -457,6 +909,92 @@
         }
       }
     },
+    "log4j2" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "Configuration" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "Xorcery",
+              "description" : "Default: Xorcery"
+            },
+            "status" : {
+              "type" : "string",
+              "default" : "warn",
+              "description" : "Default: warn",
+              "enum" : [ "trace", "debug", "info", "warn", "error" ]
+            },
+            "properties" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "thresholdFilter" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "level" : {
+                  "type" : "string",
+                  "default" : "info",
+                  "description" : "Default: info",
+                  "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                }
+              }
+            },
+            "appenders" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "Loggers" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "logger" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "properties" : {
+                      "name" : {
+                        "type" : "string"
+                      },
+                      "level" : {
+                        "type" : "string",
+                        "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                      },
+                      "additivity" : {
+                        "type" : "boolean"
+                      },
+                      "AppenderRef" : {
+                        "type" : [ "array", "string" ]
+                      }
+                    }
+                  }
+                },
+                "Root" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "level" : {
+                      "type" : "string",
+                      "default" : "info",
+                      "description" : "Default: info",
+                      "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                    },
+                    "AppenderRef" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "opentelemetry" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -469,6 +1007,89 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ opentelemetry.enabled ? false | true }}",
               "description" : "Default: {{ opentelemetry.enabled ? false | true }} (true)"
+            }
+          }
+        }
+      }
+    },
+    "reactivestreams" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "client" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ jetty.client.enabled }}",
+              "description" : "Default: {{ jetty.client.enabled }} (true)"
+            },
+            "connectTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.connectTimeout }}",
+              "description" : "Default: {{ defaults.connectTimeout }} (5s)"
+            },
+            "idleTimeout" : {
+              "type" : "string",
+              "default" : "{{ defaults.idleTimeout }}",
+              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
+            },
+            "autoFragment" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
+            "maxTextMessageSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1048576,
+              "description" : "Default: 1048576"
+            },
+            "maxBinaryMessageSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1048576,
+              "description" : "Default: 1048576"
+            },
+            "maxFrameSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 65536,
+              "description" : "Default: 65536"
+            },
+            "inputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            },
+            "outputBufferSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 4096,
+              "description" : "Default: 4096"
+            }
+          }
+        },
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "server" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ jetty.server.websockets.enabled }}",
+              "description" : "Default: {{ jetty.server.websockets.enabled }} (true)"
+            },
+            "scheme" : {
+              "type" : "string",
+              "default" : "{{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }}",
+              "description" : "Default: {{ jetty.server.ssl.enabled ? \"wss\" | \"ws\" }} (wss)"
+            },
+            "uri" : {
+              "type" : "string",
+              "default" : "{{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/",
+              "description" : "Default: {{ reactivestreams.server.scheme }}://{{ instance.fqdn }}:{{ jetty.server.port }}/ (wss://service.xorcery.test:443/)"
             }
           }
         }

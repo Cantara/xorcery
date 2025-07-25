@@ -1,8 +1,11 @@
 {
-  "title" : "xorcery.yaml override JSON Schema",
+  "title" : "xorcery.yaml test override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
+    "certificates" : {
+      "$ref" : "#/$defs/certificates"
+    },
     "instance" : {
       "$ref" : "#/$defs/instance"
     },
@@ -21,17 +24,60 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
     "keystores" : {
       "$ref" : "#/$defs/keystores"
     },
     "secrets" : {
       "$ref" : "#/$defs/secrets"
     },
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
+    },
     "jetty" : {
       "$ref" : "#/$defs/jetty"
     }
   },
   "$defs" : {
+    "certificates" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "keystore" : {
+          "type" : "string",
+          "default" : "ssl",
+          "description" : "Default: ssl"
+        },
+        "renewOnStartup" : {
+          "type" : [ "boolean", "string" ],
+          "default" : false,
+          "description" : "Default: false"
+        },
+        "alias" : {
+          "type" : "string",
+          "default" : "{{ server.ssl.alias | client.ssl.alias | \"self\"}}",
+          "description" : "Default: {{ server.ssl.alias | client.ssl.alias | \"self\"}} (self)"
+        },
+        "subject" : {
+          "type" : "string",
+          "default" : "{{ instance.fqdn | \"server\"}}",
+          "description" : "Default: {{ instance.fqdn | \"server\"}} (service.xorcery.test)"
+        },
+        "ipAddresses" : {
+          "type" : [ "array", "string" ]
+        },
+        "dnsNames" : {
+          "type" : [ "array", "string" ]
+        }
+      }
+    },
     "instance" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -112,6 +158,9 @@
           "type" : "string",
           "default" : "unknown",
           "description" : "Default: unknown"
+        },
+        "versions" : {
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -213,6 +262,23 @@
         }
       }
     },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        }
+      }
+    },
     "keystores" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -301,6 +367,92 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ secrets.enabled }}",
               "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
+        }
+      }
+    },
+    "log4j2" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "Configuration" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "Xorcery",
+              "description" : "Default: Xorcery"
+            },
+            "status" : {
+              "type" : "string",
+              "default" : "warn",
+              "description" : "Default: warn",
+              "enum" : [ "trace", "debug", "info", "warn", "error" ]
+            },
+            "properties" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "thresholdFilter" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "level" : {
+                  "type" : "string",
+                  "default" : "info",
+                  "description" : "Default: info",
+                  "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                }
+              }
+            },
+            "appenders" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "Loggers" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "logger" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "properties" : {
+                      "name" : {
+                        "type" : "string"
+                      },
+                      "level" : {
+                        "type" : "string",
+                        "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                      },
+                      "additivity" : {
+                        "type" : "boolean"
+                      },
+                      "AppenderRef" : {
+                        "type" : [ "array", "string" ]
+                      }
+                    }
+                  }
+                },
+                "Root" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "level" : {
+                      "type" : "string",
+                      "default" : "info",
+                      "description" : "Default: info",
+                      "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                    },
+                    "AppenderRef" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                }
+              }
             }
           }
         }

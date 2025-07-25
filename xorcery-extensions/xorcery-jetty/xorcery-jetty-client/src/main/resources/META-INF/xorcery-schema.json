@@ -1,7 +1,6 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-jetty-client/schema",
   "title" : "xorcery-jetty-client configuration JSON Schema",
   "properties" : {
     "jetty" : {
@@ -13,90 +12,89 @@
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
-        "client" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} (true)"
-            },
-            "idleTimeout" : {
-              "type" : "string",
-              "default" : "{{ defaults.idleTimeout }}",
-              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
-            },
-            "connectTimeout" : {
-              "type" : "string",
-              "default" : "5s",
-              "description" : "Default: 5s"
-            },
-            "requestBufferSize" : {
-              "type" : [ "number", "string" ],
-              "default" : 4096,
-              "description" : "Default: 4096"
-            },
-            "reusePort" : {
-              "type" : [ "boolean", "string" ],
-              "default" : false,
-              "description" : "Default: false"
-            },
-            "http2" : {
+        "clients" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
               "type" : "object",
               "additionalProperties" : false,
               "properties" : {
+                "name" : {
+                  "type" : "string",
+                  "default" : "default",
+                  "description" : "Default: default"
+                },
                 "enabled" : {
                   "type" : [ "boolean", "string" ],
-                  "default" : false,
-                  "description" : "Default: false"
+                  "default" : true,
+                  "description" : "Default: true"
                 },
                 "idleTimeout" : {
                   "type" : "string",
-                  "default" : "{{ jetty.client.idleTimeout }}",
-                  "description" : "Default: {{ jetty.client.idleTimeout }} (-1s)"
-                }
-              }
-            },
-            "ssl" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ jetty.client.enabled }}",
-                  "description" : "Default: {{ jetty.client.enabled }} (true)"
+                  "default" : "-1s",
+                  "description" : "Default: -1s"
                 },
-                "alias" : {
+                "connectTimeout" : {
                   "type" : "string",
-                  "default" : "self",
-                  "description" : "Default: self"
+                  "default" : "5s",
+                  "description" : "Default: 5s"
                 },
-                "keystore" : {
-                  "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
+                "requestBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
                 },
-                "truststore" : {
-                  "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
-                },
-                "endpointIdentificationAlgorithm" : {
-                  "type" : "string",
-                  "default" : "HTTPS",
-                  "description" : "Default: HTTPS"
-                },
-                "trustAll" : {
+                "reusePort" : {
                   "type" : [ "boolean", "string" ],
                   "default" : false,
                   "description" : "Default: false"
+                },
+                "http2" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : false,
+                      "description" : "Default: false"
+                    }
+                  }
+                },
+                "ssl" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "alias" : {
+                      "type" : "string",
+                      "default" : "self",
+                      "description" : "Default: self"
+                    },
+                    "keystore" : {
+                      "default" : null,
+                      "description" : "Default: null"
+                    },
+                    "truststore" : {
+                      "default" : null,
+                      "description" : "Default: null"
+                    },
+                    "endpointIdentificationAlgorithm" : {
+                      "type" : "string",
+                      "default" : "HTTPS",
+                      "description" : "Default: HTTPS"
+                    },
+                    "trustAll" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : false,
+                      "description" : "Default: false"
+                    }
+                  }
                 }
               }
-            }
+            } ]
           }
         }
       }
     }
-  }
+  },
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-jetty-client/schema"
 }

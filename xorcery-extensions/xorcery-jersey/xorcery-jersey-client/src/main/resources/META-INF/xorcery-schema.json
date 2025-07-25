@@ -1,7 +1,6 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-jersey-client/schema",
   "title" : "xorcery-jersey-client configuration JSON Schema",
   "properties" : {
     "jersey" : {
@@ -15,6 +14,8 @@
       "properties" : {
         "client" : {
           "type" : "object",
+          "default" : "{{ jersey.clients.default }}",
+          "description" : "Default: {{ jersey.clients.default }} ({{ jersey.clients.default }})",
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
@@ -48,8 +49,48 @@
               "properties" : { }
             }
           }
+        },
+        "clients" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string",
+                  "default" : "default",
+                  "description" : "Default: default"
+                },
+                "keystore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "truststore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "connectTimeout" : {
+                  "type" : "string",
+                  "default" : "5s",
+                  "description" : "Default: 5s"
+                },
+                "readTimeout" : {
+                  "type" : "string",
+                  "default" : "0s",
+                  "description" : "Default: 0s"
+                },
+                "properties" : {
+                  "type" : "object",
+                  "additionalProperties" : true,
+                  "properties" : { }
+                }
+              }
+            } ]
+          }
         }
       }
     }
-  }
+  },
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-jersey-client/schema"
 }

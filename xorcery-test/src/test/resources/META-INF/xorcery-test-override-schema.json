@@ -1,5 +1,5 @@
 {
-  "title" : "xorcery.yaml override JSON Schema",
+  "title" : "xorcery.yaml test override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -244,6 +244,9 @@
           "type" : "string",
           "default" : "unknown",
           "description" : "Default: unknown"
+        },
+        "versions" : {
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -556,6 +559,8 @@
       "properties" : {
         "client" : {
           "type" : "object",
+          "default" : "{{ jersey.clients.default }}",
+          "description" : "Default: {{ jersey.clients.default }} ({{ jersey.clients.default }})",
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
@@ -588,6 +593,45 @@
               "additionalProperties" : true,
               "properties" : { }
             }
+          }
+        },
+        "clients" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string",
+                  "default" : "default",
+                  "description" : "Default: default"
+                },
+                "keystore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "truststore" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "connectTimeout" : {
+                  "type" : "string",
+                  "default" : "5s",
+                  "description" : "Default: 5s"
+                },
+                "readTimeout" : {
+                  "type" : "string",
+                  "default" : "0s",
+                  "description" : "Default: 0s"
+                },
+                "properties" : {
+                  "type" : "object",
+                  "additionalProperties" : true,
+                  "properties" : { }
+                }
+              }
+            } ]
           }
         },
         "server" : {
@@ -691,6 +735,8 @@
       "properties" : {
         "client" : {
           "type" : "object",
+          "default" : "{{ jetty.clients.default }}",
+          "description" : "Default: {{ jetty.clients.default }} ({{ jetty.clients.default }})",
           "additionalProperties" : false,
           "properties" : {
             "enabled" : {
@@ -770,6 +816,87 @@
                 }
               }
             }
+          }
+        },
+        "clients" : {
+          "type" : [ "array", "string" ],
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "name" : {
+                  "type" : "string",
+                  "default" : "default",
+                  "description" : "Default: default"
+                },
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
+                },
+                "idleTimeout" : {
+                  "type" : "string",
+                  "default" : "-1s",
+                  "description" : "Default: -1s"
+                },
+                "connectTimeout" : {
+                  "type" : "string",
+                  "default" : "5s",
+                  "description" : "Default: 5s"
+                },
+                "requestBufferSize" : {
+                  "type" : [ "number", "string" ],
+                  "default" : 4096,
+                  "description" : "Default: 4096"
+                },
+                "reusePort" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : false,
+                  "description" : "Default: false"
+                },
+                "http2" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : false,
+                      "description" : "Default: false"
+                    }
+                  }
+                },
+                "ssl" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "alias" : {
+                      "type" : "string",
+                      "default" : "self",
+                      "description" : "Default: self"
+                    },
+                    "keystore" : {
+                      "default" : null,
+                      "description" : "Default: null"
+                    },
+                    "truststore" : {
+                      "default" : null,
+                      "description" : "Default: null"
+                    },
+                    "endpointIdentificationAlgorithm" : {
+                      "type" : "string",
+                      "default" : "HTTPS",
+                      "description" : "Default: HTTPS"
+                    },
+                    "trustAll" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : false,
+                      "description" : "Default: false"
+                    }
+                  }
+                }
+              }
+            } ]
           }
         },
         "server" : {

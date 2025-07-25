@@ -1,5 +1,5 @@
 {
-  "title" : "xorcery.yaml override JSON Schema",
+  "title" : "xorcery.yaml test override JSON Schema",
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
   "properties" : {
@@ -21,8 +21,17 @@
     "DefaultRunLevelContext" : {
       "$ref" : "#/$defs/DefaultRunLevelContext"
     },
+    "configuration" : {
+      "$ref" : "#/$defs/configuration"
+    },
+    "log4j2" : {
+      "$ref" : "#/$defs/log4j2"
+    },
     "opentelemetry" : {
       "$ref" : "#/$defs/opentelemetry"
+    },
+    "secrets" : {
+      "$ref" : "#/$defs/secrets"
     },
     "neo4jdatabase" : {
       "$ref" : "#/$defs/neo4jdatabase"
@@ -109,6 +118,9 @@
           "type" : "string",
           "default" : "unknown",
           "description" : "Default: unknown"
+        },
+        "versions" : {
+          "type" : [ "array", "string" ]
         }
       }
     },
@@ -210,6 +222,109 @@
         }
       }
     },
+    "configuration" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "validation" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            }
+          }
+        }
+      }
+    },
+    "log4j2" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "Configuration" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "name" : {
+              "type" : "string",
+              "default" : "Xorcery",
+              "description" : "Default: Xorcery"
+            },
+            "status" : {
+              "type" : "string",
+              "default" : "warn",
+              "description" : "Default: warn",
+              "enum" : [ "trace", "debug", "info", "warn", "error" ]
+            },
+            "properties" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "thresholdFilter" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "level" : {
+                  "type" : "string",
+                  "default" : "info",
+                  "description" : "Default: info",
+                  "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                }
+              }
+            },
+            "appenders" : {
+              "type" : "object",
+              "additionalProperties" : true,
+              "properties" : { }
+            },
+            "Loggers" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "logger" : {
+                  "type" : [ "array", "string" ],
+                  "items" : {
+                    "properties" : {
+                      "name" : {
+                        "type" : "string"
+                      },
+                      "level" : {
+                        "type" : "string",
+                        "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                      },
+                      "additivity" : {
+                        "type" : "boolean"
+                      },
+                      "AppenderRef" : {
+                        "type" : [ "array", "string" ]
+                      }
+                    }
+                  }
+                },
+                "Root" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "level" : {
+                      "type" : "string",
+                      "default" : "info",
+                      "description" : "Default: info",
+                      "enum" : [ "trace", "debug", "info", "warn", "error" ]
+                    },
+                    "AppenderRef" : {
+                      "type" : [ "array", "string" ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "opentelemetry" : {
       "type" : "object",
       "additionalProperties" : false,
@@ -222,6 +337,289 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ opentelemetry.enabled ? false | true }}",
               "description" : "Default: {{ opentelemetry.enabled ? false | true }} (true)"
+            }
+          }
+        },
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{ defaults.enabled }}",
+          "description" : "Default: {{ defaults.enabled }} (true)"
+        },
+        "install" : {
+          "type" : [ "boolean", "string" ],
+          "default" : true,
+          "description" : "Default: true"
+        },
+        "resource" : {
+          "type" : "object",
+          "additionalProperties" : true,
+          "properties" : {
+            "service.namespace" : {
+              "type" : "string",
+              "default" : "{{ instance.environment }}",
+              "description" : "Default: {{ instance.environment }} (development)"
+            },
+            "service.name" : {
+              "type" : "string",
+              "default" : "{{ application.name }}",
+              "description" : "Default: {{ application.name }} (application)"
+            },
+            "service.version" : {
+              "type" : "string",
+              "default" : "{{ application.version }}",
+              "description" : "Default: {{ application.version }} (unknown)"
+            },
+            "service.instance.id" : {
+              "type" : "string",
+              "default" : "{{ instance.id }}",
+              "description" : "Default: {{ instance.id }} (service.application)"
+            },
+            "host.name" : {
+              "type" : "string",
+              "default" : "{{ instance.fqdn }}",
+              "description" : "Default: {{ instance.fqdn }} (service.xorcery.test)"
+            },
+            "host.ip" : {
+              "type" : [ "array", "string" ]
+            },
+            "process.runtime.name" : {
+              "type" : "string",
+              "default" : "{{ SYSTEM.java_runtime_name }}",
+              "description" : "Default: {{ SYSTEM.java_runtime_name }} (OpenJDK Runtime Environment)"
+            },
+            "process.runtime.version" : {
+              "type" : "string",
+              "default" : "{{ SYSTEM.java_runtime_version }}",
+              "description" : "Default: {{ SYSTEM.java_runtime_version }} (17.0.8+7-LTS)"
+            },
+            "process.runtime.description" : {
+              "type" : "string",
+              "default" : "{{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }}",
+              "description" : "Default: {{ SYSTEM.java_vm_vendor }} {{ SYSTEM.java_vm_name }} {{ SYSTEM.java_vm_version }} (Amazon.com Inc. OpenJDK 64-Bit Server VM 17.0.8+7-LTS)"
+            }
+          }
+        },
+        "exporters" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "local" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
+                }
+              }
+            },
+            "logging" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | true }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | true }} (true)"
+                }
+              }
+            },
+            "jmx" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }}",
+                  "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? false | defaults.development }} (false)"
+                }
+              }
+            },
+            "otlp" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "endpoint" : {
+                  "default" : null,
+                  "description" : "Default: null"
+                },
+                "http" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint ? true | false }}",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint ? true | false }} (false)"
+                    },
+                    "port" : {
+                      "type" : [ "number", "string" ],
+                      "default" : 4318,
+                      "description" : "Default: 4318"
+                    },
+                    "compression" : {
+                      "type" : "string",
+                      "default" : "gzip",
+                      "description" : "Default: gzip"
+                    },
+                    "headers" : {
+                      "type" : "object",
+                      "additionalProperties" : true,
+                      "properties" : { }
+                    },
+                    "connectTimeout" : {
+                      "type" : "string",
+                      "default" : "{{ defaults.connectTimeout }}",
+                      "description" : "Default: {{ defaults.connectTimeout }} (5s)"
+                    },
+                    "timeout" : {
+                      "type" : "string",
+                      "default" : "10s",
+                      "description" : "Default: 10s"
+                    },
+                    "logsEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/logs (null:4318/v1/logs)"
+                    },
+                    "tracesEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/traces (null:4318/v1/traces)"
+                    },
+                    "metricsEndpoint" : {
+                      "type" : "string",
+                      "default" : "{{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics",
+                      "description" : "Default: {{ opentelemetry.exporters.otlp.endpoint }}:{{ opentelemetry.exporters.otlp.http.port }}/v1/metrics (null:4318/v1/metrics)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "meters" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "interval" : {
+              "type" : "string",
+              "default" : "10s",
+              "description" : "Default: 10s"
+            },
+            "excludes" : {
+              "type" : [ "array", "string" ]
+            },
+            "includes" : {
+              "type" : [ "array", "string" ]
+            }
+          }
+        },
+        "logging" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "scheduleDelay" : {
+              "type" : "string",
+              "default" : "5s",
+              "description" : "Default: 5s"
+            },
+            "exporterTimeout" : {
+              "type" : "string",
+              "default" : "60s",
+              "description" : "Default: 60s"
+            },
+            "maxExportBatchSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1000,
+              "description" : "Default: 1000"
+            },
+            "maxQueueSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 10000,
+              "description" : "Default: 10000"
+            }
+          }
+        },
+        "spans" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "scheduleDelay" : {
+              "type" : "string",
+              "default" : "5s",
+              "description" : "Default: 5s"
+            },
+            "exporterTimeout" : {
+              "type" : "string",
+              "default" : "60s",
+              "description" : "Default: 60s"
+            },
+            "maxExportBatchSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 1000,
+              "description" : "Default: 1000"
+            },
+            "maxQueueSize" : {
+              "type" : [ "number", "string" ],
+              "default" : 10000,
+              "description" : "Default: 10000"
+            },
+            "sampler" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "properties" : {
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : "{{ opentelemetry.enabled }}",
+                  "description" : "Default: {{ opentelemetry.enabled }} (true)"
+                },
+                "excludes" : {
+                  "type" : [ "array", "string" ]
+                },
+                "includes" : {
+                  "type" : [ "array", "string" ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "secrets" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "enabled" : {
+          "type" : [ "boolean", "string" ],
+          "default" : "{{defaults.enabled}}",
+          "description" : "Default: {{defaults.enabled}} (true)"
+        },
+        "default" : {
+          "type" : "string",
+          "default" : "secret",
+          "description" : "Default: secret"
+        },
+        "env" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
+            }
+          }
+        },
+        "system" : {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "enabled" : {
+              "type" : [ "boolean", "string" ],
+              "default" : "{{ secrets.enabled }}",
+              "description" : "Default: {{ secrets.enabled }} ({{ secrets.enabled }})"
             }
           }
         }
