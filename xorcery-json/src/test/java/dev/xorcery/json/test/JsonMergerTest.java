@@ -238,6 +238,41 @@ class JsonMergerTest {
     }
 
     @Test
+    public void testMergeObjectListWithDottedKey() throws Throwable {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+
+        ObjectNode test1 = (ObjectNode)objectMapper.readTree("""
+                list:
+                  - name: foo
+                    value: bar1
+                  - name: foo
+                    value: bar2
+                """);
+        ObjectNode test2 = (ObjectNode)objectMapper.readTree("""
+                list.foo.value: bar3
+                """);
+        ObjectNode merged = new JsonMerger(path ->
+        {
+            System.out.println(path);
+            return true;
+        }).apply(test1, test2);
+
+        String result = objectMapper.writeValueAsString(merged);
+
+        String expectedResult = """
+                ---
+                list:
+                - name: "foo"
+                  value: "bar3"
+                - name: "foo"
+                  value: "bar2"
+                """;
+
+        assertThat(result, equalTo(expectedResult));
+        System.out.println(result);
+    }
+
+    @Test
     public void testSkipMergeObjectListWithAnyOfType() throws Throwable {
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 

@@ -66,14 +66,16 @@ public class JsonMerger
             } else {
                 String[] keys = entry.getKey().split("\\.");
                 for (int i = 0; i < keys.length - 1; i++) {
-                    JsonNode nextNode = currentNode.path(keys[i]);
-                    if (nextNode.isMissingNode()) {
-                        nextNode = current.objectNode();
-                        if (currentNode instanceof ObjectNode on) {
-                            on.set(keys[i], nextNode);
+                    if (currentNode instanceof ObjectNode currentObject){
+                        JsonNode nextNode = currentObject.path(keys[i]);
+                        if (nextNode.isMissingNode()) {
+                            nextNode = current.objectNode();
+                            currentObject.set(keys[i], nextNode);
                         }
+                        currentNode = nextNode;
+                    } else if (currentNode instanceof ArrayNode currentArray){
+                        currentNode = findInArrayById(currentArray, keys[i]);
                     }
-                    currentNode = nextNode;
                 }
                 key = keys[keys.length - 1];
             }
@@ -86,6 +88,17 @@ public class JsonMerger
             }
         }
         return current;
+    }
+
+    private JsonNode findInArrayById(ArrayNode array, String key) {
+        for (JsonNode jsonNode : array) {
+            Iterator<JsonNode> valueIterator = jsonNode.values();
+            if (valueIterator.hasNext() && valueIterator.next() instanceof TextNode textNode){
+                if (textNode.asText().equals(key) && jsonNode instanceof ObjectNode objectNode)
+                    return objectNode;
+            }
+        }
+        return MissingNode.getInstance();
     }
 
     private void setValue(ObjectNode currentObject, String key, JsonNode value, Stack<String> path) {
