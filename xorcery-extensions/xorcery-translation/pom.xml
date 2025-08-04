@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-extensions</artifactId>
-        <version>0.163.3-SNAPSHOT</version>
+        <version>0.163.3</version>
     </parent>
 
     <artifactId>xorcery-translation</artifactId>
