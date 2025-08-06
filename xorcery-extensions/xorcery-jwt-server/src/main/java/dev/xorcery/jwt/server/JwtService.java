@@ -107,6 +107,25 @@ public class JwtService {
                 .build());
     }
 
+    public String createJwt(Map<String, Object> headerClaims, Map<String, Object> payloadClaims, Duration jwtDuration )
+            throws IOException
+    {
+        Instant now = Instant.now();
+        Date expiresAt = Date.from(now.plus(jwtDuration));
+        String token = JWT.create()
+                .withHeader(headerClaims)
+                .withPayload(payloadClaims)
+                .withIssuedAt(now)
+                .withExpiresAt(expiresAt)
+                .withKeyId(keyId)
+                .withJWTId(UUIDs.newId())
+                .sign(algorithm);
+
+        logger.debug("Created JWT token: {}", token);
+        return token;
+
+    }
+
     public String createJwt(String userName)
             throws IOException {
         Instant now = Instant.now();

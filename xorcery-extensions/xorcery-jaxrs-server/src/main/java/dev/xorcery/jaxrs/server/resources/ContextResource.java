@@ -23,6 +23,7 @@ import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.jetty.ee10.servlet.ServletApiRequest;
 import org.eclipse.jetty.security.AuthenticationState;
+import org.eclipse.jetty.security.UserIdentity;
 import org.eclipse.jetty.security.authentication.LoginAuthenticator;
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -101,9 +102,9 @@ public interface ContextResource {
         return getContainerRequestContext().getSecurityContext();
     }
 
-    // JAAS
-    default Optional<Subject> getSubject() {
-        Optional<Subject> subject = Optional.empty();
+    // Authentication
+    default Optional<UserIdentity> getUserIdentity(){
+        Optional<UserIdentity> userIdentity = Optional.empty();
         if (getHttpServletRequest() instanceof ServletApiRequest servletApiRequest)
         {
             AuthenticationState authenticationState = servletApiRequest.getAuthentication();
@@ -119,9 +120,14 @@ public interface ContextResource {
 
             if (authenticationState instanceof LoginAuthenticator.UserAuthenticationSucceeded userAuth)
             {
-                subject = Optional.of(userAuth.getUserIdentity().getSubject());
+                userIdentity = Optional.of(userAuth.getUserIdentity());
             }
         }
-        return subject;
+        return userIdentity;
+
+    }
+
+    default Optional<Subject> getSubject() {
+        return getUserIdentity().map(UserIdentity::getSubject);
     }
 }
