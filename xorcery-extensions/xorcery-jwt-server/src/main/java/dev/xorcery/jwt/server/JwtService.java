@@ -115,6 +115,7 @@ public class JwtService {
         String token = JWT.create()
                 .withHeader(headerClaims)
                 .withPayload(payloadClaims)
+                .withIssuer(jwtServerConfiguration.getTokenIssuer())
                 .withIssuedAt(now)
                 .withExpiresAt(expiresAt)
                 .withKeyId(keyId)

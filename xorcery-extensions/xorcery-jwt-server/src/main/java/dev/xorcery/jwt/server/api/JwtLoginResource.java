@@ -25,7 +25,6 @@ import dev.xorcery.jsonschema.JsonSchema;
 import dev.xorcery.jsonschema.Properties;
 import dev.xorcery.jsonschema.Types;
 import dev.xorcery.jsonschema.server.resources.JsonSchemaResource;
-import dev.xorcery.jwt.server.JwtConfigurationLoginService;
 import dev.xorcery.jwt.server.JwtServerConfiguration;
 import dev.xorcery.jwt.server.JwtService;
 import jakarta.inject.Inject;
@@ -33,7 +32,6 @@ import jakarta.servlet.ServletException;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.jetty.security.LoginService;
 
 import java.io.IOException;
 import java.net.URI;
@@ -53,12 +51,10 @@ public class JwtLoginResource
         implements JsonSchemaResource, CommandsJsonSchemaResource {
 
     private final JwtService jwtService;
-    private final LoginService loginService;
 
     @Inject
-    public JwtLoginResource(JwtService jwtService, JwtConfigurationLoginService loginService) {
+    public JwtLoginResource(JwtService jwtService) {
         this.jwtService = jwtService;
-        this.loginService = loginService;
     }
 
     @GET
