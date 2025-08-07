@@ -21,12 +21,12 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-executable-docker</artifactId>
-        <version>0.164.1</version>
+        <version>0.164.2-SNAPSHOT</version>
         <relativePath>../../xorcery-executable-docker</relativePath>
     </parent>
 
     <artifactId>xorcery-coordinator</artifactId>
-    <version>0.164.1</version>
+    <version>0.164.2-SNAPSHOT</version>
 
     <properties>
         <mainclass>dev.xorcery.coordinator.Main</mainclass>
