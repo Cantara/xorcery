@@ -96,13 +96,10 @@ public class JsonResolver
             if (value instanceof TextNode textNode) {
                 try {
                     JsonNode newValue = resolveValue(source, textNode);
-                    if (!newValue.isNull() && !newValue.isMissingNode())
-                    {
-                        if (newValue instanceof ArrayNode arrayNode)
-                        {
+                    if (!newValue.isNull() && !newValue.isMissingNode()) {
+                        if (newValue instanceof ArrayNode arrayNode) {
                             arrayNode.forEach(result::add);
-                        } else
-                        {
+                        } else {
                             result.add(newValue);
                         }
                     }
@@ -199,7 +196,19 @@ public class JsonResolver
         ContainerNode context = source;
         String[] names = name.split("\\.");
         for (int i = 0; i < names.length - 1; i++) {
-            JsonNode node = context.get(names[i]);
+            JsonNode node = switch (context) {
+                case ArrayNode array -> {
+                    for (JsonNode jsonNode : array) {
+                        Iterator<JsonNode> valueIterator = jsonNode.values();
+                        if (valueIterator.hasNext() && valueIterator.next() instanceof TextNode textNode) {
+                            if (textNode.asText().equals(names[i]) && jsonNode instanceof ObjectNode objectNode)
+                                yield objectNode;
+                        }
+                    }
+                    throw new IllegalArgumentException("No object found in array with identifying property valued:" + names[i]);
+                }
+                default -> context.get(names[i]);
+            };
 
             // Might be an intermediary lookup
             if (node instanceof TextNode textNode) {

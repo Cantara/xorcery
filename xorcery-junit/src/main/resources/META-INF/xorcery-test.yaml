@@ -1,6 +1,6 @@
 $schema: xorcery-override-schema.json
-jetty.client.ssl.keystore: "ssl"
-jetty.client.ssl.truststore: "truststore"
+jetty.clients.default.ssl.keystore: "ssl"
+jetty.clients.default.ssl.truststore: "truststore"
 
 jetty.server.ssl.enabled: true
 jetty.server.ssl.keystore: "ssl"

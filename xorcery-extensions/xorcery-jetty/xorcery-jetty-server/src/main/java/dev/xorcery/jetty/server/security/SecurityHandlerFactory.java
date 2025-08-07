@@ -61,7 +61,7 @@ public class SecurityHandlerFactory
         jettySecurityConfiguration.getConstraints().forEach(c -> constraints.put(c.getName(),
                 ConstraintSecurityHandler.createConstraint(c.getName(), c.getRoles().toArray(new String[0]), ServletSecurity.EmptyRoleSemantic.PERMIT, ServletSecurity.TransportGuarantee.NONE)));
 
-        // Loa path -> constraint mappings
+        // Load path -> constraint mappings
         jettySecurityConfiguration.getMappings().forEach(m ->
         {
             m.getConstraint().ifPresentOrElse(name ->
@@ -82,7 +82,6 @@ public class SecurityHandlerFactory
                 logger.debug("Skipped constraint mapping for path '{}', constraint name was not set", m.getPath());
             });
         });
-
     }
 
     @Override

@@ -1,9 +1,11 @@
 $schema: xorcery-schema.json
 jersey:
-  client:
-    enabled: "{{ jetty.client.enabled }}"
+  clients:
+  - name: "default"
+    enabled: "{{ defaults.enabled }}"
     keystore: null
     truststore: null
     connectTimeout: "{{ defaults.connectTimeout }}"
-    readTimeout: "0s"
+    readTimeout: "30s"
+    httpClient: "default"
     properties: {}

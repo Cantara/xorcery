@@ -24,8 +24,10 @@ import dev.xorcery.io.ZipFiles;
 import dev.xorcery.log4j.LoggerContextFactory;
 import dev.xorcery.util.Resources;
 import org.apache.logging.log4j.LogManager;
+import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
+import org.glassfish.hk2.utilities.InjecteeImpl;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.*;
@@ -209,14 +211,20 @@ public class XorceryExtension
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
         Class<?> type = parameterContext.getParameter().getType();
-        return xorcery.getServiceLocator().getService(type) != null ||
+        InjecteeImpl injectee = new InjecteeImpl(parameterContext.getParameter().getType());
+        injectee.setParent(parameterContext.getAnnotatedElement());
+        ActiveDescriptor<?> activeDescriptor = xorcery.getServiceLocator().getInjecteeDescriptor(injectee);
+        return xorcery.getServiceLocator().getServiceHandle(activeDescriptor, injectee) != null ||
                 type.getConstructors().length > 0;
     }
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
         Class<?> type = parameterContext.getParameter().getType();
-        Object result = xorcery.getServiceLocator().getService(type);
+        InjecteeImpl injectee = new InjecteeImpl(parameterContext.getParameter().getType());
+        injectee.setParent(parameterContext.getAnnotatedElement());
+        ActiveDescriptor<?> activeDescriptor = xorcery.getServiceLocator().getInjecteeDescriptor(injectee);
+        Object result = xorcery.getServiceLocator().getServiceHandle(activeDescriptor, injectee).getService();
         if (result == null)
             result = xorcery.getServiceLocator().createAndInitialize(type);
         return result;

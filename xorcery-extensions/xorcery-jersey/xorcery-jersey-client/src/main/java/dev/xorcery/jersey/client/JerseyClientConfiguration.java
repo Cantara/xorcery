@@ -21,7 +21,14 @@ import dev.xorcery.configuration.Configuration;
 import java.time.Duration;
 import java.util.Optional;
 
+import static dev.xorcery.configuration.Configuration.missing;
+
 public record JerseyClientConfiguration(Configuration configuration) {
+
+    public String getName(){
+        return configuration.getString("name").orElseThrow(missing("name"));
+    }
+
     public Optional<JsonNode> getProperties() {
         return configuration.getJson("properties");
     }
@@ -42,5 +49,10 @@ public record JerseyClientConfiguration(Configuration configuration) {
     public Optional<String> getTrustStoreName()
     {
         return configuration.getString("truststore");
+    }
+
+    public String getHttpClient()
+    {
+        return configuration.getString("httpClient").orElse("default");
     }
 }

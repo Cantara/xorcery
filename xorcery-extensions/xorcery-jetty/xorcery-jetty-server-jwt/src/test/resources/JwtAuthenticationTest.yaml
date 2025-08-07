@@ -1,7 +1,8 @@
 $schema: META-INF/xorcery-jetty-server-jwt-override-schema.json
 
 jetty:
-  client:
+  clients:
+  - name: default
     enabled: true
   server:
     enabled: true

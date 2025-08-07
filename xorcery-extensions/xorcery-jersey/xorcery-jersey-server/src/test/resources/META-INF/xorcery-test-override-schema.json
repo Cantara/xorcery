@@ -853,16 +853,6 @@
               }
             }
           }
-        },
-        "config" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "server" : {
-              "default" : null,
-              "description" : "Default: null"
-            }
-          }
         }
       }
     }

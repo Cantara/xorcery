@@ -84,7 +84,12 @@ class JsonResolverTest {
               "{{ arrayref }}"
             someotherarray:
               - "xyzzy"
-              - "{{ arrayref }}"        
+              - "{{ arrayref }}"
+              
+            namedobjectarray:
+            - name: "foo"
+              value: "xyzzy"
+              bar: "{{ namedobjectarray.foo.value }}"
                         """;
 
     private static ObjectMapper objectMapper;
@@ -172,4 +177,10 @@ class JsonResolverTest {
         assertThat(result.get("somearray").toPrettyString(), equalTo("[ \"foo\", \"bar\" ]"));
         assertThat(result.get("someotherarray").toPrettyString(), equalTo("[ \"xyzzy\", \"foo\", \"bar\" ]"));
     }
+
+    @Test
+    public void testNamedObjectArrayReference() {
+        assertThat(result.get("namedobjectarray").get(0).get("bar").asText(), equalTo("xyzzy"));
+    }
+
 }

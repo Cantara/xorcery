@@ -18,12 +18,13 @@ package dev.xorcery.jersey.client;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.dns.client.providers.DnsLookupService;
+import dev.xorcery.hk2.Instances;
 import dev.xorcery.jersey.client.providers.SRVConnectorProvider;
+import dev.xorcery.jetty.client.HttpClientFactory;
 import dev.xorcery.keystores.KeyStores;
 import dev.xorcery.keystores.KeyStoresConfiguration;
 import dev.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.ws.rs.client.ClientBuilder;
 import org.apache.logging.log4j.Logger;
@@ -40,13 +41,14 @@ import org.jvnet.hk2.annotations.Service;
 
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class ClientBuilderFactory
         implements Factory<ClientBuilder> {
 
-    private Provider<HttpClient> client;
+    private HttpClientFactory httpClientFactory;
     private Configuration configuration;
     private InstantiationService instantiationService;
     private Provider<DnsLookupService> dnsLookups;
@@ -56,7 +58,7 @@ public class ClientBuilderFactory
     private final LoggerContext loggerContext;
 
     @Inject
-    public ClientBuilderFactory(Provider<HttpClient> client,
+    public ClientBuilderFactory(HttpClientFactory httpClientFactory,
                                 Configuration configuration,
                                 InstantiationService instantiationService,
                                 Provider<DnsLookupService> dnsLookups,
@@ -64,7 +66,7 @@ public class ClientBuilderFactory
                                 Provider<Secrets> secretsProvider,
                                 Logger logger,
                                 LoggerContext loggerContext) {
-        this.client = client;
+        this.httpClientFactory = httpClientFactory;
         this.configuration = configuration;
         this.instantiationService = instantiationService;
         this.dnsLookups = dnsLookups;
@@ -77,18 +79,12 @@ public class ClientBuilderFactory
     @Override
     @PerLookup
     public ClientBuilder provide() {
-        String loggerName = "default";
-        if (instantiationService.getInstantiationData().getParentInjectee() != null) {
-            Class<?> injecteeClass = instantiationService.getInstantiationData().getParentInjectee().getInjecteeClass();
-            Named named = injecteeClass.getAnnotation(Named.class);
-            if (named != null) {
-                loggerName = "client." + named;
-            } else {
-                loggerName = injecteeClass.getName();
-            }
-        }
+        String name = Optional.ofNullable(Instances.name(instantiationService)).orElse("default");
+        String loggerName = "jersey.client."+name;
 
-        JerseyClientConfiguration jerseyClientConfiguration = new JerseyClientConfiguration(configuration.getConfiguration("jersey.client"));
+        JerseyClientsConfiguration jerseyClientsConfiguration = new JerseyClientsConfiguration(configuration.getConfiguration("jersey"));
+
+        JerseyClientConfiguration jerseyClientConfiguration = jerseyClientsConfiguration.getClient(name).orElseThrow(()->new IllegalArgumentException("No config found for Jersey client named "+name));
 
         ClientConfig clientConfig = new ClientConfig();
         jerseyClientConfiguration.getProperties().ifPresent(json ->
@@ -106,7 +102,10 @@ public class ClientBuilderFactory
 
         JettyConnectorProvider jettyConnectorProvider = new JettyConnectorProvider();
 
-        HttpClient httpClient = client.get();
+        HttpClient httpClient = httpClientFactory.newHttpClient(jerseyClientConfiguration.getHttpClient());
+        if (httpClient == null){
+            throw new IllegalStateException("No HttpClient instance available");
+        }
         ClientBuilder builder = ClientBuilder.newBuilder()
                 .withConfig(clientConfig
                         .connectorProvider(dnsLookup != null
@@ -117,23 +116,23 @@ public class ClientBuilderFactory
                 .register(new LoggingFeature.LoggingFeatureBuilder().withLogger(java.util.logging.Logger.getLogger(loggerName)).build())
                 .register(new JettyHttpClientSupplier(httpClient));
 
-        jerseyClientConfiguration.getKeyStoreName().ifPresentOrElse(name ->
+        jerseyClientConfiguration.getKeyStoreName().ifPresentOrElse(keyStoreName ->
         {
-            KeyStoresConfiguration.get(configuration).getKeyStoreConfiguration(name).ifPresent(keyStoreConfiguration ->
+            KeyStoresConfiguration.get(configuration).getKeyStoreConfiguration(keyStoreName).ifPresent(keyStoreConfiguration ->
             {
                 KeyStores ks = Objects.requireNonNull(keyStoresProvider.get(), "KeyStores service not available");
                 Secrets secrets = Objects.requireNonNull(secretsProvider.get(), "Secrets service not available");
                 String password = keyStoreConfiguration.getPassword().map(secrets::getSecretString).orElse(null);
-                builder.keyStore(Objects.requireNonNull(ks.getKeyStore(name), "No such KeyStore:"+name),password );
+                builder.keyStore(Objects.requireNonNull(ks.getKeyStore(keyStoreName), "No such KeyStore:"+keyStoreName),password );
             });
         }, ()->
         {
             logger.warn("SSL enabled but no keystore specified");
         });
-        jerseyClientConfiguration.getTrustStoreName().ifPresent(name ->
+        jerseyClientConfiguration.getTrustStoreName().ifPresent(trustStoreName ->
         {
             KeyStores ks = Objects.requireNonNull(keyStoresProvider.get(), "KeyStores service not available");
-            builder.trustStore(Objects.requireNonNull(ks.getKeyStore(name), "No such KeyStore:"+name));
+            builder.trustStore(Objects.requireNonNull(ks.getKeyStore(trustStoreName), "No such KeyStore:"+trustStoreName));
         });
 
         return builder;

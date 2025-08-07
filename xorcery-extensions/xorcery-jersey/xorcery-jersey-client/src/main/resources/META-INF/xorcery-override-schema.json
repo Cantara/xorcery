@@ -350,6 +350,11 @@
                       "type" : [ "boolean", "string" ],
                       "default" : false,
                       "description" : "Default: false"
+                    },
+                    "idleTimeout" : {
+                      "type" : "string",
+                      "default" : "-1s",
+                      "description" : "Default: -1s"
                     }
                   }
                 },
@@ -357,6 +362,11 @@
                   "type" : "object",
                   "additionalProperties" : false,
                   "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : true,
+                      "description" : "Default: true"
+                    },
                     "alias" : {
                       "type" : "string",
                       "default" : "self",
@@ -588,44 +598,6 @@
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
-        "client" : {
-          "type" : "object",
-          "default" : "{{ jersey.clients.default }}",
-          "description" : "Default: {{ jersey.clients.default }} ({{ jersey.clients.default }})",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ jetty.client.enabled }}",
-              "description" : "Default: {{ jetty.client.enabled }} (true)"
-            },
-            "keystore" : {
-              "default" : null,
-              "description" : "Default: null",
-              "type" : [ "string", "null" ]
-            },
-            "truststore" : {
-              "default" : null,
-              "description" : "Default: null",
-              "type" : [ "string", "null" ]
-            },
-            "connectTimeout" : {
-              "type" : "string",
-              "default" : "{{ defaults.connectTimeout }}",
-              "description" : "Default: {{ defaults.connectTimeout }} (5s)"
-            },
-            "readTimeout" : {
-              "type" : "string",
-              "default" : "0s",
-              "description" : "Default: 0s"
-            },
-            "properties" : {
-              "type" : "object",
-              "additionalProperties" : true,
-              "properties" : { }
-            }
-          }
-        },
         "clients" : {
           "type" : [ "array", "string" ],
           "items" : {
@@ -637,6 +609,11 @@
                   "type" : "string",
                   "default" : "default",
                   "description" : "Default: default"
+                },
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
                 },
                 "keystore" : {
                   "default" : null,
@@ -655,6 +632,11 @@
                   "type" : "string",
                   "default" : "0s",
                   "description" : "Default: 0s"
+                },
+                "httpClient" : {
+                  "type" : "string",
+                  "default" : "default",
+                  "description" : "Default: default"
                 },
                 "properties" : {
                   "type" : "object",

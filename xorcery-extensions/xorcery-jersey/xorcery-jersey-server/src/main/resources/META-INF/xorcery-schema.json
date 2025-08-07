@@ -1,7 +1,6 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-jersey-server/schema",
   "title" : "xorcery-jersey-server configuration JSON Schema",
   "properties" : {
     "jersey" : {
@@ -95,18 +94,9 @@
               }
             }
           }
-        },
-        "config" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "server" : {
-              "default" : null,
-              "description" : "Default: null"
-            }
-          }
         }
       }
     }
-  }
+  },
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-jersey-server/schema"
 }

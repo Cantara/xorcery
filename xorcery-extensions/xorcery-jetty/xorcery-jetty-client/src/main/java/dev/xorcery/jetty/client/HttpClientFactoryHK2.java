@@ -18,38 +18,49 @@ package dev.xorcery.jetty.client;
 import dev.xorcery.configuration.ApplicationConfiguration;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.dns.client.providers.DnsLookupService;
+import dev.xorcery.hk2.Instances;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.InstantiationService;
 import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.PreDestroy;
+import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
+import java.util.Optional;
+
 @Service(name = "jetty.client")
+@ContractsProvided({Factory.class, HttpClientFactory.class})
 public class HttpClientFactoryHK2 extends HttpClientFactory
-        implements Factory<HttpClient> {
+        implements Factory<HttpClient>, PreDestroy {
+
+    private final InstantiationService instantiationService;
 
     @Inject
     public HttpClientFactoryHK2(
             Configuration configuration,
             Provider<DnsLookupService> dnsLookup,
-            Provider<SslContextFactory.Client> clientSslContextFactoryProvider,
-            OpenTelemetry openTelemetry) throws Exception {
+            ClientSslContextFactory clientSslContextFactory,
+            OpenTelemetry openTelemetry,
+            InstantiationService instantiationService) {
         super(
-                new JettyClientConfiguration(configuration.getConfiguration("jetty.client")),
+                new JettyClientsConfiguration(configuration.getConfiguration("jetty")),
                 ApplicationConfiguration.get(configuration),
                 dnsLookup::get,
-                clientSslContextFactoryProvider::get,
+                clientSslContextFactory,
                 openTelemetry
         );
+        this.instantiationService = instantiationService;
     }
 
     @Override
     @PerLookup
     public HttpClient provide() {
-        return super.provide();
+        String name = Optional.ofNullable(Instances.name(instantiationService)).orElse("default");
+        return newHttpClient(name);
     }
 
     @Override
@@ -59,6 +70,15 @@ public class HttpClientFactoryHK2 extends HttpClientFactory
             instance.stop();
         } catch (Exception e) {
             logger.warn("Could not stop Jetty client", e);
+        }
+    }
+
+    @Override
+    public void preDestroy() {
+        try {
+            super.close();
+        } catch (Exception e) {
+            // Ignore
         }
     }
 }

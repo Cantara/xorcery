@@ -483,16 +483,6 @@
               }
             }
           }
-        },
-        "config" : {
-          "type" : "object",
-          "additionalProperties" : false,
-          "properties" : {
-            "server" : {
-              "default" : null,
-              "description" : "Default: null"
-            }
-          }
         }
       }
     },
@@ -545,6 +535,11 @@
                       "type" : [ "boolean", "string" ],
                       "default" : false,
                       "description" : "Default: false"
+                    },
+                    "idleTimeout" : {
+                      "type" : "string",
+                      "default" : "-1s",
+                      "description" : "Default: -1s"
                     }
                   }
                 },
@@ -552,6 +547,11 @@
                   "type" : "object",
                   "additionalProperties" : false,
                   "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : true,
+                      "description" : "Default: true"
+                    },
                     "alias" : {
                       "type" : "string",
                       "default" : "self",

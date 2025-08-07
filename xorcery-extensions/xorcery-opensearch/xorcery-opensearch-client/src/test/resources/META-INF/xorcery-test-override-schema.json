@@ -311,44 +311,6 @@
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
-        "client" : {
-          "type" : "object",
-          "default" : "{{ jersey.clients.default }}",
-          "description" : "Default: {{ jersey.clients.default }} ({{ jersey.clients.default }})",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ jetty.client.enabled }}",
-              "description" : "Default: {{ jetty.client.enabled }} (true)"
-            },
-            "keystore" : {
-              "default" : null,
-              "description" : "Default: null",
-              "type" : [ "string", "null" ]
-            },
-            "truststore" : {
-              "default" : null,
-              "description" : "Default: null",
-              "type" : [ "string", "null" ]
-            },
-            "connectTimeout" : {
-              "type" : "string",
-              "default" : "{{ defaults.connectTimeout }}",
-              "description" : "Default: {{ defaults.connectTimeout }} (5s)"
-            },
-            "readTimeout" : {
-              "type" : "string",
-              "default" : "0s",
-              "description" : "Default: 0s"
-            },
-            "properties" : {
-              "type" : "object",
-              "additionalProperties" : true,
-              "properties" : { }
-            }
-          }
-        },
         "clients" : {
           "type" : [ "array", "string" ],
           "items" : {
@@ -360,6 +322,11 @@
                   "type" : "string",
                   "default" : "default",
                   "description" : "Default: default"
+                },
+                "enabled" : {
+                  "type" : [ "boolean", "string" ],
+                  "default" : true,
+                  "description" : "Default: true"
                 },
                 "keystore" : {
                   "default" : null,
@@ -379,6 +346,11 @@
                   "default" : "0s",
                   "description" : "Default: 0s"
                 },
+                "httpClient" : {
+                  "type" : "string",
+                  "default" : "default",
+                  "description" : "Default: default"
+                },
                 "properties" : {
                   "type" : "object",
                   "additionalProperties" : true,
@@ -394,91 +366,6 @@
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
-        "client" : {
-          "type" : "object",
-          "default" : "{{ jetty.clients.default }}",
-          "description" : "Default: {{ jetty.clients.default }} ({{ jetty.clients.default }})",
-          "additionalProperties" : false,
-          "properties" : {
-            "enabled" : {
-              "type" : [ "boolean", "string" ],
-              "default" : "{{ defaults.enabled }}",
-              "description" : "Default: {{ defaults.enabled }} (true)"
-            },
-            "idleTimeout" : {
-              "type" : "string",
-              "default" : "{{ defaults.idleTimeout }}",
-              "description" : "Default: {{ defaults.idleTimeout }} (-1s)"
-            },
-            "connectTimeout" : {
-              "type" : "string",
-              "default" : "5s",
-              "description" : "Default: 5s"
-            },
-            "requestBufferSize" : {
-              "type" : [ "number", "string" ],
-              "default" : 4096,
-              "description" : "Default: 4096"
-            },
-            "reusePort" : {
-              "type" : [ "boolean", "string" ],
-              "default" : false,
-              "description" : "Default: false"
-            },
-            "http2" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : false,
-                  "description" : "Default: false"
-                },
-                "idleTimeout" : {
-                  "type" : "string",
-                  "default" : "{{ jetty.client.idleTimeout }}",
-                  "description" : "Default: {{ jetty.client.idleTimeout }} (-1s)"
-                }
-              }
-            },
-            "ssl" : {
-              "type" : "object",
-              "additionalProperties" : false,
-              "properties" : {
-                "enabled" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : "{{ jetty.client.enabled }}",
-                  "description" : "Default: {{ jetty.client.enabled }} (true)"
-                },
-                "alias" : {
-                  "type" : "string",
-                  "default" : "self",
-                  "description" : "Default: self"
-                },
-                "keystore" : {
-                  "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
-                },
-                "truststore" : {
-                  "default" : null,
-                  "description" : "Default: null",
-                  "type" : [ "string", "null" ]
-                },
-                "endpointIdentificationAlgorithm" : {
-                  "type" : "string",
-                  "default" : "HTTPS",
-                  "description" : "Default: HTTPS"
-                },
-                "trustAll" : {
-                  "type" : [ "boolean", "string" ],
-                  "default" : false,
-                  "description" : "Default: false"
-                }
-              }
-            }
-          }
-        },
         "clients" : {
           "type" : [ "array", "string" ],
           "items" : {
@@ -524,6 +411,11 @@
                       "type" : [ "boolean", "string" ],
                       "default" : false,
                       "description" : "Default: false"
+                    },
+                    "idleTimeout" : {
+                      "type" : "string",
+                      "default" : "-1s",
+                      "description" : "Default: -1s"
                     }
                   }
                 },
@@ -531,6 +423,11 @@
                   "type" : "object",
                   "additionalProperties" : false,
                   "properties" : {
+                    "enabled" : {
+                      "type" : [ "boolean", "string" ],
+                      "default" : true,
+                      "description" : "Default: true"
+                    },
                     "alias" : {
                       "type" : "string",
                       "default" : "self",

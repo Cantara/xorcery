@@ -22,6 +22,10 @@ import java.time.Duration;
 
 public record JettyClientConfiguration(Configuration context)
         implements ServiceConfiguration {
+    public String getName() {
+        return context.getString("name").orElse("default");
+    }
+
     public Duration getIdleTimeout() {
         return Duration.parse("PT" + context().getString("idleTimeout").orElse("-1s"));
     }

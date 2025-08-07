@@ -20,40 +20,30 @@ import dev.xorcery.keystores.KeyStores;
 import dev.xorcery.secrets.Secrets;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.glassfish.hk2.api.Factory;
+import org.apache.logging.log4j.Logger;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.api.messaging.MessageReceiver;
 import org.glassfish.hk2.api.messaging.SubscribeTo;
+import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
 
 import java.security.KeyStore;
 import java.util.Optional;
 
-@Service(name = "jetty.client.ssl")
+@Service
 @MessageReceiver(KeyStore.class)
-public class ClientSslContextFactoryFactoryHK2 extends ClientSslContextFactoryFactory
-        implements Factory<SslContextFactory.Client>, PreDestroy {
+@ContractsProvided(ClientSslContextFactory.class)
+public class ClientSslContextFactoryHK2 extends ClientSslContextFactory
+        implements PreDestroy {
 
     @Inject
-    public ClientSslContextFactoryFactoryHK2(Configuration configuration, Provider<KeyStores> keyStores, Secrets secrets) throws Exception {
-        super(configuration, Optional.ofNullable(keyStores.get()), secrets);
+    public ClientSslContextFactoryHK2(Configuration configuration, Provider<KeyStores> keyStores, Secrets secrets, Logger logger) throws Exception {
+        super(configuration, Optional.ofNullable(keyStores.get()), secrets, logger);
     }
 
     @Override
     public void preDestroy() {
         super.preDestroy();
-    }
-
-    @Singleton
-    @Override
-    public SslContextFactory.Client provide() {
-        return super.provide();
-    }
-
-    @Override
-    public void dispose(SslContextFactory.Client instance) {
     }
 
     public void keyStoreUpdated(@SubscribeTo KeyStore updatedKeyStore) {

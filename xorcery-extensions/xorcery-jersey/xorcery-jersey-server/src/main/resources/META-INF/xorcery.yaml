@@ -15,6 +15,3 @@ jersey:
                     enable: true
             wadl:
               disableWadl: true
-
-  config:
-    server:

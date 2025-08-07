@@ -40,21 +40,21 @@ import java.util.UUID;
 
 public class JwtAuthenticationMultipleKeysTest {
     String config = """
-            jetty.client.enabled: true
+            jetty.clients.default.enabled: true
             jetty.server.enabled: true
             jetty.server.security.enabled: true
             jetty.server.security.type: "jwt"
             jetty.server.security.jwt:
                 enabled: true
                 issuers:
-                  authentication.catalystone.com:
-                    keys:
-                      - publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj6uESe/1pQZKpFEfsjLXXNEm6yGWH1NpJp1SBUYJFKzbPOcbrdxSeYq0ZzQGwb68v41aUiMVvprdUJJv2dkTSVd92SokgxyEXecESgyKxSNzqdbGYcJ9Q66RtKBQx9uzVKdQaDk+nkhGKMadWStkQ8hybsczWtYzSF1yJgcf0pXsYFk/sIetIb0LNlhHuSasqJikiKivW2kTE60+KwC/E3QcKStg1qbCDxGyWouOC4r1eQX5RhWGNE570y+zPePfMc4RNS6rXEH9OVELuXPGwlKV30cZPT3GYa49GACIF6LDXosPW+ct3Qj1SiV6VkrCIs5uTQ3+Trvs9xauCA8pBwIDAQAB"                        
-                        alg: "RS256"
-                      - publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj3jFbQaQzXpmuFrNeYphJd4y2EmEX4lHihIAmeUeNMQUd4BAzVDLbw0Ubzpm6jhkRRo/psXvrwZp1SLNqhoxwGooQ+/hPxSy4CPLFiXdQQzbllGaJwMGMrolGg2nYb2YZ1Wzs/GvzfqG1NzIr05iJOTYs5/96dcPN20wWEKPoEVlRZr918flPyAmZ7zN4eVLa2Ck6ZN3NNhDMlRfQTL4RamfoR63Nt88odWOnh9kQsVoYL9A2EYcJfSEyVB7PHP8TFy0IvbSxXWrcr4tWrgkN3di5jf0d5PYIzcEpN/lmaGRFxdOcSkzcYklsGoUrs3rYW7Z4w7WEK1dAGunzk/UOQIDAQAB"
-                        alg: "RS256"                        
-                      - publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAk/d+A9CEAHvPP8g12J/1atIzYIwAdheVfuJukZD8KIs2dp3KoX7hayPtLh2yp4d/yzECcYqJMVNWSrxDRV5eTzv02T5753KG84FFrN87EHpJ0arhVT3YluboDqlMF0lv/V61k4DptZM1rHY24PIncjFWT8R0kkGHsZsZJWXngghP4DZjAH40U7owZ2UL1PVZQperhC/PWtIU0NvtcZn9j6gmoj6bFmqaeDeaCTyZDMnW08pG5aPVP8hqgVlV+bZdMWwCG3dVTulvXUQJXj8HjqdIAjs0gd7k5E5v7d/1NULhK7Pi4bhgt0W+A2uWFZcIum9Q6fNnclAL7cOJVgC9VwIDAQAB"
-                        alg: "RS256"
+                - name: "authentication.catalystone.com"
+                  keys:
+                    - publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj6uESe/1pQZKpFEfsjLXXNEm6yGWH1NpJp1SBUYJFKzbPOcbrdxSeYq0ZzQGwb68v41aUiMVvprdUJJv2dkTSVd92SokgxyEXecESgyKxSNzqdbGYcJ9Q66RtKBQx9uzVKdQaDk+nkhGKMadWStkQ8hybsczWtYzSF1yJgcf0pXsYFk/sIetIb0LNlhHuSasqJikiKivW2kTE60+KwC/E3QcKStg1qbCDxGyWouOC4r1eQX5RhWGNE570y+zPePfMc4RNS6rXEH9OVELuXPGwlKV30cZPT3GYa49GACIF6LDXosPW+ct3Qj1SiV6VkrCIs5uTQ3+Trvs9xauCA8pBwIDAQAB"                        
+                      alg: "RS256"
+                    - publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAj3jFbQaQzXpmuFrNeYphJd4y2EmEX4lHihIAmeUeNMQUd4BAzVDLbw0Ubzpm6jhkRRo/psXvrwZp1SLNqhoxwGooQ+/hPxSy4CPLFiXdQQzbllGaJwMGMrolGg2nYb2YZ1Wzs/GvzfqG1NzIr05iJOTYs5/96dcPN20wWEKPoEVlRZr918flPyAmZ7zN4eVLa2Ck6ZN3NNhDMlRfQTL4RamfoR63Nt88odWOnh9kQsVoYL9A2EYcJfSEyVB7PHP8TFy0IvbSxXWrcr4tWrgkN3di5jf0d5PYIzcEpN/lmaGRFxdOcSkzcYklsGoUrs3rYW7Z4w7WEK1dAGunzk/UOQIDAQAB"
+                      alg: "RS256"                        
+                    - publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAk/d+A9CEAHvPP8g12J/1atIzYIwAdheVfuJukZD8KIs2dp3KoX7hayPtLh2yp4d/yzECcYqJMVNWSrxDRV5eTzv02T5753KG84FFrN87EHpJ0arhVT3YluboDqlMF0lv/V61k4DptZM1rHY24PIncjFWT8R0kkGHsZsZJWXngghP4DZjAH40U7owZ2UL1PVZQperhC/PWtIU0NvtcZn9j6gmoj6bFmqaeDeaCTyZDMnW08pG5aPVP8hqgVlV+bZdMWwCG3dVTulvXUQJXj8HjqdIAjs0gd7k5E5v7d/1NULhK7Pi4bhgt0W+A2uWFZcIum9Q6fNnclAL7cOJVgC9VwIDAQAB"
+                      alg: "RS256"
             """;
 
     @Inject
