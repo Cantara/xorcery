@@ -35,10 +35,13 @@ import org.junit.jupiter.api.extension.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
@@ -60,6 +63,7 @@ public class XorceryExtension
         BeforeAllCallback,
         AfterAllCallback {
     public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create("xorcery");
+    private static final String PARAMETERIZED_TEST_CLASSNAME = "org.junit.jupiter.params.ParameterizedTest";
 
     private final List<Object> services;
     private final Configuration configuration;
@@ -210,6 +214,14 @@ public class XorceryExtension
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
+        if (extensionContext.getTestMethod()
+                .map(Method::getDeclaredAnnotations)
+                .map(Arrays::stream)
+                .map(stream -> stream.map(Annotation::annotationType).map(Class::getName)
+                        .anyMatch(PARAMETERIZED_TEST_CLASSNAME::equals))
+                .orElse(false)) {
+            return false; // avoid clash with parameterized tests
+        }
         Class<?> type = parameterContext.getParameter().getType();
         InjecteeImpl injectee = new InjecteeImpl(parameterContext.getParameter().getType());
         injectee.setParent(parameterContext.getAnnotatedElement());
