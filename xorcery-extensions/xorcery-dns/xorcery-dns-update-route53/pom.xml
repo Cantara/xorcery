@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-dns</artifactId>
-        <version>0.164.2</version>
+        <version>0.164.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-dns-update-route53</artifactId>
