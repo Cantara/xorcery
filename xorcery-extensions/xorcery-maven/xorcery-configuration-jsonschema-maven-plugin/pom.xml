@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-maven</artifactId>
-        <version>0.164.4</version>
+        <version>0.164.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-configuration-jsonschema-maven-plugin</artifactId>
