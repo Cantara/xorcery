@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.xorcery</groupId>
     <artifactId>xorcery-parent</artifactId>
-    <version>0.164.3-SNAPSHOT</version>
+    <version>0.164.3</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -57,7 +57,7 @@
             <dependency>
                 <groupId>dev.xorcery</groupId>
                 <artifactId>xorcery-bom</artifactId>
-                <version>0.164.3-SNAPSHOT</version>
+                <version>0.164.3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -576,7 +576,7 @@
                         <consoleOutputReporter>
                             <disable>true</disable>
                         </consoleOutputReporter>
-                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter"/>
+                        <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter" />
                     </configuration>
                 </plugin>
                 <plugin>
