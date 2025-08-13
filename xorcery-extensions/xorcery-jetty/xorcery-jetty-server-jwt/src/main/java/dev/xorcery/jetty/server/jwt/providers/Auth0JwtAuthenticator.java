@@ -218,93 +218,41 @@ public class Auth0JwtAuthenticator
 
     @Override
     public AuthenticationState validateRequest(Request request, Response response, Callback callback) throws ServerAuthException {
-        String jwt = getBearerToken(request);
+        String jwt = getToken(request);
 
         if (jwt == null)
-            jwt = getCookieToken(request);
+            return AuthenticationState.defer(this);
 
-        if (jwt != null) {
-            try {
-                DecodedJWT decodedJwt = jwtParser.decodeJwt(jwt);
+        try {
+            DecodedJWT decodedJwt = jwtParser.decodeJwt(jwt);
 
-                // Check expiration date
-                if (decodedJwt.getExpiresAtAsInstant().isBefore(Instant.now()))
-                    throw new ServerAuthException("JWT token is expired");
+            verifyJwt(decodedJwt);
 
-                Map<String, JWTVerifier> issuerVerifiers = this.verifiers.getOrDefault(Optional.ofNullable(decodedJwt.getIssuer()).orElse("default"), Collections.emptyMap());
+            // Authenticate user
+            JwtCredential claimsCredential = new JwtCredential(decodedJwt);
+            UserPrincipal userPrincipal = new JwtUserPrincipal(decodedJwt.getSubject(), claimsCredential);
+            Subject subject = new Subject();
+            userPrincipal.configureSubject(subject);
+            subject.setReadOnly();
 
-                JWTVerifier verifier = null;
-                if (decodedJwt.getKeyId() != null) {
-                    verifier = issuerVerifiers.get(decodedJwt.getKeyId());
-                }
-
-                // Verify JWT token
-                if (verifier != null) {
-                    // We found the correct key
-                    try {
-                        verifier.verify(decodedJwt);
-                    } catch (JWTVerificationException e) {
-                        logger.warn("Could not authenticate JWT token", e);
-                        throw new ServerAuthException("Could not authenticate JWT token", e);
-                    }
-                } else {
-                    // Try all of them
-                    JWTVerificationException error = new JWTVerificationException(String.format("Could not find JWT verifier for token, kid:%s,issuer:%s, sub:%s", decodedJwt.getKeyId(), decodedJwt.getIssuer(), decodedJwt.getSubject()));
-                    for (JWTVerifier jwtVerifier : issuerVerifiers.values()) {
-                        try {
-                            jwtVerifier.verify(decodedJwt);
-                            error = null;
-                            break;
-                        } catch (JWTVerificationException e) {
-                            error = e;
-                        }
-                    }
-
-                    if (error != null) {
-                        throw new ServerAuthException("Could not authenticate JWT token", error);
-                    }
-                }
-
-                // Check if already logged in
-                // Look for cached authentication
-                Session session = request.getSession(false);
-                AuthenticationState authenticationState = session == null ? null : (AuthenticationState) session.getAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
-                if (logger.isDebugEnabled())
-                    logger.debug("auth {}", authenticationState);
-
-                // Has authentication been revoked?
-                if (authenticationState instanceof AuthenticationState.Succeeded succeeded && _loginService != null && !_loginService.validate(succeeded.getUserIdentity())) {
-                    if (logger.isDebugEnabled())
-                        logger.debug("auth revoked {}", authenticationState);
-                    session.removeAttribute(SessionAuthentication.AUTHENTICATED_ATTRIBUTE);
-                    authenticationState = null;
-                }
-
-                // Found valid authentication, return it
-                if (authenticationState != null)
-                    return authenticationState;
-
-                // Login user
-                JwtCredential claimsCredential = new JwtCredential(decodedJwt);
-                UserPrincipal userPrincipal = new JwtUserPrincipal(decodedJwt.getSubject(), claimsCredential);
-                Subject subject = new Subject();
-                userPrincipal.configureSubject(subject);
-                subject.setReadOnly();
-
-                List<String> roles = decodedJwt.getClaim("roles").asList(String.class);
-                if (roles == null)
-                    roles = Collections.emptyList();
-                UserIdentity userIdentity = UserIdentity.from(subject, userPrincipal, roles.toArray(new String[0]));
-                return new LoginAuthenticator.UserAuthenticationSucceeded(getAuthenticationType(), userIdentity);
-            } catch (ServerAuthException e) {
-                throw e;
-            } catch (Exception e) {
-                logger.warn("Could not authenticate JWT token", e);
-                throw new ServerAuthException("Could not authenticate JWT token", e);
-            }
+            List<String> roles = decodedJwt.getClaim("roles").asList(String.class);
+            if (roles == null)
+                roles = Collections.emptyList();
+            UserIdentity userIdentity = UserIdentity.from(subject, userPrincipal, roles.toArray(new String[0]));
+            return new LoginAuthenticator.UserAuthenticationSucceeded(getAuthenticationType(), userIdentity);
+        } catch (ServerAuthException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.warn("Could not authenticate JWT token", e);
+            throw new ServerAuthException("Could not authenticate JWT token", e);
         }
+    }
 
-        return AuthenticationState.defer(this);
+    private String getToken(Request request) {
+        String jwt = getBearerToken(request);
+        if (jwt == null)
+            jwt = getCookieToken(request);
+        return jwt;
     }
 
     private String getBearerToken(Request request) {
@@ -324,6 +272,46 @@ public class Auth0JwtAuthenticator
                 return cookie.getValue();
         }
         return null;
+    }
+
+    private void verifyJwt(DecodedJWT decodedJwt) throws ServerAuthException {
+        // Check expiration date
+        if (decodedJwt.getExpiresAtAsInstant().isBefore(Instant.now()))
+            throw new ServerAuthException("JWT token is expired");
+
+        Map<String, JWTVerifier> issuerVerifiers = this.verifiers.getOrDefault(Optional.ofNullable(decodedJwt.getIssuer()).orElse("default"), Collections.emptyMap());
+
+        JWTVerifier verifier = null;
+        if (decodedJwt.getKeyId() != null) {
+            verifier = issuerVerifiers.get(decodedJwt.getKeyId());
+        }
+
+        // Verify JWT token
+        if (verifier != null) {
+            // We found the correct key
+            try {
+                verifier.verify(decodedJwt);
+            } catch (JWTVerificationException e) {
+                logger.warn("Could not authenticate JWT token", e);
+                throw new ServerAuthException("Could not authenticate JWT token", e);
+            }
+        } else {
+            // Try all of them
+            JWTVerificationException error = new JWTVerificationException(String.format("Could not find JWT verifier for token, kid:%s,issuer:%s, sub:%s", decodedJwt.getKeyId(), decodedJwt.getIssuer(), decodedJwt.getSubject()));
+            for (JWTVerifier jwtVerifier : issuerVerifiers.values()) {
+                try {
+                    jwtVerifier.verify(decodedJwt);
+                    error = null;
+                    break;
+                } catch (JWTVerificationException e) {
+                    error = e;
+                }
+            }
+
+            if (error != null) {
+                throw new ServerAuthException("Could not authenticate JWT token", error);
+            }
+        }
     }
 
     private boolean isLoginOrErrorPage(String pathInContext) {
