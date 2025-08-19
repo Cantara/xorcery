@@ -17,7 +17,6 @@ package dev.xorcery.log4j;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.xorcery.configuration.Configuration;
-import dev.xorcery.core.Xorcery;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
@@ -64,7 +63,7 @@ public class LoggerContextFactory
         if (configuration.getFalsy("log4j2")) {
             loggerContext = initialize(configuration);
         } else {
-            loggerContext = LogManager.getContext(Xorcery.class.getClassLoader(), false);
+            loggerContext = LogManager.getContext(LoggerContextFactory.class.getClassLoader(), false);
         }
     }
 

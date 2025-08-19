@@ -22,5 +22,4 @@ module xorcery.log4j {
     requires org.glassfish.hk2.api;
     requires xorcery.configuration.api;
     requires jakarta.inject;
-    requires xorcery.core;
 }
