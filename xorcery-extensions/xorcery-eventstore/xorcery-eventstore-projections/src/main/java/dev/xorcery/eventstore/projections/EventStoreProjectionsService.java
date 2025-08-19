@@ -48,7 +48,6 @@ public class EventStoreProjectionsService {
         client = EventStoreDBProjectionManagementClient.create(eventStoreService.getSettings());
         List<ProjectionDetails> projectionsList = client.list().join();
 
-
         ProjectionsConfiguration cfg = new ProjectionsConfiguration(configuration.getConfiguration("eventstore.projections"));
         List<ProjectionDetails> updatedProjections = new ArrayList<>();
         for (Projection projection : cfg.getProjections()) {
@@ -103,6 +102,9 @@ public class EventStoreProjectionsService {
                         if (projection.isEnabled())
                         {
                             client.enable(projectionName).join();
+                        } else
+                        {
+                            client.disable(projectionName).join();
                         }
                     } catch (Exception e) {
                         logger.error("Could not create projection " + projectionName, e);
