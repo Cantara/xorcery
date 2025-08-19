@@ -22,9 +22,9 @@ A set of Java libraries dedicated to helping you build better applications.
 
 ## Features
 Xorcery contains several core modules, which are used by most applications and services:
-- Core: dependency injection and runtime level support through HK2
+- [Core](xorcery-core/README.md): dependency injection and runtime level support through HK2
 - [Configuration](xorcery-configuration/README.md): composable, overridable, uses YAML+JSON-SCHEMA for editing and validation
-- JSON: JSON merging and reference resolving, primarily for configuration handling
+- [JSON](xorcery-json/README.md): JSON merging and reference resolving, primarily for configuration handling
 - JUnit: helpers to run Xorcery in tests
 - Log4j: integration of configuration and DI with Log4j2
 - Util: various helper classes
