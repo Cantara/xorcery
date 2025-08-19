@@ -30,7 +30,16 @@
     <dependencies>
         <dependency>
             <groupId>dev.xorcery</groupId>
-            <artifactId>xorcery-core</artifactId>
+            <artifactId>xorcery-configuration-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.hk2</groupId>
+            <artifactId>hk2-api</artifactId>
         </dependency>
 
         <dependency>
@@ -54,5 +63,4 @@
             <artifactId>jspecify</artifactId>
         </dependency>
     </dependencies>
-
 </project>
