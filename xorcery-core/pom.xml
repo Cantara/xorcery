@@ -74,8 +74,14 @@
             <artifactId>log4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jspecify</groupId>
-            <artifactId>jspecify</artifactId>
+            <groupId>dev.xorcery</groupId>
+            <artifactId>xorcery-configuration</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.xorcery</groupId>
+            <artifactId>xorcery-log4j</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
