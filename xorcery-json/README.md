@@ -4,6 +4,15 @@
 
 The `xorcery-json` module provides advanced JSON processing capabilities built on top of Jackson, offering sophisticated merging, variable resolution, and element manipulation functionality. This module is designed to handle complex JSON operations commonly needed in configuration management and data transformation scenarios.
 
+## Maven Dependency
+
+```xml
+<dependency>
+    <groupId>dev.xorcery</groupId>
+    <artifactId>xorcery-json</artifactId>
+</dependency>
+```
+
 ## Module Structure
 
 ```

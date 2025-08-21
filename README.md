@@ -23,13 +23,15 @@ A set of Java libraries dedicated to helping you build better applications.
 ## Features
 Xorcery contains several core modules, which are used by most applications and services:
 - [Core](xorcery-core/README.md): dependency injection and runtime level support through HK2
-- [Configuration](xorcery-configuration/README.md): composable, overridable, uses YAML+JSON-SCHEMA for editing and validation
+- [Configuration](xorcery-configuration/README.md): composable, overridable, uses YAML+JSON-Schema for editing and validation
 - [JSON](xorcery-json/README.md): JSON merging and reference resolving, primarily for configuration handling
-- JUnit: helpers to run Xorcery in tests
-- Log4j: integration of configuration and DI with Log4j2
-- Util: various helper classes
+- [JUnit](xorcery-junit/README.md): helpers to run Xorcery in tests
+- [Log4j](xorcery-log4j/README.md): integration of configuration and DI with Log4j2
+- [Runner](xorcery-runner/README.md): standard Main class with CLI to startup your application
+- [Util](xorcery-util/README.md): various helper classes
 
-The majority of the useful modules used to build are in extensions, which you can add to your own project as needed. 
+## Extensions
+The majority of the useful modules used to build applications and services are in the extensions, which you can add to your own project as needed. 
 - Certificate management
 - DNS client and registration
 - EventStore client
@@ -41,16 +43,18 @@ The majority of the useful modules used to build are in extensions, which you ca
 - JWT server
 - Keystore management
 - Kurrent client
-- Maven plugins, with JSON-Schema generation for module configurations etc.
+- Maven plugins: JSON-Schema generation for module configurations, etc.
 - OpenSearch client
-- OpenTelemetry (SDK integration, exporters, module and JDK integrations)
-- Reactive streams over websockets, integrated with Project Reactor/Flux
+- OpenTelemetry: SDK integration, exporters, modules, and JDK/JVM/system integrations
+- Reactive streams over websockets: integrated with Project Reactor(Flux)
 - Secrets access
 - Status API
 - Thymeleaf integration
 - Build and runtime translation
 
-Most modules are integrated with the configuration and OpenTelemetry observability support.
+Most modules are integrated with the Configuration object, Log4j2 loggers, and OpenTelemetry observability support.
+Many of these only require you to add it as a dependency and providing your own configuration overrides. 
+Some of them provide APIs and SPIs that you can use or implement in your own modules. 
 
 ## Getting Started
 

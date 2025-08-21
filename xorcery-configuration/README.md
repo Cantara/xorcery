@@ -11,6 +11,15 @@ xorcery-configuration         # Implementation and providers
 xorcery-configuration-validation # JSON Schema validation
 ```
 
+## Maven Dependency
+
+```xml
+<dependency>
+    <groupId>dev.xorcery</groupId>
+    <artifactId>xorcery-configuration</artifactId>
+</dependency>
+```
+
 ## Module Structure
 
 ### xorcery-configuration-api

@@ -4,6 +4,14 @@
 
 The `xorcery-core` module is the foundational component of the Xorcery framework, providing the bootstrap mechanism, dependency injection infrastructure, and service lifecycle management. It serves as the entry point for all Xorcery applications and orchestrates the initialization and shutdown of the entire system.
 
+## Maven Dependency
+
+```xml
+<dependency>
+    <groupId>dev.xorcery</groupId>
+    <artifactId>xorcery-core</artifactId>
+</dependency>
+```
 ## Architecture
 
 ### Core Design Principles
