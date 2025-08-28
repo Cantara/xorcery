@@ -31,11 +31,14 @@ Xorcery contains several core modules, which are used by most applications and s
 - [Util](xorcery-util/README.md): various helper classes
 
 ## Extensions
-The majority of the useful modules used to build applications and services are in the extensions, which you can add to your own project as needed. 
-- Certificate management
-- DNS client and registration
+The majority of the useful modules used to build applications and services are in the extensions, which you can add to your own project as needed.
+- [AWS Authentication](xorcery-aws-auth/README.md)
+- [Certificate management](xorcery-certificates/README.md)
+- [DNS client and registration](xorcery-dns/README.md)
 - EventStore client
-- Jersey server, for JAX-RS support
+- [JAX-RS server helpers](xorcery-jaxrs-server/README.md)
+- Jersey JAX-RS client
+- [Jersey JAX-RS server](xorcery-jersey-server/README.md)
 - Jetty client
 - Jetty server
 - JSON:API

@@ -26,6 +26,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -44,8 +45,7 @@ public class DnsLookupSocketAddressResolver
     }
 
     @Override
-    public void resolve(String host, int port, Promise<List<InetSocketAddress>> promise) {
-
+    public void resolve(String host, int port, Map<String, Object> context, Promise<List<InetSocketAddress>> promise) {
         try {
             dnsLookup.resolve(new URI("http", null, host, port, null, null, null))
                     .whenComplete((list, t) ->
