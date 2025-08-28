@@ -20,7 +20,7 @@
 
     <groupId>dev.xorcery</groupId>
     <artifactId>xorcery-project</artifactId>
-    <version>0.164.6</version>
+    <version>0.164.7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <developers>
@@ -38,7 +38,7 @@
         <developerConnection>scm:git:ssh://git@github.com/Cantara/xorcery.git</developerConnection>
         <connection>scm:git:https://github.com/Cantara/xorcery.git</connection>
         <url>https://github.com/Cantara/xorcery</url>
-        <tag>xorcery-project-0.164.6</tag>
+        <tag>xorcery-project-0.110.1</tag>
     </scm>
 
     <modules>
