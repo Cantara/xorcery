@@ -94,11 +94,11 @@ public class PublishSubscriberWebSocketTest {
                         "numbers",
                         ServerWebSocketOptions.instance(),
                         Integer.class,
-                        upstream -> upstream.publishOn(Schedulers.immediate(), 1024).doOnNext(result::add).subscribe());
+                        upstream -> upstream.publishOn(Schedulers.immediate(), 1).doOnNext(result::add).subscribe());
 
                 // When
                 URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
-                List<Integer> source = IntStream.range(0, 100).boxed().toList();
+                List<Integer> source = IntStream.range(0, 4096).boxed().toList();
                 Flux<Integer> publisher = Flux.fromIterable(source);
                 CompletableFuture<Void> publishResult = websocketStreamsClientClient.publish(publisher, serverUri, ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON);
                 publishResult.orTimeout(30, TimeUnit.SECONDS).join();

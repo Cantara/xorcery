@@ -40,8 +40,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 import static dev.xorcery.reactivestreams.api.IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT;
@@ -53,8 +51,6 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
     private final static ObjectMapper jsonMapper = new JsonMapper().findAndRegisterModules();
 
     private final static long CANCEL = Long.MIN_VALUE;
-    private final static long COMPLETE = -1L;
-    private final static long SEND_BUFFERED_REQUESTS = 0;
 
     private final MessageReader<SUBSCRIBE> reader;
     private final Function<Flux<SUBSCRIBE>, Disposable> subscriber;
@@ -73,13 +69,6 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
     private final AtomicLong connectionCounter;
     private FluxSink<SUBSCRIBE> inboundSink;
     private Disposable subscriptionDisposable;
-
-    // Requests
-    private final Lock sendLock = new ReentrantLock();
-    private volatile long sendRequestsThreshold = 0;
-    private final AtomicLong requests = new AtomicLong(0);
-    private final AtomicLong outstandingRequests = new AtomicLong(0);
-    private volatile Throwable error; // Upstream error we are saving for when server closes the websocket
 
     private final LongHistogram receivedBytes;
     private final LongHistogram itemReceivedSizes;
@@ -229,9 +218,7 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
                 itemReceivedSizes.record(payload.limit(), attributes);
                 SUBSCRIBE event = reader.readFrom(new ByteBufferBackedInputStream(payload));
                 inboundSink.next(event);
-                outstandingRequests.decrementAndGet();
             } else {
-                int count = 0;
                 receivedBytes.record(payload.limit(), attributes);
                 while (payload.position() != payload.limit()) {
                     int length = payload.getInt();
@@ -239,12 +226,9 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
                     SUBSCRIBE event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
                     payload.position(payload.position() + length);
                     inboundSink.next(event);
-                    count++;
                     itemReceivedSizes.record(length, attributes);
                 }
-                outstandingRequests.addAndGet(-count);
             }
-            sendRequest(SEND_BUFFERED_REQUESTS);
             callback.succeed();
         } catch (Throwable e) {
             logger.error("Could not receive value", e);
@@ -322,50 +306,11 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
         if (session == null || !session.isOpen())
             return;
 
-        sendLock.lock();
-        try {
-            if (n == SEND_BUFFERED_REQUESTS) {
-                // Try to send buffered requests if we have capacity
-                sendBufferedRequestsIfPossible();
-                return;
-            }
-
-            // Add new requests to buffer
-            long totalBufferedRequests = requests.addAndGet(n);
-
-            // Initialize threshold on first request if not set
-            if (sendRequestsThreshold == 0) {
-                sendRequestsThreshold = Math.max(1, (totalBufferedRequests * 3) / 4);
-            }
-
-            // Try to send buffered requests if we have enough and capacity
-            sendBufferedRequestsIfPossible();
-        } finally {
-            sendLock.unlock();
-        }
-    }
-
-    private void sendBufferedRequestsIfPossible() {
-        long bufferedRequests = requests.get();
-        long outstanding = outstandingRequests.get();
-
-        // Only send if we have enough buffered requests and outstanding is below threshold
-        if (bufferedRequests >= sendRequestsThreshold && outstanding < sendRequestsThreshold) {
-            long toSend = Math.min(sendRequestsThreshold, bufferedRequests);
-
-            // Atomically update both counters
-            if (requests.compareAndSet(bufferedRequests, bufferedRequests - toSend)) {
-                outstandingRequests.addAndGet(toSend);
-
-                // Send the request over the network
-                getSession().sendText(Long.toString(toSend), Callback.NOOP);
-
-                if (logger.isTraceEnabled()) {
-                    logger.trace(marker, "sendRequest {} (buffered: {}, outstanding: {})",
-                            toSend, requests.get(), outstandingRequests.get());
-                }
-            }
-            // If CAS failed, another thread updated requests, so we'll try again on next call
+        // Send the request over the network
+        getSession().sendText(Long.toString(n), Callback.NOOP);
+        requestsHistogram.record(n);
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "sendRequest {}", n);
         }
     }
 }
