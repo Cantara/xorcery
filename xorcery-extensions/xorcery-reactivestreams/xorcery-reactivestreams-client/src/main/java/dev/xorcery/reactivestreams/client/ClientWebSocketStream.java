@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import dev.xorcery.concurrent.SmartBatcher;
 import dev.xorcery.dns.client.api.DnsLookup;
 import dev.xorcery.io.ByteBufferBackedInputStream;
@@ -81,6 +82,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 import static dev.xorcery.lang.Exceptions.isCausedBy;
 import static dev.xorcery.lang.Exceptions.unwrap;
@@ -107,8 +109,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     private final Class<?> inputType;
     private final MessageWorkers messageWorkers;
 
-    private final Publisher<OUTPUT> publisher; // if null -> subscribe
-    private final FluxSink<INPUT> sink;
+    private final Supplier<Publisher<OUTPUT>> outboundPublisher; // if null -> subscribe
+    private final FluxSink<INPUT> inboundSink;
 
     private final ClientWebSocketOptions options;
     private final DnsLookup dnsLookup;
@@ -162,8 +164,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             Class<?> outputType,
             Class<?> inputType,
             MessageWorkers messageWorkers,
-            Publisher<OUTPUT> publisher,
-            FluxSink<INPUT> downstreamSink,
+            Supplier<Publisher<OUTPUT>> outboundPublisher,
+            FluxSink<INPUT> inboundSink,
 
             ClientWebSocketOptions options,
             DnsLookup dnsLookup,
@@ -183,8 +185,8 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         this.outputType = outputType;
         this.inputType = inputType;
         this.messageWorkers = messageWorkers;
-        this.publisher = publisher;
-        this.sink = downstreamSink;
+        this.outboundPublisher = outboundPublisher;
+        this.inboundSink = inboundSink;
         this.options = options;
         this.dnsLookup = dnsLookup;
         this.webSocketClient = webSocketClient;
@@ -222,7 +224,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
 
-        downstreamSink.onCancel(this::upstreamCancel);
+        inboundSink.onCancel(this::upstreamCancel);
 // TODO Should we handle this callback? downstreamSink.onDispose(someCallback);
 
         try {
@@ -274,7 +276,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                     .setSpanKind(SpanKind.PRODUCER)
                     .startSpan();
             try (Scope scope = connectSpan.makeCurrent()) {
-                ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest();
+                ClientUpgradeRequest clientUpgradeRequest = new ClientUpgradeRequest(subscriberWebsocketUri);
                 Map<String, List<String>> headers = options.headers();
                 headers.put("Aggregate", List.of("maxBinaryMessageSize=" + webSocketClient.getMaxBinaryMessageSize()));
                 clientUpgradeRequest.setHeaders(headers);
@@ -288,13 +290,13 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                     case subscriber -> {
                         clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), List.copyOf(outputContentTypes));
                     }
-                    case subscriberWithResult, publisherWithResult -> {
+                    case subscriberWithResult-> {
                         clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), List.copyOf(outputContentTypes));
                         clientUpgradeRequest.setHeader(HttpHeader.ACCEPT.asString(), List.copyOf(inputContentTypes));
                     }
                 }
                 textMapPropagator.inject(Context.current(), clientUpgradeRequest, jettySetter);
-                return webSocketClient.connect(this, subscriberWebsocketUri, clientUpgradeRequest)
+                return webSocketClient.connect(this, clientUpgradeRequest)
                         .thenRun(connectSpan::end).toCompletableFuture();
             } catch (Throwable e) {
                 failure = CompletableFuture.failedFuture(unwrap(e));
@@ -356,7 +358,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         }
 
         if (subProtocol == ReactiveStreamSubProtocol.subscriber) {
-            sink.next((INPUT) item);
+            inboundSink.next((INPUT) item);
         }
     }
 
@@ -454,7 +456,14 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
     protected void hookOnError(Throwable throwable) {
         if (session.isOpen()) {
             batcher.close();
-            session.close(StatusCode.NORMAL, getError(throwable).toPrettyString(), Callback.NOOP);
+            switch (subProtocol){
+                case publisher, subscriberWithResult -> {
+                    session.close(StatusCode.NORMAL, getError(throwable).toPrettyString(), Callback.NOOP);
+                }
+                case subscriber -> {
+                    // TODO where is the error even coming from here?
+                }
+            }
 
             // Save it for when websocket is closed so that we can report it accurately
             this.error = throwable;
@@ -495,7 +504,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 if (!initWriter(serverAcceptType))
                     return;
             }
-            case subscriberWithResult, publisherWithResult -> {
+            case subscriberWithResult -> {
                 if (!initWriter(serverAcceptType))
                     return;
                 if (!initReader(serverContentType))
@@ -515,7 +524,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         }).orElse(-1);
 
         ObjectNode contextJson = JsonNodeFactory.instance.objectNode();
-        sink.contextView().forEach((k, v) ->
+        inboundSink.contextView().forEach((k, v) ->
         {
             if (v instanceof String str) {
                 contextJson.set(k.toString(), contextJson.textNode(str));
@@ -539,7 +548,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
             session.sendText(contextJsonString, Callback.NOOP);
             logger.debug(marker, "Connected to {} with context {}", session.getRemoteSocketAddress(), contextJsonString);
 
-            sink.onRequest(this::sendRequests);
+            inboundSink.onRequest(this::sendRequests);
         } catch (Throwable e) {
             error = e;
             session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
@@ -594,43 +603,43 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
 
         try {
             JsonNode json = jsonMapper.readTree(message);
-            if (json instanceof NumericNode numericNode) {
+            if (json instanceof ObjectNode serverContextNode) {
+                Map<String, Object> contextMap = new HashMap<>();
+                for (Map.Entry<String, JsonNode> property : serverContextNode.properties()) {
+                    JsonNode value = property.getValue();
+                    switch (value.getNodeType()) {
+                        case STRING -> contextMap.put(property.getKey(), value.asText());
+                        case BOOLEAN -> contextMap.put(property.getKey(), value.asBoolean());
+                        case NUMBER -> {
+                            if (value.isIntegralNumber()) {
+                                contextMap.put(property.getKey(), value.asLong());
+                            } else {
+                                contextMap.put(property.getKey(), value.asDouble());
+                            }
+                        }
+                        case OBJECT -> contextMap.put(property.getKey(), jsonMapper.treeToValue(value, Map.class));
+                        case ARRAY -> contextMap.put(property.getKey(), jsonMapper.treeToValue(value, List.class));
+                    }
+                }
+                contextMap.put("request", session.getUpgradeRequest());
+                contextMap.put("response", session.getUpgradeResponse());
+                context = reactor.util.context.Context.of(contextMap);
+                outboundPublisher.get().subscribe(this);
+            } else if (json instanceof NumericNode numericNode) {
                 long requests = numericNode.asLong();
                 if (requests == CANCEL) {
                     upstream().cancel();
                     session.close(StatusCode.NORMAL, null, Callback.NOOP);
                 } else if (requests == COMPLETE) {
-                    sink.complete();
+                    inboundSink.complete();
                 } else {
                     if (upstream() != null)
                         upstream().request(requests);
                     else
                         upstreamRequests.addAndGet(requests);
                 }
-            } else if (json instanceof ObjectNode objectNode) {
-                Map<String, Object> contextMap = new HashMap<>();
-                for (Map.Entry<String, JsonNode> property : objectNode.properties()) {
-                    JsonNode value = property.getValue();
-                    switch (value.getNodeType()) {
-                        case STRING -> contextMap.put(property.getKey(), value.asText());
-                        case BOOLEAN -> contextMap.put(property.getKey(), value.asBoolean());
-                        case NUMBER -> {
-                            if (value.isIntegralNumber()){
-                                contextMap.put(property.getKey(), value.asLong());
-                            } else {
-                                contextMap.put(property.getKey(), value.asDouble());
-                            }
-                        }
-                        case OBJECT ->
-                                contextMap.put(property.getKey(), jsonMapper.treeToValue(value, Map.class));
-                        case ARRAY ->
-                                contextMap.put(property.getKey(), jsonMapper.treeToValue(value, List.class));
-                    }
-                }
-                contextMap.put("request", session.getUpgradeRequest());
-                contextMap.put("response", session.getUpgradeResponse());
-                context = reactor.util.context.Context.of(contextMap);
-                publisher.subscribe(this);
+            } else if (json instanceof TextNode errorNode) {
+                inboundSink.error(new ServerStreamException(1001, errorNode.asText()));
             }
         } catch (Throwable e) {
 
@@ -638,7 +647,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                 return;
 
             upstream().cancel();
-            sink.error(e);
+            inboundSink.error(e);
             session.close(StatusCode.NORMAL, getError(e).toPrettyString(), Callback.NOOP);
         }
     }
@@ -672,13 +681,13 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                         ByteBuffer itemByteBuffer = byteBuffer.slice(byteBuffer.position(), length);
                         INPUT event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
                         byteBuffer.position(byteBuffer.position() + length);
-                        sink.next(event);
+                        inboundSink.next(event);
                         count++;
                         itemReceivedSizes.record(length, attributes);
                     }
                     outstandingRequests.addAndGet(-count);
                     receivedCounter.add(count, attributes);
-//                    logger.info("READ AGGREGATED DONE {}", count);
+                    logger.info("READ AGGREGATED DONE {}", count);
                 }
 
                 sendRequests(SEND_BUFFERED_REQUESTS);
@@ -724,7 +733,7 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
         if (statusCode == StatusCode.NORMAL) {
             logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             if (reason == null) {
-                sink.complete();
+                inboundSink.complete();
             } else {
                 try {
                     JsonNode reasonJson = jsonMapper.readTree(reason);
@@ -739,20 +748,20 @@ public class ClientWebSocketStream<OUTPUT, INPUT>
                             default -> new ServerStreamException(status, message, error);
                         };
 
-                        sink.error(throwable);
+                        inboundSink.error(throwable);
                     } else {
-                        sink.error(new ServerStreamException(statusCode, reason, error));
+                        inboundSink.error(new ServerStreamException(statusCode, reason, error));
                     }
                 } catch (JsonProcessingException e) {
-                    sink.error(new ServerStreamException(statusCode, reason, error));
+                    inboundSink.error(new ServerStreamException(statusCode, reason, error));
                 }
             }
         } else {
             logger.debug(marker, "Close websocket:{} {}", statusCode, reason);
             if (reason != null && reason.equals("Connection Idle Timeout")) {
-                sink.error(new IdleTimeoutStreamException());
+                inboundSink.error(new IdleTimeoutStreamException());
             } else {
-                sink.error(new ServerStreamException(statusCode, reason, error));
+                inboundSink.error(new ServerStreamException(statusCode, reason, error));
             }
         }
 

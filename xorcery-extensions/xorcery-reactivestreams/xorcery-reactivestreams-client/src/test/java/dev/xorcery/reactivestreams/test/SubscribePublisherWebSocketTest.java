@@ -21,9 +21,9 @@ import dev.xorcery.core.Xorcery;
 import dev.xorcery.net.Sockets;
 import dev.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
-import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import dev.xorcery.reactivestreams.api.server.ServerStreamException;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import dev.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import jakarta.ws.rs.core.MediaType;
@@ -65,7 +65,6 @@ public class SubscribePublisherWebSocketTest {
     private Configuration clientConfiguration;
     private Configuration serverConfiguration;
     private ServerWebSocketStreamsConfiguration websocketStreamsServerWebSocketStreamsConfiguration;
-    private Context webSocketContext;
 
     Logger logger = LogManager.getLogger();
 
@@ -75,7 +74,6 @@ public class SubscribePublisherWebSocketTest {
         clientConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(clientConf).build();
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf).build();
         websocketStreamsServerWebSocketStreamsConfiguration = ServerWebSocketStreamsConfiguration.get(serverConfiguration);
-        webSocketContext = Context.of(ClientWebSocketStreamContext.serverUri.name(), websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers"));
     }
 
     @Test
@@ -90,13 +88,15 @@ public class SubscribePublisherWebSocketTest {
                 List<Integer> source = IntStream.range(0, 100).boxed().toList();
                 websocketStreamsServer.publisher(
                         "numbers",
+                        ServerWebSocketOptions.instance(),
                         Integer.class,
                         Flux.fromIterable(source));
 
                 // When
-                Flux<Integer> numbers = websocketStreamsClientClient.subscribe(
+                URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
+                Flux<Integer> numbers = websocketStreamsClientClient.subscribe(serverUri,
                         ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
-                ).contextWrite(webSocketContext);
+                );
                 List<Integer> result = numbers.toStream().toList();
 
                 // Then
@@ -118,12 +118,14 @@ public class SubscribePublisherWebSocketTest {
                 List<Integer> source = IntStream.range(0, 10000).boxed().toList();
                 websocketStreamsServer.publisher(
                         "numbers",
+                        ServerWebSocketOptions.instance(),
                         Integer.class,
                         Flux.fromIterable(source));
 
                 // When
+                URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
                 List<Integer> result = websocketStreamsClientClient.subscribe(
-                                ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
+                                serverUri,ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
                         )
                         .<Integer>handle((v, s) -> {
                             if (v == 10)
@@ -131,7 +133,6 @@ public class SubscribePublisherWebSocketTest {
                             else
                                 s.next(v);
                         })
-                        .contextWrite(webSocketContext)
                         .toStream().toList();
 
                 // Then
@@ -152,6 +153,7 @@ public class SubscribePublisherWebSocketTest {
 
                 websocketStreamsServer.publisher(
                         "numbers",
+                        ServerWebSocketOptions.instance(),
                         Integer.class,
                         Flux.fromStream(IntStream.range(0, 20).boxed()).handle((v, s) ->
                         {
@@ -163,10 +165,10 @@ public class SubscribePublisherWebSocketTest {
 
                 // When
                 try {
+                    URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
                     websocketStreamsClientClient.subscribe(
-                                    ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
+                                    serverUri, ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
                             )
-                            .contextWrite(webSocketContext)
                             .toStream().toList();
                     Assertions.fail();
                 } catch (ServerStreamException e) {
@@ -198,16 +200,17 @@ public class SubscribePublisherWebSocketTest {
                 // When
                 websocketStreamsServer.publisher(
                         "numbers",
+                        ServerWebSocketOptions.instance(),
                         Integer.class,
                         Sinks.many().unicast().<Integer>onBackpressureBuffer().asFlux());
 
                 // Then
                 Assertions.assertThrows(IdleTimeoutStreamException.class, () ->
                 {
+                    URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
                     List<Integer> result = websocketStreamsClientClient.subscribe(
-                                    ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
+                                    serverUri, ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
                             )
-                            .contextWrite(webSocketContext)
                             .toStream().toList();
                 });
             }
@@ -233,6 +236,7 @@ public class SubscribePublisherWebSocketTest {
 
                 websocketStreamsServer.publisher(
                         "numbers",
+                        ServerWebSocketOptions.instance(),
                         Integer.class,
                         Sinks.many().unicast().<Integer>onBackpressureBuffer().asFlux());
 
@@ -241,10 +245,10 @@ public class SubscribePublisherWebSocketTest {
                 // Then
                 Assertions.assertThrows(IdleTimeoutStreamException.class, () ->
                 {
+                    URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
                     List<Integer> result = websocketStreamsClientClient.subscribe(
-                                    ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
+                                    serverUri, ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
                             )
-                            .contextWrite(webSocketContext)
                             .toStream().toList();
                 });
             }
@@ -273,13 +277,15 @@ public class SubscribePublisherWebSocketTest {
                 Sinks.Many<Integer> sink = Sinks.many().replay().all();
                 websocketStreamsServer.publisher(
                         "numbers",
+                        ServerWebSocketOptions.instance(),
                         Integer.class,
                         sink.asFlux());
                 IntStream.range(0, 5).boxed().forEach(sink::tryEmitNext);
 
                 // When
+                URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
                 List<Integer> result = websocketStreamsClientClient.subscribe(
-                                ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
+                                serverUri, ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
                         )
                         .doOnSubscribe(s ->
                         {
@@ -289,7 +295,6 @@ public class SubscribePublisherWebSocketTest {
                             }
                         })
                         .retry()
-                        .contextWrite(webSocketContext)
                         .toStream().toList();
 
                 // Then
@@ -327,16 +332,15 @@ public class SubscribePublisherWebSocketTest {
                 };
                 websocketStreamsServer.publisher(
                         "numbers/{foo}",
+                        ServerWebSocketOptions.instance(),
                         String.class,
                         configPublisher);
 
                 URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers/bar?param1=value1");
                 String config = websocketStreamsClientClient.subscribe(
-                                ClientWebSocketOptions.instance(), String.class, MediaType.APPLICATION_JSON
+                                serverUri, ClientWebSocketOptions.instance(), String.class, MediaType.APPLICATION_JSON
                         )
-                        .contextWrite(Context.of(
-                                ClientWebSocketStreamContext.serverUri.name(), serverUri,
-                                "client", "abc"))
+                        .contextWrite(Context.of("client", "abc"))
                         .take(1).blockFirst();
 
                 // Then

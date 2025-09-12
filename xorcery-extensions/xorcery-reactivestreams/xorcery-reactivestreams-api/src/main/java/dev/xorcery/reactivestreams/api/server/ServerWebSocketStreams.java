@@ -24,25 +24,21 @@ import java.util.function.Function;
 public interface ServerWebSocketStreams {
     <PUBLISH> Disposable publisher(
             String path,
+            ServerWebSocketOptions options,
             Class<? super PUBLISH> publishType,
             Publisher<PUBLISH> publisher)
             throws IllegalArgumentException;
 
-    <PUBLISH, RESULT> Disposable publisherWithResult(
-            String path,
-            Class<? super PUBLISH> publishType,
-            Class<? super RESULT> resultType,
-            Function<Flux<RESULT>, Publisher<PUBLISH>> publisherWithResultTransform)
-            throws IllegalArgumentException;
-
     <SUBSCRIBE> Disposable subscriber(
             String path,
+            ServerWebSocketOptions options,
             Class<? super SUBSCRIBE> subscribeType,
-            Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> subscriberTransform)
+            Function<Flux<SUBSCRIBE>, Disposable> subscriber)
             throws IllegalArgumentException;
 
     <SUBSCRIBE, RESULT> Disposable subscriberWithResult(
             String path,
+            ServerWebSocketOptions options,
             Class<? super SUBSCRIBE> subscribeType,
             Class<? super RESULT> resultType,
             Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscriberWithResultTransform)

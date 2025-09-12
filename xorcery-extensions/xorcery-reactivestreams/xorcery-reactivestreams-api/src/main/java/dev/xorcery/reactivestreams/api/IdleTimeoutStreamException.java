@@ -18,7 +18,9 @@ package dev.xorcery.reactivestreams.api;
 public class IdleTimeoutStreamException
     extends StreamException
 {
+    public static final String CONNECTION_IDLE_TIMEOUT = "Connection Idle Timeout";
+
     public IdleTimeoutStreamException() {
-        super(1001, "Connection Idle Timeout");
+        super(1001, CONNECTION_IDLE_TIMEOUT);
     }
 }

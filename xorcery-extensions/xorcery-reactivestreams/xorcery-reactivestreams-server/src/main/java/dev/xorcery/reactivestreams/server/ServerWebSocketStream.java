@@ -15,17 +15,20 @@
  */
 package dev.xorcery.reactivestreams.server;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import dev.xorcery.concurrent.SmartBatcher;
 import dev.xorcery.io.ByteBufferBackedInputStream;
 import dev.xorcery.lang.Exceptions;
 import dev.xorcery.opentelemetry.OpenTelemetryUnits;
 import dev.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
+import dev.xorcery.reactivestreams.api.client.ClientStreamException;
 import dev.xorcery.reactivestreams.api.server.NotAuthorizedStreamException;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.spi.MessageReader;
@@ -54,8 +57,10 @@ import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
+import reactor.util.context.ContextView;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -70,7 +75,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 
 import static dev.xorcery.lang.Exceptions.unwrap;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
@@ -92,9 +96,10 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     private final ServerWebSocketOptions options;
     private final MessageWriter<OUTPUT> writer;
     private final MessageReader<INPUT> reader;
-    private final Publisher<OUTPUT> publisher;
+    private final Flux<OUTPUT> outboundFlux;
     private final SmartBatcher<OUTPUT> batcher;
-    private FluxSink<INPUT> downstreamSink;
+    private FluxSink<INPUT> inboundSink;
+    private Flux<INPUT> transformedInboundFlux;
 
     private final Logger logger;
     private final Marker marker;
@@ -118,7 +123,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     private volatile boolean redundancyNotificationIssued = false;
 
     private volatile Session session;
-    private volatile reactor.util.context.Context context = reactor.util.context.Context.empty();
+    private volatile ContextView context = reactor.util.context.Context.empty();
 
     // Requests
     private final Lock sendLock = new ReentrantLock();
@@ -139,7 +144,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
             MessageWriter<OUTPUT> writer,
             MessageReader<INPUT> reader,
-            Function<Flux<INPUT>, Publisher<OUTPUT>> customizer,
+            SubProtocolHandlers<INPUT, OUTPUT> subProtocolHandler,
             Executor flushingExecutor,
 
             ByteBufferPool byteBufferPool,
@@ -164,12 +169,51 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         this.connectionCounter = connectionCounter;
         this.requestContext = requestContext;
 
-        Flux<INPUT> source = Flux.<INPUT>create(sink -> {
-            ServerWebSocketStream.this.downstreamSink = sink;
-            sink.onCancel(this::upstreamCancel);
-            sink.onDispose(() -> logger.debug("Dispose server stream"));
+        Flux<INPUT> inboundFlux = Flux.<INPUT>create(sink -> {
+            ServerWebSocketStream.this.inboundSink = sink;
+
+            // Send complete context back to client
+            context = switch (requestSubProtocol){
+                case subscriber -> reactor.util.context.Context.of(inboundSink.contextView()).putAll(context);
+                case publisher -> inboundSink.contextView();
+                case subscriberWithResult -> reactor.util.context.Context.of(inboundSink.contextView()).putAll(context);
+            };
+
+            ObjectNode serverContext = JsonNodeFactory.instance.objectNode();
+            inboundSink.contextView().forEach((k, v) ->
+            {
+                if (v instanceof String str) {
+                    serverContext.set(k.toString(), serverContext.textNode(str));
+                } else if (v instanceof Long nr) {
+                    serverContext.set(k.toString(), serverContext.numberNode(nr));
+                } else if (v instanceof Double nr) {
+                    serverContext.set(k.toString(), serverContext.numberNode(nr));
+                } else if (v instanceof Boolean bool) {
+                    serverContext.set(k.toString(), serverContext.booleanNode(bool));
+                }
+            });
+
+            try {
+                String contextJsonString = jsonMapper.writeValueAsString(serverContext);
+                session.sendText(contextJsonString, Callback.NOOP);
+                logger.debug(marker, "Sent context {}: {}", session.getRemoteSocketAddress(), contextJsonString);
+
+                sink.onRequest(this::subscriberRequested);
+                sink.onCancel(this::inboundCancel);
+                sink.onDispose(() -> logger.debug("Dispose server stream"));
+            } catch (JsonProcessingException e) {
+                throw new UncheckedIOException(e);
+            }
         });
-        this.publisher = customizer.apply(source);
+        Publisher<OUTPUT> outboundPublisher = switch (requestSubProtocol) {
+            case publisher -> subProtocolHandler.publisher();
+            case subscriber -> {
+                transformedInboundFlux = subProtocolHandler.subscriberTransform().apply(inboundFlux);
+                yield null;
+            }
+            case subscriberWithResult -> subProtocolHandler.subscriberWithResult().apply(inboundFlux);
+        };
+        this.outboundFlux = outboundPublisher instanceof Flux flux ? flux : outboundPublisher != null ? Flux.from(outboundPublisher) : null;
 
         if (writer != null) {
             this.batcher = new SmartBatcher<>(this::flush, new ArrayBlockingQueue<>(queueSize), flushingExecutor);
@@ -196,7 +240,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 .setUnit("{item}").ofLongs().build();
     }
 
-    private void upstreamCancel() {
+    private void inboundCancel() {
         sendRequests(Long.MIN_VALUE);
     }
 
@@ -209,7 +253,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     // Subscriber
     @Override
     public reactor.util.context.Context currentContext() {
-        return context;
+        return reactor.util.context.Context.of(context);
     }
 
     @Override
@@ -326,14 +370,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 batcher.close();
             }
             if (error == null) {
-                if (requestSubProtocol == ReactiveStreamSubProtocol.publisherWithResult)
-                {
-                    sendRequests(SEND_BUFFERED_REQUESTS);
-                    sendRequests(COMPLETE);
-                } else
-                {
-                    session.close(StatusCode.NORMAL, null, Callback.NOOP);
-                }
+                session.close(StatusCode.NORMAL, null, Callback.NOOP);
             } else if (session.isOpen()) {
                 hookOnError(error);
             }
@@ -344,7 +381,14 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
     protected void hookOnError(Throwable throwable) {
         if (session.isOpen()) {
             logger.error(marker, "Reactive stream error", throwable);
-            session.close(StatusCode.NORMAL, getError(throwable).toPrettyString(), Callback.NOOP);
+            switch (requestSubProtocol) {
+                case publisher, subscriberWithResult -> {
+                    session.close(StatusCode.NORMAL, getError(throwable).toPrettyString(), Callback.NOOP);
+                }
+                case subscriber -> {
+                    // Cannot happen
+                }
+            }
         }
     }
 
@@ -359,7 +403,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         session.setMaxOutgoingFrames(options.maxOutgoingFrames());
         connectionCounter.incrementAndGet();
 
-        tracer.spanBuilder("stream "+requestSubProtocol+" connected "+path)
+        tracer.spanBuilder("stream " + requestSubProtocol + " connected " + path)
                 .setParent(requestContext)
                 .setSpanKind(SpanKind.SERVER)
                 .setAllAttributes(attributes)
@@ -377,39 +421,23 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
         try {
             JsonNode json = jsonMapper.readTree(message);
-            if (json instanceof NumericNode numericNode) {
-                long requests = numericNode.asLong();
-                if (requests == COMPLETE) {
-                    if (downstreamSink != null) {
-                        upstream().request(Long.MAX_VALUE);
-                        downstreamSink.complete();
-                    }
-                } else {
-                    if (upstream() == null) {
-                        // Subscribe upstream
-                        publisher.subscribe(this);
-                    }
-                    upstream().request(requests);
-                }
-            } else if (json instanceof ObjectNode objectNode) {
+            if (json instanceof ObjectNode clientContextNode) {
                 // Add downstream context
                 Map<String, Object> contextMap = new HashMap<>();
-                for (Map.Entry<String, JsonNode> property : objectNode.properties()) {
+                for (Map.Entry<String, JsonNode> property : clientContextNode.properties()) {
                     JsonNode value = property.getValue();
                     switch (value.getNodeType()) {
                         case STRING -> contextMap.put(property.getKey(), value.asText());
                         case BOOLEAN -> contextMap.put(property.getKey(), value.asBoolean());
                         case NUMBER -> {
-                            if (value.isIntegralNumber()){
+                            if (value.isIntegralNumber()) {
                                 contextMap.put(property.getKey(), value.asLong());
                             } else {
                                 contextMap.put(property.getKey(), value.asDouble());
                             }
                         }
-                        case OBJECT ->
-                            contextMap.put(property.getKey(), jsonMapper.treeToValue(value, Map.class));
-                        case ARRAY ->
-                            contextMap.put(property.getKey(), jsonMapper.treeToValue(value, List.class));
+                        case OBJECT -> contextMap.put(property.getKey(), jsonMapper.treeToValue(value, Map.class));
+                        case ARRAY -> contextMap.put(property.getKey(), jsonMapper.treeToValue(value, List.class));
                     }
                 }
 
@@ -425,38 +453,30 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 context = reactor.util.context.Context.of(contextMap);
 
                 // Subscribe upstream
-                publisher.subscribe(this);
-
-                if (reader != null) {
-                    // Send complete context back to client
-                    downstreamSink.contextView().forEach((k, v) ->
-                    {
-                        if (v instanceof String str) {
-                            objectNode.set(k.toString(), objectNode.textNode(str));
-                        } else if (v instanceof Long nr) {
-                            objectNode.set(k.toString(), objectNode.numberNode(nr));
-                        } else if (v instanceof Double nr) {
-                            objectNode.set(k.toString(), objectNode.numberNode(nr));
-                        } else if (v instanceof Boolean bool) {
-                            objectNode.set(k.toString(), objectNode.booleanNode(bool));
-                        }
-                    });
-
-                    String contextJsonString = jsonMapper.writeValueAsString(objectNode);
-                    session.sendText(contextJsonString, Callback.NOOP);
-                    logger.debug(marker, "Sent context {}: {}", session.getRemoteSocketAddress(), contextJsonString);
-
-                    context = reactor.util.context.Context.of(downstreamSink.contextView());
-
-                    downstreamSink.onRequest(this::subscriberRequested);
+                if (outboundFlux != null) {
+                    outboundFlux.subscribe(this);
                 }
+                if (transformedInboundFlux != null) {
+                }
+            } else if (json instanceof NumericNode numericNode) {
+                long requests = numericNode.asLong();
+                if (requests == COMPLETE) {
+                    if (inboundSink != null) {
+                        upstream().request(Long.MAX_VALUE);
+                        inboundSink.complete();
+                    }
+                } else {
+                    upstream().request(requests);
+                }
+            } else if (json instanceof TextNode errorNode) {
+                inboundSink.error(new ClientStreamException(1001, errorNode.asText()));
             } else {
-                logger.error("Unknown JSON type:"+json+"("+message+")");
+                logger.error("Unknown JSON type:" + json + "(" + message + ")");
             }
         } catch (Throwable e) {
             logger.error("onWebSocketText error", e);
-            if (downstreamSink != null)
-                downstreamSink.error(e);
+            if (inboundSink != null)
+                inboundSink.error(e);
         }
     }
 
@@ -478,7 +498,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                     receivedBytes.record(byteBuffer.limit(), attributes);
                     itemReceivedSizes.record(byteBuffer.limit(), attributes);
                     INPUT event = reader.readFrom(new ByteBufferBackedInputStream(byteBuffer));
-                    downstreamSink.next(event);
+                    inboundSink.next(event);
                     outstandingRequests.decrementAndGet();
                 } else {
                     int count = 0;
@@ -488,7 +508,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                         ByteBuffer itemByteBuffer = byteBuffer.slice(byteBuffer.position(), length);
                         INPUT event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
                         byteBuffer.position(byteBuffer.position() + length);
-                        downstreamSink.next(event);
+                        inboundSink.next(event);
                         count++;
                         itemReceivedSizes.record(length, attributes);
                     }
@@ -500,8 +520,8 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
                 logger.error("Could not receive value", e);
                 if (upstream() != null)
                     upstream().cancel();
-                if (downstreamSink != null)
-                    downstreamSink.error(e);
+                if (inboundSink != null)
+                    inboundSink.error(e);
                 callback.fail(e);
             }
         }
@@ -527,7 +547,7 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
             if (upstream != null)
                 upstream.cancel();
         } finally {
-            tracer.spanBuilder("stream "+requestSubProtocol+" disconnected "+path)
+            tracer.spanBuilder("stream " + requestSubProtocol + " disconnected " + path)
                     .setParent(requestContext)
                     .setSpanKind(SpanKind.SERVER)
                     .setAllAttributes(attributes)
@@ -562,44 +582,60 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
 
         sendLock.lock();
         try {
-            long rn = n;
-            if (n == SEND_BUFFERED_REQUESTS) {
-                rn = requests.get();
-                // TODO: There is something wrong with the logic here, need to figure out exactly what
-                if (rn >= sendRequestsThreshold && outstandingRequests.get() < sendRequestsThreshold) {
-                    requests.addAndGet(-sendRequestsThreshold);
-                    rn = sendRequestsThreshold;
-                    outstandingRequests.addAndGet(rn);
-                } else {
-                    return;
-                }
-            } else if (n == COMPLETE) {
-                rn = n;
-            }else {
-                rn = requests.addAndGet(n);
-
-                if (sendRequestsThreshold == 0) {
-                    sendRequestsThreshold = Math.max(1, (rn * 3) / 4);
-                } else {
-                    if (rn < sendRequestsThreshold) {
-                        return; // Wait until we have more requests lined up
-                    } else {
-                        requests.addAndGet(-sendRequestsThreshold);
-                        rn = sendRequestsThreshold;
-                    }
-                }
-                outstandingRequests.addAndGet(rn);
+            if (n == CANCEL) {
+                // Handle cancellation
+                session.sendText(Long.toString(CANCEL), Callback.NOOP);
+                return;
             }
 
-            String requestString = Long.toString(rn);
-            session.sendText(requestString, Callback.NOOP);
+            if (n == COMPLETE) {
+                // Handle completion
+                session.sendText(Long.toString(COMPLETE), Callback.NOOP);
+                return;
+            }
 
-            if (logger.isTraceEnabled())
-                logger.trace(marker, "sendRequest {}",
-                        rn == COMPLETE ? "COMPLETE"
-                                : rn);
+            if (n == SEND_BUFFERED_REQUESTS) {
+                // Try to send buffered requests if we have capacity
+                sendBufferedRequestsIfPossible();
+                return;
+            }
+
+            // Add new requests to buffer
+            long totalBufferedRequests = requests.addAndGet(n);
+
+            // Initialize threshold on first request if not set
+            if (sendRequestsThreshold == 0) {
+                sendRequestsThreshold = Math.max(1, (totalBufferedRequests * 3) / 4);
+            }
+
+            // Try to send buffered requests if we have enough and capacity
+            sendBufferedRequestsIfPossible();
         } finally {
             sendLock.unlock();
+        }
+    }
+
+    private void sendBufferedRequestsIfPossible() {
+        long bufferedRequests = requests.get();
+        long outstanding = outstandingRequests.get();
+
+        // Only send if we have enough buffered requests and outstanding is below threshold
+        if (bufferedRequests >= sendRequestsThreshold && outstanding < sendRequestsThreshold) {
+            long toSend = Math.min(sendRequestsThreshold, bufferedRequests);
+
+            // Atomically update both counters
+            if (requests.compareAndSet(bufferedRequests, bufferedRequests - toSend)) {
+                outstandingRequests.addAndGet(toSend);
+
+                // Send the request over the network
+                session.sendText(Long.toString(toSend), Callback.NOOP);
+
+                if (logger.isTraceEnabled()) {
+                    logger.trace(marker, "sendRequest {} (buffered: {}, outstanding: {})",
+                            toSend, requests.get(), outstandingRequests.get());
+                }
+            }
+            // If CAS failed, another thread updated requests, so we'll try again on next call
         }
     }
 

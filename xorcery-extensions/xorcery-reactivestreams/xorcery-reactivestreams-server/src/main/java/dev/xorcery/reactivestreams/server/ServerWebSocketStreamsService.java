@@ -42,6 +42,7 @@ import org.eclipse.jetty.http.pathmap.UriTemplatePathSpec;
 import org.eclipse.jetty.io.ArrayByteBufferPool;
 import org.eclipse.jetty.io.ByteBufferPool;
 import org.eclipse.jetty.util.Callback;
+import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.server.ServerUpgradeRequest;
 import org.eclipse.jetty.websocket.server.ServerUpgradeResponse;
 import org.eclipse.jetty.websocket.server.WebSocketCreator;
@@ -93,7 +94,7 @@ public class ServerWebSocketStreamsService
     private final ExecutorService flushingExecutors = Executors.newCachedThreadPool(new NamedThreadFactory("reactivestreams-server-flusher-"));
 
     // Path -> Subprotocol -> handler
-    private final Map<String, Map<ReactiveStreamSubProtocol, WebSocketHandler>> pathHandlers = new ConcurrentHashMap<>();
+    private final Map<String, Map<ReactiveStreamSubProtocol, ServerSubProtocol>> pathHandlers = new ConcurrentHashMap<>();
     private final Set<String> mappedPaths = new CopyOnWriteArraySet<>();
 
     private final TextMapPropagator textMapPropagator;
@@ -133,36 +134,34 @@ public class ServerWebSocketStreamsService
     }
 
     @Override
-    public <PUBLISH> Disposable publisher(String path, Class<? super PUBLISH> publishType, Publisher<PUBLISH> publisher) throws IllegalArgumentException {
-
-        return registerHandler(ReactiveStreamSubProtocol.publisher, path, null, publishType, flux -> Flux.from(publisher));
+    public <PUBLISH> Disposable publisher(String path, ServerWebSocketOptions options, Class<? super PUBLISH> publishType, Publisher<PUBLISH> publisher) throws IllegalArgumentException {
+        return this.registerHandler(path, ReactiveStreamSubProtocol.publisher, new ServerPublisherSubProtocol<>(publishType, publisher, this));
     }
 
     @Override
-    public <PUBLISH, RESULT> Disposable publisherWithResult(String path, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Function<Flux<RESULT>, Publisher<PUBLISH>> publisherWithResultTransform) throws IllegalArgumentException {
-        return registerHandler(ReactiveStreamSubProtocol.publisherWithResult, path, resultType, publishType, publisherWithResultTransform);
+    public <SUBSCRIBE> Disposable subscriber(String path, ServerWebSocketOptions options, Class<? super SUBSCRIBE> subscribeType, Function<Flux<SUBSCRIBE>, Disposable> subscriber) throws IllegalArgumentException {
+        return registerHandler(path, ReactiveStreamSubProtocol.subscriber, new ServerSubscriberSubProtocol<>(options, subscribeType, subscriber, this));
     }
 
     @Override
-    public <SUBSCRIBE> Disposable subscriber(String path, Class<? super SUBSCRIBE> subscribeType, Function<Flux<SUBSCRIBE>, Publisher<SUBSCRIBE>> appendSubscriber) throws IllegalArgumentException {
-        return registerHandler(ReactiveStreamSubProtocol.subscriber, path, subscribeType, null, appendSubscriber);
+    public <SUBSCRIBE, RESULT> Disposable subscriberWithResult(String path, ServerWebSocketOptions options, Class<? super SUBSCRIBE> subscribeType, Class<? super RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscriberWithResultTransform) throws IllegalArgumentException {
+        return this.registerHandler(path, ReactiveStreamSubProtocol.subscriberWithResult, new ServerSubscriberWithResultSubProtocol<>(subscribeType, resultType, subscriberWithResultTransform, this));
     }
 
-    @Override
-    public <SUBSCRIBE, RESULT> Disposable subscriberWithResult(String path, Class<? super SUBSCRIBE> subscribeType, Class<? super RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult) throws IllegalArgumentException {
-        return registerHandler(ReactiveStreamSubProtocol.subscriberWithResult, path, subscribeType, resultType, subscribeAndReturnResult);
-    }
-
-    private <INPUT, OUTPUT> Disposable registerHandler(ReactiveStreamSubProtocol subProtocol, String path, Class<?> readerType, Class<?> writerType, Function<Flux<INPUT>, Publisher<OUTPUT>> handler) {
+    private Disposable registerHandler(
+            String path,
+            ReactiveStreamSubProtocol subProtocol,
+            ServerSubProtocol serverSubProtocol
+    ) {
 
         if (!path.contains("|") && !path.startsWith("/")) {
             path = "/" + path;
         }
 
-        Map<ReactiveStreamSubProtocol, WebSocketHandler> subProtocolHandlers = pathHandlers.computeIfAbsent(path, p -> new ConcurrentHashMap<>());
+        Map<ReactiveStreamSubProtocol, ServerSubProtocol> subProtocolHandlers = pathHandlers.computeIfAbsent(path, p -> new ConcurrentHashMap<>());
 
-        if (subProtocolHandlers.containsKey(subProtocol))
-            throw new IllegalArgumentException("Handler for " + path + " and subprotocol " + subProtocol + " already exists");
+        if (subProtocolHandlers.containsKey(serverSubProtocol))
+            throw new IllegalArgumentException("Handler for " + path + " and subprotocol " + serverSubProtocol + " already exists");
 
         // Only register once for each path
         if (mappedPaths.add(path)) {
@@ -170,15 +169,72 @@ public class ServerWebSocketStreamsService
             webSocketUpgradeHandler.getServerWebSocketContainer().addMapping("uri-template|" + path, webSocketCreator);
         }
 
-        subProtocolHandlers.put(subProtocol, new WebSocketHandler(subProtocol, readerType, writerType, (Function) handler));
+        subProtocolHandlers.put(subProtocol, serverSubProtocol);
 
-        return () -> subProtocolHandlers.remove(subProtocol);
+        return () -> {
+            ServerSubProtocol removedSubProtocol = subProtocolHandlers.remove(subProtocol);
+            if (removedSubProtocol != null) {
+                removedSubProtocol.close();
+            }
+        };
     }
 
-    record WebSocketHandler(ReactiveStreamSubProtocol subProtocol,
-                            Class<?> readerType,
-                            Class<?> writerType,
-                            Function<Flux<Object>, Publisher<Object>> handler) {
+    MessageWriter<Object> getWriter(Class<?> type, ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse) {
+        List<String> availableWriteContentTypes = Collections.emptyList();
+        HttpField acceptField = serverUpgradeRequest.getHeaders().getField(HttpHeader.ACCEPT);
+        if (acceptField != null) {
+            availableWriteContentTypes = acceptField.getValueList();
+        }
+
+        for (String contentType : availableWriteContentTypes) {
+
+            MessageWriter<Object> writer = messageWorkers.newWriter(type, type, contentType);
+            if (writer != null) {
+                serverUpgradeResponse.getHeaders().add(HttpHeader.CONTENT_TYPE, contentType);
+                return writer;
+            }
+        }
+
+        // No content type handlers found
+        serverUpgradeResponse.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
+        return null;
+    }
+
+    MessageReader<Object> getReader(Class<?> type, ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse) {
+        List<String> availableReadContentTypes = Collections.emptyList();
+        HttpField contentTypeField = serverUpgradeRequest.getHeaders().getField(HttpHeader.CONTENT_TYPE);
+        if (contentTypeField != null) {
+            availableReadContentTypes = contentTypeField.getValueList();
+        }
+
+        for (String contentType : availableReadContentTypes) {
+
+            MessageReader<Object> reader = messageWorkers.newReader(type, type, contentType);
+            if (reader != null) {
+                serverUpgradeResponse.getHeaders().add(HttpHeader.ACCEPT, contentType);
+                return reader;
+            }
+        }
+
+        // No content type handlers found
+        serverUpgradeResponse.setStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE_415);
+        return null;
+    }
+
+    AtomicLong getConnectionCounter() {
+        return connectionCounter;
+    }
+
+    public LoggerContext getLoggerContext() {
+        return loggerContext;
+    }
+
+    public Meter getMeter() {
+        return meter;
+    }
+
+    public Tracer getTracer() {
+        return tracer;
     }
 
     class StreamWebSocketCreator
@@ -188,15 +244,12 @@ public class ServerWebSocketStreamsService
         public Object createWebSocket(ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse, Callback callback) {
             // Check if this is just a load balancer check
             String loadBalancing = serverUpgradeRequest.getHeaders().get("Xorcery-LoadBalancing");
-            if (loadBalancing != null)
-            {
+            if (loadBalancing != null) {
                 List<String> response = new ArrayList<>();
                 for (String loadBalancingType : loadBalancing.split(",")) {
-                    switch (loadBalancingType)
-                    {
-                        case "connections":
-                        {
-                            response.add("connections="+connectionCounter.get());
+                    switch (loadBalancingType) {
+                        case "connections": {
+                            response.add("connections=" + connectionCounter.get());
                             break;
                         }
                     }
@@ -220,7 +273,7 @@ public class ServerWebSocketStreamsService
                 String path = serverUpgradeRequest.getHttpURI().getPath();
 
                 Map<String, String> pathParameters = Collections.emptyMap();
-                Map<ReactiveStreamSubProtocol, WebSocketHandler> subProtocolHandlers;
+                Map<ReactiveStreamSubProtocol, ServerSubProtocol> subProtocolHandlers;
                 if (serverUpgradeRequest.getAttribute(PathSpec.class.getName()) instanceof UriTemplatePathSpec pathSpec) {
                     pathParameters = pathSpec.getPathParams(path);
                     String factoryPath = pathSpec.getDeclaration();
@@ -230,39 +283,40 @@ public class ServerWebSocketStreamsService
                 }
                 if (subProtocolHandlers == null)
                     continue;
-                WebSocketHandler subProtocolHandler = subProtocolHandlers.get(requestSubProtocol);
-                if (subProtocolHandler == null)
+                ServerSubProtocol serverSubProtocol = subProtocolHandlers.get(requestSubProtocol);
+                if (serverSubProtocol == null)
                     continue;
 
+/*
                 // Content type negotiation for both read (Content-Type header) and write (Accept header)
                 MessageReader<Object> reader = null;
                 MessageWriter<Object> writer = null;
                 switch (requestSubProtocol) {
                     case publisher -> {
-                        writer = getWriter(subProtocolHandler.writerType(), serverUpgradeRequest, serverUpgradeResponse);
+                        writer = getWriter(serverSubProtocol.writerType(), serverUpgradeRequest, serverUpgradeResponse);
                         if (writer == null)
                             return null;
                     }
                     case subscriber -> {
-                        reader = getReader(subProtocolHandler.readerType(), serverUpgradeRequest, serverUpgradeResponse);
+                        reader = getReader(serverSubProtocol.readerType(), serverUpgradeRequest, serverUpgradeResponse);
                         if (reader == null)
                             return null;
                     }
-                    case subscriberWithResult,publisherWithResult -> {
-                        reader = getReader(subProtocolHandler.readerType(), serverUpgradeRequest, serverUpgradeResponse);
+                    case subscriberWithResult -> {
+                        reader = getReader(serverSubProtocol.readerType(), serverUpgradeRequest, serverUpgradeResponse);
                         if (reader == null)
                             return null;
-                        writer = getWriter(subProtocolHandler.writerType(), serverUpgradeRequest, serverUpgradeResponse);
+                        writer = getWriter(serverSubProtocol.writerType(), serverUpgradeRequest, serverUpgradeResponse);
                         if (writer == null)
                             return null;
 
                     }
                 }
+*/
 
                 Context context = textMapPropagator.extract(Context.current(), serverUpgradeRequest, jettyGetter);
-                Function<Flux<Object>, Publisher<Object>> handler = subProtocolHandler.handler();
                 serverUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol.name());
-                serverUpgradeResponse.getHeaders().add("Aggregate", "maxBinaryMessageSize="+webSocketUpgradeHandler.getServerWebSocketContainer().getMaxBinaryMessageSize());
+                serverUpgradeResponse.getHeaders().add("Aggregate", "maxBinaryMessageSize=" + webSocketUpgradeHandler.getServerWebSocketContainer().getMaxBinaryMessageSize());
 
                 // Aggregate header for batching support
                 int clientMaxBinaryMessageSize = Optional.ofNullable(serverUpgradeRequest.getHeaders().get("Aggregate")).map(header ->
@@ -280,14 +334,21 @@ public class ServerWebSocketStreamsService
                         ? isa.getHostName()
                         : serverUpgradeRequest.getConnectionMetaData().getRemoteSocketAddress().toString();
 
-                return new ServerWebSocketStream<>(
+                Session.Listener.AutoDemanding socketProtocolHandler = serverSubProtocol.createSubProtocolHandler(
+                        serverUpgradeRequest,
+                        serverUpgradeResponse,
+                        clientHost,
                         path,
                         pathParameters,
-                        requestSubProtocol,
+                        clientMaxBinaryMessageSize,
+                        context);
+                return socketProtocolHandler;
+/*
+                return                 new ServerWebSocketStream<>(
+                        path,
+                        pathParameters,
                         ServerWebSocketOptions.instance(),
-                        writer,
-                        reader,
-                        handler,
+                        serverSubProtocol,
                         flushingExecutors,
                         byteBufferPool,
                         clientMaxBinaryMessageSize,
@@ -298,52 +359,12 @@ public class ServerWebSocketStreamsService
                         clientHost,
                         context
                 );
+*/
+
             }
 
             // No protocols or handlers found matching this request
             serverUpgradeResponse.setStatus(HttpStatus.NOT_FOUND_404);
-            return null;
-        }
-
-        private MessageWriter<Object> getWriter(Class<?> type, ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse) {
-            List<String> availableWriteContentTypes = Collections.emptyList();
-            HttpField acceptField = serverUpgradeRequest.getHeaders().getField(HttpHeader.ACCEPT);
-            if (acceptField != null) {
-                availableWriteContentTypes = acceptField.getValueList();
-            }
-
-            for (String contentType : availableWriteContentTypes) {
-
-                MessageWriter<Object> writer = messageWorkers.newWriter(type, type, contentType);
-                if (writer != null) {
-                    serverUpgradeResponse.getHeaders().add(HttpHeader.CONTENT_TYPE, contentType);
-                    return writer;
-                }
-            }
-
-            // No content type handlers found
-            serverUpgradeResponse.setStatus(HttpStatus.NOT_ACCEPTABLE_406);
-            return null;
-        }
-
-        private MessageReader<Object> getReader(Class<?> type, ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse) {
-            List<String> availableReadContentTypes = Collections.emptyList();
-            HttpField contentTypeField = serverUpgradeRequest.getHeaders().getField(HttpHeader.CONTENT_TYPE);
-            if (contentTypeField != null) {
-                availableReadContentTypes = contentTypeField.getValueList();
-            }
-
-            for (String contentType : availableReadContentTypes) {
-
-                MessageReader<Object> reader = messageWorkers.newReader(type, type, contentType);
-                if (reader != null) {
-                    serverUpgradeResponse.getHeaders().add(HttpHeader.ACCEPT, contentType);
-                    return reader;
-                }
-            }
-
-            // No content type handlers found
-            serverUpgradeResponse.setStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE_415);
             return null;
         }
     }
