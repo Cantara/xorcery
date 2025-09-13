@@ -28,6 +28,7 @@ import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import dev.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.websocket.api.StatusCode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import reactor.core.CoreSubscriber;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.context.Context;
 import reactor.util.retry.Retry;
 
@@ -104,8 +106,10 @@ public class PublishWithResultSubscriberWebSocketTest {
 
                 // When
                 URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
-                List<Integer> source = IntStream.range(0, 100).boxed().toList();
+                List<Integer> source = IntStream.range(0, 1000).boxed().toList();
                 List<Integer> result = websocketStreamsClientClient.publishWithResult(Flux.fromIterable(source), serverUri, instance(), Integer.class, Integer.class)
+                        .publishOn(Schedulers.immediate(), 256)
+                        .contextWrite(Context.of("foo", "bar"))
                         .toStream().toList();
 
                 // Then
@@ -147,7 +151,7 @@ public class PublishWithResultSubscriberWebSocketTest {
                 logger.info("Emitted: " + publisher.tryEmitNext(42));
                 latch.await(10, TimeUnit.SECONDS);
                 subscription.dispose();
-                logger.info("Disposed");
+                logger.info("Subscription cancelled");
                 cancelled.await(10, TimeUnit.SECONDS);
 
                 // Then
@@ -157,7 +161,7 @@ public class PublishWithResultSubscriberWebSocketTest {
     }
 
     @Test
-    public void subscriberException() throws Exception {
+    public void serverSubscriberException() throws Exception {
 
         // Given
         try (Xorcery server = new Xorcery(serverConfiguration)) {
@@ -182,12 +186,100 @@ public class PublishWithResultSubscriberWebSocketTest {
                 // Then
                 try {
                     URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
-                    List<Integer> source = IntStream.range(0, 100).boxed().toList();
-                    websocketStreamsClientClient.publishWithResult(Flux.fromIterable(source), serverUri, instance(), Integer.class, Integer.class)
+                    Sinks.Many<Integer> publisher = Sinks.many().unicast().onBackpressureBuffer(new ArrayBlockingQueue<>(1024));
+                    for (int i = 0; i < 20; i++) {
+                        publisher.tryEmitNext(i);
+                    }
+                    websocketStreamsClientClient.publishWithResult(publisher.asFlux(), serverUri, instance(), Integer.class, Integer.class)
                             .toStream().toList();
                     Assertions.fail();
                 } catch (ServerStreamException e) {
-                    Assertions.assertEquals(500, e.getStatus());
+                    Assertions.assertEquals(StatusCode.NORMAL, e.getStatus());
+                    Assertions.assertEquals("Break", e.getMessage());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void clientPublisherException() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
+
+                websocketStreamsServer.subscriberWithResult(
+                        "numbers",
+                        ServerWebSocketOptions.instance(),
+                        Integer.class,
+                        Integer.class,
+                        upstream -> upstream.map(v -> v));
+
+                // Then
+                try {
+                    URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
+                    Sinks.Many<Integer> publisher = Sinks.many().unicast().onBackpressureBuffer(new ArrayBlockingQueue<>(1024));
+                    for (int i = 0; i < 20; i++) {
+                        publisher.tryEmitNext(i);
+                    }
+                    websocketStreamsClientClient.publishWithResult(publisher.asFlux().handle((v, s) ->
+                            {
+                                if (v == 10)
+                                    s.error(new IllegalArgumentException("Break"));
+                                else
+                                    s.next(v);
+                            }), serverUri, instance(), Integer.class, Integer.class)
+                            .toStream().toList();
+                    Assertions.fail();
+                } catch (ServerStreamException e) {
+                    Assertions.assertEquals(StatusCode.NORMAL, e.getStatus());
+                    Assertions.assertEquals("Break", e.getMessage());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void clientSubscriberException() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
+                CountDownLatch terminateLatch = new CountDownLatch(1);
+                websocketStreamsServer.subscriberWithResult(
+                        "numbers",
+                        ServerWebSocketOptions.instance(),
+                        Integer.class,
+                        Integer.class,
+                        upstream -> upstream.map(v -> v));
+
+                // Then
+                try {
+                    URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
+                    Sinks.Many<Integer> publisher = Sinks.many().unicast().onBackpressureBuffer(new ArrayBlockingQueue<>(1024));
+                    for (int i = 0; i < 20; i++) {
+                        publisher.tryEmitNext(i);
+                    }
+                    websocketStreamsClientClient.publishWithResult(publisher.asFlux().doOnCancel(terminateLatch::countDown), serverUri, instance(), Integer.class, Integer.class)
+                            .handle((v, s) ->
+                            {
+                                if (v == 10){
+                                    logger.debug("Error");
+                                    s.error(new IllegalArgumentException("Break"));
+                                }
+                                else
+                                    s.next(v);
+                            })
+                            .toStream().toList();
+                    Assertions.fail();
+                } catch (IllegalArgumentException e) {
+                    terminateLatch.await();
                     Assertions.assertEquals("Break", e.getMessage());
                 }
             }

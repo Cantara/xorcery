@@ -639,16 +639,4 @@ public class ServerWebSocketStream<OUTPUT, INPUT>
         }
     }
 
-    public record ReleaseCallback(RetainableByteBuffer byteBuffer)
-            implements Callback {
-        @Override
-        public void succeed() {
-            byteBuffer.release();
-        }
-
-        @Override
-        public void fail(Throwable x) {
-            byteBuffer.release();
-        }
-    }
 }

@@ -26,4 +26,5 @@ open module xorcery.reactivestreams.server.test {
     requires jakarta.ws.rs;
     requires org.glassfish.hk2.api;
     requires reactor.test;
+    requires org.eclipse.jetty.websocket.api;
 }

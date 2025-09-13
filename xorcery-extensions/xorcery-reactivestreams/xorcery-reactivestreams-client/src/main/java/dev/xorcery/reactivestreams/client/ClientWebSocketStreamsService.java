@@ -118,61 +118,41 @@ public class ClientWebSocketStreamsService
                 textMapPropagator,
                 loggerContext.getLogger(ClientSubscriberSubProtocolHandler.class));
         return result;
-/*
-
-        return flux -> new ClientWebSocketStream<>(
-                getServerUri(sink.contextView()),
-                ReactiveStreamSubProtocol.subscriber,
-                availableContentTypes, null,
-                publishType,
-                null,
-                messageWorkers,
-                flux,
-                null,
-                options,
-                dnsLookup,
-                webSocketClient,
-                flushingExecutors,
-                host,
-                byteBufferPool,
-                meter,
-                tracer,
-                textMapPropagator,
-                loggerContext.getLogger(ClientWebSocketStream.class)));
-*/
     }
 
     @Override
     public <PUBLISH, RESULT> Flux<RESULT> publishWithResult(Flux<PUBLISH> publisher, URI serverURI, ClientWebSocketOptions options, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Collection<String> messageContentTypes, Collection<String> resultContentTypes) {
-        Collection<String> availableContentTypes = messageWorkers.getAvailableWriteContentTypes(publishType, messageContentTypes);
-        if (availableContentTypes.isEmpty()) {
+        Collection<String> writeTypes = messageWorkers.getAvailableWriteContentTypes(publishType, messageContentTypes);
+        if (writeTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
         }
-        Collection<String> availableResultContentTypes = messageWorkers.getAvailableReadContentTypes(resultType, resultContentTypes);
-        if (availableResultContentTypes.isEmpty()) {
+        Collection<String> readTypes = messageWorkers.getAvailableReadContentTypes(resultType, resultContentTypes);
+        if (readTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
         }
-        return null;
-/*
-        return flux -> Flux.create(sink -> new ClientWebSocketStream<>(
-                getServerUri(sink.contextView()),
-                ReactiveStreamSubProtocol.subscriberWithResult,
-                availableContentTypes, availableResultContentTypes,
-                publishType, resultType,
-                messageWorkers,
-                () -> flux,
-                sink,
-                options,
-                dnsLookup,
-                webSocketClient,
-                flushingExecutors,
-                host,
-                byteBufferPool,
-                meter,
-                tracer,
-                textMapPropagator,
-                loggerContext.getLogger(ClientWebSocketStream.class)));
-*/
+        return Flux.create(inboundSink ->{
+            new ClientSubscriberWithResultSubProtocolHandler(
+                    publisher,
+                    serverURI,
+                    inboundSink,
+                    options,
+                    publishType,
+                    resultType,
+                    writeTypes,
+                    readTypes,
+                    messageWorkers,
+                    dnsLookup,
+                    webSocketClient,
+                    flushingExecutors,
+                    host,
+                    byteBufferPool,
+                    meter,
+                    tracer,
+                    textMapPropagator,
+                    loggerContext.getLogger(ClientSubscriberWithResultSubProtocolHandler.class));
+
+
+        });
     }
 
     @Override

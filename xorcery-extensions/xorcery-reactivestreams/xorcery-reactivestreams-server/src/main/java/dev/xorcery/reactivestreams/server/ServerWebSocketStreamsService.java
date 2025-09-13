@@ -145,7 +145,7 @@ public class ServerWebSocketStreamsService
 
     @Override
     public <SUBSCRIBE, RESULT> Disposable subscriberWithResult(String path, ServerWebSocketOptions options, Class<? super SUBSCRIBE> subscribeType, Class<? super RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscriberWithResultTransform) throws IllegalArgumentException {
-        return this.registerHandler(path, ReactiveStreamSubProtocol.subscriberWithResult, new ServerSubscriberWithResultSubProtocol<>(subscribeType, resultType, subscriberWithResultTransform, this));
+        return this.registerHandler(path, ReactiveStreamSubProtocol.subscriberWithResult, new ServerSubscriberWithResultSubProtocol<>(options, subscribeType, resultType, subscriberWithResultTransform, this));
     }
 
     private Disposable registerHandler(
@@ -235,6 +235,14 @@ public class ServerWebSocketStreamsService
 
     public Tracer getTracer() {
         return tracer;
+    }
+
+    public ExecutorService getFlushingExecutors() {
+        return flushingExecutors;
+    }
+
+    public ByteBufferPool getByteBufferPool() {
+        return byteBufferPool;
     }
 
     class StreamWebSocketCreator

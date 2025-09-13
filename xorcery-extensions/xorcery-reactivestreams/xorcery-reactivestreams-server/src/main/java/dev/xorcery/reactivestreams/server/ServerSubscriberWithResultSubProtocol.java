@@ -1,6 +1,12 @@
 package dev.xorcery.reactivestreams.server;
 
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
+import dev.xorcery.reactivestreams.spi.MessageReader;
+import dev.xorcery.reactivestreams.spi.MessageWriter;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.server.ServerUpgradeRequest;
 import org.eclipse.jetty.websocket.server.ServerUpgradeResponse;
@@ -10,13 +16,22 @@ import reactor.core.publisher.Flux;
 import java.util.Map;
 import java.util.function.Function;
 
+import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.XORCERY_MESSAGING_SYSTEM;
+
 public class ServerSubscriberWithResultSubProtocol<SUBSCRIBE, RESULT> implements ServerSubProtocol {
+    private final ServerWebSocketOptions options;
     private final Class<? super SUBSCRIBE> subscribeType;
     private final Class<? super RESULT> resultType;
     private final Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult;
     private final ServerWebSocketStreamsService serverWebSocketStreamsService;
 
-    public ServerSubscriberWithResultSubProtocol(Class<? super SUBSCRIBE> subscribeType, Class<? super RESULT> resultType, Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult, ServerWebSocketStreamsService serverWebSocketStreamsService) {
+    public ServerSubscriberWithResultSubProtocol(
+            ServerWebSocketOptions options,
+            Class<? super SUBSCRIBE> subscribeType,
+            Class<? super RESULT> resultType,
+            Function<Flux<SUBSCRIBE>, Publisher<RESULT>> subscribeAndReturnResult,
+            ServerWebSocketStreamsService serverWebSocketStreamsService) {
+        this.options = options;
         this.subscribeType = subscribeType;
         this.resultType = resultType;
         this.subscribeAndReturnResult = subscribeAndReturnResult;
@@ -24,8 +39,43 @@ public class ServerSubscriberWithResultSubProtocol<SUBSCRIBE, RESULT> implements
     }
 
     @Override
-    public Session.Listener.AutoDemanding createSubProtocolHandler(ServerUpgradeRequest serverUpgradeRequest, ServerUpgradeResponse serverUpgradeResponse, String clientHost, String path, Map<String, String> pathParameters, int clientMaxBinaryMessageSize, Context context) {
-        return null;
+    public Session.Listener.AutoDemanding createSubProtocolHandler(
+            ServerUpgradeRequest serverUpgradeRequest,
+            ServerUpgradeResponse serverUpgradeResponse,
+            String clientHost,
+            String path,
+            Map<String, String> pathParameters,
+            int clientMaxBinaryMessageSize,
+            Context context) {
+        MessageReader<SUBSCRIBE> reader = (MessageReader<SUBSCRIBE>) serverWebSocketStreamsService.getReader(subscribeType, serverUpgradeRequest, serverUpgradeResponse);
+        MessageWriter<RESULT> writer = (MessageWriter<RESULT>) serverWebSocketStreamsService.getWriter(resultType, serverUpgradeRequest, serverUpgradeResponse);
+        if (reader == null || writer == null)
+            return null;
+
+        Attributes attributes = Attributes.builder()
+                .put(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, path)
+                .put(MessagingIncubatingAttributes.MESSAGING_SYSTEM, XORCERY_MESSAGING_SYSTEM)
+                .put(ClientAttributes.CLIENT_ADDRESS, clientHost)
+                .build();
+
+        return new ServerSubscriberWithResultSubProtocolHandler<SUBSCRIBE, RESULT>(
+                serverWebSocketStreamsService.getConnectionCounter(),
+                options,
+                reader,
+                writer,
+                subscribeAndReturnResult,
+                path,
+                pathParameters,
+                clientMaxBinaryMessageSize,
+                serverWebSocketStreamsService.getFlushingExecutors(),
+                serverWebSocketStreamsService.getByteBufferPool(),
+                serverWebSocketStreamsService.getLoggerContext().getLogger(ServerSubscriberSubProtocolHandler.class),
+                serverWebSocketStreamsService.getTracer(),
+                serverWebSocketStreamsService.getMeter(),
+                context,
+                attributes
+        );
+
     }
 
     @Override

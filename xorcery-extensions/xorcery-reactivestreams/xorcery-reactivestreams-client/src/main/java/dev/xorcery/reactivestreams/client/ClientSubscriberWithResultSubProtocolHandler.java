@@ -1,5 +1,6 @@
 package dev.xorcery.reactivestreams.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NumericNode;
@@ -7,11 +8,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import dev.xorcery.concurrent.SmartBatcher;
 import dev.xorcery.dns.client.api.DnsLookup;
+import dev.xorcery.io.ByteBufferBackedInputStream;
 import dev.xorcery.opentelemetry.OpenTelemetryUnits;
 import dev.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import dev.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
-import dev.xorcery.reactivestreams.api.client.ClientStreamException;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
+import dev.xorcery.reactivestreams.api.server.ServerStreamException;
+import dev.xorcery.reactivestreams.spi.MessageReader;
 import dev.xorcery.reactivestreams.spi.MessageWorkers;
 import dev.xorcery.reactivestreams.spi.MessageWriter;
 import dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
@@ -43,21 +46,26 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 import org.reactivestreams.Subscription;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.FluxSink;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
 
 import static dev.xorcery.lang.Exceptions.isCausedBy;
 import static dev.xorcery.lang.Exceptions.unwrap;
-import static dev.xorcery.reactivestreams.api.IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
 
-public class ClientSubscriberSubProtocolHandler<OUTPUT>
+public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
         extends Session.Listener.AbstractAutoDemanding
         implements SubProtocolHandlerHelpers {
 
@@ -67,12 +75,14 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
     private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
             (carrier, key, value) -> carrier.setHeader(key, value);
 
+
     private final Flux<OUTPUT> publisher;
     private final URI serverUri;
-    private final CompletableFuture<Void> result;
     private final ClientWebSocketOptions options;
     private final Class<OUTPUT> outputType;
+    private final Class<INPUT> inputType;
     private final Collection<String> writeTypes;
+    private final Collection<String> readTypes;
     private final MessageWorkers messageWorkers;
     private final DnsLookup dnsLookup;
     private final WebSocketClient webSocketClient;
@@ -82,11 +92,13 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
 
     private final Logger logger;
     private final Marker marker;
-
     private final Meter meter;
     private final Tracer tracer;
     private final TextMapPropagator textMapPropagator;
     private final Attributes attributes;
+
+    private final LongHistogram receivedBytes;
+    private final LongHistogram itemReceivedSizes;
     private final LongHistogram sentBytes;
     private final LongHistogram itemSentSizes;
     private final LongHistogram requestsHistogram;
@@ -94,18 +106,23 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
 
     private Iterator<URI> uriIterator;
     private MessageWriter<OUTPUT> writer;
+    private MessageReader<INPUT> reader;
     private int serverMaxBinaryMessageSize;
     private OutboundSubscriber outboundSubscriber;
     private String serverHost;
     private String clientHost;
+    private final FluxSink<INPUT> inboundSink;
+    private Throwable error;
 
-    public ClientSubscriberSubProtocolHandler(
+    public ClientSubscriberWithResultSubProtocolHandler(
             Flux<OUTPUT> publisher,
             URI serverUri,
-            CompletableFuture<Void> result,
+            FluxSink<INPUT> inboundSink,
             ClientWebSocketOptions options,
             Class<OUTPUT> outputType,
+            Class<INPUT> inputType,
             Collection<String> writeTypes,
+            Collection<String> readTypes,
             MessageWorkers messageWorkers,
             DnsLookup dnsLookup,
             WebSocketClient webSocketClient,
@@ -118,10 +135,12 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
             Logger logger) {
         this.publisher = publisher;
         this.serverUri = serverUri;
-        this.result = result;
+        this.inboundSink = inboundSink;
+        this.inputType = inputType;
         this.options = options;
         this.outputType = outputType;
         this.writeTypes = writeTypes;
+        this.readTypes = readTypes;
         this.messageWorkers = messageWorkers;
         this.dnsLookup = dnsLookup;
         this.webSocketClient = webSocketClient;
@@ -139,6 +158,10 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                 .put(UrlAttributes.URL_FULL, serverUri.toASCIIString())
                 .put(ClientAttributes.CLIENT_ADDRESS, host)
                 .build();
+        this.receivedBytes = meter.histogramBuilder(SUBSCRIBER_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
+        this.itemReceivedSizes = meter.histogramBuilder(SUBSCRIBER_ITEM_IO)
+                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.itemSentSizes = meter.histogramBuilder(PUBLISHER_ITEM_IO)
@@ -148,23 +171,16 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
         this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
 
-        result.exceptionally(throwable -> {
-            if (throwable instanceof CancellationException) {
-                getSession().sendText(JsonNodeFactory.instance.numberNode(CANCEL).asText(), Callback.NOOP);
-            }
-            return null;
-        });
-
         try {
             start();
         } catch (CompletionException e) {
-            result.completeExceptionally(e.getCause());
+            inboundSink.error(e.getCause());
         }
     }
 
     @Override
     public ReactiveStreamSubProtocol getSubProtocol() {
-        return ReactiveStreamSubProtocol.subscriber;
+        return ReactiveStreamSubProtocol.subscriberWithResult;
     }
 
     @Override
@@ -215,8 +231,9 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                 clientUpgradeRequest.setCookies(options.cookies());
                 clientUpgradeRequest.setExtensions(options.extensions().stream().map(ExtensionConfig::parse).toList());
 
-                clientUpgradeRequest.setSubProtocols(ReactiveStreamSubProtocol.subscriber.name());
+                clientUpgradeRequest.setSubProtocols(ReactiveStreamSubProtocol.subscriberWithResult.name());
                 clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), List.copyOf(writeTypes));
+                clientUpgradeRequest.setHeader(HttpHeader.ACCEPT.asString(), List.copyOf(readTypes));
                 textMapPropagator.inject(Context.current(), clientUpgradeRequest, jettySetter);
                 return webSocketClient.connect(this, clientUpgradeRequest)
                         .thenRun(connectSpan::end).toCompletableFuture();
@@ -252,8 +269,13 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                 .end();
 
         String serverAcceptType = session.getUpgradeResponse().getHeader(HttpHeader.ACCEPT.asString());
-        if ((writer = getWriter(serverAcceptType, outputType)) == null){
-            session.close(StatusCode.SHUTDOWN, "Cannot handle Accept type:"+serverAcceptType, Callback.NOOP);
+        if ((writer = getWriter(serverAcceptType, outputType)) == null) {
+            session.close(StatusCode.SHUTDOWN, "Cannot handle Accept type:" + serverAcceptType, Callback.NOOP);
+            return;
+        }
+        String serverContentType = session.getUpgradeResponse().getHeader(HttpHeader.CONTENT_TYPE.asString());
+        if ((reader = getReader(serverAcceptType, inputType)) == null) {
+            session.close(StatusCode.SHUTDOWN, "Cannot handle Content-Type type:" + serverContentType, Callback.NOOP);
             return;
         }
 
@@ -267,6 +289,21 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
             });
             return Integer.valueOf(parameters.computeIfAbsent("maxBinaryMessageSize", k -> "-1"));
         }).orElse(-1);
+
+        // Send client subscriber context to the server subscriber
+        ObjectNode clientSubscriberContext = createClientContext(inboundSink.contextView());
+
+        try {
+            String contextJsonString = jsonMapper.writeValueAsString(clientSubscriberContext);
+            getSession().sendText(contextJsonString, Callback.NOOP);
+            logger.debug(marker, "Sent context {}: {}", getSession().getRemoteSocketAddress(), contextJsonString);
+
+        } catch (JsonProcessingException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        inboundSink.onDispose(() -> logger.debug("Dispose client stream"));
+        inboundSink.onCancel(this::inboundCancel);
     }
 
     @Override
@@ -281,12 +318,12 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                 reactor.util.context.Context context = parseContext(serverContextNode);
                 outboundSubscriber = new OutboundSubscriber();
                 publisher.contextWrite(context).subscribe(outboundSubscriber);
+                inboundSink.onRequest(this::sendRequest);
             } else if (json instanceof NumericNode numericNode) {
                 if (outboundSubscriber != null) {
                     long requests = numericNode.asLong();
                     if (requests == CANCEL) {
                         outboundSubscriber.cancel();
-                        getSession().close(StatusCode.SHUTDOWN, "cancel", Callback.NOOP);
                     } else if (requests == COMPLETE) {
                         // Cannot happen in this protocol
                         // Cannot receive context in this protocol
@@ -311,25 +348,50 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
             if (unwrap(e) instanceof EofException)
                 return;
 
-            outboundSubscriber.cancel();
+            if (outboundSubscriber != null)
+                outboundSubscriber.cancel();
+            inboundSink.error(e);
             getSession().close(StatusCode.SHUTDOWN, e.getMessage(), Callback.NOOP);
         }
     }
 
-
     @Override
     public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
-        // Cannot happen in this protocol
-        // Cannot receive items in this protocol
-        if (outboundSubscriber != null) {
-            outboundSubscriber.cancel();
+        try {
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(payload.asReadOnlyBuffer()).toString());
+            }
+
+            if (serverMaxBinaryMessageSize == -1) {
+                receivedBytes.record(payload.limit(), attributes);
+                itemReceivedSizes.record(payload.limit(), attributes);
+                INPUT event = reader.readFrom(new ByteBufferBackedInputStream(payload));
+                inboundSink.next(event);
+            } else {
+                receivedBytes.record(payload.limit(), attributes);
+                while (payload.position() != payload.limit()) {
+                    int length = payload.getInt();
+                    ByteBuffer itemByteBuffer = payload.slice(payload.position(), length);
+                    INPUT event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
+                    payload.position(payload.position() + length);
+                    inboundSink.next(event);
+                    itemReceivedSizes.record(length, attributes);
+                }
+            }
+            callback.succeed();
+        } catch (Throwable e) {
+            logger.error("Could not receive value", e);
+            inboundSink.error(e);
+            if (outboundSubscriber != null) {
+                outboundSubscriber.cancel();
+            }
+            callback.fail(e);
         }
-        getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
     }
 
     @Override
     public void onWebSocketError(Throwable throwable) {
-        result.completeExceptionally(throwable);
+        error = throwable;
 
         Throwable unwrap = unwrap(throwable);
         if (unwrap instanceof ClosedChannelException
@@ -348,24 +410,32 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
         }
 
-        // Upstream
+        // Cancel publisher
         if (outboundSubscriber != null) {
             outboundSubscriber.cancel();
         }
 
-        if (!result.isDone()) {
-            if (reason.equals("complete")) {
-                result.complete(null);
-            } else if (reason.equals("cancel")) {
-                result.cancel(true);
-            } else if (reason.equals(CONNECTION_IDLE_TIMEOUT)) {
-                result.completeExceptionally(new IdleTimeoutStreamException());
-            } else {
-                result.completeExceptionally(new ClientStreamException(statusCode, reason));
+        switch (statusCode) {
+            case StatusCode.NORMAL -> {
+                switch (reason) {
+                    case "complete" -> inboundSink.complete();
+                    default -> inboundSink.error(error != null
+                            ? new ServerStreamException(statusCode, reason, error)
+                            : new ServerStreamException(statusCode, reason));
+                }
+            }
+            default -> {
+                switch (reason) {
+                    case IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT ->
+                            inboundSink.error(new IdleTimeoutStreamException());
+                    default -> inboundSink.error(error != null
+                            ? new ServerStreamException(statusCode, reason, error)
+                            : new ServerStreamException(statusCode, reason));
+                }
             }
         }
 
-        tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.subscriber + " disconnected " + serverUri.toASCIIString())
+        tracer.spanBuilder("stream " + getSubProtocol() + " disconnected " + serverUri.toASCIIString())
                 .setSpanKind(SpanKind.CLIENT)
                 .setAllAttributes(attributes)
                 .startSpan()
@@ -374,6 +444,24 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                 .setAttribute("server", serverHost)
                 .setAttribute("client", clientHost)
                 .end();
+    }
+
+    private void inboundCancel() {
+        sendRequest(CANCEL);
+    }
+
+    // Send requests
+    protected void sendRequest(long n) {
+        Session session = getSession();
+        if (session == null || !session.isOpen())
+            return;
+
+        // Send the request over the network
+        getSession().sendText(Long.toString(n), Callback.NOOP);
+        requestsHistogram.record(n);
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "sendRequest {}", n);
+        }
     }
 
     private class OutboundSubscriber
@@ -413,14 +501,12 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
 
                     // Tell server we have a problem
                     onError(e);
-                    result.completeExceptionally(e);
                 }
             } else {
                 try {
                     batcher.submit(item);
                 } catch (InterruptedException e) {
                     onError(e);
-                    result.completeExceptionally(e);
                 }
             }
         }
@@ -493,7 +579,6 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                 flushHistogram.record(items.size(), attributes);
                 getSession().sendBinary(byteBuffer, new ReleaseCallback(sendByteBuffer));
             } catch (Throwable e) {
-                result.completeExceptionally(e);
                 logger.error("Flush failed", e);
                 onError(e);
             }
@@ -506,21 +591,19 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                     batcher.close();
                 }
                 logger.debug("Complete");
-                getSession().close(StatusCode.NORMAL, "complete", Callback.NOOP);
+                sendRequest(COMPLETE);
             }
         }
 
         @Override
         protected void hookOnError(Throwable throwable) {
 
-            result.completeExceptionally(new ClientStreamException(StatusCode.SHUTDOWN, throwable.getMessage(), throwable));
-
             if (getSession().isOpen()) {
                 if (batcher != null) {
                     batcher.close();
                 }
                 logger.debug("Error", throwable);
-                getSession().close(StatusCode.SHUTDOWN, throwable.getMessage(), Callback.NOOP);
+                getSession().sendText(JsonNodeFactory.instance.textNode(throwable.getMessage()).toString(), Callback.NOOP);
             }
         }
 

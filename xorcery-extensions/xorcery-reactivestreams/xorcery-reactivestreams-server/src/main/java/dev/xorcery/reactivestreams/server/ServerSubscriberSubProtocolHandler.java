@@ -15,6 +15,7 @@ import dev.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import dev.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import dev.xorcery.reactivestreams.api.client.ClientShutdownStreamException;
 import dev.xorcery.reactivestreams.api.client.ClientStreamException;
+import dev.xorcery.reactivestreams.api.server.ServerStreamException;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.spi.MessageReader;
 import io.opentelemetry.api.common.Attributes;
@@ -105,9 +106,9 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
         this.requestContext = requestContext;
         this.attributes = attributes;
 
-        this.receivedBytes = reader == null ? null : meter.histogramBuilder(SUBSCRIBER_IO)
+        this.receivedBytes = meter.histogramBuilder(SUBSCRIBER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.itemReceivedSizes = reader == null ? null : meter.histogramBuilder(SUBSCRIBER_ITEM_IO)
+        this.itemReceivedSizes = meter.histogramBuilder(SUBSCRIBER_ITEM_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
@@ -164,7 +165,7 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
                 throw new UncheckedIOException(e);
             }
 
-            inboundSink.onDispose(() -> logger.debug("Dispose server stream"));
+            inboundSink.onDispose(() -> logger.debug("Server stream terminated"));
             inboundSink.onCancel(this::inboundCancel);
             inboundSink.onRequest(this::sendRequest);
         });
@@ -258,21 +259,20 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
                 return;
 
             switch (statusCode) {
-                case StatusCode.NORMAL: {
-                    inboundSink.complete();
-                    break;
+                case StatusCode.NORMAL-> {
+                    switch (reason){
+                        case "complete" -> inboundSink.complete();
+                        default -> inboundSink.error(new ServerStreamException(statusCode, reason));
+                    }
                 }
-                case StatusCode.SHUTDOWN: {
+                case StatusCode.SHUTDOWN-> {
                     if (CONNECTION_IDLE_TIMEOUT.equals(reason)) {
                         inboundSink.error(new IdleTimeoutStreamException());
                     } else {
                         inboundSink.error(new ClientShutdownStreamException(reason));
                     }
-                    break;
                 }
-                default: {
-                    inboundSink.error(new ClientStreamException(statusCode, reason));
-                }
+                default-> inboundSink.error(new ClientStreamException(statusCode, reason));
             }
         } finally {
             tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.subscriber + " disconnected " + path)
