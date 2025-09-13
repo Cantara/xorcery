@@ -18,8 +18,8 @@ package dev.xorcery.reactivestreams.extras.test;
 import dev.xorcery.configuration.builder.ConfigurationBuilder;
 import dev.xorcery.junit.XorceryExtension;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
-import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import dev.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import dev.xorcery.reactivestreams.extras.publishers.YamlPublisher;
@@ -59,21 +59,23 @@ public class SmileMessageReaderWriterTest {
         server.getServiceLocator().getService(ServerWebSocketStreams.class)
                 .subscriberWithResult(
                         "test",
+                        ServerWebSocketOptions.instance(),
                         Map.class,
                         Map.class,
                         flux -> flux.doOnNext(map -> map.put("some", "value")));
 
         YamlPublisher<Map<String, Object>> filePublisher = new YamlPublisher<>(Map.class);
-        List<Map<String, Object>> result = Flux.from(filePublisher).transform(client.getServiceLocator().getService(ClientWebSocketStreams.class)
+        List<Map<String, Object>> result = client.getServiceLocator().getService(ClientWebSocketStreams.class)
                 .<Map<String, Object>, Map<String, Object>>publishWithResult(
+                        Flux.from(filePublisher),
+                        ServerWebSocketStreamsConfiguration.get(server.getConfiguration()).getURI().resolve("test"),
                         ClientWebSocketOptions.instance(),
                         Map.class,
                         Map.class,
                         "application/x-jackson-smile",
                         "application/x-jackson-smile"
-                ))
+                )
                 .contextWrite(Context.of(
-                        ClientWebSocketStreamContext.serverUri.name(), ServerWebSocketStreamsConfiguration.get(server.getConfiguration()).getURI().resolve("test"),
                         ResourcePublisherContext.resourceUrl.name(), Resources.getResource("testevents.yaml").orElseThrow().toExternalForm()))
                 .toStream().toList();
 

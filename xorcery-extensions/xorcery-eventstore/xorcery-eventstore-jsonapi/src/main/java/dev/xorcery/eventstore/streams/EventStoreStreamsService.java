@@ -20,6 +20,7 @@ import com.eventstore.dbclient.EventStoreDBClientSettings;
 import com.eventstore.dbclient.EventStoreDBConnectionString;
 import com.eventstore.dbclient.StreamMetadata;
 import dev.xorcery.collections.Element;
+import dev.xorcery.concurrent.NamedThreadFactory;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.InstanceConfiguration;
 import dev.xorcery.domainevents.api.DomainEventMetadata;
@@ -31,6 +32,7 @@ import dev.xorcery.metadata.WithMetadata;
 import dev.xorcery.reactivestreams.api.ContextViewElement;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import dev.xorcery.reactivestreams.api.ReactiveStreamsContext;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
@@ -40,6 +42,7 @@ import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.UUID;
 
@@ -77,10 +80,10 @@ public class EventStoreStreamsService
         logger.info("$all stream metadata:" + allMetadata.toString());
 
         // Read
-        publisher = reactiveStreams.publisher("api/eventstore/{streamId}", MetadataByteBuffer.class,
+        publisher = reactiveStreams.publisher("api/eventstore/{streamId}", ServerWebSocketOptions.instance(), MetadataByteBuffer.class,
                 Flux.from(eventStoreClient.readStream())
 //                        .subscribeOn(Schedulers.single(), true)
-//                        .publishOn(Schedulers.newSingle(new NamedThreadFactory("EventStore")), 8192)
+                        .publishOn(Schedulers.newSingle(new NamedThreadFactory("EventStore")), 8192)
                         .contextWrite(context ->
                         {
                             ContextViewElement cv = new ContextViewElement(context);
@@ -93,9 +96,11 @@ public class EventStoreStreamsService
         // Write
         subscriber = reactiveStreams.subscriberWithResult(
                 "api/eventstore/{streamId}",
+                ServerWebSocketOptions.instance(),
                 MetadataByteBuffer.class,
                 Metadata.class,
                 flux -> flux
+                        .publishOn(Schedulers.newSingle(new NamedThreadFactory("EventStore")), 8192)
                         .transformDeferredContextual(eventStoreClient.appendStream(this::eventId, this::eventType, options -> {
                         }))
                         .map(WithMetadata::metadata));

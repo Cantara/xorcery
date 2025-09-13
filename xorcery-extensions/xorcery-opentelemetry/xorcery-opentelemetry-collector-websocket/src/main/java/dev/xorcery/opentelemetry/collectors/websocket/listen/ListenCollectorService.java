@@ -21,6 +21,7 @@ import dev.xorcery.configuration.Configuration;
 import dev.xorcery.opentelemetry.collectors.websocket.WebsocketCollectorService;
 import dev.xorcery.reactivestreams.api.ContextViewElement;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +29,6 @@ import org.eclipse.jetty.websocket.api.UpgradeRequest;
 import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
-import org.reactivestreams.Publisher;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
@@ -54,12 +54,12 @@ public class ListenCollectorService
         this.logger = logger;
         this.configuration = ListenCollectorConfiguration.get(configuration);
 
-        this.disposable = serverWebSocketStreams.subscriber(this.configuration.getPath(), MetadataByteBuffer.class, this::subscribe);
+        this.disposable = serverWebSocketStreams.subscriber(this.configuration.getPath(), ServerWebSocketOptions.instance(), MetadataByteBuffer.class, this::subscribe);
         logger.info("Collector listening at "+this.configuration.getPath());
 
     }
 
-    private Publisher<MetadataByteBuffer> subscribe(Flux<MetadataByteBuffer> attachFlux) {
+    private Disposable subscribe(Flux<MetadataByteBuffer> attachFlux) {
         return attachFlux
                 .transformDeferredContextual((flux, context)->
                 {
@@ -67,7 +67,8 @@ public class ListenCollectorService
                     return flux;
                 })
                 .doOnNext(this::resourceIdMapping)
-                .doOnNext(websocketCollectorService::collect);
+                .doOnNext(websocketCollectorService::collect)
+                .subscribe();
     }
 
     private void resourceIdMapping(MetadataByteBuffer metadataByteBuffer) {

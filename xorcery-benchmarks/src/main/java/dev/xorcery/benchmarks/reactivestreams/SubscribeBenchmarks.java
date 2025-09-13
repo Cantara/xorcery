@@ -24,8 +24,8 @@ import dev.xorcery.core.Xorcery;
 import dev.xorcery.metadata.Metadata;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
-import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import dev.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import jakarta.ws.rs.core.MediaType;
@@ -37,7 +37,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.context.Context;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -55,16 +54,16 @@ public class SubscribeBenchmarks {
             secrets.enabled: true
             keystores.enabled: true
             dns.client.enabled: true
-                        
+            
             dns.client.hosts:
                 - name: server.xorcery.test
                   url: "{{ instance.ip }}"
-                        
+            
             jetty.client.enabled: true
             jetty.client.ssl.enabled: true
-
+            
             reactivestreams.enabled: true            
-
+            
             log4j2.Configuration.thresholdFilter: debug
             
             reactivestreams.client.maxFrameSize: 1048576
@@ -73,13 +72,13 @@ public class SubscribeBenchmarks {
     private static final String clientConfig = """
             instance.id: client
             reactivestreams.server.enabled: false
-
+            
             log4j2.Configuration.thresholdFilter: debug
             
             log4j2.Configuration.Loggers.logger:
                 - name: dev.xorcery.reactivestreams
                   level: info
-
+            
                 - name: org.eclipse.jetty.websocket.core.internal.FrameFlusher
                   level: info                       
             """;
@@ -91,7 +90,7 @@ public class SubscribeBenchmarks {
             jetty.server.http2.enabled: false
             jetty.server.ssl.enabled: false
             jetty.server.ssl.port: 8443
-
+            
             reactivestreams.client.enabled: false
             """;
 
@@ -165,7 +164,7 @@ public class SubscribeBenchmarks {
         ObjectNode metadataJson = (ObjectNode) new YAMLMapper().readTree(metadata);
         ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[1024]);
         MetadataByteBuffer metadataByteBuffer = new MetadataByteBuffer(new Metadata(metadataJson), byteBuffer);
-        runBenchmark(counters, MetadataByteBuffer.class, Flux.fromStream(Stream.generate(()-> metadataByteBuffer).limit(1000000)), MediaType.APPLICATION_JSON+"metadata");
+        runBenchmark(counters, MetadataByteBuffer.class, Flux.fromStream(Stream.generate(() -> metadataByteBuffer).limit(1000000)), MediaType.APPLICATION_JSON + "metadata");
     }
 
     @Benchmark
@@ -173,7 +172,7 @@ public class SubscribeBenchmarks {
     public void subscribeByteBuffer(OpCounters counters) {
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[1024]);
-        runBenchmark(counters, ByteBuffer.class, Flux.fromStream(Stream.generate(()-> byteBuffer).limit(10000000)), MediaType.APPLICATION_JSON);
+        runBenchmark(counters, ByteBuffer.class, Flux.fromStream(Stream.generate(() -> byteBuffer).limit(10000000)), MediaType.APPLICATION_JSON);
     }
 
     @Benchmark
@@ -182,11 +181,10 @@ public class SubscribeBenchmarks {
         runBenchmark(counters, Integer.class, Flux.fromStream(IntStream.range(0, 10000000).boxed()), MediaType.APPLICATION_JSON);
     }
 
-    private <T,R> void runBenchmark(OpCounters counters, Class<T> publishType, Flux<T> source, String contentType)
-    {
+    private <T, R> void runBenchmark(OpCounters counters, Class<T> publishType, Flux<T> source, String contentType) {
         counters.counter = 0;
         ServerWebSocketStreams streamsServer = this.server.getServiceLocator().getService(ServerWebSocketStreams.class);
-        serverDisposable = streamsServer.publisher("benchmark", publishType,source);
+        serverDisposable = streamsServer.publisher("benchmark", ServerWebSocketOptions.instance(), publishType, source);
 
         URI serverUri = ServerWebSocketStreamsConfiguration.get(serverConf).getURI().resolve("benchmark");
         ClientWebSocketStreams reactiveStreamsClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
@@ -194,13 +192,10 @@ public class SubscribeBenchmarks {
         System.out.println("Start");
         CompletableFuture<Void> done = new CompletableFuture<>();
 
-        reactiveStreamsClient.subscribe(ClientWebSocketOptions.builder().build(), publishType, contentType)
-//                .doOnRequest(r -> System.out.println("Requests:"+r))
-//                .subscribeOn(Schedulers.boundedElastic(), true)
+        reactiveStreamsClient.subscribe(serverUri, ClientWebSocketOptions.builder().build(), publishType, contentType)
                 .publishOn(Schedulers.boundedElastic(), 1024)
-                .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
-                .doOnRequest(r -> System.out.println("Requests downstream:"+r))
-                .subscribe(result->counters.counter++, done::completeExceptionally, ()->done.complete(null) );
+                .doOnRequest(r -> System.out.println("Requests downstream:" + r))
+                .subscribe(result -> counters.counter++, done::completeExceptionally, () -> done.complete(null));
         done.join();
         System.out.println("Stop");
         serverDisposable.dispose();

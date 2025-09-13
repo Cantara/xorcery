@@ -1,3 +1,18 @@
+/*
+ * Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dev.xorcery.reactivestreams.server;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,7 +36,7 @@ public interface SubProtocolHandlerHelpers {
 
     Session getSession();
 
-    default reactor.util.context.Context parseContext(ObjectNode serverContextNode) throws JsonProcessingException {
+    default reactor.util.context.Context parseContext(ObjectNode serverContextNode, Map<String, String> pathParameters, Map<String, List<String>> parameterMap) throws JsonProcessingException {
         Map<String, Object> contextMap = new HashMap<>();
         for (Map.Entry<String, JsonNode> property : serverContextNode.properties()) {
             JsonNode value = property.getValue();
@@ -39,12 +54,15 @@ public interface SubProtocolHandlerHelpers {
                 case ARRAY -> contextMap.put(property.getKey(), jsonMapper.treeToValue(value, List.class));
             }
         }
+        contextMap.putAll(pathParameters);
+        parameterMap.forEach((k, v) -> contextMap.put(k, v.get(0)));
+
         contextMap.put("request", getSession().getUpgradeRequest());
         contextMap.put("response", getSession().getUpgradeResponse());
         return reactor.util.context.Context.of(contextMap);
     }
 
-    default ObjectNode createServerContext(ContextView contextView, Map<String, String> pathParameters, Map<String, List<String>> parameterMap) {
+    default ObjectNode createServerContext(ContextView contextView) {
         ObjectNode serverContext = JsonNodeFactory.instance.objectNode();
         contextView.forEach((k, v) ->
         {
@@ -58,9 +76,6 @@ public interface SubProtocolHandlerHelpers {
                 serverContext.set(k.toString(), serverContext.booleanNode(bool));
             }
         });
-
-        pathParameters.forEach((k, v) -> serverContext.set(k, JsonNodeFactory.instance.textNode(v)));
-        parameterMap.forEach((k, v) -> serverContext.set(k, JsonNodeFactory.instance.textNode(v.get(0))));
         return serverContext;
     }
 }

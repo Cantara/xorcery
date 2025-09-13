@@ -16,12 +16,7 @@
 package dev.xorcery.reactivestreams.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import dev.xorcery.concurrent.SmartBatcher;
 import dev.xorcery.dns.client.api.DnsLookup;
 import dev.xorcery.io.ByteBufferBackedInputStream;
 import dev.xorcery.opentelemetry.OpenTelemetryUnits;
@@ -31,7 +26,6 @@ import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerStreamException;
 import dev.xorcery.reactivestreams.spi.MessageReader;
 import dev.xorcery.reactivestreams.spi.MessageWorkers;
-import dev.xorcery.reactivestreams.spi.MessageWriter;
 import dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
@@ -50,7 +44,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.io.*;
+import org.eclipse.jetty.io.ByteBufferPool;
+import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.websocket.api.Callback;
 import org.eclipse.jetty.websocket.api.ExtensionConfig;
 import org.eclipse.jetty.websocket.api.Session;
@@ -58,42 +53,31 @@ import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.exceptions.WebSocketTimeoutException;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
-import org.reactivestreams.Subscription;
-import reactor.core.publisher.BaseSubscriber;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 
-import static dev.xorcery.lang.Exceptions.isCausedBy;
 import static dev.xorcery.lang.Exceptions.unwrap;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
 
-public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
+public class ClientPublisherSubProtocolHandler<INPUT>
         extends Session.Listener.AbstractAutoDemanding
         implements SubProtocolHandlerHelpers {
-
     private static final TextMapSetter<? super ClientUpgradeRequest> jettySetter =
             (carrier, key, value) -> carrier.setHeader(key, value);
 
-
-    private final Flux<OUTPUT> publisher;
     private final URI serverUri;
+    private final FluxSink<INPUT> inboundSink;
     private final ClientWebSocketOptions options;
-    private final Class<? super OUTPUT> outputType;
     private final Class<? super INPUT> inputType;
-    private final Collection<String> writeTypes;
     private final Collection<String> readTypes;
     private final MessageWorkers messageWorkers;
     private final DnsLookup dnsLookup;
@@ -110,29 +94,20 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
 
     private final LongHistogram receivedBytes;
     private final LongHistogram itemReceivedSizes;
-    private final LongHistogram sentBytes;
-    private final LongHistogram itemSentSizes;
     private final LongHistogram requestsHistogram;
-    private final LongHistogram flushHistogram;
 
     private Iterator<URI> uriIterator;
-    private MessageWriter<OUTPUT> writer;
     private MessageReader<INPUT> reader;
     private int serverMaxBinaryMessageSize;
-    private OutboundSubscriber outboundSubscriber;
     private String serverHost;
     private String clientHost;
-    private final FluxSink<INPUT> inboundSink;
     private Throwable error;
 
-    public ClientSubscriberWithResultSubProtocolHandler(
-            Flux<OUTPUT> publisher,
+    public  ClientPublisherSubProtocolHandler(
             URI serverUri,
             FluxSink<INPUT> inboundSink,
             ClientWebSocketOptions options,
-            Class<? super OUTPUT> outputType,
             Class<? super INPUT> inputType,
-            Collection<String> writeTypes,
             Collection<String> readTypes,
             MessageWorkers messageWorkers,
             DnsLookup dnsLookup,
@@ -144,13 +119,10 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
             Tracer tracer,
             TextMapPropagator textMapPropagator,
             Logger logger) {
-        this.publisher = publisher;
         this.serverUri = serverUri;
         this.inboundSink = inboundSink;
-        this.inputType = inputType;
         this.options = options;
-        this.outputType = outputType;
-        this.writeTypes = writeTypes;
+        this.inputType = inputType;
         this.readTypes = readTypes;
         this.messageWorkers = messageWorkers;
         this.dnsLookup = dnsLookup;
@@ -172,14 +144,8 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.itemReceivedSizes = meter.histogramBuilder(SUBSCRIBER_ITEM_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
-                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.itemSentSizes = meter.histogramBuilder(PUBLISHER_ITEM_IO)
-                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
                 .setUnit("{request}").ofLongs().build();
-        this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
-                .setUnit("{item}").ofLongs().build();
 
         try {
             start();
@@ -190,7 +156,7 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
 
     @Override
     public ReactiveStreamSubProtocol getSubProtocol() {
-        return ReactiveStreamSubProtocol.subscriberWithResult;
+        return ReactiveStreamSubProtocol.publisher;
     }
 
     @Override
@@ -241,8 +207,7 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
                 clientUpgradeRequest.setCookies(options.cookies());
                 clientUpgradeRequest.setExtensions(options.extensions().stream().map(ExtensionConfig::parse).toList());
 
-                clientUpgradeRequest.setSubProtocols(ReactiveStreamSubProtocol.subscriberWithResult.name());
-                clientUpgradeRequest.setHeader(HttpHeader.CONTENT_TYPE.asString(), List.copyOf(writeTypes));
+                clientUpgradeRequest.setSubProtocols(ReactiveStreamSubProtocol.publisher.name());
                 clientUpgradeRequest.setHeader(HttpHeader.ACCEPT.asString(), List.copyOf(readTypes));
                 textMapPropagator.inject(Context.current(), clientUpgradeRequest, jettySetter);
                 return webSocketClient.connect(this, clientUpgradeRequest)
@@ -259,6 +224,7 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
         }
     }
 
+
     @Override
     public void onWebSocketOpen(Session session) {
         super.onWebSocketOpen(session);
@@ -270,7 +236,7 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
             logger.trace(marker, "onWebSocketOpen {}", serverHost);
         }
 
-        tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.subscriber + " connected " + serverUri.toASCIIString())
+        tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.publisher + " connected " + serverUri.toASCIIString())
                 .setSpanKind(SpanKind.CLIENT)
                 .setAllAttributes(attributes)
                 .startSpan()
@@ -278,11 +244,6 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
                 .setAttribute("client", clientHost)
                 .end();
 
-        String serverAcceptType = session.getUpgradeResponse().getHeader(HttpHeader.ACCEPT.asString());
-        if ((writer = getWriter(serverAcceptType, outputType)) == null) {
-            session.close(StatusCode.SHUTDOWN, "Cannot handle Accept type:" + serverAcceptType, Callback.NOOP);
-            return;
-        }
         String serverContentType = session.getUpgradeResponse().getHeader(HttpHeader.CONTENT_TYPE.asString());
         if ((reader = getReader(serverContentType, inputType)) == null) {
             session.close(StatusCode.SHUTDOWN, "Cannot handle Content-Type type:" + serverContentType, Callback.NOOP);
@@ -300,7 +261,7 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
             return Integer.valueOf(parameters.computeIfAbsent("maxBinaryMessageSize", k -> "-1"));
         }).orElse(-1);
 
-        // Send client subscriber context to the server subscriber
+        // Send client subscriber context to the server publisher
         ObjectNode clientSubscriberContext = createClientContext(inboundSink.contextView());
 
         try {
@@ -314,6 +275,7 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
 
         inboundSink.onDispose(() -> logger.debug("Dispose client stream"));
         inboundSink.onCancel(this::inboundCancel);
+        inboundSink.onRequest(this::sendRequest);
     }
 
     @Override
@@ -321,48 +283,7 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketText {}", message);
         }
-
-        try {
-            JsonNode json = jsonMapper.readTree(message);
-            if (json instanceof ObjectNode serverContextNode) {
-                reactor.util.context.Context context = parseContext(serverContextNode);
-                outboundSubscriber = new OutboundSubscriber();
-                publisher.contextWrite(context).subscribe(outboundSubscriber);
-                inboundSink.onRequest(this::sendRequest);
-            } else if (json instanceof NumericNode numericNode) {
-                if (outboundSubscriber != null) {
-                    long requests = numericNode.asLong();
-                    if (requests == CANCEL) {
-                        outboundSubscriber.cancel();
-                    } else if (requests == COMPLETE) {
-                        // Cannot happen in this protocol
-                        // Cannot receive context in this protocol
-                        if (outboundSubscriber != null) {
-                            outboundSubscriber.cancel();
-                        }
-                        getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
-                    } else {
-                        outboundSubscriber.request(numericNode.longValue());
-                    }
-                }
-            } else if (json instanceof TextNode errorNode) {
-                // Cannot happen in this protocol
-                // Cannot receive errors in this protocol
-                if (outboundSubscriber != null) {
-                    outboundSubscriber.cancel();
-                }
-                getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
-            }
-        } catch (Throwable e) {
-
-            if (unwrap(e) instanceof EofException)
-                return;
-
-            if (outboundSubscriber != null)
-                outboundSubscriber.cancel();
-            inboundSink.error(e);
-            getSession().close(StatusCode.SHUTDOWN, e.getMessage(), Callback.NOOP);
-        }
+        getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
     }
 
     @Override
@@ -392,10 +313,8 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
         } catch (Throwable e) {
             logger.error("Could not receive value", e);
             inboundSink.error(e);
-            if (outboundSubscriber != null) {
-                outboundSubscriber.cancel();
-            }
             callback.fail(e);
+            getSession().close(StatusCode.NORMAL, "cancel", Callback.NOOP);
         }
     }
 
@@ -418,11 +337,6 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
     public void onWebSocketClose(int statusCode, String reason) {
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
-        }
-
-        // Cancel publisher
-        if (outboundSubscriber != null) {
-            outboundSubscriber.cancel();
         }
 
         switch (statusCode) {
@@ -471,154 +385,6 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
         requestsHistogram.record(n);
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "sendRequest {}", n);
-        }
-    }
-
-    private class OutboundSubscriber
-            extends BaseSubscriber<OUTPUT> {
-
-        private final SmartBatcher<OUTPUT> batcher;
-
-        private final int queueSize = 1024; // TODO Make configurable
-        private final int[] sizes = new int[queueSize];
-
-        public OutboundSubscriber() {
-            this.batcher = new SmartBatcher<>(this::flush, new ArrayBlockingQueue<>(queueSize), flushingExecutors);
-        }
-
-        @Override
-        protected void hookOnSubscribe(Subscription subscription) {
-        }
-
-        @Override
-        protected void hookOnNext(OUTPUT item) {
-
-            if (serverMaxBinaryMessageSize == -1) {
-                try (ByteBufferOutputStream2 outputStream = new ByteBufferOutputStream2(byteBufferPool, false)) {
-                    writer.writeTo(item, outputStream);
-
-                    RetainableByteBuffer retainableByteBuffer = outputStream.takeByteBuffer();
-                    ByteBuffer eventBuffer = retainableByteBuffer.getByteBuffer();
-                    sentBytes.record(eventBuffer.limit(), attributes);
-                    itemSentSizes.record(eventBuffer.limit(), attributes);
-                    getSession().sendBinary(eventBuffer, new ReleaseCallback(retainableByteBuffer));
-                } catch (Throwable e) {
-
-                    if (isCausedBy(e, EofException.class, ClosedChannelException.class)) {
-                        // Shutting down, ignore this
-                        return;
-                    }
-
-                    // Tell server we have a problem
-                    onError(e);
-                }
-            } else {
-                try {
-                    batcher.submit(item);
-                } catch (InterruptedException e) {
-                    onError(e);
-                }
-            }
-        }
-
-        private void flush(Collection<OUTPUT> items) {
-            RetainableByteBuffer sendByteBuffer = byteBufferPool.acquire(serverMaxBinaryMessageSize, false);
-            ByteBuffer byteBuffer = sendByteBuffer.getByteBuffer();
-            logger.debug("Flushing {}", items.size());
-            try (ByteBufferOutputStream outputStream = new ByteBufferOutputStream(byteBuffer)) {
-                int idx = 0;
-                for (OUTPUT item : items) {
-                    outputStream.write(new byte[4]);
-                    int position = byteBuffer.limit();
-                    boolean isBufferOverflow = false;
-                    try {
-                        writer.writeTo(item, outputStream);
-                    } catch (Throwable e) {
-                        if (unwrap(e) instanceof BufferOverflowException) {
-                            isBufferOverflow = true;
-                        } else {
-                            throw e;
-                        }
-                    }
-
-                    if (byteBuffer.limit() > serverMaxBinaryMessageSize || isBufferOverflow) {
-                        logger.info("OVERFLOW FLUSH {}", byteBuffer.limit());
-
-                        // Flush what we have so far and start again
-                        position = 0;
-                        for (int i = 0; i < idx; i++) {
-                            int size = sizes[i];
-                            byteBuffer.putInt(size);
-                            position += 4 + size;
-                            byteBuffer.position(position);
-                            itemSentSizes.record(size, attributes);
-                        }
-                        byteBuffer.flip();
-                        CompletableFuture<Void> flushDone = new CompletableFuture<>();
-                        getSession().sendBinary(byteBuffer, Callback.from(() -> flushDone.complete(null), flushDone::completeExceptionally));
-                        flushDone.join();
-                        byteBuffer.limit(0);
-                        idx = 0;
-
-                        // Try again
-                        outputStream.write(new byte[4]);
-                        position = byteBuffer.limit();
-                        writer.writeTo(item, outputStream);
-
-                        if (byteBuffer.limit() > serverMaxBinaryMessageSize) {
-                            throw new IOException(String.format("Item is too large:%d bytes, server max binary message size:%d", byteBuffer.limit(), serverMaxBinaryMessageSize));
-                        }
-                    }
-
-                    int size = byteBuffer.limit() - position;
-                    sizes[idx++] = size;
-                }
-
-                // Fill in the item sizes
-                int position = 0;
-                for (int i = 0; i < idx; i++) {
-                    int size = sizes[i];
-                    byteBuffer.putInt(size);
-                    position += 4 + size;
-                    byteBuffer.position(position);
-                    itemSentSizes.record(size, attributes);
-                }
-                byteBuffer.flip();
-
-                sentBytes.record(byteBuffer.limit(), attributes);
-                flushHistogram.record(items.size(), attributes);
-                getSession().sendBinary(byteBuffer, new ReleaseCallback(sendByteBuffer));
-            } catch (Throwable e) {
-                logger.error("Flush failed", e);
-                onError(e);
-            }
-        }
-
-        @Override
-        protected void hookOnComplete() {
-            if (getSession().isOpen()) {
-                if (batcher != null) {
-                    batcher.close();
-                }
-                logger.debug("Complete");
-                sendRequest(COMPLETE);
-            }
-        }
-
-        @Override
-        protected void hookOnError(Throwable throwable) {
-
-            if (getSession().isOpen()) {
-                if (batcher != null) {
-                    batcher.close();
-                }
-                logger.debug("Error", throwable);
-                getSession().sendText(JsonNodeFactory.instance.textNode(throwable.getMessage()).toString(), Callback.NOOP);
-            }
-        }
-
-        @Override
-        protected void hookOnCancel() {
         }
     }
 }

@@ -18,6 +18,7 @@ package dev.xorcery.opentelemetry.exporters.websocket.listen;
 import dev.xorcery.configuration.Configuration;
 import dev.xorcery.opentelemetry.exporters.websocket.WebsocketExporterService;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +37,7 @@ public class ListenExporterService
     @Inject
     public ListenExporterService(WebsocketExporterService websocketExporterService, ServerWebSocketStreams serverWebSocketStreams, Configuration configuration, Logger logger)  {
         ListenExporterConfiguration exporterConfiguration = ListenExporterConfiguration.get(configuration);
-        this.disposable = serverWebSocketStreams.publisher(exporterConfiguration.getPath(), MetadataByteBuffer.class, websocketExporterService.getCollector());
+        this.disposable = serverWebSocketStreams.publisher(exporterConfiguration.getPath(), ServerWebSocketOptions.instance(), MetadataByteBuffer.class, websocketExporterService.getCollector());
         logger.info("Listening at {}", exporterConfiguration.getUri());
     }
 

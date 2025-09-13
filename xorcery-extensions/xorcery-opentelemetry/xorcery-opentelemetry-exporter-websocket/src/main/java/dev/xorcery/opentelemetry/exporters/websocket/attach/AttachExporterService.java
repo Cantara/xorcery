@@ -20,7 +20,6 @@ import dev.xorcery.configuration.Configuration;
 import dev.xorcery.opentelemetry.exporters.websocket.WebsocketExporterService;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
-import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
@@ -28,8 +27,6 @@ import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 import reactor.core.Disposable;
-import reactor.util.context.Context;
-import reactor.util.context.ContextView;
 import reactor.util.retry.Retry;
 
 import java.net.URI;
@@ -52,12 +49,11 @@ public class AttachExporterService
         // Attach to collector
         AttachExporterConfiguration attachExporterConfiguration = AttachExporterConfiguration.get(configuration);
         URI collectorUri = attachExporterConfiguration.getCollectorUri();
-        ContextView webSocketContext = Context.of(ClientWebSocketStreamContext.serverUri.name(), collectorUri);
 
-        this.disposable = websocketExporterService.getCollector()
-                .as(flux -> attachExporterConfiguration.isOptimizeResource() ? flux.doOnNext(this::optimizeResource) : flux)
-                .transform(clientWebSocketStreams.publish(ClientWebSocketOptions.instance(), MetadataByteBuffer.class))
-                .contextWrite(webSocketContext)
+        this.disposable = clientWebSocketStreams.publishWithResult(websocketExporterService.getCollector()
+                .as(flux -> attachExporterConfiguration.isOptimizeResource() ? flux.doOnNext(this::optimizeResource) : flux),
+                collectorUri,
+                ClientWebSocketOptions.instance(), MetadataByteBuffer.class, MetadataByteBuffer.class)
                 .doOnError(throwable ->
                 {
                     logger.error(String.format("Attach to %s failed", collectorUri), throwable);

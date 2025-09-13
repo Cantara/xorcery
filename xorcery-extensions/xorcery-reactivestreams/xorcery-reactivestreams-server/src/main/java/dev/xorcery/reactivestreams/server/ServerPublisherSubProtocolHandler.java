@@ -21,15 +21,10 @@ import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import dev.xorcery.concurrent.SmartBatcher;
-import dev.xorcery.io.ByteBufferBackedInputStream;
 import dev.xorcery.lang.Exceptions;
 import dev.xorcery.opentelemetry.OpenTelemetryUnits;
-import dev.xorcery.reactivestreams.api.IdleTimeoutStreamException;
 import dev.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
-import dev.xorcery.reactivestreams.api.client.ClientShutdownStreamException;
-import dev.xorcery.reactivestreams.api.client.ClientStreamException;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
-import dev.xorcery.reactivestreams.spi.MessageReader;
 import dev.xorcery.reactivestreams.spi.MessageWriter;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongHistogram;
@@ -49,10 +44,8 @@ import org.reactivestreams.Subscription;
 import reactor.core.Disposable;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -62,62 +55,53 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 
 import static dev.xorcery.lang.Exceptions.isCausedBy;
 import static dev.xorcery.lang.Exceptions.unwrap;
-import static dev.xorcery.reactivestreams.api.IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
 
-public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
+public class ServerPublisherSubProtocolHandler<OUTPUT>
         extends Session.Listener.AbstractAutoDemanding
         implements Disposable, SubProtocolHandlerHelpers {
     private final AtomicLong connectionCounter;
     private final ServerWebSocketOptions options;
-    private final MessageReader<INPUT> reader;
     private final MessageWriter<OUTPUT> writer;
-    private final Function<Flux<INPUT>, Publisher<OUTPUT>> subscribeAndReturnResult;
+    private final Publisher<OUTPUT> publisher;
     private final String path;
     private final Map<String, String> pathParameters;
     private final int clientMaxBinaryMessageSize;
-
-    private final Marker marker;
-    private final Executor flushingExecutors;
+    private final ExecutorService flushingExecutors;
     private final ByteBufferPool byteBufferPool;
     private final Logger logger;
     private final Tracer tracer;
     private final Context requestContext;
     private final Attributes attributes;
 
-    private final LongHistogram receivedBytes;
-    private final LongHistogram itemReceivedSizes;
-    private final LongHistogram requestsHistogram;
     private final LongHistogram sentBytes;
     private final LongHistogram itemSentSizes;
     private final LongHistogram flushHistogram;
+    private final Marker marker;
 
     private Map<String, List<String>> parameterMap;
-    private FluxSink<INPUT> inboundSink;
     private OutboundSubscriber outboundSubscriber;
     private String serverHost;
     private String clientHost;
-    private volatile boolean isCancelledByClientSubscriber;
 
-    public ServerSubscriberWithResultSubProtocolHandler(
+
+    public ServerPublisherSubProtocolHandler(
             AtomicLong connectionCounter,
 
             ServerWebSocketOptions options,
-            MessageReader<INPUT> reader,
             MessageWriter<OUTPUT> writer,
-            Function<Flux<INPUT>, Publisher<OUTPUT>> subscribeAndReturnResult,
+            Publisher<OUTPUT> publisher,
 
             String path,
             Map<String, String> pathParameters,
             int clientMaxBinaryMessageSize,
 
-            Executor flushingExecutors,
+            ExecutorService flushingExecutors,
             ByteBufferPool byteBufferPool,
 
             Logger logger,
@@ -128,9 +112,8 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
     ) {
         this.connectionCounter = connectionCounter;
         this.options = options;
-        this.reader = reader;
         this.writer = writer;
-        this.subscribeAndReturnResult = subscribeAndReturnResult;
+        this.publisher = publisher;
         this.path = path;
         this.pathParameters = pathParameters;
         this.clientMaxBinaryMessageSize = clientMaxBinaryMessageSize;
@@ -142,12 +125,6 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
         this.requestContext = requestContext;
         this.attributes = attributes;
 
-        this.receivedBytes = meter.histogramBuilder(SUBSCRIBER_IO)
-                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.itemReceivedSizes = meter.histogramBuilder(SUBSCRIBER_ITEM_IO)
-                .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
-        this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
-                .setUnit("{request}").ofLongs().build();
         this.sentBytes = meter.histogramBuilder(PUBLISHER_IO)
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.itemSentSizes = meter.histogramBuilder(PUBLISHER_ITEM_IO)
@@ -193,23 +170,19 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
                 clientSubscribe(clientContext);
             } else if (json instanceof NumericNode numericNode) {
                 if (numericNode.asLong() == CANCEL && outboundSubscriber != null) {
-                    isCancelledByClientSubscriber = true;
                     outboundSubscriber.cancel();
-                } else if (numericNode.asLong() == COMPLETE) {
-                    inboundSink.complete();
                 } else {
                     outboundSubscriber.request(numericNode.longValue());
                 }
-            } else if (json instanceof TextNode errorNode) {
-                inboundSink.error(new ClientStreamException(1001, errorNode.asText()));
+            } else if (json instanceof TextNode) {
+                getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
             } else {
                 logger.error("Unknown JSON type:" + json + "(" + message + ")");
                 getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
             }
         } catch (Throwable e) {
             logger.error("onWebSocketText error", e);
-            if (inboundSink != null)
-                inboundSink.error(e);
+            getSession().close(StatusCode.NORMAL, e.getMessage(), Callback.NOOP);
         }
     }
 
@@ -217,27 +190,7 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
         reactor.util.context.Context context = parseContext(clientContext, pathParameters, parameterMap);
 
         // Subscribe upstream
-        Flux<INPUT> inboundFlux = Flux.create(inboundSink -> {
-            this.inboundSink = inboundSink;
-
-            // Send server subscriber context back to client
-            ObjectNode serverContext = createServerContext(inboundSink.contextView());
-
-            try {
-                String contextJsonString = jsonMapper.writeValueAsString(serverContext);
-                getSession().sendText(contextJsonString, Callback.NOOP);
-                logger.debug(marker, "Sent context {}: {}", serverHost, contextJsonString);
-
-            } catch (JsonProcessingException e) {
-                throw new UncheckedIOException(e);
-            }
-
-            inboundSink.onDispose(() -> logger.debug("Dispose server stream"));
-            inboundSink.onCancel(this::inboundCancel);
-            inboundSink.onRequest(this::sendRequest);
-        });
-
-        Flux<OUTPUT> outboundResultFlux = switch (subscribeAndReturnResult.apply(inboundFlux)) {
+        Flux<OUTPUT> outboundResultFlux = switch (publisher) {
             case Flux<OUTPUT> flux -> flux;
             case Publisher<OUTPUT> publisher -> Flux.from(publisher);
         };
@@ -250,34 +203,11 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
 
     @Override
     public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
-        try {
-            if (logger.isTraceEnabled()) {
-                logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(payload.asReadOnlyBuffer()).toString());
-            }
-
-            if (clientMaxBinaryMessageSize == -1) {
-                receivedBytes.record(payload.limit(), attributes);
-                itemReceivedSizes.record(payload.limit(), attributes);
-                INPUT event = reader.readFrom(new ByteBufferBackedInputStream(payload));
-                inboundSink.next(event);
-            } else {
-                receivedBytes.record(payload.limit(), attributes);
-                while (payload.position() != payload.limit()) {
-                    int length = payload.getInt();
-                    ByteBuffer itemByteBuffer = payload.slice(payload.position(), length);
-                    INPUT event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
-                    payload.position(payload.position() + length);
-                    inboundSink.next(event);
-                    itemReceivedSizes.record(length, attributes);
-                }
-            }
-            callback.succeed();
-        } catch (Throwable e) {
-            logger.error("Could not receive value", e);
-            if (inboundSink != null)
-                inboundSink.error(e);
-            callback.fail(e);
+        if (logger.isTraceEnabled()) {
+            logger.trace(marker, "onWebSocketBinary {}", StandardCharsets.UTF_8.decode(payload.asReadOnlyBuffer()).toString());
         }
+
+        getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
     }
 
     @Override
@@ -297,17 +227,14 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
             }
 
             switch (statusCode) {
-                case StatusCode.SHUTDOWN: {
-                    if (CONNECTION_IDLE_TIMEOUT.equals(reason)) {
-                        inboundSink.error(new IdleTimeoutStreamException());
-                    } else {
-                        inboundSink.error(new ClientShutdownStreamException(reason));
+                case StatusCode.NORMAL -> {
+                    switch (reason) {
+                        case "complete" -> {
+                        }
+                        case "cancel" -> outboundSubscriber.cancel();
                     }
-                    break;
                 }
-                default: {
-                    inboundSink.error(new ClientStreamException(statusCode, reason));
-                }
+                default-> outboundSubscriber.cancel();
             }
         } finally {
             tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.subscriber + " disconnected " + path)
@@ -327,27 +254,6 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
     @Override
     public void dispose() {
 
-    }
-
-    private void inboundCancel() {
-        if (isCancelledByClientSubscriber)
-            getSession().close(StatusCode.NORMAL, "cancel", Callback.NOOP);
-        else
-            sendRequest(CANCEL);
-    }
-
-    // Send requests
-    protected void sendRequest(long n) {
-        Session session = getSession();
-        if (session == null || !session.isOpen())
-            return;
-
-        // Send the request over the network
-        getSession().sendText(Long.toString(n), Callback.NOOP);
-        requestsHistogram.record(n);
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "sendRequest {}", n);
-        }
     }
 
     private class OutboundSubscriber

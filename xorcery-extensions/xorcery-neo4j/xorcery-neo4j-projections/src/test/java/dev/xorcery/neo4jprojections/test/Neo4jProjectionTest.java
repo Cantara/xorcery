@@ -26,8 +26,8 @@ import dev.xorcery.neo4jprojections.SkipEventsUntil;
 import dev.xorcery.neo4jprojections.api.Neo4jProjections;
 import dev.xorcery.neo4jprojections.api.ProjectionStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
-import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import dev.xorcery.reactivestreams.extras.publishers.ResourcePublisherContext;
 import dev.xorcery.reactivestreams.extras.publishers.YamlPublisher;
@@ -130,7 +130,7 @@ public class Neo4jProjectionTest {
         // Server
         Neo4jProjections neo4jProjections = xorceryExtension.getServiceLocator().getService(Neo4jProjections.class);
         ServerWebSocketStreams server = xorceryExtension.getServiceLocator().getService(ServerWebSocketStreams.class);
-        Disposable subscriber = server.subscriber("projections/{projectionId}", MetadataEvents.class,
+        Disposable subscriber = server.subscriberWithResult("projections/{projectionId}", ServerWebSocketOptions.instance(), MetadataEvents.class,MetadataEvents.class,
                 flux -> flux.transformDeferredContextual(neo4jProjections.projection()));
 
         try {
@@ -144,8 +144,7 @@ public class Neo4jProjectionTest {
                     .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
             URI serverUri = ServerWebSocketStreamsConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
-            publisher.transform(client.publish(ClientWebSocketOptions.instance(), MetadataEvents.class, MediaType.APPLICATION_JSON))
-                    .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
+            client.publishWithResult(publisher, serverUri, ClientWebSocketOptions.instance(), MetadataEvents.class, MetadataEvents.class, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON)
                     .blockLast();
 
             // Check results
@@ -169,7 +168,7 @@ public class Neo4jProjectionTest {
         // Server
         Neo4jProjections neo4jProjections = xorceryExtension.getServiceLocator().getService(Neo4jProjections.class);
         ServerWebSocketStreams server = xorceryExtension.getServiceLocator().getService(ServerWebSocketStreams.class);
-        Disposable subscriber = server.subscriberWithResult("projections/{projectionId}", MetadataEvents.class, Metadata.class,
+        Disposable subscriber = server.subscriberWithResult("projections/{projectionId}", ServerWebSocketOptions.instance(), MetadataEvents.class, Metadata.class,
                 flux -> flux.transformDeferredContextual(neo4jProjections.projection()).map(WithMetadata::metadata));
 
         try {
@@ -183,8 +182,7 @@ public class Neo4jProjectionTest {
                     .contextWrite(Context.of(ResourcePublisherContext.resourceUrl.name(), Resources.getResource("events.yaml").orElseThrow()));
 
             URI serverUri = ServerWebSocketStreamsConfiguration.get(xorceryExtension.getConfiguration()).getURI().resolve("projections/testremote");
-            publisher.transform(client.publishWithResult(ClientWebSocketOptions.instance(), MetadataEvents.class, Metadata.class, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON))
-                    .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
+            client.publishWithResult(publisher, serverUri, ClientWebSocketOptions.instance(), MetadataEvents.class, Metadata.class, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON)
                     .blockLast();
 
             // Check results

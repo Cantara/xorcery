@@ -135,7 +135,7 @@ public class ServerWebSocketStreamsService
 
     @Override
     public <PUBLISH> Disposable publisher(String path, ServerWebSocketOptions options, Class<? super PUBLISH> publishType, Publisher<PUBLISH> publisher) throws IllegalArgumentException {
-        return this.registerHandler(path, ReactiveStreamSubProtocol.publisher, new ServerPublisherSubProtocol<>(publishType, publisher, this));
+        return this.registerHandler(path, ReactiveStreamSubProtocol.publisher, new ServerPublisherSubProtocol<>(options, publishType, publisher, this));
     }
 
     @Override
@@ -295,33 +295,6 @@ public class ServerWebSocketStreamsService
                 if (serverSubProtocol == null)
                     continue;
 
-/*
-                // Content type negotiation for both read (Content-Type header) and write (Accept header)
-                MessageReader<Object> reader = null;
-                MessageWriter<Object> writer = null;
-                switch (requestSubProtocol) {
-                    case publisher -> {
-                        writer = getWriter(serverSubProtocol.writerType(), serverUpgradeRequest, serverUpgradeResponse);
-                        if (writer == null)
-                            return null;
-                    }
-                    case subscriber -> {
-                        reader = getReader(serverSubProtocol.readerType(), serverUpgradeRequest, serverUpgradeResponse);
-                        if (reader == null)
-                            return null;
-                    }
-                    case subscriberWithResult -> {
-                        reader = getReader(serverSubProtocol.readerType(), serverUpgradeRequest, serverUpgradeResponse);
-                        if (reader == null)
-                            return null;
-                        writer = getWriter(serverSubProtocol.writerType(), serverUpgradeRequest, serverUpgradeResponse);
-                        if (writer == null)
-                            return null;
-
-                    }
-                }
-*/
-
                 Context context = textMapPropagator.extract(Context.current(), serverUpgradeRequest, jettyGetter);
                 serverUpgradeResponse.setAcceptedSubProtocol(requestSubProtocol.name());
                 serverUpgradeResponse.getHeaders().add("Aggregate", "maxBinaryMessageSize=" + webSocketUpgradeHandler.getServerWebSocketContainer().getMaxBinaryMessageSize());
@@ -351,24 +324,6 @@ public class ServerWebSocketStreamsService
                         clientMaxBinaryMessageSize,
                         context);
                 return socketProtocolHandler;
-/*
-                return                 new ServerWebSocketStream<>(
-                        path,
-                        pathParameters,
-                        ServerWebSocketOptions.instance(),
-                        serverSubProtocol,
-                        flushingExecutors,
-                        byteBufferPool,
-                        clientMaxBinaryMessageSize,
-                        loggerContext.getLogger(ServerWebSocketStream.class),
-                        tracer,
-                        meter,
-                        connectionCounter,
-                        clientHost,
-                        context
-                );
-*/
-
             }
 
             // No protocols or handlers found matching this request

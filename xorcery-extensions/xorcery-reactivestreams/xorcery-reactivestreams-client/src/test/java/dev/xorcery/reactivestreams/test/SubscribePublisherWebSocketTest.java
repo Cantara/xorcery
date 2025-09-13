@@ -29,6 +29,7 @@ import dev.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jetty.websocket.api.StatusCode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -173,7 +174,46 @@ public class SubscribePublisherWebSocketTest {
                     Assertions.fail();
                 } catch (ServerStreamException e) {
                     // Then
-                    Assertions.assertEquals(500, e.getStatus());
+                    Assertions.assertEquals(StatusCode.NORMAL, e.getStatus());
+                    Assertions.assertEquals("Break", e.getMessage());
+                }
+            }
+        }
+    }
+
+    @Test
+    public void subscriberException() throws Exception {
+
+        // Given
+        try (Xorcery server = new Xorcery(serverConfiguration)) {
+            try (Xorcery client = new Xorcery(clientConfiguration)) {
+                LogManager.getLogger().info(clientConfiguration);
+                ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
+                ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
+
+                websocketStreamsServer.publisher(
+                        "numbers",
+                        ServerWebSocketOptions.instance(),
+                        Integer.class,
+                        Flux.fromStream(IntStream.range(0, 20).boxed()));
+
+                // When
+                try {
+                    URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
+                    websocketStreamsClientClient.subscribe(
+                                    serverUri, ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON
+                            )
+                            .handle((v, s) ->
+                            {
+                                if (v == 10)
+                                    s.error(new IllegalArgumentException("Break"));
+                                else
+                                    s.next(v);
+                            })
+                            .toStream().toList();
+                    Assertions.fail();
+                } catch (IllegalArgumentException e) {
+                    // Then
                     Assertions.assertEquals("Break", e.getMessage());
                 }
             }
@@ -344,7 +384,7 @@ public class SubscribePublisherWebSocketTest {
                         .take(1).blockFirst();
 
                 // Then
-                Assertions.assertEquals(String.format("[serverUri=%s, foo=bar, client=abc, param1=value1]",serverUri.toASCIIString()), config);
+                Assertions.assertEquals("[foo=bar, client=abc, param1=value1]", config);
             }
         }
     }

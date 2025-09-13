@@ -21,7 +21,6 @@ import dev.xorcery.configuration.Configuration;
 import dev.xorcery.configuration.InstanceConfiguration;
 import dev.xorcery.dns.client.api.DnsLookup;
 import dev.xorcery.reactivestreams.api.ContextViewElement;
-import dev.xorcery.reactivestreams.api.ReactiveStreamSubProtocol;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
@@ -93,16 +92,16 @@ public class ClientWebSocketStreamsService
     }
 
     @Override
-    public <PUBLISH> CompletableFuture<Void> publish(Flux<PUBLISH> publisher, URI serverURI, ClientWebSocketOptions options, Class<? super PUBLISH> publishType, String... publishContentTypes) {
+    public <PUBLISH> CompletableFuture<Void> publish(Flux<PUBLISH> publisher, URI serverUri, ClientWebSocketOptions options, Class<? super PUBLISH> publishType, String... publishContentTypes) {
         Collection<String> availableContentTypes = messageWorkers.getAvailableWriteContentTypes(publishType, Arrays.asList(publishContentTypes));
         if (availableContentTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
         }
 
         CompletableFuture<Void> result = new CompletableFuture<>();
-        new ClientSubscriberSubProtocolHandler(
+        new ClientSubscriberSubProtocolHandler<PUBLISH>(
                 publisher,
-                serverURI,
+                serverUri,
                 result,
                 options,
                 publishType,
@@ -121,7 +120,7 @@ public class ClientWebSocketStreamsService
     }
 
     @Override
-    public <PUBLISH, RESULT> Flux<RESULT> publishWithResult(Flux<PUBLISH> publisher, URI serverURI, ClientWebSocketOptions options, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Collection<String> messageContentTypes, Collection<String> resultContentTypes) {
+    public <PUBLISH, RESULT> Flux<RESULT> publishWithResult(Flux<PUBLISH> publisher, URI serverUri, ClientWebSocketOptions options, Class<? super PUBLISH> publishType, Class<? super RESULT> resultType, Collection<String> messageContentTypes, Collection<String> resultContentTypes) {
         Collection<String> writeTypes = messageWorkers.getAvailableWriteContentTypes(publishType, messageContentTypes);
         if (writeTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageWriter implementation for given published type and content types");
@@ -130,48 +129,41 @@ public class ClientWebSocketStreamsService
         if (readTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
         }
-        return Flux.create(inboundSink ->{
-            new ClientSubscriberWithResultSubProtocolHandler(
-                    publisher,
-                    serverURI,
-                    inboundSink,
-                    options,
-                    publishType,
-                    resultType,
-                    writeTypes,
-                    readTypes,
-                    messageWorkers,
-                    dnsLookup,
-                    webSocketClient,
-                    flushingExecutors,
-                    host,
-                    byteBufferPool,
-                    meter,
-                    tracer,
-                    textMapPropagator,
-                    loggerContext.getLogger(ClientSubscriberWithResultSubProtocolHandler.class));
-
-
-        });
+        return Flux.create(inboundSink -> new ClientSubscriberWithResultSubProtocolHandler<PUBLISH, RESULT>(
+                publisher,
+                serverUri,
+                inboundSink,
+                options,
+                publishType,
+                resultType,
+                writeTypes,
+                readTypes,
+                messageWorkers,
+                dnsLookup,
+                webSocketClient,
+                flushingExecutors,
+                host,
+                byteBufferPool,
+                meter,
+                tracer,
+                textMapPropagator,
+                loggerContext.getLogger(ClientSubscriberWithResultSubProtocolHandler.class)));
     }
 
     @Override
     public <SUBSCRIBE> Flux<SUBSCRIBE> subscribe(URI serverUri, ClientWebSocketOptions options, Class<? super SUBSCRIBE> subscribeType, String... messageContentTypes) {
-        Collection<String> availableResultContentTypes = messageWorkers.getAvailableReadContentTypes(subscribeType, Arrays.asList(messageContentTypes));
-        if (availableResultContentTypes.isEmpty()) {
+        Collection<String> readTypes = messageWorkers.getAvailableReadContentTypes(subscribeType, Arrays.asList(messageContentTypes));
+        if (readTypes.isEmpty()) {
             throw new IllegalArgumentException("No MessageReader implementation for given result type and content types");
         }
 
-        return Flux.create(sink ->
-                new ClientWebSocketStream<SUBSCRIBE, SUBSCRIBE>(
-                        getServerUri(sink.contextView()),
-                        ReactiveStreamSubProtocol.publisher,
-                        null, availableResultContentTypes,
-                        null, subscribeType,
-                        messageWorkers,
-                        null,
-                        sink,
+        return Flux.create(inboundSink -> new ClientPublisherSubProtocolHandler<>(
+                        serverUri,
+                        inboundSink,
                         options,
+                        subscribeType,
+                        readTypes,
+                        messageWorkers,
                         dnsLookup,
                         webSocketClient,
                         flushingExecutors,
@@ -180,7 +172,7 @@ public class ClientWebSocketStreamsService
                         meter,
                         tracer,
                         textMapPropagator,
-                        loggerContext.getLogger(ClientWebSocketStream.class)));
+                        loggerContext.getLogger(ClientSubscriberWithResultSubProtocolHandler.class)));
     }
 
     public void preDestroy() {

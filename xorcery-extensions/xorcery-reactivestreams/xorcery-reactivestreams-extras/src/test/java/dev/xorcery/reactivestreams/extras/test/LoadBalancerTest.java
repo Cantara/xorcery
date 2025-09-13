@@ -22,6 +22,7 @@ import dev.xorcery.net.Sockets;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import dev.xorcery.reactivestreams.extras.loadbalancing.LoadBalancer;
 import jakarta.ws.rs.core.MediaType;
@@ -117,8 +118,9 @@ public class LoadBalancerTest {
             List<Integer> result = new ArrayList<>();
             websocketStreamsServer.subscriber(
                     "numbers",
+                    ServerWebSocketOptions.instance(),
                     Integer.class,
-                    upstream -> upstream.doOnNext(result::add));
+                    upstream -> upstream.doOnNext(result::add).subscribe());
         }
 
         // Start publishers on client
@@ -131,8 +133,8 @@ public class LoadBalancerTest {
             futures.add(future);
             List<Integer> source = IntStream.range(0, 10000).boxed().toList();
             LoadBalancer loadBalancer = client.getServiceLocator().getService(LoadBalancer.class);
-            Flux.fromIterable(source)
-                    .transform(websocketStreamsClientClient.publish(ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON))
+
+            websocketStreamsClientClient.publishWithResult(Flux.fromIterable(source), null, ClientWebSocketOptions.instance(), Integer.class, Integer.class, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON)
                     .contextWrite(context -> {
                         serverChoices.add(context.get(ClientWebSocketStreamContext.serverUri));
                         return context;
@@ -142,6 +144,7 @@ public class LoadBalancerTest {
                     .doOnError(e -> logger.warn(e))
                     .subscribe(v -> {
                     }, future::completeExceptionally, () -> future.complete(null));
+            futures.add(future);
         }
 
         logger.info("Waiting for publishers to complete");

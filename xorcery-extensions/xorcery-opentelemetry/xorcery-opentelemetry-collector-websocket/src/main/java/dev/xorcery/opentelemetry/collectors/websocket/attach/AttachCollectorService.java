@@ -19,7 +19,6 @@ import dev.xorcery.configuration.Configuration;
 import dev.xorcery.opentelemetry.collectors.websocket.WebsocketCollectorService;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
-import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import jakarta.inject.Inject;
 import org.apache.logging.log4j.Logger;
@@ -28,8 +27,6 @@ import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.Service;
 import reactor.core.Disposable;
 import reactor.core.Disposables;
-import reactor.util.context.Context;
-import reactor.util.context.ContextView;
 import reactor.util.retry.Retry;
 
 import java.net.URI;
@@ -55,9 +52,7 @@ public class AttachCollectorService
     }
 
     public Disposable attach(URI exporterUri) {
-        ContextView webSocketContext = Context.of(ClientWebSocketStreamContext.serverUri.name(), exporterUri);
-        Disposable disposable = Disposables.composite(() -> attached.remove(exporterUri), clientWebSocketStreams.subscribe(ClientWebSocketOptions.instance(), MetadataByteBuffer.class)
-                .contextWrite(webSocketContext)
+        Disposable disposable = Disposables.composite(() -> attached.remove(exporterUri), clientWebSocketStreams.subscribe(exporterUri, ClientWebSocketOptions.instance(), MetadataByteBuffer.class)
                 .retryWhen(Retry.backoff(Long.MAX_VALUE, attachCollectorConfiguration.getMinimumBackoff()))
                 .subscribe(websocketCollectorService::collect));
         attached.put(exporterUri, disposable);

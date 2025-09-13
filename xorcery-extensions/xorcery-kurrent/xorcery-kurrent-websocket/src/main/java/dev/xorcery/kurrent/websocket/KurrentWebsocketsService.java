@@ -27,6 +27,7 @@ import dev.xorcery.metadata.WithMetadata;
 import dev.xorcery.reactivestreams.api.ContextViewElement;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import dev.xorcery.reactivestreams.api.ReactiveStreamsContext;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import io.opentelemetry.api.OpenTelemetry;
 import jakarta.inject.Inject;
@@ -82,11 +83,12 @@ public class KurrentWebsocketsService
         for (ReadTransformerProvider readTransformerProvider : readTransformerProviders) {
             readFlux = readFlux.transformDeferredContextual(readTransformerProvider);
         }
-        publisher = reactiveStreams.publisher("api/kurrent/{streamId}", MetadataByteBuffer.class, readFlux);
+        publisher = reactiveStreams.publisher("api/kurrent/{streamId}", ServerWebSocketOptions.instance(), MetadataByteBuffer.class, readFlux);
 
         // Write
         subscriber = reactiveStreams.subscriberWithResult(
                 "api/kurrent/{streamId}",
+                ServerWebSocketOptions.instance(),
                 MetadataByteBuffer.class,
                 Metadata.class,
                 flux -> {

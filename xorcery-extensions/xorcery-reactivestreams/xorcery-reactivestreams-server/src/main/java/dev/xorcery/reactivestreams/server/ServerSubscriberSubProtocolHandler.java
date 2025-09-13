@@ -1,3 +1,18 @@
+/*
+ * Copyright © 2022 eXOReaction AS (rickard@exoreaction.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dev.xorcery.reactivestreams.server;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,15 +61,15 @@ import java.util.function.Function;
 import static dev.xorcery.reactivestreams.api.IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
 
-public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
+public class ServerSubscriberSubProtocolHandler<INPUT>
         extends Session.Listener.AbstractAutoDemanding
         implements Disposable {
     private final static ObjectMapper jsonMapper = new JsonMapper().findAndRegisterModules();
 
     private final static long CANCEL = Long.MIN_VALUE;
 
-    private final MessageReader<SUBSCRIBE> reader;
-    private final Function<Flux<SUBSCRIBE>, Disposable> subscriber;
+    private final MessageReader<INPUT> reader;
+    private final Function<Flux<INPUT>, Disposable> subscriber;
     private final String path;
     private final Map<String, String> pathParameters;
     private final ServerWebSocketOptions options;
@@ -62,13 +77,12 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
     private final Logger logger;
     private final Marker marker;
     private final Tracer tracer;
-    private final Meter meter;
     private final Context requestContext;
     private final Attributes attributes;
 
     private Map<String, List<String>> parameterMap;
     private final AtomicLong connectionCounter;
-    private FluxSink<SUBSCRIBE> inboundSink;
+    private FluxSink<INPUT> inboundSink;
     private Disposable subscriptionDisposable;
 
     private final LongHistogram receivedBytes;
@@ -79,8 +93,8 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
             AtomicLong connectionCounter,
 
             ServerWebSocketOptions options,
-            MessageReader<SUBSCRIBE> reader,
-            Function<Flux<SUBSCRIBE>, Disposable> subscriber,
+            MessageReader<INPUT> reader,
+            Function<Flux<INPUT>, Disposable> subscriber,
 
             String path,
             Map<String, String> pathParameters,
@@ -102,7 +116,6 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
         this.logger = logger;
         this.marker = MarkerManager.getMarker(path);
         this.tracer = tracer;
-        this.meter = meter;
         this.requestContext = requestContext;
         this.attributes = attributes;
 
@@ -119,7 +132,7 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
         super.onWebSocketOpen(session);
 
         if (logger.isTraceEnabled())
-            logger.trace(marker, "onWebSocketConnect {}", session.getRemoteSocketAddress());
+            logger.trace(marker, "onWebSocketOpen {}", session.getRemoteSocketAddress());
 
         this.parameterMap = session.getUpgradeRequest().getParameterMap();
         session.setMaxOutgoingFrames(options.maxOutgoingFrames());
@@ -135,7 +148,7 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
                 .end();
 
         // Subscribe upstream
-        Flux<SUBSCRIBE> inboundFlux = Flux.create(inboundSink -> {
+        Flux<INPUT> inboundFlux = Flux.create(inboundSink -> {
             this.inboundSink = inboundSink;
 
             // Send server subscriber context back to client
@@ -217,14 +230,14 @@ public class ServerSubscriberSubProtocolHandler<SUBSCRIBE>
             if (clientMaxBinaryMessageSize == -1) {
                 receivedBytes.record(payload.limit(), attributes);
                 itemReceivedSizes.record(payload.limit(), attributes);
-                SUBSCRIBE event = reader.readFrom(new ByteBufferBackedInputStream(payload));
+                INPUT event = reader.readFrom(new ByteBufferBackedInputStream(payload));
                 inboundSink.next(event);
             } else {
                 receivedBytes.record(payload.limit(), attributes);
                 while (payload.position() != payload.limit()) {
                     int length = payload.getInt();
                     ByteBuffer itemByteBuffer = payload.slice(payload.position(), length);
-                    SUBSCRIBE event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
+                    INPUT event = reader.readFrom(new ByteBufferBackedInputStream(itemByteBuffer));
                     payload.position(payload.position() + length);
                     inboundSink.next(event);
                     itemReceivedSizes.record(length, attributes);

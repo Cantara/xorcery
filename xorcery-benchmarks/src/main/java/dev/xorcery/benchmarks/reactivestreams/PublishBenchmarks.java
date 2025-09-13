@@ -24,8 +24,8 @@ import dev.xorcery.core.Xorcery;
 import dev.xorcery.metadata.Metadata;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
-import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
+import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
 import dev.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import jakarta.ws.rs.core.MediaType;
@@ -37,7 +37,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.context.Context;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -187,7 +186,7 @@ public class PublishBenchmarks {
     {
         counters.counter = 0;
         ServerWebSocketStreams streamsServer = this.server.getServiceLocator().getService(ServerWebSocketStreams.class);
-        serverDisposable = streamsServer.subscriber("benchmark", publishType,
+        serverDisposable = streamsServer.subscriber("benchmark", ServerWebSocketOptions.instance(), publishType,
                 flux -> flux
                         .publishOn(Schedulers.boundedElastic(), 2048)
                         .doOnNext(item ->
@@ -197,7 +196,7 @@ public class PublishBenchmarks {
                         .doOnComplete(() ->
                         {
                             System.out.println("Invoke count:" + counters.counter);
-                        }));
+                        }).subscribe());
 
         URI serverUri = ServerWebSocketStreamsConfiguration.get(serverConf).getURI().resolve("benchmark");
         System.out.println("Server URI:"+serverUri);
@@ -205,16 +204,12 @@ public class PublishBenchmarks {
 
         System.out.println("Start");
         AtomicInteger count = new AtomicInteger();
-        CompletableFuture done = new CompletableFuture();
-
-        source
-//                .doOnRequest(r -> System.out.println("Requests:"+r))
-//                .subscribeOn(Schedulers.boundedElastic(), true)
-                .transform(reactiveStreamsClient.publish(ClientWebSocketOptions.builder().extensionPerMessageDeflate().build(), publishType, contentType))
-                .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
-                .doOnRequest(r -> System.out.println("Requests downstream:"+r))
-                .subscribe(result->count.incrementAndGet(), done::completeExceptionally, ()->done.complete(null) );
-        done.join();
+        CompletableFuture<Void> result = reactiveStreamsClient.publish(
+                source.doOnNext(item -> count.incrementAndGet()),
+                serverUri,
+                ClientWebSocketOptions.builder().extensionPerMessageDeflate().build(),
+                publishType, contentType);
+        result.join();
         System.out.println("Stop "+count);
         serverDisposable.dispose();
     }
