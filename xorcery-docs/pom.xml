@@ -22,12 +22,12 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-parent</artifactId>
-        <version>0.166.0</version>
+        <version>0.166.1-SNAPSHOT</version>
         <relativePath>../xorcery-parent</relativePath>
     </parent>
 
     <artifactId>xorcery-docs</artifactId>
-    <version>0.166.0</version>
+    <version>0.166.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <build>
