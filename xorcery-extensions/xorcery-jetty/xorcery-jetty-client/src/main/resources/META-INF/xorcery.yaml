@@ -9,7 +9,6 @@ jetty:
     reusePort: false
     http2:
       enabled: true
-      idleTimeout: "{{ jetty.clients.default.idleTimeout }}"
 
     ssl:
       enabled: "{{ jetty.clients.default.ssl.keystore ? true | false }}"

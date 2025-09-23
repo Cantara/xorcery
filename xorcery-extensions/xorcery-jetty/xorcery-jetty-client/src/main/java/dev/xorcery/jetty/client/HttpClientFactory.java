@@ -77,7 +77,6 @@ public class HttpClientFactory implements AutoCloseable {
 
             // Client setup
             ClientConnector connector = new ClientConnector();
-            connector.setIdleTimeout(jettyClientConfiguration.getIdleTimeout());
             connector.setReusePort(jettyClientConfiguration.getReusePort());
 
             // HTTP 1.1
@@ -89,8 +88,6 @@ public class HttpClientFactory implements AutoCloseable {
             if (http2Configuration.isEnabled()) {
                 // HTTP/2
                 HTTP2Client http2Client = new HTTP2Client(connector);
-                http2Client.setIdleTimeout(http2Configuration.getIdleTimeout());
-
                 http2 = new ClientConnectionFactoryOverHTTP2.HTTP2(http2Client);
             }
 
@@ -112,6 +109,7 @@ public class HttpClientFactory implements AutoCloseable {
             HttpClient client = new HttpClient(transport);
             client.getRequestListeners().addListener(new OpenTelemetryRequestListener(openTelemetry));
             client.setConnectTimeout(jettyClientConfiguration.getConnectTimeout().toMillis());
+            client.setIdleTimeout(jettyClientConfiguration.getIdleTimeout().toMillis());
             client.setRequestBufferSize(jettyClientConfiguration.getRequestBufferSize());
             QueuedThreadPool executor = new JettyClientConnectorThreadPool();
             executor.setDaemon(true);

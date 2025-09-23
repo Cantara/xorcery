@@ -35,6 +35,11 @@ public class HttpClientTest {
                                  idleTimeout: 5s
                                - name: "custom"
                                  connectTimeout: 20s
+                               - name: "http2"
+                                 connectTimeout: 30s
+                                 idleTimeout: 10s
+                                 http2:
+                                    enabled: true
                     """)
             .build();
 
@@ -48,5 +53,11 @@ public class HttpClientTest {
     public void testCustomHttpClient(@Instance("custom") HttpClient httpClient){
         Assertions.assertEquals(20000, httpClient.getConnectTimeout());
         Assertions.assertEquals(5000, httpClient.getIdleTimeout());
+    }
+
+    @Test
+    public void testHttp2Client(@Instance("http2") HttpClient httpClient){
+        Assertions.assertEquals(30000, httpClient.getConnectTimeout());
+        Assertions.assertEquals(10000, httpClient.getIdleTimeout());
     }
 }
