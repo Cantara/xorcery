@@ -260,7 +260,7 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
+    public void onWebSocketClose(int statusCode, String reason, Callback callback) {
         try {
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
@@ -299,6 +299,7 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
                     .setAttribute("server", getSession().getLocalSocketAddress().toString())
                     .end();
             connectionCounter.decrementAndGet();
+            callback.succeed();
         }
     }
 

@@ -89,7 +89,6 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
     private String serverHost;
     private String clientHost;
 
-
     public ServerPublisherSubProtocolHandler(
             AtomicLong connectionCounter,
 
@@ -208,6 +207,7 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
         }
 
         getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
+        callback.succeed();
     }
 
     @Override
@@ -218,7 +218,7 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
+    public void onWebSocketClose(int statusCode, String reason, Callback callback) {
         try {
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
@@ -248,12 +248,15 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
                     .setAttribute("server", serverHost)
                     .end();
             connectionCounter.decrementAndGet();
+            callback.succeed();
         }
     }
 
     @Override
     public void dispose() {
-
+        if (getSession().isOpen()){
+            getSession().close(StatusCode.SHUTDOWN, "dispose", Callback.NOOP);
+        }
     }
 
     private class OutboundSubscriber

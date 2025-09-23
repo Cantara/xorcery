@@ -280,12 +280,12 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
 
         String serverAcceptType = session.getUpgradeResponse().getHeader(HttpHeader.ACCEPT.asString());
         if ((writer = getWriter(serverAcceptType, outputType)) == null) {
-            session.close(StatusCode.SHUTDOWN, "Cannot handle Accept type:" + serverAcceptType, Callback.NOOP);
+            session.close(StatusCode.NORMAL, "Cannot handle Accept type:" + serverAcceptType, Callback.NOOP);
             return;
         }
         String serverContentType = session.getUpgradeResponse().getHeader(HttpHeader.CONTENT_TYPE.asString());
         if ((reader = getReader(serverContentType, inputType)) == null) {
-            session.close(StatusCode.SHUTDOWN, "Cannot handle Content-Type type:" + serverContentType, Callback.NOOP);
+            session.close(StatusCode.NORMAL, "Cannot handle Content-Type type:" + serverContentType, Callback.NOOP);
             return;
         }
 
@@ -361,7 +361,7 @@ public class ClientSubscriberWithResultSubProtocolHandler<OUTPUT, INPUT>
             if (outboundSubscriber != null)
                 outboundSubscriber.cancel();
             inboundSink.error(e);
-            getSession().close(StatusCode.SHUTDOWN, e.getMessage(), Callback.NOOP);
+            getSession().close(StatusCode.NORMAL, e.getMessage(), Callback.NOOP);
         }
     }
 

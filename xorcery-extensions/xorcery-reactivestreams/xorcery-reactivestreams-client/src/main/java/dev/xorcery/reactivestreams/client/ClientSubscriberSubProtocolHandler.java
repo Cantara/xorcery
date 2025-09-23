@@ -301,7 +301,7 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                     long requests = numericNode.asLong();
                     if (requests == CANCEL) {
                         outboundSubscriber.cancel();
-                        getSession().close(StatusCode.SHUTDOWN, "cancel", Callback.NOOP);
+                        getSession().close(StatusCode.NORMAL, "cancel", Callback.NOOP);
                     } else if (requests == COMPLETE) {
                         // Cannot happen in this protocol
                         // Cannot receive context in this protocol
@@ -358,37 +358,41 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
-        }
-
-        // Upstream
-        if (outboundSubscriber != null) {
-            outboundSubscriber.cancel();
-        }
-
-        if (!result.isDone()) {
-            if (reason.equals("complete")) {
-                result.complete(null);
-            } else if (reason.equals("cancel")) {
-                result.cancel(true);
-            } else if (reason.equals(CONNECTION_IDLE_TIMEOUT)) {
-                result.completeExceptionally(new IdleTimeoutStreamException());
-            } else {
-                result.completeExceptionally(new ClientStreamException(statusCode, reason));
+    public void onWebSocketClose(int statusCode, String reason, Callback callback) {
+        try {
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
             }
-        }
 
-        tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.subscriber + " disconnected " + serverUri.toASCIIString())
-                .setSpanKind(SpanKind.CLIENT)
-                .setAllAttributes(attributes)
-                .startSpan()
-                .setAttribute("reason", reason)
-                .setAttribute("statusCode", statusCode)
-                .setAttribute("server", serverHost)
-                .setAttribute("client", clientHost)
-                .end();
+            // Upstream
+            if (outboundSubscriber != null) {
+                outboundSubscriber.cancel();
+            }
+
+            if (!result.isDone()) {
+                if (reason.equals("complete")) {
+                    result.complete(null);
+                } else if (reason.equals("cancel")) {
+                    result.cancel(true);
+                } else if (reason.equals(CONNECTION_IDLE_TIMEOUT)) {
+                    result.completeExceptionally(new IdleTimeoutStreamException());
+                } else {
+                    result.completeExceptionally(new ClientStreamException(statusCode, reason));
+                }
+            }
+
+            tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.subscriber + " disconnected " + serverUri.toASCIIString())
+                    .setSpanKind(SpanKind.CLIENT)
+                    .setAllAttributes(attributes)
+                    .startSpan()
+                    .setAttribute("reason", reason)
+                    .setAttribute("statusCode", statusCode)
+                    .setAttribute("server", serverHost)
+                    .setAttribute("client", clientHost)
+                    .end();
+        } finally {
+            callback.succeed();
+        }
     }
 
     private class OutboundSubscriber
@@ -528,14 +532,14 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
         @Override
         protected void hookOnError(Throwable throwable) {
 
-            result.completeExceptionally(new ClientStreamException(StatusCode.SHUTDOWN, throwable.getMessage(), throwable));
+            result.completeExceptionally(new ClientStreamException(StatusCode.NORMAL, throwable.getMessage(), throwable));
 
             if (getSession().isOpen()) {
                 if (batcher != null) {
                     batcher.close();
                 }
                 logger.debug("Error", throwable);
-                getSession().close(StatusCode.SHUTDOWN, throwable.getMessage(), Callback.NOOP);
+                getSession().close(StatusCode.NORMAL, throwable.getMessage(), Callback.NOOP);
             }
         }
 

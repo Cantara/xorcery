@@ -334,40 +334,44 @@ public class ClientPublisherSubProtocolHandler<INPUT>
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
-        if (logger.isTraceEnabled()) {
-            logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
-        }
+    public void onWebSocketClose(int statusCode, String reason, Callback callback) {
+        try {
+            if (logger.isTraceEnabled()) {
+                logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
+            }
 
-        switch (statusCode) {
-            case StatusCode.NORMAL -> {
-                switch (reason) {
-                    case "complete" -> inboundSink.complete();
-                    default -> inboundSink.error(error != null
-                            ? new ServerStreamException(statusCode, reason, error)
-                            : new ServerStreamException(statusCode, reason));
+            switch (statusCode) {
+                case StatusCode.NORMAL -> {
+                    switch (reason) {
+                        case "complete" -> inboundSink.complete();
+                        default -> inboundSink.error(error != null
+                                ? new ServerStreamException(statusCode, reason, error)
+                                : new ServerStreamException(statusCode, reason));
+                    }
+                }
+                default -> {
+                    switch (reason) {
+                        case IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT ->
+                                inboundSink.error(new IdleTimeoutStreamException());
+                        default -> inboundSink.error(error != null
+                                ? new ServerStreamException(statusCode, reason, error)
+                                : new ServerStreamException(statusCode, reason));
+                    }
                 }
             }
-            default -> {
-                switch (reason) {
-                    case IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT ->
-                            inboundSink.error(new IdleTimeoutStreamException());
-                    default -> inboundSink.error(error != null
-                            ? new ServerStreamException(statusCode, reason, error)
-                            : new ServerStreamException(statusCode, reason));
-                }
-            }
-        }
 
-        tracer.spanBuilder("stream " + getSubProtocol() + " disconnected " + serverUri.toASCIIString())
-                .setSpanKind(SpanKind.CLIENT)
-                .setAllAttributes(attributes)
-                .startSpan()
-                .setAttribute("reason", reason)
-                .setAttribute("statusCode", statusCode)
-                .setAttribute("server", serverHost)
-                .setAttribute("client", clientHost)
-                .end();
+            tracer.spanBuilder("stream " + getSubProtocol() + " disconnected " + serverUri.toASCIIString())
+                    .setSpanKind(SpanKind.CLIENT)
+                    .setAllAttributes(attributes)
+                    .startSpan()
+                    .setAttribute("reason", reason)
+                    .setAttribute("statusCode", statusCode)
+                    .setAttribute("server", serverHost)
+                    .setAttribute("client", clientHost)
+                    .end();
+        } finally {
+            callback.succeed();
+        }
     }
 
     private void inboundCancel() {

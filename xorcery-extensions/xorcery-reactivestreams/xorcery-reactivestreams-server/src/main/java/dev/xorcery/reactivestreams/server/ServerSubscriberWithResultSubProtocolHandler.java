@@ -288,7 +288,7 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
     }
 
     @Override
-    public void onWebSocketClose(int statusCode, String reason) {
+    public void onWebSocketClose(int statusCode, String reason, Callback callback) {
         try {
             if (logger.isTraceEnabled()) {
                 logger.trace(marker, "onWebSocketClose {} {}", statusCode, reason);
@@ -296,18 +296,13 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
                 logger.debug(marker, "Session closed:{} {}", statusCode, reason);
             }
 
-            switch (statusCode) {
-                case StatusCode.SHUTDOWN: {
-                    if (CONNECTION_IDLE_TIMEOUT.equals(reason)) {
-                        inboundSink.error(new IdleTimeoutStreamException());
-                    } else {
-                        inboundSink.error(new ClientShutdownStreamException(reason));
-                    }
-                    break;
-                }
-                default: {
-                    inboundSink.error(new ClientStreamException(statusCode, reason));
-                }
+            if (CONNECTION_IDLE_TIMEOUT.equals(reason)) {
+                inboundSink.error(new IdleTimeoutStreamException());
+            } else {
+                inboundSink.error(switch (statusCode) {
+                    case StatusCode.SHUTDOWN -> new ClientShutdownStreamException(reason);
+                    default -> new ClientStreamException(statusCode, reason);
+                });
             }
         } finally {
             tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.subscriber + " disconnected " + path)
@@ -321,12 +316,15 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
                     .setAttribute("server", serverHost)
                     .end();
             connectionCounter.decrementAndGet();
+            callback.succeed();
         }
     }
 
     @Override
     public void dispose() {
-
+        if (getSession().isOpen()){
+            getSession().close(StatusCode.SHUTDOWN, "dispose", Callback.NOOP);
+        }
     }
 
     private void inboundCancel() {
