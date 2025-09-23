@@ -47,7 +47,13 @@ public class WaitForProjectionUpdate
     private final AtomicLong currentTimestamp = new AtomicLong();
 
     public WaitForProjectionUpdate(String projectionId) {
+        this(projectionId, 0, 0);
+    }
+
+    public WaitForProjectionUpdate(String projectionId, long position, long timestamp) {
         this.projectionId = projectionId;
+        this.currentPosition.set(position);
+        this.currentTimestamp.set(timestamp);
     }
 
     @Override
