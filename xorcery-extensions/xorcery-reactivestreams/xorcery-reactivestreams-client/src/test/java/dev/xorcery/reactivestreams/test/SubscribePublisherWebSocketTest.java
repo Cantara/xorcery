@@ -226,7 +226,7 @@ public class SubscribePublisherWebSocketTest {
         // Given
         serverConfiguration = new ConfigurationBuilder().addTestDefaults().addYaml(serverConf)
                 .addYaml("""
-                        jetty.server.websockets.idleTimeout: "2s"
+                        jetty.server.websockets.idleTimeout: "1s"
                         """)
                 .build();
         logger.info(serverConfiguration);
