@@ -25,7 +25,6 @@ import dev.xorcery.metadata.Metadata;
 import dev.xorcery.metadata.WithMetadata;
 import dev.xorcery.reactivestreams.api.MetadataByteBuffer;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketOptions;
-import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreamContext;
 import dev.xorcery.reactivestreams.api.client.ClientWebSocketStreams;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketOptions;
 import dev.xorcery.reactivestreams.api.server.ServerWebSocketStreams;
@@ -39,7 +38,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.context.Context;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -52,7 +50,7 @@ import java.util.stream.Stream;
 @State(Scope.Benchmark)
 @Fork(value = 1, warmups = 1, jvmArgs = "-Dcom.sun.management.jmxremote=true")
 @Warmup(iterations = 0)
-@Measurement(iterations = 5)
+@Measurement(iterations = 3)
 public class PublishWithResultBenchmarks {
 
     private static final String config = """
@@ -77,6 +75,7 @@ public class PublishWithResultBenchmarks {
     private static final String clientConfig = """
             instance.id: client
             reactivestreams.server.enabled: false
+            jetty.clients.default.http2.enabled: true
             
             log4j2.Configuration.thresholdFilter: debug
             
@@ -92,7 +91,7 @@ public class PublishWithResultBenchmarks {
             instance.id: server
             jetty.server.enabled: true
             jetty.server.http.enabled: true
-            jetty.server.http2.enabled: false
+            jetty.server.http2.enabled: true
             jetty.server.ssl.enabled: false
             jetty.server.ssl.port: 8443
             
@@ -210,8 +209,8 @@ public class PublishWithResultBenchmarks {
         CompletableFuture<Void> done = new CompletableFuture<>();
 
         reactiveStreamsClient.publishWithResult(source, serverUri, ClientWebSocketOptions.builder().build(), publishType, publishType, contentType, resultContentType)
-                .contextWrite(Context.of(ClientWebSocketStreamContext.serverUri.name(), serverUri))
                 .doOnRequest(r -> System.out.println("Requests downstream:" + r))
+//                .publishOn(Schedulers.boundedElastic(), 1024)
                 .subscribe(result -> count.incrementAndGet(), done::completeExceptionally, () -> done.complete(null));
         done.join();
         System.out.println("Stop " + count);

@@ -8,10 +8,8 @@ jetty:
     requestBufferSize: 4096
     reusePort: false
     http2:
-      enabled: false
+      enabled: true
       idleTimeout: "{{ jetty.clients.default.idleTimeout }}"
-      # HTTP2 doesn't work with WebSockets and query parameters at the moment (Jetty 11.0.19)
-      # https://github.com/jetty/jetty.project/pull/11224
 
     ssl:
       enabled: "{{ jetty.clients.default.ssl.keystore ? true | false }}"

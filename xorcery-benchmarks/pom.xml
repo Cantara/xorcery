@@ -110,6 +110,10 @@
         </dependency>
         <dependency>
             <groupId>dev.xorcery</groupId>
+            <artifactId>xorcery-jetty-server-http2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.xorcery</groupId>
             <artifactId>xorcery-reactivestreams-client</artifactId>
         </dependency>
         <dependency>

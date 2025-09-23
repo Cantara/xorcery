@@ -54,6 +54,7 @@ public class PublishSubscriberWebSocketTest {
                             instance.id: client
                             jetty.server.enabled: false
                             reactivestreams.server.enabled: false
+                            jetty.clients.default.http2.enabled: true
             """;
 
     private String serverConf = """
