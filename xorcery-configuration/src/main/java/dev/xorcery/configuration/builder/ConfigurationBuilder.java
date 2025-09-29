@@ -16,8 +16,7 @@
 package dev.xorcery.configuration.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.*;
 import com.fasterxml.jackson.dataformat.javaprop.JavaPropsMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.xorcery.configuration.Configuration;
@@ -29,6 +28,7 @@ import dev.xorcery.util.Resources;
 import java.io.*;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
@@ -134,6 +134,7 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
         addEtc();
         addHome();
         addUserDirectory();
+        addSystemProperties();
         addEnvironmentVariables();
 
         addConfigurationProviders();
@@ -255,6 +256,22 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
         return this;
     }
 
+    public ConfigurationBuilder addSystemProperties() throws UncheckedIOException {
+        // Find system property overrides
+        Map<String, String> systemProperties = new HashMap(System.getProperties());
+        String prefix = baseName.toUpperCase();
+        systemProperties.forEach((name, value)->{
+            if (!name.startsWith(prefix+"_"))
+                return;
+
+            name = name.substring((prefix+"_").length());
+            String[] names = name.split("_");
+            override(names, value, builder.builder());
+            logger.log("System property override: "+prefix+"_" + name+"="+value);
+        });
+        return this;
+    }
+
     private void override(String[] names, String value, ObjectNode builder) {
         String name = names[0].toLowerCase();
         for (Map.Entry<String, JsonNode> property : builder.properties()) {
@@ -271,17 +288,26 @@ public record ConfigurationBuilder(Configuration.Builder builder, String baseNam
                         builder.set(property.getKey(), JsonNodeFactory.instance.nullNode());
                         return;
                     }
-                    switch (property.getValue().getNodeType()){
-                        case BOOLEAN -> {
+                    switch (property.getValue()){
+                        case BooleanNode jsonValue -> {
                             builder.set(property.getKey(), JsonNodeFactory.instance.booleanNode(Boolean.parseBoolean(value)));
                         }
-                        case NUMBER -> {
+                        case NumericNode jsonValue -> {
                             builder.set(property.getKey(), property.getValue().isIntegralNumber()
                                     ? JsonNodeFactory.instance.numberNode(Long.parseLong(value))
                                     : JsonNodeFactory.instance.numberNode(Double.parseDouble(value)));
                         }
-                        case NULL, STRING -> {
+                        case TextNode jsonValue -> {
                             builder.set(property.getKey(), JsonNodeFactory.instance.textNode(value));
+                        }
+                        case NullNode jsonValue -> {
+                            builder.set(property.getKey(), JsonNodeFactory.instance.textNode(value));
+                        }
+                        case ArrayNode jsonValue -> {
+                            String[] values = value.split(",");
+                            for (String arrayItem : values) {
+                                jsonValue.add(arrayItem);
+                            }
                         }
                         default -> throw new IllegalArgumentException("Can't override property "+name+" with value of unknown type:"+property.getValue().getNodeType().name());
                     }
