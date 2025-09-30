@@ -35,7 +35,7 @@ hk2:
   threadCount: 1
   runLevel: 20
   immediateScope:
-    enabled: true
+    enabled: false
     state: "RUNNING"
   threadScope:
     enabled: true

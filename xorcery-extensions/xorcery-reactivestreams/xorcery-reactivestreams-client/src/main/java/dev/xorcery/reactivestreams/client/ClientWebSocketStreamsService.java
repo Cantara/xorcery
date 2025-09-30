@@ -179,6 +179,7 @@ public class ClientWebSocketStreamsService
         try {
             webSocketClient.stop();
             webSocketClient.getHttpClient().stop();
+            flushingExecutors.shutdown();
         } catch (Exception e) {
             logger.warn("Could not stop websocket client", e);
         }

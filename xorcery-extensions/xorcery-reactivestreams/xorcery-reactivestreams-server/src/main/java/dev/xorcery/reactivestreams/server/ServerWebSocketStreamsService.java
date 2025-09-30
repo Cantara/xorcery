@@ -47,6 +47,7 @@ import org.eclipse.jetty.websocket.server.ServerUpgradeRequest;
 import org.eclipse.jetty.websocket.server.ServerUpgradeResponse;
 import org.eclipse.jetty.websocket.server.WebSocketCreator;
 import org.eclipse.jetty.websocket.server.WebSocketUpgradeHandler;
+import org.glassfish.hk2.api.PreDestroy;
 import org.glassfish.hk2.runlevel.RunLevel;
 import org.jvnet.hk2.annotations.ContractsProvided;
 import org.jvnet.hk2.annotations.Service;
@@ -69,7 +70,7 @@ import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.OPEN
 @ContractsProvided({ServerWebSocketStreams.class})
 @RunLevel(4)
 public class ServerWebSocketStreamsService
-        implements ServerWebSocketStreams {
+        implements ServerWebSocketStreams, PreDestroy {
 
     protected static final TextMapGetter<ServerUpgradeRequest> jettyGetter =
             new TextMapGetter<>() {
@@ -330,5 +331,10 @@ public class ServerWebSocketStreamsService
             serverUpgradeResponse.setStatus(HttpStatus.NOT_FOUND_404);
             return null;
         }
+    }
+
+    @Override
+    public void preDestroy() {
+        flushingExecutors.shutdown();
     }
 }
