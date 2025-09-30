@@ -351,7 +351,8 @@ public class ClientPublisherSubProtocolHandler<INPUT>
                 }
                 default -> {
                     switch (reason) {
-                        case IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT ->
+                        case IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT,
+                             IdleTimeoutStreamException.SESSION_IDLE_TIMEOUT ->
                                 inboundSink.error(new IdleTimeoutStreamException());
                         default -> inboundSink.error(error != null
                                 ? new ServerStreamException(statusCode, reason, error)

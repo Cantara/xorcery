@@ -19,6 +19,7 @@ public class IdleTimeoutStreamException
     extends StreamException
 {
     public static final String CONNECTION_IDLE_TIMEOUT = "Connection Idle Timeout";
+    public static final String SESSION_IDLE_TIMEOUT = "java.util.concurrent.TimeoutException: Session idle timeout expired";
 
     public IdleTimeoutStreamException() {
         super(1001, CONNECTION_IDLE_TIMEOUT);
