@@ -8,7 +8,7 @@ jetty:
     requestBufferSize: 4096
     reusePort: false
     http2:
-      enabled: true
+      enabled: false
 
     ssl:
       enabled: "{{ jetty.clients.default.ssl.keystore ? true | false }}"
