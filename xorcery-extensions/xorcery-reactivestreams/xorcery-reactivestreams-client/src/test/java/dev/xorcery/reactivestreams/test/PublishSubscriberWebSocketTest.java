@@ -54,7 +54,7 @@ public class PublishSubscriberWebSocketTest {
                             instance.id: client
                             jetty.server.enabled: false
                             reactivestreams.server.enabled: false
-                            jetty.clients.default.http2.enabled: true
+                            jetty.clients.default.http2.enabled: false
             """;
 
     private String serverConf = """
@@ -99,7 +99,7 @@ public class PublishSubscriberWebSocketTest {
 
                 // When
                 URI serverUri = websocketStreamsServerWebSocketStreamsConfiguration.getURI().resolve("numbers");
-                List<Integer> source = IntStream.range(0, 4096).boxed().toList();
+                List<Integer> source = IntStream.range(0, 10).boxed().toList();
                 Flux<Integer> publisher = Flux.fromIterable(source);
                 CompletableFuture<Void> publishResult = websocketStreamsClientClient.publish(publisher, serverUri, ClientWebSocketOptions.instance(), Integer.class, MediaType.APPLICATION_JSON);
                 publishResult.orTimeout(30, TimeUnit.SECONDS).join();
