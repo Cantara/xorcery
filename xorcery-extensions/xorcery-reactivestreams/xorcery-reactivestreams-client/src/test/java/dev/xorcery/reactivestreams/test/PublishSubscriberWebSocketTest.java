@@ -27,10 +27,7 @@ import dev.xorcery.reactivestreams.server.ServerWebSocketStreamsConfiguration;
 import jakarta.ws.rs.core.MediaType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.*;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
@@ -86,7 +83,6 @@ public class PublishSubscriberWebSocketTest {
         // Given
         try (Xorcery server = new Xorcery(serverConfiguration)) {
             try (Xorcery client = new Xorcery(clientConfiguration)) {
-                LogManager.getLogger().info(clientConfiguration);
                 ServerWebSocketStreams websocketStreamsServer = server.getServiceLocator().getService(ServerWebSocketStreams.class);
                 ClientWebSocketStreams websocketStreamsClientClient = client.getServiceLocator().getService(ClientWebSocketStreams.class);
 

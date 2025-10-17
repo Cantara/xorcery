@@ -1,4 +1,4 @@
-$schema: xorcery-test-override-schema.json
+$schema: META-INF/xorcery-test-override-schema.json
 
 log4j2:
   Configuration:
@@ -14,6 +14,10 @@ log4j2:
 
         - name: org.eclipse
           level: info
+#        - name: org.eclipse.jetty.websocket.core
+#          level: trace
+#        - name: org.eclipse.jetty.websocket.core.internal
+#          level: info
 
       Root:
         level: info

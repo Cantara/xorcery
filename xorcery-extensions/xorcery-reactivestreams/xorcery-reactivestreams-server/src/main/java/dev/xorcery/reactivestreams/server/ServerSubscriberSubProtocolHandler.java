@@ -134,8 +134,8 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
         if (logger.isTraceEnabled())
             logger.trace(marker, "onWebSocketOpen {}", session.getRemoteSocketAddress());
 
-        this.parameterMap = session.getUpgradeRequest().getParameterMap();
         session.setMaxOutgoingFrames(options.maxOutgoingFrames());
+        this.parameterMap = session.getUpgradeRequest().getParameterMap();
         connectionCounter.incrementAndGet();
 
         tracer.spanBuilder("stream " + ReactiveStreamSubProtocol.subscriber + " connected " + path)
@@ -147,6 +147,10 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
                 .setAttribute("local", session.getLocalSocketAddress().toString())
                 .end();
 
+        initialRequest();
+    }
+
+    private void initialRequest() {
         // Subscribe upstream
         Flux<INPUT> inboundFlux = Flux.create(inboundSink -> {
             this.inboundSink = inboundSink;
@@ -171,9 +175,8 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
 
             try {
                 String contextJsonString = jsonMapper.writeValueAsString(serverContext);
-                getSession().sendText(contextJsonString, Callback.NOOP);
+                Callback.Completable.with(completable -> getSession().sendText(contextJsonString, completable)).join();
                 logger.debug(marker, "Sent context {}: {}", getSession().getRemoteSocketAddress(), contextJsonString);
-
             } catch (JsonProcessingException e) {
                 throw new UncheckedIOException(e);
             }
@@ -321,7 +324,7 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
             return;
 
         // Send the request over the network
-        getSession().sendText(Long.toString(n), Callback.NOOP);
+        Callback.Completable.with(completable -> session.sendText(Long.toString(n), completable)).join();
         requestsHistogram.record(n);
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "sendRequest {}", n);
