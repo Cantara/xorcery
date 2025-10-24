@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-jsonapi</artifactId>
-        <version>0.166.14-SNAPSHOT</version>
+        <version>0.166.14</version>
     </parent>
 
     <artifactId>xorcery-jsonapi-server-neo4j</artifactId>
