@@ -82,6 +82,7 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
     private final LongHistogram sentBytes;
     private final LongHistogram itemSentSizes;
     private final LongHistogram flushHistogram;
+    private final LongHistogram requestsHistogram;
     private final Marker marker;
 
     private Map<String, List<String>> parameterMap;
@@ -130,6 +131,8 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
                 .setUnit(OpenTelemetryUnits.BYTES).ofLongs().build();
         this.flushHistogram = meter.histogramBuilder(PUBLISHER_FLUSH_COUNT)
                 .setUnit("{item}").ofLongs().build();
+        this.requestsHistogram = meter.histogramBuilder(PUBLISHER_REQUESTS)
+                .setUnit("{request}").ofLongs().build();
     }
 
     @Override
@@ -171,7 +174,10 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
                 if (numericNode.asLong() == CANCEL && outboundSubscriber != null) {
                     outboundSubscriber.cancel();
                 } else {
-                    outboundSubscriber.request(numericNode.longValue());
+                    long n = numericNode.longValue();
+                    if (n > 0)
+                        requestsHistogram.record(n);
+                    outboundSubscriber.request(n);
                 }
             } else if (json instanceof TextNode) {
                 getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);

@@ -342,7 +342,8 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
 
         // Send the request over the network
         getSession().sendText(Long.toString(n), Callback.NOOP);
-        requestsHistogram.record(n);
+        if (n > 0)
+            requestsHistogram.record(n);
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "sendRequest {}", n);
         }

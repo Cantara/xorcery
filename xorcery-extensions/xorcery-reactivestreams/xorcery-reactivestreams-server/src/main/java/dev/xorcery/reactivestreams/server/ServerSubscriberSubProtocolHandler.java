@@ -325,7 +325,8 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
 
         // Send the request over the network
         Callback.Completable.with(completable -> session.sendText(Long.toString(n), completable)).join();
-        requestsHistogram.record(n);
+        if (n > 0)
+            requestsHistogram.record(n);
         if (logger.isTraceEnabled()) {
             logger.trace(marker, "sendRequest {}", n);
         }

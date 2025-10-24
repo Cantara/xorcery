@@ -310,7 +310,10 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                         }
                         getSession().close(StatusCode.PROTOCOL, "wrongProtocol", Callback.NOOP);
                     } else {
-                        outboundSubscriber.request(numericNode.longValue());
+                        long n = numericNode.longValue();
+                        if (n > 0)
+                            requestsHistogram.record(n);
+                        outboundSubscriber.request(n);
                     }
                 }
             } else if (json instanceof TextNode errorNode) {

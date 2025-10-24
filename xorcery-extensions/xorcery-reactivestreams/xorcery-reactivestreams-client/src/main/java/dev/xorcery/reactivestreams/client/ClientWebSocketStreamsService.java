@@ -84,7 +84,7 @@ public class ClientWebSocketStreamsService
                 .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
-        meter = openTelemetry.meterBuilder(ClientWebSocketStream.class.getName())
+        meter = openTelemetry.meterBuilder(getClass().getName())
                 .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();

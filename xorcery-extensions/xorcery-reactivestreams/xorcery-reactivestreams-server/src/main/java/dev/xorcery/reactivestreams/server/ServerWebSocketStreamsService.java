@@ -120,7 +120,7 @@ public class ServerWebSocketStreamsService
 
         this.byteBufferPool = new ArrayByteBufferPool();
         textMapPropagator = openTelemetry.getPropagators().getTextMapPropagator();
-        meter = openTelemetry.meterBuilder(ServerWebSocketStream.class.getName())
+        meter = openTelemetry.meterBuilder(getClass().getName())
                 .setSchemaUrl(SchemaUrls.V1_25_0)
                 .setInstrumentationVersion(getClass().getPackage().getImplementationVersion())
                 .build();
