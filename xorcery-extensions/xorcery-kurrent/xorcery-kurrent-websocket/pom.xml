@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-kurrent</artifactId>
-        <version>0.166.18</version>
+        <version>0.166.19-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-kurrent-websocket</artifactId>
