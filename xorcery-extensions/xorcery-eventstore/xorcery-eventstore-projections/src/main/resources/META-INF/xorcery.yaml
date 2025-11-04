@@ -2,4 +2,5 @@ $schema: xorcery-schema.json
 eventstore:
   projections:
     enabled: "{{ eventstore.enabled }}"
+    updatesAllowed: true
     projections: []

@@ -344,6 +344,11 @@
               "default" : "{{ eventstore.enabled }}",
               "description" : "Default: {{ eventstore.enabled }} (true)"
             },
+            "updatesAllowed" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
+            },
             "projections" : {
               "type" : [ "array", "string" ],
               "items" : {

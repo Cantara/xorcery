@@ -20,6 +20,11 @@ import dev.xorcery.configuration.ServiceConfiguration;
 
 public record ProjectionsConfiguration(Configuration context)
         implements ServiceConfiguration {
+
+    public boolean isUpdatesAllowed(){
+        return context.getBoolean("updatesAllowed").orElse(true);
+    }
+
     public Iterable<Projection> getProjections() {
         return context.getObjectListAs("projections", Projection::new).orElseThrow(() ->
                 new IllegalStateException("Missing eventstore.projections.projections configuration"));

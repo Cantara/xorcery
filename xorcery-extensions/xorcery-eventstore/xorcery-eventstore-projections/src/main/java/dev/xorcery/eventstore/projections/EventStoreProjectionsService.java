@@ -82,13 +82,15 @@ public class EventStoreProjectionsService {
                     if (projectionDetails.getName().equals(projectionName)) {
                         // Update
                         exists = true;
-                        try {
-                            client.update(projectionName, projectionQuery, UpdateProjectionOptions.get()
-                                    .emitEnabled(projection.isEmitEnabled())).join();
-                            logger.info("Updated projection " + projectionName);
-                            updatedProjections.add(projectionDetails);
-                        } catch (Exception e) {
-                            logger.error("Could not update projection " + projectionName, e);
+                        if (cfg.isUpdatesAllowed()){
+                            try {
+                                client.update(projectionName, projectionQuery, UpdateProjectionOptions.get()
+                                        .emitEnabled(projection.isEmitEnabled())).join();
+                                logger.info("Updated projection " + projectionName);
+                                updatedProjections.add(projectionDetails);
+                            } catch (Exception e) {
+                                logger.error("Could not update projection " + projectionName, e);
+                            }
                         }
                     }
                 }

@@ -1,7 +1,6 @@
 {
   "$schema" : "https://json-schema.org/draft/2020-12/schema",
   "type" : "object",
-  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-eventstore-projections/schema",
   "title" : "xorcery-eventstore-projections configuration JSON Schema",
   "properties" : {
     "eventstore" : {
@@ -21,6 +20,11 @@
               "type" : [ "boolean", "string" ],
               "default" : "{{ eventstore.enabled }}",
               "description" : "Default: {{ eventstore.enabled }} (true)"
+            },
+            "updatesAllowed" : {
+              "type" : [ "boolean", "string" ],
+              "default" : true,
+              "description" : "Default: true"
             },
             "projections" : {
               "type" : [ "array", "string" ],
@@ -45,5 +49,6 @@
         }
       }
     }
-  }
+  },
+  "$id" : "http://xorcery.dev/modules/dev.xorcery/xorcery-eventstore-projections/schema"
 }
