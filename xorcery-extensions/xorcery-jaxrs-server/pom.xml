@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-extensions</artifactId>
-        <version>0.166.19</version>
+        <version>0.166.20-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-jaxrs-server</artifactId>
