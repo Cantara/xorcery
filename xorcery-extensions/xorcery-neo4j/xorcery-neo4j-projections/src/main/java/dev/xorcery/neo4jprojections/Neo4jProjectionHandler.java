@@ -340,7 +340,7 @@ public class Neo4jProjectionHandler
                             tx.commit();
                         }
                         break;
-                    } catch (MemoryLimitExceededException | TransientTransactionFailureException e) {
+                    } catch (MemoryLimitExceededException e) {
                         tx.rollback();
 
                         maxEvents /= 16;
@@ -382,6 +382,17 @@ public class Neo4jProjectionHandler
                         for (int i = 0; i < committed; i++) {
                             metadataEventsIterator.next();
                         }
+                    } catch (TransientTransactionFailureException e) {
+                        tx.rollback();
+
+                        // Retry entire batch
+                        logger.warn("Transient transaction failure, retrying entire batch for projection " + projectionId, e);
+                        tx = database.beginTx();
+                        metadataEventsIterator = events.iterator();
+                        // Remove already processed items
+                        for (int i = 0; i < committed; i++) {
+                            metadataEventsIterator.next();
+                        }
                     } catch (Throwable e) {
                         tx.rollback();
                         if (unwrap(e) instanceof SignalProjectionIsolationException){
@@ -394,15 +405,6 @@ public class Neo4jProjectionHandler
                                 TransactionContext.setTransactionContext(tx, ISOLATED_PROJECTION_MODE, true);
                                 maxEvents = 1;
                             }
-                            metadataEventsIterator = events.iterator();
-                            // Remove already processed items
-                            for (int i = 0; i < committed; i++) {
-                                metadataEventsIterator.next();
-                            }
-                        } else if (unwrap(e) instanceof TransientTransactionFailureException) {
-                            // Retry entire batch
-                            logger.warn("Transient transaction failure, retrying entire batch for projection " + projectionId, e);
-                            tx = database.beginTx();
                             metadataEventsIterator = events.iterator();
                             // Remove already processed items
                             for (int i = 0; i < committed; i++) {
