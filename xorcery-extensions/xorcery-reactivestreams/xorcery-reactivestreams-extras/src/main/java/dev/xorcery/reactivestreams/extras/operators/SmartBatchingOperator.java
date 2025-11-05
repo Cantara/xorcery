@@ -32,6 +32,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -80,6 +81,7 @@ public final class SmartBatchingOperator {
         private final BiConsumer<Collection<T>, SynchronousSink<Collection<T>>> handler;
         private final Executor executor;
         private final SmartBatcher<T> smartBatcher;
+        private final AtomicBoolean done = new AtomicBoolean(false);
 
         public SmartBatchingSubscriber(
                 Flux<T> upstream,
@@ -128,17 +130,21 @@ public final class SmartBatchingOperator {
 
         @Override
         public void accept(Collection<T> ts) {
-            handler.accept(ts, this);
+            if (!done.get()) {
+                handler.accept(ts, this);
+            }
         }
 
         // SynchronousSink
         @Override
         public void complete() {
+            done.set(true);
             downstream.complete();
         }
 
         @Override
         public void error(Throwable e) {
+            done.set(true);
             // This needs to be async, or else the dispose calling smartBatcher.close will deadlock since this call is coming
             // from the SmartBatcher handler
             CompletableFuture.runAsync(()->downstream.error(e));
