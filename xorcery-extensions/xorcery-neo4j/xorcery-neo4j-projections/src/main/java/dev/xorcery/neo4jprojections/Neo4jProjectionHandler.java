@@ -383,8 +383,8 @@ public class Neo4jProjectionHandler
                             metadataEventsIterator.next();
                         }
                     } catch (Throwable e) {
+                        tx.rollback();
                         if (unwrap(e) instanceof SignalProjectionIsolationException){
-                            tx.rollback();
                             tx = database.beginTx();
                             if (eventCount > 0){
                                 beforeIsolatedProjectionMode = true;
@@ -394,6 +394,15 @@ public class Neo4jProjectionHandler
                                 TransactionContext.setTransactionContext(tx, ISOLATED_PROJECTION_MODE, true);
                                 maxEvents = 1;
                             }
+                            metadataEventsIterator = events.iterator();
+                            // Remove already processed items
+                            for (int i = 0; i < committed; i++) {
+                                metadataEventsIterator.next();
+                            }
+                        } else if (unwrap(e) instanceof TransientTransactionFailureException) {
+                            // Retry entire batch
+                            logger.warn("Transient transaction failure, retrying entire batch for projection " + projectionId, e);
+                            tx = database.beginTx();
                             metadataEventsIterator = events.iterator();
                             // Remove already processed items
                             for (int i = 0; i < committed; i++) {
