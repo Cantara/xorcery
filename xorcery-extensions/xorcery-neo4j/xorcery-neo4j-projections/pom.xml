@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-neo4j</artifactId>
-        <version>0.166.22</version>
+        <version>0.166.23-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-neo4j-projections</artifactId>
