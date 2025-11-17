@@ -22,7 +22,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-parent</artifactId>
-        <version>0.166.23</version>
+        <version>0.166.24-SNAPSHOT</version>
         <relativePath>../xorcery-parent</relativePath>
     </parent>
 
