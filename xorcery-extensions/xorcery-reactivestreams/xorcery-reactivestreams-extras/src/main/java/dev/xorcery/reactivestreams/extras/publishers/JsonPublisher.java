@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.function.LongConsumer;
+import java.util.zip.GZIPInputStream;
 
 public class JsonPublisher<T>
         implements Publisher<T> {
@@ -53,8 +54,11 @@ public class JsonPublisher<T>
             try {
                 Object resourceUrl = new ContextViewElement(sink.currentContext()).get(ResourcePublisherContext.resourceUrl)
                         .orElseThrow(Element.missing(ResourcePublisherContext.resourceUrl));
-                URL yamlResource = resourceUrl instanceof URL url ? url : new URL(resourceUrl.toString());
-                InputStream resourceAsStream = new BufferedInputStream(yamlResource.openStream(), 32 * 1024);
+                URL jsonResource = resourceUrl instanceof URL url ? url : new URL(resourceUrl.toString());
+                InputStream resourceAsStream = new BufferedInputStream(jsonResource.openStream(), 32 * 1024);
+                if (jsonResource.toExternalForm().endsWith(".gz")){
+                    resourceAsStream = new GZIPInputStream(resourceAsStream);
+                }
                 // Skip until position
                 long skip = new ContextViewElement(sink.currentContext())
                         .getLong(ReactiveStreamsContext.streamPosition)

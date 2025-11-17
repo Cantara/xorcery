@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.function.LongConsumer;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Put the URL to the resource to be published into the subscriber ContextView with key {@link ResourcePublisherContext#resourceUrl}
@@ -60,6 +61,9 @@ public class YamlPublisher<T>
                         .orElseThrow(Element.missing(ResourcePublisherContext.resourceUrl));
                 URL yamlResource = resourceUrl instanceof URL url ? url : new URL(resourceUrl.toString());
                 InputStream resourceAsStream = new BufferedInputStream(yamlResource.openStream(), 32 * 1024);
+                if (yamlResource.toExternalForm().endsWith(".gz")){
+                    resourceAsStream = new GZIPInputStream(resourceAsStream);
+                }
                 // Skip until position
                 long skip = new ContextViewElement(sink.currentContext())
                         .getLong(ReactiveStreamsContext.streamPosition)
