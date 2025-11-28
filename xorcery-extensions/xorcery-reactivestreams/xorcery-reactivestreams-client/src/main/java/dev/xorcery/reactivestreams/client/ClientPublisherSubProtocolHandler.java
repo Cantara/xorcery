@@ -67,6 +67,8 @@ import java.util.concurrent.ExecutorService;
 
 import static dev.xorcery.lang.Exceptions.unwrap;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
+import static io.opentelemetry.api.trace.StatusCode.ERROR;
+import static io.opentelemetry.api.trace.StatusCode.OK;
 
 public class ClientPublisherSubProtocolHandler<INPUT>
         extends Session.Listener.AbstractAutoDemanding
@@ -365,6 +367,7 @@ public class ClientPublisherSubProtocolHandler<INPUT>
                     .setSpanKind(SpanKind.CLIENT)
                     .setAllAttributes(attributes)
                     .startSpan()
+                    .setStatus(statusCode==StatusCode.NORMAL ? OK : ERROR, error != null ? error.getMessage() : null)
                     .setAttribute("reason", reason)
                     .setAttribute("statusCode", statusCode)
                     .setAttribute("server", serverHost)

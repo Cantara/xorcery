@@ -229,6 +229,10 @@
                                         <argument>-f</argument>
                                         <argument>${docker.namespace}/${project.artifactId}:${docker.tag}</argument>
                                     </arguments>
+                                    <successCodes>
+                                        <successCode>0</successCode>
+                                        <successCode>1</successCode>
+                                    </successCodes>
                                 </configuration>
                             </execution>
                             <!--

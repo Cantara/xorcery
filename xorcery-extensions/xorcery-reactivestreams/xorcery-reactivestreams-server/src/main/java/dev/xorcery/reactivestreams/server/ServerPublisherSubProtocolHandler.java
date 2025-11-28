@@ -61,6 +61,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static dev.xorcery.lang.Exceptions.isCausedBy;
 import static dev.xorcery.lang.Exceptions.unwrap;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
+import static io.opentelemetry.api.trace.StatusCode.ERROR;
+import static io.opentelemetry.api.trace.StatusCode.OK;
 
 public class ServerPublisherSubProtocolHandler<OUTPUT>
         extends Session.Listener.AbstractAutoDemanding
@@ -89,6 +91,8 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
     private OutboundSubscriber outboundSubscriber;
     private String serverHost;
     private String clientHost;
+
+    private Throwable error;
 
     public ServerPublisherSubProtocolHandler(
             AtomicLong connectionCounter,
@@ -221,6 +225,7 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
         if (logger.isDebugEnabled() && !Exceptions.isCausedBy(throwable, ClosedChannelException.class)) {
             logger.debug(marker, "onWebSocketError", throwable);
         }
+        error = throwable;
     }
 
     @Override
@@ -248,6 +253,7 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
                     .setSpanKind(SpanKind.SERVER)
                     .setAllAttributes(attributes)
                     .startSpan()
+                    .setStatus(statusCode==StatusCode.NORMAL ? OK : ERROR, error != null ? error.getMessage() : null)
                     .setAttribute("reason", reason)
                     .setAttribute("statusCode", statusCode)
                     .setAttribute("client", clientHost)
@@ -402,7 +408,7 @@ public class ServerPublisherSubProtocolHandler<OUTPUT>
                 if (batcher != null) {
                     batcher.close();
                 }
-                logger.debug("Error", throwable);
+                logger.error("Upstream error", throwable);
                 getSession().close(StatusCode.NORMAL, throwable.getMessage(), Callback.NOOP);
             }
         }

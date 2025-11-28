@@ -60,6 +60,7 @@ import java.util.function.Function;
 
 import static dev.xorcery.reactivestreams.api.IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
+import static io.opentelemetry.api.trace.StatusCode.*;
 
 public class ServerSubscriberSubProtocolHandler<INPUT>
         extends Session.Listener.AbstractAutoDemanding
@@ -88,6 +89,8 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
     private final LongHistogram receivedBytes;
     private final LongHistogram itemReceivedSizes;
     private final LongHistogram requestsHistogram;
+
+    private Throwable error;
 
     public ServerSubscriberSubProtocolHandler(
             AtomicLong connectionCounter,
@@ -260,6 +263,7 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
         if (logger.isDebugEnabled() && !Exceptions.isCausedBy(throwable, ClosedChannelException.class)) {
             logger.debug(marker, "onWebSocketError", throwable);
         }
+        error = throwable;
     }
 
     @Override
@@ -296,6 +300,7 @@ public class ServerSubscriberSubProtocolHandler<INPUT>
                     .setSpanKind(SpanKind.SERVER)
                     .setAllAttributes(attributes)
                     .startSpan()
+                    .setStatus(statusCode==StatusCode.NORMAL ? OK : ERROR, error != null ? error.getMessage() : null)
                     .setAttribute("reason", reason)
                     .setAttribute("statusCode", statusCode)
                     .setAttribute("client", getSession().getRemoteSocketAddress().toString())

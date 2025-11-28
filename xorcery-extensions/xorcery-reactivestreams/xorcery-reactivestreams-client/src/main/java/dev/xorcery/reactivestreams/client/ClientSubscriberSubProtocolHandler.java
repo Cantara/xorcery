@@ -71,6 +71,8 @@ import static dev.xorcery.lang.Exceptions.isCausedBy;
 import static dev.xorcery.lang.Exceptions.unwrap;
 import static dev.xorcery.reactivestreams.api.IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
+import static io.opentelemetry.api.trace.StatusCode.ERROR;
+import static io.opentelemetry.api.trace.StatusCode.OK;
 
 public class ClientSubscriberSubProtocolHandler<OUTPUT>
         extends Session.Listener.AbstractAutoDemanding
@@ -113,6 +115,8 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
     private OutboundSubscriber outboundSubscriber;
     private String serverHost;
     private String clientHost;
+
+    private Throwable error;
 
     public ClientSubscriberSubProtocolHandler(
             Flux<OUTPUT> publisher,
@@ -358,6 +362,8 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
         if (logger.isDebugEnabled()) {
             logger.debug(marker, "onWebSocketError", throwable);
         }
+
+        error = throwable;
     }
 
     @Override
@@ -388,6 +394,7 @@ public class ClientSubscriberSubProtocolHandler<OUTPUT>
                     .setSpanKind(SpanKind.CLIENT)
                     .setAllAttributes(attributes)
                     .startSpan()
+                    .setStatus(statusCode==StatusCode.NORMAL ? OK : ERROR, error != null ? error.getMessage() : null)
                     .setAttribute("reason", reason)
                     .setAttribute("statusCode", statusCode)
                     .setAttribute("server", serverHost)

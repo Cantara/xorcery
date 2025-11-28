@@ -70,6 +70,8 @@ import static dev.xorcery.lang.Exceptions.isCausedBy;
 import static dev.xorcery.lang.Exceptions.unwrap;
 import static dev.xorcery.reactivestreams.api.IdleTimeoutStreamException.CONNECTION_IDLE_TIMEOUT;
 import static dev.xorcery.reactivestreams.util.ReactiveStreamsOpenTelemetry.*;
+import static io.opentelemetry.api.trace.StatusCode.ERROR;
+import static io.opentelemetry.api.trace.StatusCode.OK;
 
 public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
         extends Session.Listener.AbstractAutoDemanding
@@ -104,6 +106,8 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
     private String serverHost;
     private String clientHost;
     private volatile boolean isCancelledByClientSubscriber;
+
+    private Throwable error;
 
     public ServerSubscriberWithResultSubProtocolHandler(
             AtomicLong connectionCounter,
@@ -285,6 +289,7 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
         if (logger.isDebugEnabled() && !Exceptions.isCausedBy(throwable, ClosedChannelException.class)) {
             logger.debug(marker, "onWebSocketError", throwable);
         }
+        error = throwable;
     }
 
     @Override
@@ -310,6 +315,7 @@ public class ServerSubscriberWithResultSubProtocolHandler<INPUT, OUTPUT>
                     .setSpanKind(SpanKind.SERVER)
                     .setAllAttributes(attributes)
                     .startSpan()
+                    .setStatus(statusCode==StatusCode.NORMAL ? OK : ERROR, error != null ? error.getMessage() : null)
                     .setAttribute("reason", reason)
                     .setAttribute("statusCode", statusCode)
                     .setAttribute("client", clientHost)
