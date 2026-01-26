@@ -21,7 +21,7 @@
     <parent>
         <groupId>dev.xorcery</groupId>
         <artifactId>xorcery-opentelemetry</artifactId>
-        <version>0.167.2</version>
+        <version>0.167.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>xorcery-opentelemetry-log4j</artifactId>
