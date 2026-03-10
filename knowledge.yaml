@@ -1,0 +1,30 @@
+id: xorcery-project
+name: Xorcery
+version: 0.166.14-SNAPSHOT
+description: |
+  Reactive, event-sourced microservice framework built on Java 21, Project
+  Reactor, and JSON-LD. Provides a modular architecture for building
+  event-driven services with graph-based configuration, reactive streams, and
+  built-in OpenTelemetry support.
+units:
+  - id: core
+    name: Core
+    type: component
+    description: HK2-based component model and lifecycle management — service registry and DI.
+    path: src/main/java/com/exoreaction/xorcery
+  - id: configuration
+    name: Configuration
+    type: component
+    description: JSON-LD graph configuration — hierarchical, type-safe service configuration.
+  - id: reactivestreams
+    name: Reactive Streams
+    type: component
+    description: Reactive stream publishers and subscribers implementing Project Reactor patterns.
+  - id: opentelemetry
+    name: OpenTelemetry
+    type: component
+    description: Built-in metrics, distributed traces, and structured logging via OpenTelemetry.
+  - id: extensions
+    name: Extensions
+    type: component
+    description: Optional extensions — Jetty HTTP, Neo4j graph store, and EventStore integrations.
