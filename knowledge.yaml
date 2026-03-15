@@ -1,30 +1,109 @@
-id: xorcery-project
-name: Xorcery
+kcp_version: "0.10"
+project: xorcery
 version: 0.166.14-SNAPSHOT
-description: |
-  Reactive, event-sourced microservice framework built on Java 21, Project
-  Reactor, and JSON-LD. Provides a modular architecture for building
-  event-driven services with graph-based configuration, reactive streams, and
-  built-in OpenTelemetry support.
+updated: "2026-03-15"
+language: en
+license: "Apache-2.0"
+indexing: private
+
 units:
+
   - id: core
-    name: Core
-    type: component
-    description: HK2-based component model and lifecycle management — service registry and DI.
-    path: src/main/java/com/exoreaction/xorcery
+    path: xorcery-core
+    intent: "What is the Xorcery component model? HK2-based DI and lifecycle management — the service registry that all Xorcery modules plug into. Entry point for understanding how services discover and depend on each other."
+    scope: global
+    audience: [developer, agent]
+    validated: "2026-03-15"
+    triggers: [core, HK2, DI, dependency injection, component model, service registry, lifecycle, module system]
+
   - id: configuration
-    name: Configuration
-    type: component
-    description: JSON-LD graph configuration — hierarchical, type-safe service configuration.
+    path: xorcery-configuration
+    intent: "How does Xorcery handle configuration? JSON-LD graph-based configuration system — hierarchical, composable, type-safe. Understand this before working on any service config binding or environment-specific overrides."
+    scope: module
+    audience: [developer, agent]
+    validated: "2026-03-15"
+    depends_on: [core]
+    triggers: [configuration, JSON-LD, config graph, hierarchical config, type-safe, config binding, environment, override, yaml config]
+
+  - id: configuration-api
+    path: xorcery-configuration-api
+    intent: "What is the public API for Xorcery configuration? Interfaces and types used by all Xorcery modules to declare and consume configuration — the contract other modules depend on."
+    scope: module
+    audience: [developer, agent]
+    validated: "2026-03-15"
+    depends_on: [core]
+    triggers: [configuration API, config interface, config types, config contract, configuration consumer]
+
   - id: reactivestreams
-    name: Reactive Streams
-    type: component
-    description: Reactive stream publishers and subscribers implementing Project Reactor patterns.
+    path: xorcery-reactivestreams
+    intent: "How does Xorcery implement reactive streams? Project Reactor-based publisher/subscriber infrastructure — the backbone for event-driven, backpressure-aware data flow between Xorcery services."
+    scope: module
+    audience: [developer, agent]
+    validated: "2026-03-15"
+    depends_on: [core, configuration]
+    triggers: [reactive streams, Project Reactor, publisher, subscriber, backpressure, event-driven, Flux, Mono, reactive]
+
+  - id: event-sourcing
+    path: xorcery-eventstore
+    intent: "How does Xorcery support event sourcing? EventStore integration for durable event log persistence — commands, events, and aggregate state reconstruction via EventStore subscriptions."
+    scope: module
+    audience: [developer, agent]
+    validated: "2026-03-15"
+    depends_on: [reactivestreams, core]
+    triggers: [event sourcing, EventStore, event log, aggregate, command, event stream, event-driven persistence]
+
   - id: opentelemetry
-    name: OpenTelemetry
-    type: component
-    description: Built-in metrics, distributed traces, and structured logging via OpenTelemetry.
+    path: xorcery-opentelemetry
+    intent: "How is observability built into Xorcery? OpenTelemetry integration providing metrics, distributed traces, and structured logging — automatically wired into all Xorcery services via the HK2 component model."
+    scope: module
+    audience: [developer, agent]
+    validated: "2026-03-15"
+    depends_on: [core]
+    triggers: [OpenTelemetry, metrics, tracing, distributed trace, structured logging, observability, spans, OTLP]
+
+  - id: certificates
+    path: xorcery-certificates
+    intent: "How does Xorcery handle TLS certificate management? Certificate provisioning and renewal for Xorcery services — supporting Let's Encrypt, CA-signed, and self-signed certificates for mutual TLS."
+    scope: module
+    audience: [developer, agent]
+    validated: "2026-03-15"
+    depends_on: [core, configuration]
+    triggers: [certificates, TLS, mTLS, Let's Encrypt, CA, certificate renewal, HTTPS, PKI]
+
   - id: extensions
-    name: Extensions
-    type: component
-    description: Optional extensions — Jetty HTTP, Neo4j graph store, and EventStore integrations.
+    path: xorcery-extensions
+    intent: "What optional integrations does Xorcery provide? Extension modules — Jetty HTTP server, Neo4j graph store, and additional EventStore integrations — loaded on demand via the HK2 component model."
+    scope: module
+    audience: [developer, agent]
+    validated: "2026-03-15"
+    depends_on: [core, reactivestreams]
+    triggers: [extensions, Jetty, Neo4j, HTTP server, graph store, optional modules, plugin]
+
+relationships:
+  - from: configuration
+    to: core
+    type: depends_on
+  - from: configuration-api
+    to: core
+    type: depends_on
+  - from: reactivestreams
+    to: core
+    type: depends_on
+  - from: reactivestreams
+    to: configuration
+    type: depends_on
+  - from: event-sourcing
+    to: reactivestreams
+    type: depends_on
+  - from: opentelemetry
+    to: core
+    type: depends_on
+  - from: certificates
+    to: core
+    type: depends_on
+  - from: extensions
+    to: core
+    type: depends_on
+  - from: extensions
+    to: reactivestreams
+    type: depends_on
