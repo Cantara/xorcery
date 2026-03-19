@@ -1,7 +1,7 @@
-kcp_version: "0.10"
+kcp_version: "0.12"
 project: xorcery
 version: 0.166.14-SNAPSHOT
-updated: "2026-03-15"
+updated: "2026-03-19"
 language: en
 license: "Apache-2.0"
 indexing: private
