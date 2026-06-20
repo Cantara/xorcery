@@ -8,7 +8,7 @@ signing:
   scheme: ed25519
   scope: this-manifest
   public_key: "MCowBQYDK2VwAyEAuipgusnqU9vjf3p2yPVLD/DmERT6tBbLOqEETdxAhMU="
-  signature: "https://raw.githubusercontent.com/Cantara/reactiveservices/master/knowledge.yaml.sig"
+  signature: "https://raw.githubusercontent.com/Cantara/xorcery/master/knowledge.yaml.sig"
 language: en
 license: "Apache-2.0"
 indexing: private
