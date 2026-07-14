@@ -1,4 +1,4 @@
-kcp_version: "0.21"
+kcp_version: "0.26"
 project: xorcery
 version: 0.166.14-SNAPSHOT
 updated: "2026-06-20"
@@ -23,9 +23,6 @@ units:
     audience: [developer, agent]
     validated: "2026-03-15"
     triggers: [core, HK2, DI, dependency injection, component model, service registry, lifecycle, module system]
-      content_hash:
-        algorithm: sha256
-        value: ""
 
   - id: configuration
     path: xorcery-configuration
@@ -35,9 +32,6 @@ units:
     validated: "2026-03-15"
     depends_on: [core]
     triggers: [configuration, JSON-LD, config graph, hierarchical config, type-safe, config binding, environment, override, yaml config]
-      content_hash:
-        algorithm: sha256
-        value: ""
 
   - id: configuration-api
     path: xorcery-configuration-api
@@ -47,9 +41,6 @@ units:
     validated: "2026-03-15"
     depends_on: [core]
     triggers: [configuration API, config interface, config types, config contract, configuration consumer]
-      content_hash:
-        algorithm: sha256
-        value: ""
 
   - id: reactivestreams
     path: xorcery-reactivestreams
@@ -59,9 +50,6 @@ units:
     validated: "2026-03-15"
     depends_on: [core, configuration]
     triggers: [reactive streams, Project Reactor, publisher, subscriber, backpressure, event-driven, Flux, Mono, reactive]
-      content_hash:
-        algorithm: sha256
-        value: ""
 
   - id: event-sourcing
     path: xorcery-eventstore
@@ -71,9 +59,6 @@ units:
     validated: "2026-03-15"
     depends_on: [reactivestreams, core]
     triggers: [event sourcing, EventStore, event log, aggregate, command, event stream, event-driven persistence]
-      content_hash:
-        algorithm: sha256
-        value: ""
 
   - id: opentelemetry
     path: xorcery-opentelemetry
@@ -83,9 +68,6 @@ units:
     validated: "2026-03-15"
     depends_on: [core]
     triggers: [OpenTelemetry, metrics, tracing, distributed trace, structured logging, observability, spans, OTLP]
-      content_hash:
-        algorithm: sha256
-        value: ""
 
   - id: certificates
     path: xorcery-certificates
@@ -95,9 +77,6 @@ units:
     validated: "2026-03-15"
     depends_on: [core, configuration]
     triggers: [certificates, TLS, mTLS, Let's Encrypt, CA, certificate renewal, HTTPS, PKI]
-      content_hash:
-        algorithm: sha256
-        value: ""
 
   - id: extensions
     path: xorcery-extensions
@@ -107,9 +86,6 @@ units:
     validated: "2026-03-15"
     depends_on: [core, reactivestreams]
     triggers: [extensions, Jetty, Neo4j, HTTP server, graph store, optional modules, plugin]
-      content_hash:
-        algorithm: sha256
-        value: ""
 
 relationships:
   - from: configuration
@@ -139,3 +115,11 @@ relationships:
   - from: extensions
     to: reactivestreams
     type: depends_on
+
+# Serving Endpoint Binding (KCP SPEC v0.26 §3.12): authoritative manifest URL
+# and authorized MCP representative. Ignored by pre-0.26 verifiers.
+serving:
+  manifest:
+    - https://raw.githubusercontent.com/Cantara/reactiveservices/master/knowledge.yaml
+  mcp:
+    - https://mcp.cantara.no/mcp
