@@ -120,6 +120,6 @@ relationships:
 # and authorized MCP representative. Ignored by pre-0.26 verifiers.
 serving:
   manifest:
-    - https://raw.githubusercontent.com/Cantara/reactiveservices/master/knowledge.yaml
+    - https://raw.githubusercontent.com/Cantara/xorcery/master/knowledge.yaml
   mcp:
     - https://mcp.cantara.no/mcp
