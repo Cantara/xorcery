@@ -198,7 +198,7 @@ public class Neo4jDatabaseService
             }
         }
         .setUserLogProvider(new Log4jLogProvider(
-                new Neo4jLoggerContext(loggerContext, () -> {}, "")))
+                new Neo4jLoggerContext(loggerContext, () -> {}, "", false)))
         .loadPropertiesFromFile(tmpConfigFile)
         .build();
     }
