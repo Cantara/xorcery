@@ -99,7 +99,7 @@ public class LabelAccessMode
         }
 
         @Override
-        public SecurityContext authorize(IdLookup idLookup, PrivilegeDatabaseReference privilegeDatabaseReference, AbstractSecurityLog abstractSecurityLog) {
+        public SecurityContext authorize(IdLookup idLookup, PrivilegeDatabaseReference privilegeDatabaseReference, AbstractSecurityLog abstractSecurityLog, long timeOfEvaluationMillis) {
             return new SecurityContext(AuthSubject.AUTH_DISABLED, new LabelAccessMode(idLookup.getLabelId(labelName)), this.connectionInfo(), privilegeDatabaseReference.name());
         }
     }
